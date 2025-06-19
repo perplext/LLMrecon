@@ -142,10 +142,6 @@ This tool is designed for:
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## 📄 License
-
-[License Information - TBD]
-
 ## 🔗 Links
 
 - [Release Notes](RELEASE.md)
