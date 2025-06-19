@@ -20,7 +20,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -268,13 +267,7 @@ func (r *DefaultImportReportingSystem) AssessSystemImpact(result *ImportResult) 
 	}
 
 	// Get disk space available
-	if len(result.ImportedFiles) > 0 {
-		dir := filepath.Dir(result.ImportedFiles[0])
-		var stat syscall.Statfs_t
-		if err := syscall.Statfs(dir, &stat); err == nil {
-			impact.DiskSpaceAvailable = int64(stat.Bavail) * int64(stat.Bsize)
-		}
-	}
+	impact.DiskSpaceAvailable = r.getDiskSpaceForImportedFiles(result.ImportedFiles)
 
 	// Get memory usage (approximate)
 	var m runtime.MemStats

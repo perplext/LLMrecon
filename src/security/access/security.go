@@ -769,12 +769,12 @@ func (a *SecurityManagerAdapter) UpdateVulnerability(vulnerability *models.Vulne
 
 // MitigateVulnerability marks a security vulnerability as mitigated
 func (a *SecurityManagerAdapter) MitigateVulnerability(vulnerabilityID, mitigation string) error {
-	return a.impl.UpdateVulnerabilityStatus(context.Background(), vulnerabilityID, VulnerabilityStatusMitigated, "", mitigation, "system")
+	return a.impl.UpdateVulnerabilityStatus(context.Background(), vulnerabilityID, VulnerabilityStatusRemediated, "", mitigation, "system")
 }
 
 // ResolveVulnerability marks a security vulnerability as resolved
 func (a *SecurityManagerAdapter) ResolveVulnerability(vulnerabilityID string) error {
-	return a.impl.UpdateVulnerabilityStatus(context.Background(), vulnerabilityID, VulnerabilityStatusResolved, "", "", "system")
+	return a.impl.UpdateVulnerabilityStatus(context.Background(), vulnerabilityID, VulnerabilityStatusVerified, "", "", "system")
 }
 
 // ListVulnerabilities lists security vulnerabilities

@@ -120,7 +120,7 @@ func (m *RBACManagerImpl) AddRoleToUser(ctx context.Context, userID string, role
 	defer m.mu.Unlock()
 
 	// Verify the user exists
-	user, err := m.userManager.GetUser(ctx, userID)
+	user, err := m.userManager.GetUser(userID)
 	if err != nil {
 		return err
 	}
@@ -132,10 +132,10 @@ func (m *RBACManagerImpl) AddRoleToUser(ctx context.Context, userID string, role
 	}
 
 	// Log the audit event
-	auditLog := &models.AuditLog{
+	auditLog := &AuditLog{
 		ID:          uuid.New().String(),
 		UserID:      getRBACUserIDFromContext(ctx),
-		Action:      models.AuditActionUpdate,
+		Action:      AuditActionUpdate,
 		Resource:    "role",
 		ResourceID:  userID,
 		Description: "Added role " + role + " to user " + user.Username,
@@ -153,7 +153,7 @@ func (m *RBACManagerImpl) RemoveRoleFromUser(ctx context.Context, userID string,
 	defer m.mu.Unlock()
 
 	// Verify the user exists
-	user, err := m.userManager.GetUser(ctx, userID)
+	user, err := m.userManager.GetUser(userID)
 	if err != nil {
 		return err
 	}
@@ -165,10 +165,10 @@ func (m *RBACManagerImpl) RemoveRoleFromUser(ctx context.Context, userID string,
 	}
 
 	// Log the audit event
-	auditLog := &models.AuditLog{
+	auditLog := &AuditLog{
 		ID:          uuid.New().String(),
 		UserID:      getRBACUserIDFromContext(ctx),
-		Action:      models.AuditActionUpdate,
+		Action:      AuditActionUpdate,
 		Resource:    "role",
 		ResourceID:  userID,
 		Description: "Removed role " + role + " from user " + user.Username,
@@ -186,7 +186,7 @@ func (m *RBACManagerImpl) GetUserRoles(ctx context.Context, userID string) ([]st
 	defer m.mu.RUnlock()
 
 	// Verify the user exists
-	_, err := m.userManager.GetUser(ctx, userID)
+	_, err := m.userManager.GetUser(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -198,10 +198,10 @@ func (m *RBACManagerImpl) GetUserRoles(ctx context.Context, userID string) ([]st
 	}
 
 	// Log the audit event
-	auditLog := &models.AuditLog{
+	auditLog := &AuditLog{
 		ID:          uuid.New().String(),
 		UserID:      getRBACUserIDFromContext(ctx),
-		Action:      models.AuditActionRead,
+		Action:      AuditActionRead,
 		Resource:    "role",
 		ResourceID:  userID,
 		Description: "Retrieved roles for user",
@@ -219,7 +219,7 @@ func (m *RBACManagerImpl) GetUserPermissions(ctx context.Context, userID string)
 	defer m.mu.RUnlock()
 
 	// Verify the user exists
-	_, err := m.userManager.GetUser(ctx, userID)
+	_, err := m.userManager.GetUser(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -250,10 +250,10 @@ func (m *RBACManagerImpl) GetUserPermissions(ctx context.Context, userID string)
 	}
 
 	// Log the audit event
-	auditLog := &models.AuditLog{
+	auditLog := &AuditLog{
 		ID:          uuid.New().String(),
 		UserID:      getRBACUserIDFromContext(ctx),
-		Action:      models.AuditActionRead,
+		Action:      AuditActionRead,
 		Resource:    "permission",
 		ResourceID:  userID,
 		Description: "Retrieved permissions for user",

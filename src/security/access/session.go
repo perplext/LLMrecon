@@ -177,7 +177,7 @@ func (s *SimpleInMemorySessionStore) CleanExpiredSessions(ctx context.Context) e
 type PersistentSessionStore interface {
 	SessionStore
 	Initialize(ctx context.Context) error
-	Close(ctx context.Context) error
+	CloseWithContext(ctx context.Context) error
 }
 
 // SessionManager manages user sessions

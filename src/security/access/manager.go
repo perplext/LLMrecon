@@ -82,11 +82,8 @@ func NewAccessControlManager(config *AccessControlConfig) (*AccessControlManager
 	// Create session manager
 	sessionManager := NewSessionManager(sessionStore, &config.SessionPolicy, auditLogger)
 	
-	// Create user manager using adapter
-	factory := NewFactory(nil)
-	userStoreAdapter := factory.CreateUserStoreAdapter(userStore)
-	userManagerImpl := NewUserManager(userStoreAdapter, auditLogger)
-	userManager := NewUserManagerAdapter(userManagerImpl)
+	// Create user manager using stub implementation
+	userManager := NewUserManager()
 	
 	// Create security incident and vulnerability stores
 	incidentStore := NewLocalInMemoryIncidentStore()

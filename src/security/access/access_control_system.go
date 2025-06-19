@@ -3,7 +3,6 @@ package access
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"sync"
