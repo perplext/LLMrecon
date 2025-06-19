@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "last_updated": "2025-05-18T20:00:00Z",
+  "providers": [
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "path": "providers/openai_v1.0.go",
+      "version": "1.0",
+      "supported_models": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"],
+      "min_tool_version": "1.0.0",
+      "author": "LLM Red Team",
+      "description": "OpenAI API integration for GPT models"
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "path": "providers/anthropic_v1.0.go",
+      "version": "1.0",
+      "supported_models": ["claude-2", "claude-instant", "claude-3-opus", "claude-3-sonnet"],
+      "min_tool_version": "1.0.0",
+      "author": "LLM Red Team",
+      "description": "Anthropic API integration for Claude models"
+    }
+  ],
+  "utilities": [
+    {
+      "id": "rate_limiter",
+      "name": "Rate Limiter",
+      "path": "utils/rate_limiter.go",
+      "version": "1.0",
+      "min_tool_version": "1.0.0",
+      "author": "LLM Red Team",
+      "description": "Utility for managing API rate limits"
+    },
+    {
+      "id": "token_counter",
+      "name": "Token Counter",
+      "path": "utils/token_counter.go",
+      "version": "1.0",
+      "min_tool_version": "1.0.0",
+      "author": "LLM Red Team",
+      "description": "Utility for counting tokens in prompts and responses"
+    }
+  ],
+  "detectors": [
+    {
+      "id": "string_match",
+      "name": "String Matcher",
+      "path": "detectors/string_match.go",
+      "version": "1.0",
+      "min_tool_version": "1.0.0",
+      "author": "LLM Red Team",
+      "description": "Simple string matching for response analysis"
+    },
+    {
+      "id": "regex_match",
+      "name": "Regex Matcher",
+      "path": "detectors/regex_match.go",
+      "version": "1.0",
+      "min_tool_version": "1.0.0",
+      "author": "LLM Red Team",
+      "description": "Regular expression matching for response analysis"
+    },
+    {
+      "id": "semantic_match",
+      "name": "Semantic Matcher",
+      "path": "detectors/semantic_match.go",
+      "version": "1.0",
+      "min_tool_version": "1.0.0",
+      "author": "LLM Red Team",
+      "description": "Semantic analysis for response evaluation"
+    }
+  ]
+}

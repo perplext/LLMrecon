@@ -1,0 +1,11 @@
+{
+  "id": "prompt_injection",
+  "name": "Prompt Injection",
+  "description": "Templates for testing prompt injection vulnerabilities (OWASP LLM01)",
+  "owasp_reference": "LLM01",
+  "iso_reference": "ISO/IEC 42001:2023 - 5.2.1",
+  "templates": [
+    "basic_injection_v1.0.yaml",
+    "advanced_injection_v1.0.yaml"
+  ]
+}

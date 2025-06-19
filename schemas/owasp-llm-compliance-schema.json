@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OWASP LLM Top 10 Compliance Mapping Schema",
+  "description": "Schema for mapping templates to OWASP Top 10 for Large Language Model Applications",
+  "type": "object",
+  "required": ["compliance"],
+  "properties": {
+    "compliance": {
+      "type": "object",
+      "description": "Compliance mappings for various standards",
+      "properties": {
+        "owasp-llm": {
+          "type": "array",
+          "description": "OWASP LLM Top 10 compliance mappings",
+          "items": {
+            "type": "object",
+            "required": ["category"],
+            "properties": {
+              "category": {
+                "type": "string",
+                "description": "OWASP LLM Top 10 category ID",
+                "enum": ["LLM01", "LLM02", "LLM03", "LLM04", "LLM05", "LLM06", "LLM07", "LLM08", "LLM09", "LLM10"]
+              },
+              "subcategory": {
+                "type": "string",
+                "description": "Specific subcategory within the main category",
+                "enum": [
+                  "direct-injection", "indirect-injection", "jailbreaking",
+                  "xss", "ssrf", "command-injection", "sql-injection",
+                  "data-poisoning", "backdoor-attacks", "bias-injection",
+                  "resource-exhaustion", "token-flooding", "context-window-saturation",
+                  "pretrained-model-vulnerabilities", "dependency-risks", "integration-vulnerabilities",
+                  "training-data-extraction", "credential-leakage", "pii-disclosure",
+                  "plugin-escalation", "unauthorized-access", "data-leakage",
+                  "unauthorized-actions", "scope-expansion", "privilege-escalation",
+                  "hallucination-acceptance", "unverified-recommendations", "critical-decision-delegation",
+                  "model-extraction", "weight-stealing", "architecture-inference"
+                ]
+              },
+              "coverage": {
+                "type": "string",
+                "description": "Level of coverage for this category/subcategory",
+                "enum": ["basic", "comprehensive", "advanced"]
+              }
+            }
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": {
+        "description": "Mappings to other compliance standards",
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "Simple mapping to a standard section"
+          },
+          {
+            "type": "array",
+            "description": "Multiple mappings to standard sections",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "object",
+            "description": "Detailed mapping to a standard",
+            "additionalProperties": true
+          }
+        ]
+      }
+    }
+  }
+}

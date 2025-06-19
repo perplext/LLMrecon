@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "last_updated": "2025-05-18T20:36:28-04:00",
+  "templates": {
+    "prompt_injection_basic_v1.0": {
+      "id": "prompt_injection_basic_v1.0",
+      "name": "Basic Prompt Injection",
+      "description": "Tests if the LLM can be manipulated to execute basic prompt injection",
+      "version": "1.0",
+      "author": "LLM Red Team",
+      "category": "prompt",
+      "severity": "high",
+      "tags": [
+        "prompt_injection",
+        "beginner",
+        "owasp-llm01"
+      ],
+      "path": "prompt_injection/basic_prompt_injection_v1.0.yaml",
+      "added_at": "2025-05-18T20:36:28-04:00",
+      "updated_at": "2025-05-18T20:36:28-04:00"
+    }
+  },
+  "categories": {
+    "prompt": {
+      "name": "prompt",
+      "description": "prompt vulnerability templates",
+      "templates": [
+        "prompt_injection_basic_v1.0"
+      ]
+    }
+  }
+}

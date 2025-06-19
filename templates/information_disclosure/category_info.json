@@ -1,0 +1,11 @@
+{
+  "id": "information_disclosure",
+  "name": "Information Disclosure",
+  "description": "Templates for testing information disclosure vulnerabilities (OWASP LLM02)",
+  "owasp_reference": "LLM02",
+  "iso_reference": "ISO/IEC 42001:2023 - 5.2.2",
+  "templates": [
+    "pii_extraction_v1.0.yaml",
+    "credential_leak_v1.0.yaml"
+  ]
+}

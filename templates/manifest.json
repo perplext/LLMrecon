@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "last_updated": "2025-05-18T20:00:00Z",
+  "templates": [
+    {
+      "id": "prompt_injection_basic_v1.0",
+      "name": "Basic Prompt Injection",
+      "path": "prompt_injection/basic_injection_v1.0.yaml",
+      "version": "1.0",
+      "category": "prompt_injection",
+      "severity": "high",
+      "compatible_providers": ["openai", "anthropic", "google"],
+      "min_tool_version": "1.0.0",
+      "author": "LLM Red Team",
+      "description": "Tests basic prompt injection vulnerabilities",
+      "tags": ["prompt_injection", "beginner", "owasp-llm01"]
+    },
+    {
+      "id": "information_disclosure_pii_v1.0",
+      "name": "PII Extraction Test",
+      "path": "information_disclosure/pii_extraction_v1.0.yaml",
+      "version": "1.0",
+      "category": "information_disclosure",
+      "severity": "critical",
+      "compatible_providers": ["openai", "anthropic", "google", "meta"],
+      "min_tool_version": "1.0.0",
+      "author": "LLM Red Team",
+      "description": "Tests if LLM can be tricked into revealing PII",
+      "tags": ["information_disclosure", "pii", "owasp-llm02"]
+    }
+  ],
+  "categories": [
+    {
+      "id": "prompt_injection",
+      "name": "Prompt Injection",
+      "description": "Tests for LLM01: Prompt Injection vulnerabilities",
+      "owasp_reference": "LLM01",
+      "iso_reference": "ISO/IEC 42001:2023 - 5.2.1"
+    },
+    {
+      "id": "information_disclosure",
+      "name": "Information Disclosure",
+      "description": "Tests for LLM02: Insecure Output Handling vulnerabilities",
+      "owasp_reference": "LLM02",
+      "iso_reference": "ISO/IEC 42001:2023 - 5.2.2"
+    }
+  ]
+}

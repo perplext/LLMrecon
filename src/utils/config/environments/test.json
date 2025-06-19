@@ -1,0 +1,68 @@
+{
+  "environment": "test",
+  "profiler_enabled": true,
+  "profiler_interval": 120,
+  "profiler_output_dir": "profiles/test",
+  "memory_threshold": 150,
+  "gc_threshold": 150,
+  
+  "pool_manager_enabled": true,
+  "default_pool_size": 8,
+  "min_pool_size": 4,
+  "max_pool_size": 16,
+  "enable_pool_scaling": true,
+  "scale_up_threshold": 0.75,
+  "scale_down_threshold": 0.25,
+  
+  "memory_optimizer_enabled": true,
+  "enable_deduplication": true,
+  "enable_compression": true,
+  "enable_lazy_loading": true,
+  "enable_gc_hints": true,
+  
+  "inheritance_optimizer_enabled": true,
+  "max_inheritance_depth": 2,
+  "flatten_inheritance": true,
+  "cache_optimized_templates": true,
+  
+  "context_optimizer_enabled": true,
+  "context_deduplication": true,
+  "context_lazy_loading": true,
+  "context_compression": true,
+  
+  "concurrency_manager_enabled": true,
+  "max_workers": 16,
+  "min_workers": 4,
+  "queue_size": 500,
+  "worker_idle_timeout": 45,
+  
+  "execution_optimizer_enabled": true,
+  "enable_batch_processing": true,
+  "batch_size": 10,
+  "result_cache_size": 1000,
+  "result_cache_ttl": 600,
+  
+  "tuner_enabled": true,
+  "gc_percent": 100,
+  "max_concurrent_requests": 100,
+  "connection_pool_size": 20,
+  "buffer_pool_size": 750,
+  
+  "static_file_handler": {
+    "root_dir": "static/test",
+    "enable_cache": true,
+    "max_cache_size": 75000000,
+    "enable_compression": true,
+    "min_compress_size": 1024,
+    "cache_expiration_seconds": 600,
+    "compress_extensions": [".html", ".css", ".js", ".json", ".xml", ".txt"]
+  },
+  
+  "custom_config": {
+    "debug_mode": true,
+    "verbose_logging": false,
+    "profile_all_operations": false,
+    "load_test_mode": true,
+    "simulate_production_load": true
+  }
+}

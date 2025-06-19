@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Build artifacts
+build/
+dist/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Reports
+reports/
+
+# Config files (may contain secrets)
+config.yaml
+config.yml
+*.env
+
+# Test files
+*_test.go
+
+# Dependencies (will be downloaded during build)
+vendor/

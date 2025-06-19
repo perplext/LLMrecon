@@ -1,0 +1,149 @@
+name: OWASP LLM Top 10 Security Templates
+version: 1.0.0
+description: |
+  Comprehensive security testing templates for the OWASP Top 10 for 
+  Large Language Model Applications. These templates help identify
+  and validate security vulnerabilities in LLM implementations.
+author: LLMrecon
+license: Apache-2.0
+tags:
+  - owasp
+  - security
+  - llm
+  - vulnerability-testing
+
+categories:
+  - id: llm01-prompt-injection
+    name: "LLM01: Prompt Injection"
+    description: "Manipulation of LLM behavior through crafted prompts"
+    severity: critical
+    templates:
+      - direct-injection.yaml
+      - indirect-injection.yaml
+      - jailbreaking.yaml
+      - system-prompt-override.yaml
+
+  - id: llm02-insecure-output
+    name: "LLM02: Insecure Output Handling"
+    description: "Insufficient validation of LLM outputs leading to downstream vulnerabilities"
+    severity: critical
+    templates:
+      - command-injection.yaml
+      - sql-injection.yaml
+      - xss.yaml
+      - ssrf.yaml
+      - code-execution.yaml
+
+  - id: llm03-training-data-poisoning
+    name: "LLM03: Training Data Poisoning"
+    description: "Corruption of training data to introduce vulnerabilities or biases"
+    severity: high
+    templates:
+      - data-poisoning.yaml
+      - backdoor-attacks.yaml
+      - bias-injection.yaml
+      - knowledge-extraction.yaml
+
+  - id: llm04-model-denial-of-service
+    name: "LLM04: Model Denial of Service"
+    description: "Resource exhaustion attacks against LLM services"
+    severity: high
+    templates:
+      - resource-exhaustion.yaml
+      - token-flooding.yaml
+      - context-window-saturation.yaml
+      - resource-consumption.yaml
+
+  - id: llm05-supply-chain
+    name: "LLM05: Supply Chain Vulnerabilities"
+    description: "Vulnerabilities in LLM supply chain components"
+    severity: high
+    templates:
+      - dependency-risks.yaml
+      - pretrained-model-vulnerabilities.yaml
+      - integration-vulnerabilities.yaml
+
+  - id: llm06-sensitive-information
+    name: "LLM06: Sensitive Information Disclosure"
+    description: "Unintended revelation of confidential data"
+    severity: high
+    templates:
+      - pii-disclosure.yaml
+      - credential-leakage.yaml
+      - training-data-extraction.yaml
+
+  - id: llm07-insecure-plugin-design
+    name: "LLM07: Insecure Plugin Design"
+    description: "Flaws in LLM plugin architecture and implementation"
+    severity: critical
+    templates:
+      - plugin-escalation.yaml
+      - plugin-data-leakage.yaml
+      - privilege-escalation.yaml
+
+  - id: llm08-unauthorized-actions
+    name: "LLM08: Excessive Agency"
+    description: "LLM performing actions beyond intended scope"
+    severity: high
+    templates:
+      - unauthorized-actions.yaml
+      - impersonation.yaml
+
+  - id: llm09-overreliance
+    name: "LLM09: Overreliance"
+    description: "Excessive trust in LLM outputs without validation"
+    severity: medium
+    templates:
+      - hallucination-acceptance.yaml
+      - misinformation-generation.yaml
+
+  - id: llm10-model-theft
+    name: "LLM10: Model Theft"
+    description: "Unauthorized access to proprietary model information"
+    severity: high
+    templates:
+      - model-extraction.yaml
+      - model-inversion.yaml
+      - extraction-attack.yaml
+
+statistics:
+  total_templates: 37
+  critical_severity: 9
+  high_severity: 23
+  medium_severity: 5
+  categories: 10
+
+requirements:
+  min_scanner_version: "1.0.0"
+  supported_models:
+    - openai/*
+    - anthropic/*
+    - google/*
+    - meta/*
+    - custom
+
+usage:
+  scan_all: |
+    llm-redteam scan --template-dir owasp-llm/
+  
+  scan_category: |
+    llm-redteam scan --template-dir owasp-llm/llm01-prompt-injection/
+  
+  scan_specific: |
+    llm-redteam scan --template owasp-llm/llm01-prompt-injection/direct-injection.yaml
+
+reporting:
+  formats:
+    - json
+    - html
+    - pdf
+    - csv
+    - markdown
+  
+  compliance_mapping:
+    - standard: "OWASP LLM Top 10 2023"
+      version: "1.1"
+    - standard: "ISO/IEC 42001:2023"
+      clauses: ["8.3", "9.1"]
+    - standard: "NIST AI RMF"
+      categories: ["GOVERN", "MAP", "MEASURE"]

@@ -1,0 +1,17 @@
+{
+  "name": "Custom Provider",
+  "version": "1.0.0",
+  "author": "LLM Red Team",
+  "description": "A custom provider plugin for the LLM Red Team framework",
+  "provider_type": "custom-provider",
+  "supported_models": [
+    "custom-model-1",
+    "custom-model-2"
+  ],
+  "min_framework_version": "0.1.0",
+  "max_framework_version": "",
+  "tags": [
+    "custom",
+    "example"
+  ]
+}

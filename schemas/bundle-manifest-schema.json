@@ -1,0 +1,285 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LLM Red Team Tool Bundle Manifest Schema",
+  "description": "JSON Schema for validating bundle manifest files in the LLM Red Team Tool",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "bundle_id",
+    "bundle_type",
+    "name",
+    "description",
+    "version",
+    "created_at",
+    "author",
+    "content",
+    "checksums",
+    "compatibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Version of the manifest schema",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "bundle_id": {
+      "type": "string",
+      "description": "Unique identifier for the bundle",
+      "pattern": "^[a-zA-Z0-9_-]+$",
+      "minLength": 3,
+      "maxLength": 64
+    },
+    "bundle_type": {
+      "type": "string",
+      "description": "Type of bundle (templates or modules)",
+      "enum": ["templates", "modules", "mixed"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the bundle",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the bundle",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the bundle",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9\\.]+)?$"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "Timestamp when the bundle was created",
+      "format": "date-time"
+    },
+    "author": {
+      "type": "object",
+      "description": "Information about the bundle author",
+      "required": ["name", "email"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the author",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "Email of the author",
+          "format": "email"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL of the author's website",
+          "format": "uri"
+        },
+        "organization": {
+          "type": "string",
+          "description": "Organization the author belongs to",
+          "maxLength": 100
+        },
+        "key_id": {
+          "type": "string",
+          "description": "Cryptographic key identifier for the author",
+          "pattern": "^[A-Fa-f0-9]{8,64}$"
+        }
+      }
+    },
+    "content": {
+      "type": "array",
+      "description": "List of content items in the bundle",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "type", "checksum"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to the content item within the bundle",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of content item",
+            "enum": ["template", "module", "documentation", "resource", "configuration"]
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the content item",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the content item",
+            "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9\\.]+)?$"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the content item",
+            "maxLength": 500
+          },
+          "checksum": {
+            "type": "string",
+            "description": "Checksum of the content item",
+            "pattern": "^sha256:[A-Fa-f0-9]{64}$"
+          },
+          "bundle_id": {
+            "type": "string",
+            "description": "ID of the bundle this item belongs to",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "categories": {
+            "type": "array",
+            "description": "Categories the content item belongs to",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags associated with the content item",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "checksums": {
+      "type": "object",
+      "description": "Checksums for bundle components",
+      "required": ["manifest", "content"],
+      "properties": {
+        "manifest": {
+          "type": "string",
+          "description": "Checksum of the manifest file without the checksums and signature fields",
+          "pattern": "^sha256:[A-Fa-f0-9]{64}$"
+        },
+        "content": {
+          "type": "object",
+          "description": "Map of content paths to checksums",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^sha256:[A-Fa-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "description": "Compatibility information for the bundle",
+      "required": ["min_version"],
+      "properties": {
+        "min_version": {
+          "type": "string",
+          "description": "Minimum version of the LLM Red Team Tool required",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "max_version": {
+          "type": "string",
+          "description": "Maximum version of the LLM Red Team Tool supported",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "List of bundle IDs this bundle depends on",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          }
+        },
+        "incompatible": {
+          "type": "array",
+          "description": "List of bundle IDs this bundle is incompatible with",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          }
+        }
+      }
+    },
+    "signature": {
+      "type": "string",
+      "description": "Base64-encoded cryptographic signature of the manifest",
+      "pattern": "^[A-Za-z0-9+/=]+$"
+    },
+    "is_incremental": {
+      "type": "boolean",
+      "description": "Whether this is an incremental bundle that updates a previous version",
+      "default": false
+    },
+    "base_version": {
+      "type": "string",
+      "description": "Version of the base bundle this incremental bundle updates",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9\\.]+)?$"
+    },
+    "compliance": {
+      "type": "object",
+      "description": "Compliance mappings for content items",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Mapping of compliance standards to content items",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          }
+        }
+      }
+    },
+    "changelog": {
+      "type": "array",
+      "description": "List of changes in this bundle version",
+      "items": {
+        "type": "object",
+        "required": ["version", "date", "changes"],
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "Version associated with these changes",
+            "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9\\.]+)?$"
+          },
+          "date": {
+            "type": "string",
+            "description": "Date when these changes were made",
+            "format": "date-time"
+          },
+          "changes": {
+            "type": "array",
+            "description": "List of changes",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "documentation": {
+      "type": "object",
+      "description": "Paths to documentation files",
+      "properties": {
+        "README": {
+          "type": "string",
+          "description": "Path to the README file"
+        },
+        "usage": {
+          "type": "string",
+          "description": "Path to the usage documentation"
+        },
+        "installation": {
+          "type": "string",
+          "description": "Path to the installation documentation"
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
