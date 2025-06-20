@@ -36,13 +36,13 @@ var (
 
 // LegacyAuthManager manages authentication and session management (legacy version)
 type LegacyAuthManager struct {
-	config          *AccessControlConfig
-	userStore       UserStore
-	sessionStore    SessionStore
-	auditLogger     AuditLogger
-	mfaManager      mfa.MFAManager
+	config           *AccessControlConfig
+	userStore        UserStore
+	sessionStore     SessionStore
+	auditLogger      AuditLogger
+	mfaManager       mfa.MFAManager
 	boundaryEnforcer *EnhancedContextBoundaryEnforcer
-	mu              sync.RWMutex
+	mu               sync.RWMutex
 }
 
 // UserStore and SessionStore are now defined in store_interfaces.go
@@ -51,16 +51,16 @@ type LegacyAuthManager struct {
 func NewLegacyAuthManager(config *AccessControlConfig, userStore UserStore, sessionStore SessionStore, auditLogger AuditLogger) *LegacyAuthManager {
 	// Create a mock MFA manager for backward compatibility
 	mockMFAManager := mfa.NewMockMFAManager()
-	
+
 	// Create a boundary enforcer
 	boundaryEnforcer := NewEnhancedContextBoundaryEnforcer()
-	
+
 	return &LegacyAuthManager{
-		config:          config,
-		userStore:       userStore,
-		sessionStore:    sessionStore,
-		auditLogger:     auditLogger,
-		mfaManager:      mockMFAManager,
+		config:           config,
+		userStore:        userStore,
+		sessionStore:     sessionStore,
+		auditLogger:      auditLogger,
+		mfaManager:       mockMFAManager,
 		boundaryEnforcer: boundaryEnforcer,
 	}
 }
@@ -69,13 +69,13 @@ func NewLegacyAuthManager(config *AccessControlConfig, userStore UserStore, sess
 func NewLegacyAuthManagerWithMFA(config *AccessControlConfig, userStore UserStore, sessionStore SessionStore, auditLogger AuditLogger, mfaManager mfa.MFAManager) *LegacyAuthManager {
 	// Create a boundary enforcer
 	boundaryEnforcer := NewEnhancedContextBoundaryEnforcer()
-	
+
 	return &LegacyAuthManager{
-		config:          config,
-		userStore:       userStore,
-		sessionStore:    sessionStore,
-		auditLogger:     auditLogger,
-		mfaManager:      mfaManager,
+		config:           config,
+		userStore:        userStore,
+		sessionStore:     sessionStore,
+		auditLogger:      auditLogger,
+		mfaManager:       mfaManager,
 		boundaryEnforcer: boundaryEnforcer,
 	}
 }
@@ -88,14 +88,14 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 		if errors.Is(err, ErrUserNotFound) {
 			// Log failed login attempt
 			m.auditLogger.LogAudit(ctx, &AuditLog{
-				Timestamp:  time.Now(),
-				Action:     AuditActionLogin,
-				Resource:   "user",
+				Timestamp:   time.Now(),
+				Action:      AuditActionLogin,
+				Resource:    "user",
 				Description: "Failed login attempt: user not found",
-				IPAddress:  ipAddress,
-				UserAgent:  userAgent,
-				Severity:   AuditSeverityMedium,
-				Status:     "failed",
+				IPAddress:   ipAddress,
+				UserAgent:   userAgent,
+				Severity:    AuditSeverityMedium,
+				Status:      "failed",
 				Metadata: map[string]interface{}{
 					"username": username,
 				},
@@ -109,17 +109,17 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	if !user.Active {
 		// Log failed login attempt
 		m.auditLogger.LogAudit(ctx, &AuditLog{
-			Timestamp:  time.Now(),
-			UserID:     user.ID,
-			Username:   user.Username,
-			Action:     AuditActionLogin,
-			Resource:   "user",
-			ResourceID: user.ID,
+			Timestamp:   time.Now(),
+			UserID:      user.ID,
+			Username:    user.Username,
+			Action:      AuditActionLogin,
+			Resource:    "user",
+			ResourceID:  user.ID,
 			Description: "Failed login attempt: user inactive",
-			IPAddress:  ipAddress,
-			UserAgent:  userAgent,
-			Severity:   AuditSeverityMedium,
-			Status:     "failed",
+			IPAddress:   ipAddress,
+			UserAgent:   userAgent,
+			Severity:    AuditSeverityMedium,
+			Status:      "failed",
 		})
 		return nil, ErrUserInactive
 	}
@@ -128,17 +128,17 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	if user.Locked {
 		// Log failed login attempt
 		m.auditLogger.LogAudit(ctx, &AuditLog{
-			Timestamp:  time.Now(),
-			UserID:     user.ID,
-			Username:   user.Username,
-			Action:     AuditActionLogin,
-			Resource:   "user",
-			ResourceID: user.ID,
+			Timestamp:   time.Now(),
+			UserID:      user.ID,
+			Username:    user.Username,
+			Action:      AuditActionLogin,
+			Resource:    "user",
+			ResourceID:  user.ID,
 			Description: "Failed login attempt: user locked",
-			IPAddress:  ipAddress,
-			UserAgent:  userAgent,
-			Severity:   AuditSeverityMedium,
-			Status:     "failed",
+			IPAddress:   ipAddress,
+			UserAgent:   userAgent,
+			Severity:    AuditSeverityMedium,
+			Status:      "failed",
 		})
 		return nil, ErrUserLocked
 	}
@@ -147,44 +147,44 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	if !m.verifyPassword(password, user.PasswordHash) {
 		// Increment failed login attempts
 		user.FailedLoginAttempts++
-		
+
 		// Check if account should be locked
-		if m.config != nil && m.config.PasswordPolicy.LockoutThreshold > 0 && 
-		   user.FailedLoginAttempts >= m.config.PasswordPolicy.LockoutThreshold {
+		if m.config != nil && m.config.PasswordPolicy.LockoutThreshold > 0 &&
+			user.FailedLoginAttempts >= m.config.PasswordPolicy.LockoutThreshold {
 			user.Locked = true
 		}
-		
+
 		// Update user
 		if err := m.userStore.UpdateUser(ctx, user); err != nil {
 			return nil, err
 		}
-		
+
 		// Log failed login attempt
 		m.auditLogger.LogAudit(ctx, &AuditLog{
-			Timestamp:  time.Now(),
-			UserID:     user.ID,
-			Username:   user.Username,
-			Action:     AuditActionLogin,
-			Resource:   "user",
-			ResourceID: user.ID,
+			Timestamp:   time.Now(),
+			UserID:      user.ID,
+			Username:    user.Username,
+			Action:      AuditActionLogin,
+			Resource:    "user",
+			ResourceID:  user.ID,
 			Description: "Failed login attempt: invalid password",
-			IPAddress:  ipAddress,
-			UserAgent:  userAgent,
-			Severity:   AuditSeverityMedium,
-			Status:     "failed",
+			IPAddress:   ipAddress,
+			UserAgent:   userAgent,
+			Severity:    AuditSeverityMedium,
+			Status:      "failed",
 			Metadata: map[string]interface{}{
 				"failed_attempts": user.FailedLoginAttempts,
-				"account_locked": user.Locked,
+				"account_locked":  user.Locked,
 			},
 		})
-		
+
 		return nil, ErrInvalidCredentials
 	}
 
 	// Reset failed login attempts
 	user.FailedLoginAttempts = 0
 	user.LastLogin = time.Now()
-	
+
 	// Update user
 	if err := m.userStore.UpdateUser(ctx, user); err != nil {
 		return nil, err
@@ -238,20 +238,20 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 
 	// Log successful login
 	m.auditLogger.LogAudit(ctx, &AuditLog{
-		Timestamp:  time.Now(),
-		UserID:     user.ID,
-		Username:   user.Username,
-		Action:     AuditActionLogin,
-		Resource:   "user",
-		ResourceID: user.ID,
+		Timestamp:   time.Now(),
+		UserID:      user.ID,
+		Username:    user.Username,
+		Action:      AuditActionLogin,
+		Resource:    "user",
+		ResourceID:  user.ID,
 		Description: "Successful login",
-		IPAddress:  ipAddress,
-		UserAgent:  userAgent,
-		Severity:   AuditSeverityInfo,
-		Status:     "success",
-		SessionID:  session.ID,
+		IPAddress:   ipAddress,
+		UserAgent:   userAgent,
+		Severity:    AuditSeverityInfo,
+		Status:      "success",
+		SessionID:   session.ID,
 		Metadata: map[string]interface{}{
-			"mfa_required": mfaRequired,
+			"mfa_required":  mfaRequired,
 			"mfa_completed": !mfaRequired,
 		},
 	})
@@ -288,18 +288,18 @@ func (m *LegacyAuthManager) VerifyMFA(ctx context.Context, sessionID, code strin
 	if err != nil || !valid {
 		// Log failed MFA attempt
 		m.auditLogger.LogAudit(ctx, &AuditLog{
-			Timestamp:  time.Now(),
-			UserID:     user.ID,
-			Username:   user.Username,
-			Action:     AuditActionLogin,
-			Resource:   "user",
-			ResourceID: user.ID,
+			Timestamp:   time.Now(),
+			UserID:      user.ID,
+			Username:    user.Username,
+			Action:      AuditActionLogin,
+			Resource:    "user",
+			ResourceID:  user.ID,
 			Description: "Failed MFA verification",
-			IPAddress:  session.IPAddress,
-			UserAgent:  session.UserAgent,
-			Severity:   AuditSeverityMedium,
-			Status:     "failed",
-			SessionID:  session.ID,
+			IPAddress:   session.IPAddress,
+			UserAgent:   session.UserAgent,
+			Severity:    AuditSeverityMedium,
+			Status:      "failed",
+			SessionID:   session.ID,
 		})
 		return ErrInvalidMFACode
 	}
@@ -313,18 +313,18 @@ func (m *LegacyAuthManager) VerifyMFA(ctx context.Context, sessionID, code strin
 
 	// Log successful MFA verification
 	m.auditLogger.LogAudit(ctx, &AuditLog{
-		Timestamp:  time.Now(),
-		UserID:     user.ID,
-		Username:   user.Username,
-		Action:     AuditActionLogin,
-		Resource:   "user",
-		ResourceID: user.ID,
+		Timestamp:   time.Now(),
+		UserID:      user.ID,
+		Username:    user.Username,
+		Action:      AuditActionLogin,
+		Resource:    "user",
+		ResourceID:  user.ID,
 		Description: "Successful MFA verification",
-		IPAddress:  session.IPAddress,
-		UserAgent:  session.UserAgent,
-		Severity:   AuditSeverityInfo,
-		Status:     "success",
-		SessionID:  session.ID,
+		IPAddress:   session.IPAddress,
+		UserAgent:   session.UserAgent,
+		Severity:    AuditSeverityInfo,
+		Status:      "success",
+		SessionID:   session.ID,
 	})
 
 	// Update the context with MFA status
@@ -361,18 +361,18 @@ func (m *LegacyAuthManager) Logout(ctx context.Context, sessionID string) error 
 
 	// Log logout
 	m.auditLogger.LogAudit(ctx, &AuditLog{
-		Timestamp:  time.Now(),
-		UserID:     user.ID,
-		Username:   user.Username,
-		Action:     AuditActionLogout,
-		Resource:   "user",
-		ResourceID: user.ID,
+		Timestamp:   time.Now(),
+		UserID:      user.ID,
+		Username:    user.Username,
+		Action:      AuditActionLogout,
+		Resource:    "user",
+		ResourceID:  user.ID,
 		Description: "User logout",
-		IPAddress:  session.IPAddress,
-		UserAgent:  session.UserAgent,
-		Severity:   AuditSeverityInfo,
-		Status:     "success",
-		SessionID:  session.ID,
+		IPAddress:   session.IPAddress,
+		UserAgent:   session.UserAgent,
+		Severity:    AuditSeverityInfo,
+		Status:      "success",
+		SessionID:   session.ID,
 	})
 
 	return nil
@@ -407,17 +407,17 @@ func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, toke
 	if m.config != nil && m.config.SessionPolicy.EnforceIPBinding && session.IPAddress != ipAddress {
 		// Log suspicious activity
 		m.auditLogger.LogAudit(ctx, &AuditLog{
-			Timestamp:  time.Now(),
-			UserID:     session.UserID,
-			Action:     AuditActionLogin,
-			Resource:   "session",
-			ResourceID: session.ID,
+			Timestamp:   time.Now(),
+			UserID:      session.UserID,
+			Action:      AuditActionLogin,
+			Resource:    "session",
+			ResourceID:  session.ID,
 			Description: "Session IP mismatch",
-			IPAddress:  ipAddress,
-			UserAgent:  userAgent,
-			Severity:   AuditSeverityHigh,
-			Status:     "failed",
-			SessionID:  session.ID,
+			IPAddress:   ipAddress,
+			UserAgent:   userAgent,
+			Severity:    AuditSeverityHigh,
+			Status:      "failed",
+			SessionID:   session.ID,
 			Metadata: map[string]interface{}{
 				"expected_ip": session.IPAddress,
 				"actual_ip":   ipAddress,
@@ -430,17 +430,17 @@ func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, toke
 	if m.config != nil && m.config.SessionPolicy.EnforceUserAgentBinding && session.UserAgent != userAgent {
 		// Log suspicious activity
 		m.auditLogger.LogAudit(ctx, &AuditLog{
-			Timestamp:  time.Now(),
-			UserID:     session.UserID,
-			Action:     AuditActionLogin,
-			Resource:   "session",
-			ResourceID: session.ID,
+			Timestamp:   time.Now(),
+			UserID:      session.UserID,
+			Action:      AuditActionLogin,
+			Resource:    "session",
+			ResourceID:  session.ID,
 			Description: "Session user agent mismatch",
-			IPAddress:  ipAddress,
-			UserAgent:  userAgent,
-			Severity:   AuditSeverityMedium,
-			Status:     "failed",
-			SessionID:  session.ID,
+			IPAddress:   ipAddress,
+			UserAgent:   userAgent,
+			Severity:    AuditSeverityMedium,
+			Status:      "failed",
+			SessionID:   session.ID,
 			Metadata: map[string]interface{}{
 				"expected_user_agent": session.UserAgent,
 				"actual_user_agent":   userAgent,
@@ -547,18 +547,18 @@ func (m *LegacyAuthManager) RefreshSession(ctx context.Context, sessionID, refre
 
 	// Log session refresh
 	m.auditLogger.LogAudit(ctx, &AuditLog{
-		Timestamp:  time.Now(),
-		UserID:     user.ID,
-		Username:   user.Username,
-		Action:     AuditActionLogin,
-		Resource:   "session",
-		ResourceID: session.ID,
+		Timestamp:   time.Now(),
+		UserID:      user.ID,
+		Username:    user.Username,
+		Action:      AuditActionLogin,
+		Resource:    "session",
+		ResourceID:  session.ID,
 		Description: "Session refreshed",
-		IPAddress:  ipAddress,
-		UserAgent:  userAgent,
-		Severity:   AuditSeverityInfo,
-		Status:     "success",
-		SessionID:  session.ID,
+		IPAddress:   ipAddress,
+		UserAgent:   userAgent,
+		Severity:    AuditSeverityInfo,
+		Status:      "success",
+		SessionID:   session.ID,
 	})
 
 	return session, nil
@@ -588,16 +588,16 @@ func (m *LegacyAuthManager) CreateUser(ctx context.Context, username, email, pas
 
 	// Create user
 	user := &User{
-		ID:                generateRandomID(),
-		Username:          username,
-		Email:             email,
-		PasswordHash:      passwordHash,
-		Roles:             roles,
-		MFAEnabled:        false,
+		ID:                 generateRandomID(),
+		Username:           username,
+		Email:              email,
+		PasswordHash:       passwordHash,
+		Roles:              roles,
+		MFAEnabled:         false,
 		LastPasswordChange: time.Now(),
-		Active:            true,
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
+		Active:             true,
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
 	}
 
 	// Save user
@@ -750,18 +750,18 @@ func (m *LegacyAuthManager) verifyMFACode(user *User, code string) bool {
 	// Enhanced MFA verification
 	// This is a placeholder implementation that will be replaced with a more robust solution
 	// when the MFA manager is fully integrated
-	
+
 	// If no MFA methods are configured, fall back to simple verification
 	if len(user.MFAMethods) == 0 {
 		return code == "123456"
 	}
-	
+
 	// Check which MFA method is being used
 	method := common.AuthMethodTOTP
 	if len(user.MFAMethods) > 0 {
 		method = common.AuthMethod(user.MFAMethods[0])
 	}
-	
+
 	// Verify based on method
 	switch method {
 	case common.AuthMethodTOTP:

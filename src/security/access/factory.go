@@ -15,15 +15,15 @@ import (
 
 // FactoryImpl implements the Factory interface
 type FactoryImpl struct {
-	mu                 sync.Mutex
-	config             *Config
+	mu                  sync.Mutex
+	config              *Config
 	accessControlSystem *AccessControlSystem
-	securityManager    *BasicSecurityManager
-	userManager        UserManager
-	authManager        AuthManager
-	rbacManager        RBACManager
-	auditLogger        AuditLogger
-	adapterFactory     *impl.Factory
+	securityManager     *BasicSecurityManager
+	userManager         UserManager
+	authManager         AuthManager
+	rbacManager         RBACManager
+	auditLogger         AuditLogger
+	adapterFactory      *impl.Factory
 }
 
 // Config contains configuration for the factory
@@ -31,15 +31,15 @@ type Config struct {
 	// Database configuration
 	DBDriver string
 	DBDSN    string
-	
+
 	// In-memory mode
 	InMemory bool
-	
+
 	// Logging configuration
 	LogLevel  string
 	LogFormat string
 	LogFile   string
-	
+
 	// Security configuration
 	PasswordMinLength      int
 	PasswordRequireUpper   bool
@@ -47,11 +47,11 @@ type Config struct {
 	PasswordRequireNumber  bool
 	PasswordRequireSpecial bool
 	PasswordMaxAge         int
-	
+
 	// Session configuration
 	SessionTimeout     int
 	SessionMaxInactive int
-	
+
 	// MFA configuration
 	MFAEnabled bool
 	MFAMethods []string
@@ -86,20 +86,20 @@ func (f *FactoryImpl) CreateDatabaseAccessControlSystem(dbDriver, dbDSN string) 
 func (f *FactoryImpl) CreateAccessControlSystem() (*AccessControlSystem, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	
+
 	if f.accessControlSystem != nil {
 		return f.accessControlSystem, nil
 	}
-	
+
 	// TODO: Create the access control system with proper interface implementations
 	// For now, create a minimal working version
-	
+
 	// Create AccessControlSystem with minimal configuration
 	f.accessControlSystem = &AccessControlSystem{
 		// TODO: Initialize fields based on AccessControlSystem struct definition
 		// config: DefaultAccessControlConfigV2(),
 	}
-	
+
 	return f.accessControlSystem, nil
 }
 
@@ -107,19 +107,19 @@ func (f *FactoryImpl) CreateAccessControlSystem() (*AccessControlSystem, error) 
 func (f *FactoryImpl) CreateSecurityManager() (*BasicSecurityManager, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	
+
 	if f.securityManager != nil {
 		return f.securityManager, nil
 	}
-	
+
 	// TODO: Create proper stores once interface mismatches are resolved
 	// For now, create a basic security manager with nil stores
 	securityConfig := DefaultAccessControlConfigV2()
 	f.securityManager = NewSecurityManager(securityConfig, nil, nil, nil)
-	
+
 	// TODO: Initialize the security manager if needed
 	// BasicSecurityManager doesn't have Initialize method
-	
+
 	return f.securityManager, nil
 }
 
@@ -127,11 +127,11 @@ func (f *FactoryImpl) CreateSecurityManager() (*BasicSecurityManager, error) {
 func (f *FactoryImpl) CreateUserManager() (UserManager, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	
+
 	if f.userManager != nil {
 		return f.userManager, nil
 	}
-	
+
 	// For now, return a placeholder implementation
 	// In a real implementation, we would create a user manager that uses a user store
 	return nil, errors.New("not implemented")
@@ -141,7 +141,7 @@ func (f *FactoryImpl) CreateUserManager() (UserManager, error) {
 func (f *FactoryImpl) CreateAuthManager() (AuthManager, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	
+
 	// Return a zero-value AuthManager for now to satisfy the signature
 	// In a real implementation, we would properly initialize the AuthManager
 	return AuthManager{}, nil
@@ -151,11 +151,11 @@ func (f *FactoryImpl) CreateAuthManager() (AuthManager, error) {
 func (f *FactoryImpl) CreateRBACManager() (RBACManager, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	
+
 	if f.rbacManager != nil {
 		return f.rbacManager, nil
 	}
-	
+
 	// For now, return a placeholder implementation
 	// In a real implementation, we would create an RBAC manager that uses a user store and role store
 	return nil, errors.New("not implemented")
@@ -165,11 +165,11 @@ func (f *FactoryImpl) CreateRBACManager() (RBACManager, error) {
 func (f *FactoryImpl) CreateAuditLogger() (AuditLogger, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	
+
 	if f.auditLogger != nil {
 		return f.auditLogger, nil
 	}
-	
+
 	// For now, return a placeholder implementation
 	// In a real implementation, we would create an audit logger that uses an audit store
 	return nil, errors.New("not implemented")
@@ -179,7 +179,7 @@ func (f *FactoryImpl) CreateAuditLogger() (AuditLogger, error) {
 func (f *FactoryImpl) createIncidentStore() (IncidentStore, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	
+
 	// TODO: Fix interface mismatches between different SecurityIncident types
 	// For now, return an error to allow compilation
 	return nil, errors.New("incident store temporarily disabled due to interface mismatches")
@@ -189,7 +189,7 @@ func (f *FactoryImpl) createIncidentStore() (IncidentStore, error) {
 func (f *FactoryImpl) createVulnerabilityStore() (VulnerabilityStore, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	
+
 	// TODO: Fix interface mismatches between different Vulnerability types
 	// For now, return an error to allow compilation
 	return nil, errors.New("vulnerability store temporarily disabled due to interface mismatches")
@@ -225,7 +225,7 @@ func (a *AccessControlSystemImpl) Initialize() error {
 	if a.initialized {
 		return nil
 	}
-	
+
 	a.initialized = true
 	return nil
 }
@@ -258,21 +258,21 @@ func (a *AccessControlSystemImpl) GetAuditLogger() AuditLogger {
 // Close closes the access control system
 func (a *AccessControlSystemImpl) Close() error {
 	var errs []error
-	
+
 	if a.securityManager != nil {
 		if err := a.securityManager.Close(); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	
+
 	// In a real implementation, we would close other components as well
-	
+
 	a.initialized = false
-	
+
 	if len(errs) > 0 {
 		return errors.New("failed to close access control system")
 	}
-	
+
 	return nil
 }
 
@@ -286,7 +286,7 @@ type InMemoryIncidentStoreModels struct {
 func (s *InMemoryIncidentStoreModels) CreateIncident(ctx context.Context, incident *models.SecurityIncident) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	s.incidents[incident.ID] = incident
 	return nil
 }
@@ -295,12 +295,12 @@ func (s *InMemoryIncidentStoreModels) CreateIncident(ctx context.Context, incide
 func (s *InMemoryIncidentStoreModels) GetIncidentByID(ctx context.Context, incidentID string) (*models.SecurityIncident, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	incident, ok := s.incidents[incidentID]
 	if !ok {
 		return nil, errors.New("incident not found")
 	}
-	
+
 	return incident, nil
 }
 
@@ -308,12 +308,12 @@ func (s *InMemoryIncidentStoreModels) GetIncidentByID(ctx context.Context, incid
 func (s *InMemoryIncidentStoreModels) UpdateIncident(ctx context.Context, incident *models.SecurityIncident) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	_, ok := s.incidents[incident.ID]
 	if !ok {
 		return errors.New("incident not found")
 	}
-	
+
 	s.incidents[incident.ID] = incident
 	return nil
 }
@@ -322,26 +322,26 @@ func (s *InMemoryIncidentStoreModels) UpdateIncident(ctx context.Context, incide
 func (s *InMemoryIncidentStoreModels) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.SecurityIncident, int, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	var incidents []*models.SecurityIncident
-	
+
 	// Apply filters
 	for _, incident := range s.incidents {
 		// In a real implementation, we would apply filters here
 		incidents = append(incidents, incident)
 	}
-	
+
 	// Apply pagination
 	total := len(incidents)
 	if offset >= total {
 		return []*models.SecurityIncident{}, total, nil
 	}
-	
+
 	end := offset + limit
 	if end > total {
 		end = total
 	}
-	
+
 	return incidents[offset:end], total, nil
 }
 
@@ -355,7 +355,7 @@ type InMemoryVulnerabilityStoreModels struct {
 func (s *InMemoryVulnerabilityStoreModels) CreateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	s.vulnerabilities[vulnerability.ID] = vulnerability
 	return nil
 }
@@ -364,12 +364,12 @@ func (s *InMemoryVulnerabilityStoreModels) CreateVulnerability(ctx context.Conte
 func (s *InMemoryVulnerabilityStoreModels) GetVulnerabilityByID(ctx context.Context, vulnerabilityID string) (*models.Vulnerability, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	vulnerability, ok := s.vulnerabilities[vulnerabilityID]
 	if !ok {
 		return nil, errors.New("vulnerability not found")
 	}
-	
+
 	return vulnerability, nil
 }
 
@@ -377,12 +377,12 @@ func (s *InMemoryVulnerabilityStoreModels) GetVulnerabilityByID(ctx context.Cont
 func (s *InMemoryVulnerabilityStoreModels) UpdateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	_, ok := s.vulnerabilities[vulnerability.ID]
 	if !ok {
 		return errors.New("vulnerability not found")
 	}
-	
+
 	s.vulnerabilities[vulnerability.ID] = vulnerability
 	return nil
 }
@@ -391,25 +391,25 @@ func (s *InMemoryVulnerabilityStoreModels) UpdateVulnerability(ctx context.Conte
 func (s *InMemoryVulnerabilityStoreModels) ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Vulnerability, int, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	var vulnerabilities []*models.Vulnerability
-	
+
 	// Apply filters
 	for _, vulnerability := range s.vulnerabilities {
 		// In a real implementation, we would apply filters here
 		vulnerabilities = append(vulnerabilities, vulnerability)
 	}
-	
+
 	// Apply pagination
 	total := len(vulnerabilities)
 	if offset >= total {
 		return []*models.Vulnerability{}, total, nil
 	}
-	
+
 	end := offset + limit
 	if end > total {
 		end = total
 	}
-	
+
 	return vulnerabilities[offset:end], total, nil
 }

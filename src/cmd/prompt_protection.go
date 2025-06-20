@@ -47,7 +47,7 @@ protection system.`,
 		// Get flags
 		level, _ := cmd.Flags().GetString("level")
 		configFile, _ := cmd.Flags().GetString("config")
-		
+
 		// Convert level string to ProtectionLevel
 		var protectionLevel prompt.ProtectionLevel
 		switch strings.ToLower(level) {
@@ -63,7 +63,7 @@ protection system.`,
 			fmt.Println("Invalid protection level. Using medium level.")
 			protectionLevel = prompt.LevelMedium
 		}
-		
+
 		// Create a default config based on the protection level
 		var config *prompt.ProtectionConfig
 		switch protectionLevel {
@@ -97,31 +97,31 @@ protection system.`,
 				fmt.Println("Using custom configuration. You can modify it with --enable and --disable flags.")
 			}
 		}
-		
+
 		// Apply enable/disable flags
 		enableFeatures, _ := cmd.Flags().GetStringSlice("enable")
 		disableFeatures, _ := cmd.Flags().GetStringSlice("disable")
-		
+
 		for _, feature := range enableFeatures {
 			enableFeature(config, feature)
 		}
-		
+
 		for _, feature := range disableFeatures {
 			disableFeature(config, feature)
 		}
-		
+
 		// Save the configuration
 		outputFile, _ := cmd.Flags().GetString("output")
 		if outputFile == "" {
 			outputFile = "config/prompt_protection.json"
 		}
-		
+
 		err := saveConfigToFile(config, outputFile)
 		if err != nil {
 			fmt.Printf("Error saving configuration: %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("Prompt protection configuration saved to %s\n", outputFile)
 		fmt.Println("Configuration summary:")
 		printConfigSummary(config)
@@ -132,20 +132,20 @@ protection system.`,
 var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Test a prompt for security issues",
-	Long: `Test a prompt for potential security issues such as prompt injection attempts, jailbreaking attempts, or other security threats using the enhanced protection system.`,
+	Long:  `Test a prompt for potential security issues such as prompt injection attempts, jailbreaking attempts, or other security threats using the enhanced protection system.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get flags
 		promptText, _ := cmd.Flags().GetString("prompt")
 		promptFile, _ := cmd.Flags().GetString("file")
 		configFile, _ := cmd.Flags().GetString("config")
-		
+
 		// Load the prompt text
 		if promptText == "" && promptFile == "" {
 			fmt.Println("Error: Either --prompt or --file must be provided.")
 			cmd.Help()
 			return
 		}
-		
+
 		if promptFile != "" {
 			data, err := os.ReadFile(promptFile)
 			if err != nil {
@@ -154,7 +154,7 @@ var testCmd = &cobra.Command{
 			}
 			promptText = string(data)
 		}
-		
+
 		// Load the configuration
 		var config *prompt.ProtectionConfig
 		if configFile != "" {
@@ -168,29 +168,29 @@ var testCmd = &cobra.Command{
 		} else {
 			config = prompt.DefaultProtectionConfig()
 		}
-		
+
 		// Create an enhanced protection manager
 		manager, err := prompt.NewEnhancedProtectionManager(config)
 		if err != nil {
 			fmt.Printf("Error creating enhanced protection manager: %v\n", err)
 			return
 		}
-		
+
 		// Create a context
 		ctx := context.Background()
-		
+
 		// Generate session and user IDs
 		sessionID := fmt.Sprintf("session-%d", time.Now().UnixNano())
 		userID := "cli-user"
 		templateID := "cli-template"
-		
+
 		// Protect the prompt with enhanced protection
 		protectedPrompt, result, err := manager.ProtectPromptEnhanced(ctx, promptText, userID, sessionID, templateID)
 		if err != nil {
 			fmt.Printf("Error protecting prompt: %v\n", err)
 			return
 		}
-		
+
 		// Print the results
 		fmt.Println("Prompt Protection Test Results")
 		fmt.Println("==============================")
@@ -198,7 +198,7 @@ var testCmd = &cobra.Command{
 		fmt.Printf("Action Taken: %s\n", actionTypeToString(result.ActionTaken))
 		fmt.Printf("Processing Time: %v\n", result.ProcessingTime)
 		fmt.Printf("Detections: %d\n", len(result.Detections))
-		
+
 		if len(result.Detections) > 0 {
 			fmt.Println("\nDetections:")
 			for i, detection := range result.Detections {
@@ -213,7 +213,7 @@ var testCmd = &cobra.Command{
 				}
 			}
 		}
-		
+
 		if protectedPrompt != promptText {
 			fmt.Println("\nOriginal Prompt:")
 			fmt.Println(promptText)
@@ -222,7 +222,7 @@ var testCmd = &cobra.Command{
 		} else {
 			fmt.Println("\nNo modifications were made to the prompt.")
 		}
-		
+
 		// Print risk assessment
 		fmt.Println("\nRisk Assessment:")
 		if result.RiskScore >= 0.9 {
@@ -250,25 +250,10 @@ prompt injection pattern library.`,
 		action, _ := cmd.Flags().GetString("action")
 		patternID, _ := cmd.Flags().GetString("id")
 		patternFile, _ := cmd.Flags().GetString("file")
-		configFile, _ := cmd.Flags().GetString("config")
-		
-		// Load the configuration
-		var config *prompt.ProtectionConfig
-		if configFile != "" {
-			var err error
-			config, err = loadConfigFromFile(configFile)
-			if err != nil {
-				fmt.Printf("Error loading config file: %v\n", err)
-				fmt.Println("Using default configuration.")
-				config = prompt.DefaultProtectionConfig()
-			}
-		} else {
-			config = prompt.DefaultProtectionConfig()
-		}
-		
+
 		// Create a pattern library
 		patternLibrary := prompt.NewInjectionPatternLibrary()
-		
+
 		// Load patterns from file if provided
 		if patternFile != "" && action != "save" {
 			err := patternLibrary.LoadPatternsFromFile(patternFile)
@@ -278,7 +263,7 @@ prompt injection pattern library.`,
 			}
 			fmt.Printf("Loaded patterns from %s\n", patternFile)
 		}
-		
+
 		// Perform the requested action
 		switch action {
 		case "list":
@@ -327,23 +312,23 @@ been detected by the prompt injection protection system.`,
 		// Get flags
 		reportsDir, _ := cmd.Flags().GetString("dir")
 		reportID, _ := cmd.Flags().GetString("id")
-		
+
 		// Ensure reports directory exists
 		if reportsDir == "" {
 			reportsDir = "reports"
 		}
-		
+
 		if _, err := os.Stat(reportsDir); os.IsNotExist(err) {
 			fmt.Printf("Reports directory %s does not exist.\n", reportsDir)
 			return
 		}
-		
+
 		// If a specific report ID is provided, show that report
 		if reportID != "" {
 			showReport(reportsDir, reportID)
 			return
 		}
-		
+
 		// Otherwise, list all reports
 		listReports(reportsDir)
 	},
@@ -353,14 +338,14 @@ been detected by the prompt injection protection system.`,
 var monitorCmd = &cobra.Command{
 	Use:   "monitor",
 	Short: "Monitor template usage",
-	Long: `Monitor template usage for unusual patterns and behaviors that may indicate security issues.`,
+	Long:  `Monitor template usage for unusual patterns and behaviors that may indicate security issues.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get flags
 		duration, _ := cmd.Flags().GetDuration("duration")
 		if duration == 0 {
 			duration = time.Minute * 10 // Default to 10 minutes
 		}
-		
+
 		// Create an enhanced protection manager
 		config := prompt.DefaultProtectionConfig()
 		manager, err := prompt.NewEnhancedProtectionManager(config)
@@ -369,31 +354,31 @@ var monitorCmd = &cobra.Command{
 			return
 		}
 		defer manager.Close()
-		
+
 		// Create a context with timeout
 		ctx, cancel := context.WithTimeout(context.Background(), duration)
 		defer cancel()
-		
+
 		// Start monitoring
 		fmt.Printf("Starting template monitoring for %v...\n", duration)
 		if err := manager.StartMonitoring(ctx); err != nil {
 			fmt.Printf("Error starting monitoring: %v\n", err)
 			return
 		}
-		
+
 		// Wait for monitoring to complete
 		<-ctx.Done()
-		
+
 		// Get template monitor
 		monitor := manager.GetTemplateMonitor()
 		if monitor == nil {
 			fmt.Println("Template monitor not available")
 			return
 		}
-		
+
 		// Get alert history
 		alerts := monitor.GetAlertHistory()
-		
+
 		// Print alerts
 		fmt.Printf("Monitoring completed. Found %d alerts.\n", len(alerts))
 		for i, alert := range alerts {
@@ -423,12 +408,12 @@ var monitorCmd = &cobra.Command{
 var approvalCmd = &cobra.Command{
 	Use:   "approval",
 	Short: "Manage approval workflow",
-	Long: `Manage the approval workflow for high-risk operations.`,
+	Long:  `Manage the approval workflow for high-risk operations.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get flags
 		action, _ := cmd.Flags().GetString("action")
 		id, _ := cmd.Flags().GetString("id")
-		
+
 		// Create an enhanced protection manager
 		config := prompt.DefaultProtectionConfig()
 		manager, err := prompt.NewEnhancedProtectionManager(config)
@@ -437,14 +422,14 @@ var approvalCmd = &cobra.Command{
 			return
 		}
 		defer manager.Close()
-		
+
 		// Get approval workflow
 		workflow := manager.GetApprovalWorkflow()
 		if workflow == nil {
 			fmt.Println("Approval workflow not available")
 			return
 		}
-		
+
 		// Handle different actions
 		switch action {
 		case "list":
@@ -453,7 +438,7 @@ var approvalCmd = &cobra.Command{
 			fmt.Printf("Found %d pending approvals.\n", len(pendingApprovals))
 			for i, approval := range pendingApprovals {
 				fmt.Printf("Approval %d:\n", i+1)
-				fmt.Printf("  ID: %s\n", approval.ApprovalID)
+				fmt.Printf("  ID: %s\n", approval.RequestID)
 				fmt.Printf("  Timestamp: %s\n", approval.Timestamp.Format(time.RFC3339))
 				fmt.Printf("  Risk Score: %.2f\n", approval.RiskScore)
 				fmt.Printf("  Status: %s\n", approval.Status)
@@ -465,7 +450,7 @@ var approvalCmd = &cobra.Command{
 				fmt.Println("Error: Approval ID is required")
 				return
 			}
-			if err := workflow.ApproveRequest(context.Background(), id, "Approved via CLI"); err != nil {
+			if err := workflow.ApproveRequest(id, "CLI-User", "Approved via CLI"); err != nil {
 				fmt.Printf("Error approving request: %v\n", err)
 				return
 			}
@@ -476,7 +461,7 @@ var approvalCmd = &cobra.Command{
 				fmt.Println("Error: Approval ID is required")
 				return
 			}
-			if err := workflow.RejectRequest(context.Background(), id, "Rejected via CLI"); err != nil {
+			if err := workflow.RejectRequest(id, "CLI-User", "Rejected via CLI"); err != nil {
 				fmt.Printf("Error rejecting request: %v\n", err)
 				return
 			}
@@ -495,25 +480,25 @@ func init() {
 	promptProtectionCmd.AddCommand(reportsCmd)
 	promptProtectionCmd.AddCommand(monitorCmd)
 	promptProtectionCmd.AddCommand(approvalCmd)
-	
+
 	// Configure command flags
 	configureCmd.Flags().String("level", "medium", "Protection level (low, medium, high, custom)")
 	configureCmd.Flags().String("config", "", "Path to a configuration file")
 	configureCmd.Flags().String("output", "", "Path to save the configuration")
 	configureCmd.Flags().StringSlice("enable", []string{}, "Features to enable (comma-separated)")
 	configureCmd.Flags().StringSlice("disable", []string{}, "Features to disable (comma-separated)")
-	
+
 	// Test command flags
 	testCmd.Flags().String("prompt", "", "Prompt text to test")
 	testCmd.Flags().String("file", "", "Path to a file containing the prompt to test")
 	testCmd.Flags().String("config", "", "Path to a configuration file")
-	
+
 	// Patterns command flags
 	patternsCmd.Flags().String("action", "list", "Action to perform (list, enable, disable, save)")
 	patternsCmd.Flags().String("id", "", "Pattern ID")
 	patternsCmd.Flags().String("file", "", "Path to a pattern file")
 	patternsCmd.Flags().String("config", "", "Path to a configuration file")
-	
+
 	// Reports command flags
 	reportsCmd.Flags().String("dir", "", "Directory containing reports")
 	reportsCmd.Flags().String("id", "", "Report ID")
@@ -527,13 +512,13 @@ func loadConfigFromFile(filePath string) (*prompt.ProtectionConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var config prompt.ProtectionConfig
 	err = json.Unmarshal(data, &config)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &config, nil
 }
 
@@ -544,12 +529,12 @@ func saveConfigToFile(config *prompt.ProtectionConfig, filePath string) error {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
-	
+
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
 	}
-	
+
 	return os.WriteFile(filePath, data, 0644)
 }
 
@@ -655,51 +640,51 @@ func boolToEnabledString(b bool) string {
 // listPatterns lists all patterns in the library
 func listPatterns(library *prompt.InjectionPatternLibrary) {
 	patterns := library.GetAllPatterns()
-	
+
 	if len(patterns) == 0 {
 		fmt.Println("No patterns found.")
 		return
 	}
-	
+
 	fmt.Printf("Found %d patterns:\n\n", len(patterns))
-	
+
 	// Group patterns by category
 	patternsByCategory := make(map[prompt.PatternCategory][]*prompt.InjectionPattern)
 	for _, pattern := range patterns {
 		patternsByCategory[pattern.Category] = append(patternsByCategory[pattern.Category], pattern)
 	}
-	
+
 	// Print patterns by category
 	for category, patterns := range patternsByCategory {
 		fmt.Printf("Category: %s (%d patterns)\n", category, len(patterns))
 		fmt.Println(strings.Repeat("-", 50))
-		
+
 		for _, pattern := range patterns {
 			status := "Enabled"
 			if !pattern.Enabled {
 				status = "Disabled"
 			}
-			
+
 			fmt.Printf("ID: %s (%s)\n", pattern.ID, status)
 			fmt.Printf("Name: %s\n", pattern.Name)
 			fmt.Printf("Description: %s\n", pattern.Description)
 			fmt.Printf("Pattern: %s\n", pattern.Pattern)
 			fmt.Printf("Confidence: %.2f, Severity: %.2f\n", pattern.Confidence, pattern.Severity)
-			
+
 			if len(pattern.Tags) > 0 {
 				fmt.Printf("Tags: %s\n", strings.Join(pattern.Tags, ", "))
 			}
-			
+
 			if len(pattern.Examples) > 0 {
 				fmt.Println("Examples:")
 				for i, example := range pattern.Examples {
 					fmt.Printf("  %d. %s\n", i+1, example)
 				}
 			}
-			
+
 			fmt.Println()
 		}
-		
+
 		fmt.Println()
 	}
 }
@@ -712,32 +697,32 @@ func showReport(reportsDir, reportID string) {
 		if err != nil {
 			return err
 		}
-		
+
 		if !info.IsDir() && strings.Contains(path, reportID) {
 			reportFile = path
 			return filepath.SkipDir
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		fmt.Printf("Error searching for report: %v\n", err)
 		return
 	}
-	
+
 	if reportFile == "" {
 		fmt.Printf("Report with ID %s not found.\n", reportID)
 		return
 	}
-	
+
 	// Read the report file
 	data, err := os.ReadFile(reportFile)
 	if err != nil {
 		fmt.Printf("Error reading report file: %v\n", err)
 		return
 	}
-	
+
 	// Parse the report
 	var report prompt.InjectionReport
 	err = json.Unmarshal(data, &report)
@@ -745,7 +730,7 @@ func showReport(reportsDir, reportID string) {
 		fmt.Printf("Error parsing report: %v\n", err)
 		return
 	}
-	
+
 	// Print the report
 	fmt.Println("Prompt Injection Report")
 	fmt.Println("=======================")
@@ -755,20 +740,20 @@ func showReport(reportsDir, reportID string) {
 	fmt.Printf("Severity: %.2f\n", report.Severity)
 	fmt.Printf("Timestamp: %s\n", report.Timestamp.Format("2006-01-02 15:04:05"))
 	fmt.Printf("Description: %s\n", report.Description)
-	
+
 	if report.Pattern != "" {
 		fmt.Printf("Pattern: %s\n", report.Pattern)
 	}
-	
+
 	if report.Example != "" {
 		fmt.Println("\nExample:")
 		fmt.Println(report.Example)
 	}
-	
+
 	if report.Source != "" {
 		fmt.Printf("\nSource: %s\n", report.Source)
 	}
-	
+
 	if len(report.Metadata) > 0 {
 		fmt.Println("\nMetadata:")
 		for key, value := range report.Metadata {
@@ -785,26 +770,26 @@ func listReports(reportsDir string) {
 		if err != nil {
 			return err
 		}
-		
+
 		if !info.IsDir() && strings.HasPrefix(filepath.Base(path), "report_") {
 			reportFiles = append(reportFiles, path)
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		fmt.Printf("Error searching for reports: %v\n", err)
 		return
 	}
-	
+
 	if len(reportFiles) == 0 {
 		fmt.Println("No reports found.")
 		return
 	}
-	
+
 	fmt.Printf("Found %d reports:\n\n", len(reportFiles))
-	
+
 	// Process each report file
 	for i, file := range reportFiles {
 		// Read the report file
@@ -813,7 +798,7 @@ func listReports(reportsDir string) {
 			fmt.Printf("Error reading report file %s: %v\n", file, err)
 			continue
 		}
-		
+
 		// Parse the report
 		var report prompt.InjectionReport
 		err = json.Unmarshal(data, &report)
@@ -821,7 +806,7 @@ func listReports(reportsDir string) {
 			fmt.Printf("Error parsing report from file %s: %v\n", file, err)
 			continue
 		}
-		
+
 		// Print a summary of the report
 		fmt.Printf("%d. Report ID: %s\n", i+1, report.ReportID)
 		fmt.Printf("   Type: %s\n", report.DetectionType)
@@ -830,6 +815,6 @@ func listReports(reportsDir string) {
 		fmt.Printf("   Description: %s\n", report.Description)
 		fmt.Println()
 	}
-	
+
 	fmt.Println("To view a specific report, use the --id flag with the report ID.")
 }

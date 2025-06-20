@@ -588,7 +588,7 @@ func (a *RBACManagerAdapter) AddRoleToUser(userID string, role string) error {
 
 // RemoveRoleFromUser removes a role from a user
 func (a *RBACManagerAdapter) RemoveRoleFromUser(userID string, role string) error {
-	// This is a simplified implementation  
+	// This is a simplified implementation
 	// In a real implementation, we would update the user's roles
 	return nil
 }

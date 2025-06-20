@@ -31,5 +31,5 @@ func parseTime(s string) (time.Time, error) {
 
 // Other utility functions are defined in their respective files to avoid conflicts:
 // - getUserIDFromContext is in access_control_system.go
-// - generateID is in auth_manager.go  
+// - generateID is in auth_manager.go
 // - containsString and removeString are in integration.go

@@ -9,7 +9,6 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/perplext/LLMrecon/src/config"
 	"github.com/perplext/LLMrecon/src/version"
 	"github.com/spf13/cobra"
@@ -100,34 +99,34 @@ func runVersion(cmd *cobra.Command, args []string) error {
 
 // VersionInfo contains all version information
 type VersionInfo struct {
-	Binary        ComponentVersion            `json:"binary"`
-	Templates     ComponentVersion            `json:"templates"`
-	Modules       []ComponentVersion          `json:"modules"`
-	Build         BuildInfo                   `json:"build"`
-	System        SystemInfo                  `json:"system"`
-	Dependencies  []DependencyInfo            `json:"dependencies,omitempty"`
-	Compatibility *CompatibilityReport        `json:"compatibility,omitempty"`
+	Binary        ComponentVersion     `json:"binary"`
+	Templates     ComponentVersion     `json:"templates"`
+	Modules       []ComponentVersion   `json:"modules"`
+	Build         BuildInfo            `json:"build"`
+	System        SystemInfo           `json:"system"`
+	Dependencies  []DependencyInfo     `json:"dependencies,omitempty"`
+	Compatibility *CompatibilityReport `json:"compatibility,omitempty"`
 }
 
 // ComponentVersion represents version info for a component
 type ComponentVersion struct {
-	Name         string    `json:"name"`
-	Version      string    `json:"version"`
-	ReleaseDate  time.Time `json:"release_date,omitempty"`
-	Author       string    `json:"author,omitempty"`
-	Description  string    `json:"description,omitempty"`
-	License      string    `json:"license,omitempty"`
-	Homepage     string    `json:"homepage,omitempty"`
+	Name        string    `json:"name"`
+	Version     string    `json:"version"`
+	ReleaseDate time.Time `json:"release_date,omitempty"`
+	Author      string    `json:"author,omitempty"`
+	Description string    `json:"description,omitempty"`
+	License     string    `json:"license,omitempty"`
+	Homepage    string    `json:"homepage,omitempty"`
 }
 
 // BuildInfo contains build-time information
 type BuildInfo struct {
-	Date       string `json:"date"`
-	Commit     string `json:"commit"`
-	Branch     string `json:"branch"`
-	Number     string `json:"number"`
-	GoVersion  string `json:"go_version"`
-	Compiler   string `json:"compiler"`
+	Date      string `json:"date"`
+	Commit    string `json:"commit"`
+	Branch    string `json:"branch"`
+	Number    string `json:"number"`
+	GoVersion string `json:"go_version"`
+	Compiler  string `json:"compiler"`
 }
 
 // SystemInfo contains system information
@@ -147,16 +146,16 @@ type DependencyInfo struct {
 
 // CompatibilityReport contains compatibility check results
 type CompatibilityReport struct {
-	Compatible     bool                    `json:"compatible"`
-	Issues         []CompatibilityIssue    `json:"issues,omitempty"`
-	Recommendations []string               `json:"recommendations,omitempty"`
+	Compatible      bool                 `json:"compatible"`
+	Issues          []CompatibilityIssue `json:"issues,omitempty"`
+	Recommendations []string             `json:"recommendations,omitempty"`
 }
 
 // CompatibilityIssue represents a compatibility problem
 type CompatibilityIssue struct {
-	Component   string `json:"component"`
-	Issue       string `json:"issue"`
-	Severity    string `json:"severity"`
+	Component string `json:"component"`
+	Issue     string `json:"issue"`
+	Severity  string `json:"severity"`
 }
 
 func collectVersionInfo(cfg *config.Config) (*VersionInfo, error) {
@@ -251,7 +250,7 @@ func checkComponentCompatibility(info *VersionInfo) *CompatibilityReport {
 			Issue:     fmt.Sprintf("Major version mismatch: binary=%d, templates=%d", binaryVer.Major, templateVer.Major),
 			Severity:  "high",
 		})
-		report.Recommendations = append(report.Recommendations, 
+		report.Recommendations = append(report.Recommendations,
 			"Update templates to match binary major version")
 	}
 
@@ -287,7 +286,7 @@ func outputVersionTable(info *VersionInfo, verbose bool) error {
 	fmt.Fprintf(w, "%s:\t%s\n", cyan("Version"), info.Binary.Version)
 	fmt.Fprintf(w, "%s:\t%s\n", cyan("Build Date"), info.Build.Date)
 	fmt.Fprintf(w, "%s:\t%s\n", cyan("Git Commit"), formatCommit(info.Build.Commit))
-	
+
 	if verbose {
 		fmt.Fprintf(w, "%s:\t%s\n", cyan("Git Branch"), info.Build.Branch)
 		fmt.Fprintf(w, "%s:\t%s\n", cyan("Build Number"), info.Build.Number)
@@ -310,18 +309,18 @@ func outputVersionTable(info *VersionInfo, verbose bool) error {
 	// Component versions
 	fmt.Println("\n" + bold("Components:"))
 	w = tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	
+
 	if info.Templates.Version != "" {
 		fmt.Fprintf(w, "%s:\t%s\n", cyan("Templates"), info.Templates.Version)
 	}
-	
+
 	if len(info.Modules) > 0 {
 		fmt.Fprintf(w, "%s:\n", cyan("Modules"))
 		for _, mod := range info.Modules {
 			fmt.Fprintf(w, "  %s:\t%s\n", mod.Name, mod.Version)
 		}
 	}
-	
+
 	w.Flush()
 
 	// Compatibility report
@@ -336,12 +335,12 @@ func outputVersionTable(info *VersionInfo, verbose bool) error {
 				if issue.Severity == "high" {
 					severityColor = red
 				}
-				fmt.Printf("  - %s: %s [%s]\n", 
-					issue.Component, 
-					issue.Issue, 
+				fmt.Printf("  - %s: %s [%s]\n",
+					issue.Component,
+					issue.Issue,
 					severityColor(issue.Severity))
 			}
-			
+
 			if len(info.Compatibility.Recommendations) > 0 {
 				fmt.Println("\n" + bold("Recommendations:"))
 				for _, rec := range info.Compatibility.Recommendations {

@@ -107,20 +107,20 @@ func (m *AuthManager) CreateUser(ctx context.Context, username, email, password 
 	// Create the user
 	now := time.Now()
 	user := &User{
-		ID:                 userID,
-		Username:           username,
-		Email:              email,
-		PasswordHash:       string(hashedPassword),
-		Roles:              roles,
-		Permissions:        []string{},
-		MFAEnabled:         false,
-		MFAMethods:         []string{},
+		ID:                  userID,
+		Username:            username,
+		Email:               email,
+		PasswordHash:        string(hashedPassword),
+		Roles:               roles,
+		Permissions:         []string{},
+		MFAEnabled:          false,
+		MFAMethods:          []string{},
 		FailedLoginAttempts: 0,
-		Locked:             false,
-		Active:             true,
-		CreatedAt:          now,
-		UpdatedAt:          now,
-		Metadata:           map[string]interface{}{},
+		Locked:              false,
+		Active:              true,
+		CreatedAt:           now,
+		UpdatedAt:           now,
+		Metadata:            map[string]interface{}{},
 	}
 
 	// Store the user
@@ -331,17 +331,17 @@ func (m *AuthManager) Login(ctx context.Context, username, password, ipAddress, 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		// Increment failed login attempts
 		user.FailedLoginAttempts++
-		
+
 		// Lock account if max attempts reached
 		// Use a default of 5 max login attempts
 		maxAttempts := 5
 		if user.FailedLoginAttempts >= maxAttempts {
 			user.Locked = true
 		}
-		
+
 		// Update user
 		m.userStore.UpdateUser(ctx, user)
-		
+
 		// Log the failed login
 		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
@@ -354,7 +354,7 @@ func (m *AuthManager) Login(ctx context.Context, username, password, ipAddress, 
 			IPAddress:   ipAddress,
 			UserAgent:   userAgent,
 		})
-		
+
 		return nil, ErrInvalidCredentials
 	}
 
@@ -725,14 +725,14 @@ func (m *AuthManager) GetAllUsers(ctx context.Context) ([]*User, error) {
 
 // getSessionByToken retrieves a session by token
 func (m *AuthManager) getSessionByToken(ctx context.Context, token string) (*Session, error) {
-	// TODO: This is a temporary implementation. In production, we should have a way to 
+	// TODO: This is a temporary implementation. In production, we should have a way to
 	// lookup sessions by token directly or maintain a token->sessionID map
 	return nil, fmt.Errorf("getSessionByToken not implemented")
 }
 
 // getSessionByRefreshToken retrieves a session by refresh token
 func (m *AuthManager) getSessionByRefreshToken(ctx context.Context, refreshToken string) (*Session, error) {
-	// TODO: This is a temporary implementation. In production, we should have a way to 
+	// TODO: This is a temporary implementation. In production, we should have a way to
 	// lookup sessions by refresh token directly or maintain a refreshToken->sessionID map
 	return nil, fmt.Errorf("getSessionByRefreshToken not implemented")
 }
@@ -768,8 +768,8 @@ func (m *AuthManager) ValidateSession(ctx context.Context, token string) (*Sessi
 	if !valid {
 		return nil, fmt.Errorf("invalid session")
 	}
-	
-	// For now, return a basic session. In a real implementation, 
+
+	// For now, return a basic session. In a real implementation,
 	// this would retrieve the actual session from storage
 	return &Session{
 		Token: token,
@@ -777,7 +777,7 @@ func (m *AuthManager) ValidateSession(ctx context.Context, token string) (*Sessi
 	}, nil
 }
 
-// UpdateSession updates a session 
+// UpdateSession updates a session
 func (m *AuthManager) UpdateSession(ctx context.Context, sessionID string, updates map[string]interface{}) error {
 	// This is a placeholder implementation
 	// In a real implementation, this would update the session in storage
@@ -790,13 +790,13 @@ func (m *AuthManager) HasRole(ctx context.Context, userID string, role string) (
 	if err != nil {
 		return false, err
 	}
-	
+
 	for _, userRole := range user.Roles {
 		if userRole == role {
 			return true, nil
 		}
 	}
-	
+
 	return false, nil
 }
 

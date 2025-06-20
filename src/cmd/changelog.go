@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/perplext/LLMrecon/src/config"
 	"github.com/perplext/LLMrecon/src/version"
 	"github.com/spf13/cobra"
@@ -218,7 +217,7 @@ func parseReleaseBody(body string, entry *ChangelogEntry) {
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		
+
 		// Check for section headers
 		switch {
 		case strings.HasPrefix(strings.ToLower(line), "## breaking"):
@@ -353,7 +352,7 @@ func outputChangelogText(changelog *Changelog) error {
 
 	for i, entry := range changelog.Entries {
 		// Version header
-		fmt.Printf("%s %s %s\n", 
+		fmt.Printf("%s %s %s\n",
 			bold(fmt.Sprintf("v%s", entry.Version)),
 			dim("-"),
 			dim(entry.Date.Format("2006-01-02")))

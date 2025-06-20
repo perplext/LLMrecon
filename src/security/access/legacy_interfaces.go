@@ -5,7 +5,6 @@ import (
 	"github.com/perplext/LLMrecon/src/security/access/models"
 )
 
-
 // SecurityManager defines the interface for managing security incidents and vulnerabilities
 type SecurityManager interface {
 	// ReportIncident reports a security incident

@@ -1,10 +1,6 @@
 // Package access provides access control and security auditing functionality
 package access
 
-import (
-	"github.com/perplext/LLMrecon/src/security/access/models"
-)
-
 // RoleName represents a user role name in the system
 type RoleName = string
 

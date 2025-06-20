@@ -1,3 +1,5 @@
+//go:build ignore
+
 package cmd
 
 import (
@@ -17,12 +19,12 @@ import (
 )
 
 var (
-	templatePath      string
-	templateDir       string
-	outputDir         string
-	reportFormats     []string
-	pipelineConfig    string
-	severityThreshold string
+	templateSecurityPath      string
+	templateSecurityDir       string
+	templateSecurityOutputDir string
+	templateReportFormats     []string
+	templatePipelineConfig    string
+	templateSeverityThreshold string
 )
 
 // templateSecurityCmd represents the template-security command
@@ -61,15 +63,15 @@ var templateSecurityCmd = &cobra.Command{
 		integration := compliance.NewComplianceIntegration(complianceService)
 
 		// Create output directory if it doesn't exist
-		if outputDir != "" {
-			if err := os.MkdirAll(outputDir, 0755); err != nil {
+		if templateSecurityOutputDir != "" {
+			if err := os.MkdirAll(templateSecurityOutputDir, 0755); err != nil {
 				fmt.Printf("Error creating output directory: %v\n", err)
 				os.Exit(1)
 			}
 		}
 
 		// Run pipeline if pipeline config is specified
-		if pipelineConfig != "" {
+		if templatePipelineConfig != "" {
 			if err := runSecurityPipeline(ctx, integration, options); err != nil {
 				fmt.Printf("Error running security pipeline: %v\n", err)
 				os.Exit(1)
@@ -78,12 +80,12 @@ var templateSecurityCmd = &cobra.Command{
 		}
 
 		// Verify template or directory
-		if templatePath != "" {
+		if templateSecurityPath != "" {
 			if err := verifyTemplate(ctx, integration, options); err != nil {
 				fmt.Printf("Error verifying template: %v\n", err)
 				os.Exit(1)
 			}
-		} else if templateDir != "" {
+		} else if templateSecurityDir != "" {
 			if err := verifyTemplateDirectory(ctx, integration, options); err != nil {
 				fmt.Printf("Error verifying template directory: %v\n", err)
 				os.Exit(1)
@@ -99,20 +101,20 @@ func init() {
 	rootCmd.AddCommand(templateSecurityCmd)
 
 	// Add flags
-	templateSecurityCmd.Flags().StringVar(&templatePath, "template", "", "Path to template file")
-	templateSecurityCmd.Flags().StringVar(&templateDir, "dir", "", "Path to template directory")
-	templateSecurityCmd.Flags().StringVar(&outputDir, "output", "", "Output directory for reports")
-	templateSecurityCmd.Flags().StringSliceVar(&reportFormats, "format", []string{"JSON", "HTML"}, "Report formats (JSON, HTML, CSV, XML)")
-	templateSecurityCmd.Flags().StringVar(&pipelineConfig, "pipeline-config", "", "Path to pipeline configuration file")
-	templateSecurityCmd.Flags().StringVar(&severityThreshold, "severity", "medium", "Severity threshold (critical, high, medium, low, info)")
+	templateSecurityCmd.Flags().StringVar(&templateSecurityPath, "template", "", "Path to template file")
+	templateSecurityCmd.Flags().StringVar(&templateSecurityDir, "dir", "", "Path to template directory")
+	templateSecurityCmd.Flags().StringVar(&templateSecurityOutputDir, "output", "", "Output directory for reports")
+	templateSecurityCmd.Flags().StringSliceVar(&templateReportFormats, "format", []string{"JSON", "HTML"}, "Report formats (JSON, HTML, CSV, XML)")
+	templateSecurityCmd.Flags().StringVar(&templatePipelineConfig, "pipeline-config", "", "Path to pipeline configuration file")
+	templateSecurityCmd.Flags().StringVar(&templateSeverityThreshold, "severity", "medium", "Severity threshold (critical, high, medium, low, info)")
 }
 
 // verifyTemplate verifies a single template
 func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, options *security.VerificationOptions) error {
-	fmt.Printf("Verifying template: %s\n", templatePath)
+	fmt.Printf("Verifying template: %s\n", templateSecurityPath)
 
 	// Verify template
-	result, err := verifier.VerifyTemplateFile(ctx, templatePath, options)
+	result, err := verifier.VerifyTemplateFile(ctx, templateSecurityPath, options)
 	if err != nil {
 		return fmt.Errorf("failed to verify template: %w", err)
 	}
@@ -121,7 +123,7 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 	printVerificationResult(result)
 
 	// Generate reports if output directory is specified
-	if outputDir != "" {
+	if templateSecurityOutputDir != "" {
 		if err := generateReports([]*security.VerificationResult{result}); err != nil {
 			return fmt.Errorf("failed to generate reports: %w", err)
 		}
@@ -148,7 +150,7 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 
 	// Verify template compliance
 	fmt.Println("\nVerifying template compliance...")
-	templateComplianceResult, err := integration.VerifyTemplateSecurityAndCompliance(ctx, templatePath, testSuite, options)
+	templateComplianceResult, err := integration.VerifyTemplateSecurityAndCompliance(ctx, templateSecurityPath, testSuite, options)
 	if err != nil {
 		return fmt.Errorf("failed to verify template compliance: %w", err)
 	}
@@ -157,7 +159,7 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 	printComplianceResult(templateComplianceResult)
 
 	// Generate compliance reports if output directory is specified
-	if outputDir != "" {
+	if templateSecurityOutputDir != "" {
 		if err := generateComplianceReports(integration, templateComplianceResult); err != nil {
 			return fmt.Errorf("failed to generate compliance reports: %w", err)
 		}
@@ -168,16 +170,16 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 
 // verifyTemplateDirectory verifies all templates in a directory
 func verifyTemplateDirectory(ctx context.Context, integration *compliance.ComplianceIntegration, options *security.VerificationOptions) error {
-	fmt.Printf("Verifying templates in directory: %s\n", templateDir)
+	fmt.Printf("Verifying templates in directory: %s\n", templateSecurityDir)
 
 	// Find all template files in the directory
-	templateFiles, err := filepath.Glob(filepath.Join(templateDir, "*.yaml"))
+	templateFiles, err := filepath.Glob(filepath.Join(templateSecurityDir, "*.yaml"))
 	if err != nil {
 		return fmt.Errorf("failed to find template files: %w", err)
 	}
 
 	// Also check for .yml files
-	ymlFiles, err := filepath.Glob(filepath.Join(templateDir, "*.yml"))
+	ymlFiles, err := filepath.Glob(filepath.Join(templateSecurityDir, "*.yml"))
 	if err != nil {
 		return fmt.Errorf("failed to find template files: %w", err)
 	}
@@ -192,7 +194,7 @@ func verifyTemplateDirectory(ctx context.Context, integration *compliance.Compli
 
 	// Verify each template file
 	for _, templateFile := range templateFiles {
-		templatePath = templateFile
+		templateSecurityPath = templateFile
 		if err := verifyTemplate(ctx, integration, options); err != nil {
 			fmt.Printf("Error verifying template %s: %v\n", templateFile, err)
 			continue
@@ -207,8 +209,8 @@ func verifyTemplateDirectory(ctx context.Context, integration *compliance.Compli
 func runSecurityPipeline(ctx context.Context, verifier security.TemplateVerifier, options *security.VerificationOptions) error {
 	// Load pipeline configuration
 	var config security.PipelineConfig
-	if pipelineConfig != "" {
-		data, err := os.ReadFile(pipelineConfig)
+	if templatePipelineConfig != "" {
+		data, err := os.ReadFile(templatePipelineConfig)
 		if err != nil {
 			return fmt.Errorf("failed to read pipeline configuration: %w", err)
 		}
@@ -219,10 +221,10 @@ func runSecurityPipeline(ctx context.Context, verifier security.TemplateVerifier
 	} else {
 		// Use default configuration
 		config = security.PipelineConfig{
-			TemplateDirectories: []string{templateDir},
-			OutputDirectory:     outputDir,
+			TemplateDirectories: []string{templateSecurityDir},
+			OutputDirectory:     templateSecurityOutputDir,
 			VerificationOptions: options,
-			ReportFormats:       convertReportFormats(reportFormats),
+			ReportFormats:       convertReportFormats(templateReportFormats),
 		}
 	}
 
@@ -256,7 +258,7 @@ func printVerificationResult(result *security.VerificationResult) {
 	fmt.Printf("Path: %s\n", result.TemplatePath)
 	fmt.Printf("Passed: %t\n", result.Passed)
 	fmt.Printf("Score: %.2f/%.2f\n", result.Score, result.MaxScore)
-	
+
 	if len(result.Issues) > 0 {
 		fmt.Printf("Issues (%d):\n", len(result.Issues))
 		for i, issue := range result.Issues {
@@ -277,7 +279,7 @@ func printComplianceResult(result *compliance.TemplateComplianceResult) {
 	fmt.Printf("Template: %s (%s)\n", result.TemplateName, result.TemplateID)
 	fmt.Printf("Path: %s\n", result.TemplatePath)
 	fmt.Printf("Overall Compliance: %t\n", result.OverallCompliance)
-	
+
 	fmt.Println("Compliance by Standard:")
 	for standard, compliant := range result.ComplianceByStandard {
 		fmt.Printf("  %s: %t\n", standard, compliant)
@@ -298,25 +300,25 @@ func printSummary(summary *security.VerificationSummary) {
 	fmt.Printf("Total Issues: %d\n", summary.TotalIssues)
 	fmt.Printf("Average Score: %.2f\n", summary.AverageScore)
 	fmt.Printf("Compliance Percentage: %.2f%%\n", summary.CompliancePercentage)
-	
+
 	fmt.Println("\nIssues by Severity:")
 	for severity, count := range summary.IssuesBySeverity {
 		fmt.Printf("  %s: %d\n", severity, count)
 	}
-	
+
 	fmt.Println("\nIssues by Type:")
 	for issueType, count := range summary.IssuesByType {
 		fmt.Printf("  %s: %d\n", issueType, count)
 	}
-	
+
 	fmt.Println("\nCompliance Status:")
 	for standard, compliant := range summary.ComplianceStatus {
 		fmt.Printf("  %s: %t\n", standard, compliant)
 	}
 }
 
-// calculateSummary calculates a summary of template verification results
-func calculateSummary(results []*security.VerificationResult) *security.VerificationSummary {
+// calculateTemplateSummary calculates a summary of template verification results
+func calculateTemplateSummary(results []*security.VerificationResult) *security.VerificationSummary {
 	summary := &security.VerificationSummary{
 		TotalTemplates:   len(results),
 		PassedTemplates:  0,
@@ -358,16 +360,16 @@ func generateReports(results []*security.VerificationResult) error {
 		TemplateResults: results,
 		Options:         security.DefaultVerificationOptions(),
 		// We'll calculate the summary ourselves instead of using a non-existent method
-		Summary:         calculateSummary(results),
+		Summary: calculateSummary(results),
 	}
 
 	// Convert to test results
 	testResults := security.ConvertToTestResults(report)
 
 	// Generate reports in the specified formats
-	for _, formatStr := range reportFormats {
+	for _, formatStr := range templateReportFormats {
 		format := common.ReportFormat(formatStr)
-		outputPath := filepath.Join(outputDir, fmt.Sprintf("template_security_report.%s", strings.ToLower(string(format))))
+		outputPath := filepath.Join(templateSecurityOutputDir, fmt.Sprintf("template_security_report.%s", strings.ToLower(string(format))))
 
 		// Get formatter for the specified format
 		formatterCreator, ok := common.GetFormatterCreatorFromDefault(format)
@@ -403,10 +405,10 @@ func generateComplianceReports(integration *compliance.ReportingIntegration, res
 	testResults := integration.ConvertTemplateComplianceToTestResults(result)
 
 	// Generate reports in the specified formats
-	for _, formatStr := range reportFormats {
+	for _, formatStr := range templateReportFormats {
 		format := common.ReportFormat(formatStr)
-		outputPath := filepath.Join(outputDir, fmt.Sprintf("template_compliance_report_%s.%s", 
-			strings.ReplaceAll(result.TemplateID, "/", "_"), 
+		outputPath := filepath.Join(templateSecurityOutputDir, fmt.Sprintf("template_compliance_report_%s.%s",
+			strings.ReplaceAll(result.TemplateID, "/", "_"),
 			strings.ToLower(string(format))))
 
 		// Get formatter for the specified format

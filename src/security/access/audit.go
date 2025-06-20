@@ -33,12 +33,12 @@ const (
 
 // Audit severity levels
 const (
-	AuditSeverityInfo    AuditSeverity = "info"
-	AuditSeverityLow     AuditSeverity = "low"
-	AuditSeverityMedium  AuditSeverity = "medium"
-	AuditSeverityHigh    AuditSeverity = "high"
+	AuditSeverityInfo     AuditSeverity = "info"
+	AuditSeverityLow      AuditSeverity = "low"
+	AuditSeverityMedium   AuditSeverity = "medium"
+	AuditSeverityHigh     AuditSeverity = "high"
 	AuditSeverityCritical AuditSeverity = "critical"
-	AuditSeverityError   AuditSeverity = "error"
+	AuditSeverityError    AuditSeverity = "error"
 )
 
 // AuditLog represents a security audit log entry
@@ -65,19 +65,19 @@ type AuditLog struct {
 
 // AuditLogFilter defines filters for querying audit logs
 type AuditLogFilter struct {
-	UserID      string       `json:"user_id,omitempty"`
-	Username    string       `json:"username,omitempty"`
-	Action      AuditAction  `json:"action,omitempty"`
-	Resource    string       `json:"resource,omitempty"`
-	ResourceID  string       `json:"resource_id,omitempty"`
-	IPAddress   string       `json:"ip_address,omitempty"`
-	Severity    AuditSeverity `json:"severity,omitempty"`
-	Status      string       `json:"status,omitempty"`
-	SessionID   string       `json:"session_id,omitempty"`
-	StartTime   time.Time    `json:"start_time,omitempty"`
-	EndTime     time.Time    `json:"end_time,omitempty"`
-	Limit       int          `json:"limit,omitempty"`
-	Offset      int          `json:"offset,omitempty"`
+	UserID     string        `json:"user_id,omitempty"`
+	Username   string        `json:"username,omitempty"`
+	Action     AuditAction   `json:"action,omitempty"`
+	Resource   string        `json:"resource,omitempty"`
+	ResourceID string        `json:"resource_id,omitempty"`
+	IPAddress  string        `json:"ip_address,omitempty"`
+	Severity   AuditSeverity `json:"severity,omitempty"`
+	Status     string        `json:"status,omitempty"`
+	SessionID  string        `json:"session_id,omitempty"`
+	StartTime  time.Time     `json:"start_time,omitempty"`
+	EndTime    time.Time     `json:"end_time,omitempty"`
+	Limit      int           `json:"limit,omitempty"`
+	Offset     int           `json:"offset,omitempty"`
 }
 
 // InMemoryAuditLogger is a simple in-memory implementation of AuditLogger
@@ -296,7 +296,7 @@ func (l *FileAuditLogger) LogAudit(ctx context.Context, log *AuditLog) error {
 func (l *FileAuditLogger) GetAuditLogs(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*AuditLog, int, error) {
 	// This is a simplified implementation that reads the entire file
 	// In a real-world scenario, you would use a database or more efficient storage
-	
+
 	// Open file for reading
 	file, err := os.Open(l.filePath)
 	if err != nil {

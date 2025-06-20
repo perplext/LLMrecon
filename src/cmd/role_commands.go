@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package cmd provides command-line interface functionality
 package cmd
 
@@ -58,7 +60,7 @@ func initRoleCommands() {
 				description := roles[role]
 				fmt.Printf("Role: %s\n", role)
 				fmt.Printf("Description: %s\n", description)
-				
+
 				// Get permissions for this role
 				permissions := accessControlManager.rbacManager.GetRolePermissions(ctx, role)
 				if len(permissions) > 0 {
@@ -142,7 +144,7 @@ func initRoleCommands() {
 			fmt.Printf("Role Details:\n")
 			fmt.Printf("Name: %s\n", role)
 			fmt.Printf("Description: %s\n", description)
-			
+
 			if len(permissions) > 0 {
 				fmt.Printf("Permissions:\n")
 				for _, perm := range permissions {
@@ -220,7 +222,7 @@ func initRoleCommands() {
 			fmt.Printf("Role created successfully:\n")
 			fmt.Printf("Name: %s\n", role)
 			fmt.Printf("Description: %s\n", roleDescription)
-			
+
 			if len(rolePermissions) > 0 {
 				fmt.Printf("Permissions: %s\n", strings.Join(rolePermissions, ", "))
 			} else {

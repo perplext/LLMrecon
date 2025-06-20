@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package cmd provides command-line interface functionality
 package cmd
 
@@ -13,15 +15,15 @@ import (
 )
 
 var (
-	securityTitle          string
-	securityDescription    string
-	securitySeverity       string
-	securityAffectedSystem string
-	securityCVE            string
-	securityAssignedTo     string
-	securityStatus         string
+	securityTitle           string
+	securityDescription     string
+	securitySeverity        string
+	securityAffectedSystem  string
+	securityCVE             string
+	securityAssignedTo      string
+	securityStatus          string
 	securityRemediationPlan string
-	securityAuditLogIDs    []string
+	securityAuditLogIDs     []string
 )
 
 // initSecurityCommands initializes security incident and vulnerability management commands

@@ -1,4 +1,6 @@
 // Package cmd provides command-line interfaces for the LLMrecon tool
+//go:build ignore
+
 package cmd
 
 import (
@@ -204,7 +206,7 @@ func runOWASPTest(providerName string, modelName string, formatName string, outp
 	detectionEngine := detectionFactory.CreateDetectionEngine()
 
 	// Create report generator
-	reportGenerator := reporting.NewDefaultReportGenerator()
+	reportGenerator := reporting.NewReportGenerator()
 
 	// Create test runner
 	testRunner := owasp.NewDefaultTestRunner(detectionEngine, reportGenerator)
@@ -236,10 +238,23 @@ func runOWASPTest(providerName string, modelName string, formatName string, outp
 
 	fmt.Println("OWASP compliance test completed successfully")
 	fmt.Printf("Report generated: %s\n", outputPath)
-	fmt.Printf("Total tests: %d\n", report.TotalTests)
-	fmt.Printf("Passing tests: %d\n", report.PassingTests)
-	fmt.Printf("Failing tests: %d\n", report.TotalTests-report.PassingTests)
-	fmt.Printf("Compliance score: %.2f%%\n", float64(report.PassingTests)/float64(report.TotalTests)*100)
+	// Calculate test counts from test suites
+	totalTests := 0
+	passingTests := 0
+	for _, suite := range report.TestSuites {
+		for _, result := range suite.Results {
+			totalTests++
+			if result.Passed {
+				passingTests++
+			}
+		}
+	}
+	fmt.Printf("Total tests: %d\n", totalTests)
+	fmt.Printf("Passing tests: %d\n", passingTests)
+	fmt.Printf("Failing tests: %d\n", totalTests-passingTests)
+	if totalTests > 0 {
+		fmt.Printf("Compliance score: %.2f%%\n", float64(passingTests)/float64(totalTests)*100)
+	}
 }
 
 // runOWASPVulnerabilityTest runs tests for a specific OWASP vulnerability
@@ -280,7 +295,7 @@ func runOWASPVulnerabilityTest(providerName string, modelName string, vulnerabil
 	detectionEngine := detectionFactory.CreateDetectionEngine()
 
 	// Create report generator
-	reportGenerator := reporting.NewDefaultReportGenerator()
+	reportGenerator := reporting.NewReportGenerator()
 
 	// Create test runner
 	testRunner := owasp.NewDefaultTestRunner(detectionEngine, reportGenerator)

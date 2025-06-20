@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
+
 	"github.com/perplext/LLMrecon/src/security/access/common"
 	"github.com/perplext/LLMrecon/src/security/access/mfa"
 	"github.com/perplext/LLMrecon/src/security/access/models"
@@ -40,7 +40,7 @@ func NewAccessControlManager(config *AccessControlConfig) (*AccessControlManager
 	// Create stores
 	userStore := NewInMemoryUserStore()
 	sessionStore := NewInMemorySessionStore()
-	
+
 	// Create audit logger
 	var auditLogger AuditLogger
 	if config.AuditConfig.LogFilePath != "" {
@@ -50,17 +50,17 @@ func NewAccessControlManager(config *AccessControlConfig) (*AccessControlManager
 	} else {
 		auditLogger = NewInMemoryAuditLogger()
 	}
-	
+
 	// Create audit manager
 	auditManager, err := NewAuditManager(auditLogger, &config.AuditConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create audit manager: %w", err)
 	}
-	
+
 	// Create RBAC manager
 	simpleRBACManager := NewRBACManager(config)
 	rbacManager := NewRBACManagerAdapter(simpleRBACManager)
-	
+
 	// Create auth manager
 	mfaManager := mfa.NewMockMFAManager()
 	authConfig := &AuthConfig{
@@ -78,21 +78,21 @@ func NewAccessControlManager(config *AccessControlConfig) (*AccessControlManager
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth manager: %w", err)
 	}
-	
+
 	// Create session manager
 	sessionManager := NewSessionManager(sessionStore, &config.SessionPolicy, auditLogger)
-	
+
 	// Create user manager using stub implementation
 	userManager := NewUserManager()
-	
+
 	// Create security incident and vulnerability stores
 	incidentStore := NewLocalInMemoryIncidentStore()
 	vulnStore := NewLocalInMemoryVulnerabilityStore()
-	
+
 	// Create security manager
 	securityManagerImpl := NewSecurityManager(config, incidentStore, vulnStore, auditLogger)
 	securityManager := NewSecurityManagerAdapter(securityManagerImpl)
-	
+
 	return &AccessControlManager{
 		config:          config,
 		rbacManager:     rbacManager,
@@ -127,15 +127,15 @@ func (m *AccessControlManager) GetUserManager() UserManager {
 func (m *AccessControlManager) Initialize(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	// Initialize default roles and permissions
 	m.initializeDefaultRoles()
-	
+
 	// Create admin user if it doesn't exist
 	if err := m.createAdminUser(ctx); err != nil {
 		return fmt.Errorf("failed to create admin user: %w", err)
 	}
-	
+
 	// Log initialization
 	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
@@ -145,7 +145,7 @@ func (m *AccessControlManager) Initialize(ctx context.Context) error {
 		Severity:    AuditSeverityInfo,
 		Status:      "success",
 	})
-	
+
 	return nil
 }
 
@@ -153,15 +153,15 @@ func (m *AccessControlManager) Initialize(ctx context.Context) error {
 func (m *AccessControlManager) Close(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	// Stop session manager
 	m.sessionManager.Stop()
-	
+
 	// Close audit manager
 	if err := m.auditManager.Close(); err != nil {
 		return fmt.Errorf("failed to close audit manager: %w", err)
 	}
-	
+
 	// Log shutdown
 	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
@@ -171,7 +171,7 @@ func (m *AccessControlManager) Close(ctx context.Context) error {
 		Severity:    AuditSeverityInfo,
 		Status:      "success",
 	})
-	
+
 	return nil
 }
 
@@ -227,12 +227,12 @@ func (m *AccessControlManager) CreateUser(ctx context.Context, username, email, 
 		Roles:    roles,
 		Active:   true,
 	}
-	
+
 	err := m.userManager.CreateUser(user)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert back to local User type for return
 	// This is a simplified conversion - in real implementation we'd need proper mapping
 	return &User{
@@ -254,12 +254,12 @@ func (m *AccessControlManager) UpdateUser(ctx context.Context, id, username, ema
 		Roles:    roles,
 		Active:   active,
 	}
-	
+
 	err := m.userManager.UpdateUser(user)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert back to local User type for return
 	return &User{
 		ID:       user.ID,
@@ -281,7 +281,7 @@ func (m *AccessControlManager) GetUser(ctx context.Context, id string) (*User, e
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert models.User to local User type
 	return &User{
 		ID:       user.ID,
@@ -298,7 +298,7 @@ func (m *AccessControlManager) GetUserByUsername(ctx context.Context, username s
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert models.User to local User type
 	return &User{
 		ID:       user.ID,
@@ -315,7 +315,7 @@ func (m *AccessControlManager) ListUsers(ctx context.Context) ([]*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert models.User slice to local User slice
 	result := make([]*User, len(users))
 	for i, user := range users {
@@ -327,7 +327,7 @@ func (m *AccessControlManager) ListUsers(ctx context.Context) ([]*User, error) {
 			Active:   user.Active,
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -350,7 +350,7 @@ func (m *AccessControlManager) LockUser(ctx context.Context, id, lockedBy string
 	if err != nil {
 		return err
 	}
-	
+
 	user.Locked = true
 	return m.userManager.UpdateUser(user)
 }
@@ -362,7 +362,7 @@ func (m *AccessControlManager) UnlockUser(ctx context.Context, id, unlockedBy st
 	if err != nil {
 		return err
 	}
-	
+
 	user.Locked = false
 	return m.userManager.UpdateUser(user)
 }
@@ -383,7 +383,7 @@ func (m *AccessControlManager) DisableMFA(ctx context.Context, id string, method
 func (m *AccessControlManager) LogAudit(ctx context.Context, log *AuditLog) error {
 	// Note: ProcessSecurityAuditLog is not part of the SecurityManager interface
 	// This would need to be implemented separately if needed
-	
+
 	return m.auditLogger.LogAudit(ctx, log)
 }
 
@@ -402,7 +402,7 @@ func (m *AccessControlManager) CreateIncident(ctx context.Context, title, descri
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert back to local SecurityIncident type
 	return &SecurityIncident{
 		ID:          modelsIncident.ID,
@@ -424,10 +424,10 @@ func (m *AccessControlManager) UpdateIncidentStatus(ctx context.Context, id stri
 	if err != nil {
 		return err
 	}
-	
+
 	// Update the status
 	modelsIncident.Status = models.SecurityIncidentStatus(status)
-	
+
 	// Update the incident
 	return m.securityManager.UpdateIncident(modelsIncident)
 }
@@ -438,7 +438,7 @@ func (m *AccessControlManager) GetIncident(ctx context.Context, id string) (*Sec
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to local SecurityIncident type
 	return &SecurityIncident{
 		ID:          modelsIncident.ID,
@@ -466,13 +466,13 @@ func (m *AccessControlManager) ListIncidents(ctx context.Context, filter *Incide
 			filterMap["assignee_id"] = filter.AssigneeID
 		}
 	}
-	
+
 	// Call SecurityManager with default pagination
 	modelsIncidents, _, err := m.securityManager.ListIncidents(filterMap, 0, 100)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to local SecurityIncident types
 	result := make([]*SecurityIncident, len(modelsIncidents))
 	for i, modelsIncident := range modelsIncidents {
@@ -486,7 +486,7 @@ func (m *AccessControlManager) ListIncidents(ctx context.Context, filter *Incide
 			ReportedBy:  modelsIncident.ReportedBy,
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -498,7 +498,7 @@ func (m *AccessControlManager) CreateVulnerability(ctx context.Context, title, d
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert back to local Vulnerability type
 	return &Vulnerability{
 		ID:             modelsVuln.ID,
@@ -521,10 +521,10 @@ func (m *AccessControlManager) UpdateVulnerabilityStatus(ctx context.Context, id
 	if err != nil {
 		return err
 	}
-	
+
 	// Update the status
 	modelsVuln.Status = models.VulnerabilityStatus(status)
-	
+
 	// Update the vulnerability
 	return m.securityManager.UpdateVulnerability(modelsVuln)
 }
@@ -535,7 +535,7 @@ func (m *AccessControlManager) GetVulnerability(ctx context.Context, id string) 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to local Vulnerability type
 	return &Vulnerability{
 		ID:          modelsVuln.ID,
@@ -566,13 +566,13 @@ func (m *AccessControlManager) ListVulnerabilities(ctx context.Context, filter *
 			filterMap["cve_id"] = filter.CveID
 		}
 	}
-	
+
 	// Call SecurityManager with default pagination
 	modelsVulns, _, err := m.securityManager.ListVulnerabilities(filterMap, 0, 100)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to local Vulnerability types
 	result := make([]*Vulnerability, len(modelsVulns))
 	for i, modelsVuln := range modelsVulns {
@@ -586,7 +586,7 @@ func (m *AccessControlManager) ListVulnerabilities(ctx context.Context, filter *
 			ReportedBy:  modelsVuln.ReportedBy,
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -610,28 +610,28 @@ func (m *AccessControlManager) createAdminUser(ctx context.Context) error {
 	} else if !errors.Is(err, ErrUserNotFound) {
 		return err
 	}
-	
+
 	// Create admin user
 	adminUser := &User{
-		ID:                 generateRandomID(),
-		Username:           "admin",
-		Email:              "admin@example.com",
-		PasswordHash:       "admin", // This should be properly hashed in a real implementation
-		Roles:              []string{RoleAdmin},
-		MFAEnabled:         false,
+		ID:                  generateRandomID(),
+		Username:            "admin",
+		Email:               "admin@example.com",
+		PasswordHash:        "admin", // This should be properly hashed in a real implementation
+		Roles:               []string{RoleAdmin},
+		MFAEnabled:          false,
 		FailedLoginAttempts: 0,
-		Locked:             false,
-		LastPasswordChange: time.Now(),
-		Active:             true,
-		CreatedAt:          time.Now(),
-		UpdatedAt:          time.Now(),
+		Locked:              false,
+		LastPasswordChange:  time.Now(),
+		Active:              true,
+		CreatedAt:           time.Now(),
+		UpdatedAt:           time.Now(),
 	}
-	
+
 	// Save admin user
 	if err := m.userStore.CreateUser(ctx, adminUser); err != nil {
 		return err
 	}
-	
+
 	// Log admin user creation
 	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
@@ -646,6 +646,6 @@ func (m *AccessControlManager) createAdminUser(ctx context.Context) error {
 			"roles":    adminUser.Roles,
 		},
 	})
-	
+
 	return nil
 }

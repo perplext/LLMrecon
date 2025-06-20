@@ -10,7 +10,6 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/perplext/LLMrecon/src/update"
 	"github.com/spf13/cobra"
@@ -74,11 +73,12 @@ func runBundleInfo(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("bundle not found: %w", err)
 	}
 
-	// Load bundle manifest
-	manifest, err := bundle.LoadBundleManifest(bundlePath)
+	// Load bundle
+	b, err := bundle.LoadBundle(bundlePath)
 	if err != nil {
-		return fmt.Errorf("loading manifest: %w", err)
+		return fmt.Errorf("loading bundle: %w", err)
 	}
+	manifest := &b.Manifest
 
 	// Calculate checksum
 	checksum, _ := update.CalculateChecksum(bundlePath)
@@ -101,15 +101,15 @@ func runBundleInfo(cmd *cobra.Command, args []string) error {
 
 // BundleInfo contains comprehensive bundle information
 type BundleInfo struct {
-	Path        string                 `json:"path"`
-	Size        int64                  `json:"size"`
-	Checksum    string                 `json:"checksum"`
-	CreatedAt   time.Time              `json:"created_at"`
-	Manifest    BundleManifestInfo     `json:"manifest"`
-	Components  ComponentsInfo         `json:"components"`
-	OWASP       OWASPInfo              `json:"owasp"`
-	Compliance  ComplianceInfo         `json:"compliance"`
-	Statistics  BundleStatistics       `json:"statistics"`
+	Path       string             `json:"path"`
+	Size       int64              `json:"size"`
+	Checksum   string             `json:"checksum"`
+	CreatedAt  time.Time          `json:"created_at"`
+	Manifest   BundleManifestInfo `json:"manifest"`
+	Components ComponentsInfo     `json:"components"`
+	OWASP      OWASPInfo          `json:"owasp"`
+	Compliance ComplianceInfo     `json:"compliance"`
+	Statistics BundleStatistics   `json:"statistics"`
 }
 
 // BundleManifestInfo contains manifest information
@@ -124,39 +124,40 @@ type BundleManifestInfo struct {
 
 // ComponentsInfo contains component counts
 type ComponentsInfo struct {
-	Templates    []ComponentItem `json:"templates"`
-	Modules      []ComponentItem `json:"modules"`
-	Documents    []ComponentItem `json:"documents"`
-	Resources    []ComponentItem `json:"resources"`
+	Templates []ComponentItem `json:"templates"`
+	Modules   []ComponentItem `json:"modules"`
+	Documents []ComponentItem `json:"documents"`
+	Resources []ComponentItem `json:"resources"`
 }
 
 // ComponentItem represents a component in the bundle
 type ComponentItem struct {
-	Name        string                 `json:"name"`
-	Path        string                 `json:"path"`
-	Version     string                 `json:"version"`
-	Size        int64                  `json:"size"`
-	Checksum    string                 `json:"checksum"`
-	Category    string                 `json:"category,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Name     string                 `json:"name"`
+	Path     string                 `json:"path"`
+	Version  string                 `json:"version"`
+	Size     int64                  `json:"size"`
+	Checksum string                 `json:"checksum"`
+	Category string                 `json:"category,omitempty"`
+	Type     string                 `json:"type,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // OWASPInfo contains OWASP categorization information
 type OWASPInfo struct {
-	Categorized   bool              `json:"categorized"`
-	Categories    map[string]int    `json:"categories"`
-	Uncategorized int               `json:"uncategorized"`
+	Categorized   bool           `json:"categorized"`
+	Categories    map[string]int `json:"categories"`
+	Uncategorized int            `json:"uncategorized"`
 }
 
 // ComplianceInfo contains compliance documentation status
 type ComplianceInfo struct {
-	ISO42001    ComplianceStatus `json:"iso42001"`
-	OWASP       ComplianceStatus `json:"owasp"`
-	Documents   []string         `json:"documents"`
+	ISO42001  BundleComplianceStatus `json:"iso42001"`
+	OWASP     BundleComplianceStatus `json:"owasp"`
+	Documents []string               `json:"documents"`
 }
 
-// ComplianceStatus represents compliance standard status
-type ComplianceStatus struct {
+// BundleComplianceStatus represents compliance standard status
+type BundleComplianceStatus struct {
 	Present     bool     `json:"present"`
 	Version     string   `json:"version"`
 	LastUpdated string   `json:"last_updated"`
@@ -184,7 +185,7 @@ func collectBundleInfo(manifest *bundle.BundleManifest, fileInfo os.FileInfo, ch
 			Version:     manifest.Version,
 			Name:        manifest.Name,
 			Description: manifest.Description,
-			Author:      manifest.Author,
+			Author:      manifest.Author.Name,
 			CreatedAt:   manifest.CreatedAt,
 			Metadata:    manifest.Metadata,
 		},
@@ -203,85 +204,79 @@ func collectBundleInfo(manifest *bundle.BundleManifest, fileInfo os.FileInfo, ch
 		Statistics: BundleStatistics{},
 	}
 
-	// Process templates
-	for _, template := range manifest.Templates {
+	// Process content items
+	for _, content := range manifest.Content {
 		item := ComponentItem{
-			Name:     template.Name,
-			Path:     template.Path,
-			Version:  template.Version,
-			Size:     template.Size,
-			Checksum: template.Checksum,
-			Metadata: template.Metadata,
+			Name:     filepath.Base(content.Path),
+			Path:     content.Path,
+			Version:  content.Version,
+			Size:     content.Size,
+			Checksum: content.Checksum,
+			Metadata: content.Metadata,
 		}
 
-		// Extract OWASP category
-		if category, ok := template.Metadata["owasp_category"].(string); ok && category != "" {
-			item.Category = category
-			info.OWASP.Categories[category]++
-			info.OWASP.Categorized = true
-		} else {
-			info.OWASP.Uncategorized++
+		switch content.Type {
+		case bundle.TemplateContentType:
+			// Extract OWASP category
+			if category, ok := content.Metadata["owasp_category"].(string); ok && category != "" {
+				item.Category = category
+				info.OWASP.Categories[category]++
+				info.OWASP.Categorized = true
+			} else {
+				info.OWASP.Uncategorized++
+			}
+
+			info.Components.Templates = append(info.Components.Templates, item)
+			info.Statistics.TemplateCount++
+
+		case bundle.ModuleContentType:
+			// Extract module type
+			if moduleType, ok := content.Metadata["type"].(string); ok {
+				item.Type = moduleType
+			}
+
+			info.Components.Modules = append(info.Components.Modules, item)
+			info.Statistics.ModuleCount++
 		}
 
-		info.Components.Templates = append(info.Components.Templates, item)
-		info.Statistics.TemplateCount++
+		info.Statistics.TotalSize += content.Size
+
+		// Track largest file
+		if content.Size > info.Statistics.LargestFileSize {
+			info.Statistics.LargestFileSize = content.Size
+			info.Statistics.LargestFile = content.Path
+		}
 	}
 
-	// Process modules
-	for _, module := range manifest.Modules {
-		item := ComponentItem{
-			Name:     module.Name,
-			Path:     module.Path,
-			Version:  module.Version,
-			Size:     module.Size,
-			Checksum: module.Checksum,
-			Metadata: module.Metadata,
-		}
-		info.Components.Modules = append(info.Components.Modules, item)
-		info.Statistics.ModuleCount++
-	}
+	info.Statistics.TotalFiles = len(manifest.Content)
 
-	// Process files for documents and compliance
-	var largestFile string
-	var largestSize int64
-
-	for _, file := range manifest.Files {
-		info.Statistics.TotalFiles++
-		info.Statistics.TotalSize += file.Size
-
-		if file.Size > largestSize {
-			largestSize = file.Size
-			largestFile = file.Path
-		}
-
+	// Check for compliance files
+	for _, content := range manifest.Content {
 		// Check for documents
-		if strings.HasPrefix(file.Path, "docs/") {
+		if strings.HasPrefix(content.Path, "docs/") {
 			item := ComponentItem{
-				Name:     filepath.Base(file.Path),
-				Path:     file.Path,
-				Size:     file.Size,
-				Checksum: file.Checksum,
+				Name:     filepath.Base(content.Path),
+				Path:     content.Path,
+				Size:     content.Size,
+				Checksum: content.Checksum,
 			}
 			info.Components.Documents = append(info.Components.Documents, item)
 			info.Statistics.DocumentCount++
 
 			// Check for compliance documents
-			if strings.Contains(file.Path, "iso42001") {
+			if strings.Contains(content.Path, "iso42001") {
 				info.Compliance.ISO42001.Present = true
-				info.Compliance.ISO42001.Files = append(info.Compliance.ISO42001.Files, file.Path)
+				info.Compliance.ISO42001.Files = append(info.Compliance.ISO42001.Files, content.Path)
 			}
-			if strings.Contains(file.Path, "owasp") {
+			if strings.Contains(content.Path, "owasp") {
 				info.Compliance.OWASP.Present = true
-				info.Compliance.OWASP.Files = append(info.Compliance.OWASP.Files, file.Path)
+				info.Compliance.OWASP.Files = append(info.Compliance.OWASP.Files, content.Path)
 			}
-			if strings.Contains(file.Path, "compliance") {
-				info.Compliance.Documents = append(info.Compliance.Documents, file.Path)
+			if strings.Contains(content.Path, "compliance") {
+				info.Compliance.Documents = append(info.Compliance.Documents, content.Path)
 			}
 		}
 	}
-
-	info.Statistics.LargestFile = largestFile
-	info.Statistics.LargestFileSize = largestSize
 
 	// Extract compliance metadata
 	if compliance, ok := manifest.Metadata["compliance"].(map[string]interface{}); ok {
@@ -306,25 +301,25 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 	fmt.Fprintf(w, "%s:\t%s\n", cyan("Version"), info.Manifest.Version)
 	fmt.Fprintf(w, "%s:\t%s\n", cyan("Size"), formatSize(info.Size))
 	fmt.Fprintf(w, "%s:\t%s\n", cyan("Created"), info.CreatedAt.Format("2006-01-02 15:04:05"))
-	
+
 	if info.Manifest.Author != "" {
 		fmt.Fprintf(w, "%s:\t%s\n", cyan("Author"), info.Manifest.Author)
 	}
-	
+
 	if info.Manifest.Description != "" {
 		fmt.Fprintf(w, "%s:\t%s\n", cyan("Description"), info.Manifest.Description)
 	}
-	
+
 	if verbose {
 		fmt.Fprintf(w, "%s:\t%s\n", cyan("Checksum"), info.Checksum[:16]+"...")
 	}
-	
+
 	w.Flush()
 
 	// Component summary
 	fmt.Println("\n" + bold("Components:"))
 	w = tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	
+
 	if info.Statistics.TemplateCount > 0 {
 		fmt.Fprintf(w, "  %s:\t%d\n", cyan("Templates"), info.Statistics.TemplateCount)
 	}
@@ -334,30 +329,30 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 	if info.Statistics.DocumentCount > 0 {
 		fmt.Fprintf(w, "  %s:\t%d\n", cyan("Documents"), info.Statistics.DocumentCount)
 	}
-	
-	fmt.Fprintf(w, "  %s:\t%d files, %s total\n", 
-		cyan("Total"), 
+
+	fmt.Fprintf(w, "  %s:\t%d files, %s total\n",
+		cyan("Total"),
 		info.Statistics.TotalFiles,
 		formatSize(info.Statistics.TotalSize))
-	
+
 	w.Flush()
 
 	// OWASP categorization
 	if info.OWASP.Categorized {
 		fmt.Println("\n" + bold("OWASP LLM Top 10 Categories:"))
-		
+
 		// Sort categories
 		categories := make([]string, 0, len(info.OWASP.Categories))
 		for cat := range info.OWASP.Categories {
 			categories = append(categories, cat)
 		}
 		sort.Strings(categories)
-		
+
 		for _, cat := range categories {
 			count := info.OWASP.Categories[cat]
 			fmt.Printf("  %s %s: %d templates\n", getCategoryIcon(cat), cat, count)
 		}
-		
+
 		if info.OWASP.Uncategorized > 0 {
 			fmt.Printf("  %s Uncategorized: %d templates\n", dim("○"), info.OWASP.Uncategorized)
 		}
@@ -366,7 +361,7 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 	// Compliance status
 	if showCompliance || info.Compliance.ISO42001.Present || info.Compliance.OWASP.Present {
 		fmt.Println("\n" + bold("Compliance Documentation:"))
-		
+
 		if info.Compliance.ISO42001.Present {
 			fmt.Printf("  %s ISO/IEC 42001: %s\n", green("✓"), "Present")
 			if verbose && len(info.Compliance.ISO42001.Files) > 0 {
@@ -377,7 +372,7 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 		} else {
 			fmt.Printf("  %s ISO/IEC 42001: %s\n", dim("○"), "Not found")
 		}
-		
+
 		if info.Compliance.OWASP.Present {
 			fmt.Printf("  %s OWASP Standards: %s\n", green("✓"), "Present")
 			if verbose && len(info.Compliance.OWASP.Files) > 0 {
@@ -403,7 +398,7 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 			}
 			fmt.Println()
 		}
-		
+
 		if len(info.Components.Modules) > 0 {
 			fmt.Println("\n" + bold("Modules:"))
 			for _, module := range info.Components.Modules {
@@ -417,12 +412,12 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 				fmt.Println()
 			}
 		}
-		
+
 		if len(info.Components.Documents) > 0 {
 			fmt.Println("\n" + bold("Documents:"))
 			for _, doc := range info.Components.Documents {
-				fmt.Printf("  %s %s %s\n", 
-					getFileIcon(doc.Path), 
+				fmt.Printf("  %s %s %s\n",
+					getFileIcon(doc.Path),
 					doc.Path,
 					dim(formatSize(doc.Size)))
 			}
@@ -432,10 +427,10 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 	// Statistics in verbose mode
 	if verbose {
 		fmt.Println("\n" + bold("Statistics:"))
-		fmt.Printf("  Largest file: %s (%s)\n", 
+		fmt.Printf("  Largest file: %s (%s)\n",
 			info.Statistics.LargestFile,
 			formatSize(info.Statistics.LargestFileSize))
-		
+
 		avgSize := int64(0)
 		if info.Statistics.TotalFiles > 0 {
 			avgSize = info.Statistics.TotalSize / int64(info.Statistics.TotalFiles)
@@ -446,18 +441,18 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 
 func getCategoryIcon(category string) string {
 	icons := map[string]string{
-		"llm01-prompt-injection":      "🔐",
-		"llm02-insecure-output":       "⚠️",
+		"llm01-prompt-injection":        "🔐",
+		"llm02-insecure-output":         "⚠️",
 		"llm03-training-data-poisoning": "☠️",
 		"llm04-model-denial-of-service": "🚫",
-		"llm05-supply-chain":          "🔗",
-		"llm06-sensitive-information": "🔒",
-		"llm07-insecure-plugin":       "🔌",
-		"llm08-excessive-agency":      "🤖",
-		"llm09-overreliance":          "⚖️",
-		"llm10-model-theft":           "🎭",
+		"llm05-supply-chain":            "🔗",
+		"llm06-sensitive-information":   "🔒",
+		"llm07-insecure-plugin":         "🔌",
+		"llm08-excessive-agency":        "🤖",
+		"llm09-overreliance":            "⚖️",
+		"llm10-model-theft":             "🎭",
 	}
-	
+
 	if icon, ok := icons[category]; ok {
 		return icon
 	}

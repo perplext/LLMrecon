@@ -12,7 +12,6 @@ import (
 	"github.com/perplext/LLMrecon/src/security/access/mfa"
 )
 
-
 // simpleRBACManager is a simple implementation of RBAC
 type simpleRBACManager struct {
 	config          *AccessControlConfig
@@ -36,12 +35,12 @@ func (r *simpleRBACManager) Initialize(ctx context.Context) error {
 func (r *simpleRBACManager) RoleHasPermission(role, permission string) bool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	perms, exists := r.rolePermissions[role]
 	if !exists {
 		return false
 	}
-	
+
 	for _, perm := range perms {
 		if perm == permission {
 			return true
@@ -136,8 +135,8 @@ func NewAccessControlSystem(config *AccessControlConfig) (*AccessControlSystem, 
 		securityConfig := &SecurityConfig{
 			IncidentNotificationEmails:      config.SecurityIncidentConfig.NotificationEmails,
 			IncidentEscalationThreshold:     common.AuditSeverity(config.SecurityIncidentConfig.EscalationThreshold),
-			IncidentAutoClose:              time.Duration(config.SecurityIncidentConfig.ResponseTimeoutMinutes) * time.Minute,
-			VulnerabilityCheckPeriod:       24 * time.Hour,
+			IncidentAutoClose:               time.Duration(config.SecurityIncidentConfig.ResponseTimeoutMinutes) * time.Minute,
+			VulnerabilityCheckPeriod:        24 * time.Hour,
 			VulnerabilityNotificationEmails: config.VulnerabilityConfig.ReportRecipients,
 		}
 
@@ -149,10 +148,10 @@ func NewAccessControlSystem(config *AccessControlConfig) (*AccessControlSystem, 
 	}
 
 	return &AccessControlSystem{
-		config:         config,
-		authManager:    authManager,
-		rbacManager:    rbacManager,
-		auditManager:   auditManager,
+		config:          config,
+		authManager:     authManager,
+		rbacManager:     rbacManager,
+		auditManager:    auditManager,
 		securityManager: securityManager,
 		mfaManager:      mfaManager,
 	}, nil
@@ -205,7 +204,7 @@ func (s *AccessControlSystem) MFA() mfa.MFAManager {
 	return s.mfaManager
 }
 
-// GetAllUsers returns all users in the system  
+// GetAllUsers returns all users in the system
 func (s *AccessControlSystem) GetAllUsers(ctx context.Context) ([]*User, error) {
 	return s.authManager.GetAllUsers(ctx)
 }
@@ -265,14 +264,14 @@ func (a *AccessControlSystem) UpdateUser(ctx context.Context, user *User) error 
 	changes := getChanges(oldUser, user)
 	if a.securityManager != nil {
 		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
-		Timestamp:   time.Now(),
-		UserID:      getUserIDFromContext(ctx),
-		Action:      AuditAction(common.AuditActionUserUpdate),
-		Resource:    "user",
-		ResourceID:  user.ID,
-		Description: fmt.Sprintf("Updated user %s", user.Username),
-		Severity:    AuditSeverity(common.AuditSeverityInfo),
-		Changes:     changes,
+			Timestamp:   time.Now(),
+			UserID:      getUserIDFromContext(ctx),
+			Action:      AuditAction(common.AuditActionUserUpdate),
+			Resource:    "user",
+			ResourceID:  user.ID,
+			Description: fmt.Sprintf("Updated user %s", user.Username),
+			Severity:    AuditSeverity(common.AuditSeverityInfo),
+			Changes:     changes,
 		})
 	}
 
@@ -295,13 +294,13 @@ func (a *AccessControlSystem) DeleteUser(ctx context.Context, userID string) err
 	// Log the action
 	if a.securityManager != nil && user != nil {
 		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
-		Timestamp:   time.Now(),
-		UserID:      getUserIDFromContext(ctx),
-		Action:      AuditAction(common.AuditActionUserDelete),
-		Resource:    "user",
-		ResourceID:  userID,
-		Description: fmt.Sprintf("Deleted user %s", user.Username),
-		Severity:    AuditSeverity(common.AuditSeverityInfo),
+			Timestamp:   time.Now(),
+			UserID:      getUserIDFromContext(ctx),
+			Action:      AuditAction(common.AuditActionUserDelete),
+			Resource:    "user",
+			ResourceID:  userID,
+			Description: fmt.Sprintf("Deleted user %s", user.Username),
+			Severity:    AuditSeverity(common.AuditSeverityInfo),
 		})
 	}
 
@@ -324,13 +323,13 @@ func (a *AccessControlSystem) UpdateUserPassword(ctx context.Context, userID, cu
 	// Log the action
 	if a.securityManager != nil && user != nil {
 		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
-		Timestamp:   time.Now(),
-		UserID:      getUserIDFromContext(ctx),
-		Action:      AuditAction(common.AuditActionUserPasswordChange),
-		Resource:    "user",
-		ResourceID:  userID,
-		Description: fmt.Sprintf("Updated password for user %s", user.Username),
-		Severity:    AuditSeverity(common.AuditSeverityInfo),
+			Timestamp:   time.Now(),
+			UserID:      getUserIDFromContext(ctx),
+			Action:      AuditAction(common.AuditActionUserPasswordChange),
+			Resource:    "user",
+			ResourceID:  userID,
+			Description: fmt.Sprintf("Updated password for user %s", user.Username),
+			Severity:    AuditSeverity(common.AuditSeverityInfo),
 		})
 	}
 
@@ -353,17 +352,17 @@ func (a *AccessControlSystem) EnableMFA(ctx context.Context, userID string, meth
 	// Log the action
 	if a.securityManager != nil && user != nil {
 		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
-		Timestamp:   time.Now(),
-		UserID:      getUserIDFromContext(ctx),
-		Action:      AuditAction(common.AuditActionMfaEnable),
-		Resource:    "user",
-		ResourceID:  userID,
-		Description: fmt.Sprintf("Enabled MFA (%s) for user %s", method, user.Username),
-		Severity:    AuditSeverity(common.AuditSeverityInfo),
-		Changes: map[string]interface{}{
-			"mfa_enabled": true,
-			"mfa_method":  string(method),
-		},
+			Timestamp:   time.Now(),
+			UserID:      getUserIDFromContext(ctx),
+			Action:      AuditAction(common.AuditActionMfaEnable),
+			Resource:    "user",
+			ResourceID:  userID,
+			Description: fmt.Sprintf("Enabled MFA (%s) for user %s", method, user.Username),
+			Severity:    AuditSeverity(common.AuditSeverityInfo),
+			Changes: map[string]interface{}{
+				"mfa_enabled": true,
+				"mfa_method":  string(method),
+			},
 		})
 	}
 
@@ -386,17 +385,17 @@ func (a *AccessControlSystem) DisableMFA(ctx context.Context, userID string, met
 	// Log the action
 	if a.securityManager != nil && user != nil {
 		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
-		Timestamp:   time.Now(),
-		UserID:      getUserIDFromContext(ctx),
-		Action:      AuditAction(common.AuditActionMfaDisable),
-		Resource:    "user",
-		ResourceID:  userID,
-		Description: fmt.Sprintf("Disabled MFA (%s) for user %s", method, user.Username),
-		Severity:    AuditSeverity(common.AuditSeverityInfo),
-		Changes: map[string]interface{}{
-			"mfa_enabled": false,
-			"mfa_method":  string(method),
-		},
+			Timestamp:   time.Now(),
+			UserID:      getUserIDFromContext(ctx),
+			Action:      AuditAction(common.AuditActionMfaDisable),
+			Resource:    "user",
+			ResourceID:  userID,
+			Description: fmt.Sprintf("Disabled MFA (%s) for user %s", method, user.Username),
+			Severity:    AuditSeverity(common.AuditSeverityInfo),
+			Changes: map[string]interface{}{
+				"mfa_enabled": false,
+				"mfa_method":  string(method),
+			},
 		})
 	}
 

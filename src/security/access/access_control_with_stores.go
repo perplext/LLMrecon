@@ -41,7 +41,7 @@ func NewAccessControlSystemWithStores(
 	}
 	mfaManager := mfa.NewDefaultMFAManager(mfaStore, mfaConfig)
 
-	// Create the security manager  
+	// Create the security manager
 	// Note: We don't use these managers directly as we create simpleRBACManager and simpleSecurityManager below
 	_ = NewSecurityManager(
 		config,
@@ -56,15 +56,15 @@ func NewAccessControlSystemWithStores(
 	// Create the auth manager
 	// Extract auth config from AccessControlConfig
 	authConfig := &AuthConfig{
-		SessionTimeout:     time.Duration(config.SessionPolicy.TokenExpiration) * time.Minute,
-		SessionMaxInactive: time.Duration(config.SessionPolicy.InactivityTimeout) * time.Minute,
-		PasswordMinLength:  config.PasswordPolicy.MinLength,
-		PasswordRequireUpper: config.PasswordPolicy.RequireUppercase,
-		PasswordRequireLower: config.PasswordPolicy.RequireLowercase,
-		PasswordRequireNumber: config.PasswordPolicy.RequireNumbers,
+		SessionTimeout:         time.Duration(config.SessionPolicy.TokenExpiration) * time.Minute,
+		SessionMaxInactive:     time.Duration(config.SessionPolicy.InactivityTimeout) * time.Minute,
+		PasswordMinLength:      config.PasswordPolicy.MinLength,
+		PasswordRequireUpper:   config.PasswordPolicy.RequireUppercase,
+		PasswordRequireLower:   config.PasswordPolicy.RequireLowercase,
+		PasswordRequireNumber:  config.PasswordPolicy.RequireNumbers,
 		PasswordRequireSpecial: config.PasswordPolicy.RequireSpecialChars,
-		PasswordMaxAge: time.Duration(config.PasswordPolicy.MaxAge) * 24 * time.Hour,
-		MFAEnabled: config.EnableMFA,
+		PasswordMaxAge:         time.Duration(config.PasswordPolicy.MaxAge) * 24 * time.Hour,
+		MFAEnabled:             config.EnableMFA,
 	}
 	authManager, err := NewAuthManager(
 		userStore,
@@ -92,13 +92,13 @@ func NewAccessControlSystemWithStores(
 	if config.RolePermissions != nil {
 		simpleRBAC.rolePermissions = config.RolePermissions
 	}
-	
+
 	// Create a simpleSecurityManager for the AccessControlSystem
 	simpleSecurity := &simpleSecurityManager{
 		auditLogger: auditLogger,
 		config:      &SecurityConfig{},
 	}
-	
+
 	return &AccessControlSystem{
 		authManager:     authManager,
 		rbacManager:     simpleRBAC,

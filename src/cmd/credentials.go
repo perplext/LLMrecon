@@ -143,21 +143,21 @@ var credentialShowCmd = &cobra.Command{
 		fmt.Println("Tags:", strings.Join(cred.Tags, ", "))
 		fmt.Println("Created:", cred.CreatedAt.Format(time.RFC3339))
 		fmt.Println("Updated:", cred.UpdatedAt.Format(time.RFC3339))
-		
+
 		if !cred.LastUsedAt.IsZero() {
 			fmt.Println("Last Used:", cred.LastUsedAt.Format(time.RFC3339))
 		}
-		
+
 		if !cred.ExpiresAt.IsZero() {
 			fmt.Println("Expires:", cred.ExpiresAt.Format(time.RFC3339))
 		}
-		
+
 		if cred.RotationPolicy != nil && cred.RotationPolicy.Enabled {
 			fmt.Println("Rotation Policy:")
 			fmt.Println("  Enabled:", cred.RotationPolicy.Enabled)
 			fmt.Println("  Interval:", cred.RotationPolicy.IntervalDays, "days")
 			fmt.Println("  Warning:", cred.RotationPolicy.WarningDays, "days before")
-			
+
 			if !cred.RotationPolicy.LastRotation.IsZero() {
 				fmt.Println("  Last Rotation:", cred.RotationPolicy.LastRotation.Format(time.RFC3339))
 				nextRotation := cred.RotationPolicy.LastRotation.AddDate(0, 0, cred.RotationPolicy.IntervalDays)

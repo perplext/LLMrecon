@@ -87,7 +87,7 @@ func runUpdateCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get current versions
-	currentVersions, err := getCurrentVersions(cfg)
+	currentVersions, err := getUpdateCurrentVersions(cfg)
 	if err != nil {
 		return fmt.Errorf("getting current versions: %w", err)
 	}
@@ -107,13 +107,13 @@ func runUpdateCheck(cmd *cobra.Command, args []string) error {
 
 	// Output results
 	if jsonFlag {
-		return outputJSON(filteredUpdates)
+		return outputUpdateJSON(filteredUpdates)
 	}
 
 	return outputTable(filteredUpdates, verboseFlag)
 }
 
-func getCurrentVersions(cfg *config.Config) (map[string]version.Version, error) {
+func getUpdateCurrentVersions(cfg *config.Config) (map[string]version.Version, error) {
 	versions := make(map[string]version.Version)
 
 	// Get core version
@@ -137,68 +137,90 @@ func getCurrentVersions(cfg *config.Config) (map[string]version.Version, error) 
 	return versions, nil
 }
 
-func checkUpdatesFromSources(ctx context.Context, cfg *config.Config, currentVersions map[string]version.Version, source string) ([]update.UpdateInfo, error) {
-	var allUpdates []update.UpdateInfo
+func checkUpdatesFromSources(ctx context.Context, cfg *config.Config, currentVersions map[string]version.Version, source string) ([]update.ExtendedUpdateInfo, error) {
+	var allUpdates []update.ExtendedUpdateInfo
 
 	// Check GitHub if configured
 	if (source == "all" || source == "github") && cfg.UpdateSources.GitHub != "" {
 		fmt.Print(dim("Checking GitHub for updates... "))
-		checker := update.NewVersionChecker(cfg.UpdateSources.GitHub, currentVersions)
-		updates, err := checker.CheckForUpdatesContext(ctx)
+		checker, err := update.NewVersionChecker(ctx)
 		if err != nil {
 			fmt.Println(red("✗"))
 			if source == "github" {
-				return nil, fmt.Errorf("GitHub check failed: %w", err)
+				return nil, fmt.Errorf("GitHub checker creation failed: %w", err)
 			}
 			// Continue with other sources if not exclusive
 		} else {
-			fmt.Println(green("✓"))
-			allUpdates = append(allUpdates, updates...)
+			checker.UpdateServerURL = cfg.UpdateSources.GitHub
+			checker.CurrentVersions = currentVersions
+			updates, err := checker.CheckForUpdatesContext(ctx)
+			if err != nil {
+				fmt.Println(red("✗"))
+				if source == "github" {
+					return nil, fmt.Errorf("GitHub check failed: %w", err)
+				}
+				// Continue with other sources if not exclusive
+			} else {
+				fmt.Println(green("✓"))
+				allUpdates = append(allUpdates, updates...)
+			}
 		}
 	}
 
 	// Check GitLab if configured
 	if (source == "all" || source == "gitlab") && cfg.UpdateSources.GitLab != "" {
 		fmt.Print(dim("Checking GitLab for updates... "))
-		checker := update.NewVersionChecker(cfg.UpdateSources.GitLab, currentVersions)
-		updates, err := checker.CheckForUpdatesContext(ctx)
+		checker, err := update.NewVersionChecker(ctx)
 		if err != nil {
 			fmt.Println(red("✗"))
 			if source == "gitlab" {
-				return nil, fmt.Errorf("GitLab check failed: %w", err)
+				return nil, fmt.Errorf("GitLab checker creation failed: %w", err)
 			}
 		} else {
-			fmt.Println(green("✓"))
-			allUpdates = append(allUpdates, updates...)
+			checker.UpdateServerURL = cfg.UpdateSources.GitLab
+			checker.CurrentVersions = currentVersions
+			updates, err := checker.CheckForUpdatesContext(ctx)
+			if err != nil {
+				fmt.Println(red("✗"))
+				if source == "gitlab" {
+					return nil, fmt.Errorf("GitLab check failed: %w", err)
+				}
+			} else {
+				fmt.Println(green("✓"))
+				allUpdates = append(allUpdates, updates...)
+			}
 		}
 	}
 
 	// Check S3 if configured
-	if (source == "all" || source == "s3") && cfg.UpdateSources.S3 != "" {
-		fmt.Print(dim("Checking S3 for updates... "))
-		checker := update.NewVersionChecker(cfg.UpdateSources.S3, currentVersions)
-		updates, err := checker.CheckForUpdatesContext(ctx)
-		if err != nil {
-			fmt.Println(red("✗"))
-			if source == "s3" {
-				return nil, fmt.Errorf("S3 check failed: %w", err)
+	// Note: S3 support is not currently available in the config
+	/*
+		if (source == "all" || source == "s3") && cfg.UpdateSources.S3 != "" {
+			fmt.Print(dim("Checking S3 for updates... "))
+			checker := update.NewVersionChecker(cfg.UpdateSources.S3, currentVersions)
+			updates, err := checker.CheckForUpdatesContext(ctx)
+			if err != nil {
+				fmt.Println(red("✗"))
+				if source == "s3" {
+					return nil, fmt.Errorf("S3 check failed: %w", err)
+				}
+			} else {
+				fmt.Println(green("✓"))
+				allUpdates = append(allUpdates, updates...)
 			}
-		} else {
-			fmt.Println(green("✓"))
-			allUpdates = append(allUpdates, updates...)
 		}
-	}
+	*/
 
-	// Merge and deduplicate updates
-	return update.MergeUpdates(allUpdates), nil
+	// Return updates directly (merging is done elsewhere if needed)
+	return allUpdates, nil
 }
 
-func filterUpdatesByComponent(updates []update.UpdateInfo, component string) []update.UpdateInfo {
+func filterUpdatesByComponent(updates []update.ExtendedUpdateInfo, component string) []update.ExtendedUpdateInfo {
 	if component == "all" {
 		return updates
 	}
 
-	var filtered []update.UpdateInfo
+	var filtered []update.ExtendedUpdateInfo
 	for _, u := range updates {
 		switch component {
 		case "binary":
@@ -222,7 +244,7 @@ func filterUpdatesByComponent(updates []update.UpdateInfo, component string) []u
 	return filtered
 }
 
-func outputTable(updates []update.UpdateInfo, verbose bool) error {
+func outputTable(updates []update.ExtendedUpdateInfo, verbose bool) error {
 	if len(updates) == 0 {
 		fmt.Println("\n" + green("✓") + " All components are up to date!")
 		return nil
@@ -256,7 +278,7 @@ func outputTable(updates []update.UpdateInfo, verbose bool) error {
 			u.CurrentVersion.String(),
 			green(u.LatestVersion.String()),
 			changeColor(formatChangeType(u.ChangeType)),
-			formatSize(u.Size))
+			formatUpdateSize(u.Size))
 	}
 
 	w.Flush()
@@ -297,7 +319,7 @@ func outputTable(updates []update.UpdateInfo, verbose bool) error {
 	return nil
 }
 
-func outputJSON(updates []update.UpdateInfo) error {
+func outputUpdateJSON(updates []update.ExtendedUpdateInfo) error {
 	// Convert to JSON-friendly format
 	type jsonUpdate struct {
 		Component       string    `json:"component"`
@@ -365,7 +387,7 @@ func formatChangeType(changeType version.VersionChangeType) string {
 	}
 }
 
-func formatSize(size int64) string {
+func formatUpdateSize(size int64) string {
 	const unit = 1024
 	if size < unit {
 		return fmt.Sprintf("%d B", size)

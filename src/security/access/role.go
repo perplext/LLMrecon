@@ -17,10 +17,10 @@ type Role struct {
 
 // RBACConfig represents the configuration for role-based access control
 type RBACConfig struct {
-	DefaultRoles    []string               `json:"default_roles"`
-	RolePermissions map[string][]string    `json:"role_permissions"`
-	RoleHierarchy   map[string][]string    `json:"role_hierarchy"`
-	CustomRoles     []Role                 `json:"custom_roles"`
+	DefaultRoles    []string            `json:"default_roles"`
+	RolePermissions map[string][]string `json:"role_permissions"`
+	RoleHierarchy   map[string][]string `json:"role_hierarchy"`
+	CustomRoles     []Role              `json:"custom_roles"`
 }
 
 // NewRBACConfig creates a new RBAC configuration with default values

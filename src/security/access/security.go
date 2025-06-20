@@ -12,11 +12,11 @@ import (
 
 // BasicSecurityManager manages security incidents and vulnerabilities
 type BasicSecurityManager struct {
-	incidentStore     IncidentStore
+	incidentStore      IncidentStore
 	vulnerabilityStore VulnerabilityStore
-	auditLogger       AuditLogger
-	config            *AccessControlConfig
-	mu                sync.RWMutex
+	auditLogger        AuditLogger
+	config             *AccessControlConfig
+	mu                 sync.RWMutex
 }
 
 // IncidentStore defines the interface for security incident storage
@@ -39,28 +39,28 @@ type VulnerabilityStore interface {
 
 // LocalIncidentFilter defines filters for querying security incidents (local version)
 type LocalIncidentFilter struct {
-	Severity    AuditSeverity    `json:"severity,omitempty"`
-	Status      IncidentStatus   `json:"status,omitempty"`
-	AssignedTo  string           `json:"assigned_to,omitempty"`
-	ReportedBy  string           `json:"reported_by,omitempty"`
-	StartTime   time.Time        `json:"start_time,omitempty"`
-	EndTime     time.Time        `json:"end_time,omitempty"`
-	Limit       int              `json:"limit,omitempty"`
-	Offset      int              `json:"offset,omitempty"`
+	Severity   AuditSeverity  `json:"severity,omitempty"`
+	Status     IncidentStatus `json:"status,omitempty"`
+	AssignedTo string         `json:"assigned_to,omitempty"`
+	ReportedBy string         `json:"reported_by,omitempty"`
+	StartTime  time.Time      `json:"start_time,omitempty"`
+	EndTime    time.Time      `json:"end_time,omitempty"`
+	Limit      int            `json:"limit,omitempty"`
+	Offset     int            `json:"offset,omitempty"`
 }
 
 // LocalVulnerabilityFilter defines filters for querying vulnerabilities (local version)
 type LocalVulnerabilityFilter struct {
-	Severity       AuditSeverity        `json:"severity,omitempty"`
-	Status         VulnerabilityStatus  `json:"status,omitempty"`
-	AssignedTo     string               `json:"assigned_to,omitempty"`
-	ReportedBy     string               `json:"reported_by,omitempty"`
-	AffectedSystem string               `json:"affected_system,omitempty"`
-	CVE            string               `json:"cve,omitempty"`
-	StartTime      time.Time            `json:"start_time,omitempty"`
-	EndTime        time.Time            `json:"end_time,omitempty"`
-	Limit          int                  `json:"limit,omitempty"`
-	Offset         int                  `json:"offset,omitempty"`
+	Severity       AuditSeverity       `json:"severity,omitempty"`
+	Status         VulnerabilityStatus `json:"status,omitempty"`
+	AssignedTo     string              `json:"assigned_to,omitempty"`
+	ReportedBy     string              `json:"reported_by,omitempty"`
+	AffectedSystem string              `json:"affected_system,omitempty"`
+	CVE            string              `json:"cve,omitempty"`
+	StartTime      time.Time           `json:"start_time,omitempty"`
+	EndTime        time.Time           `json:"end_time,omitempty"`
+	Limit          int                 `json:"limit,omitempty"`
+	Offset         int                 `json:"offset,omitempty"`
 }
 
 // NewSecurityManager creates a new security manager
@@ -71,10 +71,10 @@ func NewSecurityManager(config *AccessControlConfig, incidentStore IncidentStore
 // NewBasicSecurityManager creates a new basic security manager
 func NewBasicSecurityManager(config *AccessControlConfig, incidentStore IncidentStore, vulnerabilityStore VulnerabilityStore, auditLogger AuditLogger) *BasicSecurityManager {
 	return &BasicSecurityManager{
-		config:            config,
-		incidentStore:     incidentStore,
+		config:             config,
+		incidentStore:      incidentStore,
 		vulnerabilityStore: vulnerabilityStore,
-		auditLogger:       auditLogger,
+		auditLogger:        auditLogger,
 	}
 }
 
@@ -327,7 +327,7 @@ func (m *BasicSecurityManager) ProcessSecurityAuditLog(ctx context.Context, log 
 	// Create incident
 	title := fmt.Sprintf("%s: %s", log.Action, log.Description)
 	description := fmt.Sprintf("Security incident automatically created from audit log:\n\n%s", log.Description)
-	
+
 	if log.UserID != "" {
 		description += fmt.Sprintf("\n\nUser ID: %s", log.UserID)
 	}
@@ -646,7 +646,7 @@ func (a *SecurityManagerAdapter) ReportIncident(title, description string, sever
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert back to models.SecurityIncident
 	return &models.SecurityIncident{
 		ID:          incident.ID,
@@ -665,7 +665,7 @@ func (a *SecurityManagerAdapter) GetIncident(incidentID string) (*models.Securit
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to models.SecurityIncident
 	return &models.SecurityIncident{
 		ID:          incident.ID,
@@ -698,12 +698,12 @@ func (a *SecurityManagerAdapter) ListIncidents(filter map[string]interface{}, of
 		Limit:  limit,
 		Offset: offset,
 	}
-	
+
 	incidents, err := a.impl.ListIncidents(context.Background(), localFilter)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	// Convert to models.SecurityIncident
 	result := make([]*models.SecurityIncident, len(incidents))
 	for i, incident := range incidents {
@@ -717,7 +717,7 @@ func (a *SecurityManagerAdapter) ListIncidents(filter map[string]interface{}, of
 			ReportedBy:  incident.ReportedBy,
 		}
 	}
-	
+
 	return result, len(result), nil
 }
 
@@ -729,7 +729,7 @@ func (a *SecurityManagerAdapter) ReportVulnerability(title, description string, 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert back to models.Vulnerability
 	return &models.Vulnerability{
 		ID:          vuln.ID,
@@ -748,7 +748,7 @@ func (a *SecurityManagerAdapter) GetVulnerability(vulnerabilityID string) (*mode
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to models.Vulnerability
 	return &models.Vulnerability{
 		ID:          vuln.ID,
@@ -784,12 +784,12 @@ func (a *SecurityManagerAdapter) ListVulnerabilities(filter map[string]interface
 		Limit:  limit,
 		Offset: offset,
 	}
-	
+
 	vulnerabilities, err := a.impl.ListVulnerabilities(context.Background(), localFilter)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	// Convert to models.Vulnerability
 	result := make([]*models.Vulnerability, len(vulnerabilities))
 	for i, vuln := range vulnerabilities {
@@ -803,7 +803,7 @@ func (a *SecurityManagerAdapter) ListVulnerabilities(filter map[string]interface
 			ReportedBy:  vuln.ReportedBy,
 		}
 	}
-	
+
 	return result, len(result), nil
 }
 

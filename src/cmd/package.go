@@ -43,12 +43,12 @@ var (
 	}
 
 	// Flags
-	publicKeyPath  string
-	installDir     string
-	tempDir        string
-	backupDir      string
-	forceUpdate    bool
-	skipVerify     bool
+	publicKeyPath string
+	installDir    string
+	tempDir       string
+	backupDir     string
+	forceUpdate   bool
+	skipVerify    bool
 )
 
 func init() {

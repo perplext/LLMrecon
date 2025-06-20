@@ -178,12 +178,12 @@ func (e *EnhancedContextBoundaryEnforcer) RequireRole(role string) ContextBounda
 			if err != nil || session == nil {
 				return false
 			}
-			
+
 			user, err := e.authManager.GetUserByID(ctx, session.UserID)
 			if err != nil {
 				return false
 			}
-			
+
 			hasRole, err := e.rbacManager.HasRole(ctx, user.ID, value)
 			if err != nil {
 				return false
@@ -204,12 +204,12 @@ func (e *EnhancedContextBoundaryEnforcer) RequirePermission(permission string) C
 			if err != nil || session == nil {
 				return false
 			}
-			
+
 			user, err := e.authManager.GetUserByID(ctx, session.UserID)
 			if err != nil {
 				return false
 			}
-			
+
 			hasPermission, err := e.rbacManager.HasPermission(ctx, user.ID, value)
 			if err != nil {
 				return false
@@ -229,7 +229,7 @@ func (e *EnhancedContextBoundaryEnforcer) RequireMFA() ContextBoundary {
 			if err != nil || session == nil {
 				return false
 			}
-			
+
 			return session.MFACompleted
 		},
 	}

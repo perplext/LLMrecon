@@ -15,71 +15,71 @@ import (
 
 // Common errors
 var (
-	ErrUnauthorized          = errors.New("unauthorized access")
+	ErrUnauthorized = errors.New("unauthorized access")
 	// ErrInvalidCredentials is already defined in auth.go
 	// ErrMFARequired is already defined in auth.go
 	ErrMFAVerificationFailed = errors.New("multi-factor authentication verification failed")
 	// ErrUserNotFound is already defined in auth.go
 	// ErrSessionExpired is already defined in auth.go
-	ErrInvalidSession        = errors.New("invalid session")
+	ErrInvalidSession = errors.New("invalid session")
 )
 
 // User represents a user in the system
 type User struct {
 	// ID is the unique identifier for the user
 	ID string `json:"id"`
-	
+
 	// Username is the username of the user
 	Username string `json:"username"`
-	
+
 	// Email is the email address of the user
 	Email string `json:"email"`
-	
+
 	// PasswordHash is the hashed password of the user
 	PasswordHash string `json:"-"`
-	
+
 	// Enabled indicates if the user is enabled
 	Enabled bool `json:"enabled"`
-	
+
 	// Active indicates if the user is active (alias for Enabled for compatibility)
 	Active bool `json:"active"`
-	
+
 	// MFAEnabled indicates if MFA is enabled for the user
 	MFAEnabled bool `json:"mfa_enabled"`
-	
+
 	// MFAMethods contains the enabled MFA methods for the user
 	MFAMethods []string `json:"mfa_methods"`
-	
+
 	// MFAMethod is the default MFA method
 	MFAMethod string `json:"mfa_method,omitempty"`
-	
+
 	// MFASecret is the MFA secret (for TOTP)
 	MFASecret string `json:"mfa_secret,omitempty"`
-	
+
 	// Roles contains the user's roles
 	Roles []string `json:"roles"`
-	
+
 	// Permissions contains the user's permissions
 	Permissions []string `json:"permissions,omitempty"`
-	
+
 	// FailedLoginAttempts tracks failed login attempts
 	FailedLoginAttempts int `json:"failed_login_attempts"`
-	
+
 	// Locked indicates if the user account is locked
 	Locked bool `json:"locked"`
-	
+
 	// LastLogin is the timestamp of the last successful login
 	LastLogin time.Time `json:"last_login"`
-	
+
 	// LastPasswordChange is the timestamp of the last password change
 	LastPasswordChange time.Time `json:"last_password_change"`
-	
+
 	// CreatedAt is the timestamp when the user was created
 	CreatedAt time.Time `json:"created_at"`
-	
+
 	// UpdatedAt is the timestamp when the user was last updated
 	UpdatedAt time.Time `json:"updated_at"`
-	
+
 	// Metadata contains additional user metadata
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
@@ -90,22 +90,22 @@ type User struct {
 type Session struct {
 	// ID is the unique identifier for the session
 	ID string `json:"id"`
-	
+
 	// UserID is the ID of the user associated with the session
 	UserID string `json:"user_id"`
-	
+
 	// CreatedAt is the timestamp when the session was created
 	CreatedAt time.Time `json:"created_at"`
-	
+
 	// ExpiresAt is the timestamp when the session expires
 	ExpiresAt time.Time `json:"expires_at"`
-	
+
 	// MFAVerified indicates if MFA has been verified for this session
 	MFAVerified bool `json:"mfa_verified"`
-	
+
 	// IP is the IP address associated with the session
 	IP string `json:"ip"`
-	
+
 	// UserAgent is the user agent associated with the session
 	UserAgent string `json:"user_agent"`
 }
@@ -126,22 +126,22 @@ type AccessControlIntegration struct {
 type UserStore interface {
 	// CreateUser creates a new user
 	CreateUser(ctx context.Context, user *User) error
-	
+
 	// GetUserByID retrieves a user by ID
 	GetUserByID(ctx context.Context, userID string) (*User, error)
-	
+
 	// GetUserByUsername retrieves a user by username
 	GetUserByUsername(ctx context.Context, username string) (*User, error)
-	
+
 	// GetUserByEmail retrieves a user by email
 	GetUserByEmail(ctx context.Context, email string) (*User, error)
-	
+
 	// UpdateUser updates an existing user
 	UpdateUser(ctx context.Context, user *User) error
-	
+
 	// DeleteUser deletes a user
 	DeleteUser(ctx context.Context, userID string) error
-	
+
 	// ListUsers lists all users
 	ListUsers(ctx context.Context) ([]*User, error)
 }
@@ -153,22 +153,22 @@ type UserStore interface {
 type SessionStore interface {
 	// CreateSession creates a new session
 	CreateSession(ctx context.Context, session *Session) error
-	
+
 	// GetSession retrieves a session by ID
 	GetSession(ctx context.Context, sessionID string) (*Session, error)
-	
+
 	// UpdateSession updates an existing session
 	UpdateSession(ctx context.Context, session *Session) error
-	
+
 	// DeleteSession deletes a session
 	DeleteSession(ctx context.Context, sessionID string) error
-	
+
 	// DeleteUserSessions deletes all sessions for a user
 	DeleteUserSessions(ctx context.Context, userID string) error
-	
+
 	// ListUserSessions lists all sessions for a user
 	ListUserSessions(ctx context.Context, userID string) ([]*Session, error)
-	
+
 	// CleanupExpiredSessions cleans up expired sessions
 	CleanupExpiredSessions(ctx context.Context) error
 }
@@ -534,7 +534,7 @@ func (a *AccessControlIntegration) GetUserPermissions(ctx context.Context, userI
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert strings to Permission objects
 	permissions := make([]*rbac.Permission, len(permStrings))
 	for i, perm := range permStrings {
@@ -543,7 +543,7 @@ func (a *AccessControlIntegration) GetUserPermissions(ctx context.Context, userI
 			Name: perm,
 		}
 	}
-	
+
 	return permissions, nil
 }
 

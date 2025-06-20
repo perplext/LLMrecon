@@ -179,7 +179,7 @@ func interactiveCreateBundle() error {
 
 	// Bundle options
 	var compress, encrypt, sign bool
-	
+
 	compressPrompt := &survey.Confirm{
 		Message: "Compress bundle?",
 		Default: true,
@@ -266,7 +266,7 @@ func interactiveVerifyBundle() error {
 
 	// Verification options
 	var skipSignature, skipIntegrity, verbose bool
-	
+
 	skipSigPrompt := &survey.Confirm{
 		Message: "Skip signature verification?",
 		Default: false,
@@ -335,7 +335,7 @@ func interactiveImportBundle() error {
 
 	// Import options
 	var dryRun, force, preserveOWASP bool
-	
+
 	dryRunPrompt := &survey.Confirm{
 		Message: "Perform dry run first?",
 		Default: true,
@@ -517,9 +517,9 @@ func interactiveGenerateReport() error {
 	color.Cyan("Input: %s", inputPath)
 	color.Cyan("Output Formats: %s", strings.Join(formats, ", "))
 	color.Cyan("Output Directory: %s", outputDir)
-	
+
 	// TODO: Execute actual report generation when reporting commands are implemented
-	
+
 	return nil
 }
 

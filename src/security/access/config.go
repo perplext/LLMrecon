@@ -158,20 +158,20 @@ const (
 
 // Vulnerability represents a security vulnerability
 type Vulnerability struct {
-	ID             string                 `json:"id"`
-	Title          string                 `json:"title"`
-	Description    string                 `json:"description"`
-	Severity       AuditSeverity          `json:"severity"`
-	Status         VulnerabilityStatus    `json:"status"`
-	CreatedAt      time.Time              `json:"created_at"`
-	UpdatedAt      time.Time              `json:"updated_at"`
-	ResolvedAt     time.Time              `json:"resolved_at,omitempty"`
-	AssignedTo     string                 `json:"assigned_to,omitempty"`
-	ReportedBy     string                 `json:"reported_by,omitempty"`
-	AffectedSystem string                 `json:"affected_system,omitempty"`
-	CVE            string                 `json:"cve,omitempty"`
-	RemediationPlan string                `json:"remediation_plan,omitempty"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	ID              string                 `json:"id"`
+	Title           string                 `json:"title"`
+	Description     string                 `json:"description"`
+	Severity        AuditSeverity          `json:"severity"`
+	Status          VulnerabilityStatus    `json:"status"`
+	CreatedAt       time.Time              `json:"created_at"`
+	UpdatedAt       time.Time              `json:"updated_at"`
+	ResolvedAt      time.Time              `json:"resolved_at,omitempty"`
+	AssignedTo      string                 `json:"assigned_to,omitempty"`
+	ReportedBy      string                 `json:"reported_by,omitempty"`
+	AffectedSystem  string                 `json:"affected_system,omitempty"`
+	CVE             string                 `json:"cve,omitempty"`
+	RemediationPlan string                 `json:"remediation_plan,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // VulnerabilityStatus represents the status of a vulnerability
@@ -198,24 +198,24 @@ func DefaultAccessControlConfigV2() *AccessControlConfig {
 			RoleManager,
 		},
 		PasswordPolicy: PasswordPolicy{
-			MinLength:         12,
-			RequireUppercase:  true,
-			RequireLowercase:  true,
-			RequireNumbers:    true,
+			MinLength:           12,
+			RequireUppercase:    true,
+			RequireLowercase:    true,
+			RequireNumbers:      true,
 			RequireSpecialChars: true,
-			MaxAge:            90,
-			PreventReuseCount: 5,
-			LockoutThreshold:  5,
-			LockoutDuration:   30,
+			MaxAge:              90,
+			PreventReuseCount:   5,
+			LockoutThreshold:    5,
+			LockoutDuration:     30,
 		},
 		SessionPolicy: SessionPolicy{
-			TokenExpiration:        60,
-			RefreshTokenExpiration: 1440, // 24 hours
-			InactivityTimeout:      30,
-			MaxConcurrentSessions:  5,
-			EnforceIPBinding:       true,
+			TokenExpiration:         60,
+			RefreshTokenExpiration:  1440, // 24 hours
+			InactivityTimeout:       30,
+			MaxConcurrentSessions:   5,
+			EnforceIPBinding:        true,
 			EnforceUserAgentBinding: true,
-			CleanupInterval:        15,
+			CleanupInterval:         15,
 		},
 		AuditConfig: AuditConfig{
 			EnabledSeverities: []AuditSeverity{
@@ -255,13 +255,13 @@ func DefaultAccessControlConfigV2() *AccessControlConfig {
 type RBACConfigSettings struct {
 	// DefaultRoles specifies the default roles available in the system
 	DefaultRoles []string `json:"default_roles"`
-	
+
 	// RolePermissions maps role names to their permissions
 	RolePermissions map[string][]string `json:"role_permissions"`
-	
+
 	// StrictHierarchy enables strict role hierarchy enforcement
 	StrictHierarchy bool `json:"strict_hierarchy"`
-	
+
 	// AllowDirectPermissions allows direct permission assignments to users
 	AllowDirectPermissions bool `json:"allow_direct_permissions"`
 }

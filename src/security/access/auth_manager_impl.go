@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/perplext/LLMrecon/src/security/access/converters"
 	"github.com/perplext/LLMrecon/src/security/access/interfaces"
 	"github.com/perplext/LLMrecon/src/security/access/models"
 	"golang.org/x/crypto/bcrypt"
@@ -29,7 +28,7 @@ type AuthConfig struct {
 	// Session configuration
 	SessionTimeout     time.Duration
 	SessionMaxInactive time.Duration
-	
+
 	// Password configuration
 	PasswordMinLength      int
 	PasswordRequireUpper   bool
@@ -37,7 +36,7 @@ type AuthConfig struct {
 	PasswordRequireNumber  bool
 	PasswordRequireSpecial bool
 	PasswordMaxAge         time.Duration
-	
+
 	// MFA configuration
 	MFAEnabled bool
 	MFAMethods []string
@@ -53,7 +52,7 @@ func NewAuthManagerImpl(userStore interfaces.UserStore, sessionStore interfaces.
 			PasswordMinLength:  8,
 		}
 	}
-	
+
 	return &AuthManagerImpl{
 		userStore:    userStore,
 		sessionStore: sessionStore,
@@ -96,9 +95,9 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 			Status:      "failed",
 			Timestamp:   time.Now(),
 		}
-		
+
 		_ = m.auditLogger.LogAudit(ctx, auditLog)
-		
+
 		return nil, errors.New("invalid username or password")
 	}
 
@@ -121,9 +120,9 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 			Status:      "failed_inactive",
 			Timestamp:   time.Now(),
 		}
-		
+
 		_ = m.auditLogger.LogAudit(ctx, auditLog)
-		
+
 		return nil, errors.New("user account is inactive")
 	}
 
@@ -146,9 +145,9 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 			Status:      "failed_locked",
 			Timestamp:   time.Now(),
 		}
-		
+
 		_ = m.auditLogger.LogAudit(ctx, auditLog)
-		
+
 		return nil, errors.New("user account is locked")
 	}
 
@@ -157,15 +156,15 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 	if err != nil {
 		// Increment failed login attempts
 		user.FailedLoginAttempts++
-		
+
 		// Lock the account if too many failed attempts
 		if user.FailedLoginAttempts >= 5 {
 			user.Locked = true
 		}
-		
+
 		// Update the user
 		_ = m.userStore.UpdateUser(ctx, user)
-		
+
 		// Log failed login attempt
 		ipAddress := getIPFromContext(ctx)
 		userAgent := getUserAgentFromContext(ctx)
@@ -183,16 +182,16 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 			Status:      "failed_password",
 			Timestamp:   time.Now(),
 		}
-		
+
 		_ = m.auditLogger.LogAudit(ctx, auditLog)
-		
+
 		return nil, errors.New("invalid username or password")
 	}
 
 	// Reset failed login attempts
 	user.FailedLoginAttempts = 0
 	user.LastLogin = time.Now()
-	
+
 	// Update the user
 	_ = m.userStore.UpdateUser(ctx, user)
 
@@ -231,7 +230,7 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 		Status:      "success",
 		Timestamp:   time.Now(),
 	}
-	
+
 	_ = m.auditLogger.LogAudit(ctx, auditLog)
 
 	return session, nil
@@ -250,7 +249,7 @@ func (m *AuthManagerImpl) Logout(ctx context.Context, sessionID string) error {
 
 	// Mark session as expired by setting expiry to now
 	session.ExpiresAt = time.Now()
-	
+
 	// Update the session
 	err = m.sessionStore.UpdateSession(ctx, session)
 	if err != nil {
@@ -279,7 +278,7 @@ func (m *AuthManagerImpl) Logout(ctx context.Context, sessionID string) error {
 		Status:      "success",
 		Timestamp:   time.Now(),
 	}
-	
+
 	_ = m.auditLogger.LogAudit(ctx, auditLog)
 
 	return nil
@@ -306,7 +305,7 @@ func (m *AuthManagerImpl) ValidateSession(ctx context.Context, sessionID string)
 		// Mark session as expired
 		session.ExpiresAt = time.Now()
 		_ = m.sessionStore.UpdateSession(ctx, session)
-		
+
 		return nil, errors.New("session has been inactive for too long")
 	}
 
@@ -336,7 +335,7 @@ func (m *AuthManagerImpl) RefreshSession(ctx context.Context, sessionID string) 
 	// Refresh the session
 	session.ExpiresAt = time.Now().Add(m.config.SessionTimeout)
 	session.LastActivity = time.Now()
-	
+
 	// Update the session
 	err = m.sessionStore.UpdateSession(ctx, session)
 	if err != nil {
@@ -372,9 +371,9 @@ func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPasswor
 			Severity:    AuditSeverityMedium,
 			Status:      "failed",
 		}
-		
+
 		_ = m.auditLogger.LogAudit(ctx, auditLog)
-		
+
 		return errors.New("incorrect old password")
 	}
 
@@ -397,9 +396,9 @@ func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPasswor
 			Status:      "failed",
 			Timestamp:   time.Now(),
 		}
-		
+
 		_ = m.auditLogger.LogAudit(ctx, auditLog)
-		
+
 		return err
 	}
 
@@ -412,7 +411,7 @@ func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPasswor
 	// Update the user
 	user.PasswordHash = string(hashedPassword)
 	user.UpdatedAt = time.Now()
-	
+
 	err = m.userStore.UpdateUser(ctx, user)
 	if err != nil {
 		return err
@@ -434,7 +433,7 @@ func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPasswor
 		Status:      "success",
 		Timestamp:   time.Now(),
 	}
-	
+
 	_ = m.auditLogger.LogAudit(ctx, auditLog)
 
 	return nil
@@ -466,9 +465,9 @@ func (m *AuthManagerImpl) ResetPassword(ctx context.Context, userID, newPassword
 			Severity:    AuditSeverityMedium,
 			Status:      "failed",
 		}
-		
+
 		_ = m.auditLogger.LogAudit(ctx, auditLog)
-		
+
 		return err
 	}
 
@@ -483,7 +482,7 @@ func (m *AuthManagerImpl) ResetPassword(ctx context.Context, userID, newPassword
 	user.UpdatedAt = time.Now()
 	user.FailedLoginAttempts = 0
 	user.Locked = false
-	
+
 	err = m.userStore.UpdateUser(ctx, user)
 	if err != nil {
 		return err
@@ -505,7 +504,7 @@ func (m *AuthManagerImpl) ResetPassword(ctx context.Context, userID, newPassword
 		Status:      "success",
 		Timestamp:   time.Now(),
 	}
-	
+
 	_ = m.auditLogger.LogAudit(ctx, auditLog)
 
 	return nil
@@ -591,12 +590,12 @@ func getIPFromContext(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	
+
 	ip, ok := ctx.Value("ip").(string)
 	if !ok {
 		return ""
 	}
-	
+
 	return ip
 }
 
@@ -604,13 +603,11 @@ func getUserAgentFromContext(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	
+
 	userAgent, ok := ctx.Value("user_agent").(string)
 	if !ok {
 		return ""
 	}
-	
+
 	return userAgent
 }
-
-

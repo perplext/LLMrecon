@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/perplext/LLMrecon/src/config"
 	"github.com/perplext/LLMrecon/src/update"
-	"github.com/perplext/LLMrecon/src/version"
 	"github.com/spf13/cobra"
 )
 
@@ -177,9 +174,9 @@ func createBundleOptions(cfg *config.Config, component, filter, category, source
 		IncludeModules:   component == "all" || component == "modules",
 		IncludeDocs:      includeCompliance,
 		Metadata: map[string]interface{}{
-			"created_at":    time.Now().Format(time.RFC3339),
-			"tool_version":  currentVersion,
-			"source":        source,
+			"created_at":   time.Now().Format(time.RFC3339),
+			"tool_version": currentVersion,
+			"source":       source,
 		},
 	}
 
@@ -198,7 +195,7 @@ func createBundleOptions(cfg *config.Config, component, filter, category, source
 	// Set encryption
 	if encrypt && password != "" {
 		opts.Encryption = &bundle.EncryptionOptions{
-			Algorithm: bundle.EncryptionAES256GCM,
+			Algorithm: "aes-256-gcm",
 			Password:  password,
 		}
 	}
@@ -206,15 +203,14 @@ func createBundleOptions(cfg *config.Config, component, filter, category, source
 	// Set filters
 	if filter != "" || category != "" {
 		opts.Filters = &bundle.ExportFilters{}
-		
+
 		if filter != "" {
-			opts.Filters.PathPatterns = []string{filter}
+			opts.Filters.IncludeList = []string{filter}
 		}
-		
+
 		if category != "" {
 			// Add OWASP category filter
-			opts.Filters.PathPatterns = append(opts.Filters.PathPatterns, 
-				fmt.Sprintf("templates/%s/**", category))
+			opts.Filters.TemplateCategories = []string{category}
 			opts.Metadata["owasp_category"] = category
 		}
 	}
@@ -231,91 +227,56 @@ func createBundleOptions(cfg *config.Config, component, filter, category, source
 }
 
 func createBundleExporter(ctx context.Context, cfg *config.Config, source string, opts *bundle.ExportOptions) (*bundle.BundleExporter, error) {
-	var sourceDir string
-
 	switch source {
 	case "github":
 		// Clone/fetch from GitHub
 		fmt.Println(dim("Fetching templates from GitHub..."))
-		tempDir, err := fetchFromGitHub(ctx, cfg)
+		_, err := fetchFromGitHub(ctx, cfg)
 		if err != nil {
 			return nil, fmt.Errorf("fetching from GitHub: %w", err)
 		}
-		sourceDir = tempDir
-		
+
 	case "gitlab":
 		// Clone/fetch from GitLab
 		fmt.Println(dim("Fetching templates from GitLab..."))
-		tempDir, err := fetchFromGitLab(ctx, cfg)
+		_, err := fetchFromGitLab(ctx, cfg)
 		if err != nil {
 			return nil, fmt.Errorf("fetching from GitLab: %w", err)
 		}
-		sourceDir = tempDir
-		
+
 	default:
 		// Use local source
-		sourceDir = "."
 	}
 
-	return bundle.NewBundleExporter(sourceDir, opts), nil
+	return bundle.NewBundleExporter(*opts), nil
 }
 
-func createProgressHandler(verbose bool) bundle.ProgressHandler {
-	var lastStage bundle.ProgressStage
+func createProgressHandler(verbose bool) bundle.ExportProgressHandler {
 	startTime := time.Now()
 
-	return func(event bundle.ProgressEvent) {
-		// Update stage
-		if event.Stage != lastStage {
-			lastStage = event.Stage
-			fmt.Printf("\n%s %s\n", getStageIcon(event.Stage), event.Operation)
+	return func(progress bundle.ProgressInfo) {
+		// Show progress
+		if progress.Message != "" && verbose {
+			fmt.Printf("%s: %s\n", progress.Stage, progress.Message)
 		}
 
 		// Show progress bar for file operations
-		if event.ItemsTotal > 0 && verbose {
-			percentage := float64(event.ItemsProcessed) / float64(event.ItemsTotal) * 100
-			fmt.Printf("\r  Progress: %3.0f%% [%d/%d files]", 
-				percentage, event.ItemsProcessed, event.ItemsTotal)
+		if progress.Total > 0 {
+			fmt.Printf("\r  Progress: %3.0f%% [%d/%d files]",
+				progress.Percentage, progress.Current, progress.Total)
 		}
 
 		// Show current file in verbose mode
-		if verbose && event.CurrentFile != "" {
-			fmt.Printf("\n  %s %s", dim("→"), event.CurrentFile)
+		if verbose && progress.CurrentFile != "" {
+			fmt.Printf("\n  %s %s", dim("→"), progress.CurrentFile)
 		}
 
 		// Show completion
-		if event.Stage == bundle.StageCompleted {
+		if progress.Stage == "completed" {
 			elapsed := time.Since(startTime)
 			fmt.Printf("\n\n%s Completed in %s\n", green("✓"), elapsed.Round(time.Millisecond))
 		}
 
-		// Show errors
-		if event.Error != nil {
-			fmt.Printf("\n%s Error: %v\n", red("✗"), event.Error)
-		}
-	}
-}
-
-func getStageIcon(stage bundle.ProgressStage) string {
-	switch stage {
-	case bundle.StageInitializing:
-		return blue("◐")
-	case bundle.StageCollecting:
-		return blue("◑")
-	case bundle.StageCompressing:
-		return blue("◒")
-	case bundle.StageEncrypting:
-		return blue("◓")
-	case bundle.StageWriting:
-		return blue("◔")
-	case bundle.StageFinalizing:
-		return blue("◕")
-	case bundle.StageCompleted:
-		return green("●")
-	case bundle.StageFailed:
-		return red("●")
-	default:
-		return dim("●")
 	}
 }
 
@@ -343,7 +304,7 @@ func calculateBundleChecksum(bundlePath string) string {
 	if err != nil {
 		return "error"
 	}
-	
+
 	// Return first 12 characters for display
 	if len(checksum) > 12 {
 		return checksum[:12] + "..."

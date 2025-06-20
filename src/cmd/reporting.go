@@ -1,3 +1,5 @@
+//go:build ignore
+
 package cmd
 
 import (
@@ -136,17 +138,17 @@ Example:
 
 		// Create report options
 		options := &reporting.ReportOptions{
-			Format:             reportFormat,
-			Title:              title,
-			Description:        description,
-			IncludePassedTests: includePassed,
+			Format:              reportFormat,
+			Title:               title,
+			Description:         description,
+			IncludePassedTests:  includePassed,
 			IncludeSkippedTests: includeSkipped,
 			IncludePendingTests: includePending,
-			MinimumSeverity:    severityLevel,
-			IncludeTags:        includeTags,
-			ExcludeTags:        excludeTags,
-			TemplatePath:       templatePath,
-			OutputPath:         output,
+			MinimumSeverity:     severityLevel,
+			IncludeTags:         includeTags,
+			ExcludeTags:         excludeTags,
+			TemplatePath:        templatePath,
+			OutputPath:          output,
 			Metadata: map[string]interface{}{
 				"generated_by":    "LLMrecon CLI",
 				"generation_time": time.Now().Format(time.RFC3339),
@@ -279,17 +281,17 @@ Example:
 
 		// Create report options
 		options := &reporting.ReportOptions{
-			Format:             reportFormat,
-			Title:              title,
-			Description:        description,
-			IncludePassedTests: includePassed,
+			Format:              reportFormat,
+			Title:               title,
+			Description:         description,
+			IncludePassedTests:  includePassed,
 			IncludeSkippedTests: includeSkipped,
 			IncludePendingTests: includePending,
-			MinimumSeverity:    severityLevel,
-			IncludeTags:        includeTags,
-			ExcludeTags:        excludeTags,
-			TemplatePath:       templatePath,
-			OutputPath:         output,
+			MinimumSeverity:     severityLevel,
+			IncludeTags:         includeTags,
+			ExcludeTags:         excludeTags,
+			TemplatePath:        templatePath,
+			OutputPath:          output,
 			Metadata: map[string]interface{}{
 				"generated_by":    "LLMrecon CLI",
 				"generation_time": time.Now().Format(time.RFC3339),
@@ -381,9 +383,9 @@ Example:
 		// Format report
 		ctx := context.Background()
 		options := &reporting.ReportOptions{
-			Format:      reportFormat,
+			Format:       reportFormat,
 			TemplatePath: templatePath,
-			OutputPath:  output,
+			OutputPath:   output,
 		}
 		_, err = formatter.Format(ctx, &report, options)
 		if err != nil {

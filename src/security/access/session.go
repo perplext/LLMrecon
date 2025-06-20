@@ -9,17 +9,17 @@ import (
 
 // Session represents a user session
 type Session struct {
-	ID              string                 `json:"id"`
-	UserID          string                 `json:"user_id"`
-	Token           string                 `json:"token"`
-	RefreshToken    string                 `json:"refresh_token,omitempty"`
-	IPAddress       string                 `json:"ip_address"`
-	UserAgent       string                 `json:"user_agent"`
-	ExpiresAt       time.Time              `json:"expires_at"`
-	LastActivity    time.Time              `json:"last_activity"`
-	MFACompleted    bool                   `json:"mfa_completed"`
-	CreatedAt       time.Time              `json:"created_at"`
-	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+	ID           string                 `json:"id"`
+	UserID       string                 `json:"user_id"`
+	Token        string                 `json:"token"`
+	RefreshToken string                 `json:"refresh_token,omitempty"`
+	IPAddress    string                 `json:"ip_address"`
+	UserAgent    string                 `json:"user_agent"`
+	ExpiresAt    time.Time              `json:"expires_at"`
+	LastActivity time.Time              `json:"last_activity"`
+	MFACompleted bool                   `json:"mfa_completed"`
+	CreatedAt    time.Time              `json:"created_at"`
+	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // IsExpired checks if the session has expired
@@ -29,15 +29,15 @@ func (s *Session) IsExpired() bool {
 
 // SimpleInMemorySessionStore is a simple in-memory implementation of SessionStore
 type SimpleInMemorySessionStore struct {
-	sessions map[string]*Session
+	sessions     map[string]*Session
 	userSessions map[string][]string // Maps userID to session IDs
-	mu       sync.RWMutex
+	mu           sync.RWMutex
 }
 
 // NewSimpleInMemorySessionStore creates a new simple in-memory session store
 func NewSimpleInMemorySessionStore() *SimpleInMemorySessionStore {
 	return &SimpleInMemorySessionStore{
-		sessions: make(map[string]*Session),
+		sessions:     make(map[string]*Session),
 		userSessions: make(map[string][]string),
 	}
 }
@@ -154,7 +154,7 @@ func (s *SimpleInMemorySessionStore) CleanExpiredSessions(ctx context.Context) e
 	// Delete expired sessions
 	for _, id := range expiredIDs {
 		session := s.sessions[id]
-		
+
 		// Remove from user sessions
 		if userSessions, ok := s.userSessions[session.UserID]; ok {
 			newUserSessions := make([]string, 0, len(userSessions))
@@ -165,7 +165,7 @@ func (s *SimpleInMemorySessionStore) CleanExpiredSessions(ctx context.Context) e
 			}
 			s.userSessions[session.UserID] = newUserSessions
 		}
-		
+
 		// Delete session
 		delete(s.sessions, id)
 	}
@@ -182,20 +182,20 @@ type PersistentSessionStore interface {
 
 // SessionManager manages user sessions
 type SessionManager struct {
-	store      SessionStore
-	config     *SessionPolicy
-	auditLogger AuditLogger
+	store         SessionStore
+	config        *SessionPolicy
+	auditLogger   AuditLogger
 	cleanupTicker *time.Ticker
-	stopChan   chan struct{}
+	stopChan      chan struct{}
 }
 
 // NewSessionManager creates a new session manager
 func NewSessionManager(store SessionStore, config *SessionPolicy, auditLogger AuditLogger) *SessionManager {
 	manager := &SessionManager{
-		store:      store,
-		config:     config,
+		store:       store,
+		config:      config,
 		auditLogger: auditLogger,
-		stopChan:   make(chan struct{}),
+		stopChan:    make(chan struct{}),
 	}
 
 	// Start cleanup routine if cleanup interval is set
@@ -217,12 +217,12 @@ func (m *SessionManager) cleanupRoutine() {
 				// Log error
 				if m.auditLogger != nil {
 					m.auditLogger.LogAudit(ctx, &AuditLog{
-						Timestamp:  time.Now(),
-						Action:     AuditActionSystem,
-						Resource:   "session",
+						Timestamp:   time.Now(),
+						Action:      AuditActionSystem,
+						Resource:    "session",
 						Description: "Failed to clean up expired sessions",
-						Severity:   AuditSeverityError,
-						Status:     "failed",
+						Severity:    AuditSeverityError,
+						Status:      "failed",
 						Metadata: map[string]interface{}{
 							"error": err.Error(),
 						},
@@ -273,17 +273,17 @@ func (m *SessionManager) CreateSession(ctx context.Context, userID, ipAddress, u
 	// Log session creation
 	if m.auditLogger != nil {
 		m.auditLogger.LogAudit(ctx, &AuditLog{
-			Timestamp:  time.Now(),
-			UserID:     userID,
-			Action:     AuditActionLogin,
-			Resource:   "session",
-			ResourceID: session.ID,
+			Timestamp:   time.Now(),
+			UserID:      userID,
+			Action:      AuditActionLogin,
+			Resource:    "session",
+			ResourceID:  session.ID,
 			Description: "Session created",
-			IPAddress:  ipAddress,
-			UserAgent:  userAgent,
-			Severity:   AuditSeverityInfo,
-			Status:     "success",
-			SessionID:  session.ID,
+			IPAddress:   ipAddress,
+			UserAgent:   userAgent,
+			Severity:    AuditSeverityInfo,
+			Status:      "success",
+			SessionID:   session.ID,
 			Metadata: map[string]interface{}{
 				"mfa_completed": mfaCompleted,
 			},
@@ -323,17 +323,17 @@ func (m *SessionManager) ValidateSession(ctx context.Context, sessionID, token s
 		// Log suspicious activity
 		if m.auditLogger != nil {
 			m.auditLogger.LogAudit(ctx, &AuditLog{
-				Timestamp:  time.Now(),
-				UserID:     session.UserID,
-				Action:     AuditActionLogin,
-				Resource:   "session",
-				ResourceID: session.ID,
+				Timestamp:   time.Now(),
+				UserID:      session.UserID,
+				Action:      AuditActionLogin,
+				Resource:    "session",
+				ResourceID:  session.ID,
 				Description: "Session IP mismatch",
-				IPAddress:  ipAddress,
-				UserAgent:  userAgent,
-				Severity:   AuditSeverityHigh,
-				Status:     "failed",
-				SessionID:  session.ID,
+				IPAddress:   ipAddress,
+				UserAgent:   userAgent,
+				Severity:    AuditSeverityHigh,
+				Status:      "failed",
+				SessionID:   session.ID,
 				Metadata: map[string]interface{}{
 					"expected_ip": session.IPAddress,
 					"actual_ip":   ipAddress,
@@ -348,17 +348,17 @@ func (m *SessionManager) ValidateSession(ctx context.Context, sessionID, token s
 		// Log suspicious activity
 		if m.auditLogger != nil {
 			m.auditLogger.LogAudit(ctx, &AuditLog{
-				Timestamp:  time.Now(),
-				UserID:     session.UserID,
-				Action:     AuditActionLogin,
-				Resource:   "session",
-				ResourceID: session.ID,
+				Timestamp:   time.Now(),
+				UserID:      session.UserID,
+				Action:      AuditActionLogin,
+				Resource:    "session",
+				ResourceID:  session.ID,
 				Description: "Session user agent mismatch",
-				IPAddress:  ipAddress,
-				UserAgent:  userAgent,
-				Severity:   AuditSeverityMedium,
-				Status:     "failed",
-				SessionID:  session.ID,
+				IPAddress:   ipAddress,
+				UserAgent:   userAgent,
+				Severity:    AuditSeverityMedium,
+				Status:      "failed",
+				SessionID:   session.ID,
 				Metadata: map[string]interface{}{
 					"expected_user_agent": session.UserAgent,
 					"actual_user_agent":   userAgent,
@@ -427,17 +427,17 @@ func (m *SessionManager) RefreshSession(ctx context.Context, sessionID, refreshT
 	// Log session refresh
 	if m.auditLogger != nil {
 		m.auditLogger.LogAudit(ctx, &AuditLog{
-			Timestamp:  time.Now(),
-			UserID:     session.UserID,
-			Action:     AuditActionLogin,
-			Resource:   "session",
-			ResourceID: session.ID,
+			Timestamp:   time.Now(),
+			UserID:      session.UserID,
+			Action:      AuditActionLogin,
+			Resource:    "session",
+			ResourceID:  session.ID,
 			Description: "Session refreshed",
-			IPAddress:  session.IPAddress,
-			UserAgent:  session.UserAgent,
-			Severity:   AuditSeverityInfo,
-			Status:     "success",
-			SessionID:  session.ID,
+			IPAddress:   session.IPAddress,
+			UserAgent:   session.UserAgent,
+			Severity:    AuditSeverityInfo,
+			Status:      "success",
+			SessionID:   session.ID,
 		})
 	}
 
@@ -460,17 +460,17 @@ func (m *SessionManager) InvalidateSession(ctx context.Context, sessionID string
 	// Log session invalidation
 	if m.auditLogger != nil {
 		m.auditLogger.LogAudit(ctx, &AuditLog{
-			Timestamp:  time.Now(),
-			UserID:     session.UserID,
-			Action:     AuditActionLogout,
-			Resource:   "session",
-			ResourceID: session.ID,
+			Timestamp:   time.Now(),
+			UserID:      session.UserID,
+			Action:      AuditActionLogout,
+			Resource:    "session",
+			ResourceID:  session.ID,
 			Description: "Session invalidated",
-			IPAddress:  session.IPAddress,
-			UserAgent:  session.UserAgent,
-			Severity:   AuditSeverityInfo,
-			Status:     "success",
-			SessionID:  session.ID,
+			IPAddress:   session.IPAddress,
+			UserAgent:   session.UserAgent,
+			Severity:    AuditSeverityInfo,
+			Status:      "success",
+			SessionID:   session.ID,
 		})
 	}
 
@@ -494,17 +494,17 @@ func (m *SessionManager) InvalidateUserSessions(ctx context.Context, userID stri
 		// Log session invalidation
 		if m.auditLogger != nil {
 			m.auditLogger.LogAudit(ctx, &AuditLog{
-				Timestamp:  time.Now(),
-				UserID:     userID,
-				Action:     AuditActionLogout,
-				Resource:   "session",
-				ResourceID: session.ID,
+				Timestamp:   time.Now(),
+				UserID:      userID,
+				Action:      AuditActionLogout,
+				Resource:    "session",
+				ResourceID:  session.ID,
 				Description: "Session invalidated (user logout)",
-				IPAddress:  session.IPAddress,
-				UserAgent:  session.UserAgent,
-				Severity:   AuditSeverityInfo,
-				Status:     "success",
-				SessionID:  session.ID,
+				IPAddress:   session.IPAddress,
+				UserAgent:   session.UserAgent,
+				Severity:    AuditSeverityInfo,
+				Status:      "success",
+				SessionID:   session.ID,
 			})
 		}
 	}

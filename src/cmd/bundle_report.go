@@ -9,10 +9,8 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"github.com/perplext/LLMrecon/src/bundle"
-	"github.com/perplext/LLMrecon/src/reporting"
-	"github.com/perplext/LLMrecon/src/template/management"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -39,7 +37,7 @@ var bundleReportCmd = &cobra.Command{
 
 func init() {
 	bundleCmd.AddCommand(bundleReportCmd)
-	
+
 	bundleReportCmd.Flags().StringSliceVarP(&reportFormats, "format", "f", []string{"html"}, "Output formats (html,json,pdf,markdown,csv)")
 	bundleReportCmd.Flags().StringVarP(&reportType, "type", "t", "full", "Report type (full,owasp,iso42001,coverage,vulnerabilities)")
 	bundleReportCmd.Flags().StringVarP(&reportOutput, "output", "o", "./reports", "Output directory for reports")
@@ -50,7 +48,7 @@ func init() {
 
 func runBundleReport(cmd *cobra.Command, args []string) error {
 	bundlePath := args[0]
-	
+
 	// Verify bundle exists
 	if _, err := os.Stat(bundlePath); err != nil {
 		return fmt.Errorf("bundle file not found: %s", bundlePath)
@@ -83,14 +81,14 @@ func runBundleReport(cmd *cobra.Command, args []string) error {
 
 	for _, format := range reportFormats {
 		outputPath := filepath.Join(reportOutput, baseFilename+"."+format)
-		
+
 		color.Yellow("  Generating %s report...", strings.ToUpper(format))
-		
+
 		if err := generateReportInFormat(reportData, format, outputPath); err != nil {
 			color.Red("  ✗ Failed to generate %s report: %v", format, err)
 			continue
 		}
-		
+
 		color.Green("  ✓ Generated: %s", outputPath)
 	}
 
@@ -100,13 +98,13 @@ func runBundleReport(cmd *cobra.Command, args []string) error {
 }
 
 type BundleReportData struct {
-	Metadata       BundleMetadata         `json:"metadata"`
-	Summary        ReportSummary          `json:"summary"`
-	OWASPAnalysis  *OWASPComplianceReport `json:"owasp_analysis,omitempty"`
-	ISOAnalysis    *ISOComplianceReport   `json:"iso_analysis,omitempty"`
-	Statistics     *BundleStatistics      `json:"statistics,omitempty"`
-	Vulnerabilities []VulnerabilityReport  `json:"vulnerabilities,omitempty"`
-	Coverage       *CoverageReport        `json:"coverage,omitempty"`
+	Metadata        BundleMetadata          `json:"metadata"`
+	Summary         ReportSummary           `json:"summary"`
+	OWASPAnalysis   *OWASPComplianceReport  `json:"owasp_analysis,omitempty"`
+	ISOAnalysis     *ISOComplianceReport    `json:"iso_analysis,omitempty"`
+	Statistics      *BundleReportStatistics `json:"statistics,omitempty"`
+	Vulnerabilities []VulnerabilityReport   `json:"vulnerabilities,omitempty"`
+	Coverage        *CoverageReport         `json:"coverage,omitempty"`
 }
 
 type BundleMetadata struct {
@@ -135,10 +133,10 @@ type OWASPComplianceReport struct {
 }
 
 type CategoryCompliance struct {
-	Category         string  `json:"category"`
-	Score           float64 `json:"score"`
-	TemplateCount   int     `json:"template_count"`
-	Coverage        float64 `json:"coverage"`
+	Category        string   `json:"category"`
+	Score           float64  `json:"score"`
+	TemplateCount   int      `json:"template_count"`
+	Coverage        float64  `json:"coverage"`
 	MissingPatterns []string `json:"missing_patterns,omitempty"`
 }
 
@@ -151,19 +149,19 @@ type OWASPFinding struct {
 }
 
 type ISOComplianceReport struct {
-	ComplianceLevel   string                 `json:"compliance_level"`
-	RequirementsMet   int                    `json:"requirements_met"`
-	TotalRequirements int                    `json:"total_requirements"`
-	Sections          map[string]ISOSection  `json:"sections"`
-	Gaps              []ISOGap               `json:"gaps"`
-	Recommendations   []string               `json:"recommendations"`
+	ComplianceLevel   string                `json:"compliance_level"`
+	RequirementsMet   int                   `json:"requirements_met"`
+	TotalRequirements int                   `json:"total_requirements"`
+	Sections          map[string]ISOSection `json:"sections"`
+	Gaps              []ISOGap              `json:"gaps"`
+	Recommendations   []string              `json:"recommendations"`
 }
 
 type ISOSection struct {
-	Name        string  `json:"name"`
-	Compliance  float64 `json:"compliance"`
-	Status      string  `json:"status"`
-	Evidence    []string `json:"evidence,omitempty"`
+	Name       string   `json:"name"`
+	Compliance float64  `json:"compliance"`
+	Status     string   `json:"status"`
+	Evidence   []string `json:"evidence,omitempty"`
 }
 
 type ISOGap struct {
@@ -173,15 +171,15 @@ type ISOGap struct {
 	Priority    string `json:"priority"`
 }
 
-type BundleStatistics struct {
-	TemplatesByCategory   map[string]int         `json:"templates_by_category"`
-	TemplatesBySeverity   map[string]int         `json:"templates_by_severity"`
-	TemplatesByType       map[string]int         `json:"templates_by_type"`
-	AverageComplexity     float64                `json:"average_complexity"`
-	UniquePatterns        int                    `json:"unique_patterns"`
-	TotalDetectionRules   int                    `json:"total_detection_rules"`
-	LanguageDistribution  map[string]int         `json:"language_distribution"`
-	UpdateFrequency       string                 `json:"update_frequency"`
+type BundleReportStatistics struct {
+	TemplatesByCategory  map[string]int `json:"templates_by_category"`
+	TemplatesBySeverity  map[string]int `json:"templates_by_severity"`
+	TemplatesByType      map[string]int `json:"templates_by_type"`
+	AverageComplexity    float64        `json:"average_complexity"`
+	UniquePatterns       int            `json:"unique_patterns"`
+	TotalDetectionRules  int            `json:"total_detection_rules"`
+	LanguageDistribution map[string]int `json:"language_distribution"`
+	UpdateFrequency      string         `json:"update_frequency"`
 }
 
 type VulnerabilityReport struct {
@@ -210,7 +208,7 @@ func loadBundleForReport(bundlePath string) (*bundle.Bundle, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return b, nil
 }
 
@@ -219,9 +217,9 @@ func generateReportData(b *bundle.Bundle, reportType string) (*BundleReportData,
 		Metadata: BundleMetadata{
 			Name:        b.Manifest.Name,
 			Version:     b.Manifest.Version,
-			CreatedAt:   b.Manifest.Created,
+			CreatedAt:   b.Manifest.CreatedAt,
 			Description: b.Manifest.Description,
-			Author:      b.Manifest.Author,
+			Author:      b.Manifest.Author.Name,
 		},
 	}
 
@@ -237,18 +235,18 @@ func generateReportData(b *bundle.Bundle, reportType string) (*BundleReportData,
 		data.Statistics = generateStatistics(b)
 		data.Vulnerabilities = generateVulnerabilityReport(b)
 		data.Coverage = generateCoverageReport(b)
-		
+
 	case "owasp":
 		data.OWASPAnalysis = generateOWASPAnalysis(b)
 		data.Coverage = generateCoverageReport(b)
-		
+
 	case "iso42001":
 		data.ISOAnalysis = generateISOAnalysis(b)
-		
+
 	case "coverage":
 		data.Coverage = generateCoverageReport(b)
 		data.Statistics = generateStatistics(b)
-		
+
 	case "vulnerabilities":
 		data.Vulnerabilities = generateVulnerabilityReport(b)
 		data.Statistics = generateStatistics(b)
@@ -259,7 +257,7 @@ func generateReportData(b *bundle.Bundle, reportType string) (*BundleReportData,
 
 func calculateSummary(b *bundle.Bundle) ReportSummary {
 	categoryCount := make(map[string]int)
-	for _, tmpl := range b.Templates {
+	for _, tmpl := range getTemplatesFromBundle(b) {
 		if cat := extractCategory(tmpl.Path); cat != "" {
 			categoryCount[cat]++
 		}
@@ -278,7 +276,7 @@ func calculateSummary(b *bundle.Bundle) ReportSummary {
 	}
 
 	return ReportSummary{
-		TotalTemplates:      len(b.Templates),
+		TotalTemplates:      len(getTemplatesFromBundle(b)),
 		CategoriesCount:     len(categoryCount),
 		ComplianceScore:     calculateComplianceScore(b),
 		SecurityLevel:       determineSecurityLevel(b),
@@ -331,14 +329,14 @@ func generateISOAnalysis(b *bundle.Bundle) *ISOComplianceReport {
 
 	// ISO/IEC 42001 sections relevant to LLM security
 	sections := map[string]string{
-		"5.2": "AI Policy",
-		"6.1": "Risk Assessment",
-		"6.2": "AI Objectives",
-		"7.2": "Competence",
-		"8.1": "Operational Planning",
-		"8.2": "AI System Requirements",
-		"8.3": "AI System Design",
-		"9.1": "Monitoring and Measurement",
+		"5.2":  "AI Policy",
+		"6.1":  "Risk Assessment",
+		"6.2":  "AI Objectives",
+		"7.2":  "Competence",
+		"8.1":  "Operational Planning",
+		"8.2":  "AI System Requirements",
+		"8.3":  "AI System Design",
+		"9.1":  "Monitoring and Measurement",
 		"10.1": "Nonconformity and Corrective Action",
 	}
 
@@ -364,8 +362,8 @@ func generateISOAnalysis(b *bundle.Bundle) *ISOComplianceReport {
 	return report
 }
 
-func generateStatistics(b *bundle.Bundle) *BundleStatistics {
-	stats := &BundleStatistics{
+func generateStatistics(b *bundle.Bundle) *BundleReportStatistics {
+	stats := &BundleReportStatistics{
 		TemplatesByCategory:  make(map[string]int),
 		TemplatesBySeverity:  make(map[string]int),
 		TemplatesByType:      make(map[string]int),
@@ -373,7 +371,7 @@ func generateStatistics(b *bundle.Bundle) *BundleStatistics {
 	}
 
 	// Analyze templates
-	for _, tmpl := range b.Templates {
+	for _, tmpl := range getTemplatesFromBundle(b) {
 		// Category
 		if cat := extractCategory(tmpl.Path); cat != "" {
 			stats.TemplatesByCategory[cat]++
@@ -487,30 +485,26 @@ func generateCoverageReport(b *bundle.Bundle) *CoverageReport {
 }
 
 func generateReportInFormat(data *BundleReportData, format, outputPath string) error {
-	// Convert report data to reporting.Report format
-	report := &reporting.Report{
-		ID:        fmt.Sprintf("bundle-report-%s", time.Now().Format("20060102-150405")),
-		Title:     fmt.Sprintf("Bundle Analysis Report - %s", data.Metadata.Name),
-		Type:      reportType,
-		Generated: time.Now(),
-		Data:      data,
-	}
-
-	// Get report generator
-	generator := reporting.NewReportGenerator()
-	
-	// Generate report in requested format
+	// Simple report generation
 	switch format {
-	case "html":
-		return generator.GenerateHTML(report, outputPath)
 	case "json":
-		return generator.GenerateJSON(report, outputPath)
-	case "pdf":
-		return generator.GeneratePDF(report, outputPath)
+		// Generate JSON report
+		jsonData, err := json.MarshalIndent(data, "", "  ")
+		if err != nil {
+			return fmt.Errorf("marshaling report data: %w", err)
+		}
+		return os.WriteFile(outputPath, jsonData, 0644)
+
+	case "html":
+		// Generate simple HTML report
+		html := generateSimpleHTMLReport(data)
+		return os.WriteFile(outputPath, []byte(html), 0644)
+
 	case "markdown":
-		return generator.GenerateMarkdown(report, outputPath)
-	case "csv":
-		return generator.GenerateCSV(report, outputPath)
+		// Generate markdown report
+		md := generateMarkdownReport(data)
+		return os.WriteFile(outputPath, []byte(md), 0644)
+
 	default:
 		return fmt.Errorf("unsupported format: %s", format)
 	}
@@ -531,13 +525,13 @@ func extractCategory(path string) string {
 func calculateComplianceScore(b *bundle.Bundle) float64 {
 	// Simple scoring based on template coverage
 	expectedTemplates := 30 // Assume 3 templates per category minimum
-	actualTemplates := len(b.Templates)
-	
+	actualTemplates := len(getTemplatesFromBundle(b))
+
 	score := float64(actualTemplates) / float64(expectedTemplates)
 	if score > 1.0 {
 		score = 1.0
 	}
-	
+
 	return score * 100
 }
 
@@ -561,37 +555,37 @@ func countRecommendations(b *bundle.Bundle) int {
 	// Count based on missing categories and low coverage
 	count := 0
 	categories := make(map[string]bool)
-	
-	for _, tmpl := range b.Templates {
+
+	for _, tmpl := range getTemplatesFromBundle(b) {
 		if cat := extractCategory(tmpl.Path); cat != "" {
 			categories[cat] = true
 		}
 	}
-	
+
 	// Each missing category generates recommendations
 	expectedCategories := 10
 	count = (expectedCategories - len(categories)) * 2
-	
+
 	return count
 }
 
 func analyzeCategory(b *bundle.Bundle, category string) CategoryCompliance {
 	templateCount := 0
-	for _, tmpl := range b.Templates {
+	for _, tmpl := range getTemplatesFromBundle(b) {
 		if strings.Contains(tmpl.Path, category) {
 			templateCount++
 		}
 	}
-	
+
 	// Expected minimum templates per category
 	expectedTemplates := 3
 	coverage := float64(templateCount) / float64(expectedTemplates)
 	if coverage > 1.0 {
 		coverage = 1.0
 	}
-	
+
 	score := coverage * 100
-	
+
 	return CategoryCompliance{
 		Category:      category,
 		Score:         score,
@@ -602,38 +596,38 @@ func analyzeCategory(b *bundle.Bundle, category string) CategoryCompliance {
 
 func identifyCoverageGaps(scores map[string]CategoryCompliance) []string {
 	var gaps []string
-	
+
 	for category, compliance := range scores {
 		if compliance.Coverage < 0.5 {
 			gaps = append(gaps, fmt.Sprintf("%s (%.0f%% coverage)", category, compliance.Coverage*100))
 		}
 	}
-	
+
 	return gaps
 }
 
 func generateOWASPRecommendations(report *OWASPComplianceReport) []string {
 	var recommendations []string
-	
+
 	// Low coverage recommendations
 	for category, compliance := range report.CategoryScores {
 		if compliance.Coverage < 0.5 {
-			recommendations = append(recommendations, 
-				fmt.Sprintf("Increase test coverage for %s - currently at %.0f%%", 
+			recommendations = append(recommendations,
+				fmt.Sprintf("Increase test coverage for %s - currently at %.0f%%",
 					category, compliance.Coverage*100))
 		}
 	}
-	
+
 	// Overall score recommendations
 	if report.OverallScore < 70 {
-		recommendations = append(recommendations, 
+		recommendations = append(recommendations,
 			"Consider implementing comprehensive test suites for all OWASP LLM Top 10 categories")
 	}
-	
+
 	return recommendations
 }
 
-func parseTemplateMetadata(tmpl bundle.TemplateEntry) *TemplateMetadata {
+func parseTemplateMetadata(tmpl bundle.ContentItem) *TemplateMetadata {
 	// This would parse the actual template content
 	// For now, return mock data
 	return &TemplateMetadata{
@@ -648,7 +642,7 @@ type TemplateMetadata struct {
 }
 
 func hasTemplatesForCategory(b *bundle.Bundle, category string) bool {
-	for _, tmpl := range b.Templates {
+	for _, tmpl := range getTemplatesFromBundle(b) {
 		if strings.Contains(tmpl.Path, category) {
 			return true
 		}
@@ -679,22 +673,22 @@ func getMitigationStrategies(category string) []string {
 			"Strict output validation",
 		},
 	}
-	
+
 	if m, ok := mitigations[category]; ok {
 		return m
 	}
-	
+
 	return []string{"Implement security best practices"}
 }
 
 func calculateCategoryCoverage(b *bundle.Bundle, category string) float64 {
 	count := 0
-	for _, tmpl := range b.Templates {
+	for _, tmpl := range getTemplatesFromBundle(b) {
 		if strings.Contains(tmpl.Path, category) {
 			count++
 		}
 	}
-	
+
 	if count > 0 {
 		return 1.0 // Simple binary coverage for now
 	}
@@ -709,13 +703,13 @@ func calculateVectorCoverage(b *bundle.Bundle, vector string) float64 {
 
 func identifyUncoveredAreas(report *CoverageReport) []string {
 	var uncovered []string
-	
+
 	for category, coverage := range report.CategoryCoverage {
 		if coverage == 0 {
 			uncovered = append(uncovered, category)
 		}
 	}
-	
+
 	return uncovered
 }
 
@@ -725,7 +719,7 @@ func assessISOSection(b *bundle.Bundle, sectionID string) float64 {
 	switch sectionID {
 	case "5.2": // AI Policy
 		return 0.8
-	case "6.1": // Risk Assessment  
+	case "6.1": // Risk Assessment
 		return 0.9
 	case "8.2": // AI System Requirements
 		return 0.85
@@ -762,7 +756,7 @@ func calculateISOLevel(ratio float64) string {
 
 func identifyISOGaps(sections map[string]ISOSection) []ISOGap {
 	var gaps []ISOGap
-	
+
 	for sectionID, section := range sections {
 		if section.Compliance < 0.7 {
 			gaps = append(gaps, ISOGap{
@@ -773,34 +767,34 @@ func identifyISOGaps(sections map[string]ISOSection) []ISOGap {
 			})
 		}
 	}
-	
+
 	return gaps
 }
 
 func generateISORecommendations(report *ISOComplianceReport) []string {
 	var recommendations []string
-	
+
 	if report.ComplianceLevel != "Level 3 - Optimized" {
 		recommendations = append(recommendations,
 			"Implement continuous improvement processes to achieve Level 3 compliance")
 	}
-	
+
 	for _, gap := range report.Gaps {
 		recommendations = append(recommendations,
 			fmt.Sprintf("Address %s to meet compliance requirements", gap.Requirement))
 	}
-	
+
 	return recommendations
 }
 
 func countUniquePatterns(b *bundle.Bundle) int {
 	// Count unique detection patterns across templates
-	return len(b.Templates) * 3 // Simplified calculation
+	return len(getTemplatesFromBundle(b)) * 3 // Simplified calculation
 }
 
 func countDetectionRules(b *bundle.Bundle) int {
 	// Count total detection rules
-	return len(b.Templates) * 5 // Simplified calculation
+	return len(getTemplatesFromBundle(b)) * 5 // Simplified calculation
 }
 
 func calculateAverageComplexity(b *bundle.Bundle) float64 {
@@ -808,10 +802,20 @@ func calculateAverageComplexity(b *bundle.Bundle) float64 {
 	return 3.5 // Mock value
 }
 
+func getTemplatesFromBundle(b *bundle.Bundle) []bundle.ContentItem {
+	var templates []bundle.ContentItem
+	for _, item := range b.Manifest.Content {
+		if item.Type == bundle.TemplateContentType {
+			templates = append(templates, item)
+		}
+	}
+	return templates
+}
+
 func generateDetailedFindings(b *bundle.Bundle) []OWASPFinding {
 	// Generate detailed findings for each template
 	var findings []OWASPFinding
-	
+
 	// Add sample findings
 	findings = append(findings, OWASPFinding{
 		Category:    "llm01-prompt-injection",
@@ -820,6 +824,75 @@ func generateDetailedFindings(b *bundle.Bundle) []OWASPFinding {
 		Description: "Direct prompt injection vulnerability detected",
 		Mitigation:  "Implement input validation and prompt sanitization",
 	})
-	
+
 	return findings
+}
+
+func generateSimpleHTMLReport(data *BundleReportData) string {
+	html := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<head>
+<title>Bundle Report - %s</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+h1, h2, h3 { color: #333; }
+table { border-collapse: collapse; width: 100%%; margin: 20px 0; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #f2f2f2; }
+</style>
+</head>
+<body>
+<h1>Bundle Analysis Report</h1>
+<h2>%s v%s</h2>
+<p>Generated: %s</p>
+<p>%s</p>
+<h3>Summary</h3>
+<ul>
+<li>Total Templates: %d</li>
+<li>Categories: %d</li>
+<li>Compliance Score: %.1f%%</li>
+<li>Security Level: %s</li>
+</ul>
+</body>
+</html>`,
+		data.Metadata.Name,
+		data.Metadata.Name,
+		data.Metadata.Version,
+		time.Now().Format("2006-01-02 15:04:05"),
+		data.Metadata.Description,
+		data.Summary.TotalTemplates,
+		data.Summary.CategoriesCount,
+		data.Summary.ComplianceScore,
+		data.Summary.SecurityLevel,
+	)
+	return html
+}
+
+func generateMarkdownReport(data *BundleReportData) string {
+	md := fmt.Sprintf(`# Bundle Analysis Report
+
+## %s v%s
+
+**Generated:** %s
+
+%s
+
+### Summary
+
+- Total Templates: %d
+- Categories: %d  
+- Compliance Score: %.1f%%
+- Security Level: %s
+
+`,
+		data.Metadata.Name,
+		data.Metadata.Version,
+		time.Now().Format("2006-01-02 15:04:05"),
+		data.Metadata.Description,
+		data.Summary.TotalTemplates,
+		data.Summary.CategoriesCount,
+		data.Summary.ComplianceScore,
+		data.Summary.SecurityLevel,
+	)
+	return md
 }

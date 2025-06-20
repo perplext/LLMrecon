@@ -3,12 +3,10 @@ package access
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/perplext/LLMrecon/src/security/access/models"
 )
 
 // RBACManagerImpl implements the RBACManager interface
@@ -141,7 +139,7 @@ func (m *RBACManagerImpl) AddRoleToUser(ctx context.Context, userID string, role
 		Description: "Added role " + role + " to user " + user.Username,
 		Timestamp:   time.Now(),
 	}
-	
+
 	_ = m.auditLogger.LogAudit(ctx, auditLog)
 
 	return nil
@@ -174,7 +172,7 @@ func (m *RBACManagerImpl) RemoveRoleFromUser(ctx context.Context, userID string,
 		Description: "Removed role " + role + " from user " + user.Username,
 		Timestamp:   time.Now(),
 	}
-	
+
 	_ = m.auditLogger.LogAudit(ctx, auditLog)
 
 	return nil
@@ -207,7 +205,7 @@ func (m *RBACManagerImpl) GetUserRoles(ctx context.Context, userID string) ([]st
 		Description: "Retrieved roles for user",
 		Timestamp:   time.Now(),
 	}
-	
+
 	_ = m.auditLogger.LogAudit(ctx, auditLog)
 
 	return roles, nil
@@ -259,7 +257,7 @@ func (m *RBACManagerImpl) GetUserPermissions(ctx context.Context, userID string)
 		Description: "Retrieved permissions for user",
 		Timestamp:   time.Now(),
 	}
-	
+
 	_ = m.auditLogger.LogAudit(ctx, auditLog)
 
 	return permissions, nil
@@ -276,9 +274,9 @@ func (m *RBACManagerImpl) Close() error {
 
 // InMemoryRoleStore is an in-memory implementation of the RoleStore interface
 type InMemoryRoleStore struct {
-	mu                sync.RWMutex
-	userRoles         map[string][]string
-	rolePermissions   map[string][]string
+	mu              sync.RWMutex
+	userRoles       map[string][]string
+	rolePermissions map[string][]string
 }
 
 // NewInMemoryRoleStore creates a new in-memory role store
@@ -439,10 +437,10 @@ func getRBACUserIDFromContext(ctx context.Context) string {
 	if ctx == nil {
 		return "system"
 	}
-	
+
 	if userID, ok := ctx.Value("user_id").(string); ok {
 		return userID
 	}
-	
+
 	return "system"
 }

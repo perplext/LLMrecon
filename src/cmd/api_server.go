@@ -6,8 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"time"
-	
 	"github.com/perplext/LLMrecon/src/api"
 	"github.com/perplext/LLMrecon/src/security"
 	securityapi "github.com/perplext/LLMrecon/src/security/api"
@@ -17,10 +15,10 @@ import (
 
 // apiServerCmd represents the api server command
 var apiServerCmd = &cobra.Command{
-	Use:   "api",
+	Use:     "api",
 	Aliases: []string{"serve", "server"},
-	Short: "Start the API server",
-	Long:  `Start the HTTP API server for managing red-team scans with enhanced security features.`,
+	Short:   "Start the API server",
+	Long:    `Start the HTTP API server for managing red-team scans with enhanced security features.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get flags
 		addr, _ := cmd.Flags().GetString("addr")
@@ -103,7 +101,7 @@ func splitAndTrim(s string, sep string) []string {
 			result = append(result, part)
 		}
 	}
-	
+
 	return result
 }
 
@@ -112,12 +110,12 @@ func init() {
 
 	// Add basic flags
 	apiServerCmd.Flags().StringP("addr", "a", ":8080", "Address to listen on (e.g., :8080)")
-	
+
 	// Add TLS flags
 	apiServerCmd.Flags().Bool("tls", false, "Enable TLS/HTTPS")
 	apiServerCmd.Flags().String("cert", "certs/server.crt", "TLS certificate file path")
 	apiServerCmd.Flags().String("key", "certs/server.key", "TLS key file path")
-	
+
 	// Add security flags
 	apiServerCmd.Flags().String("log", "logs/security.log", "Security log file path")
 	apiServerCmd.Flags().Int("rate-limit", 60, "Rate limit in requests per minute (0 to disable)")
