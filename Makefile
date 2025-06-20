@@ -1,4 +1,4 @@
-# LLM Red Team Makefile
+# LLMrecon Makefile
 
 # Variables
 BINARY_NAME=LLMrecon
@@ -29,7 +29,7 @@ endif
 
 .PHONY: help
 help: ## Display this help message
-	@echo "LLM Red Team - Build System"
+	@echo "LLMrecon - Build System"
 	@echo ""
 	@echo "Usage: make [target]"
 	@echo ""
@@ -167,3 +167,32 @@ init: check-tools deps ## Initialize project for development
 update: ## Update all dependencies
 	$(GOGET) -u ./...
 	$(GOMOD) tidy
+
+# ML/AI Development
+.PHONY: ml-setup
+ml-setup: ## Set up ML environment for v0.3.0
+	@echo "Setting up ML environment..."
+	@pip install torch torchvision transformers gym mlflow tqdm pyyaml
+	@pip install scikit-learn pandas matplotlib seaborn
+	@echo "Creating ML directories..."
+	@mkdir -p ml/environments ml/agents ml/models ml/training ml/inference ml/data ml/utils
+	@mkdir -p notebooks configs checkpoints logs
+	@echo "ML environment setup complete!"
+	@echo "Run 'make ml-test' to verify installation"
+
+.PHONY: ml-test
+ml-test: ## Test ML environment setup
+	@python ml/test_setup.py
+
+.PHONY: ml-train-rl
+ml-train-rl: ## Train RL agent for attack optimization
+	@echo "Starting RL training..."
+	@python -m ml.training.train_rl --config configs/rl_training.yaml
+
+.PHONY: ml-tensorboard
+ml-tensorboard: ## Start TensorBoard for ML monitoring
+	@tensorboard --logdir logs
+
+.PHONY: ml-mlflow
+ml-mlflow: ## Start MLflow UI for experiment tracking
+	@mlflow ui --port 5000

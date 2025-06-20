@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Production Validation Script for LLM Red Team v0.2.0
+# Production Validation Script for LLMrecon v0.2.0
 # This script validates that the distributed infrastructure is working correctly
 
 set -e
@@ -18,7 +18,7 @@ MONITORING_HOST=${MONITORING_HOST:-"localhost:8090"}
 PROFILING_HOST=${PROFILING_HOST:-"localhost:6060"}
 TEST_DURATION=${TEST_DURATION:-"300"} # 5 minutes default
 
-echo -e "${GREEN}=== LLM Red Team v0.2.0 Production Validation ===${NC}"
+echo -e "${GREEN}=== LLMrecon v0.2.0 Production Validation ===${NC}"
 echo "Starting comprehensive validation of distributed infrastructure..."
 echo
 
@@ -81,9 +81,9 @@ validate_build() {
     echo -e "${GREEN}=== Build Validation ===${NC}"
     
     # Test main application build
-    if go build -o llm-red-team-test ./src/main.go; then
+    if go build -o llmrecon-test ./src/main.go; then
         print_status 0 "Main application builds successfully"
-        rm -f llm-red-team-test
+        rm -f llmrecon-test
     else
         print_status 1 "Main application build failed"
         return 1
@@ -117,7 +117,7 @@ validate_redis_cluster() {
     fi
     
     # Test basic Redis operations
-    local test_key="llm-red-team-validation-$$"
+    local test_key="llmrecon-validation-$$"
     local test_value="validation-$(date +%s)"
     
     if redis-cli -h $(echo $REDIS_HOST | cut -d':' -f1) -p $(echo $REDIS_HOST | cut -d':' -f2) set $test_key "$test_value" &> /dev/null; then
@@ -180,7 +180,7 @@ validate_application_startup() {
     
     if [ "$api_running" = false ] && [ "$monitoring_running" = false ] && [ "$profiling_running" = false ]; then
         print_warning "No application endpoints detected. Manual startup required."
-        print_info "Start the application with: ./llm-red-team server --distributed --redis-addr $REDIS_HOST"
+        print_info "Start the application with: ./llmrecon server --distributed --redis-addr $REDIS_HOST"
     fi
     
     echo
@@ -318,7 +318,7 @@ generate_validation_report() {
     local report_file="validation-report-$(date +%Y%m%d-%H%M%S).txt"
     
     cat > "$report_file" << EOF
-LLM Red Team v0.2.0 Production Validation Report
+LLMrecon v0.2.0 Production Validation Report
 Generated: $timestamp
 Host: $(hostname)
 User: $(whoami)
@@ -373,7 +373,7 @@ main() {
     
     if [ $exit_code -eq 0 ]; then
         echo -e "${GREEN}=== Validation Completed Successfully ===${NC}"
-        echo "Your LLM Red Team v0.2.0 installation appears to be ready for production!"
+        echo "Your LLMrecon v0.2.0 installation appears to be ready for production!"
     else
         echo -e "${RED}=== Validation Completed with Issues ===${NC}"
         echo "Please review the issues above before proceeding to production."

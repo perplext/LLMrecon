@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Deployment Monitoring Script for LLM Red Team v0.2.0
+# Deployment Monitoring Script for LLMrecon v0.2.0
 # This script monitors active deployments and collects metrics
 
 set -e
@@ -17,7 +17,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${GREEN}=== LLM Red Team v0.2.0 Deployment Monitor ===${NC}"
+echo -e "${GREEN}=== LLMrecon v0.2.0 Deployment Monitor ===${NC}"
 echo "Monitoring deployments every ${CHECK_INTERVAL} seconds"
 echo
 

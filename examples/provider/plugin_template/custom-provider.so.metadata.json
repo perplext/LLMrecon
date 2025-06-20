@@ -1,8 +1,8 @@
 {
   "name": "Custom Provider",
   "version": "1.0.0",
-  "author": "LLM Red Team",
-  "description": "A custom provider plugin for the LLM Red Team framework",
+  "author": "LLMrecon",
+  "description": "A custom provider plugin for the LLMrecon framework",
   "provider_type": "custom-provider",
   "supported_models": [
     "custom-model-1",

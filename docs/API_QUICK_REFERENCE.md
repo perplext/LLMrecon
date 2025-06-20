@@ -164,7 +164,7 @@ Configure webhooks for async notifications:
 
 ### Python
 ```python
-from llm_red_team import Client
+from llmrecon import Client
 
 client = Client(api_key="your-api-key")
 scan = client.scans.create(

@@ -1,6 +1,6 @@
 # Production Deployment Guide - v0.2.0
 
-This guide covers deploying LLM Red Team v0.2.0 in production environments with distributed execution capabilities.
+This guide covers deploying LLMrecon v0.2.0 in production environments with distributed execution capabilities.
 
 ## Overview
 
@@ -235,7 +235,7 @@ logging:
   level: "info"
   format: "json"
   output: ["stdout", "file"]
-  file_path: "/var/log/llm-red-team.log"
+  file_path: "/var/log/llmrecon.log"
 
 providers:
   openai:
@@ -259,26 +259,26 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o llm-red-team ./src/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o llmrecon ./src/main.go
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
-COPY --from=builder /app/llm-red-team .
+COPY --from=builder /app/llmrecon .
 COPY --from=builder /app/examples ./examples
 COPY --from=builder /app/templates ./templates
 
 EXPOSE 8080 8090 6060
 
-CMD ["./llm-red-team", "server", "--config", "/etc/config/production-config.yaml"]
+CMD ["./llmrecon", "server", "--config", "/etc/config/production-config.yaml"]
 ```
 
 ```yaml
 # docker-compose.prod.yml
 version: '3.8'
 services:
-  llm-red-team-1:
+  llmrecon-1:
     build: .
     environment:
       - NODE_ID=node-1
@@ -297,7 +297,7 @@ services:
     depends_on:
       - redis-cluster
       
-  llm-red-team-2:
+  llmrecon-2:
     build: .
     environment:
       - NODE_ID=node-2
@@ -316,7 +316,7 @@ services:
     depends_on:
       - redis-cluster
       
-  llm-red-team-3:
+  llmrecon-3:
     build: .
     environment:
       - NODE_ID=node-3
@@ -343,24 +343,24 @@ volumes:
 
 #### Kubernetes Deployment
 ```yaml
-# llm-red-team-deployment.yaml
+# llmrecon-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: llm-red-team
+  name: llmrecon
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: llm-red-team
+      app: llmrecon
   template:
     metadata:
       labels:
-        app: llm-red-team
+        app: llmrecon
     spec:
       containers:
-      - name: llm-red-team
-        image: llm-red-team:v0.2.0
+      - name: llmrecon
+        image: llmrecon:v0.2.0
         ports:
         - containerPort: 8080
         - containerPort: 8090
@@ -412,7 +412,7 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: llm-red-team-config
+          name: llmrecon-config
       - name: certs
         secret:
           secretName: tls-certs
@@ -420,10 +420,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: llm-red-team-service
+  name: llmrecon-service
 spec:
   selector:
-    app: llm-red-team
+    app: llmrecon
   ports:
   - name: api
     port: 8080
@@ -456,16 +456,16 @@ defaults
 
 frontend llm_frontend
     bind *:80
-    bind *:443 ssl crt /etc/ssl/certs/llm-red-team.pem
+    bind *:443 ssl crt /etc/ssl/certs/llmrecon.pem
     redirect scheme https if !{ ssl_fc }
     default_backend llm_backend
 
 backend llm_backend
     balance roundrobin
     option httpchk GET /health
-    server node1 llm-red-team-1:8080 check
-    server node2 llm-red-team-2:8080 check
-    server node3 llm-red-team-3:8080 check
+    server node1 llmrecon-1:8080 check
+    server node2 llmrecon-2:8080 check
+    server node3 llmrecon-3:8080 check
 
 frontend monitoring_frontend
     bind *:8090
@@ -473,9 +473,9 @@ frontend monitoring_frontend
 
 backend monitoring_backend
     balance roundrobin
-    server node1 llm-red-team-1:8090 check
-    server node2 llm-red-team-2:8090 check
-    server node3 llm-red-team-3:8090 check
+    server node1 llmrecon-1:8090 check
+    server node2 llmrecon-2:8090 check
+    server node3 llmrecon-3:8090 check
 ```
 
 ### 4. Monitoring Setup
@@ -487,7 +487,7 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-- job_name: 'llm-red-team'
+- job_name: 'llmrecon'
   static_configs:
   - targets:
     - 'llm-red-team-1:8090'
@@ -507,8 +507,8 @@ scrape_configs:
   static_configs:
   - targets:
     - 'llm-red-team-1:6060'
-    - 'llm-red-team-2:6060'
-    - 'llm-red-team-3:6060'
+    - 'llmrecon-2:6060'
+    - 'llmrecon-3:6060'
   metrics_path: '/debug/pprof/goroutine'
 ```
 
@@ -516,7 +516,7 @@ scrape_configs:
 ```json
 {
   "dashboard": {
-    "title": "LLM Red Team v0.2.0 Monitoring",
+    "title": "LLMrecon v0.2.0 Monitoring",
     "panels": [
       {
         "title": "Attack Throughput",
@@ -570,16 +570,16 @@ scrape_configs:
 #### Horizontal Scaling
 ```bash
 # Add new node to cluster
-docker-compose -f docker-compose.prod.yml up -d --scale llm-red-team=4
+docker-compose -f docker-compose.prod.yml up -d --scale llmrecon=4
 
 # Kubernetes scaling
-kubectl scale deployment llm-red-team --replicas=5
+kubectl scale deployment llmrecon --replicas=5
 ```
 
 #### Vertical Scaling
 ```bash
 # Update resource limits
-kubectl patch deployment llm-red-team -p '{"spec":{"template":{"spec":{"containers":[{"name":"llm-red-team","resources":{"limits":{"memory":"16Gi","cpu":"8000m"}}}]}}}}'
+kubectl patch deployment llmrecon -p '{"spec":{"template":{"spec":{"containers":[{"name":"llmrecon","resources":{"limits":{"memory":"16Gi","cpu":"8000m"}}}]}}}}'
 ```
 
 ### Maintenance Operations
@@ -591,8 +591,8 @@ docker-compose -f docker-compose.prod.yml pull
 docker-compose -f docker-compose.prod.yml up -d --no-deps --build
 
 # Kubernetes
-kubectl set image deployment/llm-red-team llm-red-team=llm-red-team:v0.2.1 --record
-kubectl rollout status deployment/llm-red-team
+kubectl set image deployment/llmrecon llmrecon=llmrecon:v0.2.1 --record
+kubectl rollout status deployment/llmrecon
 ```
 
 #### Backup Operations
@@ -601,7 +601,7 @@ kubectl rollout status deployment/llm-red-team
 redis-cli --cluster backup redis-1:7000 --cluster-backup-dir /backup
 
 # Application state backup
-kubectl exec -it llm-red-team-pod -- tar czf /backup/app-state.tar.gz /var/lib/llm-red-team
+kubectl exec -it llmrecon-pod -- tar czf /backup/app-state.tar.gz /var/lib/llmrecon
 ```
 
 ### Performance Tuning
@@ -707,4 +707,4 @@ curl http://localhost:8090/api/v1/metrics | grep performance
 - **CPU usage**: ~4 cores per 100 concurrent attacks
 - **Network**: ~100Mbps per 100 concurrent attacks
 
-This production deployment guide ensures reliable, scalable operation of LLM Red Team v0.2.0 in enterprise environments.
+This production deployment guide ensures reliable, scalable operation of LLMrecon v0.2.0 in enterprise environments.

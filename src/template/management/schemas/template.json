@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "LLM Red Team Template Schema",
-  "description": "Schema for LLM Red Team test templates",
+  "title": "LLMrecon Template Schema",
+  "description": "Schema for LLMrecon test templates",
   "type": "object",
   "required": ["id", "info", "test"],
   "properties": {

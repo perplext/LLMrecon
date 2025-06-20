@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Load Testing Script for LLM Red Team v0.2.0
+# Load Testing Script for LLMrecon v0.2.0
 # Tests the distributed infrastructure under sustained load
 
 set -e
@@ -27,7 +27,7 @@ ATTACK_DIST_PROMPT_INJECTION=40
 ATTACK_DIST_JAILBREAK=35
 ATTACK_DIST_CONTEXT_MANIPULATION=25
 
-echo -e "${GREEN}=== LLM Red Team v0.2.0 Load Testing ===${NC}"
+echo -e "${GREEN}=== LLMrecon v0.2.0 Load Testing ===${NC}"
 echo "Configuration:"
 echo "  API Host: $API_HOST"
 echo "  Monitoring Host: $MONITORING_HOST"
@@ -347,7 +347,7 @@ generate_report() {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LLM Red Team v0.2.0 Load Test Report</title>
+    <title>LLMrecon v0.2.0 Load Test Report</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
@@ -364,7 +364,7 @@ generate_report() {
 </head>
 <body>
     <div class="header">
-        <h1>LLM Red Team v0.2.0 Load Test Report</h1>
+        <h1>LLMrecon v0.2.0 Load Test Report</h1>
         <p>Generated: $(date)</p>
         <p>Test Configuration: $CONCURRENT_ATTACKS concurrent attacks, $TOTAL_ATTACKS total attacks, ${TEST_DURATION}s duration</p>
     </div>

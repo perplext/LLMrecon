@@ -9,7 +9,7 @@
       "version": "1.0",
       "supported_models": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"],
       "min_tool_version": "1.0.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "description": "OpenAI API integration for GPT models"
     },
     {
@@ -19,7 +19,7 @@
       "version": "1.0",
       "supported_models": ["claude-2", "claude-instant", "claude-3-opus", "claude-3-sonnet"],
       "min_tool_version": "1.0.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "description": "Anthropic API integration for Claude models"
     }
   ],
@@ -30,7 +30,7 @@
       "path": "utils/rate_limiter.go",
       "version": "1.0",
       "min_tool_version": "1.0.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "description": "Utility for managing API rate limits"
     },
     {
@@ -39,7 +39,7 @@
       "path": "utils/token_counter.go",
       "version": "1.0",
       "min_tool_version": "1.0.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "description": "Utility for counting tokens in prompts and responses"
     }
   ],
@@ -50,7 +50,7 @@
       "path": "detectors/string_match.go",
       "version": "1.0",
       "min_tool_version": "1.0.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "description": "Simple string matching for response analysis"
     },
     {
@@ -59,7 +59,7 @@
       "path": "detectors/regex_match.go",
       "version": "1.0",
       "min_tool_version": "1.0.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "description": "Regular expression matching for response analysis"
     },
     {
@@ -68,7 +68,7 @@
       "path": "detectors/semantic_match.go",
       "version": "1.0",
       "min_tool_version": "1.0.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "description": "Semantic analysis for response evaluation"
     }
   ]

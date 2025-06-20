@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Building the main application
 ```bash
 # Build the main CLI tool
-go build -o llm-red-team ./src/main.go
+go build -o llmrecon ./src/main.go
 
 # Build specific tools
 go build -o compliance-report ./cmd/compliance-report

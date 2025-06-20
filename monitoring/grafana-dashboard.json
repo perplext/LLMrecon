@@ -91,7 +91,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "llm_red_team_concurrent_attacks",
+          "expr": "llmrecon_concurrent_attacks",
           "refId": "A",
           "legendFormat": "Concurrent Attacks"
         }
@@ -153,7 +153,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "llm_red_team_success_rate * 100",
+          "expr": "llmrecon_success_rate * 100",
           "refId": "A"
         }
       ],
@@ -215,7 +215,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "llm_red_team_response_time_seconds",
+          "expr": "llmrecon_response_time_seconds",
           "refId": "A"
         }
       ],
@@ -295,7 +295,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rate(llm_red_team_requests_total[5m])",
+          "expr": "rate(llmrecon_requests_total[5m])",
           "refId": "A",
           "legendFormat": "Request Rate"
         }
@@ -376,12 +376,12 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "llm_red_team_cpu_usage_percent",
+          "expr": "llmrecon_cpu_usage_percent",
           "refId": "A",
           "legendFormat": "CPU Usage"
         },
         {
-          "expr": "(llm_red_team_memory_usage_bytes / llm_red_team_memory_total_bytes) * 100",
+          "expr": "(llmrecon_memory_usage_bytes / llmrecon_memory_total_bytes) * 100",
           "refId": "B",
           "legendFormat": "Memory Usage"
         }
@@ -393,7 +393,7 @@
   "refresh": "5s",
   "schemaVersion": 27,
   "style": "dark",
-  "tags": ["llm-red-team", "v0.2.0"],
+  "tags": ["llmrecon", "v0.2.0"],
   "templating": {
     "list": []
   },
@@ -403,7 +403,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "LLM Red Team v0.2.0 Dashboard",
-  "uid": "llm-red-team-v020",
+  "title": "LLMrecon v0.2.0 Dashboard",
+  "uid": "llmrecon-v020",
   "version": 0
 }

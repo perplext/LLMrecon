@@ -1,6 +1,6 @@
 # Distributed Architecture Guide - v0.2.0
 
-This guide explains the distributed architecture of LLM Red Team v0.2.0 and how to design, deploy, and manage distributed attack campaigns at scale.
+This guide explains the distributed architecture of LLMrecon v0.2.0 and how to design, deploy, and manage distributed attack campaigns at scale.
 
 ## Overview
 
@@ -18,7 +18,7 @@ v0.2.0 introduces a sophisticated distributed architecture that enables:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Distributed LLM Red Team                     │
+│                    Distributed LLMrecon                     │
 ├─────────────────────────────────────────────────────────────────┤
 │                      Load Balancer                              │
 │              ┌─────────────────────────────┐                     │
@@ -324,7 +324,7 @@ campaign:
 **Campaign Execution**:
 ```bash
 # Submit distributed campaign
-./llm-red-team campaign submit \
+./llmrecon campaign submit \
   --config distributed-campaign.yaml \
   --distributed \
   --nodes 3 \
@@ -332,10 +332,10 @@ campaign:
   --output campaign-results.json
 
 # Monitor campaign progress
-./llm-red-team campaign status campaign-12345 --distributed
+./llmrecon campaign status campaign-12345 --distributed
 
 # Scale campaign mid-execution
-./llm-red-team campaign scale campaign-12345 --nodes 5
+./llmrecon campaign scale campaign-12345 --nodes 5
 ```
 
 ## Node Management
@@ -350,14 +350,14 @@ service_discovery:
   
   consul:
     address: "consul:8500"
-    service_name: "llm-red-team"
+    service_name: "llmrecon"
     health_check:
       interval: 10s
       timeout: 3s
       
   kubernetes:
-    namespace: "llm-red-team"
-    label_selector: "app=llm-red-team"
+    namespace: "llmrecon"
+    label_selector: "app=llmrecon"
     
   static:
     nodes:
@@ -580,7 +580,7 @@ tracing:
   
   jaeger:
     endpoint: "http://jaeger:14268/api/traces"
-    service_name: "llm-red-team"
+    service_name: "llmrecon"
     
   # Sampling
   sampling:
@@ -606,7 +606,7 @@ logging:
     enabled: true
     destination: "elasticsearch"
     endpoint: "http://elasticsearch:9200"
-    index_pattern: "llm-red-team-%Y.%m.%d"
+    index_pattern: "llmrecon-%Y.%m.%d"
     
   # Log correlation
   correlation:
@@ -630,19 +630,19 @@ logging:
 
 ```bash
 # Deploy green environment
-kubectl apply -f deployments/llm-red-team-green.yaml
+kubectl apply -f deployments/llmrecon-green.yaml
 
 # Verify green environment
 ./scripts/verify-deployment.sh green
 
 # Switch traffic to green
-kubectl patch service llm-red-team -p '{"spec":{"selector":{"version":"green"}}}'
+kubectl patch service llmrecon -p '{"spec":{"selector":{"version":"green"}}}'
 
 # Verify traffic switch
 ./scripts/verify-traffic.sh green
 
 # Clean up blue environment
-kubectl delete -f deployments/llm-red-team-blue.yaml
+kubectl delete -f deployments/llmrecon-blue.yaml
 ```
 
 ### Rolling Deployment
@@ -651,13 +651,13 @@ kubectl delete -f deployments/llm-red-team-blue.yaml
 
 ```bash
 # Start rolling update
-kubectl set image deployment/llm-red-team llm-red-team=llm-red-team:v0.2.1
+kubectl set image deployment/llmrecon llmrecon=llmrecon:v0.2.1
 
 # Monitor rollout
-kubectl rollout status deployment/llm-red-team
+kubectl rollout status deployment/llmrecon
 
 # Rollback if needed
-kubectl rollout undo deployment/llm-red-team
+kubectl rollout undo deployment/llmrecon
 ```
 
 ### Canary Deployment
@@ -669,7 +669,7 @@ kubectl rollout undo deployment/llm-red-team
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: llm-red-team
+  name: llmrecon
 spec:
   strategy:
     canary:
@@ -698,7 +698,7 @@ security:
   node_auth:
     method: "certificate"  # certificate, token, oidc
     verify_hostname: true
-    allowed_cns: ["llm-red-team-node"]
+    allowed_cns: ["llmrecon-node"]
 ```
 
 ### Network Security
@@ -709,11 +709,11 @@ security:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: llm-red-team-netpol
+  name: llmrecon-netpol
 spec:
   podSelector:
     matchLabels:
-      app: llm-red-team
+      app: llmrecon
   policyTypes:
   - Ingress
   - Egress
@@ -721,7 +721,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app: llm-red-team
+          app: llmrecon
     - podSelector:
         matchLabels:
           app: load-balancer
@@ -732,4 +732,4 @@ spec:
           app: redis-cluster
 ```
 
-This distributed architecture guide provides comprehensive coverage of designing, deploying, and managing LLM Red Team v0.2.0 in distributed environments for maximum scale and reliability.
+This distributed architecture guide provides comprehensive coverage of designing, deploying, and managing LLMrecon v0.2.0 in distributed environments for maximum scale and reliability.

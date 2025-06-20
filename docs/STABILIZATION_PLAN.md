@@ -85,7 +85,7 @@ chaos_experiments:
     duration: 5m
     
   - name: "app-node-cpu-stress"
-    target: "llm-red-team-nodes"
+    target: "llmrecon-nodes"
     action: "cpu-stress-80%"
     duration: 10m
     
@@ -95,7 +95,7 @@ chaos_experiments:
     duration: 3m
     
   - name: "memory-pressure"
-    target: "llm-red-team-nodes"
+    target: "llmrecon-nodes"
     action: "memory-stress-90%"
     duration: 5m
 ```
@@ -161,7 +161,7 @@ chaos_experiments:
 ## 🤖 v0.3.0 Planning: AI-Powered Attack Evolution
 
 ### Vision Statement
-Transform LLM Red Team from a distributed attack platform into an intelligent, self-evolving security testing system that uses AI to discover new vulnerabilities and optimize attack strategies.
+Transform LLMrecon from a distributed attack platform into an intelligent, self-evolving security testing system that uses AI to discover new vulnerabilities and optimize attack strategies.
 
 ### Core Objectives
 1. **Intelligent Attack Generation**: ML-powered payload creation

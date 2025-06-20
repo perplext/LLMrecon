@@ -11,7 +11,7 @@
       "severity": "high",
       "compatible_providers": ["openai", "anthropic", "google"],
       "min_tool_version": "1.0.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "description": "Tests basic prompt injection vulnerabilities",
       "tags": ["prompt_injection", "beginner", "owasp-llm01"]
     },
@@ -24,7 +24,7 @@
       "severity": "critical",
       "compatible_providers": ["openai", "anthropic", "google", "meta"],
       "min_tool_version": "1.0.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "description": "Tests if LLM can be tricked into revealing PII",
       "tags": ["information_disclosure", "pii", "owasp-llm02"]
     }

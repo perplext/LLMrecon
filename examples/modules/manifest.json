@@ -8,7 +8,7 @@
       "name": "OpenAI Provider",
       "description": "Provider module for OpenAI API integration",
       "version": "1.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "tags": [
         "openai",
         "gpt",
@@ -24,7 +24,7 @@
       "name": "Prompt Formatter",
       "description": "Utility module for formatting prompts and sanitizing inputs",
       "version": "1.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "tags": [
         "utility",
         "formatter",
@@ -40,7 +40,7 @@
       "name": "Prompt Injection Detector",
       "description": "Detector module for identifying prompt injection attempts",
       "version": "1.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "tags": [
         "detector",
         "prompt_injection",

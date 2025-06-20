@@ -1,0 +1,72 @@
+# Configuration for RL Training
+
+# Experiment settings
+experiment_name: "llm_attack_rl_v1"
+checkpoint_dir: "checkpoints/rl"
+
+# Training parameters
+num_episodes: 1000
+max_steps_per_episode: 100
+save_frequency: 100
+eval_frequency: 50
+eval_episodes: 10
+
+# Environment configuration
+environment:
+  max_steps: 100
+  reward_shaping: true
+  use_real_api: false  # Set to true when ready for real LLM testing
+  
+  # Reward weights
+  reward_weights:
+    success: 10.0
+    efficiency: 2.0
+    stealth: 3.0
+    exploration: 0.5
+
+# Agent configuration (DQN)
+agent:
+  # Network architecture
+  hidden_sizes: [256, 256, 128]
+  
+  # Training hyperparameters
+  learning_rate: 0.0001
+  batch_size: 32
+  gamma: 0.99
+  tau: 0.005  # Soft update
+  
+  # Exploration
+  epsilon_start: 1.0
+  epsilon_end: 0.01
+  epsilon_decay: 0.995
+  
+  # Experience replay
+  buffer_size: 10000
+  prioritized_replay: true
+  alpha: 0.6  # Priority exponent
+  beta_start: 0.4  # Importance sampling
+  beta_end: 1.0
+  
+  # Device
+  device: "cuda"  # or "cpu"
+
+# Distributed training (future)
+distributed:
+  enabled: false
+  num_workers: 4
+  gpus_per_worker: 1
+  backend: "nccl"
+
+# Logging
+logging:
+  log_frequency: 10
+  save_plots: true
+  save_videos: false
+  tensorboard: true
+  
+# Early stopping
+early_stopping:
+  enabled: true
+  patience: 200
+  min_delta: 0.01
+  metric: "eval_reward"

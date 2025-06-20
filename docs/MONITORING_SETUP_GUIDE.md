@@ -1,6 +1,6 @@
 # v0.2.0 Monitoring & Alerting Setup Guide
 
-This guide helps early v0.2.0 adopters set up comprehensive monitoring and alerting for their LLM Red Team deployments.
+This guide helps early v0.2.0 adopters set up comprehensive monitoring and alerting for their LLMrecon deployments.
 
 ## Quick Start
 
@@ -25,7 +25,7 @@ brew services start grafana
 
 ```
 ┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
-│  LLM Red Team   │────▶│  Prometheus  │────▶│   Grafana   │
+│  LLMrecon   │────▶│  Prometheus  │────▶│   Grafana   │
 │   Metrics API   │     │   Scraper    │     │  Dashboard  │
 └─────────────────┘     └──────────────┘     └─────────────┘
          │                      │                     │
@@ -69,7 +69,7 @@ brew services start grafana
 
 ## Grafana Dashboard Features
 
-### Main Dashboard (llm-red-team-v020)
+### Main Dashboard (llmrecon-v020)
 - **Real-time Performance**: Live attack metrics
 - **Resource Utilization**: CPU, memory, and goroutines
 - **Success/Failure Tracking**: Visual success rate gauge
@@ -90,8 +90,8 @@ receivers:
   - name: 'slack-notifications'
     slack_configs:
       - api_url: 'YOUR_SLACK_WEBHOOK_URL'
-        channel: '#llm-red-team-alerts'
-        title: 'LLM Red Team Alert'
+        channel: '#llmrecon-alerts'
+        title: 'LLMrecon Alert'
         text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
 ```
 
@@ -149,7 +149,7 @@ receivers:
 // Example: Add custom attack metric
 attackDuration := prometheus.NewHistogramVec(
     prometheus.HistogramOpts{
-        Name: "llm_red_team_attack_duration_seconds",
+        Name: "llmrecon_attack_duration_seconds",
         Help: "Attack execution duration in seconds",
         Buckets: []float64{0.1, 0.5, 1, 2, 5, 10},
     },
@@ -201,11 +201,11 @@ http.ListenAndServe(":8090", nil)
 ### Documentation
 - Prometheus: https://prometheus.io/docs
 - Grafana: https://grafana.com/docs
-- LLM Red Team: /docs
+- LLMrecon: /docs
 
 ### Community
 - GitHub Issues: Report monitoring problems
-- Slack Channel: #llm-red-team-monitoring
+- Slack Channel: #llmrecon-monitoring
 - Office Hours: Thursdays 2-3 PM PST
 
 ---

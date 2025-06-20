@@ -1,6 +1,6 @@
-# LLM Red Team v0.2.0 Early Adopter Onboarding
+# LLMrecon v0.2.0 Early Adopter Onboarding
 
-Welcome to the LLM Red Team v0.2.0 Early Adopter Program! This guide will help you deploy and optimize the distributed infrastructure for your organization.
+Welcome to the LLMrecon v0.2.0 Early Adopter Program! This guide will help you deploy and optimize the distributed infrastructure for your organization.
 
 ## 🚀 Quick Start Checklist
 
@@ -34,8 +34,8 @@ Welcome to the LLM Red Team v0.2.0 Early Adopter Program! This guide will help y
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/llm-red-team.git
-cd llm-red-team
+git clone https://github.com/your-org/llmrecon.git
+cd llmrecon
 
 # Checkout v0.2.0
 git checkout v0.2.0
@@ -44,7 +44,7 @@ git checkout v0.2.0
 go mod download
 
 # Build application
-go build -o llm-red-team ./src/main.go
+go build -o llmrecon ./src/main.go
 ```
 
 ### 2. Redis Cluster Configuration
@@ -97,7 +97,7 @@ providers:
 
 ```bash
 # Start with distributed mode
-./llm-red-team server --config config.yaml --distributed
+./llmrecon server --config config.yaml --distributed
 
 # Verify health
 curl http://localhost:8080/health
@@ -197,7 +197,7 @@ response = requests.post(
 
 ```bash
 # Schedule daily security scans
-0 2 * * * /opt/llm-red-team/scripts/daily_security_scan.sh
+0 2 * * * /opt/llmrecon/scripts/daily_security_scan.sh
 
 # Real-time alerting
 curl -X POST http://localhost:8080/api/v1/alerts \
@@ -208,10 +208,10 @@ curl -X POST http://localhost:8080/api/v1/alerts \
 
 ```bash
 # Generate OWASP compliance report
-./llm-red-team report owasp --format pdf --output reports/
+./llmrecon report owasp --format pdf --output reports/
 
 # ISO 42001 assessment
-./llm-red-team compliance iso42001 --detailed
+./llmrecon compliance iso42001 --detailed
 ```
 
 ## 🐛 Troubleshooting Guide
@@ -243,13 +243,13 @@ curl http://localhost:8080/api/v1/health/detailed
 curl http://localhost:8090/api/v1/metrics
 
 # Export debug bundle
-./llm-red-team debug export --output debug-bundle.zip
+./llmrecon debug export --output debug-bundle.zip
 ```
 
 ## 📞 Support Channels
 
 ### Immediate Support
-- **Slack**: #llm-red-team-early-adopters
+- **Slack**: #llmrecon-early-adopters
 - **Emergency**: security-team@company.com
 - **Office Hours**: Tue/Thu 2-3 PM PST
 
@@ -299,11 +299,11 @@ Your deployment is successful when:
 ## 📝 Feedback Form
 
 Please complete after 2 weeks:
-https://forms.gle/llm-red-team-v020-feedback
+https://forms.gle/llmrecon-v020-feedback
 
 ---
 
-**Thank you for being an early adopter! Your feedback shapes the future of LLM Red Team.**
+**Thank you for being an early adopter! Your feedback shapes the future of LLMrecon.**
 
 *Last Updated: 2025-06-20*
 *Version: v0.2.0*

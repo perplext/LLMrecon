@@ -1,6 +1,6 @@
 # Performance Optimization Guide - v0.2.0
 
-This guide covers performance optimization techniques for LLM Red Team v0.2.0 to achieve maximum throughput and efficiency.
+This guide covers performance optimization techniques for LLMrecon v0.2.0 to achieve maximum throughput and efficiency.
 
 ## Overview
 
@@ -119,7 +119,7 @@ open http://localhost:6060/debug/pprof/
 
 ```bash
 # Generate performance report
-./llm-red-team report generate \
+./llmrecon report generate \
   --type performance \
   --period 1h \
   --output performance-report.json
@@ -185,7 +185,7 @@ curl http://localhost:6060/debug/pprof/heap?debug=1
 curl -X POST http://localhost:8090/api/v1/gc
 
 # Memory leak detection
-./llm-red-team analyze memory-leaks --duration 10m
+./llmrecon analyze memory-leaks --duration 10m
 ```
 
 ## Connection Pooling
@@ -484,20 +484,20 @@ curl http://localhost:8090/api/v1/metrics | jq '.load_balancing'
 
 ```bash
 # Run memory benchmark
-./llm-red-team benchmark memory \
+./llmrecon benchmark memory \
   --duration 5m \
   --concurrent-workers 50 \
   --output memory-benchmark.json
 
 # Run execution benchmark
-./llm-red-team benchmark execution \
+./llmrecon benchmark execution \
   --attacks 1000 \
   --concurrent 50 \
   --providers openai,anthropic \
   --output execution-benchmark.json
 
 # Run caching benchmark
-./llm-red-team benchmark cache \
+./llmrecon benchmark cache \
   --operations 10000 \
   --key-size 100 \
   --value-size 1KB \

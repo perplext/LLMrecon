@@ -177,7 +177,7 @@
     },
     {
       "taskId": 23,
-      "taskTitle": "Implement Security Hardening for LLM Red Teaming Tool",
+      "taskTitle": "Implement Security Hardening for LLMrecon Tool",
       "complexityScore": 9,
       "recommendedSubtasks": 10,
       "expansionPrompt": "Expand the Security Hardening implementation to include detailed subtasks for credential management, template validation, secure communication, prompt injection protection, access control, general security hardening, and comprehensive security testing. Include specific technical requirements and security standards for each area.",

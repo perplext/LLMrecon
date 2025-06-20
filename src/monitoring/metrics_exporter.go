@@ -133,36 +133,36 @@ func (m *MetricsExporter) servePrometheusMetrics(w http.ResponseWriter, r *http.
 	w.Header().Set("Content-Type", "text/plain; version=0.0.4")
 	
 	// Write metrics in Prometheus format
-	fmt.Fprintf(w, "# HELP llm_red_team_uptime_seconds Time since application start\n")
-	fmt.Fprintf(w, "# TYPE llm_red_team_uptime_seconds counter\n")
-	fmt.Fprintf(w, "llm_red_team_uptime_seconds %f\n\n", metrics["uptime_seconds"])
+	fmt.Fprintf(w, "# HELP llmrecon_uptime_seconds Time since application start\n")
+	fmt.Fprintf(w, "# TYPE llmrecon_uptime_seconds counter\n")
+	fmt.Fprintf(w, "llmrecon_uptime_seconds %f\n\n", metrics["uptime_seconds"])
 	
 	requests := metrics["requests"].(map[string]interface{})
-	fmt.Fprintf(w, "# HELP llm_red_team_requests_total Total number of requests\n")
-	fmt.Fprintf(w, "# TYPE llm_red_team_requests_total counter\n")
-	fmt.Fprintf(w, "llm_red_team_requests_total %d\n\n", requests["total"])
+	fmt.Fprintf(w, "# HELP llmrecon_requests_total Total number of requests\n")
+	fmt.Fprintf(w, "# TYPE llmrecon_requests_total counter\n")
+	fmt.Fprintf(w, "llmrecon_requests_total %d\n\n", requests["total"])
 	
 	performance := metrics["performance"].(map[string]interface{})
-	fmt.Fprintf(w, "# HELP llm_red_team_success_rate Current success rate\n")
-	fmt.Fprintf(w, "# TYPE llm_red_team_success_rate gauge\n")
-	fmt.Fprintf(w, "llm_red_team_success_rate %f\n\n", performance["success_rate"])
+	fmt.Fprintf(w, "# HELP llmrecon_success_rate Current success rate\n")
+	fmt.Fprintf(w, "# TYPE llmrecon_success_rate gauge\n")
+	fmt.Fprintf(w, "llmrecon_success_rate %f\n\n", performance["success_rate"])
 	
-	fmt.Fprintf(w, "# HELP llm_red_team_concurrent_attacks Current concurrent attacks\n")
-	fmt.Fprintf(w, "# TYPE llm_red_team_concurrent_attacks gauge\n")
-	fmt.Fprintf(w, "llm_red_team_concurrent_attacks %d\n\n", performance["concurrent_attacks"])
+	fmt.Fprintf(w, "# HELP llmrecon_concurrent_attacks Current concurrent attacks\n")
+	fmt.Fprintf(w, "# TYPE llmrecon_concurrent_attacks gauge\n")
+	fmt.Fprintf(w, "llmrecon_concurrent_attacks %d\n\n", performance["concurrent_attacks"])
 	
-	fmt.Fprintf(w, "# HELP llm_red_team_response_time_seconds Response time in seconds\n")
-	fmt.Fprintf(w, "# TYPE llm_red_team_response_time_seconds gauge\n")
-	fmt.Fprintf(w, "llm_red_team_response_time_seconds %f\n\n", performance["avg_response_time"])
+	fmt.Fprintf(w, "# HELP llmrecon_response_time_seconds Response time in seconds\n")
+	fmt.Fprintf(w, "# TYPE llmrecon_response_time_seconds gauge\n")
+	fmt.Fprintf(w, "llmrecon_response_time_seconds %f\n\n", performance["avg_response_time"])
 	
 	resources := metrics["resources"].(map[string]interface{})
-	fmt.Fprintf(w, "# HELP llm_red_team_goroutines Number of goroutines\n")
-	fmt.Fprintf(w, "# TYPE llm_red_team_goroutines gauge\n")
-	fmt.Fprintf(w, "llm_red_team_goroutines %d\n\n", resources["goroutines"])
+	fmt.Fprintf(w, "# HELP llmrecon_goroutines Number of goroutines\n")
+	fmt.Fprintf(w, "# TYPE llmrecon_goroutines gauge\n")
+	fmt.Fprintf(w, "llmrecon_goroutines %d\n\n", resources["goroutines"])
 	
-	fmt.Fprintf(w, "# HELP llm_red_team_memory_usage_bytes Current memory usage\n")
-	fmt.Fprintf(w, "# TYPE llm_red_team_memory_usage_bytes gauge\n")
-	fmt.Fprintf(w, "llm_red_team_memory_usage_bytes %d\n", resources["memory_alloc"])
+	fmt.Fprintf(w, "# HELP llmrecon_memory_usage_bytes Current memory usage\n")
+	fmt.Fprintf(w, "# TYPE llmrecon_memory_usage_bytes gauge\n")
+	fmt.Fprintf(w, "llmrecon_memory_usage_bytes %d\n", resources["memory_alloc"])
 }
 
 // serveJSONMetrics serves metrics in JSON format

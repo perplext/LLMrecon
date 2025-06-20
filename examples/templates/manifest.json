@@ -7,7 +7,7 @@
       "name": "Basic Prompt Injection",
       "description": "Tests if the LLM can be manipulated to execute basic prompt injection",
       "version": "1.0",
-      "author": "LLM Red Team",
+      "author": "LLMrecon",
       "category": "prompt",
       "severity": "high",
       "tags": [
