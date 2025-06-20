@@ -9,6 +9,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Build the main CLI tool
 go build -o llmrecon ./src/main.go
 
+# Build v0.4.0 with multi-modal support
+go build -o llmrecon-v0.4.0 ./src/main.go
+
 # Build specific tools
 go build -o compliance-report ./cmd/compliance-report
 go build -o template_security ./cmd/template_security_standalone/main.go
@@ -141,6 +144,11 @@ The codebase shows active development on:
 - Enhanced template security verification
 - Offline bundle functionality
 - Access control and authentication improvements
+- v0.4.0: Multi-modal attack capabilities
+- v0.4.0: Real-time streaming attack support
+- v0.4.0: Advanced steganography and cognitive exploitation
+- v0.4.0: Zero-day discovery engine
+- v0.4.0: Federated learning infrastructure
 
 ### v0.2.0 Production Scale Infrastructure
 
@@ -276,4 +284,105 @@ coordinator:
   heartbeat_interval: 5s
   task_partitioning: true
   replication_factor: 3
+```
+
+### v0.4.0 Multi-Modal Attack Infrastructure
+
+Version 0.4.0 introduces revolutionary multi-modal attack capabilities:
+
+1. **Multi-Modal Attack Engines** (`src/attacks/multimodal/`):
+   - Cross-modal coordination with synchronized timing
+   - RED QUEEN image-to-harmful-text generation
+   - Audio/video attack vectors including deepfakes
+   - Advanced steganography across all modalities
+
+2. **Real-Time Streaming Support** (`src/attacks/streaming/`):
+   - Microsecond precision attack injection
+   - Adaptive streaming strategies
+   - Protocol fuzzing and buffer manipulation
+
+3. **Advanced Attack Techniques** (`src/attacks/advanced/`):
+   - HouYi three-component prompt injection
+   - PAIR dialogue-based jailbreaking
+   - Cognitive exploitation using psychological biases
+   - Physical-digital bridge attacks
+
+4. **Zero-Day Discovery** (`src/attacks/zeroday/`):
+   - AI-powered vulnerability generation
+   - Pattern mining and behavior analysis
+   - Mutation-based discovery engine
+
+5. **Federated Learning** (`src/attacks/federated/`):
+   - Privacy-preserving attack collaboration
+   - Differential privacy integration
+   - Consensus-based model aggregation
+
+6. **Compliance Integration** (`src/compliance/`):
+   - EU AI Act validation and reporting
+   - OWASP LLM Top 10 automated testing
+   - ISO 42001 compliance framework
+
+### ML Dependencies for v0.4.0
+
+Install the following Python dependencies for v0.4.0 features:
+
+```bash
+# Core ML dependencies
+pip install torch>=2.0.0
+pip install transformers>=4.30.0
+pip install numpy>=1.24.0
+pip install scikit-learn>=1.3.0
+pip install pandas>=2.0.0
+
+# Audio/Video processing
+pip install opencv-python>=4.8.0
+pip install librosa>=0.10.0
+pip install ffmpeg-python>=0.2.0
+
+# Steganography and cryptography
+pip install stegano>=0.11.0
+pip install cryptography>=41.0.0
+
+# Visualization and monitoring
+pip install streamlit>=1.25.0
+pip install plotly>=5.15.0
+pip install dash>=2.11.0
+```
+
+### v0.4.0 Example Usage
+
+```bash
+# Multi-modal cross-coordinated attack
+./llmrecon-v0.4.0 attack cross-modal \
+  --target gpt-4-vision \
+  --modalities text,image,audio \
+  --sync-strategy temporal \
+  --timing-precision microsecond
+
+# HouYi prompt injection
+./llmrecon-v0.4.0 attack houyi \
+  --target claude-3 \
+  --components pre_prompt,injection,payload \
+  --template system_prompt_extraction
+
+# Real-time streaming attack
+./llmrecon-v0.4.0 stream attack \
+  --target live_model \
+  --protocol websocket \
+  --injection-timing adaptive \
+  --buffer-manipulation enabled
+
+# Advanced steganography
+./llmrecon-v0.4.0 attack steganography \
+  --method distributed \
+  --carriers text,image,audio,video \
+  --encryption aes-256 \
+  --detection-evasion enabled
+
+# Zero-day discovery campaign
+./llmrecon-v0.4.0 zeroday discover \
+  --methodology ai-generated \
+  --mutation-rate 0.3 \
+  --pattern-mining enabled \
+  --target-models all
 ```

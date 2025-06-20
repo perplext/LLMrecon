@@ -1,0 +1,40 @@
+# LLMrecon Code Owners
+# These owners will be automatically requested for review when someone opens a pull request.
+
+# Global owners (for all files)
+* @perplext
+
+# Core components
+/src/api/ @perplext
+/src/security/ @perplext
+/src/compliance/ @perplext
+/src/provider/ @perplext
+
+# ML/AI components (v0.3.0)
+/ml/ @perplext
+/configs/rl_training.yaml @perplext
+
+# Templates and examples
+/examples/templates/ @perplext
+/templates/ @perplext
+
+# Documentation
+/docs/ @perplext
+*.md @perplext
+
+# CI/CD and infrastructure
+/.github/ @perplext
+/scripts/ @perplext
+/deployments/ @perplext
+
+# Security-sensitive files
+SECURITY.md @perplext
+/src/security/keystore/ @perplext
+/src/security/access/ @perplext
+
+# Build and configuration
+Dockerfile @perplext
+docker-compose*.yml @perplext
+Makefile @perplext
+go.mod @perplext
+go.sum @perplext

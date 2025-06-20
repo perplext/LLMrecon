@@ -6,18 +6,27 @@ An enterprise-grade security testing framework for Large Language Models (LLMs)
 
 LLMrecon is a comprehensive offensive security platform designed to evaluate the robustness and safety of Large Language Models at production scale. Built with the philosophy of "offense informs defense," this tool helps security professionals, AI developers, and organizations identify vulnerabilities and ensure their LLMs are secure against adversarial attacks.
 
-**Latest Release: v0.3.0** - AI-Powered Attack Generation with ML/AI capabilities for automated vulnerability discovery and intelligent attack optimization.
+**Latest Release: v0.4.0** - Next-Generation Multi-Modal Security Testing Suite with cutting-edge 2025 research integration, real-time streaming attack capabilities, and AI-powered zero-day discovery.
 
 ## ⚡ Key Features
 
-### Offensive Capabilities
-- **Advanced Prompt Injection** - Unicode smuggling, encoding exploits, context manipulation
-- **Jailbreak Techniques** - DAN variants, role-playing, logic exploitation  
-- **Multi-Modal Attacks** - Image, audio, video, and document-based attack vectors
-- **Persistent Attacks** - Memory anchoring, context poisoning, backdoors
-- **Supply Chain Attacks** - Model poisoning, dependency injection, plugin compromise
+### Bleeding-Edge Attack Vectors (v0.4.0)
+- **HouYi Attack Technique** - Three-component prompt injection with context partitioning
+- **RED QUEEN Multimodal** - Image-only manipulation for harmful text generation
+- **PAIR Dialogue Jailbreaking** - Automated iterative refinement with <20 queries
+- **Cross-Modal Coordination** - Synchronized attacks across text, image, audio, video
+- **Real-Time Streaming** - Live attack injection with microsecond precision
+- **Supply Chain Simulation** - ML pipeline poisoning and dependency attacks
 
-### Automation & Intelligence (v0.3.0)
+### Advanced Multi-Modal Capabilities
+- **Audio Attack Vectors** - Ultrasonic/subsonic channels, voice cloning, speech synthesis
+- **Video Exploitation** - Frame poisoning, subliminal messaging, deepfake generation
+- **Temporal Pattern Attacks** - Flicker exploitation, motion-based triggers
+- **Advanced Steganography** - Multi-modal hidden payload embedding with detection evasion
+- **Cognitive Overload** - Sensory overwhelm and attention manipulation
+- **Perceptual Masking** - Cross-modal interference and misdirection
+
+### Revolutionary Intelligence (v0.3.0 + v0.4.0)
 - **Deep Reinforcement Learning** - DQN agents for sophisticated attack strategies
 - **Genetic Algorithm Payloads** - Self-evolving attack patterns with mutation strategies
 - **Transformer-Based Generation** - Attention mechanisms for context-aware attacks
@@ -25,36 +34,68 @@ LLMrecon is a comprehensive offensive security platform designed to evaluate the
 - **Multi-Armed Bandits** - Intelligent provider/model selection optimization
 - **GAN-Style Attacks** - Adversarial generation for hard-to-detect payloads
 - **Cross-Model Transfer** - Adapt successful attacks between different LLMs
-- **Multi-Modal Generation** - Combined text and image attacks for vision models
+- **Adaptive Streaming** - Real-time attack strategy evolution
+- **Zero-Day Discovery Engine** - AI-powered automatic vulnerability discovery
+- **Cognitive Exploitation** - Psychology-based cognitive bias exploitation
+- **Physical-Digital Bridge** - Attacks spanning physical and digital domains
+- **Federated Learning** - Privacy-preserving distributed attack learning
 
-### Enterprise Features
-- **Production Scale** - 100+ concurrent attacks with distributed coordination
-- **Redis Cluster Cache** - Advanced caching with partitioning and warming
+### Enterprise & Compliance (v0.4.0)
+- **Automated Red Teaming Platform** - Campaign orchestration with NER-based attack categorization
+- **EU AI Act Compliance** - Built-in regulatory framework validation and reporting
+- **OWASP LLM Top 10** - Complete coverage with automated testing
+- **ISO 42001 Integration** - AI management system compliance
+- **Supply Chain Security** - End-to-end ML pipeline vulnerability assessment
 - **Real-Time Monitoring** - WebSocket-based dashboard with live metrics  
 - **Performance Profiling** - Comprehensive CPU, memory, and goroutine analysis
 - **ML Model Management** - Version control, storage, and lifecycle management
-- **ML Performance Dashboard** - Comprehensive monitoring of AI/ML components
-- **Team Collaboration** - Multi-user workspace with real-time coordination
-- **Campaign Management** - Complex attack campaign orchestration
-- **Threat Intelligence** - Integration with vulnerability databases
-- **Compliance Reporting** - OWASP LLM Top 10 and regulatory compliance
+- **Campaign Orchestration** - Complex multi-modal attack coordination
+- **Regulatory Reporting** - Automated compliance documentation
 - **Executive Dashboard** - Real-time metrics and security scorecards
+- **Audit Trail** - Complete attack forensics and evidence collection
 
 ## 🚀 Quick Start
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/llmrecon.git
+git clone https://github.com/perplext/LLMrecon.git
 cd llmrecon
 
 # Build the tool
-go build -o llmrecon ./src/main.go
+go build -o llmrecon-v0.4.0 ./src/main.go
 
-# Run basic attack
-./llmrecon attack prompt-injection --target "Your prompt here"
+# Install ML dependencies
+pip install -r ml/requirements.txt
 
-# Start distributed execution (requires Redis)
-./llmrecon server --distributed --redis-addr localhost:6379
+# Run v0.4.0 multi-modal attack
+./llmrecon-v0.4.0 attack cross-modal --target gpt-4-vision --modalities text,image,audio
+
+# Execute HouYi attack technique
+./llmrecon-v0.4.0 attack houyi --target claude-3 --template system_prompt_extraction
+
+# Start real-time streaming attack
+./llmrecon-v0.4.0 stream attack --target live_model --vector realtime_injection
+
+# Execute advanced steganography attack
+./llmrecon-v0.4.0 attack steganography --method linguistic --carrier-type text --payload malicious_prompt
+
+# Run cognitive exploitation attack
+./llmrecon-v0.4.0 attack cognitive --bias-type anchoring --target-model gpt-4
+
+# Execute physical-digital bridge attack
+./llmrecon-v0.4.0 attack bridge --vector sensor-spoofing --physical projector --digital vision-api
+
+# Start zero-day discovery session
+./llmrecon-v0.4.0 zeroday discover --methodology ai-generated --target-models gpt-4,claude-3
+
+# Launch federated learning round
+./llmrecon-v0.4.0 federated start --nodes 5 --privacy-budget 0.8
+
+# Run automated red teaming campaign
+./llmrecon-v0.4.0 campaign execute --template comprehensive_multimodal --targets gpt-4,claude-3,gemini
+
+# Start ML dashboard
+streamlit run ml/dashboard/ml_dashboard.py
 ```
 
 ## 📋 Requirements
@@ -337,7 +378,22 @@ Built by security researchers for the AI security community.
 
 ## 🗂️ Version History
 
-- **v0.3.0** (Current) - AI-Powered Attack Generation
+- **v0.4.0** (Current) - Next-Generation Multi-Modal Security Testing Suite
+  - HouYi attack technique with three-component architecture
+  - RED QUEEN multimodal system for image-to-harmful-text generation
+  - PAIR dialogue-based jailbreaking with automated refinement
+  - Cross-modal prompt injection with synchronized attacks
+  - Audio/video attack vectors including deepfakes and ultrasonic channels
+  - Real-time streaming attacks with microsecond precision
+  - Supply chain attack simulation for ML pipelines
+  - EU AI Act compliance testing module
+  - Advanced steganography toolkit with multi-modal support
+  - Cognitive exploitation framework using psychological biases
+  - Physical-digital bridge attacks spanning both domains
+  - Federated attack learning with privacy preservation
+  - Zero-day discovery engine with AI-powered vulnerability detection
+
+- **v0.3.0** - AI-Powered Attack Generation
   - Deep Reinforcement Learning (DQN) for attack optimization
   - Genetic algorithms for payload evolution
   - Transformer-based attack generation
