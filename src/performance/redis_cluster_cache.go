@@ -2,11 +2,9 @@ package performance
 
 import (
 	"context"
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"hash/crc32"
-	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -92,7 +90,7 @@ const (
 	InvalidationLRU       InvalidationStrategy = "lru"
 	InvalidationTTL       InvalidationStrategy = "ttl"
 	InvalidationTags      InvalidationStrategy = "tags"
-	InvalidationCallback  InvalidationStrategy = "callback"
+	InvalidationCallbackStrategy  InvalidationStrategy = "callback"
 )
 
 // ReadPreference defines read preference for cache operations
@@ -280,7 +278,7 @@ type CacheInvalidatorConfig struct {
 type WarmingScheduler struct {
 	queue    chan WarmingJob
 	workers  []*WarmingWorker
-	metrics  *SchedulerMetrics
+	metrics  *CacheSchedulerMetrics
 	ctx      context.Context
 	cancel   context.CancelFunc
 }
@@ -320,7 +318,7 @@ type AccessPattern struct {
 	PredictedNext time.Time `json:"predicted_next"`
 }
 
-type SchedulerMetrics struct {
+type CacheSchedulerMetrics struct {
 	JobsQueued    int64 `json:"jobs_queued"`
 	JobsProcessed int64 `json:"jobs_processed"`
 	QueueDepth    int   `json:"queue_depth"`
@@ -712,9 +710,7 @@ func (c *RedisClusterCache) metricsLoop() {
 func (c *RedisClusterCache) updateMetrics() {
 	// Count total keys across all partitions
 	var totalKeys int64
-	info := c.primary.ClusterNodes(c.ctx).Val()
-	
-	// Parse cluster info to get key counts
+	// TODO: Parse cluster info to get key counts
 	// This is a simplified implementation
 	c.metrics.TotalKeys = totalKeys
 }

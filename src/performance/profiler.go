@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
-	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -116,8 +115,8 @@ type PerformanceOptimizer struct {
 	config       OptimizerConfig
 	strategies   map[string]OptimizationStrategy
 	history      []*OptimizationResult
-	gcTuner      *GCTuner
-	poolManager  *PoolManager
+	// gcTuner      *GCTuner     // TODO: Define GCTuner type
+	// poolManager  *PoolManager // TODO: Define PoolManager type
 	metrics      *OptimizerMetrics
 	logger       Logger
 	mutex        sync.RWMutex
@@ -725,7 +724,7 @@ func (p *PerformanceProfiler) CollectMetrics() *PerformanceMetrics {
 	return &PerformanceMetrics{
 		Timestamp: time.Now(),
 		CPU: CPUMetrics{
-			Usage: getCPUUsage(),
+			Usage: getProfilerCPUUsage(),
 		},
 		Memory: MemoryMetrics{
 			Allocated:     m.Alloc,
@@ -918,7 +917,7 @@ func (p *PerformanceProfiler) handleBenchmarks(w http.ResponseWriter, r *http.Re
 }
 
 // getCPUUsage returns current CPU usage (simplified implementation)
-func getCPUUsage() float64 {
+func getProfilerCPUUsage() float64 {
 	// This is a simplified implementation
 	// In production, use a proper CPU monitoring library
 	return float64(runtime.NumGoroutine()) / float64(runtime.NumCPU() * 1000) * 100

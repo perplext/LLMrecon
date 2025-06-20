@@ -1,0 +1,107 @@
+groups:
+  - name: llm_red_team_alerts
+    interval: 30s
+    rules:
+      # Performance Alerts
+      - alert: HighResponseTime
+        expr: llm_red_team_response_time_seconds > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "Response time is {{ $value }}s (threshold: 2s)"
+
+      - alert: LowSuccessRate
+        expr: llm_red_team_success_rate < 0.95
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low success rate detected"
+          description: "Success rate is {{ $value | humanizePercentage }} (threshold: 95%)"
+
+      - alert: HighConcurrentAttacks
+        expr: llm_red_team_concurrent_attacks > 200
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High concurrent attack load"
+          description: "{{ $value }} concurrent attacks (normal: 100-150)"
+
+      # Resource Alerts
+      - alert: HighMemoryUsage
+        expr: llm_red_team_memory_usage_bytes > 8589934592  # 8GB
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanize1024 }}B"
+
+      - alert: HighCPUUsage
+        expr: llm_red_team_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}%"
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis connection failed"
+
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes > 1073741824  # 1GB
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory: {{ $value | humanize1024 }}B"
+
+      # Application Health
+      - alert: ApplicationDown
+        expr: up{job="llm-red-team"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "LLM Red Team application is down"
+          description: "Application health check failed"
+
+      - alert: HighErrorRate
+        expr: rate(llm_red_team_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate"
+          description: "Error rate is {{ $value | humanizePercentage }}"
+
+      # Queue Alerts
+      - alert: QueueBacklog
+        expr: llm_red_team_queue_depth > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Large queue backlog"
+          description: "Queue depth: {{ $value }} items"
+
+      - alert: SlowQueueProcessing
+        expr: rate(llm_red_team_queue_processed_total[5m]) < 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow queue processing"
+          description: "Processing rate: {{ $value }} items/sec"

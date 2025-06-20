@@ -112,6 +112,7 @@ type TargetStatistics struct {
 	P99Latency        time.Duration `json:"p99_latency"`
 	Throughput        float64       `json:"throughput"`
 	ErrorRate         float64       `json:"error_rate"`
+	SuccessRate       float64       `json:"success_rate"`
 	LastUpdated       time.Time     `json:"last_updated"`
 	LatencyHistory    []time.Duration `json:"latency_history"`
 }
@@ -404,7 +405,7 @@ type PredictionPoint struct {
 	Confidence float64  `json:"confidence"`
 }
 
-type DataPoint struct {
+type LoadBalancerDataPoint struct {
 	Timestamp time.Time `json:"timestamp"`
 	Value     float64   `json:"value"`
 	Features  map[string]float64 `json:"features"`

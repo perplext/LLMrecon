@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"runtime/debug"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -495,7 +497,7 @@ func (m *MemoryPoolManager) updateMetrics() {
 func (m *MemoryPoolManager) optimizeGC() {
 	if m.config.GCTarget > 0 {
 		runtime.GC()
-		runtime.SetGCPercent(m.config.GCTarget)
+		debug.SetGCPercent(m.config.GCTarget)
 		m.logger.Info("Optimized GC settings", "gc_target", m.config.GCTarget)
 	}
 }
