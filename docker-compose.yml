@@ -1,0 +1,188 @@
+version: '3.8'
+
+services:
+  llmrecon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: alpine-runtime
+      args:
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-unknown}
+        DATE: ${DATE:-unknown}
+    image: llmrecon:${VERSION:-latest}
+    container_name: llmrecon
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - LLMRECON_LOG_LEVEL=${LLMRECON_LOG_LEVEL:-info}
+      - LLMRECON_DEBUG=${LLMRECON_DEBUG:-false}
+      
+    # Volumes for persistent data
+    volumes:
+      - ./config:/app/config:ro
+      - ./reports:/app/reports:rw
+      - ./logs:/app/logs:rw
+      - ./cache:/app/cache:rw
+      - ./custom-templates:/app/custom-templates:ro
+      
+    # Resource limits for security
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+          
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=100M,noexec,nosuid,nodev
+      
+    # Network configuration
+    networks:
+      - llmrecon-network
+      
+    # Health check
+    healthcheck:
+      test: ["CMD", "llmrecon", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: API server mode
+  llmrecon-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: alpine-runtime
+      args:
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-unknown}
+        DATE: ${DATE:-unknown}
+    image: llmrecon:${VERSION:-latest}
+    container_name: llmrecon-api
+    restart: unless-stopped
+    
+    # Override command to run API server
+    command: ["api", "server", "--host", "0.0.0.0", "--port", "8080"]
+    
+    # Environment variables
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - LLMRECON_LOG_LEVEL=${LLMRECON_LOG_LEVEL:-info}
+      - LLMRECON_DEBUG=${LLMRECON_DEBUG:-false}
+      - LLMRECON_API_AUTH_TOKEN=${LLMRECON_API_AUTH_TOKEN:-}
+      
+    # Port mapping
+    ports:
+      - "${LLMRECON_API_PORT:-8080}:8080"
+      
+    # Volumes for persistent data
+    volumes:
+      - ./config:/app/config:ro
+      - ./reports:/app/reports:rw
+      - ./logs:/app/logs:rw
+      - ./cache:/app/cache:rw
+      - ./custom-templates:/app/custom-templates:ro
+      
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+          
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=200M,noexec,nosuid,nodev
+      
+    # Network configuration
+    networks:
+      - llmrecon-network
+      
+    # Health check for API
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Only start if explicitly enabled
+    profiles:
+      - api
+
+  # Optional: Redis for caching and job queues
+  redis:
+    image: redis:7-alpine
+    container_name: llmrecon-redis
+    restart: unless-stopped
+    
+    # Security configurations
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-llmrecon123}"]
+    
+    # Volumes for persistence
+    volumes:
+      - redis-data:/data
+      
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+          
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=50M,noexec,nosuid,nodev
+      
+    # Network configuration
+    networks:
+      - llmrecon-network
+      
+    # Health check
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      
+    # Only start if explicitly enabled
+    profiles:
+      - cache
+      - distributed
+
+networks:
+  llmrecon-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:
+    driver: local
