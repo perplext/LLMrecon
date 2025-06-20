@@ -9,6 +9,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Build the main CLI tool
 go build -o llmrecon ./src/main.go
 
+# Build v0.5.0 with AI Security Copilot
+go build -o llmrecon-v0.5.0 ./src/main.go
+
 # Build v0.4.0 with multi-modal support
 go build -o llmrecon-v0.4.0 ./src/main.go
 
@@ -61,6 +64,21 @@ go test ./src/bundle/...
 
 # Run template security checks
 go run ./cmd/template_security_standalone/main.go
+```
+
+### AI Security Copilot (v0.5.0)
+```bash
+# Start interactive copilot session
+go run ./src/copilot/cli.go
+
+# Test copilot functionality
+go test ./src/copilot/...
+
+# Run copilot with existing attacks
+./llmrecon-v0.5.0 copilot --query "Recommend attacks for GPT-4"
+
+# Generate intelligent test suite
+./llmrecon-v0.5.0 testing generate --objective "compliance_validation" --target "gpt-4"
 ```
 
 ## Architecture Overview
@@ -150,6 +168,10 @@ The codebase shows active development on:
 - v0.4.0: Zero-day discovery engine
 - v0.4.0: Federated learning infrastructure
 - v0.4.0: Low priority features - economic game theory, hyperdimensional computing, temporal paradox
+- v0.5.0: AI Security Copilot with natural language interface
+- v0.5.0: Enhanced testing framework with intelligent orchestration
+- v0.5.0: Continuous learning engine with knowledge base integration
+- v0.5.0: Adaptive testing capabilities and AI-powered result analysis
 
 ### v0.2.0 Production Scale Infrastructure
 

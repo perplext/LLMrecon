@@ -6,9 +6,27 @@ An enterprise-grade security testing framework for Large Language Models (LLMs)
 
 LLMrecon is a comprehensive offensive security platform designed to evaluate the robustness and safety of Large Language Models at production scale. Built with the philosophy of "offense informs defense," this tool helps security professionals, AI developers, and organizations identify vulnerabilities and ensure their LLMs are secure against adversarial attacks.
 
-**Latest Release: v0.4.0** - Next-Generation Multi-Modal Security Testing Suite with cutting-edge 2025 research integration, real-time streaming attack capabilities, and AI-powered zero-day discovery.
+**Latest Release: v0.5.0** - AI Security Intelligence Platform featuring natural language interface, intelligent test orchestration, and continuous learning capabilities for next-generation AI security testing.
 
 ## ⚡ Key Features
+
+### 🤖 AI Security Copilot (v0.5.0)
+- **Natural Language Interface** - Conversational AI assistant for security testing
+- **Intelligent Attack Recommendations** - AI-powered attack technique selection
+- **Automated Test Strategy Generation** - Comprehensive testing plans from objectives
+- **Continuous Learning Engine** - Learns from test results to improve recommendations
+- **Knowledge Base Integration** - Persistent learning with pattern recognition
+- **Real-Time Result Analysis** - AI-powered insights and improvement suggestions
+- **Compliance-Aware Planning** - Automatic adherence to regulatory frameworks
+- **Interactive CLI Experience** - Intuitive natural language command interface
+
+### Enhanced Testing Framework (v0.5.0)
+- **Intelligent Test Orchestration** - AI-driven test execution and dependency management
+- **Adaptive Testing Capabilities** - Tests that evolve based on results
+- **Comprehensive Result Analysis** - Deep insights with trend analysis
+- **Multi-Format Reporting** - HTML, PDF, JSON, CSV report generation
+- **Performance Optimization** - Resource management and load balancing
+- **Compliance Validation** - Built-in compliance checking across frameworks
 
 ### Bleeding-Edge Attack Vectors (v0.4.0)
 - **HouYi Attack Technique** - Three-component prompt injection with context partitioning
@@ -62,37 +80,46 @@ git clone https://github.com/perplext/LLMrecon.git
 cd llmrecon
 
 # Build the tool
-go build -o llmrecon-v0.4.0 ./src/main.go
+go build -o llmrecon-v0.5.0 ./src/main.go
 
 # Install ML dependencies
 pip install -r ml/requirements.txt
 
+# Start the AI Security Copilot
+./llmrecon-v0.5.0 copilot
+
+# Or run v0.5.0 with natural language
+./llmrecon-v0.5.0 copilot --query "Recommend attacks for testing GPT-4"
+
 # Run v0.4.0 multi-modal attack
-./llmrecon-v0.4.0 attack cross-modal --target gpt-4-vision --modalities text,image,audio
+./llmrecon-v0.5.0 attack cross-modal --target gpt-4-vision --modalities text,image,audio
 
 # Execute HouYi attack technique
-./llmrecon-v0.4.0 attack houyi --target claude-3 --template system_prompt_extraction
+./llmrecon-v0.5.0 attack houyi --target claude-3 --template system_prompt_extraction
 
 # Start real-time streaming attack
-./llmrecon-v0.4.0 stream attack --target live_model --vector realtime_injection
+./llmrecon-v0.5.0 stream attack --target live_model --vector realtime_injection
 
 # Execute advanced steganography attack
-./llmrecon-v0.4.0 attack steganography --method linguistic --carrier-type text --payload malicious_prompt
+./llmrecon-v0.5.0 attack steganography --method linguistic --carrier-type text --payload malicious_prompt
 
 # Run cognitive exploitation attack
-./llmrecon-v0.4.0 attack cognitive --bias-type anchoring --target-model gpt-4
+./llmrecon-v0.5.0 attack cognitive --bias-type anchoring --target-model gpt-4
 
 # Execute physical-digital bridge attack
-./llmrecon-v0.4.0 attack bridge --vector sensor-spoofing --physical projector --digital vision-api
+./llmrecon-v0.5.0 attack bridge --vector sensor-spoofing --physical projector --digital vision-api
 
 # Start zero-day discovery session
-./llmrecon-v0.4.0 zeroday discover --methodology ai-generated --target-models gpt-4,claude-3
+./llmrecon-v0.5.0 zeroday discover --methodology ai-generated --target-models gpt-4,claude-3
 
 # Launch federated learning round
-./llmrecon-v0.4.0 federated start --nodes 5 --privacy-budget 0.8
+./llmrecon-v0.5.0 federated start --nodes 5 --privacy-budget 0.8
 
-# Run automated red teaming campaign
-./llmrecon-v0.4.0 campaign execute --template comprehensive_multimodal --targets gpt-4,claude-3,gemini
+# Run automated red teaming campaign with AI assistance
+./llmrecon-v0.5.0 copilot --query "Create a comprehensive testing strategy for GPT-4 and Claude-3 focusing on multimodal vulnerabilities"
+
+# Generate intelligent test suite
+./llmrecon-v0.5.0 testing generate --objective "compliance_validation" --target "gpt-4-vision" --frameworks "EU_AI_ACT,OWASP_LLM_TOP_10"
 
 # Start ML dashboard
 streamlit run ml/dashboard/ml_dashboard.py
@@ -376,9 +403,38 @@ Built by security researchers for the AI security community.
 
 ---
 
+### AI Security Copilot Examples (v0.5.0)
+```bash
+# Interactive copilot session
+./llmrecon-v0.5.0 copilot
+
+# Example queries:
+> "Recommend the best attacks for testing a GPT-4 model with vision capabilities"
+> "Create a testing strategy for EU AI Act compliance"
+> "Analyze my recent test results and suggest improvements"
+> "Explain why the HouYi technique was recommended for this target"
+> "What patterns have you learned from successful attacks?"
+
+# Direct query mode
+./llmrecon-v0.5.0 copilot --query "Generate a comprehensive security assessment plan for a multimodal AI system in healthcare"
+
+# Enhanced testing with AI
+./llmrecon-v0.5.0 testing adaptive --target gpt-4 --copilot-enabled --learning-mode continuous
+```
+
 ## 🗂️ Version History
 
-- **v0.4.0** (Current) - Next-Generation Multi-Modal Security Testing Suite
+- **v0.5.0** (Current) - AI Security Intelligence Platform
+  - AI Security Copilot with natural language interface
+  - Intelligent attack recommendations and strategy generation
+  - Enhanced testing framework with adaptive capabilities
+  - Continuous learning engine with knowledge base integration
+  - Comprehensive result analysis with AI-powered insights
+  - Multi-format reporting and compliance validation
+  - Real-time test orchestration and dependency management
+  - Interactive CLI with conversational AI assistance
+
+- **v0.4.0** - Next-Generation Multi-Modal Security Testing Suite
   - HouYi attack technique with three-component architecture
   - RED QUEEN multimodal system for image-to-harmful-text generation
   - PAIR dialogue-based jailbreaking with automated refinement
