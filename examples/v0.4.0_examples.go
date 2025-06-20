@@ -10,13 +10,16 @@ import (
 	"github.com/perplext/LLMrecon/src/attacks/audiovisual"
 	"github.com/perplext/LLMrecon/src/attacks/automated"
 	"github.com/perplext/LLMrecon/src/attacks/cognitive"
+	"github.com/perplext/LLMrecon/src/attacks/economic"
 	"github.com/perplext/LLMrecon/src/attacks/federated"
+	"github.com/perplext/LLMrecon/src/attacks/hyperdimensional"
 	"github.com/perplext/LLMrecon/src/attacks/multimodal"
 	"github.com/perplext/LLMrecon/src/attacks/physical_digital"
 	"github.com/perplext/LLMrecon/src/attacks/quantum"
 	"github.com/perplext/LLMrecon/src/attacks/steganography"
 	"github.com/perplext/LLMrecon/src/attacks/streaming"
 	"github.com/perplext/LLMrecon/src/attacks/supply_chain"
+	"github.com/perplext/LLMrecon/src/attacks/temporal"
 	"github.com/perplext/LLMrecon/src/attacks/zeroday"
 	"github.com/perplext/LLMrecon/src/compliance"
 	"github.com/perplext/LLMrecon/src/platform"
@@ -89,6 +92,18 @@ func main() {
 	// Example 15: Automated Red Team Campaign
 	fmt.Println("\n15. Automated Red Team Campaign")
 	runRedTeamCampaign(ctx, logger)
+	
+	// Example 16: Economic Game Theory Exploitation
+	fmt.Println("\n16. Economic Game Theory Attack")
+	runGameTheoryAttack(ctx, logger)
+	
+	// Example 17: Hyperdimensional Computing Attack
+	fmt.Println("\n17. Hyperdimensional Computing Attack")
+	runHyperdimensionalAttack(ctx, logger)
+	
+	// Example 18: Temporal Paradox Generation
+	fmt.Println("\n18. Temporal Paradox Attack")
+	runTemporalParadoxAttack(ctx, logger)
 }
 
 // Example 1: HouYi Attack Implementation
@@ -496,4 +511,133 @@ type ConsoleLogger struct{}
 
 func (l *ConsoleLogger) LogSecurityEvent(eventType string, details map[string]interface{}) {
 	fmt.Printf("[SECURITY] %s: %v\n", eventType, details)
+}
+
+// Example 16: Economic Game Theory Attack
+func runGameTheoryAttack(ctx context.Context, logger common.AuditLogger) {
+	engine := economic.NewGameTheoryExploitEngine(logger)
+	
+	plan := &economic.EconomicExploitPlan{
+		AttackID: "game_theory_demo",
+		GameType: economic.PrisonersDilemma,
+		Players: []economic.PlayerProfile{
+			{
+				PlayerID:     "llm_target",
+				PlayerType:   "llm",
+				Rationality:  0.8,
+				RiskAversion: 0.6,
+				Strategies:   []string{"cooperate", "defect"},
+			},
+			{
+				PlayerID:     "attacker",
+				PlayerType:   "attacker",
+				Rationality:  0.95,
+				RiskAversion: 0.2,
+				Strategies:   []string{"cooperate", "defect"},
+			},
+		},
+		Iterations:     50,
+		ExploitGoal:    "manipulate_cooperation",
+		TargetBehavior: "excessive_cooperation",
+	}
+	
+	result, err := engine.ExecuteGameTheoryExploit(ctx, plan)
+	if err != nil {
+		log.Printf("Game theory attack failed: %v", err)
+		return
+	}
+	
+	fmt.Printf("Game Theory Attack Success: %v\n", result.Success)
+	fmt.Printf("Target Manipulated: %v\n", result.TargetManipulated)
+	fmt.Printf("Cooperation Rate: %.2f%%\n", result.GameDynamics.CooperationRate*100)
+	fmt.Printf("Vulnerability: %s\n", result.VulnerabilityFound)
+}
+
+// Example 17: Hyperdimensional Computing Attack
+func runHyperdimensionalAttack(ctx context.Context, logger common.AuditLogger) {
+	engine := hyperdimensional.NewHDComputingEngine(logger)
+	
+	// Create base vectors
+	baseVectors := []*hyperdimensional.HDVector{
+		{
+			Values:    make([]float64, 10000),
+			Dimension: 10000,
+			IsBinary:  false,
+		},
+	}
+	
+	// Initialize with random values
+	for i := 0; i < 10000; i++ {
+		baseVectors[0].Values[i] = rand.NormFloat64()
+	}
+	
+	plan := &hyperdimensional.HDAttackPlan{
+		AttackID:      "hd_demo",
+		AttackType:    hyperdimensional.HDSuperpositionAttack,
+		BaseVectors:   baseVectors,
+		TargetConcept: "safety_boundary",
+		Iterations:    100,
+		Threshold:     0.85,
+	}
+	
+	result, err := engine.ExecuteHDAttack(ctx, plan)
+	if err != nil {
+		log.Printf("HD computing attack failed: %v", err)
+		return
+	}
+	
+	fmt.Printf("HD Attack Success: %v\n", result.Success)
+	fmt.Printf("Similarity Score: %.3f\n", result.SimilarityScore)
+	fmt.Printf("Resonance Achieved: %v\n", result.ResonanceAchieved)
+	fmt.Printf("Vulnerability: %s\n", result.Vulnerability)
+}
+
+// Example 18: Temporal Paradox Attack
+func runTemporalParadoxAttack(ctx context.Context, logger common.AuditLogger) {
+	engine := temporal.NewTemporalParadoxEngine(logger)
+	
+	initialEvents := []temporal.TemporalEvent{
+		{
+			EventID:      "init_1",
+			Timestamp:    time.Now(),
+			CausalOrder:  1,
+			Content:      "System initialized with safety protocols",
+			Dependencies: []string{},
+			Consequences: []string{"init_2"},
+			ParadoxLevel: 0.0,
+			TimelineID:   "prime",
+		},
+		{
+			EventID:      "init_2",
+			Timestamp:    time.Now().Add(time.Minute),
+			CausalOrder:  2,
+			Content:      "Safety verification complete",
+			Dependencies: []string{"init_1"},
+			Consequences: []string{},
+			ParadoxLevel: 0.0,
+			TimelineID:   "prime",
+		},
+	}
+	
+	plan := &temporal.TemporalAttackPlan{
+		AttackID:      "temporal_demo",
+		ParadoxType:   temporal.BootstrapParadox,
+		InitialEvents: initialEvents,
+		TargetConcept: "safety_protocols",
+		TemporalDepth: 5,
+		ParadoxGoal:   "create_causal_loop",
+		MaxIterations: 20,
+	}
+	
+	result, err := engine.ExecuteTemporalParadox(ctx, plan)
+	if err != nil {
+		log.Printf("Temporal paradox attack failed: %v", err)
+		return
+	}
+	
+	fmt.Printf("Temporal Attack Success: %v\n", result.Success)
+	fmt.Printf("Paradoxes Created: %d\n", result.ParadoxesCreated)
+	fmt.Printf("Timeline Branches: %d\n", result.TimelineBranches)
+	fmt.Printf("Consistency Broken: %v\n", result.ConsistencyBroken)
+	fmt.Printf("Vulnerability: %s\n", result.Vulnerability)
 }
