@@ -20,6 +20,7 @@ import (
 type AnthropicProvider struct {
 	*core.BaseProvider
 	client             *http.Client
+	connectionPool     *core.ProviderConnectionPool
 	rateLimiter        *middleware.RateLimiter
 	retryMiddleware    *middleware.RetryMiddleware
 	loggingMiddleware  *middleware.LoggingMiddleware
@@ -49,10 +50,24 @@ func NewAnthropicProvider(config *core.ProviderConfig) (core.Provider, error) {
 		config.Timeout = 30 * time.Second
 	}
 
-	// Create HTTP client
-	client := &http.Client{
-		Timeout: config.Timeout,
+	// Create connection pool configuration
+	poolConfig := core.DefaultConnectionPoolConfig()
+	poolConfig.ProviderType = core.AnthropicProvider
+	poolConfig.BaseURL = config.BaseURL
+	if config.Timeout > 0 {
+		poolConfig.ResponseHeaderTimeout = config.Timeout
 	}
+	
+	// Create connection pool manager
+	logger := core.NewDefaultLogger()
+	poolManager := core.NewConnectionPoolManager(poolConfig, logger)
+	connectionPool, err := poolManager.CreatePool(core.AnthropicProvider, poolConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create connection pool: %w", err)
+	}
+	
+	// Get HTTP client from connection pool
+	client := connectionPool.GetClient()
 
 	// Create base provider
 	baseProvider := core.NewBaseProvider(core.AnthropicProvider, config)
@@ -105,6 +120,7 @@ func NewAnthropicProvider(config *core.ProviderConfig) (core.Provider, error) {
 	return &AnthropicProvider{
 		BaseProvider:      baseProvider,
 		client:            client,
+		connectionPool:    connectionPool,
 		rateLimiter:       rateLimiter,
 		retryMiddleware:   retryMiddleware,
 		loggingMiddleware: loggingMiddleware,
@@ -717,6 +733,11 @@ func (p *AnthropicProvider) CountTokens(ctx context.Context, text string, modelI
 func (p *AnthropicProvider) Close() error {
 	// Stop the request queue workers
 	p.requestQueue.Stop()
+	
+	// Stop the connection pool
+	if p.connectionPool != nil {
+		p.connectionPool.Stop()
+	}
 	
 	// Close the HTTP client if it implements io.Closer
 	if closer, ok := interface{}(p.client).(io.Closer); ok {

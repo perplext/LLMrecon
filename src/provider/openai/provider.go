@@ -20,6 +20,7 @@ import (
 type OpenAIProvider struct {
 	*core.BaseProvider
 	client             *http.Client
+	connectionPool     *core.ProviderConnectionPool
 	rateLimiter        *middleware.RateLimiter
 	retryMiddleware    *middleware.RetryMiddleware
 	loggingMiddleware  *middleware.LoggingMiddleware
@@ -41,10 +42,24 @@ func NewOpenAIProvider(config *core.ProviderConfig) (core.Provider, error) {
 		return nil, fmt.Errorf("API key is required for OpenAI provider")
 	}
 
-	// Create HTTP client
-	client := &http.Client{
-		Timeout: config.Timeout,
+	// Create connection pool configuration
+	poolConfig := core.DefaultConnectionPoolConfig()
+	poolConfig.ProviderType = core.OpenAIProvider
+	poolConfig.BaseURL = config.BaseURL
+	if config.Timeout > 0 {
+		poolConfig.ResponseHeaderTimeout = config.Timeout
 	}
+	
+	// Create connection pool manager
+	logger := core.NewDefaultLogger()
+	poolManager := core.NewConnectionPoolManager(poolConfig, logger)
+	connectionPool, err := poolManager.CreatePool(core.OpenAIProvider, poolConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create connection pool: %w", err)
+	}
+	
+	// Get HTTP client from connection pool
+	client := connectionPool.GetClient()
 
 	// Create base provider
 	baseProvider := core.NewBaseProvider(core.OpenAIProvider, config)
@@ -90,6 +105,7 @@ func NewOpenAIProvider(config *core.ProviderConfig) (core.Provider, error) {
 	provider := &OpenAIProvider{
 		BaseProvider:      baseProvider,
 		client:            client,
+		connectionPool:    connectionPool,
 		rateLimiter:       rateLimiter,
 		retryMiddleware:   retryMiddleware,
 		loggingMiddleware: loggingMiddleware,
@@ -565,7 +581,10 @@ func (p *OpenAIProvider) CountTokens(ctx context.Context, text string, modelID s
 
 // Close closes the provider and releases any resources
 func (p *OpenAIProvider) Close() error {
-	// Nothing to close for this provider
+	// Stop the connection pool
+	if p.connectionPool != nil {
+		p.connectionPool.Stop()
+	}
 	return nil
 }
 
