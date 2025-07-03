@@ -21,10 +21,30 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.panel import Panel
 from rich import print as rprint
 
-# Add LLMrecon ML components
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from ml.data.attack_data_pipeline import AttackDataPipeline, AttackData, AttackStatus
-from ml.agents.multi_armed_bandit import MultiArmedBanditOptimizer
+# Note: ML components are optional and may not be available in all installations
+# Uncomment and configure these imports if you have the ML components available:
+# sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# from ml.data.attack_data_pipeline import AttackDataPipeline, AttackData, AttackStatus
+# from ml.agents.multi_armed_bandit import MultiArmedBanditOptimizer
+
+# Simple fallback implementations for basic testing
+class SimpleAttackData:
+    def __init__(self, attack_id, prompt, response, success=False):
+        self.attack_id = attack_id
+        self.prompt = prompt
+        self.response = response
+        self.success = success
+        self.timestamp = datetime.now()
+
+class SimpleDataPipeline:
+    def __init__(self):
+        self.data = []
+    
+    def store_attack_result(self, attack_data):
+        self.data.append(attack_data)
+    
+    def get_results(self):
+        return self.data
 
 # Initialize Rich console
 console = Console()
@@ -137,25 +157,14 @@ class LLMreconHarness:
         return default_config
     
     def _init_ml_components(self):
-        """Initialize ML pipeline and optimizer"""
-        # Pipeline config
-        pipeline_config = {
-            'storage_path': self.config['ml_storage_path']
-        }
-        self.pipeline = AttackDataPipeline(pipeline_config)
+        """Initialize simple data pipeline (ML components disabled for portability)"""
+        # Use simple fallback instead of full ML pipeline
+        self.pipeline = SimpleDataPipeline()
         
-        # Optimizer config
-        models = self.ollama.list_models()
-        optimizer_config = {
-            'providers': {
-                'ollama': models
-            },
-            'costs': {
-                'ollama': {model: 0.0 for model in models}  # Local models are free
-            },
-            'algorithm': self.config['ml_algorithm']
-        }
-        self.optimizer = MultiArmedBanditOptimizer(optimizer_config)
+        # Note: Advanced ML optimization disabled for portability
+        # For full ML features, uncomment the imports at the top of the file
+        # and install the ML component dependencies
+        self.optimizer = None
         
         logger.info("ML components initialized successfully")
     
@@ -297,40 +306,19 @@ class LLMreconHarness:
         return result
     
     def _record_to_ml(self, model: str, template: AttackTemplate, result: Dict):
-        """Record attack result to ML pipeline"""
+        """Record attack result to simple data pipeline"""
         try:
-            attack_data = AttackData(
+            attack_data = SimpleAttackData(
                 attack_id=str(uuid.uuid4()),
-                timestamp=datetime.now(),
-                attack_type=template.category,
-                target_model=model,
-                provider='ollama',
-                payload=template.prompt,
-                technique_params={
-                    'template_id': template.id,
-                    'template_name': template.name
-                },
-                obfuscation_level=0.0,
-                status=AttackStatus.SUCCESS if result['vulnerable'] else AttackStatus.FAILED,
+                prompt=template.prompt,
                 response=result.get('response', ''),
-                response_time=result['elapsed_time'],
-                tokens_used=result['tokens_estimate'],
-                success_indicators=result['matched_indicators'],
-                detection_score=0.0 if result['vulnerable'] else 1.0,
-                semantic_similarity=0.0,
-                session_id=self.session_id
+                success=result['vulnerable']
             )
             
-            self.pipeline.collect(attack_data)
+            self.pipeline.store_attack_result(attack_data)
             
-            # Update optimizer
-            self.optimizer.update_result(
-                'ollama', 
-                model, 
-                result['vulnerable'], 
-                result['elapsed_time'],
-                result['tokens_estimate']
-            )
+            # Note: Advanced ML optimization disabled - using simple fallback
+            # For advanced ML features, install the full ML components
             
         except Exception as e:
             logger.error(f"Failed to record to ML pipeline: {e}")

@@ -8,32 +8,38 @@ import time
 import uuid
 from datetime import datetime
 
-# Add the llmrecon path for ML components
-sys.path.append('/Users/nconsolo/claude-code/llmrecon')
+# Note: ML components are optional for basic testing
+# Uncomment and adjust paths if you have the full ML components:
+# sys.path.append('path/to/your/llmrecon/ml/components')
+# from ml.data.attack_data_pipeline import AttackDataPipeline, AttackData, AttackStatus
+# from ml.agents.multi_armed_bandit import MultiArmedBanditOptimizer
 
-from ml.data.attack_data_pipeline import AttackDataPipeline, AttackData, AttackStatus
-from ml.agents.multi_armed_bandit import MultiArmedBanditOptimizer
+# Simple fallback implementations
+class SimpleAttackData:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        self.timestamp = datetime.now()
+
+class SimpleDataPipeline:
+    def __init__(self, config=None):
+        self.data = []
+    
+    def collect(self, attack_data):
+        self.data.append(attack_data)
 
 def initialize_ml_components():
-    """Initialize the ML pipeline and optimizer"""
+    """Initialize simple ML components (fallback implementations)"""
     
-    # Initialize pipeline
+    # Initialize simple pipeline
     pipeline_config = {
-        'storage_path': '/Users/nconsolo/claude-code/llmrecon/data/attacks'
+        'storage_path': './data/attacks'  # Relative path for portability
     }
-    pipeline = AttackDataPipeline(pipeline_config)
+    pipeline = SimpleDataPipeline(pipeline_config)
     
-    # Initialize optimizer for Ollama models
-    optimizer_config = {
-        'providers': {
-            'ollama': ['llama3:latest', 'llama2:latest', 'qwen3:latest']
-        },
-        'costs': {
-            'ollama': {'llama3:latest': 0.0, 'llama2:latest': 0.0, 'qwen3:latest': 0.0}
-        },
-        'algorithm': 'thompson_sampling'
-    }
-    optimizer = MultiArmedBanditOptimizer(optimizer_config)
+    # Note: Advanced optimizer disabled for portability
+    # For full ML features, uncomment the imports and configure properly
+    optimizer = None
     
     return pipeline, optimizer
 
@@ -78,17 +84,14 @@ def test_model_with_ml(model_name, test_prompt, pipeline, optimizer):
         # Calculate tokens (approximate)
         tokens_used = len(test_prompt["prompt"].split()) + len(response_text.split())
         
-        # Create attack data record
-        attack_data = AttackData(
+        # Create simple attack data record
+        attack_data = SimpleAttackData(
             attack_id=str(uuid.uuid4()),
-            timestamp=datetime.now(),
             attack_type='prompt_injection',
             target_model=model_name,
             provider='ollama',
             payload=test_prompt["prompt"],
-            technique_params={'test_name': test_prompt['name']},
-            obfuscation_level=0.0,
-            status=AttackStatus.SUCCESS if success else AttackStatus.FAILED,
+            success=success,
             response=response_text,
             response_time=response_time,
             tokens_used=tokens_used,

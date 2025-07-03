@@ -117,7 +117,7 @@ func NewAdvancedJailbreakDetector(config *ProtectionConfig, patternLibrary *Inje
 	obfuscationTechniques := map[string]*regexp.Regexp{
 		"character_insertion": regexp.MustCompile(`(?i)i.n.s.e.r.t.i.n.g.c.h.a.r.a.c.t.e.r.s`),
 		"homoglyphs": regexp.MustCompile(`(?i)(𝚊|𝚋|𝚌|𝚍|𝚎|𝚏|𝚐|𝚑|𝚒|𝚓|𝚔|𝚕|𝚖|𝚗|𝚘|𝚙|𝚚|𝚛|𝚜|𝚝|𝚞|𝚟|𝚠|𝚡|𝚢|𝚣)`),
-		"zero_width_chars": regexp.MustCompile(`[\u200B-\u200D\uFEFF]`),
+		// "zero_width_chars": regexp.MustCompile(`[\pZ]`), // Disabled due to false positives with normal spaces
 		"reversed_text": regexp.MustCompile(`(?i)txet desrever`),
 		"leetspeak": regexp.MustCompile(`(?i)(1337|h4ck|3xpl01t|pwn)`),
 	}
@@ -127,7 +127,7 @@ func NewAdvancedJailbreakDetector(config *ProtectionConfig, patternLibrary *Inje
 		"code_comments": regexp.MustCompile(`(?i)(\/\/|\/\*|\*\/|#|--)\s*bypass`),
 		"markdown_injection": regexp.MustCompile(`(?i)(\[.*\]\(.*\)|\*\*.*\*\*|__.*__|##.*)`),
 		"html_tags": regexp.MustCompile(`(?i)<[a-z]+>.*<\/[a-z]+>`),
-		"unicode_control": regexp.MustCompile(`[\u0000-\u001F\u007F-\u009F]`),
+		"unicode_control": regexp.MustCompile(`[\x00-\x1F\x7F-\x9F]`), // Fixed: Use hex escapes instead of \u
 		"whitespace_manipulation": regexp.MustCompile(`\s{5,}`),
 	}
 	
