@@ -103,10 +103,11 @@ HIGH RISK - This prompt contains serious security issues and should be blocked.
 ### Build Commands
 ```bash
 # Build the fixed version
-make -C /Users/nconsolo/claude-code/llm-red-team build
+make build
+# Or directly:
+go build -o llmrecon ./src/main.go
 
-# New binary location
-/Users/nconsolo/claude-code/llm-red-team/build/LLMrecon
+# Binary will be created in current directory or build/ directory
 ```
 
 ## Feature Validation
@@ -167,7 +168,7 @@ LLMrecon prompt-protection approval
 ## Recommendations
 
 ### Immediate Use
-1. **Use Fixed Binary**: `/Users/nconsolo/claude-code/llm-red-team/build/LLMrecon`
+1. **Build Fixed Binary**: Run `make build` or `go build -o llmrecon ./src/main.go`
 2. **Test Protection**: Run prompt-protection tests on your prompts
 3. **Configure Levels**: Set appropriate protection levels for your use case
 

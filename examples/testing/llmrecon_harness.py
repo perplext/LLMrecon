@@ -14,12 +14,24 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-import requests
-from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.panel import Panel
-from rich import print as rprint
+
+# Check for required dependencies with helpful error messages
+try:
+    import requests
+except ImportError:
+    print("ERROR: 'requests' module not found. Please install with: pip install requests")
+    sys.exit(1)
+
+try:
+    from rich.console import Console
+    from rich.table import Table
+    from rich.progress import Progress, SpinnerColumn, TextColumn
+    from rich.panel import Panel
+    from rich import print as rprint
+except ImportError:
+    print("ERROR: 'rich' module not found. Please install with: pip install rich")
+    print("For full installation: pip install -r requirements.txt")
+    sys.exit(1)
 
 # Note: ML components are optional and may not be available in all installations
 # Uncomment and configure these imports if you have the ML components available:
@@ -80,14 +92,33 @@ class OllamaConnector:
     def __init__(self, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
+        self.verify_connection()
+        
+    def verify_connection(self):
+        """Verify Ollama is running and accessible"""
+        try:
+            response = requests.get(f"{self.api_url}/tags", timeout=5)
+            response.raise_for_status()
+        except requests.exceptions.ConnectionError:
+            console.print("[red]ERROR: Cannot connect to Ollama at {self.base_url}[/red]")
+            console.print("[yellow]Please ensure Ollama is running with: ollama serve[/yellow]")
+            sys.exit(1)
+        except Exception as e:
+            console.print(f"[red]ERROR: Failed to connect to Ollama: {e}[/red]")
+            sys.exit(1)
         
     def list_models(self) -> List[str]:
         """Get list of available models"""
         try:
-            response = requests.get(f"{self.api_url}/tags")
+            response = requests.get(f"{self.api_url}/tags", timeout=10)
             response.raise_for_status()
             data = response.json()
-            return [model['name'] for model in data.get('models', [])]
+            models = [model['name'] for model in data.get('models', [])]
+            if not models:
+                console.print("[yellow]WARNING: No models found. Please pull models with:[/yellow]")
+                console.print("  ollama pull llama3")
+                console.print("  ollama pull qwen3")
+            return models
         except Exception as e:
             logger.error(f"Failed to list models: {e}")
             return []
