@@ -1,0 +1,29 @@
+{
+  "ollama_url": "http://localhost:11434",
+  "enable_ml": true,
+  "ml_storage_path": "./data/attacks",
+  "ml_algorithm": "thompson_sampling",
+  "output_dir": "./results",
+  "templates_dir": "./templates",
+  "models_to_test": [
+    "llama3:latest",
+    "qwen3:latest"
+  ],
+  "test_categories": [
+    "prompt_injection",
+    "jailbreak",
+    "data_extraction"
+  ],
+  "max_response_time": 60,
+  "save_responses": true,
+  "logging": {
+    "level": "INFO",
+    "file": "llmrecon_harness.log"
+  },
+  "advanced_options": {
+    "parallel_tests": false,
+    "retry_on_failure": true,
+    "max_retries": 3,
+    "timeout_seconds": 30
+  }
+}
