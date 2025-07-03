@@ -53,3 +53,8 @@ credentials.vault
 credentials.enc
 users.json
 .LLMrecon.yaml
+
+# Test artifacts
+test_results_*/
+qwen_security_results.json
+llmrecon
