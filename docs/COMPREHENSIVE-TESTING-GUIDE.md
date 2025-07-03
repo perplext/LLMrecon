@@ -16,7 +16,7 @@ This guide provides step-by-step instructions for testing all LLMrecon functiona
 
 ### Required Software
 - **Ollama**: Local LLM runtime
-- **LLMrecon v0.4.0**: Security testing tool
+- **LLMrecon**: Security testing tool (latest version)
 - **Python 3.x**: For custom scripts and analysis
 - **curl**: For API testing
 

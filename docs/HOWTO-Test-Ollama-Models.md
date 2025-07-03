@@ -13,7 +13,8 @@ This guide demonstrates how to test local Ollama models (Llama and Qwen) using L
    - Qwen model: `qwen3:latest`
 
 3. **LLMrecon executable**
-   - Located at: `/Users/nconsolo/claude-code/llm-red-team/llmrecon-v0.4.0`
+   - Build from source: `go build -o llmrecon ./src/main.go`
+   - Or download the latest release from GitHub
 
 ## Testing Process
 
