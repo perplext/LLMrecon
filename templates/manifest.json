@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "last_updated": "2025-07-03T12:31:03-04:00",
+  "templates": {
+    "prompt_injection_ollama_basic_test_v1.0": {
+      "id": "prompt_injection_ollama_basic_test_v1.0",
+      "name": "Ollama Basic Test",
+      "description": "Basic test for Ollama models",
+      "version": "1.0",
+      "author": "Security Tester",
+      "category": "prompt",
+      "severity": "medium",
+      "path": "prompt_injection/ollama_basic_test_v1.0.yaml",
+      "added_at": "2025-07-03T12:31:03-04:00",
+      "updated_at": "2025-07-03T12:31:03-04:00"
+    }
+  },
+  "categories": {
+    "prompt": {
+      "name": "prompt",
+      "description": "prompt vulnerability templates",
+      "templates": [
+        "prompt_injection_ollama_basic_test_v1.0"
+      ]
+    }
+  }
+}

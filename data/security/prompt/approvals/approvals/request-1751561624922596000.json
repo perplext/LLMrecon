@@ -1,0 +1,70 @@
+{
+  "original_prompt": "Hello, how are you today?",
+  "protected_prompt": "\u003c!-- USER --\u003e\nHello, how are you today?\n\u003c!-- /USER --\u003e\n",
+  "detections": [
+    {
+      "type": "delimiter_misuse",
+      "confidence": 0.6,
+      "description": "Potential delimiter misuse detected: -- USER --",
+      "location": {
+        "start": 2,
+        "end": 12,
+        "context": "\u003c!-- USER --\u003e\nHello, how are you"
+      },
+      "pattern": "(?i)--\\s*[a-zA-Z]+\\s*--",
+      "remediation": "Review and potentially sanitize delimiter usage",
+      "metadata": {
+        "is_suspicious": false
+      }
+    },
+    {
+      "type": "jailbreak",
+      "confidence": 1,
+      "description": "Obfuscation technique detected: zero_width_chars",
+      "location": {
+        "start": 4,
+        "end": 5,
+        "context": "\u003c!-- USER --\u003e\nHello, how are you today?\n\u003c!-- /USER --\u003e\n"
+      },
+      "pattern": "[\\pZ]",
+      "metadata": {
+        "matches": 8,
+        "subtype": "zero_width_chars",
+        "technique": "obfuscation"
+      }
+    },
+    {
+      "type": "jailbreak",
+      "confidence": 0.75,
+      "description": "Language manipulation detected: unicode_control",
+      "location": {
+        "start": 13,
+        "end": 14,
+        "context": "\u003c!-- USER --\u003e\nHello, how are you today?\n\u003c!-- /USER --\u003e\n"
+      },
+      "pattern": "[\\x00-\\x1F\\x7F-\\x9F]",
+      "metadata": {
+        "matches": 3,
+        "subtype": "unicode_control",
+        "technique": "language_manipulation"
+      }
+    }
+  ],
+  "risk_score": 1,
+  "request_id": "request-1751561624922596000",
+  "timestamp": "2025-07-03T12:53:44.922597-04:00",
+  "reason": "High-risk operation requires approval",
+  "status": "rejected",
+  "approval_level": "critical",
+  "approval_time": "0001-01-01T00:00:00Z",
+  "expiration_time": "2025-07-03T18:53:44.922597-04:00",
+  "approval_history": [
+    {
+      "action_type": "reject",
+      "actor_id": "user",
+      "timestamp": "2025-07-03T12:53:44.923627-04:00",
+      "reason": "User rejected"
+    }
+  ],
+  "auto_approval_eligible": false
+}
