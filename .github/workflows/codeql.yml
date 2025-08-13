@@ -1,0 +1,75 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '30 5 * * 1'  # Run at 5:30 AM UTC every Monday
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'go', 'javascript-typescript', 'python' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-extended,security-and-quality
+
+    # Custom build steps for Go
+    - if: matrix.language == 'go'
+      name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+        cache: false
+
+    - if: matrix.language == 'go'
+      name: Install Go dependencies
+      run: |
+        go version
+        cd src
+        go mod download
+        go mod verify
+
+    - if: matrix.language == 'go'
+      name: Build Go code
+      run: |
+        cd src
+        # Build main binary
+        go build -v -o ../build/llmrecon ./main.go
+        
+        # Build other command utilities
+        for cmd in cmd/*; do
+          if [ -d "$cmd" ] && [ -f "$cmd/main.go" ]; then
+            name=$(basename "$cmd")
+            go build -v -o "../build/$name" "./$cmd/main.go" || echo "Skipping $name due to build error"
+          fi
+        done
+
+    # Autobuild for other languages
+    - if: matrix.language != 'go'
+      name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
