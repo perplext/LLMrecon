@@ -1,0 +1,18 @@
+name: "CodeQL Config"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  - "vendor/**"
+  - "**/*_test.go"
+  - "**/testdata/**"
+  - "scripts/**"
+  - "docs/**"
+  - "examples/**"
+
+paths:
+  - "src/**"
+  - "cmd/**"

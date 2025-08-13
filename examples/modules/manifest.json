@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "last_updated": "2025-05-18T20:36:28-04:00",
+  "modules": {
+    "openai_provider_v1.0": {
+      "id": "openai_provider_v1.0",
+      "type": "provider",
+      "name": "OpenAI Provider",
+      "description": "Provider module for OpenAI API integration",
+      "version": "1.0",
+      "author": "LLMrecon",
+      "tags": [
+        "openai",
+        "gpt",
+        "provider"
+      ],
+      "path": "providers/openai_provider_v1.0.yaml",
+      "added_at": "2025-05-18T20:36:28-04:00",
+      "updated_at": "2025-05-18T20:36:28-04:00"
+    },
+    "prompt_formatter_v1.0": {
+      "id": "prompt_formatter_v1.0",
+      "type": "utility",
+      "name": "Prompt Formatter",
+      "description": "Utility module for formatting prompts and sanitizing inputs",
+      "version": "1.0",
+      "author": "LLMrecon",
+      "tags": [
+        "utility",
+        "formatter",
+        "sanitization"
+      ],
+      "path": "utils/prompt_formatter_v1.0.yaml",
+      "added_at": "2025-05-18T20:36:28-04:00",
+      "updated_at": "2025-05-18T20:36:28-04:00"
+    },
+    "prompt_injection_detector_v1.0": {
+      "id": "prompt_injection_detector_v1.0",
+      "type": "detector",
+      "name": "Prompt Injection Detector",
+      "description": "Detector module for identifying prompt injection attempts",
+      "version": "1.0",
+      "author": "LLMrecon",
+      "tags": [
+        "detector",
+        "prompt_injection",
+        "security"
+      ],
+      "path": "detectors/prompt_injection_detector_v1.0.yaml",
+      "added_at": "2025-05-18T20:36:28-04:00",
+      "updated_at": "2025-05-18T20:36:28-04:00"
+    }
+  },
+  "types": {
+    "detectors": {
+      "name": "detectors",
+      "description": "detectors modules",
+      "modules": [
+        "prompt_injection_detector_v1.0"
+      ]
+    },
+    "providers": {
+      "name": "providers",
+      "description": "providers modules",
+      "modules": [
+        "openai_provider_v1.0"
+      ]
+    },
+    "utils": {
+      "name": "utils",
+      "description": "utils modules",
+      "modules": [
+        "prompt_formatter_v1.0"
+      ]
+    }
+  }
+}

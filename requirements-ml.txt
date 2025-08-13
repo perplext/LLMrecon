@@ -1,0 +1,44 @@
+# Core ML Frameworks
+torch>=2.0.0
+torchvision>=0.15.0
+tensorflow>=2.12.0
+transformers>=4.30.0
+
+# Reinforcement Learning
+gym>=0.26.0
+stable-baselines3>=2.0.0
+
+# Data Processing
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# Experiment Tracking
+mlflow>=2.4.0
+wandb>=0.15.0
+tensorboard>=2.12.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# Utilities
+tqdm>=4.65.0
+pyyaml>=6.0
+jupyter>=1.0.0
+jupyterlab>=4.0.0
+ipywidgets>=8.0.0
+
+# Distributed Training (optional)
+ray[default]>=2.5.0
+horovod>=0.28.0
+
+# Model Serving
+torchserve>=0.8.0
+torch-model-archiver>=0.8.0
+
+# Additional ML Libraries
+optuna>=3.2.0  # Hyperparameter optimization
+evidently>=0.3.0  # Model monitoring
+feast>=0.32.0  # Feature store

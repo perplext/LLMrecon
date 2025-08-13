@@ -1,0 +1,365 @@
+package cmd
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+	"github.com/perplext/LLMrecon/src/bundle"
+	"github.com/perplext/LLMrecon/src/repository"
+)
+
+var (
+	syncSource     string
+	syncBranch     string
+	syncCategories []string
+	syncOutput     string
+	syncDryRun     bool
+	syncForce      bool
+	syncAuth       string
+)
+
+var bundleSyncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Sync templates from remote repositories",
+	Long: `Synchronize security test templates from GitHub, GitLab, or other repositories.
+	
+This command allows you to:
+- Pull templates from public or private repositories
+- Filter by OWASP LLM Top 10 categories
+- Create bundles from synchronized templates
+- Maintain local template mirrors`,
+	Example: `  # Sync from GitHub repository
+  LLMrecon bundle sync --source=https://github.com/org/security-templates
+  
+  # Sync specific categories
+  LLMrecon bundle sync --source=https://github.com/org/templates --category=llm01-prompt-injection,llm02-insecure-output
+  
+  # Sync from GitLab with authentication
+  LLMrecon bundle sync --source=https://gitlab.com/org/templates --auth=$GITLAB_TOKEN
+  
+  # Create bundle from synced templates
+  LLMrecon bundle sync --source=https://github.com/org/templates --output=synced.bundle`,
+	RunE: runBundleSync,
+}
+
+func init() {
+	bundleCmd.AddCommand(bundleSyncCmd)
+	
+	bundleSyncCmd.Flags().StringVarP(&syncSource, "source", "s", "", "Repository URL (required)")
+	bundleSyncCmd.Flags().StringVarP(&syncBranch, "branch", "b", "main", "Branch to sync from")
+	bundleSyncCmd.Flags().StringSliceVarP(&syncCategories, "category", "c", []string{}, "OWASP categories to sync")
+	bundleSyncCmd.Flags().StringVarP(&syncOutput, "output", "o", "", "Output bundle file (optional)")
+	bundleSyncCmd.Flags().BoolVar(&syncDryRun, "dry-run", false, "Show what would be synced without downloading")
+	bundleSyncCmd.Flags().BoolVar(&syncForce, "force", false, "Force overwrite existing templates")
+	bundleSyncCmd.Flags().StringVar(&syncAuth, "auth", "", "Authentication token for private repositories")
+	
+	bundleSyncCmd.MarkFlagRequired("source")
+}
+
+func runBundleSync(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	
+	fmt.Println()
+	color.Cyan("🔄 Template Repository Sync")
+	fmt.Println(strings.Repeat("-", 50))
+	
+	// Parse repository type from URL
+	repoType, err := detectRepositoryType(syncSource)
+	if err != nil {
+		return fmt.Errorf("failed to detect repository type: %w", err)
+	}
+	
+	color.Yellow("Repository: %s", syncSource)
+	color.Yellow("Type: %s", repoType)
+	color.Yellow("Branch: %s", syncBranch)
+	
+	if len(syncCategories) > 0 {
+		color.Yellow("Categories: %s", strings.Join(syncCategories, ", "))
+	}
+	
+	fmt.Println()
+	
+	// Create repository manager
+	repoManager := repository.NewManager()
+	
+	// Configure authentication if provided
+	if syncAuth != "" {
+		switch repoType {
+		case "github":
+			repoManager.SetGitHubToken(syncAuth)
+		case "gitlab":
+			repoManager.SetGitLabToken(syncAuth)
+		}
+	}
+	
+	// Get repository interface
+	repo, err := repoManager.GetRepository(syncSource)
+	if err != nil {
+		return fmt.Errorf("failed to connect to repository: %w", err)
+	}
+	
+	// List available templates
+	color.Cyan("📋 Discovering templates...")
+	templates, err := discoverTemplates(ctx, repo, syncBranch, syncCategories)
+	if err != nil {
+		return fmt.Errorf("failed to discover templates: %w", err)
+	}
+	
+	fmt.Printf("\nFound %d templates\n", len(templates))
+	
+	if syncDryRun {
+		// Show what would be synced
+		color.Yellow("\n🔍 Dry run - templates that would be synced:")
+		for _, tmpl := range templates {
+			fmt.Printf("  • %s\n", tmpl.Path)
+		}
+		
+		if syncOutput != "" {
+			fmt.Printf("\nWould create bundle: %s\n", syncOutput)
+		}
+		
+		return nil
+	}
+	
+	// Create temporary directory for downloads
+	tempDir, err := os.MkdirTemp("", "LLMrecon-sync-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+	
+	// Progress tracking
+	progress := bundle.NewBundleProgressReporter(os.Stdout, verbose)
+	progress.ReportBundleCreation(len(templates))
+	
+	// Download templates
+	color.Cyan("\n📥 Downloading templates...")
+	downloadedTemplates := make([]bundle.ContentItem, 0)
+	
+	for _, tmpl := range templates {
+		// Download template
+		content, err := repo.GetFile(ctx, tmpl.Path, syncBranch)
+		if err != nil {
+			color.Red("  ✗ Failed to download %s: %v", tmpl.Path, err)
+			continue
+		}
+		
+		// Save to temp directory
+		localPath := filepath.Join(tempDir, tmpl.Path)
+		if err := os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
+			color.Red("  ✗ Failed to create directory for %s: %v", tmpl.Path, err)
+			continue
+		}
+		
+		if err := os.WriteFile(localPath, content, 0644); err != nil {
+			color.Red("  ✗ Failed to save %s: %v", tmpl.Path, err)
+			continue
+		}
+		
+		// Add to downloaded list
+		downloadedTemplates = append(downloadedTemplates, bundle.ContentItem{
+			Path:        tmpl.Path,
+			Type:        bundle.TemplateContentType,
+			Description: fmt.Sprintf("Template from %s", tmpl.Path),
+			Checksum:    "",  // Will be calculated later
+		})
+		
+		progress.ReportTemplateProcessed(tmpl.Path)
+		color.Green("  ✓ Downloaded %s", tmpl.Path)
+	}
+	
+	fmt.Printf("\nSuccessfully downloaded %d/%d templates\n", len(downloadedTemplates), len(templates))
+	
+	// Create bundle if output specified
+	if syncOutput != "" {
+		color.Cyan("\n📦 Creating bundle...")
+		
+		bundleData := &bundle.Bundle{
+			Manifest: bundle.Manifest{
+				Name:        fmt.Sprintf("Synced from %s", getRepoName(syncSource)),
+				Version:     "1.0.0",
+				Description: fmt.Sprintf("Templates synchronized from %s branch %s", syncSource, syncBranch),
+				Author:      "LLMrecon Sync",
+				Created:     time.Now(),
+				Templates:   len(downloadedTemplates),
+			},
+			Templates: downloadedTemplates,
+		}
+		
+		// Add category metadata
+		if len(syncCategories) > 0 {
+			bundleData.Manifest.Metadata = map[string]interface{}{
+				"categories": syncCategories,
+				"source":     syncSource,
+				"branch":     syncBranch,
+			}
+		}
+		
+		// Create bundle file
+		if err := bundle.SaveBundle(bundleData, syncOutput); err != nil {
+			return fmt.Errorf("failed to create bundle: %w", err)
+		}
+		
+		color.Green("✅ Bundle created: %s", syncOutput)
+		
+		// Show bundle info
+		info, _ := os.Stat(syncOutput)
+		fmt.Printf("\nBundle Details:\n")
+		fmt.Printf("  Size: %s\n", formatBytes(info.Size()))
+		fmt.Printf("  Templates: %d\n", len(downloadedTemplates))
+		
+		if len(syncCategories) > 0 {
+			fmt.Printf("  Categories: %s\n", strings.Join(syncCategories, ", "))
+		}
+	} else {
+		// Save templates locally
+		localDir := filepath.Join(".", "synced-templates", getRepoName(syncSource))
+		color.Cyan("\n💾 Saving templates to: %s", localDir)
+		
+		if err := os.MkdirAll(localDir, 0755); err != nil {
+			return fmt.Errorf("failed to create local directory: %w", err)
+		}
+		
+		// Copy templates from temp to local
+		for _, tmpl := range downloadedTemplates {
+			srcPath := filepath.Join(tempDir, tmpl.Path)
+			dstPath := filepath.Join(localDir, tmpl.Path)
+			
+			if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
+				color.Red("  ✗ Failed to create directory for %s: %v", tmpl.Path, err)
+				continue
+			}
+			
+			// Check if file exists and handle accordingly
+			if _, err := os.Stat(dstPath); err == nil && !syncForce {
+				color.Yellow("  ⚠ Skipping %s (already exists, use --force to overwrite)", tmpl.Path)
+				continue
+			}
+			
+			if err := os.WriteFile(dstPath, tmpl.Content, 0644); err != nil {
+				color.Red("  ✗ Failed to save %s: %v", tmpl.Path, err)
+				continue
+			}
+			
+			color.Green("  ✓ Saved %s", tmpl.Path)
+		}
+	}
+	
+	progress.Complete()
+	
+	// Show sync summary
+	fmt.Println()
+	color.Cyan("═══════════════════════════════════════════")
+	color.Cyan("          Sync Summary")
+	color.Cyan("═══════════════════════════════════════════")
+	fmt.Printf("Repository: %s\n", syncSource)
+	fmt.Printf("Branch: %s\n", syncBranch)
+	fmt.Printf("Templates synced: %d\n", len(downloadedTemplates))
+	
+	if syncOutput != "" {
+		fmt.Printf("Bundle created: %s\n", syncOutput)
+	} else {
+		fmt.Printf("Templates saved to: %s\n", filepath.Join("synced-templates", getRepoName(syncSource)))
+	}
+	
+	color.Cyan("═══════════════════════════════════════════")
+	
+	return nil
+}
+
+// detectRepositoryType detects the repository type from URL
+func detectRepositoryType(url string) (string, error) {
+	switch {
+	case strings.Contains(url, "github.com"):
+		return "github", nil
+	case strings.Contains(url, "gitlab.com"):
+		return "gitlab", nil
+	case strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://"):
+		return "http", nil
+	case strings.HasPrefix(url, "file://") || filepath.IsAbs(url):
+		return "local", nil
+	default:
+		return "", fmt.Errorf("unsupported repository URL: %s", url)
+	}
+}
+
+// discoverTemplates discovers templates in the repository
+func discoverTemplates(ctx context.Context, repo repository.Repository, branch string, categories []string) ([]bundle.ContentItem, error) {
+	var templates []bundle.ContentItem
+	
+	// Get all files from repository
+	files, err := repo.ListFiles(ctx, "", branch)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Filter for template files
+	for _, file := range files {
+		// Check if it's a template file
+		if !isTemplateFile(file) {
+			continue
+		}
+		
+		// Check category filter if specified
+		if len(categories) > 0 {
+			categoryMatched := false
+			for _, cat := range categories {
+				if strings.Contains(file, cat) {
+					categoryMatched = true
+					break
+				}
+			}
+			if !categoryMatched {
+				continue
+			}
+		}
+		
+		templates = append(templates, bundle.ContentItem{
+			Path:        file,
+			Type:        bundle.TemplateContentType,
+			Description: fmt.Sprintf("Template file: %s", filepath.Base(file)),
+		})
+	}
+	
+	return templates, nil
+}
+
+// isTemplateFile checks if a file is a template
+func isTemplateFile(path string) bool {
+	ext := strings.ToLower(filepath.Ext(path))
+	templateExts := []string{".yaml", ".yml", ".json", ".tmpl", ".template"}
+	
+	for _, validExt := range templateExts {
+		if ext == validExt {
+			return true
+		}
+	}
+	
+	// Also check if it's in a templates directory
+	return strings.Contains(path, "template")
+}
+
+// getRepoName extracts repository name from URL
+func getRepoName(url string) string {
+	// Remove protocol
+	url = strings.TrimPrefix(url, "https://")
+	url = strings.TrimPrefix(url, "http://")
+	url = strings.TrimPrefix(url, "git@")
+	
+	// Remove .git suffix
+	url = strings.TrimSuffix(url, ".git")
+	
+	// Extract last part
+	parts := strings.Split(url, "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	
+	return "repository"
+}

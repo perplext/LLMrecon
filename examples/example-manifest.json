@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "bundle_id": "owasp-llm-top10-templates",
+  "bundle_type": "templates",
+  "name": "OWASP LLM Top 10 Templates",
+  "description": "A collection of templates for testing against the OWASP LLM Top 10 vulnerabilities",
+  "version": "1.0.0",
+  "created_at": "2025-05-25T19:08:26-04:00",
+  "author": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "organization": "Example Org",
+    "url": "https://example.com",
+    "key_id": "1a2b3c4d"
+  },
+  "content": [
+    {
+      "path": "templates/owasp-llm/llm01-prompt-injection/basic-injection.json",
+      "type": "template",
+      "id": "template-001",
+      "version": "1.0.0",
+      "description": "Basic prompt injection template",
+      "checksum": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      "categories": ["prompt-injection", "owasp-llm"],
+      "tags": ["basic", "injection"]
+    },
+    {
+      "path": "templates/owasp-llm/llm02-insecure-output/data-leakage.json",
+      "type": "template",
+      "id": "template-002",
+      "version": "1.0.0",
+      "description": "Data leakage detection template",
+      "checksum": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "categories": ["insecure-output", "owasp-llm"],
+      "tags": ["data-leakage", "sensitive-information"]
+    }
+  ],
+  "checksums": {
+    "manifest": "sha256:0987654321fedcba0987654321fedcba0987654321fedcba0987654321fedcba",
+    "content": {
+      "templates/owasp-llm/llm01-prompt-injection/basic-injection.json": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      "templates/owasp-llm/llm02-insecure-output/data-leakage.json": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+    }
+  },
+  "compatibility": {
+    "min_version": "1.0.0",
+    "max_version": "2.0.0",
+    "dependencies": ["base-templates"],
+    "incompatible": ["legacy-templates"]
+  },
+  "signature": "base64+encoded+signature+data+would+go+here+in+a+real+implementation",
+  "is_incremental": false,
+  "compliance": {
+    "owaspLLMTop10": {
+      "LLM01:PromptInjection": ["template-001"],
+      "LLM02:InsecureOutput": ["template-002"]
+    },
+    "ISOIEC42001": {
+      "42001:8.2.3": ["template-001", "template-002"],
+      "42001:8.2.4": ["template-001"]
+    }
+  },
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-05-25T19:08:26-04:00",
+      "changes": ["Initial release of OWASP LLM Top 10 templates"]
+    }
+  ],
+  "documentation": {
+    "README": "README.md",
+    "usage": "documentation/usage.md",
+    "installation": "documentation/installation.md"
+  }
+}

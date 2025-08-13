@@ -1,0 +1,23 @@
+{
+  "report_id": "a6d558af-62bf-482a-90d9-87ad0f9aee97",
+  "detection_type": "jailbreak",
+  "example": "",
+  "confidence": 1,
+  "severity": 1,
+  "description": "Explicit jailbreak attempt detected",
+  "timestamp": "2025-05-22T22:42:19.32922-04:00",
+  "source": "prompt_protection_system",
+  "metadata": {
+    "action_taken": 3,
+    "detection_raw": {
+      "type": "jailbreak",
+      "confidence": 1,
+      "description": "Explicit jailbreak attempt detected",
+      "location": {
+        "start": 0,
+        "end": 62
+      }
+    },
+    "risk_score": 1
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "report_id": "799c11e2-df01-4c64-a914-8e767f5d46b4",
+  "detection_type": "unusual_pattern",
+  "example": "",
+  "confidence": 0.7,
+  "severity": 0.7,
+  "description": "Unusual pattern detected: ",
+  "timestamp": "2025-05-22T23:59:25.349309-04:00",
+  "source": "prompt_protection_system",
+  "metadata": {
+    "action_taken": 3,
+    "detection_raw": {
+      "type": "unusual_pattern",
+      "confidence": 0.7,
+      "description": "Unusual pattern detected: ",
+      "remediation": "Monitor this pattern for potential security issues",
+      "metadata": {
+        "pattern_stats": {
+          "pattern": "",
+          "count": 2,
+          "first_seen": "2025-05-22T23:59:25.349296-04:00",
+          "last_seen": "2025-05-22T23:59:25.349395-04:00",
+          "average_risk_score": 1,
+          "detection_types": {
+            "injection": 2
+          },
+          "examples": [
+            "",
+            ""
+          ]
+        }
+      }
+    },
+    "risk_score": 1
+  }
+}

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LLMrecon API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui.css">
+    <link rel="icon" type="image/png" href="https://petstore.swagger.io/favicon-32x32.png" sizes="32x32">
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
+        .swagger-ui .topbar {
+            display: none;
+        }
+        .swagger-ui .info {
+            margin-bottom: 20px;
+        }
+        .swagger-ui .info .title {
+            color: #3b4151;
+        }
+        .swagger-ui .scheme-container {
+            background: #fcfcfc;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        /* Custom branding */
+        .swagger-ui .info .title small {
+            display: block;
+            margin-top: 15px;
+            font-size: 16px;
+            color: #666;
+        }
+        .swagger-ui .info .description {
+            font-size: 16px;
+            color: #3b4151;
+        }
+        .swagger-ui .btn.authorize {
+            background-color: #4990e2;
+            border-color: #4990e2;
+        }
+        .swagger-ui .btn.authorize:hover {
+            background-color: #3d7cc9;
+            border-color: #3d7cc9;
+        }
+        .swagger-ui select {
+            font-weight: 400;
+        }
+        /* Response highlighting */
+        .swagger-ui .responses-inner h4 {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .swagger-ui .response-col_status {
+            font-weight: bold;
+        }
+        /* Better code blocks */
+        .swagger-ui pre {
+            background: #f5f5f5;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 13px;
+        }
+        /* Operation method colors */
+        .swagger-ui .opblock.opblock-post .opblock-summary-method {
+            background: #49cc90;
+        }
+        .swagger-ui .opblock.opblock-put .opblock-summary-method {
+            background: #fca130;
+        }
+        .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+            background: #f93e3e;
+        }
+        .swagger-ui .opblock.opblock-get .opblock-summary-method {
+            background: #61affe;
+        }
+        /* Tag styling */
+        .swagger-ui .opblock-tag {
+            font-size: 20px;
+            margin: 20px 0 10px 0;
+        }
+        /* Model styling */
+        .swagger-ui .model-box {
+            background: #fcfcfc;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        /* Loading indicator */
+        #swagger-ui-container {
+            position: relative;
+            min-height: 500px;
+        }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #666;
+        }
+        .loading::after {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Header styling */
+        .api-header {
+            background: #fff;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .api-header h1 {
+            margin: 0;
+            color: #3b4151;
+            font-size: 28px;
+        }
+        .api-header p {
+            margin: 10px 0 0 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="api-header">
+        <h1>LLMrecon API Documentation</h1>
+        <p>Comprehensive API for LLM security testing and vulnerability assessment</p>
+    </div>
+    
+    <div id="swagger-ui-container">
+        <div class="loading">Loading API documentation...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            // Remove loading indicator
+            document.querySelector('.loading').style.display = 'none';
+            
+            // Initialize Swagger UI
+            window.ui = SwaggerUIBundle({
+                url: "/api/v1/openapi.json",
+                dom_id: '#swagger-ui-container',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                defaultModelsExpandDepth: 1,
+                defaultModelExpandDepth: 1,
+                docExpansion: "list",
+                filter: true,
+                showExtensions: true,
+                showCommonExtensions: true,
+                // Custom configuration
+                onComplete: function() {
+                    // Add custom behaviors after UI is loaded
+                    console.log("Swagger UI loaded successfully");
+                },
+                // Request interceptor for adding auth headers
+                requestInterceptor: function(request) {
+                    // Check if we have an API key stored
+                    const apiKey = localStorage.getItem('llm_red_team_api_key');
+                    if (apiKey && !request.headers['X-API-Key']) {
+                        request.headers['X-API-Key'] = apiKey;
+                    }
+                    
+                    // Check if we have a JWT token stored
+                    const jwtToken = localStorage.getItem('llm_red_team_jwt_token');
+                    if (jwtToken && !request.headers['Authorization']) {
+                        request.headers['Authorization'] = 'Bearer ' + jwtToken;
+                    }
+                    
+                    return request;
+                },
+                // Response interceptor for handling auth tokens
+                responseInterceptor: function(response) {
+                    // Store JWT token if login was successful
+                    if (response.url.includes('/auth/login') && response.status === 200) {
+                        try {
+                            const data = JSON.parse(response.text);
+                            if (data.data && data.data.token) {
+                                localStorage.setItem('llm_red_team_jwt_token', data.data.token);
+                                console.log('JWT token stored');
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse login response:', e);
+                        }
+                    }
+                    
+                    // Store API key if creation was successful
+                    if (response.url.includes('/auth/keys') && response.status === 200 && response.method === 'POST') {
+                        try {
+                            const data = JSON.parse(response.text);
+                            if (data.data && data.data.key) {
+                                if (confirm('Store this API key locally? (Key: ' + data.data.key.substring(0, 10) + '...)')) {
+                                    localStorage.setItem('llm_red_team_api_key', data.data.key);
+                                    console.log('API key stored');
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse API key response:', e);
+                        }
+                    }
+                    
+                    return response;
+                },
+                // Enable try it out by default
+                tryItOutEnabled: true,
+                // Custom authorization configuration
+                initOAuth: {
+                    clientId: "LLMrecon-swagger-ui",
+                    realm: "LLMrecon",
+                    appName: "LLMrecon API",
+                    scopeSeparator: " "
+                },
+                // Validation
+                validatorUrl: null
+            });
+            
+            // Add utility functions
+            window.clearAuth = function() {
+                localStorage.removeItem('llm_red_team_api_key');
+                localStorage.removeItem('llm_red_team_jwt_token');
+                alert('Authentication credentials cleared');
+            };
+            
+            // Add auth management UI
+            const authContainer = document.createElement('div');
+            authContainer.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: white; padding: 15px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+            authContainer.innerHTML = `
+                <h4 style="margin: 0 0 10px 0; font-size: 14px;">Auth Management</h4>
+                <button onclick="clearAuth()" style="background: #f93e3e; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Clear Stored Credentials</button>
+                <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                    API Key: <span id="api-key-status">Not stored</span><br>
+                    JWT Token: <span id="jwt-token-status">Not stored</span>
+                </div>
+            `;
+            document.body.appendChild(authContainer);
+            
+            // Update auth status
+            function updateAuthStatus() {
+                const apiKey = localStorage.getItem('llm_red_team_api_key');
+                const jwtToken = localStorage.getItem('llm_red_team_jwt_token');
+                
+                document.getElementById('api-key-status').textContent = apiKey ? 'Stored' : 'Not stored';
+                document.getElementById('jwt-token-status').textContent = jwtToken ? 'Stored' : 'Not stored';
+            }
+            
+            updateAuthStatus();
+            setInterval(updateAuthStatus, 1000);
+        }
+    </script>
+</body>
+</html>

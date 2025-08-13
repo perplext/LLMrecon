@@ -1,0 +1,33 @@
+{{/* 
+  This is a risky template that attempts to perform potentially dangerous operations
+  It contains patterns that should be detected by the security framework
+*/}}
+
+# Risky Template Example
+
+Hello {{.Name}},
+
+This template demonstrates patterns that should be detected by the security framework.
+
+{{/* Attempt to execute a command */}}
+{{ $result := exec "ls" "-la" }}
+Command output: {{ $result }}
+
+{{/* Attempt to access the file system */}}
+{{ $file := readFile "/etc/passwd" }}
+File contents: {{ $file }}
+
+{{/* Attempt to make a network request */}}
+{{ $response := httpGet "https://example.com" }}
+Response: {{ $response }}
+
+{{/* SQL injection pattern */}}
+{{ $query := printf "SELECT * FROM users WHERE username = '%s' AND password = '%s'" .Username .Password }}
+Query: {{ $query }}
+
+{{/* Infinite loop potential */}}
+{{ $counter := 0 }}
+{{ range $i := seq 1000000 }}
+  {{ $counter = add $counter 1 }}
+{{ end }}
+Counter: {{ $counter }}

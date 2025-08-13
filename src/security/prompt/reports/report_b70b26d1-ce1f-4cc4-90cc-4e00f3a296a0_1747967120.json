@@ -1,0 +1,23 @@
+{
+  "report_id": "b70b26d1-ce1f-4cc4-90cc-4e00f3a296a0",
+  "detection_type": "injection",
+  "example": "",
+  "confidence": 1,
+  "severity": 1,
+  "description": "Prompt injection attempt detected",
+  "timestamp": "2025-05-22T22:25:20.816297-04:00",
+  "source": "prompt_protection_system",
+  "metadata": {
+    "action_taken": 3,
+    "detection_raw": {
+      "type": "injection",
+      "confidence": 1,
+      "description": "Prompt injection attempt detected",
+      "location": {
+        "start": 0,
+        "end": 61
+      }
+    },
+    "risk_score": 1
+  }
+}

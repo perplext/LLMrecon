@@ -1,0 +1,30 @@
+{
+  "report_id": "60e285d4-52db-49d4-aae5-7f0c6d2cace7",
+  "detection_type": "delimiter_misuse",
+  "pattern": "(?i)(`{3}|'''|\"\"\")",
+  "example": "```system [FILTERED]```",
+  "confidence": 0.8,
+  "severity": 0.8,
+  "description": "Potential delimiter misuse detected: ```",
+  "timestamp": "2025-05-22T21:12:55.564-04:00",
+  "source": "prompt_protection_system",
+  "metadata": {
+    "action_taken": 2,
+    "detection_raw": {
+      "type": "delimiter_misuse",
+      "confidence": 0.8,
+      "description": "Potential delimiter misuse detected: ```",
+      "location": {
+        "start": 20,
+        "end": 23,
+        "context": "```system [FILTERED]```"
+      },
+      "pattern": "(?i)(`{3}|'''|\"\"\")",
+      "remediation": "Review and potentially sanitize delimiter usage",
+      "metadata": {
+        "is_suspicious": true
+      }
+    },
+    "risk_score": 0.8
+  }
+}

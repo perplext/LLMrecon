@@ -1,0 +1,60 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+
+# Dependency directories
+node_modules/
+
+# Environment variables
+.env
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS specific
+.DS_Store
+
+# Task files
+tasks.json
+tasks/ 
+
+# Test files and development artifacts
+*_test.go
+*.test
+*.bak
+*.tmp
+*.temp
+memory-benchmark
+test_section
+
+# Binary files (exclude compiled binaries)
+.!*!*
+
+# Development environment files
+.cursor/
+.roo/
+.roomodes
+.taskmasterconfig
+.windsurfrules
+
+# LLMrecon sensitive files
+*.env
+credentials.vault
+credentials.enc
+users.json
+.LLMrecon.yaml
+
+# Test artifacts
+test_results_*/
+qwen_security_results.json
+llmrecon

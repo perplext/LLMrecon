@@ -1,0 +1,49 @@
+LLM Red Team v0.2.0 Production Validation Report
+Generated: 2025-06-19 22:49:44
+Host: Nicks-MacBook-Pro.local
+User: nconsolo
+
+System Information:
+- OS: Darwin 24.5.0
+- Architecture: arm64
+- Go Version: go version go1.23.10 darwin/arm64
+
+Configuration:
+- Redis Host: localhost:6379
+- API Host: localhost:8080
+- Monitoring Host: localhost:8090
+- Profiling Host: localhost:6060
+- Test Duration: 300 seconds
+
+Validation Results:
+[0;32m✓[0m Go installed: go1.23.10
+[0;32m✓[0m Redis connection successful
+[0;32m✓[0m Main application builds successfully
+[0;31m✗[0m Component build failed: ./src/performance/...
+[0;32m✓[0m Redis SET operation successful
+[0;32m✓[0m Redis GET operation successful
+[0;32m✓[0m Redis memory usage: 1.25M
+[0;32m✓[0m Main API endpoint responding
+[1;33m⚠[0m Monitoring dashboard not responding (http://localhost:8090/api/v1/status)
+[1;33m⚠[0m Profiling endpoint not responding (http://localhost:6060/debug/pprof/)
+[1;33m⚠[0m Monitoring endpoint not available, skipping performance validation
+[0;32m✓[0m Basic load test passed (10/10 requests succeeded)
+[0;32m✓[0m Not running as root user
+[1;33m⚠[0m No TLS endpoint detected (consider enabling HTTPS)
+[0;32m✓[0m Redis appears to have authentication configured
+[0;32m✓[0m No obvious default passwords in environment
+[0;32m✓[0m Documentation exists: README.md
+[0;32m✓[0m Documentation exists: CLAUDE.md
+[0;32m✓[0m Documentation exists: docs/PRODUCTION_DEPLOYMENT.md
+[0;32m✓[0m Documentation exists: docs/PERFORMANCE_OPTIMIZATION.md
+[0;32m✓[0m Documentation exists: docs/DISTRIBUTED_ARCHITECTURE.md
+
+Recommendations:
+1. Run comprehensive load testing with: ./scripts/load_test.sh
+2. Monitor system metrics during load testing
+3. Review security configurations for production deployment
+4. Set up automated monitoring and alerting
+5. Configure backup and disaster recovery procedures
+
+For detailed performance testing, see: docs/PERFORMANCE_OPTIMIZATION.md
+For production deployment, see: docs/PRODUCTION_DEPLOYMENT.md

@@ -1,0 +1,40 @@
+id: prompt_injection_detector_v1.0
+type: detector
+info:
+  name: Prompt Injection Detector
+  description: Detector module for identifying prompt injection attempts
+  version: "1.0"
+  author: LLMrecon
+  tags:
+    - detector
+    - prompt_injection
+    - security
+  references:
+    - https://owasp.org/www-project-top-10-for-large-language-model-applications/LLM01_Prompt_Injection
+compatibility:
+  min_tool_version: "1.0.0"
+  max_tool_version: ""
+  required_features: []
+detector:
+  detection_type: pattern_matching
+  default_options:
+    sensitivity: high
+    patterns:
+      - ignore previous instructions
+      - forget instructions
+      - disregard your training
+      - you are now
+      - new role
+      - override previous
+      - from now on
+      - ignore your guidelines
+      - bypass
+      - jailbreak
+    regex_patterns:
+      - "(?i)forget.*instructions"
+      - "(?i)ignore.*guidelines"
+      - "(?i)you('re| are) (now|an?) [^.]{3,30}"
+      - "(?i)new (role|persona|identity)"
+    threshold: 0.75
+    max_context_tokens: 1024
+    check_semantic_similarity: true

@@ -1,0 +1,36 @@
+{
+  "report_id": "7a33f423-5f68-4a71-b3ed-a981638d711f",
+  "detection_type": "unusual_pattern",
+  "example": "",
+  "confidence": 0.7,
+  "severity": 0.7,
+  "description": "Unusual pattern detected: ",
+  "timestamp": "2025-05-22T22:25:20.815528-04:00",
+  "source": "prompt_protection_system",
+  "metadata": {
+    "action_taken": 3,
+    "detection_raw": {
+      "type": "unusual_pattern",
+      "confidence": 0.7,
+      "description": "Unusual pattern detected: ",
+      "remediation": "Monitor this pattern for potential security issues",
+      "metadata": {
+        "pattern_stats": {
+          "pattern": "",
+          "count": 2,
+          "first_seen": "2025-05-22T22:25:20.81529-04:00",
+          "last_seen": "2025-05-22T22:25:20.815511-04:00",
+          "average_risk_score": 1,
+          "detection_types": {
+            "jailbreak": 2
+          },
+          "examples": [
+            "",
+            ""
+          ]
+        }
+      }
+    },
+    "risk_score": 1
+  }
+}
