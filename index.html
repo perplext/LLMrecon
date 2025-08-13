@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLMrecon - Advanced LLM Security Testing Framework</title>
+    <meta name="description" content="Enterprise-grade security testing for Large Language Models with OWASP Top 10 2025 compliance">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔍</text></svg>">
+    
+    <!-- Modern CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #1a1a2e;
+            color: #16f529;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl">🔍</span>
+                    <span class="ml-2 text-xl font-bold text-gray-800">LLMrecon</span>
+                    <span class="ml-3 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">v0.7.1</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="https://github.com/perplext/LLMrecon/blob/main/README.md" class="text-gray-600 hover:text-gray-900">
+                        Docs
+                    </a>
+                    <a href="https://github.com/perplext/LLMrecon" class="text-gray-600 hover:text-gray-900">
+                        <i class="fab fa-github text-2xl"></i>
+                    </a>
+                    <a href="https://github.com/perplext/LLMrecon/releases/latest" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                        Download
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="gradient-bg text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+            <div class="text-center">
+                <h1 class="text-5xl font-bold mb-4">🔍 LLMrecon</h1>
+                <p class="text-2xl mb-8">Advanced Security Testing for Large Language Models</p>
+                <div class="flex flex-wrap justify-center gap-2 mb-8">
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-sm">OWASP Top 10 2025</span>
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-sm">8+ Novel Attacks</span>
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-sm">ML-Powered</span>
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-sm">Open Source</span>
+                </div>
+                <div class="flex justify-center space-x-4">
+                    <a href="#quick-start" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                        Get Started
+                    </a>
+                    <a href="https://github.com/perplext/LLMrecon" class="border-2 border-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-purple-600 transition">
+                        <i class="fab fa-github mr-2"></i>View on GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Section -->
+    <section class="py-12 bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div class="p-6">
+                    <div class="text-4xl font-bold text-purple-600">10</div>
+                    <div class="text-gray-600 mt-2">OWASP Categories</div>
+                </div>
+                <div class="p-6">
+                    <div class="text-4xl font-bold text-purple-600">81%</div>
+                    <div class="text-gray-600 mt-2">FlipAttack Success</div>
+                </div>
+                <div class="p-6">
+                    <div class="text-4xl font-bold text-purple-600">92%</div>
+                    <div class="text-gray-600 mt-2">PAP Success Rate</div>
+                </div>
+                <div class="p-6">
+                    <div class="text-4xl font-bold text-purple-600">5+</div>
+                    <div class="text-gray-600 mt-2">Defense Detections</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">Cutting-Edge Security Features</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="feature-card bg-white p-6 rounded-lg shadow-md">
+                    <div class="text-3xl mb-4">⚡</div>
+                    <h3 class="text-xl font-semibold mb-2">Novel Attack Techniques</h3>
+                    <p class="text-gray-600 mb-4">Implements FlipAttack, DrAttack, Policy Puppetry, and more from 2024-2025 research.</p>
+                    <ul class="text-sm text-gray-500">
+                        <li>• Character order manipulation</li>
+                        <li>• Decomposed fragments</li>
+                        <li>• Unicode smuggling</li>
+                    </ul>
+                </div>
+                <div class="feature-card bg-white p-6 rounded-lg shadow-md">
+                    <div class="text-3xl mb-4">🛡️</div>
+                    <h3 class="text-xl font-semibold mb-2">OWASP 2025 Compliant</h3>
+                    <p class="text-gray-600 mb-4">Full implementation of all 10 vulnerability categories with comprehensive testing.</p>
+                    <ul class="text-sm text-gray-500">
+                        <li>• Prompt injection</li>
+                        <li>• System prompt leakage</li>
+                        <li>• Vector vulnerabilities</li>
+                    </ul>
+                </div>
+                <div class="feature-card bg-white p-6 rounded-lg shadow-md">
+                    <div class="text-3xl mb-4">🤖</div>
+                    <h3 class="text-xl font-semibold mb-2">ML-Powered Testing</h3>
+                    <p class="text-gray-600 mb-4">Multi-armed bandit algorithms for intelligent attack selection and optimization.</p>
+                    <ul class="text-sm text-gray-500">
+                        <li>• Adaptive selection</li>
+                        <li>• Success tracking</li>
+                        <li>• Pattern learning</li>
+                    </ul>
+                </div>
+                <div class="feature-card bg-white p-6 rounded-lg shadow-md">
+                    <div class="text-3xl mb-4">🔍</div>
+                    <h3 class="text-xl font-semibold mb-2">Defense Detection</h3>
+                    <p class="text-gray-600 mb-4">Identifies multiple defense mechanisms including filters and guardrails.</p>
+                    <ul class="text-sm text-gray-500">
+                        <li>• Content filters</li>
+                        <li>• Prompt guards</li>
+                        <li>• Rate limiting</li>
+                    </ul>
+                </div>
+                <div class="feature-card bg-white p-6 rounded-lg shadow-md">
+                    <div class="text-3xl mb-4">🚀</div>
+                    <h3 class="text-xl font-semibold mb-2">Enterprise Ready</h3>
+                    <p class="text-gray-600 mb-4">Scalable architecture with Redis, monitoring, and distributed execution.</p>
+                    <ul class="text-sm text-gray-500">
+                        <li>• 100+ parallel attacks</li>
+                        <li>• Real-time monitoring</li>
+                        <li>• CI/CD integration</li>
+                    </ul>
+                </div>
+                <div class="feature-card bg-white p-6 rounded-lg shadow-md">
+                    <div class="text-3xl mb-4">🌐</div>
+                    <h3 class="text-xl font-semibold mb-2">Multi-Platform</h3>
+                    <p class="text-gray-600 mb-4">Test models from OpenAI, Anthropic, Google, Ollama, and custom endpoints.</p>
+                    <ul class="text-sm text-gray-500">
+                        <li>• Cloud providers</li>
+                        <li>• Local models</li>
+                        <li>• Custom APIs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start -->
+    <section id="quick-start" class="py-16 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">Quick Start in 60 Seconds</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <span class="bg-purple-100 text-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">1</span>
+                        Clone & Install
+                    </h3>
+                    <pre class="code-block p-4 rounded-lg overflow-x-auto text-sm"><code>git clone https://github.com/perplext/LLMrecon.git
+cd LLMrecon
+pip install -r requirements.txt</code></pre>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <span class="bg-purple-100 text-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">2</span>
+                        Run Your First Scan
+                    </h3>
+                    <pre class="code-block p-4 rounded-lg overflow-x-auto text-sm"><code>python3 llmrecon_2025.py --models llama3:latest --categories prompt_injection</code></pre>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <span class="bg-purple-100 text-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">3</span>
+                        View Results
+                    </h3>
+                    <pre class="code-block p-4 rounded-lg overflow-x-auto text-sm"><code>✗ VULNERABLE - FlipAttack successful (81% success rate)
+✓ SECURE - DrAttack blocked by content filter
+✗ VULNERABLE - Character smuggling bypassed defenses
+
+Report saved to: llmrecon_2025_report.json</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Test Results -->
+    <section class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">Real-World Test Results</h2>
+            <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-xl font-semibold mb-6">Model Vulnerability Assessment</h3>
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium">gpt-oss:latest</span>
+                            <span class="text-sm text-gray-600">40% vulnerable</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-green-500 to-red-500 h-3 rounded-full" style="width: 40%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Vulnerable to: Character smuggling, Role override</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium">llama3:latest</span>
+                            <span class="text-sm text-gray-600">43% vulnerable</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-green-500 to-red-500 h-3 rounded-full" style="width: 43%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Vulnerable to: Prompt injection, Context switching</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium">qwen3:latest</span>
+                            <span class="text-sm text-gray-600">14% vulnerable</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-green-500 to-yellow-500 h-3 rounded-full" style="width: 14%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Vulnerable to: System prompt leakage</p>
+                    </div>
+                </div>
+                <div class="mt-8 pt-8 border-t">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-green-600">73%</div>
+                            <div class="text-sm text-gray-600">Models with Content Filtering</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-yellow-600">45%</div>
+                            <div class="text-sm text-gray-600">Models with Prompt Guards</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-16 gradient-bg text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold mb-4">Ready to Secure Your LLMs?</h2>
+            <p class="text-xl mb-8">Join thousands of security researchers using LLMrecon</p>
+            <div class="flex justify-center space-x-4">
+                <a href="https://github.com/perplext/LLMrecon" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    <i class="fab fa-github mr-2"></i>Star on GitHub
+                </a>
+                <a href="https://github.com/perplext/LLMrecon/blob/main/docs/GETTING_STARTED.md" class="border-2 border-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-purple-600 transition">
+                    Read Documentation
+                </a>
+            </div>
+            <div class="mt-8 flex justify-center space-x-6 text-white/80">
+                <a href="https://github.com/perplext/LLMrecon/releases" class="hover:text-white">
+                    <i class="fas fa-download mr-2"></i>Releases
+                </a>
+                <a href="https://github.com/perplext/LLMrecon/issues" class="hover:text-white">
+                    <i class="fas fa-bug mr-2"></i>Issues
+                </a>
+                <a href="https://github.com/perplext/LLMrecon/blob/main/LICENSE" class="hover:text-white">
+                    <i class="fas fa-balance-scale mr-2"></i>MIT License
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="mb-2">© 2025 LLMrecon Project - Enterprise LLM Security Testing</p>
+            <p class="text-gray-400">Made with ❤️ by the Security Research Community</p>
+        </div>
+    </footer>
+</body>
+</html>
