@@ -3,10 +3,8 @@ package repository
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
-	"time"
 	
 	"github.com/google/go-github/v45/github"
 	"golang.org/x/oauth2"

@@ -5,7 +5,6 @@ import (
     "encoding/json"
     "fmt"
     "sync"
-    "time"
 )
 
 // CampaignManager manages attack campaigns
@@ -202,7 +201,6 @@ const (
     ConditionSuccess    ConditionType = "success"
     ConditionFailure    ConditionType = "failure"
     ConditionThreshold  ConditionType = "threshold"
-    ConditionTime       ConditionType = "time"
 )
 
 // SuccessMetrics defines success metrics

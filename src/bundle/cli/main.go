@@ -3,7 +3,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
 )

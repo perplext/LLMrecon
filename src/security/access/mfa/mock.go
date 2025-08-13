@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"sync"
-	"time"
 )
 
 // MockMFAManager is a mock implementation of the MFAManager interface for testing

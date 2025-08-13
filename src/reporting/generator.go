@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/perplext/LLMrecon/src/reporting/common"

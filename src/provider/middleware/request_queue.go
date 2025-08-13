@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"sync"
-	"time"
 )
 
 // RequestQueueConfig represents the configuration for the request queue

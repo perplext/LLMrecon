@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 	
 	"github.com/xanzy/go-gitlab"
 )

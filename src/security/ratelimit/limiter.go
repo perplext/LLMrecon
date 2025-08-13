@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 )
 
 // RateLimiter implements a token bucket rate limiter

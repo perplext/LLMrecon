@@ -1,6 +1,5 @@
 package config
 
-import "time"
 
 // StaticFileHandlerConfig contains configuration options for the static file handler
 type StaticFileHandlerConfig struct {

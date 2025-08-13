@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/spf13/cobra"

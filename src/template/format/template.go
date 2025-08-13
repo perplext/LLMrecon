@@ -3,7 +3,6 @@ package format
 import (
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	
 	"github.com/perplext/LLMrecon/src/template/compatibility"
 	"gopkg.in/yaml.v3"

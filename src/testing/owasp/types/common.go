@@ -2,7 +2,6 @@
 package types
 
 import (
-	"time"
 
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )

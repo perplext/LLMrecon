@@ -9,10 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/big"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/klauspost/compress/zstd"

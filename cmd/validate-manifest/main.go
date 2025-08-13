@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/fatih/color"
 )

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 )
 
 // BasicInMemoryUserStore is an in-memory implementation of UserStore

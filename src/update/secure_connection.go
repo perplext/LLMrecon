@@ -12,7 +12,6 @@ import (
 	"net"
 	"net/http"
 	"sync"
-	"time"
 )
 
 // PinnedCertificate represents a pinned certificate for a specific host

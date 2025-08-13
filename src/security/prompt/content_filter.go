@@ -6,7 +6,6 @@ import (
 	"math"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // ContentFilter filters content for prohibited or sensitive information

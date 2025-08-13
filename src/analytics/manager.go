@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"sort"
 	"sync"
-	"time"
 )
 
 // Manager orchestrates all analytics operations

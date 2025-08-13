@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"sync"
-	"time"
 )
 
 // CertificateStatus represents the status of a certificate

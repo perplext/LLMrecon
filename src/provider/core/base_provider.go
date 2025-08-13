@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 )
 
 // BaseProvider is a base implementation of the Provider interface

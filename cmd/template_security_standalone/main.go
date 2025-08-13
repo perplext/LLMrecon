@@ -5,10 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/template/security"
 	"github.com/perplext/LLMrecon/src/testing/owasp/compliance"

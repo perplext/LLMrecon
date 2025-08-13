@@ -3,11 +3,8 @@ package vault
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 	"github.com/perplext/LLMrecon/src/provider/core"

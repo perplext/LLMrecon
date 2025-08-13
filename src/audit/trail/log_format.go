@@ -3,7 +3,6 @@ package trail
 
 import (
 	"encoding/json"
-	"time"
 )
 
 // LogLevel represents the severity level of a log entry

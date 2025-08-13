@@ -7,7 +7,6 @@ import (
 	"hash/crc32"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 )

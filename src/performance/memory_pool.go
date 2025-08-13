@@ -8,7 +8,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 // MemoryPoolManager manages object pools for memory optimization

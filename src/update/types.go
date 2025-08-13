@@ -2,7 +2,6 @@ package update
 
 import (
 	"fmt"
-	"time"
 )
 
 // UpdateCheck represents the result of checking for updates

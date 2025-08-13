@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"text/tabwriter"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/perplext/LLMrecon/src/config"

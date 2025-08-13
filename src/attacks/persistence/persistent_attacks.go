@@ -7,7 +7,6 @@ import (
     "encoding/json"
     "fmt"
     "sync"
-    "time"
 )
 
 // PersistentAttack represents a persistent attack mechanism

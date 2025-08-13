@@ -4,12 +4,10 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 )

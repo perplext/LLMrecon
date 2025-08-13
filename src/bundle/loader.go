@@ -4,9 +4,6 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // LoadBundle loads a bundle from the specified path

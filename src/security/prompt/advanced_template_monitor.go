@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 )
 
 // AdvancedTemplateMonitor provides real-time monitoring for unusual template patterns

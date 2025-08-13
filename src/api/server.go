@@ -7,11 +7,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/api/scan"
 	"github.com/perplext/LLMrecon/src/security"

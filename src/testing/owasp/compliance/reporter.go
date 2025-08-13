@@ -5,9 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"

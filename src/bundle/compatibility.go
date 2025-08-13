@@ -2,7 +2,6 @@ package bundle
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 	"strings"
 

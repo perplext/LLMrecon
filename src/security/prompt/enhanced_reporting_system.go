@@ -6,11 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 )
 
 // EnhancedReportingSystem extends the ReportingSystem with more sophisticated reporting capabilities

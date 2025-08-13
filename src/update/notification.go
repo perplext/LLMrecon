@@ -4,8 +4,6 @@ package update
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"time"
 )
 
 // NotificationType represents the type of notification

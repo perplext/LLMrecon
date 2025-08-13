@@ -5,11 +5,7 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
 )

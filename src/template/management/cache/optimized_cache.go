@@ -4,7 +4,6 @@ package cache
 import (
 	"container/list"
 	"sync"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 )

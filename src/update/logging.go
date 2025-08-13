@@ -4,10 +4,6 @@ package update
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // LogLevel represents the severity level of a log entry

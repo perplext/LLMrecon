@@ -5,14 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 )
 
 // ChangelogManager handles changelog operations

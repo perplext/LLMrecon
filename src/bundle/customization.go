@@ -2,10 +2,8 @@ package bundle
 
 import (
 	"fmt"
-	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // ExportCustomization provides advanced customization options for bundle export

@@ -3,8 +3,6 @@ package bundle
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 )
 
 // clearDirectory removes all files and directories in a directory

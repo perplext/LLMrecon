@@ -5,9 +5,6 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/reporting/api"
 )

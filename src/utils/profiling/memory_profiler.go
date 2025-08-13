@@ -2,12 +2,9 @@ package profiling
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"sync"
-	"time"
 )
 
 // MemoryProfiler provides tools for memory profiling and optimization

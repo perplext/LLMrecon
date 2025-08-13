@@ -10,11 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"sync"
-	"time"
 
 	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 	"golang.org/x/crypto/scrypt"

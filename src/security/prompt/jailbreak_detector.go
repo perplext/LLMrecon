@@ -5,7 +5,6 @@ import (
 	"context"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // JailbreakDetector detects jailbreaking attempts in prompts

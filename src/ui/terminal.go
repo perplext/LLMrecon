@@ -2,11 +2,8 @@ package ui
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/fatih/color"
 	"golang.org/x/term"

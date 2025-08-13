@@ -3,7 +3,6 @@ package notification
 import (
 	"fmt"
 	"strings"
-	"time"
 )
 
 // ConsoleChannel represents a notification channel that displays notifications in the console

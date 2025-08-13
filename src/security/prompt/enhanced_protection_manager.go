@@ -4,10 +4,7 @@ package prompt
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
-	"time"
 )
 
 // EnhancedProtectionManager extends the ProtectionManager with more sophisticated protection capabilities

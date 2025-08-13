@@ -3,7 +3,6 @@ package ratelimit
 
 import (
 	"sync"
-	"time"
 )
 
 // RateLimitEvent represents a single rate limiting event

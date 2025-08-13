@@ -2,10 +2,8 @@ package ui
 
 import (
 	"fmt"
-	"io"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/schollz/progressbar/v3"
 )

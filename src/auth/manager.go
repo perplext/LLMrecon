@@ -3,8 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"path/filepath"
-	"time"
 )
 
 // Manager implements the AuthManager interface

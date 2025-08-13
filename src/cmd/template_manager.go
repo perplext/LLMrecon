@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/manifest"

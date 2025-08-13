@@ -3,11 +3,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"runtime"
 	"strings"
 	"text/tabwriter"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/config"
 	"github.com/perplext/LLMrecon/src/version"

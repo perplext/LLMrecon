@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-	"time"
 )
 
 // KnowledgeExtractor extracts training data and model knowledge

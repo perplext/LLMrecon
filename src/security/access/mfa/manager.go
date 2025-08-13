@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 )
 
 // MFAMethod represents the type of MFA method

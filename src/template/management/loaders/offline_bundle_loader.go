@@ -4,7 +4,6 @@ package loaders
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/perplext/LLMrecon/src/bundle"

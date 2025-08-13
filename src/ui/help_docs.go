@@ -4,7 +4,6 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"

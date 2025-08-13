@@ -7,8 +7,6 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"hash"
-	"io"
-	"os"
 )
 
 // calculateFileChecksum calculates the checksum of a file using the specified algorithm

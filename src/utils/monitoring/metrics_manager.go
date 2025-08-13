@@ -1,7 +1,6 @@
 package monitoring
 
 import (
-	"time"
 )
 
 // SimpleMetric represents a simple metric for testing

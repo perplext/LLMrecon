@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"regexp"
 	"strings"
-	"time"
 	"unicode"
 )
 

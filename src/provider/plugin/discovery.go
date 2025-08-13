@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"plugin"
 	"sync"
 

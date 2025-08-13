@@ -5,7 +5,6 @@ import (
     "encoding/json"
     "fmt"
     "sync"
-    "time"
 )
 
 // ComplianceReportingSystem manages compliance reporting for LLM security testing

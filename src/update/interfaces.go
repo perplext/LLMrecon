@@ -1,6 +1,5 @@
 package update
 
-import "time"
 
 // Checker interface for checking updates
 type Checker interface {

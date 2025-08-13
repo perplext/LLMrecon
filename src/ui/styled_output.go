@@ -2,9 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"io"
 	"strings"
-	"time"
 )
 
 // StyledOutput provides styled terminal output

@@ -3,7 +3,6 @@ package types
 
 import (
 	"context"
-	"time"
 )
 
 // ReportFormat represents the format of a report

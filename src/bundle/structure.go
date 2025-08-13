@@ -3,10 +3,7 @@ package bundle
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 )
 
 // BundleStructure defines the structure of an offline bundle

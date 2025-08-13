@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/time/rate"

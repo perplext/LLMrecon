@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
 )
 
 // AlertSeverity defines the severity level of an alert

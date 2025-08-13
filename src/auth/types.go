@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"time"
 )
 
 // AuthType represents the type of authentication

@@ -2,7 +2,6 @@
 package prompt
 
 import (
-	"time"
 )
 
 // patternAge is a helper struct for sorting patterns by age

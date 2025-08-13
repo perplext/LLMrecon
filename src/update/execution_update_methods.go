@@ -3,7 +3,6 @@ package update
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"runtime"
 	
 	"github.com/perplext/LLMrecon/src/version"

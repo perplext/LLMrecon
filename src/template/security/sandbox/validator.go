@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"regexp"
 	"strings"
 

@@ -17,10 +17,6 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // ReportLevel represents the level of detail in a report

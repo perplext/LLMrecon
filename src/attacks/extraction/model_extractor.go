@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 )
 
 // ModelExtractor extracts model information and parameters

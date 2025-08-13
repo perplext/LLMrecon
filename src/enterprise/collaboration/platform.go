@@ -5,7 +5,6 @@ import (
     "encoding/json"
     "fmt"
     "sync"
-    "time"
 )
 
 // CollaborationPlatform manages team collaboration for LLM red teaming

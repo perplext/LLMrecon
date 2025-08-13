@@ -4,10 +4,7 @@ package errors
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
 	"strings"
-	"time"
 )
 
 // RecoveryStrategy defines the interface for error recovery strategies

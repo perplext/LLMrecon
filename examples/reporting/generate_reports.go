@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/reporting"
 )

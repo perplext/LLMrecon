@@ -3,9 +3,7 @@ package distribution
 import (
 	"context"
 	"fmt"
-	"io"
 	"sync"
-	"time"
 )
 
 // InstallationAnalyticsImpl implements the InstallationAnalytics interface

@@ -2,7 +2,6 @@ package analytics
 
 import (
 	"database/sql"
-	"time"
 )
 
 // TimeRange represents a time period for analytics queries

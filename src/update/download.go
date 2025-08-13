@@ -5,13 +5,9 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
-	"time"
 )
 
 // DownloadOptions represents options for downloading files

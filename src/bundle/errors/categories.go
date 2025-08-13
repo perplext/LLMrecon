@@ -4,8 +4,6 @@ package errors
 import (
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"syscall"
 )

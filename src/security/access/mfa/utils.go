@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
-	"time"
 )
 
 // GenerateRandomSecret generates a random secret for TOTP

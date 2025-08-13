@@ -7,11 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"sort"
-	"time"
 )
 
 // SignatureVersion defines the current signature format version

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // Constants for ID generation and validation

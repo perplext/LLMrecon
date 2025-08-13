@@ -7,7 +7,6 @@ import (
     "encoding/json"
     "fmt"
     "sync"
-    "time"
 )
 
 // SupplyChainAttack represents a supply chain attack vector

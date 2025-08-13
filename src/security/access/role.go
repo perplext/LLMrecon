@@ -1,7 +1,6 @@
 // Package access provides access control and security auditing functionality
 package access
 
-import "time"
 
 // Role represents a role in the system with associated permissions
 type Role struct {

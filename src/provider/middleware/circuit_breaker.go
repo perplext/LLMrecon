@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"sync"
-	"time"
 )
 
 // CircuitBreakerState represents the state of the circuit breaker

@@ -3,7 +3,6 @@
 package bundle
 
 import (
-	"path/filepath"
 	"syscall"
 	"unsafe"
 )

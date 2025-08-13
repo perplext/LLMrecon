@@ -5,9 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
-	"time"
 )
 
 // AuditAction represents the type of action being audited

@@ -5,7 +5,6 @@ import (
     "encoding/json"
     "fmt"
     "sync"
-    "time"
 )
 
 // ExecutiveDashboard provides high-level security insights for LLM red teaming

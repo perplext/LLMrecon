@@ -10,10 +10,8 @@ import (
     "encoding/base64"
     "encoding/json"
     "fmt"
-    "io"
     "strings"
     "sync"
-    "time"
 )
 
 // DataExfiltrator manages advanced data exfiltration techniques

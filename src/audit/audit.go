@@ -5,10 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
 	"os/user"
-	"time"
 )
 
 // AuditFormat represents the format for exporting audit logs

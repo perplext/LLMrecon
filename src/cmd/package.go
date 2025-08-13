@@ -3,8 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/update"
 	"github.com/perplext/LLMrecon/src/version"

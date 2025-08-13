@@ -2,7 +2,6 @@ package mfa
 
 import (
 	"context"
-	"time"
 )
 
 // MFAManager defines the interface for managing multi-factor authentication

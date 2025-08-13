@@ -8,14 +8,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/syslog"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
-	"time"
 )
 
 // AuditLogger defines the interface for basic audit logging

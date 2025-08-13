@@ -5,10 +5,6 @@ import (
 	"archive/zip"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // OpenBundle opens a bundle from the given path

@@ -2,8 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 

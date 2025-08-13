@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/ui"
 )

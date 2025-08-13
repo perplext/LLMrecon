@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 	"golang.org/x/time/rate"

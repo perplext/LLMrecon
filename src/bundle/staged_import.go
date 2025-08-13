@@ -4,10 +4,6 @@ package bundle
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // StagedImportPhase represents a phase in the staged import process

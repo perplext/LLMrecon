@@ -3,9 +3,6 @@ package notification
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // FileChannel represents a notification channel that writes notifications to a file

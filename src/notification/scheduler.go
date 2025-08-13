@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 )
 
 // NotificationScheduler handles scheduling and processing of notifications

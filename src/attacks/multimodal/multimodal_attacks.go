@@ -9,11 +9,9 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
-	"io"
 	"math/rand"
 	"strings"
 	"sync"
-	"time"
 )
 
 // MultiModalAttacker performs attacks using multiple input modalities

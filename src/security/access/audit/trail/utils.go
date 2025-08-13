@@ -6,11 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 )
 
 // AuditLogFilter defines a function type for filtering audit logs

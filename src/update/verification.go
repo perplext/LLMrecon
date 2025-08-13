@@ -5,10 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/version"
 )

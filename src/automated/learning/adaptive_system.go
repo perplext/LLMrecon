@@ -7,7 +7,6 @@ import (
 	"math"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/automated/chain"
 	"github.com/perplext/LLMrecon/src/automated/discovery"
@@ -930,7 +929,6 @@ type ConditionType string
 const (
 	ConditionState    ConditionType = "state"
 	ConditionResponse ConditionType = "response"
-	ConditionTime     ConditionType = "time"
 	ConditionSequence ConditionType = "sequence"
 )
 

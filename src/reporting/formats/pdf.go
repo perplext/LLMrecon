@@ -4,10 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/jung-kurt/gofpdf"
 	"github.com/perplext/LLMrecon/src/reporting/api"

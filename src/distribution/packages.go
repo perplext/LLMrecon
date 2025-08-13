@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
-	"time"
 )
 
 // Package manager implementations for different platforms

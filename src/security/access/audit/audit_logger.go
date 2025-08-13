@@ -5,9 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
-	"time"
 )
 
 // AuditLogger defines the interface for audit logging implementations

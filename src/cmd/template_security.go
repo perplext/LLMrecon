@@ -6,10 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 	"github.com/perplext/LLMrecon/src/template/security"

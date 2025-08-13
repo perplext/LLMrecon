@@ -3,8 +3,6 @@ package interfaces
 
 import (
 	"context"
-	"io"
-	"time"
 )
 
 // FileInfo represents information about a file in a repository

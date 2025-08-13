@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 // ProgressEvent represents a progress update

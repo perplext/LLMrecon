@@ -2,7 +2,6 @@
 package prompt
 
 import (
-	"time"
 )
 
 // ActionType defines the type of action taken by the protection system

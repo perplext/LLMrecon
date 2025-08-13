@@ -4,8 +4,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/perplext/LLMrecon/src/config"

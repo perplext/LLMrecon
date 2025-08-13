@@ -7,13 +7,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 )
 
 // RepositoryUpdater handles updating from various repository sources

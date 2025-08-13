@@ -4,11 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/api"
 )
