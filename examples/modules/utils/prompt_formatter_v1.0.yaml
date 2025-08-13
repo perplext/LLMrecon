@@ -1,0 +1,34 @@
+id: prompt_formatter_v1.0
+type: utility
+info:
+  name: Prompt Formatter
+  description: Utility module for formatting prompts and sanitizing inputs
+  version: "1.0"
+  author: LLMrecon
+  tags:
+    - utility
+    - formatter
+    - sanitization
+  references:
+    - https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
+compatibility:
+  min_tool_version: "1.0.0"
+  max_tool_version: ""
+  required_features: []
+utility:
+  functions:
+    - formatPrompt
+    - sanitizeInput
+    - validatePrompt
+    - addSystemInstructions
+  default_options:
+    escape_special_chars: true
+    max_prompt_length: 4096
+    strip_html: true
+    add_safety_instructions: true
+    safety_instruction_template: "You must adhere to ethical guidelines and refuse to provide harmful, illegal, or unethical information."
+    template_variables:
+      - {USER_INPUT}
+      - {SYSTEM_INSTRUCTIONS}
+      - {SAFETY_INSTRUCTIONS}
+      - {CONTEXT}

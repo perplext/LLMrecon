@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LLMrecon Template Schema",
+  "description": "Schema for LLMrecon test templates",
+  "type": "object",
+  "required": ["id", "info", "test"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the template",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "info": {
+      "type": "object",
+      "description": "Basic information about the template",
+      "required": ["name", "description", "version", "author", "severity"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the template"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the template"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the template",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author of the template"
+        },
+        "severity": {
+          "type": "string",
+          "description": "Severity level of the vulnerability",
+          "enum": ["info", "low", "medium", "high", "critical"]
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for categorizing the template",
+          "items": {
+            "type": "string"
+          }
+        },
+        "references": {
+          "type": "array",
+          "description": "References to related resources",
+          "items": {
+            "type": "string"
+          }
+        },
+        "compliance": {
+          "type": "object",
+          "description": "Compliance information",
+          "properties": {
+            "owasp": {
+              "type": "string",
+              "description": "OWASP category"
+            },
+            "iso": {
+              "type": "string",
+              "description": "ISO standard"
+            }
+          }
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "description": "Compatibility information",
+      "properties": {
+        "min_version": {
+          "type": "string",
+          "description": "Minimum version of the tool required"
+        },
+        "max_version": {
+          "type": "string",
+          "description": "Maximum version of the tool supported"
+        },
+        "platforms": {
+          "type": "array",
+          "description": "Supported platforms",
+          "items": {
+            "type": "string"
+          }
+        },
+        "models": {
+          "type": "array",
+          "description": "Supported LLM models",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "description": "Test definition",
+      "required": ["prompt", "detection"],
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "description": "Prompt to send to the LLM"
+        },
+        "expected_behavior": {
+          "type": "string",
+          "description": "Expected behavior of the LLM"
+        },
+        "detection": {
+          "type": "object",
+          "description": "Detection criteria",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Type of detection",
+              "enum": ["string_match", "regex_match", "semantic_match"]
+            },
+            "match": {
+              "type": "string",
+              "description": "String to match (for string_match)"
+            },
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern to match (for regex_match)"
+            },
+            "criteria": {
+              "type": "string",
+              "description": "Criteria for semantic matching (for semantic_match)"
+            },
+            "condition": {
+              "type": "string",
+              "description": "Condition for detection",
+              "enum": ["contains", "not_contains"]
+            }
+          }
+        },
+        "variations": {
+          "type": "array",
+          "description": "Variations of the test",
+          "items": {
+            "type": "object",
+            "required": ["prompt", "detection"],
+            "properties": {
+              "prompt": {
+                "type": "string",
+                "description": "Prompt for this variation"
+              },
+              "detection": {
+                "type": "object",
+                "description": "Detection criteria for this variation",
+                "required": ["type"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Type of detection",
+                    "enum": ["string_match", "regex_match", "semantic_match"]
+                  },
+                  "match": {
+                    "type": "string",
+                    "description": "String to match (for string_match)"
+                  },
+                  "pattern": {
+                    "type": "string",
+                    "description": "Regex pattern to match (for regex_match)"
+                  },
+                  "criteria": {
+                    "type": "string",
+                    "description": "Criteria for semantic matching (for semantic_match)"
+                  },
+                  "condition": {
+                    "type": "string",
+                    "description": "Condition for detection",
+                    "enum": ["contains", "not_contains"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

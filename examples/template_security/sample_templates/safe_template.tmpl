@@ -1,0 +1,26 @@
+{{/* 
+  This is a safe template that performs simple text formatting
+  It doesn't contain any dangerous functions or patterns
+*/}}
+
+# Welcome to the Safe Template
+
+Hello {{.Name}},
+
+This is a safe template that demonstrates the template validation and sandboxing framework.
+It only uses safe operations and doesn't attempt to access the file system, network, or execute commands.
+
+## Current Time
+The current time is: {{.CurrentTime}}
+
+## User Information
+- Name: {{.Name}}
+- Role: {{.Role}}
+- Access Level: {{.AccessLevel}}
+
+## Template Information
+- Template ID: {{.TemplateID}}
+- Template Version: {{.TemplateVersion}}
+- Created At: {{.CreatedAt}}
+
+Thank you for using our secure template system!

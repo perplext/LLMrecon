@@ -1,0 +1,359 @@
+// Package security provides template security verification mechanisms
+package security
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/perplext/LLMrecon/src/reporting/common"
+)
+
+// Pipeline represents a template security verification pipeline
+type Pipeline struct {
+	verifier TemplateVerifier
+	reporter *DefaultTemplateSecurityReporter
+	options  *VerificationOptions
+	results  []*VerificationResult
+	summary  *VerificationSummary
+}
+
+// PipelineConfig represents the configuration for a template security pipeline
+type PipelineConfig struct {
+	TemplateDirectories []string               `json:"template_directories"`
+	OutputDirectory     string                 `json:"output_directory"`
+	VerificationOptions *VerificationOptions   `json:"verification_options"`
+	ReportFormats       []common.ReportFormat  `json:"report_formats"`
+	NotificationConfig  *NotificationConfig    `json:"notification_config,omitempty"`
+	ScheduleConfig      *ScheduleConfig        `json:"schedule_config,omitempty"`
+}
+
+// NotificationConfig represents the configuration for pipeline notifications
+type NotificationConfig struct {
+	Enabled         bool     `json:"enabled"`
+	EmailRecipients []string `json:"email_recipients,omitempty"`
+	SlackWebhook    string   `json:"slack_webhook,omitempty"`
+	NotifyOnFailure bool     `json:"notify_on_failure"`
+	NotifyOnSuccess bool     `json:"notify_on_success"`
+}
+
+// ScheduleConfig represents the configuration for pipeline scheduling
+type ScheduleConfig struct {
+	Enabled       bool   `json:"enabled"`
+	CronSchedule  string `json:"cron_schedule,omitempty"`
+	IntervalHours int    `json:"interval_hours,omitempty"`
+}
+
+// NewPipeline creates a new template security verification pipeline
+func NewPipeline(verifier TemplateVerifier, options *VerificationOptions) *Pipeline {
+	if options == nil {
+		options = DefaultVerificationOptions()
+	}
+
+	reporter := NewDefaultTemplateSecurityReporter()
+
+	return &Pipeline{
+		verifier: verifier,
+		reporter: reporter,
+		options:  options,
+		results:  make([]*VerificationResult, 0),
+		summary:  nil,
+	}
+}
+
+// RunVerification runs the template security verification pipeline
+func (p *Pipeline) RunVerification(ctx context.Context, config *PipelineConfig) error {
+	// Reset results
+	p.results = make([]*VerificationResult, 0)
+	p.summary = nil
+
+	// Create output directory if it doesn't exist
+	if config.OutputDirectory != "" {
+		if err := os.MkdirAll(config.OutputDirectory, 0755); err != nil {
+			return fmt.Errorf("failed to create output directory: %w", err)
+		}
+	}
+
+	// Set verification options
+	options := config.VerificationOptions
+	if options == nil {
+		options = p.options
+	}
+
+	// Verify templates in each directory
+	for _, dir := range config.TemplateDirectories {
+		// Find all template files in the directory
+		templateFiles, err := filepath.Glob(filepath.Join(dir, "*.yaml"))
+		if err != nil {
+			return fmt.Errorf("failed to find template files: %w", err)
+		}
+
+		// Also check for .yml files
+		ymlFiles, err := filepath.Glob(filepath.Join(dir, "*.yml"))
+		if err != nil {
+			return fmt.Errorf("failed to find template files: %w", err)
+		}
+
+		// Combine the files
+		templateFiles = append(templateFiles, ymlFiles...)
+
+		// Verify each template file
+		for _, templateFile := range templateFiles {
+			result, err := p.verifier.VerifyTemplateFile(ctx, templateFile, options)
+			if err != nil {
+				fmt.Printf("Error verifying template %s: %v\n", templateFile, err)
+				continue
+			}
+
+			p.results = append(p.results, result)
+		}
+	}
+
+	// Calculate summary
+	p.summary = p.reporter.CalculateSummary(p.results)
+
+	// Generate and save reports
+	if config.OutputDirectory != "" && len(config.ReportFormats) > 0 {
+		if err := p.generateAndSaveReports(ctx, config); err != nil {
+			return fmt.Errorf("failed to generate reports: %w", err)
+		}
+	}
+
+	// Send notifications
+	if config.NotificationConfig != nil && config.NotificationConfig.Enabled {
+		if err := p.sendNotifications(config.NotificationConfig); err != nil {
+			return fmt.Errorf("failed to send notifications: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// GetResults returns the verification results
+func (p *Pipeline) GetResults() []*VerificationResult {
+	return p.results
+}
+
+// GetSummary returns the summary of the pipeline results
+func (p *Pipeline) GetSummary() *VerificationSummary {
+	return p.summary
+}
+
+// ConvertToTestResults converts the verification results to test results
+func (p *Pipeline) ConvertToTestResults() []*common.TestResult {
+	if p.results == nil || len(p.results) == 0 {
+		return []*common.TestResult{}
+	}
+
+	testResults := make([]*common.TestResult, 0)
+
+	// Convert each verification result to a test result
+	for _, result := range p.results {
+		// Create a test result for the overall verification
+		testResult := &common.TestResult{
+			ID:          result.TemplateID,
+			Name:        fmt.Sprintf("Template Security Verification: %s", result.TemplateName),
+			Description: fmt.Sprintf("Security verification for template %s", result.TemplatePath),
+			Severity:    common.Medium,
+			Category:    "template_security",
+			Status:      getComplianceStatus(result.Passed),
+			Details:     fmt.Sprintf("Score: %.2f/%.2f", result.Score, result.MaxScore),
+			RawData:     result,
+			Metadata: map[string]interface{}{
+				"template_path": result.TemplatePath,
+				"score":         result.Score,
+				"max_score":     result.MaxScore,
+				"passed":        result.Passed,
+			},
+		}
+		testResults = append(testResults, testResult)
+
+		// Create a test result for each issue
+		for _, issue := range result.Issues {
+			issueResult := &common.TestResult{
+				ID:          fmt.Sprintf("%s-%s", result.TemplateID, issue.ID),
+				Name:        fmt.Sprintf("Security Issue: %s", issue.Description),
+				Description: issue.Description,
+				Severity:    common.SeverityLevel(issue.Severity),
+				Category:    string(issue.Type),
+				Status:      "failed",
+				Details:     fmt.Sprintf("Location: %s\nRemediation: %s", issue.Location, issue.Remediation),
+				RawData:     issue,
+				Metadata: map[string]interface{}{
+					"template_id":   result.TemplateID,
+					"template_path": result.TemplatePath,
+					"location":      issue.Location,
+					"remediation":   issue.Remediation,
+					"context":       issue.Context,
+				},
+			}
+			testResults = append(testResults, issueResult)
+		}
+	}
+
+	// Add a summary test result
+	summary := p.GetSummary()
+	if summary != nil {
+		summaryResult := &common.TestResult{
+			ID:          "template_security_summary",
+			Name:        "Template Security Verification Summary",
+			Description: "Summary of template security verification results",
+			Severity:    common.Medium,
+			Category:    "template_security",
+			Status:      getComplianceStatus(summary.ComplianceStatus["OWASP LLM Top 10"]),
+			Details:     fmt.Sprintf("Total templates: %d, Passed: %d, Failed: %d, Compliance: %.2f%%",
+				summary.TotalTemplates,
+				summary.PassedTemplates,
+				summary.FailedTemplates,
+				summary.CompliancePercentage),
+			RawData: summary,
+			Metadata: map[string]interface{}{
+				"compliance_status":     summary.ComplianceStatus,
+				"compliance_percentage": summary.CompliancePercentage,
+				"issues_by_severity":    summary.IssuesBySeverity,
+				"issues_by_type":        summary.IssuesByType,
+			},
+		}
+		testResults = append(testResults, summaryResult)
+	}
+
+	return testResults
+}
+
+// generateAndSaveReports generates and saves reports in the specified formats
+func (p *Pipeline) generateAndSaveReports(ctx context.Context, config *PipelineConfig) error {
+	// Convert verification results to test results
+	testResults := p.ConvertToTestResults()
+
+	// Generate reports in the specified formats
+	for _, format := range config.ReportFormats {
+		// Get formatter for the specified format
+		formatterCreator, ok := common.GetFormatterCreatorFromDefault(format)
+		if !ok {
+			return fmt.Errorf("formatter not found for format: %s", format)
+		}
+
+		formatter, err := formatterCreator(nil)
+		if err != nil {
+			return fmt.Errorf("failed to create formatter for format %s: %w", format, err)
+		}
+
+		// Format the report using the Format method with proper arguments
+		formattedReport, err := formatter.Format(ctx, testResults, nil)
+		if err != nil {
+			return fmt.Errorf("failed to format report: %w", err)
+		}
+
+		// Save the report to file
+		outputPath := filepath.Join(config.OutputDirectory, fmt.Sprintf("template_security_report.%s", strings.ToLower(string(format))))
+		if err := os.WriteFile(outputPath, []byte(formattedReport), 0644); err != nil {
+			return fmt.Errorf("failed to save report to file: %w", err)
+		}
+
+		fmt.Printf("Report saved to %s\n", outputPath)
+	}
+
+	return nil
+}
+
+// sendNotifications sends notifications about the verification results
+func (p *Pipeline) sendNotifications(config *NotificationConfig) error {
+	summary := p.GetSummary()
+	if summary == nil {
+		return fmt.Errorf("no summary available for notifications")
+	}
+
+	// Determine if notification should be sent
+	shouldNotify := false
+	if config.NotifyOnFailure && summary.FailedTemplates > 0 {
+		shouldNotify = true
+	}
+	if config.NotifyOnSuccess && summary.FailedTemplates == 0 {
+		shouldNotify = true
+	}
+
+	if !shouldNotify {
+		return nil
+	}
+
+	// Prepare notification message
+	message := fmt.Sprintf("Template Security Verification Results\n\n")
+	message += fmt.Sprintf("Total Templates: %d\n", summary.TotalTemplates)
+	message += fmt.Sprintf("Passed Templates: %d\n", summary.PassedTemplates)
+	message += fmt.Sprintf("Failed Templates: %d\n", summary.FailedTemplates)
+	message += fmt.Sprintf("Compliance Percentage: %.2f%%\n\n", summary.CompliancePercentage)
+
+	message += "Issues by Severity:\n"
+	for severity, count := range summary.IssuesBySeverity {
+		message += fmt.Sprintf("  %s: %d\n", severity, count)
+	}
+
+	message += "\nIssues by Type:\n"
+	for issueType, count := range summary.IssuesByType {
+		message += fmt.Sprintf("  %s: %d\n", issueType, count)
+	}
+
+	// Send email notifications
+	if len(config.EmailRecipients) > 0 {
+		// TODO: Implement email notifications
+		fmt.Printf("Email notification would be sent to: %v\n", config.EmailRecipients)
+	}
+
+	// Send Slack notifications
+	if config.SlackWebhook != "" {
+		// TODO: Implement Slack notifications
+		fmt.Printf("Slack notification would be sent to webhook: %s\n", config.SlackWebhook)
+	}
+
+	return nil
+}
+
+// RunScheduledVerification runs the template security verification pipeline on a schedule
+func RunScheduledVerification(ctx context.Context, pipeline *Pipeline, config *PipelineConfig) {
+	if config.ScheduleConfig == nil || !config.ScheduleConfig.Enabled {
+		return
+	}
+
+	var interval time.Duration
+	if config.ScheduleConfig.CronSchedule != "" {
+		// TODO: Implement cron schedule parsing
+		fmt.Printf("Cron schedule parsing not implemented yet, using interval instead\n")
+		interval = time.Duration(config.ScheduleConfig.IntervalHours) * time.Hour
+	} else if config.ScheduleConfig.IntervalHours > 0 {
+		interval = time.Duration(config.ScheduleConfig.IntervalHours) * time.Hour
+	} else {
+		interval = 24 * time.Hour // Default to daily
+	}
+
+	fmt.Printf("Starting scheduled verification with interval: %s\n", interval)
+
+	// Run initial verification
+	if err := pipeline.RunVerification(ctx, config); err != nil {
+		fmt.Printf("Error running initial verification: %v\n", err)
+	}
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if err := pipeline.RunVerification(ctx, config); err != nil {
+				fmt.Printf("Error running scheduled verification: %v\n", err)
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+// getComplianceStatus returns the status string based on compliance
+func getComplianceStatus(compliant bool) string {
+	if compliant {
+		return "passed"
+	}
+	return "failed"
+}
