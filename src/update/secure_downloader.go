@@ -4,13 +4,9 @@ package update
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
-	"time"
 )
 
 // SecureDownloadOptions represents options for secure downloading

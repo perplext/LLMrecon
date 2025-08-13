@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"runtime"
-	"time"
 )
 
 // DistributionManager orchestrates cross-platform CLI distribution

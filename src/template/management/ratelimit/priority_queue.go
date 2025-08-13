@@ -6,7 +6,6 @@ import (
 	"context"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 // priorityItem represents an item in the priority queue

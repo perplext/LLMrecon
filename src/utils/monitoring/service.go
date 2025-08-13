@@ -3,10 +3,8 @@ package monitoring
 import (
 	"fmt"
 	"log"
-	"os"
 	"runtime"
 	"sync"
-	"time"
 )
 
 // MonitoringService provides monitoring and alerting for memory optimization components

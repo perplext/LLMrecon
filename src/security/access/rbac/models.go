@@ -2,7 +2,6 @@
 package rbac
 
 import (
-	"time"
 )
 
 // Role represents a role in the RBAC system

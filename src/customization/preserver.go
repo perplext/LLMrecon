@@ -3,10 +3,7 @@ package customization
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 )
 
 // Preserver preserves and reapplies user customizations during updates

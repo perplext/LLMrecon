@@ -4,11 +4,7 @@ package bundle
 import (
 	"crypto/ed25519"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/version"
 )

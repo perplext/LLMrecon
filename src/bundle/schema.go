@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/xeipuuv/gojsonschema"
 )

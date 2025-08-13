@@ -2,7 +2,6 @@
 package models
 
 import (
-	"time"
 )
 
 // SecurityIncidentSeverity represents the severity of a security incident

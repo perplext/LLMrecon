@@ -5,10 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"

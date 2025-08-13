@@ -3,9 +3,6 @@ package update
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // ExecuteUpdate executes an update from the given package

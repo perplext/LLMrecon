@@ -5,10 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // DeltaManifest represents the manifest for an incremental update bundle

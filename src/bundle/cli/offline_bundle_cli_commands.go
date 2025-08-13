@@ -3,8 +3,6 @@ package cli
 import (
 	"encoding/base64"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/perplext/LLMrecon/src/bundle"

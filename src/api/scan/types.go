@@ -2,7 +2,6 @@
 package scan
 
 import (
-	"time"
 )
 
 // ScanStatus represents the status of a scan

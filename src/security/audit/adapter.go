@@ -1,7 +1,6 @@
 package audit
 
 import (
-	"io"
 
 	"github.com/perplext/LLMrecon/src/audit"
 )

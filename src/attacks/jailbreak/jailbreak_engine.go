@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 )

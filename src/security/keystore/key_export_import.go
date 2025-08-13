@@ -9,7 +9,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"time"
 )
 
 // ExportKey exports a key in the specified format

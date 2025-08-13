@@ -8,11 +8,9 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"math"
 	"strings"
 	"sync"
-	"time"
 	"unicode"
 )
 

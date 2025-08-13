@@ -3,10 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
-	"time"
 )
 
 // UserStore manages storage of users

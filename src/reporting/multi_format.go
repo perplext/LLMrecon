@@ -6,10 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 )

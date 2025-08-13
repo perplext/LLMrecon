@@ -15,12 +15,8 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 )
 
 // Using ReportLevel from report.go for consistency

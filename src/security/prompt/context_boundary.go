@@ -6,7 +6,6 @@ import (
 	"math"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // ContextBoundaryEnforcer enforces context boundaries to prevent prompt injection

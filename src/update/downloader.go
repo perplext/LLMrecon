@@ -3,14 +3,10 @@ package update
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // UpdateDownloader handles downloading files for updates

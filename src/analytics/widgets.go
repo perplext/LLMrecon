@@ -7,7 +7,6 @@ import (
 	"html"
 	"sort"
 	"strings"
-	"time"
 )
 
 // ChartWidget displays data in various chart formats

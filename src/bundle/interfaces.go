@@ -1,6 +1,5 @@
 package bundle
 
-import "time"
 
 // Manager interface for bundle operations
 type Manager interface {

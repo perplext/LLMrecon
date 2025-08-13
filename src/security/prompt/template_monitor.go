@@ -4,7 +4,6 @@ package prompt
 import (
 	"context"
 	"sync"
-	"time"
 )
 
 // TemplateMonitor monitors templates for unusual patterns

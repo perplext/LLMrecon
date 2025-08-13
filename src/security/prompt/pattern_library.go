@@ -3,11 +3,8 @@ package prompt
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sync"
-	"time"
 )
 
 // PatternCategory defines the category of a pattern

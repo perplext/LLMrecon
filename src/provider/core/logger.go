@@ -2,7 +2,6 @@ package core
 
 import (
 	"log"
-	"os"
 )
 
 // Logger interface for connection pool logging

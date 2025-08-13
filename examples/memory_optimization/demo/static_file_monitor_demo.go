@@ -6,11 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"runtime"
 	"sync"
-	"time"
 )
 
 // MockFileHandlerOptions represents options for the mock file handler

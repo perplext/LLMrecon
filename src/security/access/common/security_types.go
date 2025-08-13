@@ -2,7 +2,6 @@
 package common
 
 import (
-	"time"
 )
 
 // AuthMethod represents an authentication method

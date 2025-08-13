@@ -5,7 +5,6 @@ import (
     "encoding/json"
     "fmt"
     "sync"
-    "time"
 )
 
 // ThreatIntelligenceSystem manages threat intelligence for LLM attacks

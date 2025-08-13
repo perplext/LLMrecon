@@ -1,7 +1,6 @@
 package manifest
 
 import (
-	"time"
 )
 
 // TemplateEntry represents an entry in the template manifest

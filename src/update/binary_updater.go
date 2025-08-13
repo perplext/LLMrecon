@@ -3,13 +3,9 @@ package update
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/Masterminds/semver/v3"
 )

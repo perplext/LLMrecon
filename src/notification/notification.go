@@ -4,10 +4,7 @@ package notification
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
-	"time"
 )
 
 // SeverityLevel represents the severity level of a notification

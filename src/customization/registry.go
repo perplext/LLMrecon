@@ -6,9 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // CustomizationType represents the type of customization

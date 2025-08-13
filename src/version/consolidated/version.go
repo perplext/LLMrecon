@@ -1,7 +1,6 @@
 package version
 
 import (
-	"time"
 )
 
 // VersionInfo represents version information for a template or module

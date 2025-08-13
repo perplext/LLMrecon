@@ -2,7 +2,6 @@
 package api
 
 import (
-	"io"
 )
 
 // ReportFormat defines the format of a report

@@ -5,10 +5,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/api"
 )

@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"strings"
-	"time"
 )
 
 // CommandSuggester provides intelligent command suggestions

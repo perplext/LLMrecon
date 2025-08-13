@@ -3,8 +3,6 @@ package version
 import (
 	"crypto/sha256"
 	"fmt"
-	"io"
-	"time"
 )
 
 // ReadFileContent reads content from a reader up to maxSize bytes

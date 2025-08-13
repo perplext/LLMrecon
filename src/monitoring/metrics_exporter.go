@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 // MetricsExporter exports metrics for Prometheus

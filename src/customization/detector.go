@@ -6,11 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 )

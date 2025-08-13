@@ -2,7 +2,6 @@
 package types
 
 import (
-	"time"
 )
 
 // TemplateSourceType represents the type of template source

@@ -6,13 +6,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
-	"time"
 )
 
 // Logger defines the interface for audit trail loggers

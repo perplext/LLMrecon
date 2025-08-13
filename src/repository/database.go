@@ -4,9 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io"
 	"strings"
-	"time"
 
 	// Import database drivers as needed
 	_ "github.com/go-sql-driver/mysql"

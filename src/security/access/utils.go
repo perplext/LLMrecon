@@ -3,7 +3,6 @@ package access
 
 import (
 	"context"
-	"time"
 )
 
 // contextKey is a private type for context keys

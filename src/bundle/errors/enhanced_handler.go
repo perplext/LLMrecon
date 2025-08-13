@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"time"
 )
 
 // EnhancedErrorHandler extends the DefaultErrorHandler with advanced error handling capabilities

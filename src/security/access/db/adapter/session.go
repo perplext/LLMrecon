@@ -3,7 +3,6 @@ package adapter
 
 import (
 	"context"
-	"time"
 )
 
 // Session represents a user session

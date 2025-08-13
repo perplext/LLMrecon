@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/attacks/injection"
 	"github.com/perplext/LLMrecon/src/automated/chain"

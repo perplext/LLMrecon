@@ -4,10 +4,6 @@ package update
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // TransactionStatus represents the status of an update transaction

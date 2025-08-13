@@ -5,11 +5,9 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"

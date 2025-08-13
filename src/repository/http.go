@@ -4,11 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
 // HTTPRepository implements the Repository interface for HTTP/HTTPS repositories

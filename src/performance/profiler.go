@@ -6,14 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
-	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/gorilla/mux"
 )

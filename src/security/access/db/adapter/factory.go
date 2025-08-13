@@ -4,8 +4,6 @@ package adapter
 import (
 	"database/sql"
 	"fmt"
-	"path/filepath"
-	"os"
 
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 

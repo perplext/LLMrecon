@@ -3,7 +3,6 @@ package analytics
 import (
 	"context"
 	"fmt"
-	"time"
 )
 
 // LoggingHook logs collection events

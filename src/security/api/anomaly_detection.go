@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 )
 
 // AnomalyType represents the type of anomaly

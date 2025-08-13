@@ -1,6 +1,5 @@
 package monitoring
 
-import "time"
 
 // Stats represents statistics for the file handler
 type Stats struct {

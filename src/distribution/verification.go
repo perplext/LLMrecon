@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"time"
 )
 
 // UpdateVerifierImpl implements the UpdateVerifier interface

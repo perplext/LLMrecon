@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"sync"
-	"time"
 )
 
 // ConnectionPoolConfig defines configuration for HTTP connection pools

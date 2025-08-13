@@ -5,11 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sync"
-	"time"
 )
 
 // EnhancedInjectionPatternLibrary extends the InjectionPatternLibrary with more sophisticated pattern management

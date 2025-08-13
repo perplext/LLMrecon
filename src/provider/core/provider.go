@@ -3,7 +3,6 @@ package core
 
 import (
 	"context"
-	"time"
 )
 
 // ModelType represents the type of LLM model

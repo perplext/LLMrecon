@@ -3,11 +3,7 @@ package update
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/schollz/progressbar/v3"
 )

@@ -2,11 +2,8 @@ package update
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 )
 
 // Installer handles installation of updates

@@ -3,8 +3,6 @@ package distribution
 import (
 	"context"
 	"fmt"
-	"io"
-	"time"
 )
 
 // GitHubChannel implements DistributionChannel for GitHub Releases

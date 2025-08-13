@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"sync"
-	"time"
 )
 
 // ScanStore interface for scan storage

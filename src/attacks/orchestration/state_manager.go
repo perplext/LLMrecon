@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
-	"time"
 )
 
 // StateManager handles persistence and recovery of conversation states

@@ -4,10 +4,7 @@ package audit
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
-	"time"
 )
 
 // CredentialAuditEvent represents an audit event for credential operations

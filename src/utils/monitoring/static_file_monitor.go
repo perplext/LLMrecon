@@ -2,7 +2,6 @@ package monitoring
 
 import (
 	"sync"
-	"time"
 )
 
 // StaticFileMetrics contains metrics for the static file handler

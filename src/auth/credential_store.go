@@ -8,11 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"sync"
-	"time"
 
 	"golang.org/x/crypto/scrypt"
 )

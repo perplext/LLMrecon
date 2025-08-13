@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"net/smtp"
 	"strings"
-	"time"
 )
 
 // EmailConfig represents the configuration for the email notification channel

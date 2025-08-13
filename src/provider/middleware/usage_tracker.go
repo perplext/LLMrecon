@@ -3,7 +3,6 @@ package middleware
 
 import (
 	"sync"
-	"time"
 )
 
 // UsageMetrics represents the usage metrics for a provider

@@ -3,7 +3,6 @@ package plugin
 
 import (
 	"fmt"
-	"path/filepath"
 	"plugin"
 	"sync"
 

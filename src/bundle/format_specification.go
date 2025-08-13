@@ -5,9 +5,6 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // OfflineBundleFormat represents the format specification for offline bundles

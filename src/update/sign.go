@@ -12,8 +12,6 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"io"
-	"os"
 )
 
 // SignatureGenerator handles the generation of digital signatures

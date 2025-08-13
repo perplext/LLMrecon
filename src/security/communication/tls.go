@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sync"
-	"time"
 )
 
 // TLSConfig represents the configuration for TLS

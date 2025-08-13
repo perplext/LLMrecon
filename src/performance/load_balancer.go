@@ -9,7 +9,6 @@ import (
 	"sort"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 // AdvancedLoadBalancer provides sophisticated load balancing and auto-scaling

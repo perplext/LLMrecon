@@ -4,7 +4,6 @@ package owasp
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/types"

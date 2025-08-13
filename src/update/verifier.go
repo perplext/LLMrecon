@@ -13,10 +13,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"hash"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 )
 

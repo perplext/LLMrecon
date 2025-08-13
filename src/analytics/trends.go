@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"time"
 )
 
 // TrendAnalyzer analyzes patterns and trends in metrics data

@@ -4,10 +4,7 @@ package profiling
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 )
 
 // CIReporter generates performance reports for CI/CD pipelines

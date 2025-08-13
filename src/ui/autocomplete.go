@@ -2,9 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 

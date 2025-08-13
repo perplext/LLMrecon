@@ -2,7 +2,6 @@ package injection
 
 import (
 	"context"
-	"time"
 )
 
 // InjectionEngine defines the interface for injection attacks

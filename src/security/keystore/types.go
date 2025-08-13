@@ -6,7 +6,6 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/x509"
-	"time"
 )
 
 // KeyType represents the type of cryptographic key

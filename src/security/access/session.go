@@ -4,7 +4,6 @@ package access
 import (
 	"context"
 	"sync"
-	"time"
 )
 
 // Session represents a user session

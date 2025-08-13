@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"time"
 )
 
 // generateSecurityID generates a unique ID for security entities

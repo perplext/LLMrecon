@@ -7,11 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 )
 
 // ExportOptions defines options for bundle export

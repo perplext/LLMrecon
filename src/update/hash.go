@@ -8,10 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
-	"io"
-	"os"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/blake2s"

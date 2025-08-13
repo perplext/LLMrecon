@@ -3,8 +3,6 @@ package errors
 
 import (
 	"fmt"
-	"io"
-	"time"
 )
 
 // ErrorLogger defines the interface for logging errors

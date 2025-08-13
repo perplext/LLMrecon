@@ -7,10 +7,8 @@ import (
 	"crypto/md5"
 	"encoding/gob"
 	"encoding/hex"
-	"io"
 	"math"
 	"sync"
-	"time"
 )
 
 // QueryCacheEntry represents a cached query result with metadata

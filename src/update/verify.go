@@ -11,9 +11,6 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"io"
-	"os"
-	"time"
 )
 
 // SignatureAlgorithm represents the type of signature algorithm

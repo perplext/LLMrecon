@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 )
 
 // PayloadGenerator creates and evolves attack payloads dynamically

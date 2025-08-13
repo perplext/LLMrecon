@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-	"time"
 )
 
 // EnhancedContentFilter extends the ContentFilter with more sophisticated filtering capabilities

@@ -3,11 +3,9 @@ package profiling
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 	"runtime/pprof"
 	"sync"
-	"time"
 )
 
 // MetricType defines the type of metric being measured

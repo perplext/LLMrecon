@@ -4,7 +4,6 @@ package security
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"regexp"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"

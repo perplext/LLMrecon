@@ -3,9 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
-	"time"
 
 	"github.com/rs/zerolog/log"
 )

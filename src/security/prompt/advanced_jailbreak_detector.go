@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // AdvancedJailbreakDetector extends the JailbreakDetector with more sophisticated detection capabilities

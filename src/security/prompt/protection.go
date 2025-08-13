@@ -4,7 +4,6 @@ package prompt
 import (
 	"context"
 	"sync"
-	"time"
 )
 
 // ProtectionLevel defines the level of protection to apply

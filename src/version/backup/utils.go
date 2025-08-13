@@ -2,7 +2,6 @@ package version
 
 import (
 	"strings"
-	"path/filepath"
 )
 
 // Additional utility functions for the version package can be added here

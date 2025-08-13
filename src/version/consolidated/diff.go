@@ -2,7 +2,6 @@ package version
 
 import (
 	"fmt"
-	"time"
 )
 
 // DiffType represents the type of difference

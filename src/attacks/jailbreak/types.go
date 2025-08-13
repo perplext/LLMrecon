@@ -3,7 +3,6 @@ package jailbreak
 import (
 	"context"
 	"strings"
-	"time"
 )
 
 // JailbreakResult contains the results of a jailbreak attempt
