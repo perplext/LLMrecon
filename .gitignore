@@ -58,3 +58,15 @@ users.json
 test_results_*/
 qwen_security_results.json
 llmrecon
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+*.egg-info/
+.eggs/
