@@ -1,0 +1,44 @@
+2025-08-13 10:13:48,728 - __main__ - INFO - Loaded template: Character Smuggling & Unicode Injection
+2025-08-13 10:13:48,728 - __main__ - INFO - Loaded template: Unbounded Consumption Attack
+2025-08-13 10:13:48,728 - __main__ - INFO - Loaded template: Persuasive Adversarial Prompts (PAP)
+2025-08-13 10:13:48,728 - __main__ - INFO - Loaded template: Policy Puppetry Attack
+2025-08-13 10:13:48,728 - __main__ - INFO - Loaded template: FlipAttack Character Order Manipulation
+2025-08-13 10:13:48,729 - __main__ - INFO - Loaded template: Vector and Embedding Vulnerabilities
+2025-08-13 10:13:48,729 - __main__ - INFO - Loaded template: DrAttack Decomposed Prompt Fragments
+2025-08-13 10:13:48,730 - __main__ - INFO - Loaded template: Multi-Stage Injection Attack
+2025-08-13 10:13:48,730 - __main__ - INFO - Loaded template: System Prompt Leakage
+2025-08-13 10:13:53,923 - __main__ - INFO - Loaded template: Character Smuggling & Unicode Injection
+2025-08-13 10:13:53,923 - __main__ - INFO - Loaded template: Unbounded Consumption Attack
+2025-08-13 10:13:53,923 - __main__ - INFO - Loaded template: Persuasive Adversarial Prompts (PAP)
+2025-08-13 10:13:53,923 - __main__ - INFO - Loaded template: Policy Puppetry Attack
+2025-08-13 10:13:53,923 - __main__ - INFO - Loaded template: FlipAttack Character Order Manipulation
+2025-08-13 10:13:53,923 - __main__ - INFO - Loaded template: Vector and Embedding Vulnerabilities
+2025-08-13 10:13:53,923 - __main__ - INFO - Loaded template: DrAttack Decomposed Prompt Fragments
+2025-08-13 10:13:53,923 - __main__ - INFO - Loaded template: Multi-Stage Injection Attack
+2025-08-13 10:13:53,923 - __main__ - INFO - Loaded template: System Prompt Leakage
+2025-08-13 10:14:05,459 - __main__ - INFO - Loaded template: Character Smuggling & Unicode Injection
+2025-08-13 10:14:05,459 - __main__ - INFO - Loaded template: Unbounded Consumption Attack
+2025-08-13 10:14:05,459 - __main__ - INFO - Loaded template: Persuasive Adversarial Prompts (PAP)
+2025-08-13 10:14:05,459 - __main__ - INFO - Loaded template: Policy Puppetry Attack
+2025-08-13 10:14:05,459 - __main__ - INFO - Loaded template: FlipAttack Character Order Manipulation
+2025-08-13 10:14:05,459 - __main__ - INFO - Loaded template: Vector and Embedding Vulnerabilities
+2025-08-13 10:14:05,459 - __main__ - INFO - Loaded template: DrAttack Decomposed Prompt Fragments
+2025-08-13 10:14:05,459 - __main__ - INFO - Loaded template: Multi-Stage Injection Attack
+2025-08-13 10:14:05,459 - __main__ - INFO - Loaded template: System Prompt Leakage
+2025-08-13 10:14:24,867 - __main__ - ERROR - Test failed: AttackData.__init__() got an unexpected keyword argument 'metadata'
+2025-08-13 10:14:54,264 - __main__ - ERROR - Test failed: AttackData.__init__() got an unexpected keyword argument 'metadata'
+2025-08-13 10:15:56,447 - __main__ - INFO - Loaded template: Character Smuggling & Unicode Injection
+2025-08-13 10:15:56,447 - __main__ - INFO - Loaded template: Unbounded Consumption Attack
+2025-08-13 10:15:56,448 - __main__ - INFO - Loaded template: Persuasive Adversarial Prompts (PAP)
+2025-08-13 10:15:56,448 - __main__ - INFO - Loaded template: Policy Puppetry Attack
+2025-08-13 10:15:56,448 - __main__ - INFO - Loaded template: FlipAttack Character Order Manipulation
+2025-08-13 10:15:56,448 - __main__ - INFO - Loaded template: Vector and Embedding Vulnerabilities
+2025-08-13 10:15:56,449 - __main__ - INFO - Loaded template: DrAttack Decomposed Prompt Fragments
+2025-08-13 10:15:56,449 - __main__ - INFO - Loaded template: Multi-Stage Injection Attack
+2025-08-13 10:15:56,449 - __main__ - INFO - Loaded template: System Prompt Leakage
+2025-08-13 10:16:26,454 - __main__ - ERROR - Test failed: HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)
+2025-08-13 10:16:56,457 - __main__ - ERROR - Test failed: HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)
+2025-08-13 10:17:26,461 - __main__ - ERROR - Test failed: HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)
+2025-08-13 10:17:32,650 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
+2025-08-13 10:17:40,211 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
+2025-08-13 10:17:53,259 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'

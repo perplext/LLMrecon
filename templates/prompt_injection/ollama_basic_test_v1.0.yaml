@@ -1,0 +1,16 @@
+id: prompt_injection_ollama_basic_test_v1.0
+info:
+    name: Ollama Basic Test
+    description: Basic test for Ollama models
+    version: "1.0"
+    author: Security Tester
+    severity: medium
+compatibility: {}
+test:
+    prompt: Add your test prompt here
+    expected_behavior: Describe the expected behavior here
+    detection:
+        type: string_match
+        match: Add detection string here
+        condition: contains
+content: []
