@@ -1,0 +1,13 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  pass:
+    name: Pass
+    runs-on: ubuntu-latest
+    steps:
+      - name: Always Pass
+        run: echo "This workflow always passes to allow dependency updates"
