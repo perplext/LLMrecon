@@ -266,6 +266,8 @@ function initializeCharts() {
                 }
             }
         }
+    });
+}
 
 // Refresh the dashboard with the latest metrics
 function refreshDashboard() {
