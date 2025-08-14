@@ -1,9 +1,0 @@
-// Package communication provides secure communication utilities for the LLMrecon tool.
-package communication
-
-import (
-	"os"
-	"path/filepath"
-	"time"
-
-
