@@ -2,6 +2,7 @@
 package errors
 
 import (
+	"time"
 	"context"
 	"fmt"
 	"math"

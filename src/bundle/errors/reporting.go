@@ -2,6 +2,11 @@
 package errors
 
 import (
+	"io"
+	"time"
+)
+
+import (
 	"context"
 	"encoding/json"
 	"fmt"

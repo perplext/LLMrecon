@@ -2,6 +2,7 @@
 package trail
 
 import (
+	"time"
 	"compress/gzip"
 	"context"
 	"encoding/json"

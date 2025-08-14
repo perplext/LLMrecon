@@ -1,5 +1,7 @@
 package core
 
+import "time"
+
 import (
 	"context"
 	"crypto/tls"

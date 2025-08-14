@@ -1,6 +1,8 @@
 // Package audit provides comprehensive security audit logging functionality
 package audit
 
+import "time"
+
 import (
 
 	"github.com/perplext/LLMrecon/src/security/access/common"

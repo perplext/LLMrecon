@@ -2,6 +2,7 @@
 package communication
 
 import (
+	"time"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"

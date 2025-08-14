@@ -1,6 +1,8 @@
 // Package core provides the core interfaces and types for the Multi-Provider LLM Integration Framework.
 package core
 
+import "time"
+
 import (
 	"context"
 	"fmt"
