@@ -1,6 +1,8 @@
 // Package errors provides error handling functionality for bundle operations
 package errors
 
+import "time"
+
 import (
 	"context"
 	"fmt"

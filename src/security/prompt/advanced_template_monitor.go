@@ -2,6 +2,7 @@
 package prompt
 
 import (
+	"time"
 	"context"
 	"fmt"
 	"sync"
