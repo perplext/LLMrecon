@@ -60,6 +60,6 @@ func (c *OfflineBundleCLI) createConvertCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&autoDetectCompliance, "auto-detect-compliance", "a", "false", "Auto-detect compliance mappings for templates (true/false)")
 
 	// Mark required flags
-	cmd.MarkFlagRequired("bundle")
-	cmd.MarkFlagRequired("output")
+	_ = cmd.MarkFlagRequired("bundle")
+	_ = cmd.MarkFlagRequired("output")
 

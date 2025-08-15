@@ -24,7 +24,7 @@ type Response struct {
 func WriteJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(data)
+	_ = json.NewEncoder(w).Encode(data) // Best effort, headers already sent
 
 // WriteErrorResponse writes an error response to the HTTP response writer
 func WriteErrorResponse(w http.ResponseWriter, statusCode int, message string) {

@@ -126,8 +126,8 @@ func (c *OfflineBundleCLI) createCreateCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&authorOrg, "author-org", "", "", "Author organization")
 
 	// Mark required flags
-	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("output")
+	_ = cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("output")
 
 	return cmd
 
@@ -189,10 +189,10 @@ func (c *OfflineBundleCLI) createAddContentCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&description, "description", "d", "", "Content description")
 
 	// Mark required flags
-	cmd.MarkFlagRequired("bundle")
-	cmd.MarkFlagRequired("source")
-	cmd.MarkFlagRequired("target")
-	cmd.MarkFlagRequired("type")
+	_ = cmd.MarkFlagRequired("bundle")
+	_ = cmd.MarkFlagRequired("source")
+	_ = cmd.MarkFlagRequired("target")
+	_ = cmd.MarkFlagRequired("type")
 
 	return cmd
 
@@ -257,8 +257,8 @@ func (c *OfflineBundleCLI) createAddComplianceCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&isoControls, "iso", "s", "", "ISO/IEC 42001 controls (comma-separated)")
 
 	// Mark required flags
-	cmd.MarkFlagRequired("bundle")
-	cmd.MarkFlagRequired("content-id")
+	_ = cmd.MarkFlagRequired("bundle")
+	_ = cmd.MarkFlagRequired("content-id")
 
 	return cmd
 
@@ -301,9 +301,9 @@ func (c *OfflineBundleCLI) createAddDocumentationCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&sourcePath, "source", "s", "", "Path to the documentation file (required)")
 
 	// Mark required flags
-	cmd.MarkFlagRequired("bundle")
-	cmd.MarkFlagRequired("type")
-	cmd.MarkFlagRequired("source")
+	_ = cmd.MarkFlagRequired("bundle")
+	_ = cmd.MarkFlagRequired("type")
+	_ = cmd.MarkFlagRequired("source")
 
 	return cmd
 
@@ -432,7 +432,7 @@ func (c *OfflineBundleCLI) createValidateCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&level, "level", "l", "standard", "Validation level (basic, standard, strict, manifest, checksum, signature, compatibility)")
 
 	// Mark required flags
-	cmd.MarkFlagRequired("bundle")
+	_ = cmd.MarkFlagRequired("bundle")
 
 	return cmd
 

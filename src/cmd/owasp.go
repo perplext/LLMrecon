@@ -24,7 +24,7 @@ var owaspCmd = &cobra.Command{
 This command allows you to test LLM providers and models for vulnerabilities
 defined in the OWASP Top 10 for LLMs.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 
 // testCmd represents the test command
@@ -125,7 +125,7 @@ var owaspMockCmd = &cobra.Command{
 This command allows you to create a mock provider with specific vulnerable responses
 for testing without using real LLM providers.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 
 // createMockCmd represents the create command for mock

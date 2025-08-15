@@ -29,7 +29,7 @@ var credentialCmd = &cobra.Command{
 	Long: `Manage credentials securely for the LLMreconing Tool.
 This command allows you to list, add, update, and delete credentials.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 
 // credentialListCmd represents the credential list command

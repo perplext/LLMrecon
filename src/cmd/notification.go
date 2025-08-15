@@ -72,7 +72,7 @@ var notificationCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 
 // listCmd represents the notification list command

@@ -114,7 +114,7 @@ func (h *ErrorHandler) HandleError(w http.ResponseWriter, r *http.Request, err e
 	w.WriteHeader(statusCode)
 
 	// Write the response
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response) // Best effort, headers already sent
 
 // getStatusCodeForError gets the HTTP status code for an error
 func (h *ErrorHandler) getStatusCodeForError(err error) int {

@@ -523,7 +523,7 @@ func (d *MonitoringDashboard) handleGetMetrics(w http.ResponseWriter, r *http.Re
 	}
 	
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(allMetrics)
+	_ = json.NewEncoder(w).Encode(allMetrics) // Best effort, headers already sent
 
 // handleGetStatus returns dashboard status
 func (d *MonitoringDashboard) handleGetStatus(w http.ResponseWriter, r *http.Request) {
@@ -536,7 +536,7 @@ func (d *MonitoringDashboard) handleGetStatus(w http.ResponseWriter, r *http.Req
 	}
 	
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(status)
+	_ = json.NewEncoder(w).Encode(status) // Best effort, headers already sent
 
 // handleHealthCheck returns health status
 func (d *MonitoringDashboard) handleHealthCheck(w http.ResponseWriter, r *http.Request) {

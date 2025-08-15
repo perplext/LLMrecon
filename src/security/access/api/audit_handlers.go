@@ -295,7 +295,7 @@ func exportAuditLogsToJSON(w http.ResponseWriter, events []*access.AuditEvent) {
 	}
 
 	// Write JSON
-	json.NewEncoder(w).Encode(eventResponses)
+	_ = json.NewEncoder(w).Encode(eventResponses) // Best effort, headers already sent
 
 // convertAuditEventToResponse converts an audit event to a response format
 func convertAuditEventToResponse(event *access.AuditEvent) AuditLogResponse {

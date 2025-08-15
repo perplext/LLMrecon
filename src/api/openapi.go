@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -1133,4 +1134,7 @@ func generateComponents() map[string]interface{} {
 func handleOpenAPISpec(w http.ResponseWriter, r *http.Request) {
 	spec := GenerateOpenAPISpec()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(spec)
+	if err := json.NewEncoder(w).Encode(spec); err != nil {
+		// Log error but response is already partially sent
+		log.Printf("Error encoding OpenAPI spec: %v", err)
+	}
