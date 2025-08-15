@@ -31,7 +31,6 @@ func clearDirectory(dir string) error {
 	}
 
 	return nil
-}
 
 // copyDirUtil copies a directory and its contents to another directory (utility version)
 func copyDirUtil(src, dst string) error {
@@ -74,17 +73,15 @@ func copyDirUtil(src, dst string) error {
 	}
 
 	return nil
-}
 
 // copyFileUtil copies a file from src to dst (utility version)
 func copyFileUtil(src, dst string) error {
 	// Open source file
-	srcFile, err := os.Open(src)
+	srcFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
-
+	defer func() { if err := srcFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	// Get source file info
 	srcInfo, err := srcFile.Stat()
 	if err != nil {
@@ -96,7 +93,7 @@ func copyFileUtil(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer dstFile.Close()
+	defer func() { if err := dstFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Copy contents
 	_, err = dstFile.ReadFrom(srcFile)
@@ -104,5 +101,3 @@ func copyFileUtil(src, dst string) error {
 		return fmt.Errorf("failed to copy file contents: %w", err)
 	}
 
-	return nil
-}

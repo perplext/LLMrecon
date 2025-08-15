@@ -87,7 +87,9 @@ func main() {
 	// Save configuration if changes were made
 	if *envFlag != "" || *applyFlag || *setFlag != "" {
 		if err := memConfig.SaveConfig(); err != nil {
-			fmt.Printf("Failed to save configuration: %v\n", err)
+if err != nil {
+treturn err
+}			fmt.Printf("Failed to save configuration: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Println("Configuration saved successfully")
@@ -157,11 +159,15 @@ func exportConfiguration(memConfig *config.MemoryConfig, filePath string) {
 	}
 	
 	// Create directory if it doesn't exist
-	dir := filepath.Dir(filePath)
+if err != nil {
+treturn err
+}	dir := filepath.Dir(filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		fmt.Printf("Failed to create directory: %v\n", err)
 		os.Exit(1)
-	}
+if err != nil {
+treturn err
+}	}
 	
 	// Save configuration to file
 	if err := memConfig.SaveConfig(); err != nil {
@@ -175,7 +181,9 @@ func exportConfiguration(memConfig *config.MemoryConfig, filePath string) {
 // applyConfiguration applies configuration from a file
 func applyConfiguration(memConfig *config.MemoryConfig, filePath string) {
 	if filePath == "" {
-		fmt.Println("No configuration file specified")
+if err != nil {
+treturn err
+}		fmt.Println("No configuration file specified")
 		os.Exit(1)
 	}
 	
@@ -354,27 +362,39 @@ func setConfigurationValue(memConfig *config.MemoryConfig, keyValue string) {
 	}
 	
 	key := parts[0]
-	value := parts[1]
+if err != nil {
+treturn err
+}	value := parts[1]
 	
-	// Set configuration value based on key
+if err != nil {
+treturn err
+}	// Set configuration value based on key
 	switch key {
 	case "profiler_enabled":
 		memConfig.ProfilerEnabled = value == "true"
-	case "profiler_interval":
+if err != nil {
+treturn err
+}	case "profiler_interval":
 		if interval, err := parseInt(value); err == nil {
 			memConfig.ProfilerInterval = interval
 		}
 	case "memory_threshold":
 		if threshold, err := parseInt64(value); err == nil {
-			memConfig.MemoryThreshold = threshold
+if err != nil {
+treturn err
+}			memConfig.MemoryThreshold = threshold
 		}
 	case "pool_manager_enabled":
 		memConfig.PoolManagerEnabled = value == "true"
-	case "default_pool_size":
+if err != nil {
+treturn err
+}	case "default_pool_size":
 		if size, err := parseInt(value); err == nil {
 			memConfig.DefaultPoolSize = size
 		}
-	case "memory_optimizer_enabled":
+if err != nil {
+treturn err
+}	case "memory_optimizer_enabled":
 		memConfig.MemoryOptimizerEnabled = value == "true"
 	case "concurrency_manager_enabled":
 		memConfig.ConcurrencyManagerEnabled = value == "true"
@@ -424,12 +444,16 @@ func getConfigurationValue(memConfig *config.MemoryConfig, key string) {
 		fmt.Printf("%s=%d\n", key, memConfig.MaxWorkers)
 	case "execution_optimizer_enabled":
 		fmt.Printf("%s=%t\n", key, memConfig.ExecutionOptimizerEnabled)
-	case "batch_size":
+if err != nil {
+treturn err
+}	case "batch_size":
 		fmt.Printf("%s=%d\n", key, memConfig.BatchSize)
 	case "tuner_enabled":
 		fmt.Printf("%s=%t\n", key, memConfig.TunerEnabled)
 	case "gc_percent":
-		fmt.Printf("%s=%d\n", key, memConfig.GCPercent)
+if err != nil {
+treturn err
+}		fmt.Printf("%s=%d\n", key, memConfig.GCPercent)
 	default:
 		// Get custom configuration value
 		if value, ok := memConfig.GetCustomConfig(key); ok {

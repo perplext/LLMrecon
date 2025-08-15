@@ -88,7 +88,6 @@ type KeyMetadata struct {
 	RotationPeriod int `json:"rotation_period,omitempty"`
 	// Fingerprint is a unique fingerprint of the key
 	Fingerprint string `json:"fingerprint,omitempty"`
-}
 
 // KeyMaterial contains the actual key material
 type KeyMaterial struct {
@@ -100,7 +99,6 @@ type KeyMaterial struct {
 	Certificate []byte `json:"certificate,omitempty"`
 	// Format is the format of the key data (e.g., "PEM", "DER")
 	Format string `json:"format"`
-}
 
 // Key represents a cryptographic key with its metadata
 type Key struct {
@@ -108,7 +106,6 @@ type Key struct {
 	Metadata KeyMetadata `json:"metadata"`
 	// Material contains the actual key material
 	Material KeyMaterial `json:"material,omitempty"`
-}
 
 // KeyStore defines the interface for key storage operations
 type KeyStore interface {
@@ -171,7 +168,6 @@ type KeyStore interface {
 	
 	// Close closes the key store
 	Close() error
-}
 
 // KeyStoreOptions contains options for creating a key store
 type KeyStoreOptions struct {
@@ -192,7 +188,6 @@ type KeyStoreOptions struct {
 	
 	// AlertCallback is called when a key needs rotation
 	AlertCallback func(key *KeyMetadata, daysUntilExpiration int)
-}
 
 // HSMConfig contains configuration for HSM integration
 type HSMConfig struct {
@@ -216,7 +211,6 @@ type HSMConfig struct {
 	
 	// KeyLabel is the prefix for key labels in the HSM
 	KeyLabel string
-}
 
 // KeyRotationPolicy defines when keys should be rotated
 type KeyRotationPolicy struct {
@@ -230,5 +224,3 @@ type KeyRotationPolicy struct {
 	LastRotation time.Time
 	
 	// WarningDays is the number of days before expiration to start showing warnings
-	WarningDays int
-}

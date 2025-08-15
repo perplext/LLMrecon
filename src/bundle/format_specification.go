@@ -29,7 +29,6 @@ type OfflineBundleFormat struct {
 	ChecksumAlgorithm string `json:"checksum_algorithm"`
 	// UpdatedAt is the timestamp when the format was last updated
 	UpdatedAt time.Time `json:"updated_at"`
-}
 
 // DefaultOfflineBundleFormat returns the default offline bundle format specification
 func DefaultOfflineBundleFormat() *OfflineBundleFormat {
@@ -252,7 +251,6 @@ func DefaultOfflineBundleFormat() *OfflineBundleFormat {
 		ChecksumAlgorithm:  "SHA-256",
 		UpdatedAt:          time.Now().UTC(),
 	}
-}
 
 // EnhancedBundleManifest extends BundleManifest with additional fields for offline bundles
 type EnhancedBundleManifest struct {
@@ -272,7 +270,6 @@ type EnhancedBundleManifest struct {
 	IsIncremental bool `json:"is_incremental,omitempty"`
 	// BaseVersion is the base version for incremental bundles
 	BaseVersion string `json:"base_version,omitempty"`
-}
 
 // ChangelogEntry represents an entry in the changelog
 type ChangelogEntry struct {
@@ -282,7 +279,6 @@ type ChangelogEntry struct {
 	Date time.Time `json:"date"`
 	// Changes is a list of changes in this version
 	Changes []string `json:"changes"`
-}
 
 // ComplianceMapping represents a mapping between content items and compliance frameworks
 type ComplianceMapping struct {
@@ -294,7 +290,6 @@ type ComplianceMapping struct {
 	ISOIECControls []string `json:"iso_iec_controls,omitempty"`
 	// Description provides additional context about the compliance mapping
 	Description string `json:"description,omitempty"`
-}
 
 // OfflineBundle extends Bundle with additional functionality for offline bundles
 type OfflineBundle struct {
@@ -307,7 +302,6 @@ type OfflineBundle struct {
 	IsIncremental bool
 	// ComplianceMappings contains detailed compliance mapping information
 	ComplianceMappings []ComplianceMapping
-}
 
 // CreateOfflineBundle creates a new offline bundle
 func CreateOfflineBundle(manifest EnhancedBundleManifest, contentDir, outputPath string) (*OfflineBundle, error) {
@@ -326,7 +320,6 @@ func CreateOfflineBundle(manifest EnhancedBundleManifest, contentDir, outputPath
 	}
 
 	return offlineBundle, nil
-}
 
 // OpenOfflineBundle opens an offline bundle from the given path
 func OpenOfflineBundle(path string) (*OfflineBundle, error) {
@@ -349,13 +342,12 @@ func OpenOfflineBundle(path string) (*OfflineBundle, error) {
 	}
 
 	return offlineBundle, nil
-}
 
 // readEnhancedManifest reads the enhanced manifest from the bundle
 func (b *OfflineBundle) readEnhancedManifest() error {
 	// Read manifest file
 	manifestPath := filepath.Join(b.BundlePath, "manifest.json")
-	manifestData, err := os.ReadFile(manifestPath)
+	manifestData, err := os.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return fmt.Errorf("failed to read manifest file: %w", err)
 	}
@@ -370,7 +362,6 @@ func (b *OfflineBundle) readEnhancedManifest() error {
 	b.IsIncremental = b.EnhancedManifest.IsIncremental
 
 	return nil
-}
 
 // ValidateOfflineBundle validates an offline bundle with enhanced validation
 func ValidateOfflineBundle(bundle *OfflineBundle, level ValidationLevel, publicKey ed25519.PublicKey) (*ValidationResult, error) {
@@ -453,7 +444,6 @@ func ValidateOfflineBundle(bundle *OfflineBundle, level ValidationLevel, publicK
 	}
 
 	return enhancedResult, nil
-}
 
 // ValidateBundle validates a bundle with the specified validation level
 func ValidateBundle(bundle Bundle, level ValidationLevel, publicKey ed25519.PublicKey) (*ValidationResult, error) {
@@ -484,7 +474,6 @@ func ValidateBundle(bundle Bundle, level ValidationLevel, publicKey ed25519.Publ
 	}
 
 	return result, nil
-}
 
 // CreateIncrementalBundle creates an incremental bundle based on a base bundle
 func CreateIncrementalBundle(baseBundle *OfflineBundle, newManifest EnhancedBundleManifest, 
@@ -501,7 +490,6 @@ func CreateIncrementalBundle(baseBundle *OfflineBundle, newManifest EnhancedBund
 	}
 
 	return bundle, nil
-}
 
 // MergeIncrementalBundle merges an incremental bundle into a base bundle
 func MergeIncrementalBundle(baseBundle, incrementalBundle *OfflineBundle, outputPath string) (*OfflineBundle, error) {
@@ -579,7 +567,7 @@ func MergeIncrementalBundle(baseBundle, incrementalBundle *OfflineBundle, output
 		dstPath := filepath.Join(tempDir, item.Path)
 		
 		// Create parent directories
-		err = os.MkdirAll(filepath.Dir(dstPath), 0755)
+		err = os.MkdirAll(filepath.Dir(dstPath), 0700)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create directory for %s: %w", item.Path, err)
 		}
@@ -597,7 +585,7 @@ func MergeIncrementalBundle(baseBundle, incrementalBundle *OfflineBundle, output
 		dstPath := filepath.Join(tempDir, item.Path)
 		
 		// Create parent directories
-		err = os.MkdirAll(filepath.Dir(dstPath), 0755)
+		err = os.MkdirAll(filepath.Dir(dstPath), 0700)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create directory for %s: %w", item.Path, err)
 		}
@@ -616,7 +604,6 @@ func MergeIncrementalBundle(baseBundle, incrementalBundle *OfflineBundle, output
 	}
 
 	return mergedBundle, nil
-}
 
 // GetComplianceMappings returns the compliance mappings for a bundle
 func (b *OfflineBundle) GetComplianceMappings() []ComplianceMapping {
@@ -673,7 +660,6 @@ func (b *OfflineBundle) GetComplianceMappings() []ComplianceMapping {
 	}
 	
 	return mappings
-}
 
 // AddComplianceMapping adds a compliance mapping to the bundle
 func (b *OfflineBundle) AddComplianceMapping(mapping ComplianceMapping) error {
@@ -727,7 +713,6 @@ func (b *OfflineBundle) AddComplianceMapping(mapping ComplianceMapping) error {
 	}
 	
 	return nil
-}
 
 // AddChangelogEntry adds a changelog entry to the bundle
 func (b *OfflineBundle) AddChangelogEntry(version string, changes []string) {
@@ -738,7 +723,6 @@ func (b *OfflineBundle) AddChangelogEntry(version string, changes []string) {
 	}
 	
 	b.EnhancedManifest.Changelog = append(b.EnhancedManifest.Changelog, entry)
-}
 
 // GetDocumentationPath returns the path to a documentation file
 func (b *OfflineBundle) GetDocumentationPath(docType string) (string, error) {
@@ -747,7 +731,6 @@ func (b *OfflineBundle) GetDocumentationPath(docType string) (string, error) {
 	}
 	
 	return "", fmt.Errorf("documentation type %s not found", docType)
-}
 
 // AddDocumentation adds a documentation file to the bundle
 func (b *OfflineBundle) AddDocumentation(docType, path string) {
@@ -755,5 +738,3 @@ func (b *OfflineBundle) AddDocumentation(docType, path string) {
 		b.EnhancedManifest.Documentation = make(map[string]string)
 	}
 	
-	b.EnhancedManifest.Documentation[docType] = path
-}

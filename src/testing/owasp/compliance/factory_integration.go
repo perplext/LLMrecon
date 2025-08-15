@@ -17,5 +17,3 @@ func RegisterDefaultWithTestFactory(factory types.TestFactory, complianceService
 	}
 	
 	// Register the compliance service with the factory
-	return factory.RegisterComplianceService(complianceService)
-}

@@ -47,15 +47,12 @@ func (vp *ValidationProcessor) Process(ctx context.Context, metric Metric) (Metr
 	}
 	
 	return metric, nil
-}
 
 func (vp *ValidationProcessor) GetType() string {
 	return "validation"
-}
 
 func (vp *ValidationProcessor) IsEnabled() bool {
 	return true // Always enabled
-}
 
 // EnrichmentProcessor adds additional context to metrics
 type EnrichmentProcessor struct {
@@ -106,21 +103,17 @@ func (ep *EnrichmentProcessor) Process(ctx context.Context, metric Metric) (Metr
 	}
 	
 	return metric, nil
-}
 
 func (ep *EnrichmentProcessor) GetType() string {
 	return "enrichment"
-}
 
 func (ep *EnrichmentProcessor) IsEnabled() bool {
 	return true
-}
 
 // FilteringProcessor filters metrics based on configuration
 type FilteringProcessor struct {
 	config  *Config
 	enabled bool
-}
 
 func (fp *FilteringProcessor) Process(ctx context.Context, metric Metric) (Metric, error) {
 	// Skip metrics that match exclusion patterns
@@ -141,15 +134,12 @@ func (fp *FilteringProcessor) Process(ctx context.Context, metric Metric) (Metri
 	}
 	
 	return metric, nil
-}
 
 func (fp *FilteringProcessor) GetType() string {
 	return "filtering"
-}
 
 func (fp *FilteringProcessor) IsEnabled() bool {
 	return fp.config.Analytics.FilteringEnabled
-}
 
 // BasicAggregator provides basic statistical aggregations
 type BasicAggregator struct {
@@ -182,7 +172,6 @@ func (ba *BasicAggregator) Aggregate(ctx context.Context, metrics []Metric, wind
 		CreatedAt:    time.Now(),
 		Type:         "basic",
 	}, nil
-}
 
 func (ba *BasicAggregator) GetWindowSizes() []time.Duration {
 	if len(ba.windowSizes) == 0 {
@@ -194,11 +183,9 @@ func (ba *BasicAggregator) GetWindowSizes() []time.Duration {
 		}
 	}
 	return ba.windowSizes
-}
 
 func (ba *BasicAggregator) Reset() {
 	// Basic aggregator is stateless, nothing to reset
-}
 
 // PerformanceAggregator focuses on performance-related metrics
 type PerformanceAggregator struct {
@@ -245,7 +232,6 @@ func (pa *PerformanceAggregator) Aggregate(ctx context.Context, metrics []Metric
 		CreatedAt:    time.Now(),
 		Type:         "performance",
 	}, nil
-}
 
 func (pa *PerformanceAggregator) GetWindowSizes() []time.Duration {
 	if len(pa.windowSizes) == 0 {
@@ -257,17 +243,14 @@ func (pa *PerformanceAggregator) GetWindowSizes() []time.Duration {
 		}
 	}
 	return pa.windowSizes
-}
 
 func (pa *PerformanceAggregator) Reset() {
 	// Performance aggregator is stateless, nothing to reset
-}
 
 // SecurityAggregator focuses on security-related metrics
 type SecurityAggregator struct {
 	windowSizes    []time.Duration
 	threatPatterns []string
-}
 
 func (sa *SecurityAggregator) Aggregate(ctx context.Context, metrics []Metric, window TimeWindow) (AggregatedMetric, error) {
 	// Filter for security metrics
@@ -303,7 +286,6 @@ func (sa *SecurityAggregator) Aggregate(ctx context.Context, metrics []Metric, w
 		CreatedAt:    time.Now(),
 		Type:         "security",
 	}, nil
-}
 
 func (sa *SecurityAggregator) GetWindowSizes() []time.Duration {
 	if len(sa.windowSizes) == 0 {
@@ -315,11 +297,9 @@ func (sa *SecurityAggregator) GetWindowSizes() []time.Duration {
 		}
 	}
 	return sa.windowSizes
-}
 
 func (sa *SecurityAggregator) Reset() {
 	// Security aggregator is stateless, nothing to reset
-}
 
 // Utility functions
 
@@ -336,7 +316,6 @@ func getBucket(value float64) string {
 	default:
 		return "very_slow"
 	}
-}
 
 func classifyPerformance(value float64) string {
 	switch {
@@ -351,7 +330,6 @@ func classifyPerformance(value float64) string {
 	default:
 		return "critical"
 	}
-}
 
 func calculateBasicStats(metrics []Metric) map[string]interface{} {
 	values := make([]float64, len(metrics))
@@ -367,7 +345,6 @@ func calculateBasicStats(metrics []Metric) map[string]interface{} {
 		"max":   max(values),
 		"std":   standardDeviation(values),
 	}
-}
 
 func filterPerformanceMetrics(metrics []Metric) []Metric {
 	var perfMetrics []Metric
@@ -382,7 +359,6 @@ func filterPerformanceMetrics(metrics []Metric) []Metric {
 		}
 	}
 	return perfMetrics
-}
 
 func filterSecurityMetrics(metrics []Metric) []Metric {
 	var securityMetrics []Metric
@@ -396,7 +372,6 @@ func filterSecurityMetrics(metrics []Metric) []Metric {
 		}
 	}
 	return securityMetrics
-}
 
 func filterResourceMetrics(metrics []Metric) []Metric {
 	var resourceMetrics []Metric
@@ -409,7 +384,6 @@ func filterResourceMetrics(metrics []Metric) []Metric {
 		}
 	}
 	return resourceMetrics
-}
 
 func extractDurationValues(metrics []Metric) []float64 {
 	var durations []float64
@@ -419,7 +393,6 @@ func extractDurationValues(metrics []Metric) []float64 {
 		}
 	}
 	return durations
-}
 
 func calculatePercentiles(values []float64) map[string]float64 {
 	if len(values) == 0 {
@@ -446,7 +419,6 @@ func calculatePercentiles(values []float64) map[string]float64 {
 		"p99":  percentile(sortedValues, 0.99),
 		"p999": percentile(sortedValues, 0.999),
 	}
-}
 
 func calculateErrorRate(metrics []Metric) float64 {
 	var total, errors int
@@ -465,7 +437,6 @@ func calculateErrorRate(metrics []Metric) float64 {
 		return 0.0
 	}
 	return float64(errors) / float64(total) * 100.0
-}
 
 func calculateResourceUtilization(metrics []Metric) map[string]float64 {
 	utilization := make(map[string]float64)
@@ -481,7 +452,6 @@ func calculateResourceUtilization(metrics []Metric) map[string]float64 {
 	}
 	
 	return utilization
-}
 
 func calculateVulnerabilityDistribution(metrics []Metric) map[string]int {
 	distribution := make(map[string]int)
@@ -495,7 +465,6 @@ func calculateVulnerabilityDistribution(metrics []Metric) map[string]int {
 	}
 	
 	return distribution
-}
 
 func calculateSeverityTrends(metrics []Metric) map[string][]float64 {
 	trends := make(map[string][]float64)
@@ -508,7 +477,6 @@ func calculateSeverityTrends(metrics []Metric) map[string][]float64 {
 	}
 	
 	return trends
-}
 
 func detectSecurityAnomalies(metrics []Metric, window TimeWindow) []map[string]interface{} {
 	var anomalies []map[string]interface{}
@@ -528,7 +496,6 @@ func detectSecurityAnomalies(metrics []Metric, window TimeWindow) []map[string]i
 	}
 	
 	return anomalies
-}
 
 func calculateOWASPCoverage(metrics []Metric) map[string]float64 {
 	coverage := make(map[string]float64)
@@ -553,7 +520,6 @@ func calculateOWASPCoverage(metrics []Metric) map[string]float64 {
 	}
 	
 	return coverage
-}
 
 // Mathematical utility functions
 func sum(values []float64) float64 {
@@ -562,14 +528,12 @@ func sum(values []float64) float64 {
 		total += v
 	}
 	return total
-}
 
 func average(values []float64) float64 {
 	if len(values) == 0 {
 		return 0.0
 	}
 	return sum(values) / float64(len(values))
-}
 
 func min(values []float64) float64 {
 	if len(values) == 0 {
@@ -582,7 +546,6 @@ func min(values []float64) float64 {
 		}
 	}
 	return minVal
-}
 
 func max(values []float64) float64 {
 	if len(values) == 0 {
@@ -595,7 +558,6 @@ func max(values []float64) float64 {
 		}
 	}
 	return maxVal
-}
 
 func standardDeviation(values []float64) float64 {
 	if len(values) <= 1 {
@@ -611,7 +573,6 @@ func standardDeviation(values []float64) float64 {
 	
 	variance := sumSquares / float64(len(values)-1)
 	return sqrt(variance)
-}
 
 func percentile(sortedValues []float64, p float64) float64 {
 	if len(sortedValues) == 0 {
@@ -631,7 +592,6 @@ func percentile(sortedValues []float64, p float64) float64 {
 	
 	weight := index - float64(lower)
 	return sortedValues[lower]*(1-weight) + sortedValues[upper]*weight
-}
 
 // Simple square root implementation for demonstration
 func sqrt(x float64) float64 {
@@ -642,5 +602,38 @@ func sqrt(x float64) float64 {
 	for i := 0; i < 10; i++ {
 		z = (z + x/z) / 2
 	}
-	return z
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

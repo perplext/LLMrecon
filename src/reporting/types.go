@@ -29,7 +29,6 @@ var SeverityLevelMapping = map[string]common.SeverityLevel{
 	"medium":   common.Medium,
 	"low":      common.Low,
 	"info":     common.Info,
-}
 
 // SeverityLevel represents the severity level of a test
 type SeverityLevel = common.SeverityLevel
@@ -78,7 +77,6 @@ type ComplianceMapping struct {
 	Description string `json:"description,omitempty"`
 	// URL is the URL to the item within the framework
 	URL string `json:"url,omitempty"`
-}
 
 // TestResult represents a single test result
 type TestResult struct {
@@ -114,7 +112,6 @@ type TestResult struct {
 	Tags []string `json:"tags,omitempty"`
 	// Metadata is additional metadata for the test
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // TestSuite represents a collection of test results
 type TestSuite struct {
@@ -134,7 +131,6 @@ type TestSuite struct {
 	Results []*TestResult `json:"results"`
 	// Metadata is additional metadata for the test suite
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // ReportSummary represents a summary of a report
 type ReportSummary struct {
@@ -162,7 +158,6 @@ type ReportSummary struct {
 	SeverityCounts map[common.SeverityLevel]int `json:"severity_counts"`
 	// TagCounts is the count of tests by tag
 	TagCounts map[string]int `json:"tag_counts"`
-}
 
 // Report represents a complete test report
 type Report struct {
@@ -180,7 +175,6 @@ type Report struct {
 	TestSuites []*TestSuite `json:"test_suites"`
 	// Metadata is additional metadata for the report
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // ReportOptions represents options for generating a report
 type ReportOptions struct {
@@ -212,7 +206,6 @@ type ReportOptions struct {
 	OutputPath string `json:"output_path,omitempty"`
 	// Metadata is additional metadata for the report
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // ReportGenerator interface defines methods for report generation
 type ReportGenerator interface {
@@ -224,7 +217,6 @@ type ReportGenerator interface {
 	GetFormatter(format common.ReportFormat) (common.ReportFormatter, bool)
 	// ListFormats returns a list of supported formats
 	ListFormats() []common.ReportFormat
-}
 
 // ComplianceMappingProvider is the interface for compliance mapping providers
 type ComplianceMappingProvider interface {
@@ -232,10 +224,8 @@ type ComplianceMappingProvider interface {
 	GetMappings(ctx context.Context, testResult *TestResult) ([]ComplianceMapping, error)
 	// GetFrameworks returns a list of supported compliance frameworks
 	GetFrameworks() []ComplianceFramework
-}
 
 // FilterFunc is a function that filters test results
 type FilterFunc func(result *TestResult) bool
 
 // SortFunc is a function that sorts test results
-type SortFunc func(results []*TestResult) []*TestResult

@@ -22,7 +22,6 @@ type CustomizationManager struct {
 	BackupDir string
 	// Logger is the logger for customization operations
 	Logger *os.File
-}
 
 // NewCustomizationManager creates a new customization manager
 func NewCustomizationManager(installDir, backupDir string, logger *os.File) (*CustomizationManager, error) {
@@ -31,7 +30,7 @@ func NewCustomizationManager(installDir, backupDir string, logger *os.File) (*Cu
 	
 	// Create registry directory if it doesn't exist
 	registryDir := filepath.Dir(registryPath)
-	if err := os.MkdirAll(registryDir, 0755); err != nil {
+	if err := os.MkdirAll(registryDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create registry directory: %w", err)
 	}
 
@@ -70,7 +69,7 @@ func NewCustomizationManager(installDir, backupDir string, logger *os.File) (*Cu
 		BackupDir:  backupDir,
 		Logger:     logger,
 	}, nil
-}
+	
 
 // DetectCustomizations detects user customizations in the installation directory
 func (m *CustomizationManager) DetectCustomizations() error {
@@ -78,10 +77,7 @@ func (m *CustomizationManager) DetectCustomizations() error {
 	if err := m.Detector.RegisterCustomizations(); err != nil {
 		return fmt.Errorf("failed to register customizations: %w", err)
 	}
-
 	return nil
-}
-
 // PreserveCustomizations preserves user customizations before update
 func (m *CustomizationManager) PreserveCustomizations() error {
 	// Preserve template customizations
@@ -95,7 +91,6 @@ func (m *CustomizationManager) PreserveCustomizations() error {
 	}
 
 	return nil
-}
 
 // ReapplyCustomizations reapplies user customizations after update
 func (m *CustomizationManager) ReapplyCustomizations(updatedTemplates, updatedModules []string) error {
@@ -103,14 +98,12 @@ func (m *CustomizationManager) ReapplyCustomizations(updatedTemplates, updatedMo
 	if err := m.Preserver.ReapplyTemplateCustomizations(updatedTemplates); err != nil {
 		return fmt.Errorf("failed to reapply template customizations: %w", err)
 	}
-
 	// Reapply module customizations
 	if err := m.Preserver.ReapplyModuleCustomizations(updatedModules); err != nil {
 		return fmt.Errorf("failed to reapply module customizations: %w", err)
 	}
 
 	return nil
-}
 
 // UpdateWithCustomizationPreservation extends the UpdateApplier to add customization preservation
 func (a *UpdateApplier) UpdateWithCustomizationPreservation(ctx context.Context, pkg *UpdatePackage) error {
@@ -120,7 +113,7 @@ func (a *UpdateApplier) UpdateWithCustomizationPreservation(ctx context.Context,
 	if err != nil {
 		return fmt.Errorf("failed to create customization log file: %w", err)
 	}
-	defer logFile.Close()
+	defer func() { if err := logFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Log start of update
 	fmt.Fprintf(logFile, "[%s] Starting update with customization preservation\n", time.Now().Format(time.RFC3339))
@@ -184,4 +177,3 @@ func (a *UpdateApplier) UpdateWithCustomizationPreservation(ctx context.Context,
 
 	fmt.Fprintf(logFile, "[%s] Update with customization preservation completed successfully\n", time.Now().Format(time.RFC3339))
 	return nil
-}

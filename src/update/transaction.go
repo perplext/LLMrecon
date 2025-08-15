@@ -52,7 +52,6 @@ type UpdateOperation struct {
 	Error error
 	// Timestamp is the time the operation was performed
 	Timestamp time.Time
-}
 
 // UpdateTransaction represents a transaction for applying an update
 type UpdateTransaction struct {
@@ -74,7 +73,6 @@ type UpdateTransaction struct {
 	SessionDir string
 	// BackupDir is the directory for backups during the transaction
 	BackupDir string
-}
 
 // NewUpdateTransaction creates a new update transaction
 func NewUpdateTransaction(packageID, sessionDir, backupDir string, logger io.Writer) *UpdateTransaction {
@@ -88,7 +86,6 @@ func NewUpdateTransaction(packageID, sessionDir, backupDir string, logger io.Wri
 		SessionDir: sessionDir,
 		BackupDir:  backupDir,
 	}
-}
 
 // Begin begins the transaction
 func (t *UpdateTransaction) Begin() error {
@@ -100,7 +97,6 @@ func (t *UpdateTransaction) Begin() error {
 	t.Status = TransactionInProgress
 
 	return nil
-}
 
 // AddOperation adds an operation to the transaction
 func (t *UpdateTransaction) AddOperation(component UpdateComponent, componentID, sourcePath, destPath, backupPath string) *UpdateOperation {
@@ -116,7 +112,6 @@ func (t *UpdateTransaction) AddOperation(component UpdateComponent, componentID,
 
 	t.Operations = append(t.Operations, operation)
 	return operation
-}
 
 // ExecuteOperation executes an operation in the transaction
 func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *UpdateOperation) error {
@@ -130,13 +125,13 @@ func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *Upd
 
 	// Create backup directory
 	backupDir := filepath.Dir(operation.BackupPath)
-	if err := os.MkdirAll(backupDir, 0755); err != nil {
+	if err := os.MkdirAll(backupDir, 0700); err != nil {
 		operation.Status = TransactionFailed
 		operation.Error = fmt.Errorf("failed to create backup directory: %w", err)
 		return operation.Error
 	}
 
-	// Create backup
+		// Create backup
 	if _, err := os.Stat(operation.DestinationPath); err == nil {
 		// Destination exists, create backup
 		if err := copyDir(operation.DestinationPath, operation.BackupPath); err != nil {
@@ -151,7 +146,7 @@ func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *Upd
 		return operation.Error
 	} else {
 		// Destination doesn't exist, create backup directory
-		if err := os.MkdirAll(operation.BackupPath, 0755); err != nil {
+		if err := os.MkdirAll(operation.BackupPath, 0700); err != nil {
 			operation.Status = TransactionFailed
 			operation.Error = fmt.Errorf("failed to create backup directory: %w", err)
 			return operation.Error
@@ -160,7 +155,7 @@ func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *Upd
 
 	// Create destination directory
 	destDir := filepath.Dir(operation.DestinationPath)
-	if err := os.MkdirAll(destDir, 0755); err != nil {
+	if err := os.MkdirAll(destDir, 0700); err != nil {
 		operation.Status = TransactionFailed
 		operation.Error = fmt.Errorf("failed to create destination directory: %w", err)
 		return operation.Error
@@ -182,7 +177,6 @@ func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *Upd
 		time.Now().Format(time.RFC3339), operation.Component, operation.ComponentID)
 
 	return nil
-}
 
 // Commit commits the transaction
 func (t *UpdateTransaction) Commit() error {
@@ -199,7 +193,6 @@ func (t *UpdateTransaction) Commit() error {
 		time.Now().Format(time.RFC3339), t.ID)
 
 	return nil
-}
 
 // Rollback rolls back the transaction
 func (t *UpdateTransaction) Rollback() error {
@@ -210,7 +203,7 @@ func (t *UpdateTransaction) Rollback() error {
 	// Rollback operations in reverse order
 	for i := len(t.Operations) - 1; i >= 0; i-- {
 		operation := t.Operations[i]
-
+	
 		// Skip operations that weren't executed
 		if operation.Status != TransactionCommitted && operation.Status != TransactionInProgress {
 			continue
@@ -249,7 +242,6 @@ func (t *UpdateTransaction) Rollback() error {
 		time.Now().Format(time.RFC3339), t.ID)
 
 	return nil
-}
 
 // GetOperationsByComponent returns operations for a specific component
 func (t *UpdateTransaction) GetOperationsByComponent(component UpdateComponent) []*UpdateOperation {
@@ -260,7 +252,6 @@ func (t *UpdateTransaction) GetOperationsByComponent(component UpdateComponent) 
 		}
 	}
 	return operations
-}
 
 // GetOperationsByStatus returns operations with a specific status
 func (t *UpdateTransaction) GetOperationsByStatus(status TransactionStatus) []*UpdateOperation {
@@ -271,17 +262,14 @@ func (t *UpdateTransaction) GetOperationsByStatus(status TransactionStatus) []*U
 		}
 	}
 	return operations
-}
 
 // GetFailedOperations returns operations that failed
 func (t *UpdateTransaction) GetFailedOperations() []*UpdateOperation {
 	return t.GetOperationsByStatus(TransactionFailed)
-}
 
 // HasFailedOperations returns true if any operations failed
 func (t *UpdateTransaction) HasFailedOperations() bool {
 	return len(t.GetFailedOperations()) > 0
-}
 
 // GetSummary returns a summary of the transaction
 func (t *UpdateTransaction) GetSummary() map[string]interface{} {
@@ -310,4 +298,3 @@ func (t *UpdateTransaction) GetSummary() map[string]interface{} {
 		"component_counts": componentCounts,
 		"failed":          t.HasFailedOperations(),
 	}
-}

@@ -67,14 +67,18 @@ func main() {
 	// Save results to file if specified
 	if *outputFileFlag != "" {
 		if err := saveResults(results, *outputFileFlag); err != nil {
-			fmt.Printf("Error saving results: %v\n", err)
+if err != nil {
+treturn err
+}			fmt.Printf("Error saving results: %v\n", err)
 		} else {
 			fmt.Printf("Results saved to %s\n", *outputFileFlag)
 		}
 	}
 
 	// Compare with previous results if specified
-	if *compareFlag != "" {
+if err != nil {
+treturn err
+}	if *compareFlag != "" {
 		previousResults, err := loadResults(*compareFlag)
 		if err != nil {
 			fmt.Printf("Error loading previous results: %v\n", err)
@@ -122,7 +126,9 @@ func runBenchmark(ctx context.Context, monitor *monitoring.PerformanceMonitor) (
 	source := types.TemplateSource{
 		Path: *sourceFlag,
 		Type: *sourceTypeFlag,
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Run benchmark suite
 	results, err := benchmark.RunBenchmarkSuite(ctx, manager, []types.TemplateSource{source}, nil)
@@ -136,24 +142,36 @@ func runBenchmark(ctx context.Context, monitor *monitoring.PerformanceMonitor) (
 	}
 
 	return results, nil
-}
+if err != nil {
+treturn err
+}}
 
-// saveResults saves benchmark results to a file
+if err != nil {
+treturn err
+}// saveResults saves benchmark results to a file
 func saveResults(results map[string]*benchmark.BenchmarkResult, filePath string) error {
 	// Create file
-	file, err := os.Create(filePath)
+if err != nil {
+treturn err
+}	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Encode results as JSON
 	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
+if err != nil {
+treturn err
+}	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(results); err != nil {
-		return fmt.Errorf("failed to encode results: %w", err)
+if err != nil {
+treturn err
+}		return fmt.Errorf("failed to encode results: %w", err)
 	}
-
+if err != nil {
+treturn err
+}
 	return nil
 }
 
@@ -164,7 +182,7 @@ func loadResults(filePath string) (map[string]*benchmark.BenchmarkResult, error)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Decode results from JSON
 	var results map[string]*benchmark.BenchmarkResult

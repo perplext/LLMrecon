@@ -33,7 +33,6 @@ type MFAManager interface {
 	// General MFA methods
 	VerifyMFA(ctx context.Context, userID string, method MFAMethod, code string) (bool, error)
 	ValidateMFASettings(ctx context.Context, userID string) (bool, []string, error)
-}
 
 
 // WebAuthnDevice represents a WebAuthn device
@@ -42,7 +41,6 @@ type WebAuthnDevice struct {
 	Name      string
 	CreatedAt time.Time
 	LastUsed  time.Time
-}
 
 // TOTPConfig represents TOTP configuration
 type TOTPConfig struct {
@@ -52,7 +50,6 @@ type TOTPConfig struct {
 	Period    int    // Period in seconds for TOTP (default: 30)
 	Algorithm string // Algorithm for TOTP (default: SHA1)
 	Issuer    string // Issuer name for TOTP (default: LLMrecon)
-}
 
 // SMSConfig represents the configuration for SMS verification
 type SMSConfig struct {
@@ -60,7 +57,6 @@ type SMSConfig struct {
 	CodeExpiration    int               // Expiration time for SMS codes in minutes
 	SMSProvider       string            // SMS provider to use
 	SMSProviderConfig map[string]string // Configuration for the SMS provider
-}
 
 // SMSVerification represents SMS verification
 type SMSVerification struct {
@@ -72,11 +68,9 @@ type SMSVerification struct {
 	Verified    bool      // Whether the verification has been verified
 	Attempts    int       // Number of verification attempts
 	MaxAttempts int       // Maximum number of verification attempts
-}
 
 // MFAMethodSettings represents settings for an MFA method
 type MFAMethodSettings struct {
 	Method MFAMethod
 	Status MFAStatus
 	// Additional method-specific settings can be added here
-}

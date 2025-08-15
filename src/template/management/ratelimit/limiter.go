@@ -39,7 +39,6 @@ type TokenBucketLimiter struct {
 	
 	// Mutex for concurrent access to user limiters
 	mu sync.RWMutex
-}
 
 // NewTokenBucketLimiter creates a new token bucket rate limiter with the specified parameters.
 //
@@ -65,7 +64,6 @@ func NewTokenBucketLimiter(globalQPS float64, globalBurst int, defaultUserQPS fl
 		defaultUserLimit: rate.Limit(defaultUserQPS),
 		defaultUserBurst: defaultUserBurst,
 	}
-}
 
 // Acquire acquires a token from the global limiter.
 //
@@ -94,7 +92,6 @@ func (l *TokenBucketLimiter) Acquire(ctx context.Context) error {
 		return fmt.Errorf("global rate limit exceeded: %w", err)
 	}
 	return nil
-}
 
 // AcquireForUser acquires a token for a specific user, applying both global and user-specific limits.
 //
@@ -136,17 +133,14 @@ func (l *TokenBucketLimiter) AcquireForUser(ctx context.Context, userID string) 
 	}
 	
 	return nil
-}
 
 // Release releases a token (no-op for token bucket)
 func (l *TokenBucketLimiter) Release() {
 	// No-op for token bucket limiter
-}
 
 // ReleaseForUser releases a token for a specific user (no-op for token bucket)
 func (l *TokenBucketLimiter) ReleaseForUser(userID string) {
 	// No-op for token bucket limiter
-}
 
 // getUserLimiter gets or creates a rate limiter for a specific user
 func (l *TokenBucketLimiter) getUserLimiter(userID string) *rate.Limiter {
@@ -170,51 +164,42 @@ func (l *TokenBucketLimiter) getUserLimiter(userID string) *rate.Limiter {
 	limiter = rate.NewLimiter(l.defaultUserLimit, l.defaultUserBurst)
 	l.userLimiters[userID] = limiter
 	return limiter
-}
 
 // GetLimit returns the current global rate limit
 func (l *TokenBucketLimiter) GetLimit() int {
 	return l.globalLimiter.Burst()
-}
 
 // GetUserLimit returns the current rate limit for a specific user
 func (l *TokenBucketLimiter) GetUserLimit(userID string) int {
 	limiter := l.getUserLimiter(userID)
 	return limiter.Burst()
-}
 
 // SetLimit sets the global rate limit
 func (l *TokenBucketLimiter) SetLimit(limit int) {
 	l.globalLimiter.SetBurst(limit)
-}
 
 // SetUserLimit sets the rate limit for a specific user
 func (l *TokenBucketLimiter) SetUserLimit(userID string, limit int) {
 	limiter := l.getUserLimiter(userID)
 	limiter.SetBurst(limit)
-}
 
 // SetGlobalQPS sets the global queries per second limit
 func (l *TokenBucketLimiter) SetGlobalQPS(qps float64) {
 	l.globalLimiter.SetLimit(rate.Limit(qps))
-}
 
 // SetUserQPS sets the queries per second limit for a specific user
 func (l *TokenBucketLimiter) SetUserQPS(userID string, qps float64) {
 	limiter := l.getUserLimiter(userID)
 	limiter.SetLimit(rate.Limit(qps))
-}
 
 // GetGlobalQPS gets the global queries per second limit
 func (l *TokenBucketLimiter) GetGlobalQPS() float64 {
 	return float64(l.globalLimiter.Limit())
-}
 
 // GetUserQPS gets the queries per second limit for a specific user
 func (l *TokenBucketLimiter) GetUserQPS(userID string) float64 {
 	limiter := l.getUserLimiter(userID)
 	return float64(limiter.Limit())
-}
 
 // GetUserLimiters returns all user limiters
 func (l *TokenBucketLimiter) GetUserLimiters() map[string]float64 {
@@ -227,7 +212,6 @@ func (l *TokenBucketLimiter) GetUserLimiters() map[string]float64 {
 	}
 	
 	return result
-}
 
 // ResetUserLimiter resets the rate limiter for a specific user
 func (l *TokenBucketLimiter) ResetUserLimiter(userID string) {
@@ -235,12 +219,9 @@ func (l *TokenBucketLimiter) ResetUserLimiter(userID string) {
 	defer l.mu.Unlock()
 	
 	delete(l.userLimiters, userID)
-}
 
 // ResetAllUserLimiters resets all user-specific rate limiters
 func (l *TokenBucketLimiter) ResetAllUserLimiters() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	
-	l.userLimiters = make(map[string]*rate.Limiter)
-}

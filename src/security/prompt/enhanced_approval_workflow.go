@@ -34,7 +34,6 @@ type EnhancedApprovalConfig struct {
 	ApprovalLevels          map[string]ApprovalLevel `json:"approval_levels"`
 	DefaultApprovalLevel    string                 `json:"default_approval_level"`
 	ApprovalTimeout         time.Duration          `json:"approval_timeout"`
-}
 
 // EnhancedApprovalRequest extends the ApprovalRequest with more information
 type EnhancedApprovalRequest struct {
@@ -84,7 +83,6 @@ type AutoApprovalRule struct {
 	RequiredMetadata    map[string]interface{} `json:"required_metadata,omitempty"`
 	ApplicableUsers     []string             `json:"applicable_users,omitempty"`
 	Enabled             bool                 `json:"enabled"`
-}
 
 // ApprovalLevel defines a level of approval
 type ApprovalLevel struct {
@@ -94,7 +92,6 @@ type ApprovalLevel struct {
 	AllowedApprovers    []string             `json:"allowed_approvers,omitempty"`
 	MaxRiskScore        float64              `json:"max_risk_score"`
 	ApprovalTimeout     time.Duration        `json:"approval_timeout"`
-}
 
 // ApprovalHandlerFunc defines a function that handles approval requests
 type ApprovalHandlerFunc func(context.Context, *EnhancedApprovalRequest) (bool, error)
@@ -104,7 +101,7 @@ func NewEnhancedApprovalWorkflow(config *ProtectionConfig, dataDir string) (*Enh
 	baseWorkflow := NewApprovalWorkflow(config)
 	
 	// Create the data directory if it doesn't exist
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	if err := os.MkdirAll(dataDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 	
@@ -180,7 +177,6 @@ func NewEnhancedApprovalWorkflow(config *ProtectionConfig, dataDir string) (*Enh
 		defaultExpiration:   time.Hour * 24,
 		dataDir:             dataDir,
 	}, nil
-}
 
 // RequestApprovalEnhanced requests approval with enhanced capabilities
 func (w *EnhancedApprovalWorkflow) RequestApprovalEnhanced(ctx context.Context, result *ProtectionResult) (bool, *ProtectionResult, error) {
@@ -343,7 +339,6 @@ func (w *EnhancedApprovalWorkflow) RequestApprovalEnhanced(ctx context.Context, 
 	w.saveApprovalToDisk(request)
 	
 	return approved, result, nil
-}
 
 // determineApprovalLevel determines the approval level for a request
 func (w *EnhancedApprovalWorkflow) determineApprovalLevel(result *ProtectionResult) string {
@@ -373,7 +368,6 @@ func (w *EnhancedApprovalWorkflow) determineApprovalLevel(result *ProtectionResu
 	}
 	
 	return level
-}
 
 // checkAutoApprovalEligibility checks if a request is eligible for auto-approval
 func (w *EnhancedApprovalWorkflow) checkAutoApprovalEligibility(request *EnhancedApprovalRequest) (bool, string) {
@@ -444,13 +438,11 @@ func (w *EnhancedApprovalWorkflow) checkAutoApprovalEligibility(request *Enhance
 	}
 	
 	return false, ""
-}
-
 // saveApprovalToDisk saves an approval request to disk
 func (w *EnhancedApprovalWorkflow) saveApprovalToDisk(request *EnhancedApprovalRequest) error {
 	// Create approval directory if it doesn't exist
 	approvalDir := filepath.Join(w.dataDir, "approvals")
-	if err := os.MkdirAll(approvalDir, 0755); err != nil {
+	if err := os.MkdirAll(approvalDir, 0700); err != nil {
 		return fmt.Errorf("failed to create approval directory: %w", err)
 	}
 	
@@ -464,12 +456,11 @@ func (w *EnhancedApprovalWorkflow) saveApprovalToDisk(request *EnhancedApprovalR
 	}
 	
 	// Write to file
-	if err := ioutil.WriteFile(filePath, data, 0644); err != nil {
+	if err := ioutil.WriteFile(filePath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write approval request to file: %w", err)
 	}
 	
 	return nil
-}
 
 // GetPendingApprovals gets all pending approval requests
 func (w *EnhancedApprovalWorkflow) GetPendingApprovals() []*EnhancedApprovalRequest {
@@ -514,7 +505,6 @@ func (w *EnhancedApprovalWorkflow) GetPendingApprovals() []*EnhancedApprovalRequ
 	}
 	
 	return pendingApprovals
-}
 
 // GetApprovalHistory gets the approval history
 func (w *EnhancedApprovalWorkflow) GetApprovalHistory() []*EnhancedApprovalRequest {
@@ -522,7 +512,6 @@ func (w *EnhancedApprovalWorkflow) GetApprovalHistory() []*EnhancedApprovalReque
 	defer w.mu.RUnlock()
 	
 	return w.approvalHistory
-}
 
 // GetApprovalRequest gets an approval request by ID
 func (w *EnhancedApprovalWorkflow) GetApprovalRequest(requestID string) (*EnhancedApprovalRequest, error) {
@@ -544,7 +533,7 @@ func (w *EnhancedApprovalWorkflow) GetApprovalRequest(requestID string) (*Enhanc
 	// Check on disk
 	filePath := filepath.Join(w.dataDir, "approvals", fmt.Sprintf("%s.json", requestID))
 	if _, err := os.Stat(filePath); err == nil {
-		data, err := ioutil.ReadFile(filePath)
+		data, err := ioutil.ReadFile(filepath.Clean(filePath))
 		if err != nil {
 			return nil, fmt.Errorf("failed to read approval request file: %w", err)
 		}
@@ -558,7 +547,6 @@ func (w *EnhancedApprovalWorkflow) GetApprovalRequest(requestID string) (*Enhanc
 	}
 	
 	return nil, fmt.Errorf("approval request not found")
-}
 
 // ApproveRequest approves an approval request
 func (w *EnhancedApprovalWorkflow) ApproveRequest(requestID string, approverID string, reason string) error {
@@ -603,7 +591,6 @@ func (w *EnhancedApprovalWorkflow) ApproveRequest(requestID string, approverID s
 	
 	// Save to disk
 	return w.saveApprovalToDisk(request)
-}
 
 // RejectRequest rejects an approval request
 func (w *EnhancedApprovalWorkflow) RejectRequest(requestID string, approverID string, reason string) error {
@@ -647,7 +634,6 @@ func (w *EnhancedApprovalWorkflow) RejectRequest(requestID string, approverID st
 	
 	// Save to disk
 	return w.saveApprovalToDisk(request)
-}
 
 // RegisterApprovalHandler registers a handler for approval requests
 func (w *EnhancedApprovalWorkflow) RegisterApprovalHandler(name string, handler ApprovalHandlerFunc) {
@@ -655,7 +641,6 @@ func (w *EnhancedApprovalWorkflow) RegisterApprovalHandler(name string, handler 
 	defer w.mu.Unlock()
 	
 	w.approvalHandlers[name] = handler
-}
 
 // SetApprovalThreshold sets the threshold for requiring approval
 func (w *EnhancedApprovalWorkflow) SetApprovalThreshold(level string, threshold float64) {
@@ -663,7 +648,6 @@ func (w *EnhancedApprovalWorkflow) SetApprovalThreshold(level string, threshold 
 	defer w.mu.Unlock()
 	
 	w.approvalConfig.ApprovalThresholds[level] = threshold
-}
 
 // EnableAutoApproval enables or disables auto-approval
 func (w *EnhancedApprovalWorkflow) EnableAutoApproval(enabled bool) {
@@ -671,7 +655,6 @@ func (w *EnhancedApprovalWorkflow) EnableAutoApproval(enabled bool) {
 	defer w.mu.Unlock()
 	
 	w.approvalConfig.EnableAutoApproval = enabled
-}
 
 // AddAutoApprovalRule adds an auto-approval rule
 func (w *EnhancedApprovalWorkflow) AddAutoApprovalRule(rule AutoApprovalRule) {
@@ -679,7 +662,6 @@ func (w *EnhancedApprovalWorkflow) AddAutoApprovalRule(rule AutoApprovalRule) {
 	defer w.mu.Unlock()
 	
 	w.approvalConfig.AutoApprovalRules[rule.Name] = rule
-}
 
 // SetDefaultApprovalLevel sets the default approval level
 func (w *EnhancedApprovalWorkflow) SetDefaultApprovalLevel(level string) error {
@@ -692,12 +674,22 @@ func (w *EnhancedApprovalWorkflow) SetDefaultApprovalLevel(level string) error {
 	
 	w.approvalConfig.DefaultApprovalLevel = level
 	return nil
-}
 
 // AddApprovalLevel adds an approval level
 func (w *EnhancedApprovalWorkflow) AddApprovalLevel(name string, level ApprovalLevel) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	
-	w.approvalConfig.ApprovalLevels[name] = level
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

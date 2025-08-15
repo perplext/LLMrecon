@@ -20,7 +20,6 @@ const OfflineBundleSource = loaders.OfflineBundleSource
 func RegisterOfflineBundleLoader(manager *DefaultTemplateManager, auditTrail *trail.AuditTrailManager) {
 	loader := loaders.NewOfflineBundleLoader(auditTrail)
 	manager.loaders = append(manager.loaders, loader)
-}
 
 // LoadFromOfflineBundle loads templates from an offline bundle
 func (m *DefaultTemplateManager) LoadFromOfflineBundle(ctx context.Context, bundlePath string, validationLevel bundle.ValidationLevel) ([]*format.Template, error) {
@@ -60,7 +59,6 @@ func (m *DefaultTemplateManager) LoadFromOfflineBundle(ctx context.Context, bund
 	}
 
 	return templates, nil
-}
 
 // CreateOfflineBundleRepository creates a repository for an offline bundle
 func CreateOfflineBundleRepository(bundlePath string, auditTrail *trail.AuditTrailManager) (*repository.OfflineBundleRepository, error) {
@@ -72,7 +70,6 @@ func CreateOfflineBundleRepository(bundlePath string, auditTrail *trail.AuditTra
 	}
 	
 	return repo, nil
-}
 
 // LoadTemplatesFromOfflineBundleRepository loads templates from an offline bundle repository
 func (m *DefaultTemplateManager) LoadTemplatesFromOfflineBundleRepository(ctx context.Context, repo *repository.OfflineBundleRepository) ([]*format.Template, error) {
@@ -139,5 +136,3 @@ func (m *DefaultTemplateManager) LoadTemplatesFromOfflineBundleRepository(ctx co
 		templates = append(templates, template)
 	}
 
-	return templates, nil
-}

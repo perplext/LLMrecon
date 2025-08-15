@@ -45,6 +45,7 @@ type TestResult struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
+}
 // TestResults is a collection of test results
 type TestResults []*TestResult
 
@@ -56,19 +57,17 @@ type ReportFormatter interface {
 	FormatTestResults(testResults []*TestResult) (string, error)
 	// WriteToFile writes a report to a file
 	WriteToFile(testResults []*TestResult, filePath string) error
-}
 
 // FormatterCreator is a function that creates a formatter with the given options
+}
 type FormatterCreator func(options map[string]interface{}) (ReportFormatter, error)
 
 // FormatterRegistry is a registry for formatter creators
 type FormatterRegistry struct {
 	formatters map[ReportFormat]FormatterCreator
 	mu         sync.RWMutex
-}
 
+}
 // FormatterFactory is a factory for creating formatters
 type FormatterFactory struct {
 	formatters map[ReportFormat]FormatterCreator
-	mu         sync.RWMutex
-}

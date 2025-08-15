@@ -39,7 +39,6 @@ func DefaultContainerSandboxOptions() *ContainerSandboxOptions {
 		VolumeBinds:     []string{},
 		CleanupTimeout:  5 * time.Second,
 	}
-}
 
 // NewContainerSandbox creates a new container-based sandbox
 func NewContainerSandbox(verifier security.TemplateVerifier, options *SandboxOptions, containerOptions *ContainerSandboxOptions) (*ContainerSandbox, error) {
@@ -66,7 +65,6 @@ func NewContainerSandbox(verifier security.TemplateVerifier, options *SandboxOpt
 		networkMode:     containerOptions.NetworkMode,
 		volumeBinds:     containerOptions.VolumeBinds,
 	}, nil
-}
 
 // checkContainerEngine checks if the specified container engine is available
 func checkContainerEngine(engine string) error {
@@ -82,7 +80,6 @@ func checkContainerEngine(engine string) error {
 	}
 	
 	return cmd.Run()
-}
 
 // Execute executes a template in a container sandbox
 func (s *ContainerSandbox) Execute(ctx context.Context, template *format.Template, options *SandboxOptions) (*ExecutionResult, error) {
@@ -134,7 +131,7 @@ func (s *ContainerSandbox) Execute(ctx context.Context, template *format.Templat
 	result.SecurityIssues = issues
 	
 	return result, nil
-}
+	
 
 // executeInContainer executes a template in a container
 func (s *ContainerSandbox) executeInContainer(ctx context.Context, template *format.Template, options *SandboxOptions) (*ExecutionResult, error) {
@@ -152,7 +149,7 @@ func (s *ContainerSandbox) executeInContainer(ctx context.Context, template *for
 		return nil, fmt.Errorf("failed to marshal template: %w", err)
 	}
 	
-	if err := ioutil.WriteFile(templateFile, templateData, 0644); err != nil {
+	if err := ioutil.WriteFile(templateFile, templateData, 0600); err != nil {
 		return nil, fmt.Errorf("failed to write template file: %w", err)
 	}
 	
@@ -165,7 +162,7 @@ cat template.txt
 echo "Done."
 `
 	
-	if err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0755); err != nil {
+	if err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0700); err != nil {
 		return nil, fmt.Errorf("failed to write script file: %w", err)
 	}
 	
@@ -246,7 +243,6 @@ echo "Done."
 			ExecutionTime: time.Since(time.Now().Add(-options.TimeoutDuration)),
 		},
 	}, nil
-}
 
 // cleanupContainer cleans up a container
 func (s *ContainerSandbox) cleanupContainer(containerName string) {
@@ -264,5 +260,10 @@ func (s *ContainerSandbox) cleanupContainer(containerName string) {
 		return
 	}
 	
-	_ = cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("operation failed: %w", err)
+	}
+}
+}
+}
 }

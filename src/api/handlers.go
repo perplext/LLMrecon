@@ -22,7 +22,6 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 		"version":   APIVersion,
 	}
 	writeSuccess(w, health)
-}
 
 // Version endpoint
 func handleVersion(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +39,6 @@ func handleVersion(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, versionInfo)
-}
 
 // Authentication handlers are implemented in auth_handlers.go
 
@@ -69,7 +67,6 @@ func handleCreateScan(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, scan)
-}
 
 func handleListScans(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
@@ -128,7 +125,6 @@ func handleListScans(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccessWithMeta(w, scans, meta)
-}
 
 func handleGetScan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -148,7 +144,6 @@ func handleGetScan(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, scan)
-}
 
 func handleCancelScan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -168,7 +163,6 @@ func handleCancelScan(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, map[string]string{"status": "cancelled"})
-}
 
 func handleGetScanResults(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -188,7 +182,6 @@ func handleGetScanResults(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, results)
-}
 
 // Template handlers
 func handleListTemplates(w http.ResponseWriter, r *http.Request) {
@@ -218,7 +211,6 @@ func handleListTemplates(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, templates)
-}
 
 func handleGetTemplate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -238,7 +230,6 @@ func handleGetTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, template)
-}
 
 func handleListCategories(w http.ResponseWriter, r *http.Request) {
 	if serverInstance == nil || serverInstance.services.TemplateManager == nil {
@@ -255,7 +246,6 @@ func handleListCategories(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, categories)
-}
 
 // Module handlers
 func handleListModules(w http.ResponseWriter, r *http.Request) {
@@ -273,7 +263,6 @@ func handleListModules(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, modules)
-}
 
 func handleGetModule(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -296,7 +285,6 @@ func handleGetModule(w http.ResponseWriter, r *http.Request) {
 	module.Config.Credentials = nil
 	
 	writeSuccess(w, module)
-}
 
 func handleUpdateModuleConfig(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -323,7 +311,6 @@ func handleUpdateModuleConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, map[string]string{"status": "updated"})
-}
 
 // Update handlers
 func handleCheckUpdate(w http.ResponseWriter, r *http.Request) {
@@ -341,7 +328,6 @@ func handleCheckUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, versionInfo)
-}
 
 func handlePerformUpdate(w http.ResponseWriter, r *http.Request) {
 	var req UpdateRequest
@@ -365,8 +351,6 @@ func handlePerformUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, response)
-}
-
 // Bundle handlers
 func handleListBundles(w http.ResponseWriter, r *http.Request) {
 	if serverInstance == nil || serverInstance.services.BundleManager == nil {
@@ -383,7 +367,6 @@ func handleListBundles(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, bundles)
-}
 
 func handleExportBundle(w http.ResponseWriter, r *http.Request) {
 	var req ExportBundleRequest
@@ -407,7 +390,6 @@ func handleExportBundle(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, result)
-}
 
 func handleImportBundle(w http.ResponseWriter, r *http.Request) {
 	var req ImportBundleRequest
@@ -431,7 +413,6 @@ func handleImportBundle(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, result)
-}
 
 // Compliance handlers
 func handleGenerateComplianceReport(w http.ResponseWriter, r *http.Request) {
@@ -456,7 +437,6 @@ func handleGenerateComplianceReport(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, report)
-}
 
 func handleCheckCompliance(w http.ResponseWriter, r *http.Request) {
 	framework := r.URL.Query().Get("framework")
@@ -478,11 +458,9 @@ func handleCheckCompliance(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, status)
-}
 
 // OpenAPI documentation handler is implemented in openapi.go
 
 // Helper functions
 func generateMockToken() string {
 	return uuid.New().String()
-}

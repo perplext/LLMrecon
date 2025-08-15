@@ -56,7 +56,6 @@ func initNotificationSystem() error {
 	notificationManager = manager
 
 	return nil
-}
 
 // notificationCmd represents the notification command
 var notificationCmd = &cobra.Command{
@@ -75,7 +74,6 @@ var notificationCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
-}
 
 // listCmd represents the notification list command
 var listNotificationsCmd = &cobra.Command{
@@ -135,7 +133,6 @@ var listNotificationsCmd = &cobra.Command{
 			fmt.Println()
 		}
 	},
-}
 
 // showNotificationCmd represents the notification show command
 var showNotificationCmd = &cobra.Command{
@@ -192,7 +189,6 @@ var showNotificationCmd = &cobra.Command{
 			fmt.Println()
 		}
 	},
-}
 
 // acknowledgeNotificationCmd represents the notification acknowledge command
 var acknowledgeNotificationCmd = &cobra.Command{
@@ -208,7 +204,6 @@ var acknowledgeNotificationCmd = &cobra.Command{
 		}
 		fmt.Printf("Notification %s acknowledged.\n", id)
 	},
-}
 
 // dismissNotificationCmd represents the notification dismiss command
 var dismissNotificationCmd = &cobra.Command{
@@ -224,7 +219,6 @@ var dismissNotificationCmd = &cobra.Command{
 		}
 		fmt.Printf("Notification %s dismissed.\n", id)
 	},
-}
 
 // clearHistoryCmd represents the notification clear-history command
 var clearHistoryCmd = &cobra.Command{
@@ -238,7 +232,7 @@ var clearHistoryCmd = &cobra.Command{
 		}
 		fmt.Println("Notification history cleared.")
 	},
-}
+	
 
 // checkUpdatesCmd represents the notification check-updates command
 var checkUpdatesCmd = &cobra.Command{
@@ -287,7 +281,6 @@ var checkUpdatesCmd = &cobra.Command{
 			fmt.Println("No updates available.")
 		}
 	},
-}
 
 func init() {
 	// Add to root command when it's available
@@ -304,4 +297,3 @@ func init() {
 	// Add flags
 	listNotificationsCmd.Flags().String("status", "", "Filter notifications by status (pending, unacknowledged)")
 	listNotificationsCmd.Flags().Bool("history", false, "Show notification history")
-}

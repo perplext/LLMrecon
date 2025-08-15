@@ -12,7 +12,6 @@ import (
 type JSONFormatter struct {
 	// pretty indicates whether to use pretty formatting
 	pretty bool
-}
 
 // FormatReport formats a report and writes it to the given writer
 func (f *JSONFormatter) FormatReport(results api.TestResults, writer io.Writer) error {
@@ -23,14 +22,12 @@ func (f *JSONFormatter) FormatReport(results api.TestResults, writer io.Writer) 
 	
 	_, err = writer.Write(data)
 	return err
-}
 
 // NewJSONFormatter creates a new JSON formatter
 func NewJSONFormatter(pretty bool) *JSONFormatter {
 	return &JSONFormatter{
 		pretty: pretty,
 	}
-}
 
 // Format formats a report as JSON
 func (f *JSONFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
@@ -55,12 +52,10 @@ func (f *JSONFormatter) Format(ctx context.Context, reportInterface interface{},
 	}
 
 	return data, nil
-}
 
 // GetFormat returns the format supported by this formatter
 func (f *JSONFormatter) GetFormat() api.ReportFormat {
 	return api.JSONFormat
-}
 
 // WriteToFile writes a report to a file
 func (f *JSONFormatter) WriteToFile(ctx context.Context, reportInterface interface{}, optionsInterface interface{}, filePath string) error {
@@ -72,21 +67,19 @@ func (f *JSONFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
 	// Write to file
-	if err := os.WriteFile(filePath, data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(filePath, data, 0600)); err != nil {
 		return fmt.Errorf("failed to write report to file %s: %w", filePath, err)
 	}
 
 	return nil
-}
 
 // JSONLFormatter is a formatter for JSONL reports
 type JSONLFormatter struct{}
-
 // FormatReport formats a report and writes it to the given writer
 func (f *JSONLFormatter) FormatReport(results api.TestResults, writer io.Writer) error {
 	data, err := f.Format(context.Background(), results, nil)
@@ -96,12 +89,10 @@ func (f *JSONLFormatter) FormatReport(results api.TestResults, writer io.Writer)
 	
 	_, err = writer.Write(data)
 	return err
-}
 
 // NewJSONLFormatter creates a new JSONL formatter
 func NewJSONLFormatter() *JSONLFormatter {
 	return &JSONLFormatter{}
-}
 
 // Format formats a report as JSONL
 func (f *JSONLFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
@@ -120,12 +111,10 @@ func (f *JSONLFormatter) Format(ctx context.Context, reportInterface interface{}
 	}
 	
 	return data, nil
-}
 
 // GetFormat returns the format supported by this formatter
 func (f *JSONLFormatter) GetFormat() api.ReportFormat {
 	return api.JSONLFormat
-}
 
 // WriteToFile writes a report to a file
 func (f *JSONLFormatter) WriteToFile(ctx context.Context, reportInterface interface{}, optionsInterface interface{}, filePath string) error {
@@ -137,14 +126,12 @@ func (f *JSONLFormatter) WriteToFile(ctx context.Context, reportInterface interf
 
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
 	// Write to file
-	if err := os.WriteFile(filePath, data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(filePath, data, 0600)); err != nil {
 		return fmt.Errorf("failed to write report to file %s: %w", filePath, err)
 	}
 
-	return nil
-}

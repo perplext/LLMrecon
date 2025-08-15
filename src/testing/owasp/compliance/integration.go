@@ -15,7 +15,6 @@ import (
 type ComplianceIntegration struct {
 	complianceService ComplianceService
 	templateVerifier  security.TemplateVerifier
-}
 
 // NewComplianceIntegration creates a new compliance integration
 func NewComplianceIntegration(complianceService ComplianceService) *ComplianceIntegration {
@@ -23,7 +22,6 @@ func NewComplianceIntegration(complianceService ComplianceService) *ComplianceIn
 		complianceService: complianceService,
 		templateVerifier:  security.NewTemplateVerifier(),
 	}
-}
 
 // RegisterWithTestFactory registers the compliance service with a test factory
 func RegisterWithTestFactory(factory types.TestFactory, complianceService ComplianceService) error {
@@ -36,7 +34,6 @@ func RegisterWithTestFactory(factory types.TestFactory, complianceService Compli
 	}
 
 	return factory.RegisterComplianceService(complianceService)
-}
 
 // GetComplianceService gets the compliance service from a test factory
 func GetComplianceService(factory types.TestFactory) (ComplianceService, error) {
@@ -55,7 +52,6 @@ func GetComplianceService(factory types.TestFactory) (ComplianceService, error) 
 	}
 
 	return complianceService, nil
-}
 
 // VerifyTemplateAndGenerateReport verifies a template and generates a compliance report
 func (ci *ComplianceIntegration) VerifyTemplateAndGenerateReport(
@@ -85,33 +81,27 @@ func (ci *ComplianceIntegration) VerifyTemplateAndGenerateReport(
 	}
 
 	return verificationResult, complianceReport, nil
-}
 
 // ConvertToTestResults converts verification and compliance results to test results
 // VerifyTemplate verifies a template for security issues
 func (ci *ComplianceIntegration) VerifyTemplate(ctx context.Context, template *format.Template, options *security.VerificationOptions) (*security.VerificationResult, error) {
 	return ci.templateVerifier.VerifyTemplate(ctx, template, options)
-}
 
 // VerifyTemplateFile verifies a template file for security issues
 func (ci *ComplianceIntegration) VerifyTemplateFile(ctx context.Context, templatePath string, options *security.VerificationOptions) (*security.VerificationResult, error) {
 	return ci.templateVerifier.VerifyTemplateFile(ctx, templatePath, options)
-}
 
 // VerifyTemplateDirectory verifies all templates in a directory for security issues
 func (ci *ComplianceIntegration) VerifyTemplateDirectory(ctx context.Context, directoryPath string, options *security.VerificationOptions) ([]*security.VerificationResult, error) {
 	return ci.templateVerifier.VerifyTemplateDirectory(ctx, directoryPath, options)
-}
 
 // RegisterCheck registers a custom security check
 func (ci *ComplianceIntegration) RegisterCheck(name string, check security.SecurityCheck) {
 	ci.templateVerifier.RegisterCheck(name, check)
-}
 
 // GetChecks returns all registered security checks
 func (ci *ComplianceIntegration) GetChecks() map[string]security.SecurityCheck {
 	return ci.templateVerifier.GetChecks()
-}
 
 func (ci *ComplianceIntegration) ConvertToTestResults(
 	verificationResult *security.VerificationResult,
@@ -216,7 +206,6 @@ func (ci *ComplianceIntegration) ConvertToTestResults(
 	}
 
 	return testResults
-}
 
 // getStandardNames returns the names of the standards
 func getStandardNames(standards []ComplianceStandard) []string {
@@ -224,5 +213,3 @@ func getStandardNames(standards []ComplianceStandard) []string {
 	for _, standard := range standards {
 		names = append(names, string(standard))
 	}
-	return names
-}

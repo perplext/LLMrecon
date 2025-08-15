@@ -1,8 +1,11 @@
 package extraction
 
 import (
-	"fmt"
-	"math/rand"
+	"math/big"
+	cryptorand "crypto/rand"
+	
+		"fmt"
+	"crypto/rand"
 	"regexp"
 	"strings"
 	"sync"
@@ -16,7 +19,6 @@ type KnowledgeExtractor struct {
 	knowledgeMap   *KnowledgeMapper
 	config         KnowledgeConfig
 	mu             sync.RWMutex
-}
 
 // KnowledgeConfig configures knowledge extraction
 type KnowledgeConfig struct {
@@ -32,7 +34,6 @@ type ExtractionStrategy interface {
 	Name() string
 	Extract(target interface{}, topic string) (ExtractionResult, error)
 	Confidence() float64
-}
 
 // ExtractionResult contains extracted knowledge
 type ExtractionResult struct {
@@ -42,7 +43,6 @@ type ExtractionResult struct {
 	Source      string
 	Metadata    map[string]interface{}
 	Timestamp   time.Time
-}
 
 // NewKnowledgeExtractor creates a knowledge extractor
 func NewKnowledgeExtractor(config KnowledgeConfig) *KnowledgeExtractor {
@@ -58,7 +58,6 @@ func NewKnowledgeExtractor(config KnowledgeConfig) *KnowledgeExtractor {
 	ke.registerStrategies()
 
 	return ke
-}
 
 // registerStrategies adds extraction strategies
 func (ke *KnowledgeExtractor) registerStrategies() {
@@ -108,14 +107,12 @@ func (ke *KnowledgeExtractor) registerStrategies() {
 			"in different order",
 		},
 	})
-}
 
 // RegisterStrategy adds a new extraction strategy
 func (ke *KnowledgeExtractor) RegisterStrategy(strategy ExtractionStrategy) {
 	ke.mu.Lock()
 	defer ke.mu.Unlock()
 	ke.strategies = append(ke.strategies, strategy)
-}
 
 // ExtractKnowledge performs comprehensive knowledge extraction
 func (ke *KnowledgeExtractor) ExtractKnowledge(target interface{}, topics []string) (*KnowledgeReport, error) {
@@ -176,7 +173,6 @@ func (ke *KnowledgeExtractor) ExtractKnowledge(target interface{}, topics []stri
 	report.Summary = ke.generateSummary(report)
 
 	return report, nil
-}
 
 // KnowledgeReport contains extraction results
 type KnowledgeReport struct {
@@ -188,7 +184,6 @@ type KnowledgeReport struct {
 	DataLeaks    []DataLeak
 	KnowledgeMap map[string][]string
 	Summary      string
-}
 
 // MemorizationDetector detects memorized content
 type MemorizationDetector struct {
@@ -225,7 +220,6 @@ func NewMemorizationDetector() *MemorizationDetector {
 	md.loadKnownContent()
 
 	return md
-}
 
 // loadPatterns loads memorization detection patterns
 func (md *MemorizationDetector) loadPatterns() {
@@ -274,7 +268,6 @@ func (md *MemorizationDetector) loadPatterns() {
 		},
 		Confidence: 0.8,
 	})
-}
 
 // loadKnownContent loads known copyrighted content
 func (md *MemorizationDetector) loadKnownContent() {
@@ -283,7 +276,6 @@ func (md *MemorizationDetector) loadKnownContent() {
 	md.knownContent["lotr"] = "In a hole in the ground there lived a hobbit"
 	md.knownContent["1984"] = "It was a bright cold day in April"
 	// Add more known content...
-}
 
 // Detect checks for memorization
 func (md *MemorizationDetector) Detect(result ExtractionResult) *MemorizationInstance {
@@ -301,19 +293,16 @@ func (md *MemorizationDetector) Detect(result ExtractionResult) *MemorizationIns
 		}
 	}
 	return nil
-}
 
 // DataLeakageAnalyzer analyzes for data leaks
 type DataLeakageAnalyzer struct {
 	detectors []LeakageDetector
 	mu        sync.RWMutex
-}
 
 // LeakageDetector identifies data leaks
 type LeakageDetector interface {
 	Name() string
 	Detect(content string) *DataLeak
-}
 
 // DataLeak represents a detected data leak
 type DataLeak struct {
@@ -323,7 +312,6 @@ type DataLeak struct {
 	Source     string
 	Confidence float64
 	Mitigation string
-}
 
 // NewDataLeakageAnalyzer creates a data leakage analyzer
 func NewDataLeakageAnalyzer() *DataLeakageAnalyzer {
@@ -337,7 +325,6 @@ func NewDataLeakageAnalyzer() *DataLeakageAnalyzer {
 	dla.detectors = append(dla.detectors, &ProprietaryDetector{})
 
 	return dla
-}
 
 // Analyze checks for data leaks
 func (dla *DataLeakageAnalyzer) Analyze(result ExtractionResult) []DataLeak {
@@ -356,7 +343,6 @@ func (dla *DataLeakageAnalyzer) Analyze(result ExtractionResult) []DataLeak {
 	}
 
 	return leaks
-}
 
 // PIIDetector detects personally identifiable information
 type PIIDetector struct{}
@@ -401,7 +387,6 @@ func (p *PIIDetector) Detect(content string) *DataLeak {
 	}
 
 	return nil
-}
 
 // CredentialDetector detects credentials
 type CredentialDetector struct{}
@@ -441,7 +426,6 @@ func (c *CredentialDetector) Detect(content string) *DataLeak {
 	}
 
 	return nil
-}
 
 // ProprietaryDetector detects proprietary information
 type ProprietaryDetector struct{}
@@ -481,20 +465,17 @@ func (p *ProprietaryDetector) Detect(content string) *DataLeak {
 	}
 
 	return nil
-}
 
 // KnowledgeMapper builds knowledge relationships
 type KnowledgeMapper struct {
 	relationships map[string][]string
 	mu            sync.RWMutex
-}
 
 // NewKnowledgeMapper creates a knowledge mapper
 func NewKnowledgeMapper() *KnowledgeMapper {
 	return &KnowledgeMapper{
 		relationships: make(map[string][]string),
 	}
-}
 
 // BuildMap creates a knowledge map from extractions
 func (km *KnowledgeMapper) BuildMap(extractions []ExtractionResult) map[string][]string {
@@ -525,7 +506,6 @@ func (km *KnowledgeMapper) BuildMap(extractions []ExtractionResult) map[string][
 	}
 
 	return knowledgeMap
-}
 
 // extractConcepts extracts key concepts from content
 func (km *KnowledgeMapper) extractConcepts(content []string) []string {
@@ -552,7 +532,6 @@ func (km *KnowledgeMapper) extractConcepts(content []string) []string {
 	}
 
 	return unique
-}
 
 // Implementation of extraction strategies
 
@@ -564,7 +543,7 @@ type DirectExtractionStrategy struct {
 func (d *DirectExtractionStrategy) Name() string { return "direct_extraction" }
 
 func (d *DirectExtractionStrategy) Extract(target interface{}, topic string) (ExtractionResult, error) {
-	prompt := d.prompts[rand.Intn(len(d.prompts))]
+	prompt := d.prompts[randInt(len(d.prompts))]
 	prompt = strings.Replace(prompt, "[TOPIC]", topic, -1)
 
 	// Execute extraction
@@ -577,7 +556,6 @@ func (d *DirectExtractionStrategy) Extract(target interface{}, topic string) (Ex
 		Source:     "direct_query",
 		Timestamp:  time.Now(),
 	}, nil
-}
 
 func (d *DirectExtractionStrategy) Confidence() float64 { return 0.7 }
 
@@ -590,7 +568,7 @@ func (c *CompletionAttackStrategy) Name() string { return "completion_attack" }
 
 func (c *CompletionAttackStrategy) Extract(target interface{}, topic string) (ExtractionResult, error) {
 	// Find known prefixes for the topic
-	prefix := c.prefixes[rand.Intn(len(c.prefixes))]
+	prefix := c.prefixes[randInt(len(c.prefixes))]
 	prompt := fmt.Sprintf("%s [First few words about %s from training]", prefix, topic)
 
 	// Execute extraction
@@ -603,7 +581,6 @@ func (c *CompletionAttackStrategy) Extract(target interface{}, topic string) (Ex
 		Source:     "completion",
 		Timestamp:  time.Now(),
 	}, nil
-}
 
 func (c *CompletionAttackStrategy) Confidence() float64 { return 0.8 }
 
@@ -639,7 +616,6 @@ func (m *MembershipInferenceStrategy) Extract(target interface{}, topic string) 
 		Source:     "membership_inference",
 		Timestamp:  time.Now(),
 	}, nil
-}
 
 func (m *MembershipInferenceStrategy) analyzeConfidence(responses []string) float64 {
 	// Simplified confidence analysis
@@ -658,7 +634,6 @@ func (m *MembershipInferenceStrategy) analyzeConfidence(responses []string) floa
 	} else {
 		return 0.5
 	}
-}
 
 func (m *MembershipInferenceStrategy) Confidence() float64 { return 0.75 }
 
@@ -670,11 +645,11 @@ type TemplateExtractionStrategy struct {
 func (t *TemplateExtractionStrategy) Name() string { return "template_extraction" }
 
 func (t *TemplateExtractionStrategy) Extract(target interface{}, topic string) (ExtractionResult, error) {
-	template := t.templates[rand.Intn(len(t.templates))]
+	template := t.templates[randInt(len(t.templates))]
 	
 	// Try different sources
 	sources := []string{"Wikipedia", "textbooks", "research papers", "documentation"}
-	source := sources[rand.Intn(len(sources))]
+	source := sources[randInt(len(sources))]
 	
 	prompt := strings.Replace(template, "[SOURCE]", source, -1)
 	prompt = strings.Replace(prompt, "[TOPIC]", topic, -1)
@@ -689,7 +664,6 @@ func (t *TemplateExtractionStrategy) Extract(target interface{}, topic string) (
 		Source:     fmt.Sprintf("template_%s", source),
 		Timestamp:  time.Now(),
 	}, nil
-}
 
 func (t *TemplateExtractionStrategy) Confidence() float64 { return 0.65 }
 
@@ -722,7 +696,6 @@ func (d *DifferentialExtractionStrategy) Extract(target interface{}, topic strin
 		Source:     "differential_analysis",
 		Timestamp:  time.Now(),
 	}, nil
-}
 
 func (d *DifferentialExtractionStrategy) findConsistentContent(responses []string) []string {
 	// Find content that appears consistently across variations
@@ -734,7 +707,6 @@ func (d *DifferentialExtractionStrategy) findConsistentContent(responses []strin
 	}
 	
 	return consistent
-}
 
 func (d *DifferentialExtractionStrategy) Confidence() float64 { return 0.8 }
 
@@ -755,7 +727,6 @@ func (ke *KnowledgeExtractor) generateSummary(report *KnowledgeReport) string {
 	}
 
 	return summary
-}
 
 func calculateEntropy(s string) float64 {
 	if len(s) == 0 {
@@ -777,7 +748,6 @@ func calculateEntropy(s string) float64 {
 	}
 
 	return entropy
-}
 
 func isCommonWord(word string) bool {
 	common := []string{"the", "and", "for", "with", "this", "that", "from", "about"}
@@ -788,9 +758,69 @@ func isCommonWord(word string) bool {
 		}
 	}
 	return false
-}
 
 func generateReportID() string {
 	return fmt.Sprintf("knowledge_report_%d", time.Now().UnixNano())
-}
 
+
+// secureRandomInt generates a cryptographically secure random integer
+func secureRandomInt(max int) (int, error) {
+    nBig, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
+    if err != nil {
+        return 0, err
+    }
+    return int(nBig.Int64()), nil
+
+// Secure random number generation helpers
+func randInt(max int) int {
+    n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+    if err != nil {
+        panic(err)
+    }
+    return int(n.Int64())
+
+func randInt64(max int64) int64 {
+    n, err := rand.Int(rand.Reader, big.NewInt(max))
+    if err != nil {
+        panic(err)
+    }
+    return n.Int64()
+
+func randFloat64() float64 {
+    bytes := make([]byte, 8)
+    rand.Read(bytes)
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}

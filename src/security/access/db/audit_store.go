@@ -28,7 +28,6 @@ func NewSQLAuditStore(db *sql.DB) (adapter.ModelsAuditStore, error) {
 	}
 
 	return store, nil
-}
 
 // initSchema initializes the database schema
 func (s *SQLAuditStore) initSchema() error {
@@ -81,7 +80,6 @@ func (s *SQLAuditStore) initSchema() error {
 	}
 
 	return nil
-}
 
 // LogEvent logs an audit event
 func (s *SQLAuditStore) LogEvent(ctx context.Context, event *adapter.AuditEvent) error {
@@ -126,7 +124,6 @@ func (s *SQLAuditStore) LogEvent(ctx context.Context, event *adapter.AuditEvent)
 	}
 
 	return nil
-}
 
 // GetEventByID retrieves an audit event by ID
 func (s *SQLAuditStore) GetEventByID(ctx context.Context, id string) (*adapter.AuditEvent, error) {
@@ -139,7 +136,6 @@ func (s *SQLAuditStore) GetEventByID(ctx context.Context, id string) (*adapter.A
 
 	row := s.db.QueryRowContext(ctx, query, id)
 	return s.scanAuditEvent(row)
-}
 
 // QueryEvents queries audit events based on filters
 func (s *SQLAuditStore) QueryEvents(ctx context.Context, filter *adapter.AuditEventFilter, offset, limit int) ([]*adapter.AuditEvent, int, error) {
@@ -230,8 +226,7 @@ func (s *SQLAuditStore) QueryEvents(ctx context.Context, filter *adapter.AuditEv
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to query audit events: %w", err)
 	}
-	defer rows.Close()
-
+	defer func() { if err := rows.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	// Scan results
 	var events []*adapter.AuditEvent
 	for rows.Next() {
@@ -247,13 +242,11 @@ func (s *SQLAuditStore) QueryEvents(ctx context.Context, filter *adapter.AuditEv
 	}
 
 	return events, len(events), nil
-}
 
 // ExportEvents exports audit events to a file
 func (s *SQLAuditStore) ExportEvents(ctx context.Context, filter *adapter.AuditEventFilter, format string) (string, error) {
 	// This is a placeholder implementation
 	return "", fmt.Errorf("export not implemented")
-}
 
 // CountEvents counts audit events based on filters
 func (s *SQLAuditStore) CountEvents(ctx context.Context, filter *adapter.AuditEventFilter) (int64, error) {
@@ -332,7 +325,6 @@ func (s *SQLAuditStore) CountEvents(ctx context.Context, filter *adapter.AuditEv
 	}
 
 	return count, nil
-}
 
 // scanAuditEvent scans an audit event from a database row
 func (s *SQLAuditStore) scanAuditEvent(row *sql.Row) (*adapter.AuditEvent, error) {
@@ -399,7 +391,6 @@ func (s *SQLAuditStore) scanAuditEvent(row *sql.Row) (*adapter.AuditEvent, error
 	}
 
 	return &event, nil
-}
 
 // scanAuditEventFromRows scans an audit event from database rows
 func (s *SQLAuditStore) scanAuditEventFromRows(rows *sql.Rows) (*adapter.AuditEvent, error) {
@@ -463,9 +454,16 @@ func (s *SQLAuditStore) scanAuditEventFromRows(rows *sql.Rows) (*adapter.AuditEv
 	}
 
 	return &event, nil
-}
 
 // Close closes the SQL connection
 func (s *SQLAuditStore) Close() error {
 	return s.db.Close()
+}
+}
+}
+}
+}
+}
+}
+}
 }

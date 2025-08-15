@@ -24,7 +24,6 @@ type UpdateInfo struct {
 	ChecksumSHA256  string
 	Required        bool                // Indicates if this update is required
 	SecurityFixes   bool                // Indicates if this update contains security fixes
-}
 
 // VersionManifest represents the version information from the update server
 type VersionManifest struct {
@@ -76,14 +75,12 @@ type VersionChecker struct {
 	HTTPClient      *http.Client
 	CurrentVersions map[string]version.Version
 	Notifier        UpdateNotifier
-}
 
 // UpdateNotifier defines the interface for notifying about updates
 type UpdateNotifier interface {
 	HandleUpdateCheck(ctx context.Context, versionInfo *UpdateVersionInfo) error
 	NotifyUpdateSuccess(ctx context.Context, fromVersion, toVersion string) error
 	NotifyUpdateFailure(ctx context.Context, fromVersion, toVersion string, err error) error
-}
 
 // NewVersionChecker creates a new VersionChecker
 func NewVersionChecker(ctx context.Context) (*VersionChecker, error) {
@@ -101,12 +98,10 @@ func NewVersionChecker(ctx context.Context) (*VersionChecker, error) {
 		},
 		CurrentVersions: currentVersions,
 	}, nil
-}
 
 // SetNotifier sets the notifier for the version checker
 func (vc *VersionChecker) SetNotifier(notifier UpdateNotifier) {
 	vc.Notifier = notifier
-}
 
 // CheckVersion checks if updates are available and returns version information
 func (vc *VersionChecker) CheckVersion(ctx context.Context) (*UpdateVersionInfo, error) {
@@ -159,7 +154,6 @@ func (vc *VersionChecker) CheckVersion(ctx context.Context) (*UpdateVersionInfo,
 	}
 
 	return versionInfo, nil
-}
 
 // CheckForUpdates checks if updates are available for components
 func (vc *VersionChecker) CheckForUpdates() ([]UpdateInfo, error) {
@@ -218,7 +212,6 @@ func (vc *VersionChecker) CheckForUpdates() ([]UpdateInfo, error) {
 			})
 		}
 	}
-
 	// Check module updates
 	for _, moduleManifest := range manifest.Modules {
 		moduleID := moduleManifest.ID
@@ -248,7 +241,6 @@ func (vc *VersionChecker) CheckForUpdates() ([]UpdateInfo, error) {
 	}
 
 	return updates, nil
-}
 
 // fetchVersionManifest fetches the version manifest from the update server
 func (vc *VersionChecker) fetchVersionManifest() (VersionManifest, error) {
@@ -258,10 +250,9 @@ func (vc *VersionChecker) fetchVersionManifest() (VersionManifest, error) {
 	if err != nil {
 		return manifest, fmt.Errorf("failed to connect to update server: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	if resp.StatusCode != http.StatusOK {
-		return manifest, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -275,7 +266,6 @@ func (vc *VersionChecker) fetchVersionManifest() (VersionManifest, error) {
 	}
 
 	return manifest, nil
-}
 
 // FormatUpdateInfo formats update information for display
 func FormatUpdateInfo(updates []UpdateInfo) string {
@@ -303,7 +293,6 @@ func FormatUpdateInfo(updates []UpdateInfo) string {
 	}
 
 	return result
-}
 
 // FormatChangeType formats a VersionChangeType as a string
 func FormatChangeType(changeType version.VersionChangeType) string {
@@ -317,7 +306,6 @@ func FormatChangeType(changeType version.VersionChangeType) string {
 	default:
 		return "No Change"
 	}
-}
 
 // MergeUpdates combines updates from multiple sources, with priority rules
 func MergeUpdates(githubUpdates, gitlabUpdates []UpdateInfo) []UpdateInfo {
@@ -348,5 +336,9 @@ func MergeUpdates(githubUpdates, gitlabUpdates []UpdateInfo) []UpdateInfo {
 		result = append(result, update)
 	}
 	
-	return result
+}
+}
+}
+}
+}
 }

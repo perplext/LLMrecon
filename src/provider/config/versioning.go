@@ -12,7 +12,6 @@ import (
 type ConfigHistoryFile struct {
 	// History is a map of provider types to configuration history
 	History map[string]*ConfigHistory `json:"history"`
-}
 
 // AddConfigVersion adds a new version to the configuration history
 func (m *ConfigManager) AddConfigVersion(providerType core.ProviderType, changes string) error {
@@ -46,7 +45,6 @@ func (m *ConfigManager) AddConfigVersion(providerType core.ProviderType, changes
 
 	// Save history without holding the lock
 	return m.SaveHistory()
-}
 
 // GetConfigHistory returns the configuration history for a provider type
 func (m *ConfigManager) GetConfigHistory(providerType core.ProviderType) (*ConfigHistory, error) {
@@ -60,7 +58,6 @@ func (m *ConfigManager) GetConfigHistory(providerType core.ProviderType) (*Confi
 	}
 
 	return history, nil
-}
 
 // GetConfigVersion returns a specific version of a provider configuration
 func (m *ConfigManager) GetConfigVersion(providerType core.ProviderType, version int) (*ConfigVersion, error) {
@@ -80,7 +77,6 @@ func (m *ConfigManager) GetConfigVersion(providerType core.ProviderType, version
 	}
 
 	return &configVersion, nil
-}
 
 // GetAllConfigHistory returns the configuration history for all providers
 func (m *ConfigManager) GetAllConfigHistory() map[core.ProviderType]*ConfigHistory {
@@ -94,7 +90,6 @@ func (m *ConfigManager) GetAllConfigHistory() map[core.ProviderType]*ConfigHisto
 	}
 
 	return historyCopy
-}
 
 // LoadHistory loads configuration history from file
 func (m *ConfigManager) LoadHistory() error {
@@ -112,11 +107,10 @@ func (m *ConfigManager) LoadHistory() error {
 	}
 
 	// Read file
-	data, err := os.ReadFile(historyFilePath)
+	data, err := os.ReadFile(filepath.Clean(historyFilePath))
 	if err != nil {
 		return fmt.Errorf("failed to read history file: %w", err)
 	}
-
 	// Decrypt data if encryption key is provided
 	if len(m.encryptionKey) > 0 {
 		decryptedData, err := DecryptData(data, string(m.encryptionKey))
@@ -139,7 +133,6 @@ func (m *ConfigManager) LoadHistory() error {
 	}
 
 	return nil
-}
 
 // SaveHistory saves configuration history to file
 func (m *ConfigManager) SaveHistory() error {
@@ -175,12 +168,10 @@ func (m *ConfigManager) SaveHistory() error {
 		copy(encryptionKey, m.encryptionKey)
 	}
 	m.mutex.RUnlock()
-
 	// Create history file
 	historyFileData := ConfigHistoryFile{
 		History: historyData,
 	}
-
 	// Marshal to JSON
 	data, err := json.MarshalIndent(historyFileData, "", "  ")
 	if err != nil {
@@ -198,17 +189,16 @@ func (m *ConfigManager) SaveHistory() error {
 	
 	// Create directory if it doesn't exist
 	historyDir := filepath.Dir(historyFilePath)
-	if err := os.MkdirAll(historyDir, 0755); err != nil {
+	if err := os.MkdirAll(historyDir, 0700); err != nil {
 		return fmt.Errorf("failed to create history directory: %w", err)
 	}
 
 	// Write file
-	if err := os.WriteFile(historyFilePath, data, 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(historyFilePath, data, 0600)); err != nil {
 		return fmt.Errorf("failed to write history file: %w", err)
 	}
 
 	return nil
-}
 
 // getHistoryFilePath returns the path to the history file
 func getHistoryFilePath(configFile string) string {
@@ -220,7 +210,6 @@ func getHistoryFilePath(configFile string) string {
 
 	// Create history file path
 	return filepath.Join(dir, name+".history"+ext)
-}
 
 // RollbackConfig rolls back a provider configuration to a specific version
 func (m *ConfigManager) RollbackConfig(providerType core.ProviderType, version int) error {
@@ -257,7 +246,6 @@ func (m *ConfigManager) RollbackConfig(providerType core.ProviderType, version i
 
 	// Save history
 	return m.SaveHistory()
-}
 
 // GetConfigVersions returns all versions of a provider configuration
 func (m *ConfigManager) GetConfigVersions(providerType core.ProviderType) ([]ConfigVersion, error) {
@@ -276,5 +264,3 @@ func (m *ConfigManager) GetConfigVersions(providerType core.ProviderType) ([]Con
 		versions = append(versions, version)
 	}
 
-	return versions, nil
-}

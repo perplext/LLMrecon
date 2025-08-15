@@ -34,7 +34,6 @@ func NewTemplateMonitor(config *ProtectionConfig, patternLibrary *InjectionPatte
 		patternStats:     make(map[string]*TemplatePatternStats),
 		stopChan:         make(chan struct{}),
 	}
-}
 
 // Start starts the template monitor
 func (m *TemplateMonitor) Start(ctx context.Context) {
@@ -49,7 +48,6 @@ func (m *TemplateMonitor) Start(ctx context.Context) {
 	
 	// Start the monitoring loop
 	go m.monitoringLoop(ctx)
-}
 
 // Stop stops the template monitor
 func (m *TemplateMonitor) Stop() {
@@ -62,7 +60,6 @@ func (m *TemplateMonitor) Stop() {
 	
 	m.running = false
 	close(m.stopChan)
-}
 
 // monitoringLoop is the main monitoring loop
 func (m *TemplateMonitor) monitoringLoop(ctx context.Context) {
@@ -79,7 +76,6 @@ func (m *TemplateMonitor) monitoringLoop(ctx context.Context) {
 			return
 		}
 	}
-}
 
 // detectAnomalies detects anomalies in the pattern statistics
 func (m *TemplateMonitor) detectAnomalies(ctx context.Context) {
@@ -96,7 +92,6 @@ func (m *TemplateMonitor) detectAnomalies(ctx context.Context) {
 	// - Detect sudden spikes in pattern frequency
 	// - Detect unusual combinations of patterns
 	// - Detect patterns with consistently high risk scores
-}
 
 // MonitorPrompt monitors a prompt for unusual patterns
 func (m *TemplateMonitor) MonitorPrompt(ctx context.Context, result *ProtectionResult) {
@@ -161,7 +156,6 @@ func (m *TemplateMonitor) MonitorPrompt(ctx context.Context, result *ProtectionR
 	if len(m.patternStats) > m.monitoringConfig.MaxPatternHistory {
 		m.pruneOldPatterns()
 	}
-}
 
 // isUnusualPattern determines if a pattern is unusual
 func (m *TemplateMonitor) isUnusualPattern(stats *TemplatePatternStats) bool {
@@ -183,7 +177,6 @@ func (m *TemplateMonitor) isUnusualPattern(stats *TemplatePatternStats) bool {
 	// More sophisticated detection would be implemented here
 	
 	return false
-}
 
 // pruneOldPatterns removes old patterns from the statistics
 func (m *TemplateMonitor) pruneOldPatterns() {
@@ -201,7 +194,6 @@ func (m *TemplateMonitor) pruneOldPatterns() {
 	for i := 0; i < numToRemove && i < len(oldPatterns); i++ {
 		delete(m.patternStats, oldPatterns[i].pattern)
 	}
-}
 
 // sortPatternsByAge sorts patterns by age (oldest first)
 func sortPatternsByAge(patterns []patternAge) {
@@ -213,7 +205,6 @@ func sortPatternsByAge(patterns []patternAge) {
 			}
 		}
 	}
-}
 
 // GetPatternStats gets the statistics for a pattern
 func (m *TemplateMonitor) GetPatternStats(pattern string) *TemplatePatternStats {
@@ -221,7 +212,6 @@ func (m *TemplateMonitor) GetPatternStats(pattern string) *TemplatePatternStats 
 	defer m.mu.RUnlock()
 	
 	return m.patternStats[pattern]
-}
 
 // GetAllPatternStats gets all pattern statistics
 func (m *TemplateMonitor) GetAllPatternStats() []*TemplatePatternStats {
@@ -233,5 +223,13 @@ func (m *TemplateMonitor) GetAllPatternStats() []*TemplatePatternStats {
 		stats = append(stats, stat)
 	}
 	
-	return stats
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

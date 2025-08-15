@@ -9,7 +9,6 @@ import (
 func init() {
 	// Register all fixtures
 	RegisterFixtures()
-}
 
 // RegisterFixtures registers all test fixtures with the testing framework
 func RegisterFixtures() {
@@ -26,12 +25,10 @@ func RegisterFixtures() {
 			types.RegisterTestCase(vulnType, testCase)
 		}
 	}
-}
 
 // RegisterTestCase registers a single test case with the testing framework
 func RegisterTestCase(testCase *types.TestCase) {
 	types.RegisterTestCase(testCase.VulnerabilityType, testCase)
-}
 
 // GetTestCaseByID returns a test case by its ID
 func GetTestCaseByID(id string) *types.TestCase {
@@ -39,5 +36,3 @@ func GetTestCaseByID(id string) *types.TestCase {
 	if fixture != nil {
 		return fixture.ToTestCase()
 	}
-	return nil
-}

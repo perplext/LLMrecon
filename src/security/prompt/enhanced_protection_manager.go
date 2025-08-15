@@ -21,7 +21,6 @@ type EnhancedProtectionManager struct {
 	advancedTemplateMonitor *AdvancedTemplateMonitor
 	dataDir                 string
 	mu                      sync.RWMutex
-}
 
 // EnhancedProtectionConfig defines the configuration for enhanced protection
 type EnhancedProtectionConfig struct {
@@ -37,7 +36,6 @@ type EnhancedProtectionConfig struct {
 	LogDirectory            string               `json:"log_directory"`
 	LogLevel                string               `json:"log_level"`
 	AnalysisInterval        time.Duration        `json:"analysis_interval"`
-}
 
 // NewEnhancedProtectionManager creates a new enhanced protection manager
 func NewEnhancedProtectionManager(config *ProtectionConfig) (*EnhancedProtectionManager, error) {
@@ -68,12 +66,12 @@ func NewEnhancedProtectionManager(config *ProtectionConfig) (*EnhancedProtection
 	}
 	
 	// Create data directory if it doesn't exist
-	if err := os.MkdirAll(enhancedConfig.DataDirectory, 0755); err != nil {
+	if err := os.MkdirAll(enhancedConfig.DataDirectory, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 	
 	// Create log directory if it doesn't exist
-	if err := os.MkdirAll(enhancedConfig.LogDirectory, 0755); err != nil {
+	if err := os.MkdirAll(enhancedConfig.LogDirectory, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
 	
@@ -121,7 +119,6 @@ func NewEnhancedProtectionManager(config *ProtectionConfig) (*EnhancedProtection
 		advancedTemplateMonitor:  advancedTemplateMonitor,
 		dataDir:                  enhancedConfig.DataDirectory,
 	}, nil
-}
 
 // ProtectPromptEnhanced protects against prompt injection with enhanced protection
 func (pm *EnhancedProtectionManager) ProtectPromptEnhanced(ctx context.Context, prompt string, userID string, sessionID string, templateID string) (string, *ProtectionResult, error) {
@@ -235,7 +232,6 @@ func (pm *EnhancedProtectionManager) ProtectPromptEnhanced(ctx context.Context, 
 	result.ProcessingTime = time.Since(startTime)
 	
 	return result.ProtectedPrompt, result, nil
-}
 
 // ProtectResponseEnhanced protects against prompt injection in responses with enhanced protection
 func (pm *EnhancedProtectionManager) ProtectResponseEnhanced(ctx context.Context, response string, originalPrompt string, userID string, sessionID string, templateID string) (string, *ProtectionResult, error) {
@@ -362,7 +358,6 @@ func (pm *EnhancedProtectionManager) ProtectResponseEnhanced(ctx context.Context
 	result.ProcessingTime = time.Since(startTime)
 	
 	return result.ProtectedResponse, result, nil
-}
 
 // StartMonitoring starts the template monitoring
 func (pm *EnhancedProtectionManager) StartMonitoring(ctx context.Context) error {
@@ -371,7 +366,6 @@ func (pm *EnhancedProtectionManager) StartMonitoring(ctx context.Context) error 
 	}
 	
 	return pm.advancedTemplateMonitor.StartMonitoring(ctx)
-}
 
 // StopMonitoring stops the template monitoring
 func (pm *EnhancedProtectionManager) StopMonitoring() {
@@ -380,7 +374,6 @@ func (pm *EnhancedProtectionManager) StopMonitoring() {
 	}
 	
 	pm.advancedTemplateMonitor.StopMonitoring()
-}
 
 // AnalyzeReports analyzes all reports
 func (pm *EnhancedProtectionManager) AnalyzeReports(ctx context.Context) error {
@@ -389,27 +382,22 @@ func (pm *EnhancedProtectionManager) AnalyzeReports(ctx context.Context) error {
 	}
 	
 	return pm.enhancedReportingSystem.AnalyzeReports(ctx)
-}
 
 // GetPatternLibrary gets the enhanced pattern library
 func (pm *EnhancedProtectionManager) GetPatternLibrary() *EnhancedInjectionPatternLibrary {
 	return pm.enhancedPatternLibrary
-}
 
 // GetApprovalWorkflow gets the enhanced approval workflow
 func (pm *EnhancedProtectionManager) GetApprovalWorkflow() *EnhancedApprovalWorkflow {
 	return pm.enhancedApprovalWorkflow
-}
 
 // GetReportingSystem gets the enhanced reporting system
 func (pm *EnhancedProtectionManager) GetReportingSystem() *EnhancedReportingSystem {
 	return pm.enhancedReportingSystem
-}
 
 // GetTemplateMonitor gets the advanced template monitor
 func (pm *EnhancedProtectionManager) GetTemplateMonitor() *AdvancedTemplateMonitor {
 	return pm.advancedTemplateMonitor
-}
 
 // EnableComponent enables or disables a component
 func (pm *EnhancedProtectionManager) EnableComponent(component string, enabled bool) {
@@ -432,7 +420,6 @@ func (pm *EnhancedProtectionManager) EnableComponent(component string, enabled b
 	case "advanced_monitoring":
 		pm.enhancedConfig.EnableAdvancedMonitoring = enabled
 	}
-}
 
 // SetProtectionLevel sets the protection level
 func (pm *EnhancedProtectionManager) SetProtectionLevel(level ProtectionLevel) {
@@ -469,7 +456,6 @@ func (pm *EnhancedProtectionManager) SetProtectionLevel(level ProtectionLevel) {
 		pm.enhancedConfig.EnableEnhancedReporting = true
 		pm.enhancedConfig.EnableAdvancedMonitoring = true
 	}
-}
 
 // Close closes the protection manager and releases resources
 func (pm *EnhancedProtectionManager) Close() error {
@@ -481,5 +467,3 @@ func (pm *EnhancedProtectionManager) Close() error {
 		return err
 	}
 	
-	return nil
-}

@@ -105,4 +105,3 @@ func init() {
 		formatter, err := NewHTMLFormatter()
 		return formatter, err
 	})
-}

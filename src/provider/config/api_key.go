@@ -70,5 +70,3 @@ func (m *ConfigManager) SetProviderAPIKey(providerType core.ProviderType, apiKey
 	if err := m.Save(); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
-	return nil
-}

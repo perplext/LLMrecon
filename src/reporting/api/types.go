@@ -44,6 +44,7 @@ type TestResult struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
+}
 // TestResults is a collection of test results
 type TestResults []*TestResult
 
@@ -53,9 +54,9 @@ type ReportFormatter interface {
 	GetFormat() ReportFormat
 	// FormatReport formats a report and writes it to the given writer
 	FormatReport(results TestResults, writer io.Writer) error
-}
 
 // FormatterCreator is a function that creates a formatter
+}
 type FormatterCreator func(options map[string]interface{}) (ReportFormatter, error)
 
 // SeverityLevelMapping maps string representations to SeverityLevel constants
@@ -65,4 +66,4 @@ var SeverityLevelMapping = map[string]SeverityLevel{
 	"medium":   Medium,
 	"low":      Low,
 	"info":     Info,
-}
+

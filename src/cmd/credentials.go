@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"fmt"
 	"strings"
 
@@ -30,7 +31,6 @@ This command allows you to list, add, update, and delete credentials.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
-}
 
 // credentialListCmd represents the credential list command
 var credentialListCmd = &cobra.Command{
@@ -109,7 +109,6 @@ var credentialListCmd = &cobra.Command{
 			)
 		}
 	},
-}
 
 // credentialShowCmd represents the credential show command
 var credentialShowCmd = &cobra.Command{
@@ -169,7 +168,6 @@ var credentialShowCmd = &cobra.Command{
 			fmt.Println("Value: [hidden, use --show-value to display]")
 		}
 	},
-}
 
 // credentialAddCmd represents the credential add command
 var credentialAddCmd = &cobra.Command{
@@ -239,8 +237,6 @@ var credentialAddCmd = &cobra.Command{
 
 		fmt.Printf("Credential added with ID: %s\n", cred.ID)
 	},
-}
-
 // credentialUpdateCmd represents the credential update command
 var credentialUpdateCmd = &cobra.Command{
 	Use:   "update [id]",
@@ -298,7 +294,6 @@ var credentialUpdateCmd = &cobra.Command{
 
 		fmt.Printf("Credential updated: %s\n", cred.ID)
 	},
-}
 
 // credentialDeleteCmd represents the credential delete command
 var credentialDeleteCmd = &cobra.Command{
@@ -312,7 +307,6 @@ var credentialDeleteCmd = &cobra.Command{
 			fmt.Printf("Error initializing credential manager: %v\n", err)
 			os.Exit(1)
 		}
-
 		// Delete credential
 		if err := vault.DefaultManager.DeleteCredential(args[0]); err != nil {
 			fmt.Printf("Error deleting credential: %v\n", err)
@@ -321,7 +315,6 @@ var credentialDeleteCmd = &cobra.Command{
 
 		fmt.Printf("Credential deleted: %s\n", args[0])
 	},
-}
 
 // credentialRotateCmd represents the credential rotate command
 var credentialRotateCmd = &cobra.Command{
@@ -351,7 +344,6 @@ var credentialRotateCmd = &cobra.Command{
 
 		fmt.Printf("Credential rotated: %s\n", args[0])
 	},
-}
 
 // credentialCheckRotationCmd represents the credential check-rotation command
 var credentialCheckRotationCmd = &cobra.Command{
@@ -402,7 +394,6 @@ var credentialCheckRotationCmd = &cobra.Command{
 			)
 		}
 	},
-}
 
 // getConfigDir returns the configuration directory path
 func getConfigDir() string {
@@ -420,7 +411,6 @@ func getConfigDir() string {
 	}
 
 	return filepath.Join(homeDir, ".LLMrecon")
-}
 
 // initCredentialManager initializes the credential manager
 func initCredentialManager() error {
@@ -432,7 +422,7 @@ func initCredentialManager() error {
 	if passphrase == "" {
 		// Use a default passphrase for development
 		// In production, this should be securely provided
-		passphrase = "LLMrecon-default-passphrase"
+		passphrase = os.Getenv("LLMRT_VAULT_PASSPHRASE")
 	}
 
 	// Initialize audit logger
@@ -454,7 +444,6 @@ func initCredentialManager() error {
 
 	// Initialize credential manager
 	return vault.InitDefaultIntegration(configDir, passphrase, securityAdapter)
-}
 
 // No longer needed - using the built-in security audit logger adapter
 
@@ -493,5 +482,3 @@ func init() {
 	credentialUpdateCmd.Flags().IntVarP(&credentialWarning, "warning-days", "w", 14, "New warning days before rotation")
 
 	// Add flags for credential rotate command
-	credentialRotateCmd.Flags().StringVarP(&credentialValue, "value", "v", "", "New credential value (required)")
-}

@@ -13,14 +13,12 @@ import (
 type TextFormatter struct {
 	// detailed indicates whether to include detailed information
 	detailed bool
-}
 
 // NewTextFormatter creates a new text formatter
 func NewTextFormatter(detailed bool) *TextFormatter {
 	return &TextFormatter{
 		detailed: detailed,
 	}
-}
 
 // FormatReport formats a report and writes it to the given writer
 func (f *TextFormatter) FormatReport(results api.TestResults, writer io.Writer) error {
@@ -60,7 +58,6 @@ func (f *TextFormatter) FormatReport(results api.TestResults, writer io.Writer) 
 	// Write to the provided writer
 	_, err := writer.Write(buf.Bytes())
 	return err
-}
 
 // Format formats a report as plain text
 func (f *TextFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
@@ -79,12 +76,10 @@ func (f *TextFormatter) Format(ctx context.Context, reportInterface interface{},
 	}
 	
 	return buf.Bytes(), nil
-}
 
 // GetFormat returns the format supported by this formatter
 func (f *TextFormatter) GetFormat() api.ReportFormat {
 	return api.TextFormat
-}
 
 // WriteToFile writes a report to a file
 func (f *TextFormatter) WriteToFile(ctx context.Context, reportInterface interface{}, optionsInterface interface{}, filePath string) error {
@@ -92,10 +87,9 @@ func (f *TextFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 	if !ok {
 		return fmt.Errorf("expected api.TestResults, got %T", reportInterface)
 	}
-
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
@@ -104,7 +98,7 @@ func (f *TextFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", filePath, err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Format and write the report
 	if err := f.FormatReport(results, file); err != nil {
@@ -112,6 +106,5 @@ func (f *TextFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 	}
 
 	return nil
-}
 
 

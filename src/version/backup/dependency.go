@@ -27,7 +27,6 @@ type DependencyNode struct {
 	
 	// Metadata is additional metadata for the node
 	Metadata map[string]interface{}
-}
 
 // Dependency represents a dependency between two nodes
 type Dependency struct {
@@ -42,7 +41,6 @@ type Dependency struct {
 	
 	// IsCompatible indicates if the dependency is compatible
 	IsCompatible bool
-}
 
 // DependencyGraph represents a graph of dependencies
 type DependencyGraph struct {
@@ -54,7 +52,6 @@ type DependencyGraph struct {
 	
 	// LeafNodes is the list of nodes with no dependencies
 	LeafNodes []*DependencyNode
-}
 
 // NewDependencyGraph creates a new dependency graph
 func NewDependencyGraph() *DependencyGraph {
@@ -63,7 +60,6 @@ func NewDependencyGraph() *DependencyGraph {
 		RootNodes: make([]*DependencyNode, 0),
 		LeafNodes: make([]*DependencyNode, 0),
 	}
-}
 
 // AddNode adds a node to the graph
 func (g *DependencyGraph) AddNode(id, name, nodeType string, version *Version, metadata map[string]interface{}) *DependencyNode {
@@ -90,7 +86,6 @@ func (g *DependencyGraph) AddNode(id, name, nodeType string, version *Version, m
 	g.updateRootAndLeafNodes()
 	
 	return node
-}
 
 // RemoveNode removes a node from the graph
 func (g *DependencyGraph) RemoveNode(id string) bool {
@@ -127,7 +122,6 @@ func (g *DependencyGraph) RemoveNode(id string) bool {
 	g.updateRootAndLeafNodes()
 	
 	return true
-}
 
 // AddDependency adds a dependency between two nodes
 func (g *DependencyGraph) AddDependency(fromID, toID, versionConstraint string, isOptional bool) error {
@@ -176,7 +170,6 @@ func (g *DependencyGraph) AddDependency(fromID, toID, versionConstraint string, 
 	g.updateRootAndLeafNodes()
 	
 	return nil
-}
 
 // RemoveDependency removes a dependency between two nodes
 func (g *DependencyGraph) RemoveDependency(fromID, toID string) error {
@@ -217,12 +210,10 @@ func (g *DependencyGraph) RemoveDependency(fromID, toID string) error {
 	g.updateRootAndLeafNodes()
 	
 	return nil
-}
 
 // GetNode gets a node by ID
 func (g *DependencyGraph) GetNode(id string) *DependencyNode {
 	return g.Nodes[id]
-}
 
 // GetAllNodes gets all nodes in the graph
 func (g *DependencyGraph) GetAllNodes() []*DependencyNode {
@@ -231,7 +222,6 @@ func (g *DependencyGraph) GetAllNodes() []*DependencyNode {
 		nodes = append(nodes, node)
 	}
 	return nodes
-}
 
 // GetNodesByType gets all nodes of a specific type
 func (g *DependencyGraph) GetNodesByType(nodeType string) []*DependencyNode {
@@ -242,7 +232,6 @@ func (g *DependencyGraph) GetNodesByType(nodeType string) []*DependencyNode {
 		}
 	}
 	return nodes
-}
 
 // GetDependencies gets all dependencies of a node
 func (g *DependencyGraph) GetDependencies(id string) ([]*DependencyNode, error) {
@@ -257,7 +246,6 @@ func (g *DependencyGraph) GetDependencies(id string) ([]*DependencyNode, error) 
 	}
 	
 	return dependencies, nil
-}
 
 // GetDependents gets all nodes that depend on a node
 func (g *DependencyGraph) GetDependents(id string) ([]*DependencyNode, error) {
@@ -267,7 +255,6 @@ func (g *DependencyGraph) GetDependents(id string) ([]*DependencyNode, error) {
 	}
 	
 	return node.Dependents, nil
-}
 
 // GetTransitiveDependencies gets all transitive dependencies of a node
 func (g *DependencyGraph) GetTransitiveDependencies(id string) ([]*DependencyNode, error) {
@@ -282,7 +269,6 @@ func (g *DependencyGraph) GetTransitiveDependencies(id string) ([]*DependencyNod
 	g.visitDependencies(node, visited, &dependencies)
 	
 	return dependencies, nil
-}
 
 // GetTransitiveDependents gets all transitive dependents of a node
 func (g *DependencyGraph) GetTransitiveDependents(id string) ([]*DependencyNode, error) {
@@ -297,7 +283,6 @@ func (g *DependencyGraph) GetTransitiveDependents(id string) ([]*DependencyNode,
 	g.visitDependents(node, visited, &dependents)
 	
 	return dependents, nil
-}
 
 // GetImpactedNodes gets all nodes that would be impacted by a change to a node
 func (g *DependencyGraph) GetImpactedNodes(id string) ([]*DependencyNode, error) {
@@ -318,7 +303,6 @@ func (g *DependencyGraph) GetImpactedNodes(id string) ([]*DependencyNode, error)
 	impacted = append(impacted, dependents...)
 	
 	return impacted, nil
-}
 
 // GetTopologicalOrder returns the nodes in topological order
 func (g *DependencyGraph) GetTopologicalOrder() ([]*DependencyNode, error) {
@@ -366,7 +350,6 @@ func (g *DependencyGraph) GetTopologicalOrder() ([]*DependencyNode, error) {
 	}
 	
 	return result, nil
-}
 
 // GetIncompatibleDependencies gets all incompatible dependencies in the graph
 func (g *DependencyGraph) GetIncompatibleDependencies() []*Dependency {
@@ -381,7 +364,6 @@ func (g *DependencyGraph) GetIncompatibleDependencies() []*Dependency {
 	}
 	
 	return incompatible
-}
 
 // wouldCreateCycle checks if adding a dependency would create a cycle
 func (g *DependencyGraph) wouldCreateCycle(fromNode, toNode *DependencyNode) bool {
@@ -396,7 +378,6 @@ func (g *DependencyGraph) wouldCreateCycle(fromNode, toNode *DependencyNode) boo
 	// Check if toNode can reach fromNode (which would create a cycle)
 	visited := make(map[string]bool)
 	return g.isReachable(toNode, fromNode.ID, visited)
-}
 
 // isReachable checks if a node is reachable from another node
 func (g *DependencyGraph) isReachable(node *DependencyNode, targetID string, visited map[string]bool) bool {
@@ -421,7 +402,6 @@ func (g *DependencyGraph) isReachable(node *DependencyNode, targetID string, vis
 	}
 	
 	return false
-}
 
 // visitDependencies visits all dependencies of a node recursively
 func (g *DependencyGraph) visitDependencies(node *DependencyNode, visited map[string]bool, result *[]*DependencyNode) {
@@ -432,7 +412,6 @@ func (g *DependencyGraph) visitDependencies(node *DependencyNode, visited map[st
 			g.visitDependencies(dep.Node, visited, result)
 		}
 	}
-}
 
 // visitDependents visits all dependents of a node recursively
 func (g *DependencyGraph) visitDependents(node *DependencyNode, visited map[string]bool, result *[]*DependencyNode) {
@@ -443,7 +422,6 @@ func (g *DependencyGraph) visitDependents(node *DependencyNode, visited map[stri
 			g.visitDependents(dependent, visited, result)
 		}
 	}
-}
 
 // updateRootAndLeafNodes updates the root and leaf nodes
 func (g *DependencyGraph) updateRootAndLeafNodes() {
@@ -468,4 +446,3 @@ func (g *DependencyGraph) updateRootAndLeafNodes() {
 	sort.Slice(g.LeafNodes, func(i, j int) bool {
 		return g.LeafNodes[i].ID < g.LeafNodes[j].ID
 	})
-}

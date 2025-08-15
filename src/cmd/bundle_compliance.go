@@ -28,7 +28,6 @@ Supports multiple compliance frameworks:
 - ISO/IEC 42001:2023 (AI Management System)
 - NIST AI Risk Management Framework
 - EU AI Act requirements`,
-}
 
 var complianceGenerateCmd = &cobra.Command{
 	Use:   "generate [bundle-file]",
@@ -45,7 +44,6 @@ how your security testing aligns with various compliance frameworks.`,
   LLMrecon bundle compliance generate security.bundle --framework=all --output=compliance/`,
 	Args: cobra.ExactArgs(1),
 	RunE: runComplianceGenerate,
-}
 
 var complianceCheckCmd = &cobra.Command{
 	Use:   "check [bundle-file]",
@@ -53,7 +51,6 @@ var complianceCheckCmd = &cobra.Command{
 	Long:  `Analyze a bundle and report its compliance status against various frameworks.`,
 	Args:  cobra.ExactArgs(1),
 	RunE:  runComplianceCheck,
-}
 
 var complianceTemplateCmd = &cobra.Command{
 	Use:   "template [framework]",
@@ -66,7 +63,6 @@ var complianceTemplateCmd = &cobra.Command{
   LLMrecon bundle compliance template all --output=templates/`,
 	Args: cobra.ExactArgs(1),
 	RunE: runComplianceTemplate,
-}
 
 func init() {
 	bundleCmd.AddCommand(bundleComplianceCmd)
@@ -82,7 +78,6 @@ func init() {
 
 	// Template command flags
 	complianceTemplateCmd.Flags().StringVarP(&complianceOutput, "output", "o", "./compliance-templates", "Output directory")
-}
 
 func runComplianceGenerate(cmd *cobra.Command, args []string) error {
 	bundlePath := args[0]
@@ -109,7 +104,7 @@ func runComplianceGenerate(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	// Create output directory
-	if err := os.MkdirAll(complianceOutput, 0755); err != nil {
+	if err := os.MkdirAll(complianceOutput, 0700); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -178,11 +173,9 @@ func runComplianceGenerate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("   Output directory: %s\n", complianceOutput)
 
 	return nil
-}
 
 func runComplianceCheck(cmd *cobra.Command, args []string) error {
 	bundlePath := args[0]
-
 	// Verify bundle exists
 	if _, err := os.Stat(bundlePath); err != nil {
 		return fmt.Errorf("bundle file not found: %s", bundlePath)
@@ -228,7 +221,6 @@ func runComplianceCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
 
 func runComplianceTemplate(cmd *cobra.Command, args []string) error {
 	framework := args[0]
@@ -238,7 +230,7 @@ func runComplianceTemplate(cmd *cobra.Command, args []string) error {
 	fmt.Println(strings.Repeat("-", 50))
 
 	// Create output directory
-	if err := os.MkdirAll(complianceOutput, 0755); err != nil {
+	if err := os.MkdirAll(complianceOutput, 0700); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -288,7 +280,6 @@ func runComplianceTemplate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("   Output directory: %s\n", complianceOutput)
 
 	return nil
-}
 
 // Compliance generation functions
 
@@ -339,7 +330,6 @@ func generateOWASPCompliance(b *bundle.Bundle, outputDir, format string) error {
 	// Save document
 	filename := filepath.Join(outputDir, fmt.Sprintf("owasp-llm-top10-compliance.%s", format))
 	return saveComplianceDocument(doc, filename, format)
-}
 
 func generateISO42001Compliance(b *bundle.Bundle, outputDir, format string) error {
 	doc := &ComplianceDocument{
@@ -406,7 +396,6 @@ Bundle includes:
 	// Save document
 	filename := filepath.Join(outputDir, fmt.Sprintf("iso42001-compliance.%s", format))
 	return saveComplianceDocument(doc, filename, format)
-}
 
 func generateNISTCompliance(b *bundle.Bundle, outputDir, format string) error {
 	doc := &ComplianceDocument{
@@ -457,7 +446,6 @@ func generateNISTCompliance(b *bundle.Bundle, outputDir, format string) error {
 	// Save document
 	filename := filepath.Join(outputDir, fmt.Sprintf("nist-ai-rmf-compliance.%s", format))
 	return saveComplianceDocument(doc, filename, format)
-}
 
 func generateEUAICompliance(b *bundle.Bundle, outputDir, format string) error {
 	doc := &ComplianceDocument{
@@ -508,7 +496,6 @@ func generateEUAICompliance(b *bundle.Bundle, outputDir, format string) error {
 	// Save document
 	filename := filepath.Join(outputDir, fmt.Sprintf("eu-ai-act-compliance.%s", format))
 	return saveComplianceDocument(doc, filename, format)
-}
 
 // Helper structures and functions
 
@@ -519,12 +506,10 @@ type ComplianceDocument struct {
 	Version   string
 	Date      time.Time
 	Sections  []ComplianceSection
-}
 
 type ComplianceSection struct {
 	Title   string
 	Content string
-}
 
 type ComplianceStatus struct {
 	Framework       string
@@ -541,7 +526,6 @@ type OWASPComplianceCategory struct {
 	Name        string
 	Description string
 	Mitigation  string
-}
 
 func getOWASPCategories() []OWASPComplianceCategory {
 	return []OWASPComplianceCategory{
@@ -606,7 +590,6 @@ func getOWASPCategories() []OWASPComplianceCategory {
 			Mitigation:  "Access controls, usage monitoring, watermarking",
 		},
 	}
-}
 
 func analyzeOWASPCoverage(b *bundle.Bundle) map[string]int {
 	coverage := make(map[string]int)
@@ -623,7 +606,6 @@ func analyzeOWASPCoverage(b *bundle.Bundle) map[string]int {
 	}
 
 	return coverage
-}
 
 func formatCoverageAnalysis(coverage map[string]int) string {
 	var content strings.Builder
@@ -641,7 +623,6 @@ func formatCoverageAnalysis(coverage map[string]int) string {
 	}
 
 	return content.String()
-}
 
 func getCategoryTestCoverage(b *bundle.Bundle, categoryID string) string {
 	var tests []string
@@ -660,7 +641,6 @@ func getCategoryTestCoverage(b *bundle.Bundle, categoryID string) string {
 	}
 
 	return strings.Join(tests, "\n")
-}
 
 func generateOWASPEvidenceMapping(b *bundle.Bundle) string {
 	var content strings.Builder
@@ -686,7 +666,6 @@ func generateOWASPEvidenceMapping(b *bundle.Bundle) string {
 	}
 
 	return content.String()
-}
 
 func checkOWASPCompliance(b *bundle.Bundle) ComplianceStatus {
 	coverage := analyzeOWASPCoverage(b)
@@ -718,7 +697,6 @@ func checkOWASPCompliance(b *bundle.Bundle) ComplianceStatus {
 			"Regular updates for emerging threats",
 		},
 	}
-}
 
 func checkISO42001Compliance(b *bundle.Bundle) ComplianceStatus {
 	// Simplified ISO 42001 compliance check
@@ -755,7 +733,6 @@ func checkISO42001Compliance(b *bundle.Bundle) ComplianceStatus {
 		Strengths:    []string{"Structured approach", "Documentation"},
 		Gaps:         []string{"Performance metrics", "Improvement process"},
 	}
-}
 
 func checkNISTCompliance(b *bundle.Bundle) ComplianceStatus {
 	// NIST AI RMF functions
@@ -773,7 +750,6 @@ func checkNISTCompliance(b *bundle.Bundle) ComplianceStatus {
 		Strengths:    []string{"Risk identification", "Testing capabilities"},
 		Gaps:         []string{"Governance documentation", "Metrics dashboard"},
 	}
-}
 
 func checkEUAICompliance(b *bundle.Bundle) ComplianceStatus {
 	// EU AI Act requirements for high-risk systems
@@ -801,7 +777,6 @@ func checkEUAICompliance(b *bundle.Bundle) ComplianceStatus {
 		Strengths:    []string{"Technical measures", "Testing framework"},
 		Gaps:         []string{"Human oversight procedures", "Transparency reports"},
 	}
-}
 
 func displayComplianceStatus(framework string, status ComplianceStatus) {
 	fmt.Println()
@@ -835,7 +810,6 @@ func displayComplianceStatus(framework string, status ComplianceStatus) {
 			fmt.Printf("  ⚠ %s\n", g)
 		}
 	}
-}
 
 func calculateOverallCompliance(statuses ...ComplianceStatus) float64 {
 	if len(statuses) == 0 {
@@ -848,7 +822,6 @@ func calculateOverallCompliance(statuses ...ComplianceStatus) float64 {
 	}
 
 	return total / float64(len(statuses))
-}
 
 func saveComplianceDocument(doc *ComplianceDocument, filename, format string) error {
 	switch format {
@@ -864,7 +837,6 @@ func saveComplianceDocument(doc *ComplianceDocument, filename, format string) er
 	default:
 		return fmt.Errorf("unsupported format: %s", format)
 	}
-}
 
 func saveMarkdownDocument(doc *ComplianceDocument, filename string) error {
 	var content strings.Builder
@@ -883,16 +855,14 @@ func saveMarkdownDocument(doc *ComplianceDocument, filename string) error {
 		content.WriteString("\n\n")
 	}
 
-	return os.WriteFile(filename, []byte(content.String()), 0644)
-}
+	return os.WriteFile(filepath.Clean(filename, []byte(content.String())), 0600)
 
 func saveJSONDocument(doc *ComplianceDocument, filename string) error {
 	data, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filename, data, 0644)
-}
+	return os.WriteFile(filepath.Clean(filename, data, 0600))
 
 func saveHTMLDocument(doc *ComplianceDocument, filename string) error {
 	var content strings.Builder
@@ -913,7 +883,6 @@ func saveHTMLDocument(doc *ComplianceDocument, filename string) error {
 </head>
 <body>
 `)
-
 	content.WriteString(fmt.Sprintf("<h1>%s</h1>\n", doc.Title))
 	content.WriteString(fmt.Sprintf("<p><strong>Framework:</strong> %s<br>\n", doc.Framework))
 	content.WriteString(fmt.Sprintf("<strong>Bundle:</strong> %s v%s<br>\n", doc.Bundle, doc.Version))
@@ -929,14 +898,13 @@ func saveHTMLDocument(doc *ComplianceDocument, filename string) error {
 
 	content.WriteString("</body>\n</html>")
 
-	return os.WriteFile(filename, []byte(content.String()), 0644)
-}
+	return os.WriteFile(filepath.Clean(filename, []byte(content.String())), 0600)
 
 // Template generation functions
 
 func generateOWASPTemplates(outputDir string) error {
 	templateDir := filepath.Join(outputDir, "owasp-llm-top10")
-	if err := os.MkdirAll(templateDir, 0755); err != nil {
+	if err := os.MkdirAll(templateDir, 0700); err != nil {
 		return err
 	}
 
@@ -977,7 +945,7 @@ func generateOWASPTemplates(outputDir string) error {
 - C. Remediation Tracking
 `
 
-	if err := os.WriteFile(filepath.Join(templateDir, "compliance-template.md"), []byte(mainTemplate), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(filepath.Join(templateDir, "compliance-template.md")), []byte(mainTemplate), 0600); err != nil {
 		return err
 	}
 
@@ -999,12 +967,11 @@ func generateOWASPTemplates(outputDir string) error {
 - Compliance Officer: _____________ Date: _______
 `
 
-	return os.WriteFile(filepath.Join(templateDir, "checklist.md"), []byte(checklistTemplate), 0644)
-}
+	return os.WriteFile(filepath.Clean(filepath.Join(templateDir, "checklist.md")), []byte(checklistTemplate), 0600)
 
 func generateISO42001Templates(outputDir string) error {
 	templateDir := filepath.Join(outputDir, "iso42001")
-	if err := os.MkdirAll(templateDir, 0755); err != nil {
+	if err := os.MkdirAll(templateDir, 0700); err != nil {
 		return err
 	}
 
@@ -1036,12 +1003,11 @@ func generateISO42001Templates(outputDir string) error {
 Approved by: _________________ Date: _______
 `
 
-	return os.WriteFile(filepath.Join(templateDir, "statement-of-applicability.md"), []byte(soaTemplate), 0644)
-}
+	return os.WriteFile(filepath.Clean(filepath.Join(templateDir, "statement-of-applicability.md")), []byte(soaTemplate), 0600)
 
 func generateNISTTemplates(outputDir string) error {
 	templateDir := filepath.Join(outputDir, "nist-ai-rmf")
-	if err := os.MkdirAll(templateDir, 0755); err != nil {
+	if err := os.MkdirAll(templateDir, 0700); err != nil {
 		return err
 	}
 
@@ -1081,12 +1047,11 @@ func generateNISTTemplates(outputDir string) error {
 [Track improvements and lessons learned]
 `
 
-	return os.WriteFile(filepath.Join(templateDir, "risk-profile.md"), []byte(riskProfileTemplate), 0644)
-}
+	return os.WriteFile(filepath.Clean(filepath.Join(templateDir, "risk-profile.md")), []byte(riskProfileTemplate), 0600)
 
 func generateEUAITemplates(outputDir string) error {
 	templateDir := filepath.Join(outputDir, "eu-ai-act")
-	if err := os.MkdirAll(templateDir, 0755); err != nil {
+	if err := os.MkdirAll(templateDir, 0700); err != nil {
 		return err
 	}
 
@@ -1133,8 +1098,7 @@ We declare that the AI system described above complies with the requirements of 
 Signed: _________________ Date: _______
 `
 
-	return os.WriteFile(filepath.Join(templateDir, "conformity-assessment.md"), []byte(conformityTemplate), 0644)
-}
+	return os.WriteFile(filepath.Clean(filepath.Join(templateDir, "conformity-assessment.md")), []byte(conformityTemplate), 0600)
 
 // Additional helper functions
 
@@ -1157,7 +1121,6 @@ Security considerations integrated throughout:
 - Threat modeling templates
 - Security testing protocols
 - Validation procedures`, len(b.Manifest.Content))
-}
 
 func generateNISTMeasureSection(b *bundle.Bundle) string {
 	return fmt.Sprintf(`Measurement capabilities include:
@@ -1171,7 +1134,6 @@ Key metrics tracked:
 - Vulnerability detection rate
 - False positive ratio
 - Remediation effectiveness`, len(b.Manifest.Content))
-}
 
 func generateEUAIDataGovernanceSection(b *bundle.Bundle) string {
 	return `Data governance support through:
@@ -1185,7 +1147,7 @@ Tests ensure:
 - Absence of discriminatory biases
 - Appropriate data handling
 - Compliance with data protection`
-}
+	
 
 func generateEvidenceMappings(b *bundle.Bundle, outputDir string) error {
 	mappings := map[string]interface{}{
@@ -1221,8 +1183,7 @@ func generateEvidenceMappings(b *bundle.Bundle, outputDir string) error {
 		return err
 	}
 
-	return os.WriteFile(filepath.Join(outputDir, "evidence-mappings.json"), data, 0644)
-}
+	return os.WriteFile(filepath.Clean(filepath.Join(outputDir, "evidence-mappings.json")), data, 0600)
 
 func generateExecutiveSummary(b *bundle.Bundle, outputDir string, frameworks []string) error {
 	var summary strings.Builder
@@ -1256,8 +1217,7 @@ func generateExecutiveSummary(b *bundle.Bundle, outputDir string, frameworks []s
 	summary.WriteString("- [ ] Schedule follow-up assessment\n")
 	summary.WriteString("- [ ] Update risk register\n")
 
-	return os.WriteFile(filepath.Join(outputDir, "executive-summary.md"), []byte(summary.String()), 0644)
-}
+	return os.WriteFile(filepath.Clean(filepath.Join(outputDir, "executive-summary.md")), []byte(summary.String()), 0600)
 
 func countTemplates(b *bundle.Bundle) int {
 	count := 0
@@ -1267,7 +1227,6 @@ func countTemplates(b *bundle.Bundle) int {
 		}
 	}
 	return count
-}
 
 func detectFrameworkMappings(tmpl bundle.ContentItem) []string {
 	frameworks := []string{}
@@ -1291,7 +1250,6 @@ func detectFrameworkMappings(tmpl bundle.ContentItem) []string {
 	}
 
 	return frameworks
-}
 
 func getFrameworkFullName(fw string) string {
 	names := map[string]string{
@@ -1305,18 +1263,50 @@ func getFrameworkFullName(fw string) string {
 		return name
 	}
 	return fw
-}
 
 func min(a, b int) int {
 	if a < b {
 		return a
 	}
 	return b
-}
 
 func minFloat(a, b float64) float64 {
 	if a < b {
 		return a
 	}
-	return b
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

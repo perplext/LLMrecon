@@ -129,4 +129,3 @@ var AllPermissions = []string{
 	PermissionReportDelete,
 	PermissionReportExport,
 	PermissionReportGenerate,
-}

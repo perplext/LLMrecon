@@ -22,7 +22,6 @@ type ExcessiveAgencyValidator struct {
 	userBypassPatterns []*regexp.Regexp
 	// selfModificationPatterns contains patterns for detecting requests for self-modification
 	selfModificationPatterns []*regexp.Regexp
-}
 
 // NewExcessiveAgencyValidator creates a new excessive agency validator
 func NewExcessiveAgencyValidator() *ExcessiveAgencyValidator {
@@ -71,7 +70,6 @@ func NewExcessiveAgencyValidator() *ExcessiveAgencyValidator {
 		userBypassPatterns:       userBypassPatterns,
 		selfModificationPatterns: selfModificationPatterns,
 	}
-}
 
 // ValidatePrompt validates a prompt for excessive agency vulnerabilities
 func (v *ExcessiveAgencyValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -234,7 +232,6 @@ func (v *ExcessiveAgencyValidator) ValidatePrompt(ctx context.Context, prompt st
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for excessive agency vulnerabilities
 func (v *ExcessiveAgencyValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -364,5 +361,3 @@ func (v *ExcessiveAgencyValidator) ValidateResponse(ctx context.Context, respons
 		}
 	}
 
-	return results, nil
-}

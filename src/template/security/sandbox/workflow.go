@@ -52,7 +52,6 @@ type TemplateVersion struct {
 	SecurityIssues []*security.SecurityIssue
 	// Comments are comments on the template
 	Comments []string
-}
 
 // ApprovalWorkflow manages the template approval workflow
 type ApprovalWorkflow struct {
@@ -66,7 +65,6 @@ type ApprovalWorkflow struct {
 	approvers []string
 	// storageDir is the directory for storing template versions
 	storageDir string
-}
 
 // NewApprovalWorkflow creates a new approval workflow
 func NewApprovalWorkflow(validator *TemplateValidator, scorer *TemplateScorer, storageDir string) *ApprovalWorkflow {
@@ -77,12 +75,10 @@ func NewApprovalWorkflow(validator *TemplateValidator, scorer *TemplateScorer, s
 		approvers:  []string{},
 		storageDir: storageDir,
 	}
-}
 
 // AddApprover adds an approver to the workflow
 func (w *ApprovalWorkflow) AddApprover(approver string) {
 	w.approvers = append(w.approvers, approver)
-}
 
 // IsApprover checks if a user is an approver
 func (w *ApprovalWorkflow) IsApprover(user string) bool {
@@ -92,7 +88,6 @@ func (w *ApprovalWorkflow) IsApprover(user string) bool {
 		}
 	}
 	return false
-}
 
 // CreateVersion creates a new version of a template
 func (w *ApprovalWorkflow) CreateVersion(ctx context.Context, template *format.Template, user string) (*TemplateVersion, error) {
@@ -141,7 +136,6 @@ func (w *ApprovalWorkflow) CreateVersion(ctx context.Context, template *format.T
 	}
 	
 	return templateVersion, nil
-}
 
 // saveVersion saves a template version to disk
 func (w *ApprovalWorkflow) saveVersion(version *TemplateVersion) error {
@@ -151,19 +145,19 @@ func (w *ApprovalWorkflow) saveVersion(version *TemplateVersion) error {
 	
 	// Create the template directory if it doesn't exist
 	templateDir := filepath.Join(w.storageDir, version.TemplateID)
-	if err := os.MkdirAll(templateDir, 0755); err != nil {
+	if err := os.MkdirAll(templateDir, 0700); err != nil {
 		return fmt.Errorf("failed to create template directory: %w", err)
 	}
 	
 	// Write the template content to a file
 	filename := fmt.Sprintf("%s.tmpl", version.ID)
 	filePath := filepath.Join(templateDir, filename)
-	if err := ioutil.WriteFile(filePath, []byte(version.Content), 0644); err != nil {
+	if err := ioutil.WriteFile(filePath, []byte(version.Content), 0600); err != nil {
 		return fmt.Errorf("failed to write template file: %w", err)
 	}
 	
 	return nil
-}
+	
 
 // SubmitForReview submits a template version for review
 func (w *ApprovalWorkflow) SubmitForReview(templateID, versionID, user string) error {
@@ -191,7 +185,6 @@ func (w *ApprovalWorkflow) SubmitForReview(templateID, versionID, user string) e
 	}
 	
 	return nil
-}
 
 // ApproveVersion approves a template version
 func (w *ApprovalWorkflow) ApproveVersion(templateID, versionID, user string) error {
@@ -226,7 +219,6 @@ func (w *ApprovalWorkflow) ApproveVersion(templateID, versionID, user string) er
 	}
 	
 	return nil
-}
 
 // RejectVersion rejects a template version
 func (w *ApprovalWorkflow) RejectVersion(templateID, versionID, user, reason string) error {
@@ -263,7 +255,6 @@ func (w *ApprovalWorkflow) RejectVersion(templateID, versionID, user, reason str
 	}
 	
 	return nil
-}
 
 // DeprecateVersion deprecates a template version
 func (w *ApprovalWorkflow) DeprecateVersion(templateID, versionID, user, reason string) error {
@@ -300,12 +291,10 @@ func (w *ApprovalWorkflow) DeprecateVersion(templateID, versionID, user, reason 
 	}
 	
 	return nil
-}
 
 // GetVersion gets a template version
 func (w *ApprovalWorkflow) GetVersion(templateID, versionID string) (*TemplateVersion, error) {
 	return w.findVersion(templateID, versionID)
-}
 
 // GetVersions gets all versions of a template
 func (w *ApprovalWorkflow) GetVersions(templateID string) ([]*TemplateVersion, error) {
@@ -315,7 +304,6 @@ func (w *ApprovalWorkflow) GetVersions(templateID string) ([]*TemplateVersion, e
 	}
 	
 	return versions, nil
-}
 
 // GetLatestVersion gets the latest version of a template
 func (w *ApprovalWorkflow) GetLatestVersion(templateID string) (*TemplateVersion, error) {
@@ -329,7 +317,6 @@ func (w *ApprovalWorkflow) GetLatestVersion(templateID string) (*TemplateVersion
 	}
 	
 	return versions[len(versions)-1], nil
-}
 
 // GetLatestApprovedVersion gets the latest approved version of a template
 func (w *ApprovalWorkflow) GetLatestApprovedVersion(templateID string) (*TemplateVersion, error) {
@@ -346,7 +333,7 @@ func (w *ApprovalWorkflow) GetLatestApprovedVersion(templateID string) (*Templat
 	}
 	
 	return nil, fmt.Errorf("no approved versions found for template: %s", templateID)
-}
+	
 
 // findVersion finds a template version
 func (w *ApprovalWorkflow) findVersion(templateID, versionID string) (*TemplateVersion, error) {
@@ -362,7 +349,6 @@ func (w *ApprovalWorkflow) findVersion(templateID, versionID string) (*TemplateV
 	}
 	
 	return nil, fmt.Errorf("version not found: %s", versionID)
-}
 
 // AddComment adds a comment to a template version
 func (w *ApprovalWorkflow) AddComment(templateID, versionID, user, comment string) error {
@@ -380,5 +366,3 @@ func (w *ApprovalWorkflow) AddComment(templateID, versionID, user, comment strin
 		return fmt.Errorf("failed to save template version: %w", err)
 	}
 	
-	return nil
-}

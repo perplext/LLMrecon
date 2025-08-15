@@ -90,7 +90,6 @@ func (ks *FileKeyStore) RotateKey(id string) (*Key, error) {
 	}
 
 	return newKey, nil
-}
 
 // GenerateKey generates a new key with the specified parameters
 func (ks *FileKeyStore) GenerateKey(keyType KeyType, algorithm string, metadata *KeyMetadata) (*Key, error) {
@@ -171,7 +170,6 @@ func (ks *FileKeyStore) GenerateKey(keyType KeyType, algorithm string, metadata 
 	}
 
 	return key, nil
-}
 
 // generateRSAKey generates an RSA key pair
 func generateRSAKey(algorithm string) (KeyMaterial, error) {
@@ -192,7 +190,6 @@ func generateRSAKey(algorithm string) (KeyMaterial, error) {
 	if err != nil {
 		return KeyMaterial{}, fmt.Errorf("failed to generate RSA key: %w", err)
 	}
-
 	// Encode private key to PEM
 	privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
 	privatePEM := pem.EncodeToMemory(&pem.Block{
@@ -215,7 +212,6 @@ func generateRSAKey(algorithm string) (KeyMaterial, error) {
 		Public:  publicPEM,
 		Format:  "PEM",
 	}, nil
-}
 
 // generateECDSAKey generates an ECDSA key pair
 func generateECDSAKey(algorithm string) (KeyMaterial, error) {
@@ -265,7 +261,6 @@ func generateECDSAKey(algorithm string) (KeyMaterial, error) {
 		Public:  publicPEM,
 		Format:  "PEM",
 	}, nil
-}
 
 // generateEd25519Key generates an Ed25519 key pair
 func generateEd25519Key() (KeyMaterial, error) {
@@ -292,8 +287,6 @@ func generateEd25519Key() (KeyMaterial, error) {
 		Public:  publicPEM,
 		Format:  "PEM",
 	}, nil
-}
-
 // generateSymmetricKey generates a symmetric key
 func generateSymmetricKey(algorithm string) (KeyMaterial, error) {
 	// Determine key size from algorithm
@@ -318,4 +311,3 @@ func generateSymmetricKey(algorithm string) (KeyMaterial, error) {
 		Private: key,
 		Format:  "RAW",
 	}, nil
-}

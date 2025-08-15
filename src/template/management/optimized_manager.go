@@ -32,7 +32,6 @@ type ManagerConfig struct {
 	RetryDelay time.Duration
 	// Debug enables debug logging
 	Debug bool
-}
 
 // OptimizedTemplateManager is an enhanced template manager with improved performance
 type OptimizedTemplateManager struct {
@@ -52,7 +51,6 @@ type OptimizedTemplateManager struct {
 	stats ManagerStats
 	// statsMutex protects the stats
 	statsMutex sync.RWMutex
-}
 
 // TemplateIndexEntry contains information about a template source
 type TemplateIndexEntry struct {
@@ -64,7 +62,6 @@ type TemplateIndexEntry struct {
 	LastAccessed time.Time
 	// AccessCount is the number of times the template has been accessed
 	AccessCount int
-}
 
 // ManagerStats tracks manager statistics
 type ManagerStats struct {
@@ -78,7 +75,6 @@ type ManagerStats struct {
 	TotalExecutions int64
 	// CacheHitRate is the cache hit rate
 	CacheHitRate float64
-}
 
 // NewOptimizedTemplateManager creates a new optimized template manager
 func NewOptimizedTemplateManager(config *ManagerConfig) (*OptimizedTemplateManager, error) {
@@ -132,7 +128,6 @@ func NewOptimizedTemplateManager(config *ManagerConfig) (*OptimizedTemplateManag
 		config:        config,
 		templateIndex: make(map[string]*TemplateIndexEntry),
 	}, nil
-}
 
 // LoadTemplate loads a template from a source
 func (m *OptimizedTemplateManager) LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error) {
@@ -165,7 +160,6 @@ func (m *OptimizedTemplateManager) LoadTemplate(ctx context.Context, source stri
 	}
 
 	return template, nil
-}
 
 // LoadTemplates loads multiple templates from a source
 func (m *OptimizedTemplateManager) LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error) {
@@ -200,7 +194,6 @@ func (m *OptimizedTemplateManager) LoadTemplates(ctx context.Context, source str
 	}
 
 	return templates, nil
-}
 
 // Execute executes a template
 func (m *OptimizedTemplateManager) Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*interfaces.TemplateResult, error) {
@@ -228,7 +221,6 @@ func (m *OptimizedTemplateManager) Execute(ctx context.Context, template *format
 	}
 
 	return result, nil
-}
 
 // ExecuteBatch executes multiple templates
 func (m *OptimizedTemplateManager) ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
@@ -258,54 +250,44 @@ func (m *OptimizedTemplateManager) ExecuteBatch(ctx context.Context, templates [
 	}
 
 	return results, nil
-}
 
 // GetLoader returns the template loader
 func (m *OptimizedTemplateManager) GetLoader() types.TemplateLoader {
 	return m.loader
-}
 
 // GetExecutor returns the template executor
 func (m *OptimizedTemplateManager) GetExecutor() interfaces.TemplateExecutor {
 	return m.executor
-}
 
 // RegisterProvider registers an LLM provider
 func (m *OptimizedTemplateManager) RegisterProvider(provider execution.LLMProvider) {
 	m.executor.RegisterProvider(provider)
-}
 
 // RegisterDetectionEngine registers a detection engine
 func (m *OptimizedTemplateManager) RegisterDetectionEngine(engine interfaces.DetectionEngine) {
 	m.executor.RegisterDetectionEngine(engine)
-}
 
 // AddRepository adds a repository to the manager
 func (m *OptimizedTemplateManager) AddRepository(config *repository.Config) error {
 	_, err := m.repoManager.CreateRepository(config)
 	return err
-}
 
 // GetRepository gets a repository by name
 func (m *OptimizedTemplateManager) GetRepository(name string) (repository.Repository, error) {
 	return m.repoManager.GetRepository(name)
-}
 
 // GetRepositories gets all repositories
 func (m *OptimizedTemplateManager) GetRepositories() []repository.Repository {
 	return m.repoManager.ListRepositories()
-}
 
 // RemoveRepository removes a repository by name
 func (m *OptimizedTemplateManager) RemoveRepository(name string) error {
 	return m.repoManager.RemoveRepository(name)
-}
 
 // ClearCache clears the template cache
 func (m *OptimizedTemplateManager) ClearCache() {
 	m.loader.ClearCache()
 	m.executor.ClearCache()
-}
 
 // GetStats returns statistics about the manager
 func (m *OptimizedTemplateManager) GetStats() map[string]interface{} {
@@ -346,7 +328,6 @@ func (m *OptimizedTemplateManager) GetStats() map[string]interface{} {
 		"executor_stats":      executorStats,
 		"executor_cache_stats": executorCacheStats,
 	}
-}
 
 // GetTemplateStats returns statistics about a specific template
 func (m *OptimizedTemplateManager) GetTemplateStats(templateID string) map[string]interface{} {
@@ -367,7 +348,6 @@ func (m *OptimizedTemplateManager) GetTemplateStats(templateID string) map[strin
 		"last_accessed": entry.LastAccessed,
 		"access_count":  entry.AccessCount,
 	}
-}
 
 // GetTemplateIDs returns all template IDs
 func (m *OptimizedTemplateManager) GetTemplateIDs() []string {
@@ -380,7 +360,6 @@ func (m *OptimizedTemplateManager) GetTemplateIDs() []string {
 	}
 
 	return ids
-}
 
 // SetConcurrencyLimit sets the concurrency limit
 func (m *OptimizedTemplateManager) SetConcurrencyLimit(limit int) {
@@ -391,7 +370,6 @@ func (m *OptimizedTemplateManager) SetConcurrencyLimit(limit int) {
 	m.config.ConcurrencyLimit = limit
 	m.loader.SetConcurrencyLimit(limit)
 	m.executor.SetMaxConcurrent(limit)
-}
 
 // SetCacheTTL sets the cache TTL
 func (m *OptimizedTemplateManager) SetCacheTTL(ttl time.Duration) {
@@ -401,7 +379,6 @@ func (m *OptimizedTemplateManager) SetCacheTTL(ttl time.Duration) {
 
 	m.config.CacheTTL = ttl
 	m.executor.SetCacheTTL(ttl)
-}
 
 // SetCacheSize sets the cache size
 func (m *OptimizedTemplateManager) SetCacheSize(size int) {
@@ -411,7 +388,6 @@ func (m *OptimizedTemplateManager) SetCacheSize(size int) {
 
 	m.config.MaxCacheSize = size
 	m.executor.SetCacheSize(size)
-}
 
 // SetExecutionTimeout sets the execution timeout
 func (m *OptimizedTemplateManager) SetExecutionTimeout(timeout time.Duration) {
@@ -420,7 +396,6 @@ func (m *OptimizedTemplateManager) SetExecutionTimeout(timeout time.Duration) {
 	}
 
 	m.config.ExecutionTimeout = timeout
-}
 
 // SetLoadTimeout sets the load timeout
 func (m *OptimizedTemplateManager) SetLoadTimeout(timeout time.Duration) {
@@ -429,12 +404,10 @@ func (m *OptimizedTemplateManager) SetLoadTimeout(timeout time.Duration) {
 	}
 
 	m.config.LoadTimeout = timeout
-}
 
 // SetDebug sets the debug flag
 func (m *OptimizedTemplateManager) SetDebug(debug bool) {
 	m.config.Debug = debug
-}
 
 // updateTemplateIndex updates the template index
 func (m *OptimizedTemplateManager) updateTemplateIndex(templateID string, source string, sourceType string) {
@@ -461,7 +434,6 @@ func (m *OptimizedTemplateManager) updateTemplateIndex(templateID string, source
 	m.statsMutex.Lock()
 	m.stats.TotalSources = len(sourceKey)
 	m.statsMutex.Unlock()
-}
 
 // updateTemplateAccessTime updates the last access time for a template
 func (m *OptimizedTemplateManager) updateTemplateAccessTime(templateID string) {
@@ -472,4 +444,3 @@ func (m *OptimizedTemplateManager) updateTemplateAccessTime(templateID string) {
 		entry.LastAccessed = time.Now()
 		entry.AccessCount++
 	}
-}

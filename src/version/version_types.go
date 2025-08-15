@@ -33,7 +33,6 @@ func (v *SemVersion) GetChangeType(other *SemVersion) VersionChangeType {
 		return BuildChange
 	}
 	return NoChange
-}
 
 // ParseVersion parses a version string into a Version struct
 func ParseVersion(versionStr string) (Version, error) {
@@ -41,5 +40,3 @@ func ParseVersion(versionStr string) (Version, error) {
 	if err != nil {
 		return Version{}, err
 	}
-	return *v, nil
-}

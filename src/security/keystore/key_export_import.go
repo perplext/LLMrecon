@@ -118,7 +118,6 @@ func (ks *FileKeyStore) ExportKey(id string, format string, includePrivate bool)
 	}
 
 	return nil, fmt.Errorf("unsupported export format: %s", format)
-}
 
 // ImportKey imports a key from the specified format
 func (ks *FileKeyStore) ImportKey(keyData []byte, format string, metadata *KeyMetadata) (*Key, error) {
@@ -209,7 +208,6 @@ func (ks *FileKeyStore) ImportKey(keyData []byte, format string, metadata *KeyMe
 	}
 
 	return key, nil
-}
 
 // processPEMKey processes a PEM-encoded key
 func processPEMKey(pemData []byte, keyType KeyType) (KeyMaterial, error) {
@@ -363,7 +361,7 @@ func processPEMKey(pemData []byte, keyType KeyType) (KeyMaterial, error) {
 	default:
 		return KeyMaterial{}, fmt.Errorf("unsupported PEM block type: %s", block.Type)
 	}
-}
+	
 
 // processDERKey processes a DER-encoded key
 func processDERKey(derData []byte, keyType KeyType) (KeyMaterial, error) {
@@ -446,5 +444,3 @@ func processDERKey(derData []byte, keyType KeyType) (KeyMaterial, error) {
 	pemData := pem.EncodeToMemory(pemBlock)
 
 	// Process the PEM data (which will extract public key if needed)
-	return processPEMKey(pemData, keyType)
-}

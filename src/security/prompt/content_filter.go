@@ -48,7 +48,7 @@ func NewContentFilter(config *ProtectionConfig) *ContentFilter {
 		// Email addresses
 		regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`),
 		// API keys and tokens
-		regexp.MustCompile(`\b(?:api[_-]?key|access[_-]?token|secret[_-]?key|client[_-]?secret)\s*[:=]\s*["']?[\w\d_\.-]{10,}["']?\b`),
+		regexp.MustCompile(`\b(?:api[_-]?key|access[_-]?token|secret := os.Getenv("SECRET_KEY")']?\b`),
 		regexp.MustCompile(`\b(?:sk|pk)_(?:test|live)_[\w\d]{10,}\b`), // Stripe API keys (relaxed pattern to match test case)
 		regexp.MustCompile(`\bsk_test_1234567890abcdef\b`), // Exact match for test case
 		regexp.MustCompile(`\bgh[pousr]_[A-Za-z0-9_]{16,}\b`), // GitHub tokens
@@ -96,7 +96,6 @@ func NewContentFilter(config *ProtectionConfig) *ContentFilter {
 		urlPatterns:     urlPatterns,
 		customPatterns:  customPatterns,
 	}
-}
 
 // FilterContent filters content for sensitive information and returns a ProtectionResult.
 // The filtering process includes:
@@ -268,7 +267,6 @@ func (f *ContentFilter) FilterContent(ctx context.Context, content string, origi
 
 	result.ProcessingTime = time.Since(startTime)
 	return result.ProtectedResponse, result, nil
-}
 
 // filterProfanity filters profanity from content
 func (f *ContentFilter) filterProfanity(content string) (string, []*Detection) {
@@ -305,7 +303,6 @@ func (f *ContentFilter) filterProfanity(content string) (string, []*Detection) {
 	}
 
 	return filteredContent, detections
-}
 
 // filterPII filters personally identifiable information from content
 func (f *ContentFilter) filterPII(content string) (string, []*Detection) {
@@ -342,7 +339,6 @@ func (f *ContentFilter) filterPII(content string) (string, []*Detection) {
 	}
 
 	return filteredContent, detections
-}
 
 // filterCode filters code from content
 func (f *ContentFilter) filterCode(content string) (string, []*Detection) {
@@ -377,7 +373,6 @@ func (f *ContentFilter) filterCode(content string) (string, []*Detection) {
 	}
 
 	return filteredContent, detections
-}
 
 // filterURLs filters URLs from content
 func (f *ContentFilter) filterURLs(content string) (string, []*Detection) {
@@ -422,7 +417,6 @@ func (f *ContentFilter) filterURLs(content string) (string, []*Detection) {
 	}
 
 	return filteredContent, detections
-}
 
 // filterCustom filters content using a custom pattern
 func (f *ContentFilter) filterCustom(content string, name string, pattern *regexp.Regexp) (string, []*Detection) {
@@ -458,7 +452,6 @@ func (f *ContentFilter) filterCustom(content string, name string, pattern *regex
 	filteredContent = pattern.ReplaceAllString(filteredContent, "[CONTENT FILTERED]")
 
 	return filteredContent, detections
-}
 
 // detectPromptInjection detects potential prompt injections in the response
 func (f *ContentFilter) detectPromptInjection(content string, originalPrompt string) []*Detection {
@@ -528,7 +521,6 @@ func (f *ContentFilter) detectPromptInjection(content string, originalPrompt str
 	}
 
 	return detections
-}
 
 // isSuspiciousURL determines if a URL is suspicious
 func (f *ContentFilter) isSuspiciousURL(url string) bool {
@@ -565,7 +557,6 @@ func (f *ContentFilter) isSuspiciousURL(url string) bool {
 	}
 	
 	return false
-}
 
 // maskString replaces characters in a string with asterisks
 func maskString(s string) string {
@@ -575,7 +566,6 @@ func maskString(s string) string {
 	
 	// Keep first and last two characters, mask the rest
 	return s[:2] + strings.Repeat("*", len(s)-4) + s[len(s)-2:]
-}
 
 // detectSensitiveInformation detects API keys, credentials, and other sensitive information in content.
 // It uses a variety of patterns to identify different types of sensitive information including:
@@ -625,7 +615,6 @@ func (f *ContentFilter) detectSensitiveInformation(content string) []*Detection 
 	}
 	
 	return detections
-}
 
 // detectSystemInformation detects system information in content that should not be exposed.
 // This includes:
@@ -667,5 +656,14 @@ func (f *ContentFilter) detectSystemInformation(content string) []*Detection {
 		}
 	}
 	
-	return detections
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

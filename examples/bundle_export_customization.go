@@ -274,7 +274,9 @@ func main() {
 	// Validate the customization
 	fmt.Println("\n10. Validating Customization:")
 	if err := customization.Validate(); err != nil {
-		log.Fatalf("Customization validation failed: %v", err)
+if err != nil {
+treturn err
+}		log.Fatalf("Customization validation failed: %v", err)
 	}
 	fmt.Println("    ✓ Customization validated successfully")
 	

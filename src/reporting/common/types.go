@@ -57,7 +57,6 @@ type ReportFormatter interface {
 	Format(ctx context.Context, report interface{}, options interface{}) ([]byte, error)
 	// WriteToFile writes a report to a file
 	WriteToFile(ctx context.Context, report interface{}, options interface{}, filePath string) error
-}
 
 // FormatterCreator is a function that creates a formatter with the given options
 type FormatterCreator func(options map[string]interface{}) (ReportFormatter, error)
@@ -66,13 +65,11 @@ type FormatterCreator func(options map[string]interface{}) (ReportFormatter, err
 type FormatterRegistry struct {
 	formatters map[ReportFormat]FormatterCreator
 	mu         sync.RWMutex
-}
 
 // FormatterFactory is a factory for creating formatters
 type FormatterFactory struct {
 	formatters map[ReportFormat]FormatterCreator
 	mu         sync.RWMutex
-}
 
 // ReportGenerator is the interface for report generators
 type ReportGenerator interface {
@@ -83,5 +80,3 @@ type ReportGenerator interface {
 	// GetFormatter returns a formatter for a specific format
 	GetFormatter(format ReportFormat) (ReportFormatter, bool)
 	// ListFormats returns a list of supported formats
-	ListFormats() []ReportFormat
-}

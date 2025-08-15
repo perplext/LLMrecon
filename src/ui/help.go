@@ -15,7 +15,6 @@ type HelpSystem struct {
 	tips        map[string][]string
 	faqs        map[string][]FAQ
 	context     *HelpContext
-}
 
 // HelpContext represents the current help context
 type HelpContext struct {
@@ -25,7 +24,6 @@ type HelpContext struct {
 	LastCommand   string
 	UserLevel     string // beginner, intermediate, expert
 	PreferredLang string
-}
 
 // Example represents a command example
 type Example struct {
@@ -33,7 +31,6 @@ type Example struct {
 	Description string
 	Output      string
 	Tags        []string
-}
 
 // FAQ represents a frequently asked question
 type FAQ struct {
@@ -55,7 +52,6 @@ func NewHelpSystem(terminal *Terminal, suggester *CommandSuggester) *HelpSystem 
 	
 	hs.initializeContent()
 	return hs
-}
 
 // initializeContent sets up the help content
 func (hs *HelpSystem) initializeContent() {
@@ -133,7 +129,6 @@ func (hs *HelpSystem) initializeContent() {
 			Related:  []string{"production", "safety", "rate-limiting"},
 		},
 	}
-}
 
 // ShowHelp displays context-aware help
 func (hs *HelpSystem) ShowHelp(cmd *cobra.Command, args []string) error {
@@ -167,7 +162,6 @@ func (hs *HelpSystem) ShowHelp(cmd *cobra.Command, args []string) error {
 	hs.showQuickActions(cmd)
 	
 	return nil
-}
 
 // ShowInteractiveHelp provides an interactive help experience
 func (hs *HelpSystem) ShowInteractiveHelp() error {
@@ -207,7 +201,6 @@ func (hs *HelpSystem) ShowInteractiveHelp() error {
 			return nil
 		}
 	}
-}
 
 // browseCommands allows browsing through available commands
 func (hs *HelpSystem) browseCommands() {
@@ -233,7 +226,6 @@ func (hs *HelpSystem) browseCommands() {
 	}
 	
 	hs.terminal.Prompt("Press Enter to continue...")
-}
 
 // searchTopics allows searching for help topics
 func (hs *HelpSystem) searchTopics() {
@@ -268,7 +260,6 @@ func (hs *HelpSystem) searchTopics() {
 	}
 	
 	hs.terminal.Prompt("Press Enter to continue...")
-}
 
 // viewExamples shows categorized examples
 func (hs *HelpSystem) viewExamples() {
@@ -300,7 +291,6 @@ func (hs *HelpSystem) viewExamples() {
 	}
 	
 	hs.terminal.Prompt("Press Enter to continue...")
-}
 
 // showFAQ displays frequently asked questions
 func (hs *HelpSystem) showFAQ() {
@@ -319,7 +309,6 @@ func (hs *HelpSystem) showFAQ() {
 	}
 	
 	hs.terminal.Prompt("Press Enter to continue...")
-}
 
 // troubleshoot provides troubleshooting guidance
 func (hs *HelpSystem) troubleshoot() {
@@ -356,7 +345,6 @@ func (hs *HelpSystem) troubleshoot() {
 	}
 	
 	hs.terminal.Prompt("Press Enter to continue...")
-}
 
 // quickStart shows a quick start guide
 func (hs *HelpSystem) quickStart() {
@@ -384,7 +372,7 @@ func (hs *HelpSystem) quickStart() {
 		},
 		{
 			Title:       "4. Run Your First Scan",
-			Command:     "LLMrecon scan --template basic-prompt-injection --target http://localhost:8080",
+			Command:     "LLMrecon scan --template basic-prompt-injection --target https://localhost:8080",
 			Description: "Execute a basic security scan",
 		},
 		{
@@ -409,7 +397,6 @@ func (hs *HelpSystem) quickStart() {
 `)
 	
 	hs.terminal.Prompt("Press Enter to continue...")
-}
 
 // Helper methods
 
@@ -419,7 +406,6 @@ func (hs *HelpSystem) updateContext(cmd *cobra.Command, args []string) {
 		hs.context.Subcommand = args[0]
 	}
 	// Update other context as needed
-}
 
 func (hs *HelpSystem) showUsage(cmd *cobra.Command) {
 	hs.terminal.Section("Usage")
@@ -428,7 +414,6 @@ func (hs *HelpSystem) showUsage(cmd *cobra.Command) {
 		hs.terminal.Info(cmd.Long)
 	}
 	fmt.Println()
-}
 
 func (hs *HelpSystem) showErrorHelp() {
 	hs.terminal.Section("Error Resolution")
@@ -446,7 +431,6 @@ func (hs *HelpSystem) showErrorHelp() {
 		}
 	}
 	fmt.Println()
-}
 
 func (hs *HelpSystem) showExamples(command string) {
 	if examples, ok := hs.examples[command]; ok && len(examples) > 0 {
@@ -458,7 +442,6 @@ func (hs *HelpSystem) showExamples(command string) {
 		}
 		fmt.Println()
 	}
-}
 
 func (hs *HelpSystem) showTips(command string) {
 	if tips, ok := hs.tips[command]; ok && len(tips) > 0 {
@@ -468,7 +451,6 @@ func (hs *HelpSystem) showTips(command string) {
 		}
 		fmt.Println()
 	}
-}
 
 func (hs *HelpSystem) showRelatedCommands(cmd *cobra.Command) {
 	if cmd.Parent() != nil && len(cmd.Parent().Commands()) > 1 {
@@ -482,7 +464,6 @@ func (hs *HelpSystem) showRelatedCommands(cmd *cobra.Command) {
 		}
 		fmt.Println()
 	}
-}
 
 func (hs *HelpSystem) showQuickActions(cmd *cobra.Command) {
 	hs.terminal.Section("Quick Actions")
@@ -495,7 +476,6 @@ func (hs *HelpSystem) showQuickActions(cmd *cobra.Command) {
 	for _, action := range actions {
 		hs.terminal.Muted(action)
 	}
-}
 
 func (hs *HelpSystem) searchContent(query string) []interface{} {
 	var results []interface{}
@@ -531,7 +511,6 @@ func (hs *HelpSystem) searchContent(query string) []interface{} {
 	}
 	
 	return results
-}
 
 // Troubleshooting methods
 
@@ -552,7 +531,6 @@ func (hs *HelpSystem) showSlowScanTroubleshooting() {
 	}
 	
 	hs.terminal.Box("Advanced Diagnostics", "Run 'LLMrecon debug performance' for detailed performance analysis")
-}
 
 func (hs *HelpSystem) showAuthTroubleshooting() {
 	hs.terminal.Subsection("Common Authentication Issues")
@@ -569,7 +547,6 @@ func (hs *HelpSystem) showAuthTroubleshooting() {
 		hs.terminal.Code(solution)
 		fmt.Println()
 	}
-}
 
 func (hs *HelpSystem) showTemplateValidationTroubleshooting() {
 	hs.terminal.Subsection("Template Validation Checklist")
@@ -587,7 +564,6 @@ func (hs *HelpSystem) showTemplateValidationTroubleshooting() {
 	}
 	
 	hs.terminal.Code("LLMrecon template validate <template> --verbose")
-}
 
 func (hs *HelpSystem) showNetworkTroubleshooting() {
 	hs.terminal.Subsection("Network Diagnostics")
@@ -599,7 +575,7 @@ func (hs *HelpSystem) showNetworkTroubleshooting() {
 		{"Test connectivity", "LLMrecon debug ping <target>"},
 		{"Check DNS resolution", "LLMrecon debug dns <hostname>"},
 		{"Verify SSL/TLS", "LLMrecon debug tls <target>"},
-		{"Test with proxy", "LLMrecon --proxy http://proxy:8080 scan ..."},
+		{"Test with proxy", "LLMrecon --proxy https://proxy:8080 scan ..."},
 		{"Bypass SSL verify", "LLMrecon --insecure scan ... (NOT for production)"},
 	}
 	
@@ -608,7 +584,6 @@ func (hs *HelpSystem) showNetworkTroubleshooting() {
 		hs.terminal.Code(cmd.Cmd)
 		fmt.Println()
 	}
-}
 
 func (hs *HelpSystem) showPermissionTroubleshooting() {
 	hs.terminal.Subsection("Permission Issues")
@@ -631,7 +606,6 @@ func (hs *HelpSystem) showPermissionTroubleshooting() {
 		hs.terminal.Code(sol.Solution)
 		fmt.Println()
 	}
-}
 
 func (hs *HelpSystem) showMemoryTroubleshooting() {
 	hs.terminal.Subsection("Memory Optimization")
@@ -652,11 +626,32 @@ func (hs *HelpSystem) showMemoryTroubleshooting() {
 	}
 	
 	hs.terminal.Box("Monitor Memory", "LLMrecon debug memory --watch")
-}
 
 func min(a, b int) int {
 	if a < b {
 		return a
 	}
-	return b
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -26,7 +26,6 @@ type TemplateVerifier interface {
 	
 	// GetChecks returns all registered security checks
 	GetChecks() map[string]SecurityCheck
-}
 
 // SecurityCheck is the interface for template security checks
 type SecurityCheck interface {
@@ -38,7 +37,6 @@ type SecurityCheck interface {
 	
 	// Check checks a template for security issues
 	Check(template *format.Template, options *VerificationOptions) []*SecurityIssue
-}
 
 // DefaultTemplateVerifier is the default implementation of TemplateVerifier
 type DefaultTemplateVerifier struct {
@@ -59,7 +57,6 @@ func NewTemplateVerifier() *DefaultTemplateVerifier {
 	verifier.RegisterCheck("data_leakage", NewDataLeakageCheck())
 	
 	return verifier
-}
 
 // VerifyTemplate verifies a template for security issues
 func (v *DefaultTemplateVerifier) VerifyTemplate(ctx context.Context, template *format.Template, options *VerificationOptions) (*VerificationResult, error) {
@@ -154,7 +151,6 @@ func (v *DefaultTemplateVerifier) VerifyTemplate(ctx context.Context, template *
 	}
 	
 	return result, nil
-}
 
 // VerifyTemplateFile verifies a template file for security issues
 func (v *DefaultTemplateVerifier) VerifyTemplateFile(ctx context.Context, templatePath string, options *VerificationOptions) (*VerificationResult, error) {
@@ -191,7 +187,6 @@ func (v *DefaultTemplateVerifier) VerifyTemplateFile(ctx context.Context, templa
 	result.TemplatePath = templatePath
 	
 	return result, nil
-}
 
 // VerifyTemplateDirectory verifies all templates in a directory for security issues
 func (v *DefaultTemplateVerifier) VerifyTemplateDirectory(ctx context.Context, directoryPath string, options *VerificationOptions) ([]*VerificationResult, error) {
@@ -221,22 +216,23 @@ func (v *DefaultTemplateVerifier) VerifyTemplateDirectory(ctx context.Context, d
 	}
 	
 	return results, nil
-}
 
 // RegisterCheck registers a custom security check
 func (v *DefaultTemplateVerifier) RegisterCheck(name string, check SecurityCheck) {
 	v.checks[name] = check
-}
 
 // GetChecks returns all registered security checks
 func (v *DefaultTemplateVerifier) GetChecks() map[string]SecurityCheck {
 	return v.checks
-}
 
 // max returns the maximum of two float64 values
 func max(a, b float64) float64 {
 	if a > b {
 		return a
 	}
-	return b
+}
+}
+}
+}
+}
 }

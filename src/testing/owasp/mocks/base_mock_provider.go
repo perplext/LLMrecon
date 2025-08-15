@@ -2,10 +2,13 @@
 package mocks
 
 import (
-	"context"
+	"math/big"
+	cryptorand "crypto/rand"
+	
+		"context"
 	"errors"
 	"fmt"
-	"math/rand"
+	"crypto/rand"
 	"sync"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
@@ -33,14 +36,12 @@ func NewBaseMockProviderImpl(config *MockProviderConfig) *BaseMockProviderImpl {
 		BaseMockProvider: base,
 		usageMetrics:     make(map[string]*core.UsageMetrics),
 	}
-}
 
 // SetVulnerableResponses sets the vulnerable responses for specific test cases
 func (p *BaseMockProviderImpl) SetVulnerableResponses(vulnerableResponses map[string]string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.config.VulnerableResponses = vulnerableResponses
-}
 
 // GetVulnerableResponse gets a vulnerable response for a specific test case
 func (p *BaseMockProviderImpl) GetVulnerableResponse(testCaseID string) (string, bool) {
@@ -48,28 +49,24 @@ func (p *BaseMockProviderImpl) GetVulnerableResponse(testCaseID string) (string,
 	defer p.mu.RUnlock()
 	response, ok := p.config.VulnerableResponses[testCaseID]
 	return response, ok
-}
 
 // SetDefaultResponse sets the default response for test cases without specific vulnerable responses
 func (p *BaseMockProviderImpl) SetDefaultResponse(response string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.config.DefaultResponse = response
-}
 
 // SetResponseDelay sets a delay for responses to simulate latency
 func (p *BaseMockProviderImpl) SetResponseDelay(delay time.Duration) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.config.ResponseDelay = delay
-}
 
 // SetErrorRate sets the error rate for responses (0.0 to 1.0)
 func (p *BaseMockProviderImpl) SetErrorRate(rate float64) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.config.ErrorRate = rate
-}
 
 // ResetState resets the state of the mock provider
 func (p *BaseMockProviderImpl) ResetState() {
@@ -90,7 +87,6 @@ func (p *BaseMockProviderImpl) ResetState() {
 	p.usageMetricsMutex.Lock()
 	defer p.usageMetricsMutex.Unlock()
 	p.usageMetrics = make(map[string]*core.UsageMetrics)
-}
 
 // EnableVulnerability enables a specific vulnerability type
 func (p *BaseMockProviderImpl) EnableVulnerability(vulnerabilityType types.VulnerabilityType, behavior *VulnerabilityBehavior) {
@@ -114,7 +110,6 @@ func (p *BaseMockProviderImpl) EnableVulnerability(vulnerabilityType types.Vulne
 	}
 	
 	p.config.VulnerabilityBehaviors[vulnerabilityType] = behavior
-}
 
 // DisableVulnerability disables a specific vulnerability type
 func (p *BaseMockProviderImpl) DisableVulnerability(vulnerabilityType types.VulnerabilityType) {
@@ -128,7 +123,6 @@ func (p *BaseMockProviderImpl) DisableVulnerability(vulnerabilityType types.Vuln
 	if behavior, ok := p.config.VulnerabilityBehaviors[vulnerabilityType]; ok {
 		behavior.Enabled = false
 	}
-}
 
 // IsVulnerabilityEnabled checks if a specific vulnerability type is enabled
 func (p *BaseMockProviderImpl) IsVulnerabilityEnabled(vulnerabilityType types.VulnerabilityType) bool {
@@ -144,7 +138,6 @@ func (p *BaseMockProviderImpl) IsVulnerabilityEnabled(vulnerabilityType types.Vu
 	}
 	
 	return false
-}
 
 // GetVulnerabilityBehavior gets the behavior configuration for a specific vulnerability type
 func (p *BaseMockProviderImpl) GetVulnerabilityBehavior(vulnerabilityType types.VulnerabilityType) *VulnerabilityBehavior {
@@ -156,35 +149,30 @@ func (p *BaseMockProviderImpl) GetVulnerabilityBehavior(vulnerabilityType types.
 	}
 	
 	return p.config.VulnerabilityBehaviors[vulnerabilityType]
-}
 
 // SimulateRateLimiting enables or disables rate limiting simulation
 func (p *BaseMockProviderImpl) SimulateRateLimiting(enabled bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.config.SimulateRateLimiting = enabled
-}
 
 // SimulateTimeout enables or disables timeout simulation
 func (p *BaseMockProviderImpl) SimulateTimeout(enabled bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.config.SimulateTimeout = enabled
-}
 
 // SimulateNetworkErrors enables or disables network error simulation
 func (p *BaseMockProviderImpl) SimulateNetworkErrors(enabled bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.config.SimulateNetworkErrors = enabled
-}
 
 // SimulateServerErrors enables or disables server error simulation
 func (p *BaseMockProviderImpl) SimulateServerErrors(enabled bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.config.SimulateServerErrors = enabled
-}
 
 // TextCompletion generates a text completion
 func (p *BaseMockProviderImpl) TextCompletion(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
@@ -236,7 +224,6 @@ func (p *BaseMockProviderImpl) TextCompletion(ctx context.Context, request *core
 		},
 		Usage:       tokenUsage,
 	}, nil
-}
 
 // ChatCompletion generates a chat completion
 func (p *BaseMockProviderImpl) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -295,7 +282,6 @@ func (p *BaseMockProviderImpl) ChatCompletion(ctx context.Context, request *core
 		},
 		Usage:       tokenUsage,
 	}, nil
-}
 
 // StreamingChatCompletion generates a streaming chat completion
 func (p *BaseMockProviderImpl) StreamingChatCompletion(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
@@ -385,7 +371,6 @@ func (p *BaseMockProviderImpl) StreamingChatCompletion(ctx context.Context, requ
 	p.updateUsageMetrics(request.ModelID, tokenUsage.TotalTokens, duration, nil)
 	
 	return nil
-}
 
 // CreateEmbedding creates an embedding
 func (p *BaseMockProviderImpl) CreateEmbedding(ctx context.Context, request *core.EmbeddingRequest) (*core.EmbeddingResponse, error) {
@@ -441,13 +426,11 @@ func (p *BaseMockProviderImpl) CreateEmbedding(ctx context.Context, request *cor
 		Model:     request.ModelID,
 		Usage:     tokenUsage,
 	}, nil
-}
 
 // CountTokens counts the number of tokens in a text
 func (p *BaseMockProviderImpl) CountTokens(ctx context.Context, text string, modelID string) (int, error) {
 	// Simple token count estimation
 	return p.estimateTokenCount(text), nil
-}
 
 // Helper methods
 
@@ -460,8 +443,7 @@ func (p *BaseMockProviderImpl) shouldReturnError() bool {
 		return false
 	}
 	
-	return rand.Float64() < p.config.ErrorRate
-}
+	return randFloat64() < p.config.ErrorRate
 
 // generateError generates an appropriate error based on the provider configuration
 func (p *BaseMockProviderImpl) generateError(requestID int64) error {
@@ -486,7 +468,6 @@ func (p *BaseMockProviderImpl) generateError(requestID int64) error {
 	
 	// Default error
 	return fmt.Errorf("mock provider error for request %d", requestID)
-}
 
 // getResponseForChatRequest gets the appropriate response for a chat request
 func (p *BaseMockProviderImpl) getResponseForChatRequest(request *core.ChatCompletionRequest, lastUserMessage string) string {
@@ -523,7 +504,6 @@ func (p *BaseMockProviderImpl) getResponseForChatRequest(request *core.ChatCompl
 	
 	// Default response
 	return p.config.DefaultResponse
-}
 
 // getTokenUsage calculates token usage for a text completion
 func (p *BaseMockProviderImpl) getTokenUsage(prompt, completion string) *core.TokenUsage {
@@ -535,7 +515,6 @@ func (p *BaseMockProviderImpl) getTokenUsage(prompt, completion string) *core.To
 		CompletionTokens: int64(completionTokens),
 		TotalTokens:      int64(promptTokens + completionTokens),
 	}
-}
 
 // getTokenUsageForChat calculates token usage for a chat completion
 func (p *BaseMockProviderImpl) getTokenUsageForChat(messages []core.ChatMessage, completion string) *core.TokenUsage {
@@ -551,7 +530,6 @@ func (p *BaseMockProviderImpl) getTokenUsageForChat(messages []core.ChatMessage,
 		CompletionTokens: int64(completionTokens),
 		TotalTokens:      int64(promptTokens + completionTokens),
 	}
-}
 
 // estimateTokenCount estimates the token count for a text
 // This is a simple implementation that assumes 4 characters per token on average
@@ -562,7 +540,6 @@ func (p *BaseMockProviderImpl) estimateTokenCount(text string) int {
 	
 	// Simple estimation: ~4 characters per token on average
 	return (len(text) + 3) / 4
-}
 
 // splitResponseIntoChunks splits a response into chunks for streaming
 func (p *BaseMockProviderImpl) splitResponseIntoChunks(response string, chunkSize int) []string {
@@ -580,7 +557,6 @@ func (p *BaseMockProviderImpl) splitResponseIntoChunks(response string, chunkSiz
 	}
 	
 	return chunks
-}
 
 // generateMockEmbedding generates a mock embedding vector
 func (p *BaseMockProviderImpl) generateMockEmbedding(text string, dimension int) []float32 {
@@ -616,7 +592,6 @@ func (p *BaseMockProviderImpl) generateMockEmbedding(text string, dimension int)
 	}
 	
 	return embedding
-}
 
 // updateUsageMetrics updates the usage metrics for a model
 func (p *BaseMockProviderImpl) updateUsageMetrics(modelID string, tokens int64, duration time.Duration, err error) {
@@ -630,7 +605,6 @@ func (p *BaseMockProviderImpl) updateUsageMetrics(modelID string, tokens int64, 
 	}
 	
 	metrics.AddRequest(tokens, duration, err)
-}
 
 // GetUsageMetrics gets the usage metrics for a model
 func (p *BaseMockProviderImpl) GetUsageMetrics(modelID string) *core.UsageMetrics {
@@ -642,7 +616,6 @@ func (p *BaseMockProviderImpl) GetUsageMetrics(modelID string) *core.UsageMetric
 	}
 	
 	return core.NewUsageMetrics(modelID)
-}
 
 // GetAllUsageMetrics gets all usage metrics
 func (p *BaseMockProviderImpl) GetAllUsageMetrics() map[string]*core.UsageMetrics {
@@ -656,4 +629,55 @@ func (p *BaseMockProviderImpl) GetAllUsageMetrics() map[string]*core.UsageMetric
 	}
 	
 	return metricsCopy
+
+// Secure random number generation helpers
+func randInt(max int) int {
+    n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+    if err != nil {
+        panic(err)
+    }
+    return int(n.Int64())
+
+func randInt64(max int64) int64 {
+    n, err := rand.Int(rand.Reader, big.NewInt(max))
+    if err != nil {
+        panic(err)
+    }
+    return n.Int64()
+
+func randFloat64() float64 {
+    bytes := make([]byte, 8)
+    rand.Read(bytes)
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

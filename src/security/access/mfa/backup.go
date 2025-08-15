@@ -25,8 +25,8 @@ type MFABackupCode struct {
 	
 	// UsedAt is the time when the code was used
 	UsedAt time.Time
-}
 
+}
 // BackupCodeConfig represents the configuration for backup codes
 type BackupCodeConfig struct {
 	// CodeLength is the length of each backup code
@@ -34,17 +34,17 @@ type BackupCodeConfig struct {
 	
 	// CodeCount is the number of backup codes to generate
 	CodeCount int
-}
 
+}
 // DefaultBackupCodeConfig returns the default backup code configuration
 func DefaultBackupCodeConfig() *BackupCodeConfig {
 	return &BackupCodeConfig{
 		CodeLength: DefaultBackupCodeLength,
 		CodeCount:  DefaultBackupCodeCount,
 	}
-}
 
 // GenerateBackupCodes generates a set of backup codes
+}
 func GenerateBackupCodes(config *BackupCodeConfig) ([]MFABackupCode, error) {
 	if config == nil {
 		config = DefaultBackupCodeConfig()
@@ -81,9 +81,9 @@ func GenerateBackupCodes(config *BackupCodeConfig) ([]MFABackupCode, error) {
 	}
 	
 	return codes, nil
-}
 
 // VerifyBackupCode verifies a backup code
+}
 func VerifyBackupCode(providedCode string, storedCodes []MFABackupCode) (bool, int, error) {
 	// Normalize provided code
 	normalizedCode := strings.ToUpper(strings.ReplaceAll(providedCode, "-", ""))
@@ -105,9 +105,9 @@ func VerifyBackupCode(providedCode string, storedCodes []MFABackupCode) (bool, i
 	}
 	
 	return false, -1, errors.New("invalid backup code")
-}
 
 // MarkBackupCodeAsUsed marks a backup code as used
+}
 func MarkBackupCodeAsUsed(codes []MFABackupCode, index int) error {
 	if index < 0 || index >= len(codes) {
 		return errors.New("invalid backup code index")
@@ -118,9 +118,9 @@ func MarkBackupCodeAsUsed(codes []MFABackupCode, index int) error {
 	codes[index].UsedAt = time.Now()
 	
 	return nil
-}
 
 // GetRemainingBackupCodes returns the number of remaining backup codes
+}
 func GetRemainingBackupCodes(codes []MFABackupCode) int {
 	remaining := 0
 	
@@ -130,5 +130,3 @@ func GetRemainingBackupCodes(codes []MFABackupCode) int {
 		}
 	}
 	
-	return remaining
-}

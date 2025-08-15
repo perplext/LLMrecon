@@ -28,7 +28,6 @@ type ProviderPlugin struct {
 	PluginInterface PluginInterface
 	// IsLegacy indicates if this is a legacy plugin
 	IsLegacy bool
-}
 
 // PluginManager is responsible for managing provider plugins
 type PluginManager struct {
@@ -44,7 +43,6 @@ type PluginManager struct {
 	discovery *PluginDiscovery
 	// validator is the plugin validator
 	validator PluginValidator
-}
 
 // NewPluginManager creates a new plugin manager
 func NewPluginManager(providerFactory *factory.ProviderFactory, pluginDirs []string) *PluginManager {
@@ -64,7 +62,6 @@ func NewPluginManager(providerFactory *factory.ProviderFactory, pluginDirs []str
 		discovery:      discovery,
 		validator:      validator,
 	}
-}
 
 // LoadPlugin loads a plugin from a file
 func (m *PluginManager) LoadPlugin(pluginPath string) (*ProviderPlugin, error) {
@@ -98,7 +95,6 @@ func (m *PluginManager) LoadPlugin(pluginPath string) (*ProviderPlugin, error) {
 	m.plugins[pluginName] = providerPlugin
 
 	return providerPlugin, nil
-}
 
 // LoadPluginsFromDirs loads plugins from directories
 func (m *PluginManager) LoadPluginsFromDirs() ([]string, []error) {
@@ -134,7 +130,6 @@ func (m *PluginManager) LoadPluginsFromDirs() ([]string, []error) {
 	}
 	
 	return loadedPlugins, errors
-}
 
 // GetPlugin returns a plugin by name
 func (m *PluginManager) GetPlugin(name string) (*ProviderPlugin, error) {
@@ -147,7 +142,6 @@ func (m *PluginManager) GetPlugin(name string) (*ProviderPlugin, error) {
 	}
 
 	return plugin, nil
-}
 
 // GetPluginByProviderType returns a plugin by provider type
 func (m *PluginManager) GetPluginByProviderType(providerType core.ProviderType) (*ProviderPlugin, error) {
@@ -161,7 +155,6 @@ func (m *PluginManager) GetPluginByProviderType(providerType core.ProviderType) 
 	}
 
 	return nil, fmt.Errorf("plugin for provider type %s not found", providerType)
-}
 
 // GetAllPlugins returns all plugins
 func (m *PluginManager) GetAllPlugins() []*ProviderPlugin {
@@ -174,7 +167,6 @@ func (m *PluginManager) GetAllPlugins() []*ProviderPlugin {
 	}
 
 	return plugins
-}
 
 // UnloadPlugin unloads a plugin
 func (m *PluginManager) UnloadPlugin(name string) error {
@@ -190,7 +182,6 @@ func (m *PluginManager) UnloadPlugin(name string) error {
 	delete(m.plugins, name)
 
 	return nil
-}
 
 // AddPluginDir adds a plugin directory
 func (m *PluginManager) AddPluginDir(dir string) {
@@ -199,17 +190,14 @@ func (m *PluginManager) AddPluginDir(dir string) {
 
 	m.pluginDirs = append(m.pluginDirs, dir)
 	m.discovery.AddPluginDir(dir)
-}
 
 // GetPluginDirs returns the plugin directories
 func (m *PluginManager) GetPluginDirs() []string {
 	return m.discovery.GetPluginDirs()
-}
 
 // ValidatePlugin validates a plugin
 func (m *PluginManager) ValidatePlugin(plugin *ProviderPlugin) error {
 	return m.validator.ValidatePlugin(plugin)
-}
 
 // ValidatePluginConfig validates a plugin configuration
 func (m *PluginManager) ValidatePluginConfig(plugin *ProviderPlugin, config *core.ProviderConfig) error {
@@ -217,5 +205,3 @@ func (m *PluginManager) ValidatePluginConfig(plugin *ProviderPlugin, config *cor
 		return fmt.Errorf("plugin is nil")
 	}
 	
-	return plugin.PluginInterface.ValidateConfig(config)
-}

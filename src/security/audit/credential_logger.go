@@ -4,7 +4,10 @@ package audit
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
+	"time"
 )
 
 // CredentialAuditEvent represents an audit event for credential operations
@@ -65,10 +68,9 @@ func NewCredentialAuditLogger(filePath string, options CredentialAuditLoggerOpti
 	}
 
 	return logger, nil
-}
 
 // LogCredentialEvent logs a credential event
-func (l *CredentialAuditLogger) LogCredentialEvent(eventType, credentialID, service string, success bool, errorMessage string, metadata map[string]string) error {
+func (l *CredentialAuditLogger) LogCredentialEvent(eventType string, credentialID string, service string, success bool, errorMessage string, metadata map[string]string) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
@@ -104,7 +106,11 @@ func (l *CredentialAuditLogger) LogCredentialEvent(eventType, credentialID, serv
 	if err != nil {
 		return fmt.Errorf("failed to open audit log file: %w", err)
 	}
-	defer file.Close()
+	defer func() { 
+		if err := file.Close(); err != nil { 
+			fmt.Printf("Failed to close: %v\n", err) 
+		} 
+	}()
 
 	// Write event
 	if _, err := file.Write(append(data, '\n')); err != nil {
@@ -112,7 +118,6 @@ func (l *CredentialAuditLogger) LogCredentialEvent(eventType, credentialID, serv
 	}
 
 	return nil
-}
 
 // LogCredentialAccess logs a credential access event
 func (l *CredentialAuditLogger) LogCredentialAccess(credentialID, service, operation string) error {
@@ -169,11 +174,15 @@ func (l *CredentialAuditLogger) GetAuditEvents(limit int, filter map[string]stri
 	}
 
 	// Open file
-	file, err := os.Open(l.filePath)
+	file, err := os.Open(filepath.Clean(l.filePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open audit log file: %w", err)
 	}
-	defer file.Close()
+	defer func() { 
+		if err := file.Close(); err != nil { 
+			fmt.Printf("Failed to close: %v\n", err) 
+		} 
+	}()
 
 	// Read events
 	var events []CredentialAuditEvent
@@ -205,14 +214,15 @@ func (l *CredentialAuditLogger) GetAuditEvents(limit int, filter map[string]stri
 					if event.UserID != value {
 						match = false
 					}
-				case "source_ip":
-					if event.SourceIP != value {
-						match = false
-					}
 				case "success":
-					if fmt.Sprintf("%v", event.Success) != value {
+					if value == "true" && !event.Success {
+						match = false
+					} else if value == "false" && event.Success {
 						match = false
 					}
+				}
+				if !match {
+					break
 				}
 			}
 			if !match {
@@ -221,13 +231,14 @@ func (l *CredentialAuditLogger) GetAuditEvents(limit int, filter map[string]stri
 		}
 
 		events = append(events, event)
+
+		// Apply limit
 		if limit > 0 && len(events) >= limit {
 			break
 		}
 	}
 
 	return events, nil
-}
 
 // RotateLogFile rotates the audit log file
 func (l *CredentialAuditLogger) RotateLogFile() error {
@@ -239,14 +250,15 @@ func (l *CredentialAuditLogger) RotateLogFile() error {
 		return nil
 	}
 
-	// Create timestamp for rotated file
-	timestamp := time.Now().UTC().Format("20060102-150405")
-	rotatedPath := fmt.Sprintf("%s.%s", l.filePath, timestamp)
+	// Create backup filename
+	backupPath := fmt.Sprintf("%s.%d", l.filePath, time.Now().Unix())
 
-	// Rename current file to rotated file
-	if err := os.Rename(l.filePath, rotatedPath); err != nil {
+	// Rename current file
+	if err := os.Rename(l.filePath, backupPath); err != nil {
 		return fmt.Errorf("failed to rotate audit log file: %w", err)
 	}
 
-	return nil
+}
+}
+}
 }

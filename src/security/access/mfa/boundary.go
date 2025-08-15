@@ -23,7 +23,6 @@ var (
 type MFABoundaryEnforcer struct {
 	mfaManager MFAManager
 	sessionManager interfaces.SessionStore
-}
 
 // NewMFABoundaryEnforcer creates a new MFA boundary enforcer
 func NewMFABoundaryEnforcer(mfaManager MFAManager, sessionManager interfaces.SessionStore) *MFABoundaryEnforcer {
@@ -31,7 +30,6 @@ func NewMFABoundaryEnforcer(mfaManager MFAManager, sessionManager interfaces.Ses
 		mfaManager:     mfaManager,
 		sessionManager: sessionManager,
 	}
-}
 
 // RequireMFA creates middleware that requires MFA completion
 func (e *MFABoundaryEnforcer) RequireMFA(next http.Handler) http.Handler {
@@ -53,7 +51,6 @@ func (e *MFABoundaryEnforcer) RequireMFA(next http.Handler) http.Handler {
 		
 		next.ServeHTTP(w, r)
 	})
-}
 
 // RequireMFAForUser creates middleware that requires MFA for specific users
 func (e *MFABoundaryEnforcer) RequireMFAForUser(userID string, next http.Handler) http.Handler {
@@ -78,7 +75,6 @@ func (e *MFABoundaryEnforcer) RequireMFAForUser(userID string, next http.Handler
 		
 		next.ServeHTTP(w, r)
 	})
-}
 
 // RequireMFAForRoles creates middleware that requires MFA for specific roles
 func (e *MFABoundaryEnforcer) RequireMFAForRoles(roles []string, next http.Handler) http.Handler {
@@ -116,7 +112,6 @@ func (e *MFABoundaryEnforcer) RequireMFAForRoles(roles []string, next http.Handl
 		
 		next.ServeHTTP(w, r)
 	})
-}
 
 // Helper function to get session from context
 func getSessionFromContext(ctx context.Context) (*interfaces.Session, error) {
@@ -132,7 +127,6 @@ func getSessionFromContext(ctx context.Context) (*interfaces.Session, error) {
 	}
 	
 	return session, nil
-}
 
 // Helper function to get user roles
 func getUserRoles(ctx context.Context, userID string) ([]string, error) {
@@ -144,7 +138,6 @@ func getUserRoles(ctx context.Context, userID string) ([]string, error) {
 	// }
 	// return user.Roles, nil
 	return []string{}, nil
-}
 
 // Helper function to check if a slice contains a string
 func contains(slice []string, item string) bool {
@@ -153,5 +146,3 @@ func contains(slice []string, item string) bool {
 			return true
 		}
 	}
-	return false
-}

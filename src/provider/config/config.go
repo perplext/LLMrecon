@@ -23,7 +23,6 @@ type ConfigVersion struct {
 	Timestamp time.Time `json:"timestamp"`
 	// Changes is a description of the changes
 	Changes string `json:"changes,omitempty"`
-}
 
 // ConfigHistory represents the history of configuration changes
 type ConfigHistory struct {
@@ -31,7 +30,6 @@ type ConfigHistory struct {
 	Current int `json:"current"`
 	// Versions is a map of version numbers to versions
 	Versions map[int]ConfigVersion `json:"versions"`
-}
 
 // ConfigManager is responsible for managing provider configurations
 type ConfigManager struct {
@@ -51,7 +49,6 @@ type ConfigManager struct {
 	encryptData func(data []byte) ([]byte, error)
 	// decryptData is a function that decrypts data
 	decryptData func(data []byte) ([]byte, error)
-}
 
 // NewConfigManager creates a new configuration manager
 func NewConfigManager(configFile string, encryptionKey []byte, envVarPrefix string) (*ConfigManager, error) {
@@ -65,7 +62,7 @@ func NewConfigManager(configFile string, encryptionKey []byte, envVarPrefix stri
 
 	// Create directory if it doesn't exist
 	configDir := filepath.Dir(configFile)
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create config directory: %w", err)
 	}
 
@@ -160,14 +157,11 @@ func NewConfigManager(configFile string, encryptionKey []byte, envVarPrefix stri
 			return nil, fmt.Errorf("failed to load configurations: %w", err)
 		}
 	}
-
 	// Load configurations from environment variables
 	if err := manager.LoadFromEnv(); err != nil {
 		return nil, fmt.Errorf("failed to load configurations from environment variables: %w", err)
 	}
-
 	return manager, nil
-}
 
 // Load loads configurations from the configuration file
 func (m *ConfigManager) Load() error {
@@ -177,7 +171,7 @@ func (m *ConfigManager) Load() error {
 	}
 
 	// Read file - this doesn't need a lock
-	data, err := ioutil.ReadFile(m.configFile)
+	data, err := ioutil.ReadFile(filepath.Clean(m.configFile))
 	if err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
@@ -208,8 +202,6 @@ func (m *ConfigManager) Load() error {
 	}
 
 	return nil
-}
-
 // Save saves configurations to the configuration file
 func (m *ConfigManager) Save() error {
 	// Make a copy of the configs to avoid holding the lock during I/O operations
@@ -243,17 +235,16 @@ func (m *ConfigManager) Save() error {
 
 	// Create directory if it doesn't exist
 	configDir := filepath.Dir(m.configFile)
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
 	// Write file
-	if err := os.WriteFile(m.configFile, data, 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(m.configFile, data, 0600)); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
 	return nil
-}
 
 // LoadFromEnv loads configurations from environment variables
 func (m *ConfigManager) LoadFromEnv() error {
@@ -275,7 +266,6 @@ func (m *ConfigManager) LoadFromEnv() error {
 		if !strings.HasPrefix(key, m.envVarPrefix+"_") {
 			continue
 		}
-
 		// Remove prefix
 		key = strings.TrimPrefix(key, m.envVarPrefix+"_")
 
@@ -316,7 +306,7 @@ func (m *ConfigManager) LoadFromEnv() error {
 	}
 
 	return nil
-}
+	
 
 // GetConfig returns the configuration for a provider type
 func (m *ConfigManager) GetConfig(providerType core.ProviderType) (*core.ProviderConfig, error) {
@@ -339,7 +329,6 @@ func (m *ConfigManager) GetConfig(providerType core.ProviderType) (*core.Provide
 	}
 	
 	return &configCopy, nil
-}
 
 // SetConfig sets the configuration for a provider type
 func (m *ConfigManager) SetConfig(providerType core.ProviderType, config *core.ProviderConfig) error {
@@ -394,7 +383,6 @@ func (m *ConfigManager) SetConfig(providerType core.ProviderType, config *core.P
 
 	// Add version to history
 	return m.AddConfigVersion(providerType, changes)
-}
 
 // UpdateConfig updates the configuration for a provider type
 func (m *ConfigManager) UpdateConfig(providerType core.ProviderType, updates *core.ProviderConfig) error {
@@ -485,7 +473,6 @@ func (m *ConfigManager) UpdateConfig(providerType core.ProviderType, updates *co
 		if updates.RateLimitConfig.MaxConcurrentRequests > 0 && updates.RateLimitConfig.MaxConcurrentRequests != config.RateLimitConfig.MaxConcurrentRequests {
 			config.RateLimitConfig.MaxConcurrentRequests = updates.RateLimitConfig.MaxConcurrentRequests
 		}
-
 		if updates.RateLimitConfig.BurstSize > 0 && updates.RateLimitConfig.BurstSize != config.RateLimitConfig.BurstSize {
 			config.RateLimitConfig.BurstSize = updates.RateLimitConfig.BurstSize
 		}
@@ -532,7 +519,6 @@ func (m *ConfigManager) UpdateConfig(providerType core.ProviderType, updates *co
 
 	// Add version to history
 	return m.AddConfigVersion(providerType, changes)
-}
 
 // DeleteConfig deletes the configuration for a provider type
 func (m *ConfigManager) DeleteConfig(providerType core.ProviderType) error {
@@ -558,7 +544,6 @@ func (m *ConfigManager) DeleteConfig(providerType core.ProviderType) error {
 
 	// Add version to history
 	return m.AddConfigVersion(providerType, "Configuration deleted")
-}
 
 // GetAllConfigs returns all configurations
 func (m *ConfigManager) GetAllConfigs() map[core.ProviderType]*core.ProviderConfig {
@@ -573,7 +558,6 @@ func (m *ConfigManager) GetAllConfigs() map[core.ProviderType]*core.ProviderConf
 	}
 
 	return configsCopy
-}
 
 // GetAllProviderTypes returns all provider types with configurations
 func (m *ConfigManager) GetAllProviderTypes() []core.ProviderType {
@@ -586,7 +570,6 @@ func (m *ConfigManager) GetAllProviderTypes() []core.ProviderType {
 	}
 
 	return providerTypes
-}
 
 // SetEncryptionKey sets the encryption key
 func (m *ConfigManager) SetEncryptionKey(encryptionKey []byte) {
@@ -594,7 +577,6 @@ func (m *ConfigManager) SetEncryptionKey(encryptionKey []byte) {
 	defer m.mutex.Unlock()
 
 	m.encryptionKey = encryptionKey
-}
 
 // SetConfigFile sets the configuration file path
 func (m *ConfigManager) SetConfigFile(configFile string) {
@@ -602,7 +584,6 @@ func (m *ConfigManager) SetConfigFile(configFile string) {
 	defer m.mutex.Unlock()
 
 	m.configFile = configFile
-}
 
 // SetEnvVarPrefix sets the environment variable prefix
 func (m *ConfigManager) SetEnvVarPrefix(envVarPrefix string) {
@@ -610,7 +591,6 @@ func (m *ConfigManager) SetEnvVarPrefix(envVarPrefix string) {
 	defer m.mutex.Unlock()
 
 	m.envVarPrefix = envVarPrefix
-}
 
 // ValidateConfig validates a provider configuration
 func (m *ConfigManager) ValidateConfig(config *core.ProviderConfig) error {
@@ -639,7 +619,7 @@ func (m *ConfigManager) ValidateConfig(config *core.ProviderConfig) error {
 	}
 
 	return nil
-}
+	
 
 // encrypt encrypts data using AES-GCM encryption
 func encrypt(data []byte, key []byte) ([]byte, error) {
@@ -675,7 +655,6 @@ func encrypt(data []byte, key []byte) ([]byte, error) {
 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
 
 	return ciphertext, nil
-}
 
 // decrypt decrypts data using AES-GCM decryption
 func decrypt(data []byte, key []byte) ([]byte, error) {
@@ -715,5 +694,3 @@ func decrypt(data []byte, key []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to decrypt data: %w", err)
 	}
 
-	return plaintext, nil
-}

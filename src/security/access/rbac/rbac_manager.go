@@ -50,7 +50,6 @@ type RBACConfig struct {
 	
 	// Minimum severity for logging permission checks
 	LogPermissionCheckSeverity common.AuditSeverity `json:"log_permission_check_severity"`
-}
 
 // NewRBACManager creates a new RBAC manager
 func NewRBACManager(config *RBACConfig, roleStore RoleStore, permissionStore PermissionStore, auditManager *audit.AuditManager) (*RBACManager, error) {
@@ -71,7 +70,6 @@ func NewRBACManager(config *RBACConfig, roleStore RoleStore, permissionStore Per
 	}
 
 	return manager, nil
-}
 
 // initializeDefaultRoles initializes default roles
 func (m *RBACManager) initializeDefaultRoles() error {
@@ -87,7 +85,6 @@ func (m *RBACManager) initializeDefaultRoles() error {
 		if err != nil {
 			return fmt.Errorf("failed to check if role exists: %w", err)
 		}
-
 		if !exists {
 			// Create the role
 			if err := m.roleStore.CreateRole(context.Background(), &role); err != nil {
@@ -97,7 +94,6 @@ func (m *RBACManager) initializeDefaultRoles() error {
 	}
 
 	return nil
-}
 
 // HasPermission checks if a user has a specific permission
 func (m *RBACManager) HasPermission(ctx context.Context, userID string, permissionID string) (bool, error) {
@@ -127,7 +123,6 @@ func (m *RBACManager) HasPermission(ctx context.Context, userID string, permissi
 			}
 		}
 	}
-
 	// Get user's roles
 	userRoles, err := m.roleStore.GetUserRoles(ctx, userID)
 	if err != nil {
@@ -156,7 +151,6 @@ func (m *RBACManager) HasPermission(ctx context.Context, userID string, permissi
 	}
 
 	return false, nil
-}
 
 // roleHasPermission checks if a role has a specific permission
 func (m *RBACManager) roleHasPermission(ctx context.Context, roleID string, permissionID string, depth int) (bool, error) {
@@ -191,7 +185,6 @@ func (m *RBACManager) roleHasPermission(ctx context.Context, roleID string, perm
 	}
 
 	return false, nil
-}
 
 // logPermissionCheck logs a permission check
 func (m *RBACManager) logPermissionCheck(ctx context.Context, userID string, permissionID string, granted bool, reason string) {
@@ -215,8 +208,6 @@ func (m *RBACManager) logPermissionCheck(ctx context.Context, userID string, per
 		// Just log to stdout if audit logging fails
 		fmt.Printf("Failed to log permission check: %v\n", err)
 	}
-}
-
 // AssignRoleToUser assigns a role to a user
 func (m *RBACManager) AssignRoleToUser(ctx context.Context, userID string, roleID string) error {
 	m.mu.Lock()
@@ -253,7 +244,6 @@ func (m *RBACManager) AssignRoleToUser(ctx context.Context, userID string, roleI
 	}
 
 	return nil
-}
 
 // RevokeRoleFromUser revokes a role from a user
 func (m *RBACManager) RevokeRoleFromUser(ctx context.Context, userID string, roleID string) error {
@@ -264,7 +254,6 @@ func (m *RBACManager) RevokeRoleFromUser(ctx context.Context, userID string, rol
 	if err := m.roleStore.RevokeRoleFromUser(ctx, userID, roleID); err != nil {
 		return fmt.Errorf("failed to revoke role from user: %w", err)
 	}
-
 	// Audit the action
 	event := audit.NewAuditEvent(
 		common.AuditActionRoleRevoke,
@@ -274,14 +263,12 @@ func (m *RBACManager) RevokeRoleFromUser(ctx context.Context, userID string, rol
 		WithResourceID(roleID).
 		WithStatus("success").
 		WithSeverity(common.AuditSeverityInfo)
-
 	if err := m.auditManager.LogAudit(ctx, event); err != nil {
 		// Log error but don't fail the operation
 		fmt.Printf("Failed to log role revocation: %v\n", err)
 	}
 
 	return nil
-}
 
 // CreateRole creates a new role
 func (m *RBACManager) CreateRole(ctx context.Context, role *Role) error {
@@ -297,7 +284,6 @@ func (m *RBACManager) CreateRole(ctx context.Context, role *Role) error {
 	if exists {
 		return fmt.Errorf("role %s already exists", role.ID)
 	}
-
 	// Validate role hierarchy
 	if m.config.StrictHierarchy {
 		for _, parentRoleID := range role.ParentRoles {
@@ -334,7 +320,6 @@ func (m *RBACManager) CreateRole(ctx context.Context, role *Role) error {
 	}
 
 	return nil
-}
 
 // UpdateRole updates an existing role
 func (m *RBACManager) UpdateRole(ctx context.Context, role *Role) error {
@@ -423,7 +408,6 @@ func (m *RBACManager) UpdateRole(ctx context.Context, role *Role) error {
 	}
 
 	return nil
-}
 
 // DeleteRole deletes a role
 func (m *RBACManager) DeleteRole(ctx context.Context, roleID string) error {
@@ -468,7 +452,6 @@ func (m *RBACManager) DeleteRole(ctx context.Context, roleID string) error {
 	}
 
 	return nil
-}
 
 // GetRole gets a role by ID
 func (m *RBACManager) GetRole(ctx context.Context, roleID string) (*Role, error) {
@@ -476,7 +459,6 @@ func (m *RBACManager) GetRole(ctx context.Context, roleID string) (*Role, error)
 	defer m.mu.RUnlock()
 
 	return m.roleStore.GetRole(ctx, roleID)
-}
 
 // ListRoles lists all roles
 func (m *RBACManager) ListRoles(ctx context.Context) ([]*Role, error) {
@@ -484,15 +466,12 @@ func (m *RBACManager) ListRoles(ctx context.Context) ([]*Role, error) {
 	defer m.mu.RUnlock()
 
 	return m.roleStore.ListRoles(ctx)
-}
 
 // GetUserRoles gets all roles assigned to a user
 func (m *RBACManager) GetUserRoles(ctx context.Context, userID string) ([]*Role, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-
 	return m.roleStore.GetUserRoles(ctx, userID)
-}
 
 // AddPermissionToRole adds a permission to a role
 func (m *RBACManager) AddPermissionToRole(ctx context.Context, roleID string, permissionID string) error {
@@ -553,7 +532,6 @@ func (m *RBACManager) AddPermissionToRole(ctx context.Context, roleID string, pe
 	}
 
 	return nil
-}
 
 // RemovePermissionFromRole removes a permission from a role
 func (m *RBACManager) RemovePermissionFromRole(ctx context.Context, roleID string, permissionID string) error {
@@ -569,7 +547,6 @@ func (m *RBACManager) RemovePermissionFromRole(ctx context.Context, roleID strin
 	if !exists {
 		return fmt.Errorf("role %s does not exist", roleID)
 	}
-
 	// Remove permission from role
 	if err := m.roleStore.RemovePermissionFromRole(ctx, roleID, permissionID); err != nil {
 		return fmt.Errorf("failed to remove permission from role: %w", err)
@@ -590,7 +567,6 @@ func (m *RBACManager) RemovePermissionFromRole(ctx context.Context, roleID strin
 	}
 
 	return nil
-}
 
 // GetRolePermissions gets all permissions assigned to a role
 func (m *RBACManager) GetRolePermissions(ctx context.Context, roleID string) ([]string, error) {
@@ -604,7 +580,6 @@ func (m *RBACManager) GetRolePermissions(ctx context.Context, roleID string) ([]
 	}
 
 	return role.Permissions, nil
-}
 
 // GetUserPermissions gets all permissions assigned to a user (including from roles)
 func (m *RBACManager) GetUserPermissions(ctx context.Context, userID string) ([]string, error) {
@@ -649,7 +624,6 @@ func (m *RBACManager) GetUserPermissions(ctx context.Context, userID string) ([]
 	}
 
 	return allPermissions, nil
-}
 
 // addParentRolePermissions adds permissions from parent roles to the permissions map
 func (m *RBACManager) addParentRolePermissions(ctx context.Context, parentRoleIDs []string, permissions map[string]bool, depth int) error {
@@ -677,7 +651,6 @@ func (m *RBACManager) addParentRolePermissions(ctx context.Context, parentRoleID
 	}
 
 	return nil
-}
 
 // DefaultRBACConfig returns the default RBAC configuration
 func DefaultRBACConfig() *RBACConfig {
@@ -692,7 +665,6 @@ func DefaultRBACConfig() *RBACConfig {
 		LogPermissionChecks:      true,
 		LogPermissionCheckSeverity: common.AuditSeverityInfo,
 	}
-}
 
 // diffStringSlices returns the elements that are in slice2 but not in slice1 (added),
 // and the elements that are in slice1 but not in slice2 (removed)
@@ -723,5 +695,22 @@ func diffStringSlices(slice1, slice2 []string) (added, removed []string) {
 		}
 	}
 
-	return added, removed
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

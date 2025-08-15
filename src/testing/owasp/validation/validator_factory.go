@@ -9,19 +9,16 @@ import (
 type ValidatorFactory struct {
 	// registry is the validator registry
 	registry *ValidatorRegistry
-}
 
 // NewValidatorFactory creates a new validator factory
 func NewValidatorFactory() *ValidatorFactory {
 	return &ValidatorFactory{
 		registry: NewValidatorRegistry(),
 	}
-}
 
 // GetRegistry returns the validator registry
 func (f *ValidatorFactory) GetRegistry() *ValidatorRegistry {
 	return f.registry
-}
 
 // RegisterAllValidators registers all available validators with the registry
 func (f *ValidatorFactory) RegisterAllValidators() {
@@ -39,12 +36,10 @@ func (f *ValidatorFactory) RegisterAllValidators() {
 	
 	// Register additional validators as they are implemented
 	// TODO: Add more validators for other OWASP LLM vulnerabilities
-}
 
 // RegisterValidator registers a validator with the registry
 func (f *ValidatorFactory) RegisterValidator(validator Validator) {
 	f.registry.RegisterValidator(validator)
-}
 
 // IndirectPromptInjectionType is a custom vulnerability type for indirect prompt injection
 const IndirectPromptInjectionType types.VulnerabilityType = "indirect_prompt_injection"
@@ -64,7 +59,6 @@ func (f *ValidatorFactory) CreateValidator(vulnerabilityType types.Vulnerability
 	default:
 		return nil
 	}
-}
 
 // CreateAndRegisterValidator creates a validator for a specific vulnerability type and registers it
 func (f *ValidatorFactory) CreateAndRegisterValidator(vulnerabilityType types.VulnerabilityType) Validator {
@@ -72,5 +66,3 @@ func (f *ValidatorFactory) CreateAndRegisterValidator(vulnerabilityType types.Vu
 	if validator != nil {
 		f.registry.RegisterValidator(validator)
 	}
-	return validator
-}

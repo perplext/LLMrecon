@@ -46,7 +46,6 @@ type FileDiff struct {
 	
 	// NewModTime is the modification time of the new file
 	NewModTime time.Time
-}
 
 // ContentDiff represents a difference between two file contents
 type ContentDiff struct {
@@ -58,7 +57,6 @@ type ContentDiff struct {
 	
 	// Chunks is the list of changed chunks
 	Chunks []*DiffChunk
-}
 
 // DiffChunk represents a chunk of a content difference
 type DiffChunk struct {
@@ -76,7 +74,6 @@ type DiffChunk struct {
 	
 	// Content is the content of the chunk
 	Content []string
-}
 
 // DiffResult represents the result of a differential analysis
 type DiffResult struct {
@@ -94,7 +91,6 @@ type DiffResult struct {
 	
 	// DiffTime is the time the diff was performed
 	DiffTime time.Time
-}
 
 // DiffOptions represents options for differential analysis
 type DiffOptions struct {
@@ -115,7 +111,6 @@ type DiffOptions struct {
 	
 	// IncludeUnchanged includes unchanged files
 	IncludeUnchanged bool
-}
 
 // DefaultDiffOptions returns the default diff options
 func DefaultDiffOptions() *DiffOptions {
@@ -127,7 +122,6 @@ func DefaultDiffOptions() *DiffOptions {
 		IncludeContent:   true,
 		IncludeUnchanged: false,
 	}
-}
 
 // FileInfo represents information about a file
 type FileInfo struct {
@@ -145,13 +139,11 @@ type FileInfo struct {
 	
 	// Content is the content of the file
 	Content []byte
-}
 
 // ComputeHash computes the SHA-256 hash of a file
 func ComputeHash(content []byte) string {
 	hash := sha256.Sum256(content)
 	return hex.EncodeToString(hash[:])
-}
 
 // DiffFiles compares two sets of files and returns the differences
 func DiffFiles(oldFiles, newFiles []*FileInfo, options *DiffOptions) *DiffResult {
@@ -271,7 +263,6 @@ func DiffFiles(oldFiles, newFiles []*FileInfo, options *DiffOptions) *DiffResult
 	}
 	
 	return result
-}
 
 // diffContent compares the content of two files and returns the differences
 func diffContent(oldContent, newContent []byte, options *DiffOptions) *ContentDiff {
@@ -295,7 +286,6 @@ func diffContent(oldContent, newContent []byte, options *DiffOptions) *ContentDi
 			},
 		},
 	}
-}
 
 // countLines counts the number of lines in a byte slice
 func countLines(content []byte) int {
@@ -311,7 +301,6 @@ func countLines(content []byte) int {
 	}
 	
 	return count
-}
 
 // splitLines splits a byte slice into lines
 func splitLines(content []byte) []string {
@@ -327,7 +316,6 @@ func splitLines(content []byte) []string {
 	}
 	
 	return result
-}
 
 // GetChangeSummary returns a summary of the changes
 func (r *DiffResult) GetChangeSummary() string {
@@ -350,7 +338,6 @@ func (r *DiffResult) GetChangeSummary() string {
 	}
 	
 	return fmt.Sprintf("Added: %d, Modified: %d, Deleted: %d, Unchanged: %d", added, modified, deleted, unchanged)
-}
 
 // GetChangedFiles returns a list of changed files
 func (r *DiffResult) GetChangedFiles() []*FileDiff {
@@ -363,7 +350,6 @@ func (r *DiffResult) GetChangedFiles() []*FileDiff {
 	}
 	
 	return changed
-}
 
 // GetChangedPaths returns a list of changed file paths
 func (r *DiffResult) GetChangedPaths() []string {
@@ -376,7 +362,6 @@ func (r *DiffResult) GetChangedPaths() []string {
 	}
 	
 	return changed
-}
 
 // HasChanges returns true if there are any changes
 func (r *DiffResult) HasChanges() bool {
@@ -387,7 +372,6 @@ func (r *DiffResult) HasChanges() bool {
 	}
 	
 	return false
-}
 
 // ReadFileContent reads the content of a file from a reader
 func ReadFileContent(r io.Reader, maxSize int64) ([]byte, error) {
@@ -397,5 +381,3 @@ func ReadFileContent(r io.Reader, maxSize int64) ([]byte, error) {
 	}
 	
 	// Read up to maxSize bytes
-	return io.ReadAll(io.LimitReader(r, maxSize))
-}

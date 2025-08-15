@@ -10,7 +10,6 @@ type CustomChannelConfig struct {
 	Name        string
 	DeliverFunc func(notification *Notification) error
 	FilterFunc  func(notification *Notification) bool
-}
 
 // CustomChannel represents a user-defined notification channel
 type CustomChannel struct {
@@ -18,7 +17,6 @@ type CustomChannel struct {
 	name        string
 	deliverFunc func(notification *Notification) error
 	filterFunc  func(notification *Notification) bool
-}
 
 // NewCustomChannel creates a new custom notification channel
 func NewCustomChannel(config CustomChannelConfig) (*CustomChannel, error) {
@@ -48,17 +46,14 @@ func NewCustomChannel(config CustomChannelConfig) (*CustomChannel, error) {
 		deliverFunc: config.DeliverFunc,
 		filterFunc:  filterFunc,
 	}, nil
-}
 
 // ID returns the unique identifier for the channel
 func (c *CustomChannel) ID() string {
 	return c.id
-}
 
 // Name returns the human-readable name of the channel
 func (c *CustomChannel) Name() string {
 	return c.name
-}
 
 // Deliver delivers a notification through the custom channel
 func (c *CustomChannel) Deliver(notification *Notification) error {
@@ -67,9 +62,7 @@ func (c *CustomChannel) Deliver(notification *Notification) error {
 	}
 
 	return c.deliverFunc(notification)
-}
 
 // CanDeliver checks if the channel can deliver the notification
 func (c *CustomChannel) CanDeliver(notification *Notification) bool {
 	return c.filterFunc(notification)
-}

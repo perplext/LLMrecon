@@ -20,7 +20,6 @@ func NewComplianceReporter(mapper ComplianceMapper) *ComplianceReporterImpl {
 	return &ComplianceReporterImpl{
 		mapper: mapper,
 	}
-}
 
 // GenerateReport generates a compliance report for a test suite
 func (r *ComplianceReporterImpl) GenerateReport(ctx context.Context, testSuite *types.TestSuite, options *ComplianceReportOptions) (*ComplianceReport, error) {
@@ -64,7 +63,6 @@ func (r *ComplianceReporterImpl) GenerateReport(ctx context.Context, testSuite *
 	}
 
 	return report, nil
-}
 
 // ExportReport exports a compliance report to a file
 func (r *ComplianceReporterImpl) ExportReport(ctx context.Context, report *ComplianceReport, format string, outputPath string) error {
@@ -74,7 +72,7 @@ func (r *ComplianceReporterImpl) ExportReport(ctx context.Context, report *Compl
 
 	// Create the output directory if it doesn't exist
 	dir := filepath.Dir(outputPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("error creating output directory: %w", err)
 	}
 
@@ -85,7 +83,6 @@ func (r *ComplianceReporterImpl) ExportReport(ctx context.Context, report *Compl
 	default:
 		return fmt.Errorf("unsupported format: %s", format)
 	}
-}
 
 // GetComplianceStatus returns the compliance status for a test suite
 func (r *ComplianceReporterImpl) GetComplianceStatus(ctx context.Context, testSuite *types.TestSuite, standard ComplianceStandard) (*StandardComplianceResult, error) {
@@ -106,7 +103,6 @@ func (r *ComplianceReporterImpl) GetComplianceStatus(ctx context.Context, testSu
 		IncludeTestResults:     true,
 	}
 	return r.generateStandardResult(ctx, testSuite, standard, mappings, options)
-}
 
 // generateStandardResult generates compliance results for a specific standard
 func (r *ComplianceReporterImpl) generateStandardResult(ctx context.Context, testSuite *types.TestSuite, standard ComplianceStandard, mappings map[types.VulnerabilityType][]*ComplianceMapping, options *ComplianceReportOptions) (*StandardComplianceResult, error) {
@@ -197,7 +193,7 @@ func (r *ComplianceReporterImpl) generateStandardResult(ctx context.Context, tes
 		result.TotalRequirements)
 
 	return result, nil
-}
+	
 
 // exportAsJSON exports the report as JSON
 func (r *ComplianceReporterImpl) exportAsJSON(report *ComplianceReport, outputPath string) error {
@@ -208,9 +204,12 @@ func (r *ComplianceReporterImpl) exportAsJSON(report *ComplianceReport, outputPa
 	}
 
 	// Write the JSON to the output file
-	if err := os.WriteFile(outputPath, jsonData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(outputPath, jsonData, 0600)); err != nil {
 		return fmt.Errorf("error writing report to file: %w", err)
 	}
 
-	return nil
+}
+}
+}
+}
 }

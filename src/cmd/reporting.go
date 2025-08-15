@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/perplext/LLMrecon/src/reporting"
@@ -20,7 +21,6 @@ var reportCmd = &cobra.Command{
 	Long: `Generate comprehensive reports from LLM test results in various formats.
 Supports multiple output formats including JSON, JSONL, CSV, Excel, Text, Markdown, PDF, and HTML.
 Reports can include compliance mappings to frameworks like OWASP Top 10 for LLMs and ISO/IEC 42001.`,
-}
 
 // generateReportCmd represents the generate command
 var generateReportCmd = &cobra.Command{
@@ -92,7 +92,7 @@ Example:
 		}
 
 		// Read results file
-		resultsData, err := os.ReadFile(resultsFile)
+		resultsData, err := os.ReadFile(filepath.Clean(resultsFile))
 		if err != nil {
 			return fmt.Errorf("failed to read results file: %w", err)
 		}
@@ -163,7 +163,6 @@ Example:
 		fmt.Printf("Report generated successfully: %s\n", output)
 		return nil
 	},
-}
 
 // batchReportCmd represents the batch command
 var batchReportCmd = &cobra.Command{
@@ -243,7 +242,6 @@ Example:
 		if templatePath != "" {
 			formatterOptions["template_path"] = templatePath
 		}
-
 		// Create factory and report generator
 		factory := reporting.NewFormatterFactory()
 		generator, err := factory.CreateDefaultReportGenerator()
@@ -257,12 +255,11 @@ Example:
 
 		// Create batch reporting service
 		service := reporting.NewBatchReportingService(generator)
-
 		// Load test suites
 		var testSuites []*reporting.TestSuite
 		for _, suiteFile := range suitesFiles {
 			// Read suite file
-			suiteData, err := os.ReadFile(suiteFile)
+			suiteData, err := os.ReadFile(filepath.Clean(suiteFile))
 			if err != nil {
 				return fmt.Errorf("failed to read suite file %s: %w", suiteFile, err)
 			}
@@ -306,7 +303,6 @@ Example:
 		fmt.Printf("Report generated successfully: %s\n", output)
 		return nil
 	},
-}
 
 // convertCmd represents the convert command
 var convertCmd = &cobra.Command{
@@ -349,7 +345,7 @@ Example:
 		}
 
 		// Read input file
-		inputData, err := os.ReadFile(input)
+		inputData, err := os.ReadFile(filepath.Clean(input))
 		if err != nil {
 			return fmt.Errorf("failed to read input file: %w", err)
 		}
@@ -359,7 +355,6 @@ Example:
 		if err := json.Unmarshal(inputData, &report); err != nil {
 			return fmt.Errorf("failed to parse input file: %w", err)
 		}
-
 		// Create formatter options
 		formatterOptions := map[string]interface{}{
 			"detailed":         detailed,
@@ -392,7 +387,6 @@ Example:
 		fmt.Printf("Report converted successfully: %s\n", output)
 		return nil
 	},
-}
 
 // isValidFormat checks if a report format is valid
 func isValidFormat(format reporting.ReportFormat) bool {
@@ -414,7 +408,6 @@ func isValidFormat(format reporting.ReportFormat) bool {
 	}
 
 	return false
-}
 
 func init() {
 	rootCmd.AddCommand(reportCmd)
@@ -457,5 +450,3 @@ func init() {
 	convertCmd.Flags().String("format", "json", "Output format (json, jsonl, csv, xlsx, txt, md, pdf, html)")
 	convertCmd.Flags().String("output", "", "Output file path")
 	convertCmd.Flags().String("template", "", "Path to custom template file")
-	convertCmd.Flags().Bool("detailed", false, "Include detailed information")
-}

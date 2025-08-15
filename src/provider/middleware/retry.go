@@ -2,24 +2,25 @@
 package middleware
 
 import (
+	"math/big"
 	"context"
-	"os"
-	"path/filepath"
+	cryptorand "crypto/rand"
 	"fmt"
 	"math"
-	"math/rand"
+	"crypto/rand"
 	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 )
 
-// RetryMiddleware provides retry functionality with exponential backoff
+// RetryMiddleware provides retry functionality for providers
 type RetryMiddleware struct {
-	// config is the retry configuration
 	config *core.RetryConfig
 }
 
-// NewRetryMiddleware creates a new retry middleware
 func NewRetryMiddleware(config *core.RetryConfig) *RetryMiddleware {
 	if config == nil {
 		config = &core.RetryConfig{
@@ -40,7 +41,6 @@ func NewRetryMiddleware(config *core.RetryConfig) *RetryMiddleware {
 	return &RetryMiddleware{
 		config: config,
 	}
-}
 
 // Execute executes a function with retries
 func (m *RetryMiddleware) Execute(ctx context.Context, fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
@@ -81,7 +81,6 @@ func (m *RetryMiddleware) Execute(ctx context.Context, fn func(ctx context.Conte
 
 	// Return the last error
 	return result, fmt.Errorf("max retries reached: %w", err)
-}
 
 // isRetryableError checks if an error is retryable
 func (m *RetryMiddleware) isRetryableError(err error) bool {
@@ -108,7 +107,6 @@ func (m *RetryMiddleware) isRetryableError(err error) bool {
 	// Check if it's a network error or timeout
 	// This is a simplified check and may need to be expanded
 	return false
-}
 
 // calculateBackoff calculates the backoff duration with jitter
 func (m *RetryMiddleware) calculateBackoff(attempt int, rng *rand.Rand) time.Duration {
@@ -125,7 +123,6 @@ func (m *RetryMiddleware) calculateBackoff(attempt int, rng *rand.Rand) time.Dur
 	}
 
 	return time.Duration(backoff)
-}
 
 // UpdateConfig updates the retry configuration
 func (m *RetryMiddleware) UpdateConfig(config *core.RetryConfig) {
@@ -138,11 +135,36 @@ func (m *RetryMiddleware) UpdateConfig(config *core.RetryConfig) {
 
 	// Update the configuration
 	m.config = &configCopy
-}
 
 // GetConfig returns the retry configuration
 func (m *RetryMiddleware) GetConfig() *core.RetryConfig {
 	// Create a copy to avoid race conditions
 	configCopy := *m.config
 	return &configCopy
+
+// Secure random number generation helpers
+func randInt(max int) int {
+    n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+    if err != nil {
+        panic(err)
+    }
+    return int(n.Int64())
+
+func randInt64(max int64) int64 {
+    n, err := rand.Int(rand.Reader, big.NewInt(max))
+    if err != nil {
+        panic(err)
+    }
+    return n.Int64()
+
+func randFloat64() float64 {
+    bytes := make([]byte, 8)
+    rand.Read(bytes)
+}
+}
+}
+}
+}
+}
+}
 }

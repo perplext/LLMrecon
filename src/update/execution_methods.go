@@ -9,14 +9,14 @@ import (
 func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) error {
 	// Create session directory
 	sessionDir := filepath.Join(e.TempDir, fmt.Sprintf("update-%s-%d", pkg.Manifest.PackageID, time.Now().Unix()))
-	if err := os.MkdirAll(sessionDir, 0755); err != nil {
+	if err := os.MkdirAll(sessionDir, 0700); err != nil {
 		return fmt.Errorf("failed to create session directory: %w", err)
 	}
 	defer os.RemoveAll(sessionDir)
 
 	// Create backup directory for this update
 	backupDir := filepath.Join(e.BackupDir, fmt.Sprintf("backup-%s-%d", pkg.Manifest.PackageID, time.Now().Unix()))
-	if err := os.MkdirAll(backupDir, 0755); err != nil {
+	if err := os.MkdirAll(backupDir, 0700); err != nil {
 		return fmt.Errorf("failed to create backup directory: %w", err)
 	}
 
@@ -85,7 +85,6 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 			e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, err.Error(), nil)
 			return fmt.Errorf("verification hook failed: %w", err)
 		}
-
 		if !result.Success {
 			e.Logger.Error("UpdateExecutor", fmt.Sprintf("Verification hook failed: %s", result.Message), transaction.ID, result.Details)
 			e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, result.Message, result.Details)
@@ -129,7 +128,6 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 
 		// Notify update rolled back
 		e.NotificationManager.NotifyUpdateRolledBack(transaction.ID, pkg.Manifest.PackageID, transaction.GetSummary())
-
 		// Log audit event
 		e.AuditLogger.LogEvent("update_rolled_back", "UpdateExecutor", e.User, transaction.ID, pkg.Manifest.PackageID, transaction.GetSummary())
 
@@ -159,5 +157,3 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 	// Log update success
 	e.Logger.Info("UpdateExecutor", "Update execution completed successfully", transaction.ID, transaction.GetSummary())
 
-	return nil
-}

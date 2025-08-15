@@ -38,7 +38,6 @@ func getDiskSpaceAvailable(dir string) int64 {
 	}
 	
 	return int64(freeBytesAvailable)
-}
 
 // getDiskSpaceForPath gets disk space for the first imported file
 func (r *DefaultImportReportingSystem) getDiskSpaceForImportedFiles(importedFiles []string) int64 {
@@ -46,5 +45,3 @@ func (r *DefaultImportReportingSystem) getDiskSpaceForImportedFiles(importedFile
 		dir := filepath.Dir(importedFiles[0])
 		return getDiskSpaceAvailable(dir)
 	}
-	return 0
-}

@@ -23,7 +23,6 @@ type PromptInjectionValidator struct {
 	delimitersPatterns []*regexp.Regexp
 	// systemPromptPatterns contains patterns that might indicate attempts to inject system prompts
 	systemPromptPatterns []*regexp.Regexp
-}
 
 // NewPromptInjectionValidator creates a new prompt injection validator
 func NewPromptInjectionValidator() *PromptInjectionValidator {
@@ -84,7 +83,6 @@ func NewPromptInjectionValidator() *PromptInjectionValidator {
 		delimitersPatterns:  delimitersPatterns,
 		systemPromptPatterns: systemPromptPatterns,
 	}
-}
 
 // ValidatePrompt validates a prompt for prompt injection vulnerabilities
 func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -254,7 +252,6 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for prompt injection vulnerabilities
 func (v *PromptInjectionValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -345,7 +342,6 @@ func (v *PromptInjectionValidator) ValidateResponse(ctx context.Context, respons
 	}
 
 	return results, nil
-}
 
 // Helper function to get the minimum of two integers
 func min(a, b int) int {
@@ -353,12 +349,9 @@ func min(a, b int) int {
 		return a
 	}
 	return b
-}
 
 // Helper function to get the maximum of two integers
 func max(a, b int) int {
 	if a > b {
 		return a
 	}
-	return b
-}

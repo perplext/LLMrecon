@@ -25,7 +25,6 @@ func DefaultSMSConfig() *SMSConfig {
 			"from": "LLMrecon",
 		},
 	}
-}
 
 // GenerateSMSCode generates a random SMS verification code
 func GenerateSMSCode(length int) (string, error) {
@@ -47,7 +46,6 @@ func GenerateSMSCode(length int) (string, error) {
 	// Format the number with leading zeros
 	format := fmt.Sprintf("%%0%dd", length)
 	return fmt.Sprintf(format, n), nil
-}
 
 // CreateSMSVerification creates a new SMS verification
 func CreateSMSVerification(config *SMSConfig, phoneNumber string, maxAttempts int) (*SMSVerification, error) {
@@ -74,7 +72,6 @@ func CreateSMSVerification(config *SMSConfig, phoneNumber string, maxAttempts in
 	}
 	
 	return verification, nil
-}
 
 // SendSMSCode sends an SMS verification code
 func SendSMSCode(config *SMSConfig, verification *SMSVerification) error {
@@ -97,7 +94,6 @@ func SendSMSCode(config *SMSConfig, verification *SMSVerification) error {
 	fmt.Printf("[SMS] Sending code %s to %s\n", verification.Code, verification.PhoneNumber)
 	
 	return nil
-}
 
 // VerifySMSCode verifies an SMS verification code
 func VerifySMSCode(verification *SMSVerification, code string) (bool, error) {
@@ -134,13 +130,11 @@ func VerifySMSCode(verification *SMSVerification, code string) (bool, error) {
 	verification.VerifiedAt = time.Now()
 	
 	return true, nil
-}
 
 // SMSProvider defines the interface for SMS providers
 type SMSProvider interface {
 	// SendSMS sends an SMS message
 	SendSMS(to, from, message string) error
-}
 
 // MockSMSProvider is a mock implementation of SMSProvider for testing
 type MockSMSProvider struct{}
@@ -149,7 +143,6 @@ type MockSMSProvider struct{}
 func (p *MockSMSProvider) SendSMS(to, from, message string) error {
 	fmt.Printf("[MockSMS] From: %s, To: %s, Message: %s\n", from, to, message)
 	return nil
-}
 
 // GetSMSProvider returns an SMS provider based on the configuration
 func GetSMSProvider(config *SMSConfig) (SMSProvider, error) {
@@ -163,4 +156,3 @@ func GetSMSProvider(config *SMSConfig) (SMSProvider, error) {
 	default:
 		return nil, fmt.Errorf("unsupported SMS provider: %s", config.SMSProvider)
 	}
-}

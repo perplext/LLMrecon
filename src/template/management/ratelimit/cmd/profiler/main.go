@@ -39,7 +39,7 @@ func main() {
 	flag.Parse()
 
 	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(*outputDir, 0755); err != nil {
+	if err := os.MkdirAll(*outputDir, 0700); err != nil {
 		log.Fatalf("Failed to create output directory: %v", err)
 	}
 
@@ -88,7 +88,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create CPU profile: %v", err)
 		}
-		defer cpuFile.Close()
+		defer func() { if err := cpuFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		if err := pprof.StartCPUProfile(cpuFile); err != nil {
 			log.Fatalf("Could not start CPU profile: %v", err)
 		}
@@ -108,7 +108,6 @@ func main() {
 	fmt.Printf("Dynamic Adjustment Enabled: %t\n", *dynamicAdj)
 	fmt.Printf("Output Directory: %s\n", *outputDir)
 	fmt.Println()
-
 	// Run the load test
 	fmt.Println("Running load test...")
 	startTime := time.Now()
@@ -124,7 +123,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to run load test: %v", err)
 	}
-
 	// Generate and print the report
 	report := profiler.GenerateReport(result)
 	fmt.Println(report)
@@ -146,7 +144,6 @@ func main() {
 	printSummaryTable(result)
 
 	fmt.Printf("\nProfiling completed in %v\n", time.Since(startTime))
-}
 
 // parseUserPriorities parses a comma-separated list of user:priority pairs
 func parseUserPriorities(prioritiesStr string) map[string]int {
@@ -183,7 +180,6 @@ func parseUserPriorities(prioritiesStr string) map[string]int {
 	}
 
 	return result
-}
 
 // printDetailedStats prints detailed statistics about the profiling run
 func printDetailedStats(result *ratelimit.ProfileResult) {
@@ -202,7 +198,6 @@ func printDetailedStats(result *ratelimit.ProfileResult) {
 			fmt.Printf("  %s: %v\n", key, value)
 		}
 	}
-}
 
 // printSummaryTable prints a summary table of the profiling results
 func printSummaryTable(result *ratelimit.ProfileResult) {
@@ -240,4 +235,3 @@ func printSummaryTable(result *ratelimit.ProfileResult) {
 			stats.AverageResponseTime,
 			stats.MaxResponseTime)
 	}
-}

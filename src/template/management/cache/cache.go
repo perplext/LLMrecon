@@ -19,7 +19,6 @@ type TemplateCache struct {
 	maxSize int
 	// evictionPolicy is the policy for evicting cache entries
 	evictionPolicy EvictionPolicy
-}
 
 // CacheEntry represents a cached template
 type CacheEntry struct {
@@ -33,7 +32,6 @@ type CacheEntry struct {
 	LastAccessed time.Time
 	// AccessCount is the number of times the entry has been accessed
 	AccessCount int
-}
 
 // EvictionPolicy represents the policy for evicting cache entries
 type EvictionPolicy string
@@ -66,7 +64,6 @@ func NewTemplateCache(defaultTTL time.Duration, maxSize int, evictionPolicy Evic
 		maxSize:        maxSize,
 		evictionPolicy: evictionPolicy,
 	}
-}
 
 // Get gets a template from the cache
 func (c *TemplateCache) Get(id string) (*format.Template, bool) {
@@ -94,12 +91,10 @@ func (c *TemplateCache) Get(id string) (*format.Template, bool) {
 	c.mutex.Unlock()
 
 	return entry.Template, true
-}
 
 // Set sets a template in the cache
 func (c *TemplateCache) Set(id string, template *format.Template) {
 	c.SetWithTTL(id, template, c.defaultTTL)
-}
 
 // SetWithTTL sets a template in the cache with a specific TTL
 func (c *TemplateCache) SetWithTTL(id string, template *format.Template, ttl time.Duration) {
@@ -123,28 +118,24 @@ func (c *TemplateCache) SetWithTTL(id string, template *format.Template, ttl tim
 
 	// Add entry to cache
 	c.cache[id] = entry
-}
 
 // Delete deletes a template from the cache
 func (c *TemplateCache) Delete(id string) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	delete(c.cache, id)
-}
 
 // Clear clears the cache
 func (c *TemplateCache) Clear() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.cache = make(map[string]*CacheEntry)
-}
 
 // Size returns the number of templates in the cache
 func (c *TemplateCache) Size() int {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 	return len(c.cache)
-}
 
 // Prune removes entries from the cache that are older than the specified duration
 func (c *TemplateCache) Prune(maxAge time.Duration) int {
@@ -164,7 +155,6 @@ func (c *TemplateCache) Prune(maxAge time.Duration) int {
 	}
 
 	return count
-}
 
 // evict evicts an entry from the cache based on the eviction policy
 func (c *TemplateCache) evict() {
@@ -178,7 +168,6 @@ func (c *TemplateCache) evict() {
 	default:
 		c.evictLRU()
 	}
-}
 
 // evictLRU evicts the least recently used entry
 func (c *TemplateCache) evictLRU() {
@@ -197,7 +186,6 @@ func (c *TemplateCache) evictLRU() {
 	if oldestID != "" {
 		delete(c.cache, oldestID)
 	}
-}
 
 // evictLFU evicts the least frequently used entry
 func (c *TemplateCache) evictLFU() {
@@ -216,7 +204,6 @@ func (c *TemplateCache) evictLFU() {
 	if leastUsedID != "" {
 		delete(c.cache, leastUsedID)
 	}
-}
 
 // evictFIFO evicts the oldest entry
 func (c *TemplateCache) evictFIFO() {
@@ -235,7 +222,6 @@ func (c *TemplateCache) evictFIFO() {
 	if oldestID != "" {
 		delete(c.cache, oldestID)
 	}
-}
 
 // GetKeys returns the keys of all templates in the cache
 func (c *TemplateCache) GetKeys() []string {
@@ -248,7 +234,6 @@ func (c *TemplateCache) GetKeys() []string {
 	}
 
 	return keys
-}
 
 // GetStats returns statistics about the cache
 func (c *TemplateCache) GetStats() map[string]interface{} {
@@ -273,7 +258,6 @@ func (c *TemplateCache) GetStats() map[string]interface{} {
 	stats["expired_count"] = expiredCount
 
 	return stats
-}
 
 // SetMaxSize sets the maximum size of the cache
 func (c *TemplateCache) SetMaxSize(maxSize int) {
@@ -290,21 +274,18 @@ func (c *TemplateCache) SetMaxSize(maxSize int) {
 	for len(c.cache) > c.maxSize {
 		c.evict()
 	}
-}
 
 // SetEvictionPolicy sets the eviction policy
 func (c *TemplateCache) SetEvictionPolicy(policy EvictionPolicy) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.evictionPolicy = policy
-}
 
 // SetDefaultTTL sets the default TTL for cache entries
 func (c *TemplateCache) SetDefaultTTL(ttl time.Duration) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.defaultTTL = ttl
-}
 
 // Refresh refreshes the expiration time of a cache entry
 func (c *TemplateCache) Refresh(id string) bool {
@@ -319,7 +300,6 @@ func (c *TemplateCache) Refresh(id string) bool {
 	// Update expiration time
 	entry.ExpiresAt = time.Now().Add(c.defaultTTL)
 	return true
-}
 
 // RefreshWithTTL refreshes the expiration time of a cache entry with a specific TTL
 func (c *TemplateCache) RefreshWithTTL(id string, ttl time.Duration) bool {
@@ -334,4 +314,3 @@ func (c *TemplateCache) RefreshWithTTL(id string, ttl time.Duration) bool {
 	// Update expiration time
 	entry.ExpiresAt = time.Now().Add(ttl)
 	return true
-}

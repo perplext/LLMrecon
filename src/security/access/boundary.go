@@ -28,7 +28,6 @@ type ContextBoundary struct {
 	Value      string
 	Required   bool
 	Validation func(ctx context.Context, value string) bool
-}
 
 // Note: User, AuthManager, and RBACManager types are defined in other files
 // This file uses the existing concrete types to avoid redeclaration conflicts
@@ -39,29 +38,24 @@ type EnhancedContextBoundaryEnforcer struct {
 	authManager    *AuthManager
 	rbacManager    *RBACManagerImpl
 	boundaries     map[ContextBoundaryType][]ContextBoundary
-}
 
 // NewEnhancedContextBoundaryEnforcer creates a new boundary enforcer
 func NewEnhancedContextBoundaryEnforcer() *EnhancedContextBoundaryEnforcer {
 	return &EnhancedContextBoundaryEnforcer{
 		boundaries: make(map[ContextBoundaryType][]ContextBoundary),
 	}
-}
 
 // SetSessionManager sets the session manager for the boundary enforcer
 func (e *EnhancedContextBoundaryEnforcer) SetSessionManager(sessionManager *SessionManager) {
 	e.sessionManager = sessionManager
-}
 
 // SetAuthManager sets the auth manager for the boundary enforcer
 func (e *EnhancedContextBoundaryEnforcer) SetAuthManager(authManager *AuthManager) {
 	e.authManager = authManager
-}
 
 // SetRBACManager sets the RBAC manager for the boundary enforcer
 func (e *EnhancedContextBoundaryEnforcer) SetRBACManager(rbacManager *RBACManagerImpl) {
 	e.rbacManager = rbacManager
-}
 
 // AddBoundary adds a new boundary to enforce
 func (e *EnhancedContextBoundaryEnforcer) AddBoundary(boundary ContextBoundary) {
@@ -69,7 +63,6 @@ func (e *EnhancedContextBoundaryEnforcer) AddBoundary(boundary ContextBoundary) 
 		e.boundaries[boundary.Type] = []ContextBoundary{}
 	}
 	e.boundaries[boundary.Type] = append(e.boundaries[boundary.Type], boundary)
-}
 
 // EnforceBoundaries enforces all boundaries for a request
 func (e *EnhancedContextBoundaryEnforcer) EnforceBoundaries(ctx context.Context) error {
@@ -129,7 +122,6 @@ func (e *EnhancedContextBoundaryEnforcer) EnforceBoundaries(ctx context.Context)
 	}
 
 	return nil
-}
 
 // Middleware creates an HTTP middleware that enforces boundaries
 func (e *EnhancedContextBoundaryEnforcer) Middleware(next http.Handler) http.Handler {
@@ -140,7 +132,6 @@ func (e *EnhancedContextBoundaryEnforcer) Middleware(next http.Handler) http.Han
 		}
 		next.ServeHTTP(w, r)
 	})
-}
 
 // RequireSession creates a boundary that requires a valid session
 func (e *EnhancedContextBoundaryEnforcer) RequireSession() ContextBoundary {
@@ -152,7 +143,6 @@ func (e *EnhancedContextBoundaryEnforcer) RequireSession() ContextBoundary {
 			return err == nil && session != nil && !session.IsExpired()
 		},
 	}
-}
 
 // RequireUser creates a boundary that requires a specific user
 func (e *EnhancedContextBoundaryEnforcer) RequireUser(userID string) ContextBoundary {
@@ -165,7 +155,6 @@ func (e *EnhancedContextBoundaryEnforcer) RequireUser(userID string) ContextBoun
 			return err == nil && session != nil && session.UserID == value
 		},
 	}
-}
 
 // RequireRole creates a boundary that requires a specific role
 func (e *EnhancedContextBoundaryEnforcer) RequireRole(role string) ContextBoundary {
@@ -191,7 +180,7 @@ func (e *EnhancedContextBoundaryEnforcer) RequireRole(role string) ContextBounda
 			return hasRole
 		},
 	}
-}
+	
 
 // RequirePermission creates a boundary that requires a specific permission
 func (e *EnhancedContextBoundaryEnforcer) RequirePermission(permission string) ContextBoundary {
@@ -217,7 +206,6 @@ func (e *EnhancedContextBoundaryEnforcer) RequirePermission(permission string) C
 			return hasPermission
 		},
 	}
-}
 
 // RequireMFA creates a boundary that requires MFA completion
 func (e *EnhancedContextBoundaryEnforcer) RequireMFA() ContextBoundary {
@@ -233,4 +221,3 @@ func (e *EnhancedContextBoundaryEnforcer) RequireMFA() ContextBoundary {
 			return session.MFACompleted
 		},
 	}
-}

@@ -14,7 +14,6 @@ import (
 type ReportingIntegration struct {
 	complianceService ComplianceService
 	templateVerifier  security.TemplateVerifier
-}
 
 // NewReportingIntegration creates a new reporting integration
 func NewReportingIntegration(complianceService ComplianceService, templateVerifier security.TemplateVerifier) *ReportingIntegration {
@@ -26,7 +25,6 @@ func NewReportingIntegration(complianceService ComplianceService, templateVerifi
 		complianceService: complianceService,
 		templateVerifier:  templateVerifier,
 	}
-}
 
 // GenerateComplianceReport generates a compliance report for a test suite
 func (ri *ReportingIntegration) GenerateComplianceReport(ctx context.Context, testSuite *types.TestSuite, options *ComplianceReportOptions) (*ComplianceReport, error) {
@@ -48,7 +46,6 @@ func (ri *ReportingIntegration) GenerateComplianceReport(ctx context.Context, te
 	}
 
 	return report, nil
-}
 
 // ConvertToTestResults converts a compliance report to test results
 func (ri *ReportingIntegration) ConvertToTestResults(report *ComplianceReport) []*common.TestResult {
@@ -131,7 +128,6 @@ func (ri *ReportingIntegration) ConvertToTestResults(report *ComplianceReport) [
 	}
 
 	return testResults
-}
 
 // VerifyTemplateSecurityAndCompliance verifies template security and compliance
 func (ri *ReportingIntegration) VerifyTemplateSecurityAndCompliance(ctx context.Context, templatePath string, testSuite *types.TestSuite, options *security.VerificationOptions) (*TemplateComplianceResult, error) {
@@ -178,7 +174,6 @@ func (ri *ReportingIntegration) VerifyTemplateSecurityAndCompliance(ctx context.
 	}
 
 	return result, nil
-}
 
 // TemplateComplianceResult represents the combined result of template security verification and compliance mapping
 type TemplateComplianceResult struct {
@@ -234,7 +229,6 @@ func (ri *ReportingIntegration) ConvertTemplateComplianceToTestResults(result *T
 	testResults = append(testResults, overallResult)
 
 	return testResults
-}
 
 // getComplianceStandardNames returns the names of the standards
 func getComplianceStandardNames(standards []ComplianceStandard) []string {
@@ -242,5 +236,8 @@ func getComplianceStandardNames(standards []ComplianceStandard) []string {
 	for _, standard := range standards {
 		names = append(names, string(standard))
 	}
-	return names
+}
+}
+}
+}
 }

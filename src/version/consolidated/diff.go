@@ -37,7 +37,6 @@ type DiffOptions struct {
 	
 	// IncludeUnchanged determines if unchanged items should be included
 	IncludeUnchanged bool
-}
 
 // DefaultDiffOptions returns the default diff options
 func DefaultDiffOptions() *DiffOptions {
@@ -48,7 +47,6 @@ func DefaultDiffOptions() *DiffOptions {
 		IgnoreFormatting: true,
 		IncludeUnchanged: false,
 	}
-}
 
 // DiffItem represents a difference item
 type DiffItem struct {
@@ -72,7 +70,6 @@ type DiffItem struct {
 	
 	// Metadata is additional metadata for the difference
 	Metadata map[string]interface{}
-}
 
 // NewDiffItem creates a new diff item
 func NewDiffItem(diffType DiffType, path string, oldContent, newContent string, lineNumber, lineCount int) *DiffItem {
@@ -85,13 +82,11 @@ func NewDiffItem(diffType DiffType, path string, oldContent, newContent string, 
 		LineCount:  lineCount,
 		Metadata:   make(map[string]interface{}),
 	}
-}
 
 // WithMetadata adds metadata to the diff item
 func (d *DiffItem) WithMetadata(key string, value interface{}) *DiffItem {
 	d.Metadata[key] = value
 	return d
-}
 
 // String returns a string representation of the diff item
 func (d *DiffItem) String() string {
@@ -107,7 +102,6 @@ func (d *DiffItem) String() string {
 	default:
 		return fmt.Sprintf("? %s (line %d, %d lines)", d.Path, d.LineNumber, d.LineCount)
 	}
-}
 
 // DiffResult represents the result of a diff operation
 type DiffResult struct {
@@ -125,7 +119,6 @@ type DiffResult struct {
 	
 	// DiffTime is the time the diff was performed
 	DiffTime time.Time
-}
 
 // NewDiffResult creates a new diff result
 func NewDiffResult(localVersion, remoteVersion *VersionInfo) *DiffResult {
@@ -136,7 +129,6 @@ func NewDiffResult(localVersion, remoteVersion *VersionInfo) *DiffResult {
 		Summary:       NewDiffSummary(),
 		DiffTime:      time.Now(),
 	}
-}
 
 // AddItem adds a diff item to the result
 func (r *DiffResult) AddItem(item *DiffItem) {
@@ -155,12 +147,10 @@ func (r *DiffResult) AddItem(item *DiffItem) {
 	}
 	
 	r.Summary.Total++
-}
 
 // HasDifferences returns true if there are differences
 func (r *DiffResult) HasDifferences() bool {
 	return r.Summary.Added > 0 || r.Summary.Removed > 0 || r.Summary.Modified > 0
-}
 
 // GetAddedItems returns all added items
 func (r *DiffResult) GetAddedItems() []*DiffItem {
@@ -171,7 +161,6 @@ func (r *DiffResult) GetAddedItems() []*DiffItem {
 		}
 	}
 	return result
-}
 
 // GetRemovedItems returns all removed items
 func (r *DiffResult) GetRemovedItems() []*DiffItem {
@@ -182,7 +171,6 @@ func (r *DiffResult) GetRemovedItems() []*DiffItem {
 		}
 	}
 	return result
-}
 
 // GetModifiedItems returns all modified items
 func (r *DiffResult) GetModifiedItems() []*DiffItem {
@@ -193,7 +181,6 @@ func (r *DiffResult) GetModifiedItems() []*DiffItem {
 		}
 	}
 	return result
-}
 
 // GetUnchangedItems returns all unchanged items
 func (r *DiffResult) GetUnchangedItems() []*DiffItem {
@@ -204,7 +191,6 @@ func (r *DiffResult) GetUnchangedItems() []*DiffItem {
 		}
 	}
 	return result
-}
 
 // DiffSummary represents a summary of differences
 type DiffSummary struct {
@@ -222,7 +208,6 @@ type DiffSummary struct {
 	
 	// Total is the total number of items
 	Total int
-}
 
 // NewDiffSummary creates a new diff summary
 func NewDiffSummary() *DiffSummary {
@@ -233,10 +218,7 @@ func NewDiffSummary() *DiffSummary {
 		Unchanged: 0,
 		Total:     0,
 	}
-}
 
 // String returns a string representation of the diff summary
 func (s *DiffSummary) String() string {
 	return fmt.Sprintf("Added: %d, Removed: %d, Modified: %d, Unchanged: %d, Total: %d",
-		s.Added, s.Removed, s.Modified, s.Unchanged, s.Total)
-}

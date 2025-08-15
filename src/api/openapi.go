@@ -31,7 +31,7 @@ func GenerateOpenAPISpec() map[string]interface{} {
 				"description": "Production server",
 			},
 			{
-				"url":         "http://localhost:8080/api/v1",
+				"url":         "https://localhost:8443/api/v1",
 				"description": "Development server",
 			},
 		},
@@ -68,7 +68,6 @@ func GenerateOpenAPISpec() map[string]interface{} {
 		"paths":      generatePaths(),
 		"components": generateComponents(),
 	}
-}
 
 // generatePaths generates the API paths section
 func generatePaths() map[string]interface{} {
@@ -511,7 +510,6 @@ func generatePaths() map[string]interface{} {
 			},
 		},
 	}
-}
 
 // generateComponents generates the components section
 func generateComponents() map[string]interface{} {
@@ -1130,11 +1128,9 @@ func generateComponents() map[string]interface{} {
 			},
 		},
 	}
-}
 
 // handleOpenAPISpec serves the OpenAPI specification
 func handleOpenAPISpec(w http.ResponseWriter, r *http.Request) {
 	spec := GenerateOpenAPISpec()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(spec)
-}

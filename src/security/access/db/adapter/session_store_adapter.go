@@ -18,12 +18,10 @@ func NewSessionStoreAdapter(store SessionStore) *SessionStoreAdapter {
 	return &SessionStoreAdapter{
 		store: store,
 	}
-}
 
 // Close closes the session store
 func (a *SessionStoreAdapter) Close() error {
 	return a.store.Close()
-}
 
 // CreateSession creates a new session
 func (a *SessionStoreAdapter) CreateSession(ctx context.Context, session *interfaces.Session) error {
@@ -41,7 +39,6 @@ func (a *SessionStoreAdapter) CreateSession(ctx context.Context, session *interf
 		Metadata:       convertMetadataToString(session.Metadata),
 	}
 	return a.store.CreateSession(ctx, adapterSession)
-}
 
 // GetSessionByID retrieves a session by ID
 func (a *SessionStoreAdapter) GetSessionByID(ctx context.Context, id string) (*interfaces.Session, error) {
@@ -50,7 +47,6 @@ func (a *SessionStoreAdapter) GetSessionByID(ctx context.Context, id string) (*i
 		return nil, err
 	}
 	return convertAdapterSessionToInterface(adapterSession), nil
-}
 
 // GetSessionByToken retrieves a session by token
 func (a *SessionStoreAdapter) GetSessionByToken(ctx context.Context, token string) (*interfaces.Session, error) {
@@ -59,7 +55,6 @@ func (a *SessionStoreAdapter) GetSessionByToken(ctx context.Context, token strin
 		return nil, err
 	}
 	return convertAdapterSessionToInterface(adapterSession), nil
-}
 
 // GetSessionByRefreshToken retrieves a session by refresh token
 func (a *SessionStoreAdapter) GetSessionByRefreshToken(ctx context.Context, refreshToken string) (*interfaces.Session, error) {
@@ -68,7 +63,6 @@ func (a *SessionStoreAdapter) GetSessionByRefreshToken(ctx context.Context, refr
 		return nil, err
 	}
 	return convertAdapterSessionToInterface(adapterSession), nil
-}
 
 // UpdateSession updates an existing session
 func (a *SessionStoreAdapter) UpdateSession(ctx context.Context, session *interfaces.Session) error {
@@ -86,17 +80,14 @@ func (a *SessionStoreAdapter) UpdateSession(ctx context.Context, session *interf
 		Metadata:       convertMetadataToString(session.Metadata),
 	}
 	return a.store.UpdateSession(ctx, adapterSession)
-}
 
 // DeleteSession deletes a session by ID
 func (a *SessionStoreAdapter) DeleteSession(ctx context.Context, id string) error {
 	return a.store.DeleteSession(ctx, id)
-}
 
 // DeleteSessionsByUserID deletes all sessions for a user
 func (a *SessionStoreAdapter) DeleteSessionsByUserID(ctx context.Context, userID string) error {
 	return a.store.DeleteSessionsByUserID(ctx, userID)
-}
 
 // ListSessionsByUserID lists sessions for a user
 func (a *SessionStoreAdapter) ListSessionsByUserID(ctx context.Context, userID string) ([]*interfaces.Session, error) {
@@ -110,12 +101,10 @@ func (a *SessionStoreAdapter) ListSessionsByUserID(ctx context.Context, userID s
 		interfaceSessions[i] = convertAdapterSessionToInterface(adapterSession)
 	}
 	return interfaceSessions, nil
-}
 
 // CleanExpiredSessions removes all expired sessions
 func (a *SessionStoreAdapter) CleanExpiredSessions(ctx context.Context) (int, error) {
 	return a.store.CleanExpiredSessions(ctx)
-}
 
 // convertAdapterSessionToInterface converts an adapter.Session to interfaces.Session
 func convertAdapterSessionToInterface(adapterSession *Session) *interfaces.Session {
@@ -135,7 +124,6 @@ func convertAdapterSessionToInterface(adapterSession *Session) *interfaces.Sessi
 		UserAgent:      adapterSession.UserAgent,
 		Metadata:       convertStringToMetadata(adapterSession.Metadata),
 	}
-}
 
 // convertMetadataToString converts metadata map to JSON string
 func convertMetadataToString(metadata map[string]interface{}) string {
@@ -148,7 +136,6 @@ func convertMetadataToString(metadata map[string]interface{}) string {
 		return ""
 	}
 	return string(data)
-}
 
 // convertStringToMetadata converts JSON string to metadata map
 func convertStringToMetadata(metadataStr string) map[string]interface{} {
@@ -160,5 +147,16 @@ func convertStringToMetadata(metadataStr string) map[string]interface{} {
 	if err := json.Unmarshal([]byte(metadataStr), &metadata); err != nil {
 		return make(map[string]interface{})
 	}
-	return metadata
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

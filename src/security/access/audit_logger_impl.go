@@ -16,7 +16,6 @@ type AuditLoggerImpl struct {
 	auditStore  AuditStore
 	config      *AuditLoggerConfig
 	initialized bool
-}
 
 // AuditLoggerConfig contains configuration for the audit logger implementation
 type AuditLoggerConfig struct {
@@ -25,10 +24,10 @@ type AuditLoggerConfig struct {
 	LogToFile    bool
 	LogFile      string
 	LogFormat    string
+}
 
 	// Retention configuration
 	RetentionDays int
-}
 
 // AuditStore defines the interface for storing and retrieving audit logs
 type AuditStore interface {
@@ -49,7 +48,6 @@ type AuditStore interface {
 
 	// Close closes the audit store
 	Close() error
-}
 
 // NewAuditLogger creates a new audit logger
 func NewAuditLogger(auditStore AuditStore, config *AuditLoggerConfig) *AuditLoggerImpl {
@@ -67,7 +65,6 @@ func NewAuditLogger(auditStore AuditStore, config *AuditLoggerConfig) *AuditLogg
 		auditStore: auditStore,
 		config:     config,
 	}
-}
 
 // Initialize initializes the audit logger
 func (l *AuditLoggerImpl) Initialize(ctx context.Context) error {
@@ -79,14 +76,14 @@ func (l *AuditLoggerImpl) Initialize(ctx context.Context) error {
 		// Create the directory if it doesn't exist
 		dir := l.config.LogFile[:len(l.config.LogFile)-len("/audit.log")]
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			err = os.MkdirAll(dir, 0755)
+			err = os.MkdirAll(dir, 0700)
 			if err != nil {
 				return fmt.Errorf("failed to create log directory: %w", err)
 			}
 		}
 
 		// Create or open the log file
-		file, err := os.OpenFile(l.config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(l.config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 		if err != nil {
 			return fmt.Errorf("failed to open log file: %w", err)
 		}
@@ -95,7 +92,6 @@ func (l *AuditLoggerImpl) Initialize(ctx context.Context) error {
 
 	l.initialized = true
 	return nil
-}
 
 // LogAudit logs an audit event
 func (l *AuditLoggerImpl) LogAudit(ctx context.Context, log *models.AuditLog) error {
@@ -119,7 +115,6 @@ func (l *AuditLoggerImpl) LogAudit(ctx context.Context, log *models.AuditLog) er
 	}
 
 	return nil
-}
 
 // GetAuditLogs gets audit logs
 func (l *AuditLoggerImpl) GetAuditLogs(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.AuditLog, int, error) {
@@ -127,7 +122,6 @@ func (l *AuditLoggerImpl) GetAuditLogs(ctx context.Context, filter map[string]in
 	defer l.mu.RUnlock()
 
 	return l.auditStore.GetAuditLogs(ctx, filter, offset, limit)
-}
 
 // CleanupOldLogs deletes audit logs older than the retention period
 func (l *AuditLoggerImpl) CleanupOldLogs(ctx context.Context) (int, error) {
@@ -139,7 +133,6 @@ func (l *AuditLoggerImpl) CleanupOldLogs(ctx context.Context) (int, error) {
 
 	// Delete old logs
 	return l.auditStore.DeleteAuditLogsBefore(ctx, cutoff)
-}
 
 // Close closes the audit logger
 func (l *AuditLoggerImpl) Close() error {
@@ -154,7 +147,6 @@ func (l *AuditLoggerImpl) Close() error {
 
 	l.initialized = false
 	return nil
-}
 
 // logToConsole logs an audit event to the console
 func (l *AuditLoggerImpl) logToConsole(log *models.AuditLog) {
@@ -179,7 +171,6 @@ func (l *AuditLoggerImpl) logToConsole(log *models.AuditLog) {
 	}
 
 	fmt.Println(logStr)
-}
 
 // logToFile logs an audit event to a file
 func (l *AuditLoggerImpl) logToFile(log *models.AuditLog) error {
@@ -199,23 +190,22 @@ func (l *AuditLoggerImpl) logToFile(log *models.AuditLog) error {
 			log.UserID,
 			log.Action,
 			log.Resource,
-			log.ResourceID,
+				log.ResourceID,
 			log.Description)
 	}
 
 	// Append to the log file
-	file, err := os.OpenFile(l.config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(l.config.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	if _, err := file.WriteString(logStr + "\n"); err != nil {
 		return err
 	}
 
 	return nil
-}
 
 // InMemoryAuditStore is an in-memory implementation of the AuditStore interface
 type InMemoryAuditStore struct {
@@ -229,7 +219,6 @@ func NewInMemoryAuditStore() *InMemoryAuditStore {
 	return &InMemoryAuditStore{
 		logs: make(map[string]*models.AuditLog),
 	}
-}
 
 // StoreAuditLog stores an audit log
 func (s *InMemoryAuditStore) StoreAuditLog(ctx context.Context, log *models.AuditLog) error {
@@ -240,7 +229,6 @@ func (s *InMemoryAuditStore) StoreAuditLog(ctx context.Context, log *models.Audi
 	s.count++
 
 	return nil
-}
 
 // GetAuditLog retrieves an audit log by ID
 func (s *InMemoryAuditStore) GetAuditLog(ctx context.Context, id string) (*models.AuditLog, error) {
@@ -253,7 +241,6 @@ func (s *InMemoryAuditStore) GetAuditLog(ctx context.Context, id string) (*model
 	}
 
 	return log, nil
-}
 
 // GetAuditLogs retrieves audit logs with optional filtering
 func (s *InMemoryAuditStore) GetAuditLogs(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.AuditLog, int, error) {
@@ -320,7 +307,6 @@ func (s *InMemoryAuditStore) GetAuditLogs(ctx context.Context, filter map[string
 	}
 
 	return logs[offset:end], total, nil
-}
 
 // DeleteAuditLog deletes an audit log
 func (s *InMemoryAuditStore) DeleteAuditLog(ctx context.Context, id string) error {
@@ -335,7 +321,6 @@ func (s *InMemoryAuditStore) DeleteAuditLog(ctx context.Context, id string) erro
 	s.count--
 
 	return nil
-}
 
 // DeleteAuditLogsBefore deletes audit logs before a specific time
 func (s *InMemoryAuditStore) DeleteAuditLogsBefore(ctx context.Context, before time.Time) (int, error) {
@@ -354,7 +339,6 @@ func (s *InMemoryAuditStore) DeleteAuditLogsBefore(ctx context.Context, before t
 	s.count -= deleted
 
 	return deleted, nil
-}
 
 // Close closes the audit store
 func (s *InMemoryAuditStore) Close() error {
@@ -364,5 +348,16 @@ func (s *InMemoryAuditStore) Close() error {
 	s.logs = make(map[string]*models.AuditLog)
 	s.count = 0
 
-	return nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

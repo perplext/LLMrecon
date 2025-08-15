@@ -33,7 +33,6 @@ func DefaultSecurityHeaders() SecurityHeaders {
 		ReferrerPolicy:         "strict-origin-when-cross-origin",
 		PermissionsPolicy:      "geolocation=(), microphone=(), camera=()",
 	}
-}
 
 // securityHeadersMiddleware adds security headers to responses
 func securityHeadersMiddleware(headers SecurityHeaders) func(http.Handler) http.Handler {
@@ -65,7 +64,6 @@ func securityHeadersMiddleware(headers SecurityHeaders) func(http.Handler) http.
 			next.ServeHTTP(w, r)
 		})
 	}
-}
 
 // IPWhitelist manages IP whitelisting
 type IPWhitelist struct {
@@ -86,7 +84,6 @@ func NewIPWhitelist(ips []string, cidrs []string) *IPWhitelist {
 	}
 	
 	return whitelist
-}
 
 // IsAllowed checks if an IP is whitelisted
 func (w *IPWhitelist) IsAllowed(ip string) bool {
@@ -102,7 +99,6 @@ func (w *IPWhitelist) IsAllowed(ip string) bool {
 	// This is a placeholder for CIDR matching logic
 	
 	return false
-}
 
 // ipWhitelistMiddleware enforces IP whitelisting
 func ipWhitelistMiddleware(whitelist *IPWhitelist) func(http.Handler) http.Handler {
@@ -119,7 +115,6 @@ func ipWhitelistMiddleware(whitelist *IPWhitelist) func(http.Handler) http.Handl
 			next.ServeHTTP(w, r)
 		})
 	}
-}
 
 // RequestSizeLimit limits request body size
 func requestSizeLimitMiddleware(maxSize int64) func(http.Handler) http.Handler {
@@ -129,7 +124,6 @@ func requestSizeLimitMiddleware(maxSize int64) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
-}
 
 // ScopeValidator validates API key scopes
 type ScopeValidator struct {
@@ -148,7 +142,6 @@ func NewScopeValidator() *ScopeValidator {
 			"/api/v1/auth/users": {"admin"},
 		},
 	}
-}
 
 // scopeValidationMiddleware validates API key scopes
 func scopeValidationMiddleware(validator *ScopeValidator, authService AuthService) func(http.Handler) http.Handler {
@@ -208,7 +201,6 @@ func scopeValidationMiddleware(validator *ScopeValidator, authService AuthServic
 			next.ServeHTTP(w, r)
 		})
 	}
-}
 
 // AuditLogger logs security-relevant events
 type AuditLogger struct {
@@ -220,7 +212,6 @@ func NewAuditLogger(logSensitive bool) *AuditLogger {
 	return &AuditLogger{
 		logSensitive: logSensitive,
 	}
-}
 
 // auditLoggingMiddleware logs security events
 func auditLoggingMiddleware(logger *AuditLogger) func(http.Handler) http.Handler {
@@ -277,7 +268,6 @@ func auditLoggingMiddleware(logger *AuditLogger) func(http.Handler) http.Handler
 			completion.Msg("API request completed")
 		})
 	}
-}
 
 // getClientIP extracts client IP from request
 func getClientIP(r *http.Request) string {
@@ -301,7 +291,6 @@ func getClientIP(r *http.Request) string {
 	}
 	
 	return ip
-}
 
 // maskAPIKey masks an API key for logging
 func maskAPIKey(key string) string {
@@ -309,7 +298,6 @@ func maskAPIKey(key string) string {
 		return "***"
 	}
 	return key[:4] + "..." + key[len(key)-4:]
-}
 
 // timeoutMiddleware adds request timeout
 func timeoutMiddleware(timeout time.Duration) func(http.Handler) http.Handler {
@@ -335,7 +323,6 @@ func timeoutMiddleware(timeout time.Duration) func(http.Handler) http.Handler {
 			}
 		})
 	}
-}
 
 // compressionMiddleware adds response compression
 func compressionMiddleware(next http.Handler) http.Handler {
@@ -352,7 +339,6 @@ func compressionMiddleware(next http.Handler) http.Handler {
 		
 		next.ServeHTTP(w, r)
 	})
-}
 
 // requestIDMiddleware ensures request ID is set
 func requestIDMiddleware(next http.Handler) http.Handler {
@@ -369,4 +355,14 @@ func requestIDMiddleware(next http.Handler) http.Handler {
 		
 		next.ServeHTTP(w, r)
 	})
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

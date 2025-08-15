@@ -9,7 +9,6 @@ import (
 type MiniDashboard struct {
 	terminal *Terminal
 	style    *DashboardStyle
-}
 
 // NewMiniDashboard creates a new mini dashboard
 func NewMiniDashboard(terminal *Terminal) *MiniDashboard {
@@ -17,7 +16,6 @@ func NewMiniDashboard(terminal *Terminal) *MiniDashboard {
 		terminal: terminal,
 		style:    newDashboardStyle(),
 	}
-}
 
 // ShowQuickStatus displays a quick status overview
 func (md *MiniDashboard) ShowQuickStatus() {
@@ -37,7 +35,6 @@ func (md *MiniDashboard) ShowQuickStatus() {
 	
 	// Alerts
 	md.showAlerts()
-}
 
 // ShowScanProgress displays inline scan progress
 func (md *MiniDashboard) ShowScanProgress(scan *ActiveScan) {
@@ -72,7 +69,6 @@ func (md *MiniDashboard) ShowScanProgress(scan *ActiveScan) {
 	default:
 		fmt.Print(status)
 	}
-}
 
 // ShowCompactResults displays scan results in a compact format
 func (md *MiniDashboard) ShowCompactResults(results *CompactResults) {
@@ -113,7 +109,6 @@ func (md *MiniDashboard) ShowCompactResults(results *CompactResults) {
 	fmt.Println("  • View full report: LLMrecon report view " + results.ScanID)
 	fmt.Println("  • Export results: LLMrecon report export " + results.ScanID)
 	fmt.Println("  • Re-run scan: LLMrecon scan --replay " + results.ScanID)
-}
 
 // ShowLiveMetrics displays real-time metrics
 func (md *MiniDashboard) ShowLiveMetrics() {
@@ -142,7 +137,6 @@ Latency: %dms | Load: %.2f | Memory: %.1f%%`,
 			metrics.MemoryUsage,
 		),
 	)
-}
 
 // ShowTestMatrix displays a test coverage matrix
 func (md *MiniDashboard) ShowTestMatrix(matrix *TestMatrix) {
@@ -173,7 +167,6 @@ func (md *MiniDashboard) ShowTestMatrix(matrix *TestMatrix) {
 		md.style.Warning.Render("█ 50-90%") + " " +
 		md.style.Critical.Render("█ <50%") + " " +
 		md.style.Info.Render("░ Not tested"))
-}
 
 // Helper methods
 
@@ -213,7 +206,6 @@ func (md *MiniDashboard) showSystemStatus() {
 	}
 	
 	fmt.Printf("\nLast check: %s\n", status.LastCheck.Format("15:04:05"))
-}
 
 func (md *MiniDashboard) showRecentActivity() {
 	md.terminal.Subsection("Recent Activity")
@@ -235,7 +227,6 @@ func (md *MiniDashboard) showRecentActivity() {
 			activity.Details,
 		)
 	}
-}
 
 func (md *MiniDashboard) showActiveScans() {
 	md.terminal.Subsection("Active Scans")
@@ -265,7 +256,6 @@ func (md *MiniDashboard) showActiveScans() {
 			scan.FindingsCount,
 		)
 	}
-}
 
 func (md *MiniDashboard) showAlerts() {
 	md.terminal.Subsection("Alerts")
@@ -300,7 +290,6 @@ func (md *MiniDashboard) showAlerts() {
 	if !hasAlerts {
 		fmt.Println(md.style.Success.Render("✅ No active alerts"))
 	}
-}
 
 func (md *MiniDashboard) createSparkline(values []float64) string {
 	if len(values) == 0 {
@@ -329,7 +318,6 @@ func (md *MiniDashboard) createSparkline(values []float64) string {
 	}
 	
 	return sparkline
-}
 
 func (md *MiniDashboard) getCoverageCell(coverage float64) string {
 	if coverage < 0 {
@@ -344,7 +332,6 @@ func (md *MiniDashboard) getCoverageCell(coverage float64) string {
 	}
 	
 	return style.Render(fmt.Sprintf("  %3.0f%%  ", coverage))
-}
 
 func (md *MiniDashboard) getActivityIcon(activityType string) string {
 	switch activityType {
@@ -361,7 +348,6 @@ func (md *MiniDashboard) getActivityIcon(activityType string) string {
 	default:
 		return "•"
 	}
-}
 
 func (md *MiniDashboard) formatRelativeTime(t time.Time) string {
 	diff := time.Since(t)
@@ -375,14 +361,12 @@ func (md *MiniDashboard) formatRelativeTime(t time.Time) string {
 	} else {
 		return fmt.Sprintf("%dd ago", int(diff.Hours()/24))
 	}
-}
 
 func truncate(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
 	}
 	return s[:maxLen-3] + "..."
-}
 
 // Data structures for mini dashboard
 
@@ -395,7 +379,6 @@ type ActiveScan struct {
 	TestsTotal     int
 	FindingsCount  int
 	ETA            string
-}
 
 type CompactResults struct {
 	ScanID     string
@@ -414,7 +397,6 @@ type LiveMetrics struct {
 	AverageLatency    int
 	SystemLoad        float64
 	MemoryUsage       float64
-}
 
 type TestMatrix struct {
 	Categories []TestCategory
@@ -425,7 +407,6 @@ type TestMatrix struct {
 type TestCategory struct {
 	Name  string
 	Tests int
-}
 
 func (tm *TestMatrix) GetCoverage(category, target string) float64 {
 	if tm.Coverage == nil {
@@ -437,24 +418,34 @@ func (tm *TestMatrix) GetCoverage(category, target string) float64 {
 		}
 	}
 	return -1
-}
 
 type SystemStatus struct {
 	APIStatus      string
 	DatabaseStatus string
 	QueueStatus    string
 	LastCheck      time.Time
-}
 
 type Activity struct {
 	Time    time.Time
 	Type    string
 	User    string
 	Details string
-}
 
 type Alert struct {
 	Level   string
 	Message string
 	Count   int
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

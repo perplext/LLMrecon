@@ -226,7 +226,6 @@ selective updates and automatic backup creation.`,
 
 		fmt.Println("\nUpdate process completed.")
 	},
-}
 
 func init() {
 	updateCmd.AddCommand(updateApplyCmd)
@@ -236,7 +235,6 @@ func init() {
 	updateApplyCmd.Flags().BoolP("yes", "y", false, "Apply updates without confirmation")
 	updateApplyCmd.Flags().Bool("no-verify", false, "Skip signature verification")
 	updateApplyCmd.Flags().Bool("backup", false, "Create backup before applying updates")
-}
 
 // createBackup creates a backup of the current installation
 func createBackup(cfg *config.Config) error {
@@ -250,7 +248,6 @@ func createBackup(cfg *config.Config) error {
 
 	fmt.Println("Backup functionality not implemented in this version.")
 	return nil
-}
 
 // applyCoreBinaryUpdate applies an update to the core binary
 func applyCoreBinaryUpdate(downloadPath string) error {
@@ -263,7 +260,6 @@ func applyCoreBinaryUpdate(downloadPath string) error {
 
 	fmt.Println("Core binary update not implemented in this version.")
 	return nil
-}
 
 // applyTemplatesUpdate applies an update to the templates
 func applyTemplatesUpdate(downloadPath, templatesDir string) error {
@@ -276,7 +272,6 @@ func applyTemplatesUpdate(downloadPath, templatesDir string) error {
 
 	fmt.Println("Templates update not implemented in this version.")
 	return nil
-}
 
 // applyModuleUpdate applies an update to a specific module
 func applyModuleUpdate(downloadPath, moduleID, modulesDir string) error {
@@ -289,4 +284,3 @@ func applyModuleUpdate(downloadPath, moduleID, modulesDir string) error {
 
 	fmt.Printf("Module update for '%s' not implemented in this version.\n", moduleID)
 	return nil
-}

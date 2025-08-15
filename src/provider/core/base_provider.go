@@ -32,8 +32,8 @@ type BaseProvider struct {
 	usageMetrics map[string]*UsageMetrics
 	// usageMetricsMutex is a mutex for concurrent access to usage metrics
 	usageMetricsMutex sync.RWMutex
-}
 
+}
 // NewBaseProvider creates a new base provider
 func NewBaseProvider(providerType ProviderType, config *ProviderConfig) *BaseProvider {
 	if config == nil {
@@ -50,19 +50,19 @@ func NewBaseProvider(providerType ProviderType, config *ProviderConfig) *BasePro
 		capabilities:   make(map[ModelCapability]bool),
 		usageMetrics:   make(map[string]*UsageMetrics),
 	}
-}
 
 // GetType returns the type of provider
+}
 func (p *BaseProvider) GetType() ProviderType {
 	return p.providerType
-}
 
 // GetConfig returns the configuration for the provider
+}
 func (p *BaseProvider) GetConfig() *ProviderConfig {
 	return p.config
-}
 
 // SetModels sets the available models
+}
 func (p *BaseProvider) SetModels(models []ModelInfo) {
 	p.modelsMutex.Lock()
 	defer p.modelsMutex.Unlock()
@@ -80,9 +80,9 @@ func (p *BaseProvider) SetModels(models []ModelInfo) {
 			p.capabilities[capability] = true
 		}
 	}
-}
 
 // GetModels returns a list of available models
+}
 func (p *BaseProvider) GetModels(ctx context.Context) ([]ModelInfo, error) {
 	p.modelsMutex.RLock()
 	modelsLastUpdated := p.modelsLastUpdated
@@ -103,17 +103,17 @@ func (p *BaseProvider) GetModels(ctx context.Context) ([]ModelInfo, error) {
 	copy(modelsCopy, p.models)
 
 	return modelsCopy, nil
-}
 
 // updateModels updates the models cache
 // This method should be overridden by specific provider implementations
+}
 func (p *BaseProvider) updateModels(ctx context.Context) error {
 	// This is a placeholder implementation
 	// Specific providers should override this method
 	return nil
-}
 
 // GetModelInfo returns information about a specific model
+}
 func (p *BaseProvider) GetModelInfo(ctx context.Context, modelID string) (*ModelInfo, error) {
 	models, err := p.GetModels(ctx)
 	if err != nil {
@@ -129,39 +129,39 @@ func (p *BaseProvider) GetModelInfo(ctx context.Context, modelID string) (*Model
 	}
 
 	return nil, fmt.Errorf("model with ID %s not found", modelID)
-}
 
 // TextCompletion generates a text completion
 // This method should be overridden by specific provider implementations
+}
 func (p *BaseProvider) TextCompletion(ctx context.Context, request *TextCompletionRequest) (*TextCompletionResponse, error) {
 	return nil, fmt.Errorf("text completion not implemented for provider %s", p.providerType)
-}
 
 // ChatCompletion generates a chat completion
 // This method should be overridden by specific provider implementations
+}
 func (p *BaseProvider) ChatCompletion(ctx context.Context, request *ChatCompletionRequest) (*ChatCompletionResponse, error) {
 	return nil, fmt.Errorf("chat completion not implemented for provider %s", p.providerType)
-}
 
 // StreamingChatCompletion generates a streaming chat completion
 // This method should be overridden by specific provider implementations
+}
 func (p *BaseProvider) StreamingChatCompletion(ctx context.Context, request *ChatCompletionRequest, callback func(response *ChatCompletionResponse) error) error {
 	return fmt.Errorf("streaming chat completion not implemented for provider %s", p.providerType)
-}
 
 // CreateEmbedding creates an embedding
 // This method should be overridden by specific provider implementations
+}
 func (p *BaseProvider) CreateEmbedding(ctx context.Context, request *EmbeddingRequest) (*EmbeddingResponse, error) {
 	return nil, fmt.Errorf("create embedding not implemented for provider %s", p.providerType)
-}
 
 // CountTokens counts the number of tokens in a text
 // This method should be overridden by specific provider implementations
+}
 func (p *BaseProvider) CountTokens(ctx context.Context, text string, modelID string) (int, error) {
 	return 0, fmt.Errorf("count tokens not implemented for provider %s", p.providerType)
-}
 
 // SupportsModel returns whether the provider supports a specific model
+}
 func (p *BaseProvider) SupportsModel(ctx context.Context, modelID string) bool {
 	models, err := p.GetModels(ctx)
 	if err != nil {
@@ -175,48 +175,48 @@ func (p *BaseProvider) SupportsModel(ctx context.Context, modelID string) bool {
 	}
 
 	return false
-}
 
 // SupportsCapability returns whether the provider supports a specific capability
+}
 func (p *BaseProvider) SupportsCapability(ctx context.Context, capability ModelCapability) bool {
 	p.capabilitiesMutex.RLock()
 	defer p.capabilitiesMutex.RUnlock()
 
 	return p.capabilities[capability]
-}
 
 // Close closes the provider and releases any resources
+}
 func (p *BaseProvider) Close() error {
 	// This is a placeholder implementation
 	// Specific providers should override this method if needed
 	return nil
-}
 
 // SetModelsCacheTTL sets the TTL for the models cache
+}
 func (p *BaseProvider) SetModelsCacheTTL(ttl time.Duration) {
 	p.modelsMutex.Lock()
 	defer p.modelsMutex.Unlock()
 
 	p.modelsCacheTTL = ttl
-}
 
 // AddCapability adds a capability to the provider
+}
 func (p *BaseProvider) AddCapability(capability ModelCapability) {
 	p.capabilitiesMutex.Lock()
 	defer p.capabilitiesMutex.Unlock()
 
 	p.capabilities[capability] = true
-}
 
 // RemoveCapability removes a capability from the provider
+}
 func (p *BaseProvider) RemoveCapability(capability ModelCapability) {
 	p.capabilitiesMutex.Lock()
 	defer p.capabilitiesMutex.Unlock()
 
 	delete(p.capabilities, capability)
-}
 
 // GetCapabilities returns the capabilities supported by the provider
+}
 func (p *BaseProvider) GetCapabilities() []ModelCapability {
 	p.capabilitiesMutex.RLock()
 	defer p.capabilitiesMutex.RUnlock()
@@ -227,9 +227,9 @@ func (p *BaseProvider) GetCapabilities() []ModelCapability {
 	}
 
 	return capabilities
-}
 
 // ValidateConfig validates the provider configuration
+}
 func (p *BaseProvider) ValidateConfig() error {
 	if p.config == nil {
 		return fmt.Errorf("provider configuration is nil")
@@ -240,9 +240,9 @@ func (p *BaseProvider) ValidateConfig() error {
 	}
 
 	return nil
-}
 
 // SetConfig sets the provider configuration
+}
 func (p *BaseProvider) SetConfig(config *ProviderConfig) error {
 	if config == nil {
 		return fmt.Errorf("provider configuration is nil")
@@ -254,9 +254,9 @@ func (p *BaseProvider) SetConfig(config *ProviderConfig) error {
 
 	p.config = config
 	return nil
-}
 
 // UpdateConfig updates the provider configuration
+}
 func (p *BaseProvider) UpdateConfig(updates *ProviderConfig) error {
 	if updates == nil {
 		return fmt.Errorf("updates is nil")
@@ -347,43 +347,43 @@ func (p *BaseProvider) UpdateConfig(updates *ProviderConfig) error {
 	}
 
 	return nil
-}
 
 // GetRateLimitConfig returns the rate limit configuration
+}
 func (p *BaseProvider) GetRateLimitConfig() *RateLimitConfig {
 	if p.config == nil {
 		return nil
 	}
 	return p.config.RateLimitConfig
-}
 
 // UpdateRateLimitConfig updates the rate limit configuration
+}
 func (p *BaseProvider) UpdateRateLimitConfig(config *RateLimitConfig) error {
 	if p.config == nil {
 		return fmt.Errorf("provider configuration is nil")
 	}
 	p.config.RateLimitConfig = config
 	return nil
-}
 
 // GetRetryConfig returns the retry configuration
+}
 func (p *BaseProvider) GetRetryConfig() *RetryConfig {
 	if p.config == nil {
 		return nil
 	}
 	return p.config.RetryConfig
-}
 
 // UpdateRetryConfig updates the retry configuration
+}
 func (p *BaseProvider) UpdateRetryConfig(config *RetryConfig) error {
 	if p.config == nil {
 		return fmt.Errorf("provider configuration is nil")
 	}
 	p.config.RetryConfig = config
 	return nil
-}
 
 // GetUsageMetrics returns the usage metrics for a specific model
+}
 func (p *BaseProvider) GetUsageMetrics(modelID string) (*UsageMetrics, error) {
 	p.usageMetricsMutex.RLock()
 	defer p.usageMetricsMutex.RUnlock()
@@ -396,9 +396,9 @@ func (p *BaseProvider) GetUsageMetrics(modelID string) (*UsageMetrics, error) {
 	// Return a copy to prevent external modification
 	metricsCopy := *metrics
 	return &metricsCopy, nil
-}
 
 // GetAllUsageMetrics returns the usage metrics for all models
+}
 func (p *BaseProvider) GetAllUsageMetrics() (map[string]*UsageMetrics, error) {
 	p.usageMetricsMutex.RLock()
 	defer p.usageMetricsMutex.RUnlock()
@@ -420,9 +420,9 @@ func (p *BaseProvider) GetAllUsageMetrics() (map[string]*UsageMetrics, error) {
 	}
 
 	return metricsCopy, nil
-}
 
 // ResetUsageMetrics resets the usage metrics
+}
 func (p *BaseProvider) ResetUsageMetrics() error {
 	p.usageMetricsMutex.Lock()
 	defer p.usageMetricsMutex.Unlock()
@@ -432,9 +432,9 @@ func (p *BaseProvider) ResetUsageMetrics() error {
 	}
 
 	return nil
-}
 
 // UpdateUsageMetrics updates the usage metrics for a model
+}
 func (p *BaseProvider) UpdateUsageMetrics(modelID string, tokens int64, duration time.Duration, err error) {
 	p.usageMetricsMutex.Lock()
 	defer p.usageMetricsMutex.Unlock()
@@ -445,5 +445,3 @@ func (p *BaseProvider) UpdateUsageMetrics(modelID string, tokens int64, duration
 		p.usageMetrics[modelID] = metrics
 	}
 
-	metrics.AddRequest(tokens, duration, err)
-}

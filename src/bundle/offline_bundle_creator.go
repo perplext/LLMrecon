@@ -22,7 +22,6 @@ type OfflineBundleCreator struct {
 	Logger io.Writer
 	// AuditTrail is the audit trail manager for logging operations
 	AuditTrail *trail.AuditTrailManager
-}
 
 // NewOfflineBundleCreator creates a new offline bundle creator
 func NewOfflineBundleCreator(signingKey ed25519.PrivateKey, author Author, logger io.Writer, auditTrail *trail.AuditTrailManager) *OfflineBundleCreator {
@@ -37,7 +36,6 @@ func NewOfflineBundleCreator(signingKey ed25519.PrivateKey, author Author, logge
 		Logger:    logger,
 		AuditTrail: auditTrail,
 	}
-}
 
 // CreateOfflineBundle creates a new offline bundle
 func (c *OfflineBundleCreator) CreateOfflineBundle(name, description, version string, bundleType BundleType, outputPath string) (*OfflineBundle, error) {
@@ -48,18 +46,17 @@ func (c *OfflineBundleCreator) CreateOfflineBundle(name, description, version st
 	manifest := c.Generator.GenerateEnhancedManifest(name, description, version, bundleType)
 
 	// Create output directory
-	if err := os.MkdirAll(outputPath, 0755); err != nil {
+	if err := os.MkdirAll(outputPath, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
 	// Create required directories
 	for _, dir := range c.Format.RequiredDirectories {
 		dirPath := filepath.Join(outputPath, dir)
-		if err := os.MkdirAll(dirPath, 0755); err != nil {
+		if err := os.MkdirAll(dirPath, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
-
 	// Create manifest file
 	manifestPath := filepath.Join(outputPath, "manifest.json")
 	if err := c.Generator.WriteEnhancedManifest(manifest, manifestPath); err != nil {
@@ -93,12 +90,11 @@ func (c *OfflineBundleCreator) CreateOfflineBundle(name, description, version st
 This offline bundle contains templates and modules for LLM red teaming.
 
 ## Usage
-
 See the documentation directory for usage instructions.
 `, name, description, version, bundleType, manifest.CreatedAt.Format(time.RFC3339),
 		manifest.Author.Name, manifest.Author.Email)
 
-	if err := os.WriteFile(readmePath, []byte(readmeContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(readmePath, []byte(readmeContent)), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write README.md: %w", err)
 	}
 
@@ -148,7 +144,6 @@ See the documentation directory for usage instructions.
 	fmt.Fprintf(c.Logger, "Offline bundle created successfully: %s\n", outputPath)
 
 	return bundle, nil
-}
 
 // AddContentToOfflineBundle adds content to an offline bundle
 func (c *OfflineBundleCreator) AddContentToOfflineBundle(bundle *OfflineBundle, sourcePath, targetPath string, contentType ContentType, id, version, description string) error {
@@ -171,9 +166,8 @@ func (c *OfflineBundleCreator) AddContentToOfflineBundle(bundle *OfflineBundle, 
 	default:
 		return fmt.Errorf("unsupported content type: %s", contentType)
 	}
-
 	// Create target directory if it doesn't exist
-	if err := os.MkdirAll(targetDir, 0755); err != nil {
+	if err := os.MkdirAll(targetDir, 0700); err != nil {
 		return fmt.Errorf("failed to create target directory: %w", err)
 	}
 
@@ -181,17 +175,17 @@ func (c *OfflineBundleCreator) AddContentToOfflineBundle(bundle *OfflineBundle, 
 	fullTargetPath := filepath.Join(targetDir, targetPath)
 
 	// Create parent directories if needed
-	if err := os.MkdirAll(filepath.Dir(fullTargetPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(fullTargetPath), 0700); err != nil {
 		return fmt.Errorf("failed to create parent directories: %w", err)
 	}
 
 	// Copy file
-	sourceData, err := os.ReadFile(sourcePath)
+	sourceData, err := os.ReadFile(filepath.Clean(sourcePath))
 	if err != nil {
 		return fmt.Errorf("failed to read source file: %w", err)
 	}
 
-	if err := os.WriteFile(fullTargetPath, sourceData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(fullTargetPath, sourceData, 0600)); err != nil {
 		return fmt.Errorf("failed to write target file: %w", err)
 	}
 
@@ -244,7 +238,6 @@ func (c *OfflineBundleCreator) AddContentToOfflineBundle(bundle *OfflineBundle, 
 	}
 
 	return nil
-}
 
 // AddComplianceMappingToOfflineBundle adds a compliance mapping to an offline bundle
 func (c *OfflineBundleCreator) AddComplianceMappingToOfflineBundle(bundle *OfflineBundle, contentID string, owaspCategories, isoControls []string) error {
@@ -282,7 +275,7 @@ func (c *OfflineBundleCreator) AddComplianceMappingToOfflineBundle(bundle *Offli
 	compliancePath := filepath.Join(bundle.BundlePath, "compliance", "mappings.json")
 	
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(compliancePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(compliancePath), 0700); err != nil {
 		return fmt.Errorf("failed to create compliance directory: %w", err)
 	}
 	
@@ -292,7 +285,7 @@ func (c *OfflineBundleCreator) AddComplianceMappingToOfflineBundle(bundle *Offli
 		return fmt.Errorf("failed to marshal compliance mappings: %w", err)
 	}
 	
-	if err := os.WriteFile(compliancePath, mappingsData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(compliancePath, mappingsData, 0600)); err != nil {
 		return fmt.Errorf("failed to write compliance mappings: %w", err)
 	}
 
@@ -320,7 +313,7 @@ func (c *OfflineBundleCreator) AddComplianceMappingToOfflineBundle(bundle *Offli
 	}
 
 	return nil
-}
+	
 
 // AddDocumentationToOfflineBundle adds documentation to an offline bundle
 func (c *OfflineBundleCreator) AddDocumentationToOfflineBundle(bundle *OfflineBundle, docType, sourcePath string) error {
@@ -333,21 +326,20 @@ func (c *OfflineBundleCreator) AddDocumentationToOfflineBundle(bundle *OfflineBu
 	targetDir := filepath.Join(bundle.BundlePath, "documentation")
 	
 	// Create target directory if it doesn't exist
-	if err := os.MkdirAll(targetDir, 0755); err != nil {
+	if err := os.MkdirAll(targetDir, 0700); err != nil {
 		return fmt.Errorf("failed to create documentation directory: %w", err)
 	}
 
 	// Determine target filename
 	targetFilename := filepath.Base(sourcePath)
 	targetPath := filepath.Join(targetDir, targetFilename)
-
 	// Copy file
-	sourceData, err := os.ReadFile(sourcePath)
+	sourceData, err := os.ReadFile(filepath.Clean(sourcePath))
 	if err != nil {
 		return fmt.Errorf("failed to read source file: %w", err)
 	}
 
-	if err := os.WriteFile(targetPath, sourceData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(targetPath, sourceData, 0600)); err != nil {
 		return fmt.Errorf("failed to write documentation file: %w", err)
 	}
 
@@ -368,7 +360,6 @@ func (c *OfflineBundleCreator) AddDocumentationToOfflineBundle(bundle *OfflineBu
 	if err := c.Generator.WriteEnhancedManifest(&bundle.EnhancedManifest, manifestPath); err != nil {
 		return fmt.Errorf("failed to write updated manifest: %w", err)
 	}
-
 	// Log audit event
 	if c.AuditTrail != nil {
 		auditLog := &trail.AuditLog{
@@ -393,7 +384,6 @@ func (c *OfflineBundleCreator) AddDocumentationToOfflineBundle(bundle *OfflineBu
 	}
 
 	return nil
-}
 
 // CreateIncrementalBundle creates an incremental bundle based on an existing bundle
 func (c *OfflineBundleCreator) CreateIncrementalBundle(baseBundle *OfflineBundle, newVersion string, changes []string, outputPath string) (*OfflineBundle, error) {
@@ -405,14 +395,13 @@ func (c *OfflineBundleCreator) CreateIncrementalBundle(baseBundle *OfflineBundle
 	manifest := c.Generator.GenerateIncrementalManifest(&baseBundle.EnhancedManifest, newVersion, changes)
 
 	// Create output directory
-	if err := os.MkdirAll(outputPath, 0755); err != nil {
+	if err := os.MkdirAll(outputPath, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
-
 	// Create required directories
 	for _, dir := range c.Format.RequiredDirectories {
 		dirPath := filepath.Join(outputPath, dir)
-		if err := os.MkdirAll(dirPath, 0755); err != nil {
+		if err := os.MkdirAll(dirPath, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
@@ -448,7 +437,6 @@ func (c *OfflineBundleCreator) CreateIncrementalBundle(baseBundle *OfflineBundle
 ## Changes
 
 %s
-
 ## Contents
 
 This is an incremental update to the base bundle. It contains only the changes since version %s.
@@ -461,7 +449,7 @@ See the documentation directory for usage instructions.
 		manifest.Author.Name, manifest.Author.Email, 
 		formatChanges(changes), manifest.BaseVersion)
 
-	if err := os.WriteFile(readmePath, []byte(readmeContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(readmePath, []byte(readmeContent)), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write README.md: %w", err)
 	}
 
@@ -512,12 +500,10 @@ See the documentation directory for usage instructions.
 	fmt.Fprintf(c.Logger, "Incremental bundle created successfully: %s\n", outputPath)
 
 	return bundle, nil
-}
 
 // ValidateOfflineBundle validates an offline bundle
 func (c *OfflineBundleCreator) ValidateOfflineBundle(bundle *OfflineBundle, level ValidationLevel) (*ValidationResult, error) {
 	return c.Validator.ValidateOfflineBundle(bundle, level)
-}
 
 // LoadOfflineBundle loads an offline bundle from a directory
 func (c *OfflineBundleCreator) LoadOfflineBundle(bundlePath string) (*OfflineBundle, error) {
@@ -528,7 +514,7 @@ func (c *OfflineBundleCreator) LoadOfflineBundle(bundlePath string) (*OfflineBun
 
 	// Load manifest
 	manifestPath := filepath.Join(bundlePath, "manifest.json")
-	manifestData, err := os.ReadFile(manifestPath)
+	manifestData, err := os.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read manifest: %w", err)
 	}
@@ -552,7 +538,7 @@ func (c *OfflineBundleCreator) LoadOfflineBundle(bundlePath string) (*OfflineBun
 	var complianceMappings []ComplianceMapping
 	compliancePath := filepath.Join(bundlePath, "compliance", "mappings.json")
 	if _, err := os.Stat(compliancePath); err == nil {
-		mappingsData, err := os.ReadFile(compliancePath)
+		mappingsData, err := os.ReadFile(filepath.Clean(compliancePath))
 		if err != nil {
 			return nil, fmt.Errorf("failed to read compliance mappings: %w", err)
 		}
@@ -599,7 +585,6 @@ func (c *OfflineBundleCreator) LoadOfflineBundle(bundlePath string) (*OfflineBun
 	}
 
 	return bundle, nil
-}
 
 // ExportOfflineBundle exports an offline bundle to a zip file
 func (c *OfflineBundleCreator) ExportOfflineBundle(bundle *OfflineBundle, outputPath string) error {
@@ -611,7 +596,6 @@ func (c *OfflineBundleCreator) ExportOfflineBundle(bundle *OfflineBundle, output
 
 	// Create zip file
 	return createZipFromDir(bundle.BundlePath, zipPath)
-}
 
 // formatChanges formats a list of changes for display
 func formatChanges(changes []string) string {
@@ -620,5 +604,4 @@ func formatChanges(changes []string) string {
 		result += fmt.Sprintf("- %s\n", change)
 	}
 	return result
-}
 

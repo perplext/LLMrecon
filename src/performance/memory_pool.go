@@ -20,7 +20,6 @@ type MemoryPoolManager struct {
 	ctx     context.Context
 	cancel  context.CancelFunc
 	wg      sync.WaitGroup
-}
 
 // MemoryPoolConfig defines configuration for memory pools
 type MemoryPoolConfig struct {
@@ -65,18 +64,15 @@ type PooledObject struct {
 	CreatedAt time.Time   `json:"created_at"`
 	UsedCount int64       `json:"used_count"`
 	LastUsed  time.Time   `json:"last_used"`
-}
 
 // ObjectFactory creates new objects for the pool
 type ObjectFactory interface {
 	CreateObject() interface{}
 	GetObjectType() string
-}
 
 // ObjectReset resets objects for reuse
 type ObjectReset interface {
 	ResetObject(obj interface{}) error
-}
 
 // MemoryPoolMetrics tracks memory pool performance
 type MemoryPoolMetrics struct {
@@ -101,7 +97,6 @@ type ObjectPoolMetrics struct {
 	HitRate           float64       `json:"hit_rate"`
 	AverageAge        time.Duration `json:"average_age"`
 	LastCleanup       time.Time     `json:"last_cleanup"`
-}
 
 // Logger interface for memory pool logging
 type Logger interface {
@@ -109,7 +104,6 @@ type Logger interface {
 	Warn(msg string, args ...interface{})
 	Error(msg string, args ...interface{})
 	Debug(msg string, args ...interface{})
-}
 
 // DefaultMemoryPoolConfig returns default configuration
 func DefaultMemoryPoolConfig() MemoryPoolConfig {
@@ -126,7 +120,6 @@ func DefaultMemoryPoolConfig() MemoryPoolConfig {
 		EnableMetrics:       true,
 		MetricsInterval:     30 * time.Second,
 	}
-}
 
 // NewMemoryPoolManager creates a new memory pool manager
 func NewMemoryPoolManager(config MemoryPoolConfig, logger Logger) *MemoryPoolManager {
@@ -142,7 +135,6 @@ func NewMemoryPoolManager(config MemoryPoolConfig, logger Logger) *MemoryPoolMan
 	}
 	
 	return manager
-}
 
 // Start starts the memory pool manager
 func (m *MemoryPoolManager) Start() error {
@@ -171,7 +163,6 @@ func (m *MemoryPoolManager) Start() error {
 	
 	m.logger.Info("Memory pool manager started")
 	return nil
-}
 
 // Stop stops the memory pool manager
 func (m *MemoryPoolManager) Stop() error {
@@ -190,7 +181,6 @@ func (m *MemoryPoolManager) Stop() error {
 	
 	m.logger.Info("Memory pool manager stopped")
 	return nil
-}
 
 // CreatePool creates a new object pool
 func (m *MemoryPoolManager) CreatePool(name string, factory ObjectFactory, reset ObjectReset) (*ObjectPool, error) {
@@ -238,7 +228,6 @@ func (m *MemoryPoolManager) CreatePool(name string, factory ObjectFactory, reset
 	
 	m.logger.Info("Created object pool", "name", name, "type", factory.GetObjectType(), "prealloc", m.config.PreallocationSize)
 	return pool, nil
-}
 
 // GetPool returns an object pool by name
 func (m *MemoryPoolManager) GetPool(name string) (*ObjectPool, error) {
@@ -251,7 +240,6 @@ func (m *MemoryPoolManager) GetPool(name string) (*ObjectPool, error) {
 	}
 	
 	return pool, nil
-}
 
 // Get retrieves an object from a pool
 func (m *MemoryPoolManager) Get(poolName string) (interface{}, error) {
@@ -261,7 +249,6 @@ func (m *MemoryPoolManager) Get(poolName string) (interface{}, error) {
 	}
 	
 	return pool.Get()
-}
 
 // Put returns an object to a pool
 func (m *MemoryPoolManager) Put(poolName string, obj interface{}) error {
@@ -271,7 +258,6 @@ func (m *MemoryPoolManager) Put(poolName string, obj interface{}) error {
 	}
 	
 	return pool.Put(obj)
-}
 
 // GetMetrics returns current memory pool metrics
 func (m *MemoryPoolManager) GetMetrics() *MemoryPoolMetrics {
@@ -297,7 +283,6 @@ func (m *MemoryPoolManager) GetMetrics() *MemoryPoolMetrics {
 	}
 	
 	return m.metrics
-}
 
 // GetPoolMetrics returns metrics for all pools
 func (m *MemoryPoolManager) GetPoolMetrics() []*ObjectPoolMetrics {
@@ -310,7 +295,6 @@ func (m *MemoryPoolManager) GetPoolMetrics() []*ObjectPoolMetrics {
 	}
 	
 	return metrics
-}
 
 // ObjectPool methods
 
@@ -342,7 +326,6 @@ func (p *ObjectPool) Get() (interface{}, error) {
 		p.metrics.ObjectsCreated++
 		return obj, nil
 	}
-}
 
 // Put returns an object to the pool
 func (p *ObjectPool) Put(obj interface{}) error {
@@ -366,7 +349,6 @@ func (p *ObjectPool) Put(obj interface{}) error {
 		// Pool is full, discard the object
 		return nil
 	}
-}
 
 // Stop stops the object pool
 func (p *ObjectPool) Stop() {
@@ -381,7 +363,6 @@ func (p *ObjectPool) Stop() {
 			return
 		}
 	}
-}
 
 // GetMetrics returns pool metrics
 func (p *ObjectPool) GetMetrics() *ObjectPoolMetrics {
@@ -397,7 +378,6 @@ func (p *ObjectPool) GetMetrics() *ObjectPoolMetrics {
 	}
 	
 	return p.metrics
-}
 
 // Private methods
 
@@ -414,7 +394,6 @@ func (m *MemoryPoolManager) cleanupLoop() {
 			return
 		}
 	}
-}
 
 // performCleanup removes old objects from pools
 func (m *MemoryPoolManager) performCleanup() {
@@ -428,7 +407,6 @@ func (m *MemoryPoolManager) performCleanup() {
 	for _, pool := range pools {
 		pool.cleanup()
 	}
-}
 
 // cleanup removes old objects from this pool
 func (p *ObjectPool) cleanup() {
@@ -461,7 +439,6 @@ func (p *ObjectPool) cleanup() {
 	if cleaned > 0 {
 		p.metrics.LastCleanup = time.Now()
 	}
-}
 
 // metricsLoop periodically updates metrics
 func (m *MemoryPoolManager) metricsLoop() {
@@ -476,7 +453,6 @@ func (m *MemoryPoolManager) metricsLoop() {
 			return
 		}
 	}
-}
 
 // updateMetrics updates memory and performance metrics
 func (m *MemoryPoolManager) updateMetrics() {
@@ -490,7 +466,6 @@ func (m *MemoryPoolManager) updateMetrics() {
 		runtime.GC()
 		m.logger.Warn("Forced garbage collection due to high memory usage", "allocated", memStats.Alloc, "limit", m.config.MaxMemoryUsage)
 	}
-}
 
 // optimizeGC optimizes garbage collection settings
 func (m *MemoryPoolManager) optimizeGC() {
@@ -499,7 +474,6 @@ func (m *MemoryPoolManager) optimizeGC() {
 		debug.SetGCPercent(m.config.GCTarget)
 		m.logger.Info("Optimized GC settings", "gc_target", m.config.GCTarget)
 	}
-}
 
 // Common object factories and resetters
 
@@ -510,15 +484,12 @@ type ByteSliceFactory struct {
 
 func NewByteSliceFactory(size int) *ByteSliceFactory {
 	return &ByteSliceFactory{Size: size}
-}
 
 func (f *ByteSliceFactory) CreateObject() interface{} {
 	return make([]byte, 0, f.Size)
-}
 
 func (f *ByteSliceFactory) GetObjectType() string {
 	return "[]byte"
-}
 
 // ByteSliceReset resets byte slices
 type ByteSliceReset struct{}
@@ -530,18 +501,15 @@ func (r *ByteSliceReset) ResetObject(obj interface{}) error {
 		return nil
 	}
 	return fmt.Errorf("object is not a []byte")
-}
 
 // StringBuilderFactory creates string builder pools
 type StringBuilderFactory struct{}
 
 func (f *StringBuilderFactory) CreateObject() interface{} {
 	return &strings.Builder{}
-}
 
 func (f *StringBuilderFactory) GetObjectType() string {
 	return "*strings.Builder"
-}
 
 // StringBuilderReset resets string builders
 type StringBuilderReset struct{}
@@ -552,7 +520,6 @@ func (r *StringBuilderReset) ResetObject(obj interface{}) error {
 		return nil
 	}
 	return fmt.Errorf("object is not a *strings.Builder")
-}
 
 // MapFactory creates map pools
 type MapFactory struct {
@@ -561,15 +528,12 @@ type MapFactory struct {
 
 func NewMapFactory(initialSize int) *MapFactory {
 	return &MapFactory{InitialSize: initialSize}
-}
 
 func (f *MapFactory) CreateObject() interface{} {
 	return make(map[string]interface{}, f.InitialSize)
-}
 
 func (f *MapFactory) GetObjectType() string {
 	return "map[string]interface{}"
-}
 
 // MapReset resets maps
 type MapReset struct{}
@@ -582,5 +546,29 @@ func (r *MapReset) ResetObject(obj interface{}) error {
 		}
 		return nil
 	}
-	return fmt.Errorf("object is not a map[string]interface{}")
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -111,7 +111,6 @@ func CreateDefaultManager(ctx context.Context, options *DefaultManagerOptions) (
 	}
 
 	return manager, nil
-}
 
 // DefaultManagerOptions contains options for creating a default template manager
 type DefaultManagerOptions struct {
@@ -141,7 +140,6 @@ type DefaultManagerOptions struct {
 	PreExecutionHooks []TemplateHook
 	// PostExecutionHooks are functions to run after template execution
 	PostExecutionHooks []TemplateHook
-}
 
 // DefaultManagerOptionsWithDefaults creates default manager options with default values
 func DefaultManagerOptionsWithDefaults() *DefaultManagerOptions {
@@ -160,7 +158,6 @@ func DefaultManagerOptionsWithDefaults() *DefaultManagerOptions {
 		PreExecutionHooks: []TemplateHook{},
 		PostExecutionHooks: []TemplateHook{},
 	}
-}
 
 // RunTemplate runs a template with the specified options
 func RunTemplate(ctx context.Context, manager *Manager, templateID string, options map[string]interface{}) (*TemplateResult, error) {
@@ -171,7 +168,6 @@ func RunTemplate(ctx context.Context, manager *Manager, templateID string, optio
 	}
 
 	return result, nil
-}
 
 // RunTemplates runs multiple templates with the specified options
 func RunTemplates(ctx context.Context, manager *Manager, templateIDs []string, options map[string]interface{}) ([]*TemplateResult, error) {
@@ -182,7 +178,7 @@ func RunTemplates(ctx context.Context, manager *Manager, templateIDs []string, o
 	}
 
 	return results, nil
-}
+	
 
 // GenerateTemplateReport generates a report for template execution results
 func GenerateTemplateReport(manager *Manager, results []*TemplateResult, format string) ([]byte, error) {
@@ -193,24 +189,19 @@ func GenerateTemplateReport(manager *Manager, results []*TemplateResult, format 
 	}
 
 	return report, nil
-}
 
 // ListAllTemplates lists all templates
 func ListAllTemplates(manager *Manager) []*format.Template {
 	return manager.ListTemplates()
-}
 
 // FindTemplatesByTag finds templates by tag
 func FindTemplatesByTag(manager *Manager, tag string) []*format.Template {
 	return manager.FindTemplatesByTag(tag)
-}
 
 // FindTemplatesByTags finds templates by multiple tags
 func FindTemplatesByTags(manager *Manager, tags []string) []*format.Template {
 	return manager.FindTemplatesByTags(tags)
-}
 
 // GetTemplateByID gets a template by ID
 func GetTemplateByID(manager *Manager, id string) (*format.Template, error) {
 	return manager.GetTemplate(id)
-}

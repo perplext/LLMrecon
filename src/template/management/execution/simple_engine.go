@@ -14,7 +14,6 @@ type Engine struct {
 	maxConcurrent int
 	// executionDelay is the simulated execution delay
 	executionDelay time.Duration
-}
 
 // NewEngine creates a new execution engine
 func NewEngine() *Engine {
@@ -22,7 +21,6 @@ func NewEngine() *Engine {
 		maxConcurrent:  10,
 		executionDelay: 10 * time.Millisecond,
 	}
-}
 
 // ExecuteTemplate executes a template
 func (e *Engine) ExecuteTemplate(ctx context.Context, template *format.Template, data interface{}) (string, error) {
@@ -49,7 +47,6 @@ func (e *Engine) ExecuteTemplate(ctx context.Context, template *format.Template,
 	}
 
 	return result, nil
-}
 
 // ExecuteTemplates executes multiple templates
 func (e *Engine) ExecuteTemplates(ctx context.Context, templates []*format.Template, data interface{}) ([]string, error) {
@@ -65,7 +62,6 @@ func (e *Engine) ExecuteTemplates(ctx context.Context, templates []*format.Templ
 	}
 	
 	return results, nil
-}
 
 // renderTemplate renders a template with data
 func (e *Engine) renderTemplate(template *format.Template, data interface{}) (string, error) {
@@ -89,28 +85,23 @@ func (e *Engine) renderTemplate(template *format.Template, data interface{}) (st
 	}
 	
 	return content, nil
-}
 
 // SetMaxConcurrent sets the maximum number of concurrent executions
 func (e *Engine) SetMaxConcurrent(max int) {
 	if max > 0 {
 		e.maxConcurrent = max
 	}
-}
 
 // SetExecutionDelay sets the simulated execution delay
 func (e *Engine) SetExecutionDelay(delay time.Duration) {
 	if delay > 0 {
 		e.executionDelay = delay
 	}
-}
 
 // GetMaxConcurrent returns the maximum number of concurrent executions
 func (e *Engine) GetMaxConcurrent() int {
 	return e.maxConcurrent
-}
 
 // GetExecutionDelay returns the simulated execution delay
 func (e *Engine) GetExecutionDelay() time.Duration {
 	return e.executionDelay
-}

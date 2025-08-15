@@ -32,7 +32,6 @@ type Role struct {
 	
 	// Additional metadata for the role
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // Permission represents a permission in the RBAC system
 type Permission struct {
@@ -62,7 +61,6 @@ type Permission struct {
 	
 	// Additional metadata for the permission
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // UserRole represents a role assignment to a user
 type UserRole struct {
@@ -80,7 +78,6 @@ type UserRole struct {
 	
 	// Expiration time for the role assignment (if any)
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
-}
 
 // UserPermission represents a direct permission assignment to a user
 type UserPermission struct {
@@ -98,7 +95,6 @@ type UserPermission struct {
 	
 	// Expiration time for the permission assignment (if any)
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
-}
 
 // NewRole creates a new role
 func NewRole(id, name, description string) *Role {
@@ -114,7 +110,6 @@ func NewRole(id, name, description string) *Role {
 		UpdatedAt:   now,
 		Metadata:    make(map[string]interface{}),
 	}
-}
 
 // NewPermission creates a new permission
 func NewPermission(id, name, description, resourceType, action string) *Permission {
@@ -130,7 +125,6 @@ func NewPermission(id, name, description, resourceType, action string) *Permissi
 		UpdatedAt:        now,
 		Metadata:         make(map[string]interface{}),
 	}
-}
 
 // DefaultRoles returns the default system roles
 func DefaultRoles() []Role {
@@ -270,7 +264,6 @@ func DefaultRoles() []Role {
 		securityAuditorRole,
 		securityAdminRole,
 	}
-}
 
 // DefaultPermissions returns the default system permissions
 func DefaultPermissions() []Permission {
@@ -548,4 +541,3 @@ func DefaultPermissions() []Permission {
 			UpdatedAt:        now,
 		},
 	}
-}

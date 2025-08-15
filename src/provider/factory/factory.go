@@ -19,7 +19,6 @@ type ProviderFactory struct {
 	instances map[core.ProviderType]core.Provider
 	// mutex is a mutex for concurrent access to instances
 	mutex sync.RWMutex
-}
 
 // ProviderConstructor is a function that creates a provider instance
 type ProviderConstructor func(config *core.ProviderConfig) (core.Provider, error)
@@ -31,7 +30,6 @@ func NewProviderFactory(configManager *config.ConfigManager) *ProviderFactory {
 		providers:     make(map[core.ProviderType]ProviderConstructor),
 		instances:     make(map[core.ProviderType]core.Provider),
 	}
-}
 
 // RegisterProvider registers a provider constructor
 func (f *ProviderFactory) RegisterProvider(providerType core.ProviderType, constructor ProviderConstructor) {
@@ -39,7 +37,6 @@ func (f *ProviderFactory) RegisterProvider(providerType core.ProviderType, const
 	defer f.mutex.Unlock()
 
 	f.providers[providerType] = constructor
-}
 
 // CreateProvider creates a provider instance
 func (f *ProviderFactory) CreateProvider(providerType core.ProviderType) (core.Provider, error) {
@@ -73,7 +70,6 @@ func (f *ProviderFactory) CreateProvider(providerType core.ProviderType) (core.P
 	f.instances[providerType] = provider
 
 	return provider, nil
-}
 
 // GetProvider gets a provider instance
 func (f *ProviderFactory) GetProvider(providerType core.ProviderType) (core.Provider, error) {
@@ -86,7 +82,6 @@ func (f *ProviderFactory) GetProvider(providerType core.ProviderType) (core.Prov
 	}
 
 	return f.CreateProvider(providerType)
-}
 
 // CloseProvider closes a provider instance
 func (f *ProviderFactory) CloseProvider(providerType core.ProviderType) error {
@@ -105,7 +100,6 @@ func (f *ProviderFactory) CloseProvider(providerType core.ProviderType) error {
 	delete(f.instances, providerType)
 
 	return nil
-}
 
 // CloseAllProviders closes all provider instances
 func (f *ProviderFactory) CloseAllProviders() error {
@@ -127,7 +121,6 @@ func (f *ProviderFactory) CloseAllProviders() error {
 	}
 
 	return nil
-}
 
 // GetSupportedProviderTypes returns all supported provider types
 func (f *ProviderFactory) GetSupportedProviderTypes() []core.ProviderType {
@@ -140,7 +133,6 @@ func (f *ProviderFactory) GetSupportedProviderTypes() []core.ProviderType {
 	}
 
 	return providerTypes
-}
 
 // IsProviderSupported returns whether a provider type is supported
 func (f *ProviderFactory) IsProviderSupported(providerType core.ProviderType) bool {
@@ -149,13 +141,11 @@ func (f *ProviderFactory) IsProviderSupported(providerType core.ProviderType) bo
 
 	_, ok := f.providers[providerType]
 	return ok
-}
 
 // RefreshProvider refreshes a provider instance
 func (f *ProviderFactory) RefreshProvider(providerType core.ProviderType) error {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
-
 	// Close existing provider instance
 	if provider, ok := f.instances[providerType]; ok {
 		if err := provider.Close(); err != nil {
@@ -186,7 +176,6 @@ func (f *ProviderFactory) RefreshProvider(providerType core.ProviderType) error 
 	f.instances[providerType] = provider
 
 	return nil
-}
 
 // UpdateProviderConfig updates a provider configuration and refreshes the provider instance
 func (f *ProviderFactory) UpdateProviderConfig(providerType core.ProviderType, updates *core.ProviderConfig) error {
@@ -201,7 +190,6 @@ func (f *ProviderFactory) UpdateProviderConfig(providerType core.ProviderType, u
 	}
 
 	return nil
-}
 
 // SaveConfigurations saves all configurations
 func (f *ProviderFactory) SaveConfigurations() error {
@@ -209,5 +197,3 @@ func (f *ProviderFactory) SaveConfigurations() error {
 		return fmt.Errorf("failed to save configurations: %w", err)
 	}
 
-	return nil
-}

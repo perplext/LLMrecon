@@ -16,7 +16,6 @@ type BundleStructure struct {
 	TemplateCategories []string
 	// ModuleTypes defines the standard types for organizing modules
 	ModuleTypes []string
-}
 
 // DirectorySpec defines the specification for a directory in the bundle
 type DirectorySpec struct {
@@ -30,7 +29,6 @@ type DirectorySpec struct {
 	FileExtensions []string
 	// NamingConvention defines the naming convention for files in this directory
 	NamingConvention string
-}
 
 // DefaultBundleStructure returns the default bundle structure specification
 func DefaultBundleStructure() *BundleStructure {
@@ -247,20 +245,17 @@ func DefaultBundleStructure() *BundleStructure {
 			"utilities",
 		},
 	}
-}
 
 // BundleStructureValidator validates the structure of a bundle
 type BundleStructureValidator struct {
 	// Structure is the bundle structure specification
 	Structure *BundleStructure
-}
 
 // NewBundleStructureValidator creates a new bundle structure validator
 func NewBundleStructureValidator() *BundleStructureValidator {
 	return &BundleStructureValidator{
 		Structure: DefaultBundleStructure(),
 	}
-}
 
 // ValidateStructure validates the structure of a bundle
 func (v *BundleStructureValidator) ValidateStructure(bundlePath string) (*ValidationResult, error) {
@@ -325,9 +320,7 @@ func (v *BundleStructureValidator) ValidateStructure(bundlePath string) (*Valida
 	// Add validation details
 	result.Details["validated_path"] = bundlePath
 	result.Details["missing_required"] = missingRequired
-
 	return result, nil
-}
 
 // validateDirectory validates a directory against its specification
 func (v *BundleStructureValidator) validateDirectory(dirPath string, dirSpec DirectorySpec, result *ValidationResult) error {
@@ -377,7 +370,6 @@ func (v *BundleStructureValidator) validateDirectory(dirPath string, dirSpec Dir
 	}
 
 	return nil
-}
 
 // validateNamingConvention validates a file name against a naming convention
 func (v *BundleStructureValidator) validateNamingConvention(fileName, convention string) bool {
@@ -385,12 +377,11 @@ func (v *BundleStructureValidator) validateNamingConvention(fileName, convention
 	// In a real implementation, this would use regex patterns from FileNamingRules
 	_, exists := v.Structure.FileNamingRules[convention]
 	return exists
-}
 
 // CreateBundleStructure creates the directory structure for a new bundle
 func CreateBundleStructure(bundlePath string, structure *BundleStructure) error {
 	// Create the bundle directory if it doesn't exist
-	if err := os.MkdirAll(bundlePath, 0755); err != nil {
+	if err := os.MkdirAll(bundlePath, 0700); err != nil {
 		return fmt.Errorf("failed to create bundle directory: %w", err)
 	}
 
@@ -402,7 +393,7 @@ func CreateBundleStructure(bundlePath string, structure *BundleStructure) error 
 		}
 		
 		path := filepath.Join(bundlePath, dirName)
-		if err := os.MkdirAll(path, 0755); err != nil {
+		if err := os.MkdirAll(path, 0700); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", dirName, err)
 		}
 
@@ -413,13 +404,12 @@ func CreateBundleStructure(bundlePath string, structure *BundleStructure) error 
 	}
 
 	return nil
-}
 
 // createSubdirectories recursively creates subdirectories
 func createSubdirectories(parentPath string, subdirs map[string]DirectorySpec) error {
 	for dirName, dirSpec := range subdirs {
 		path := filepath.Join(parentPath, dirName)
-		if err := os.MkdirAll(path, 0755); err != nil {
+		if err := os.MkdirAll(path, 0700); err != nil {
 			return fmt.Errorf("failed to create subdirectory %s: %w", dirName, err)
 		}
 
@@ -430,7 +420,6 @@ func createSubdirectories(parentPath string, subdirs map[string]DirectorySpec) e
 	}
 
 	return nil
-}
 
 // GetTemplateCategory returns the appropriate category for a template
 func (s *BundleStructure) GetTemplateCategory(templateType string) string {
@@ -460,7 +449,6 @@ func (s *BundleStructure) GetTemplateCategory(templateType string) string {
 	default:
 		return "custom"
 	}
-}
 
 // GetModuleType returns the appropriate type for a module
 func (s *BundleStructure) GetModuleType(moduleType string) string {
@@ -472,21 +460,18 @@ func (s *BundleStructure) GetModuleType(moduleType string) string {
 	default:
 		return "utilities"
 	}
-}
 
 // GetTemplatePath returns the path for a template within the bundle
 func (s *BundleStructure) GetTemplatePath(bundlePath, templateID, templateType string) string {
 	category := s.GetTemplateCategory(templateType)
 	fileName := fmt.Sprintf("%s.json", templateID)
 	return filepath.Join(bundlePath, "templates", category, fileName)
-}
 
 // GetModulePath returns the path for a module within the bundle
 func (s *BundleStructure) GetModulePath(bundlePath, moduleID, moduleType string) string {
 	category := s.GetModuleType(moduleType)
 	fileName := fmt.Sprintf("%s.json", moduleID)
 	return filepath.Join(bundlePath, "modules", category, fileName)
-}
 
 // GetDocumentationPath returns the path for a documentation file within the bundle
 func (s *BundleStructure) GetDocumentationPath(bundlePath, docType string) string {
@@ -497,7 +482,6 @@ func (s *BundleStructure) GetDocumentationPath(bundlePath, docType string) strin
 		}
 	}
 	return filepath.Join(bundlePath, "documentation", fmt.Sprintf("%s.md", docType))
-}
 
 // GetSignaturePath returns the path for a signature file within the bundle
 func (s *BundleStructure) GetSignaturePath(bundlePath, filePath string) string {
@@ -509,12 +493,10 @@ func (s *BundleStructure) GetSignaturePath(bundlePath, filePath string) string {
 	// For other files, the signature is in the content directory with the same path
 	relPath, _ := filepath.Rel(bundlePath, filePath)
 	return filepath.Join(bundlePath, "signatures", "content", fmt.Sprintf("%s.sig", relPath))
-}
 
 // GetPublicKeyPath returns the path for the public key file within the bundle
 func (s *BundleStructure) GetPublicKeyPath(bundlePath string) string {
 	return filepath.Join(bundlePath, "signatures", "public-key.pem")
-}
 
 // StructureValidationLevel is a constant for structure validation level
 const StructureValidationLevel = "structure"
@@ -522,4 +504,3 @@ const StructureValidationLevel = "structure"
 // GetCurrentTime returns the current time
 func GetCurrentTime() time.Time {
 	return time.Now()
-}

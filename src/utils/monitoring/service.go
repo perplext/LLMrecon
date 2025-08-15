@@ -25,7 +25,6 @@ type MonitoringService struct {
 	staticFileMonitors []*StaticFileMonitor
 	// mu protects concurrent access to monitors
 	mu sync.RWMutex
-}
 
 // MonitoringServiceOptions contains options for the monitoring service
 type MonitoringServiceOptions struct {
@@ -41,7 +40,6 @@ type MonitoringServiceOptions struct {
 	HeapAllocCriticalMB float64
 	// AlertCooldown is the minimum time between alerts
 	AlertCooldown time.Duration
-}
 
 // DefaultMonitoringServiceOptions returns default options for the monitoring service
 func DefaultMonitoringServiceOptions() *MonitoringServiceOptions {
@@ -53,7 +51,6 @@ func DefaultMonitoringServiceOptions() *MonitoringServiceOptions {
 		HeapAllocCriticalMB:  200,
 		AlertCooldown:        5 * time.Minute,
 	}
-}
 
 // NewMonitoringService creates a new monitoring service
 func NewMonitoringService(options *MonitoringServiceOptions) (*MonitoringService, error) {
@@ -66,12 +63,12 @@ func NewMonitoringService(options *MonitoringServiceOptions) (*MonitoringService
 	if options.LogFile != "" {
 		// Create log directory if it doesn't exist
 		logDir := "logs"
-		if err := os.MkdirAll(logDir, 0755); err != nil {
+		if err := os.MkdirAll(logDir, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create log directory: %w", err)
 		}
 
 		// Open log file
-		logFile, err := os.OpenFile(options.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		logFile, err := os.OpenFile(options.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open log file: %w", err)
 		}
@@ -142,7 +139,6 @@ func NewMonitoringService(options *MonitoringServiceOptions) (*MonitoringService
 	*/
 
 	return service, nil
-}
 
 // registerResourcePoolMetrics registers metrics for resource pools
 func (s *MonitoringService) registerResourcePoolMetrics() {
@@ -162,7 +158,6 @@ func (s *MonitoringService) registerResourcePoolMetrics() {
 	// Add resource pool alert rules
 	s.alertManager.AddResourcePoolAlertRules(0.8, 0.95, 5*time.Minute)
 	*/
-}
 
 // registerConcurrencyMetrics registers metrics for concurrency
 func (s *MonitoringService) registerConcurrencyMetrics() {
@@ -185,7 +180,6 @@ func (s *MonitoringService) registerConcurrencyMetrics() {
 	// Add concurrency alert rules
 	s.alertManager.AddConcurrencyAlertRules(0.8, 0.95, 5*time.Minute)
 	*/
-}
 
 // registerTemplateExecutionMetrics registers metrics for template execution
 func (s *MonitoringService) registerTemplateExecutionMetrics() {
@@ -204,7 +198,6 @@ func (s *MonitoringService) registerTemplateExecutionMetrics() {
 	// Add template execution alert rules
 	s.alertManager.AddExecutionTimeAlertRules(1000, 5000, 5*time.Minute)
 	*/
-}
 
 // Start starts the monitoring service
 func (s *MonitoringService) Start() {
@@ -218,7 +211,6 @@ func (s *MonitoringService) Start() {
 	// Collect initial metrics
 	// Commented out for testing purposes
 	// s.metricsManager.CollectSystemMetrics()
-}
 
 // Stop stops the monitoring service
 func (s *MonitoringService) Stop() {
@@ -229,22 +221,18 @@ func (s *MonitoringService) Stop() {
 	close(s.stopChan)
 	s.running = false
 	s.logger.Println("Monitoring service stopped")
-}
 
 // IsRunning returns true if the service is running
 func (s *MonitoringService) IsRunning() bool {
 	return s.running
-}
 
 // GetMetricsManager returns the metrics manager
 func (s *MonitoringService) GetMetricsManager() interface{} {
 	return s.metricsManager
-}
 
 // GetAlertManager returns the alert manager
 func (s *MonitoringService) GetAlertManager() interface{} {
 	return s.alertManager
-}
 
 // MonitorResourcePool monitors a resource pool
 func (s *MonitoringService) MonitorResourcePool(pool interface{}, poolName string) {
@@ -303,7 +291,6 @@ func (s *MonitoringService) MonitorResourcePool(pool interface{}, poolName strin
 			}
 		}
 	}()
-}
 
 // MonitorConcurrencyManager monitors a concurrency manager
 func (s *MonitoringService) MonitorConcurrencyManager(manager interface{}) {
@@ -354,7 +341,6 @@ func (s *MonitoringService) MonitorConcurrencyManager(manager interface{}) {
 			}
 		}
 	}()
-}
 
 // RecordTemplateExecution records metrics for a template execution
 func (s *MonitoringService) RecordTemplateExecution(executionTime time.Duration, memoryBefore, memoryAfter uint64, err error) {
@@ -389,7 +375,6 @@ func (s *MonitoringService) RecordTemplateExecution(executionTime time.Duration,
 		s.metricsManager.IncrementCounter("template.execution.errors", 1, nil)
 	}
 	*/
-}
 
 // CaptureMemorySnapshot captures a memory snapshot and returns memory stats
 func (s *MonitoringService) CaptureMemorySnapshot(label string) uint64 {
@@ -405,14 +390,12 @@ func (s *MonitoringService) CaptureMemorySnapshot(label string) uint64 {
 		memStats.NumGC)
 
 	return memStats.Alloc
-}
 
 // GetMemoryUsageMB returns the current memory usage in MB
 func (s *MonitoringService) GetMemoryUsageMB() float64 {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 	return float64(memStats.Alloc) / 1024 / 1024
-}
 
 // LogMemoryStats logs memory statistics
 func (s *MonitoringService) LogMemoryStats() {
@@ -424,7 +407,6 @@ func (s *MonitoringService) LogMemoryStats() {
 		memStats.TotalAlloc/1024/1024,
 		memStats.Sys/1024/1024,
 		memStats.NumGC)
-}
 
 // MultiWriter is a writer that writes to multiple writers
 type MultiWriter struct {
@@ -436,9 +418,8 @@ type MultiWriter struct {
 // NewMultiWriter creates a new MultiWriter
 func NewMultiWriter(writers ...interface {
 	Write(p []byte) (n int, err error)
-}) *MultiWriter {
+) *MultiWriter {
 	return &MultiWriter{writers: writers}
-}
 
 // Write writes to all writers
 func (w *MultiWriter) Write(p []byte) (n int, err error) {
@@ -452,5 +433,20 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 			return
 		}
 	}
-	return len(p), nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -24,7 +24,6 @@ type Session struct {
 // IsExpired checks if the session has expired
 func (s *Session) IsExpired() bool {
 	return time.Now().After(s.ExpiresAt)
-}
 
 // SimpleInMemorySessionStore is a simple in-memory implementation of SessionStore
 type SimpleInMemorySessionStore struct {
@@ -39,7 +38,6 @@ func NewSimpleInMemorySessionStore() *SimpleInMemorySessionStore {
 		sessions:     make(map[string]*Session),
 		userSessions: make(map[string][]string),
 	}
-}
 
 // CreateSession creates a new session
 func (s *SimpleInMemorySessionStore) CreateSession(ctx context.Context, session *Session) error {
@@ -53,7 +51,6 @@ func (s *SimpleInMemorySessionStore) CreateSession(ctx context.Context, session 
 	s.userSessions[session.UserID] = append(s.userSessions[session.UserID], session.ID)
 
 	return nil
-}
 
 // GetSession retrieves a session by ID
 func (s *SimpleInMemorySessionStore) GetSession(ctx context.Context, id string) (*Session, error) {
@@ -66,7 +63,6 @@ func (s *SimpleInMemorySessionStore) GetSession(ctx context.Context, id string) 
 	}
 
 	return session, nil
-}
 
 // UpdateSession updates an existing session
 func (s *SimpleInMemorySessionStore) UpdateSession(ctx context.Context, session *Session) error {
@@ -83,7 +79,6 @@ func (s *SimpleInMemorySessionStore) UpdateSession(ctx context.Context, session 
 	s.sessions[session.ID] = session
 
 	return nil
-}
 
 // DeleteSession deletes a session by ID
 func (s *SimpleInMemorySessionStore) DeleteSession(ctx context.Context, id string) error {
@@ -111,7 +106,6 @@ func (s *SimpleInMemorySessionStore) DeleteSession(ctx context.Context, id strin
 	delete(s.sessions, id)
 
 	return nil
-}
 
 // GetUserSessions retrieves all sessions for a user
 func (s *SimpleInMemorySessionStore) GetUserSessions(ctx context.Context, userID string) ([]*Session, error) {
@@ -133,7 +127,6 @@ func (s *SimpleInMemorySessionStore) GetUserSessions(ctx context.Context, userID
 	}
 
 	return sessions, nil
-}
 
 // CleanExpiredSessions removes expired sessions
 func (s *SimpleInMemorySessionStore) CleanExpiredSessions(ctx context.Context) error {
@@ -170,14 +163,12 @@ func (s *SimpleInMemorySessionStore) CleanExpiredSessions(ctx context.Context) e
 	}
 
 	return nil
-}
 
 // PersistentSessionStore is an interface for session stores that persist data
 type PersistentSessionStore interface {
 	SessionStore
 	Initialize(ctx context.Context) error
 	CloseWithContext(ctx context.Context) error
-}
 
 // SessionManager manages user sessions
 type SessionManager struct {
@@ -204,7 +195,6 @@ func NewSessionManager(store SessionStore, config *SessionPolicy, auditLogger Au
 	}
 
 	return manager
-}
 
 // cleanupRoutine periodically cleans up expired sessions
 func (m *SessionManager) cleanupRoutine() {
@@ -235,12 +225,10 @@ func (m *SessionManager) cleanupRoutine() {
 			return
 		}
 	}
-}
 
 // Stop stops the session manager
 func (m *SessionManager) Stop() {
 	close(m.stopChan)
-}
 
 // CreateSession creates a new session
 func (m *SessionManager) CreateSession(ctx context.Context, userID, ipAddress, userAgent string, mfaCompleted bool) (*Session, error) {
@@ -290,7 +278,6 @@ func (m *SessionManager) CreateSession(ctx context.Context, userID, ipAddress, u
 	}
 
 	return session, nil
-}
 
 // ValidateSession validates a session
 func (m *SessionManager) ValidateSession(ctx context.Context, sessionID, token string, ipAddress, userAgent string) (*Session, error) {
@@ -382,9 +369,7 @@ func (m *SessionManager) ValidateSession(ctx context.Context, sessionID, token s
 	if err := m.store.UpdateSession(ctx, session); err != nil {
 		return nil, err
 	}
-
 	return session, nil
-}
 
 // RefreshSession refreshes a session and returns a new token
 func (m *SessionManager) RefreshSession(ctx context.Context, sessionID, refreshToken string) (*Session, error) {
@@ -410,7 +395,6 @@ func (m *SessionManager) RefreshSession(ctx context.Context, sessionID, refreshT
 	session.Token = generateRandomToken()
 	session.RefreshToken = generateRandomToken()
 	session.LastActivity = time.Now()
-
 	// Set new expiration time
 	tokenExpiration := 60 // Default 60 minutes
 	if m.config != nil && m.config.TokenExpiration > 0 {
@@ -439,9 +423,7 @@ func (m *SessionManager) RefreshSession(ctx context.Context, sessionID, refreshT
 			SessionID:   session.ID,
 		})
 	}
-
 	return session, nil
-}
 
 // InvalidateSession invalidates a session
 func (m *SessionManager) InvalidateSession(ctx context.Context, sessionID string) error {
@@ -474,7 +456,6 @@ func (m *SessionManager) InvalidateSession(ctx context.Context, sessionID string
 	}
 
 	return nil
-}
 
 // InvalidateUserSessions invalidates all sessions for a user
 func (m *SessionManager) InvalidateUserSessions(ctx context.Context, userID string) error {
@@ -509,12 +490,10 @@ func (m *SessionManager) InvalidateUserSessions(ctx context.Context, userID stri
 	}
 
 	return nil
-}
 
 // GetUserSessions retrieves all sessions for a user
 func (m *SessionManager) GetUserSessions(ctx context.Context, userID string) ([]*Session, error) {
 	return m.store.GetUserSessions(ctx, userID)
-}
 
 // GetSessionFromContext extracts a session from the request context
 func (m *SessionManager) GetSessionFromContext(ctx context.Context) (*Session, error) {
@@ -523,5 +502,18 @@ func (m *SessionManager) GetSessionFromContext(ctx context.Context) (*Session, e
 	if !ok {
 		return nil, ErrSessionExpired
 	}
-	return session, nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

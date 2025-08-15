@@ -28,7 +28,6 @@ type SimpleRBACManager struct {
 // NewRBACManager creates a new RBAC manager
 func NewRBACManager(config *AccessControlConfig) *SimpleRBACManager {
 	return NewSimpleRBACManager(config)
-}
 
 // NewSimpleRBACManager creates a new simple RBAC manager
 func NewSimpleRBACManager(config *AccessControlConfig) *SimpleRBACManager {
@@ -46,7 +45,6 @@ func NewSimpleRBACManager(config *AccessControlConfig) *SimpleRBACManager {
 	}
 
 	return manager
-}
 
 // setupDefaultRolePermissions sets up default role permissions
 func (m *SimpleRBACManager) setupDefaultRolePermissions() {
@@ -161,7 +159,6 @@ func (m *SimpleRBACManager) setupDefaultRolePermissions() {
 		PermissionReportExport,
 	}
 	m.rolePermissions[RoleAutomation] = automationPermissions
-}
 
 // HasPermission checks if a user has a specific permission
 func (m *SimpleRBACManager) HasPermission(user *User, permission string) bool {
@@ -195,7 +192,6 @@ func (m *SimpleRBACManager) HasPermission(user *User, permission string) bool {
 	}
 
 	return false
-}
 
 // HasPermissionWithContext checks if a user has a specific permission (with context)
 func (m *SimpleRBACManager) HasPermissionWithContext(ctx context.Context, user *User, permission Permission) bool {
@@ -229,7 +225,6 @@ func (m *SimpleRBACManager) HasPermissionWithContext(ctx context.Context, user *
 	}
 
 	return false
-}
 
 // HasRole checks if a user has a specific role
 func (m *SimpleRBACManager) HasRole(user *User, role string) bool {
@@ -239,7 +234,6 @@ func (m *SimpleRBACManager) HasRole(user *User, role string) bool {
 		}
 	}
 	return false
-}
 
 // HasRoleWithContext checks if a user has a specific role (with context)
 func (m *SimpleRBACManager) HasRoleWithContext(ctx context.Context, user *User, role string) bool {
@@ -249,7 +243,6 @@ func (m *SimpleRBACManager) HasRoleWithContext(ctx context.Context, user *User, 
 		}
 	}
 	return false
-}
 
 // AssignRole assigns a role to a user
 func (m *SimpleRBACManager) AssignRole(ctx context.Context, user *User, role string) error {
@@ -271,7 +264,6 @@ func (m *SimpleRBACManager) AssignRole(ctx context.Context, user *User, role str
 	// Add the role
 	user.Roles = append(user.Roles, role)
 	return nil
-}
 
 // RevokeRole revokes a role from a user
 func (m *SimpleRBACManager) RevokeRole(ctx context.Context, user *User, role string) error {
@@ -286,7 +278,6 @@ func (m *SimpleRBACManager) RevokeRole(ctx context.Context, user *User, role str
 	}
 
 	return ErrRoleNotFound
-}
 
 // AssignPermission assigns a direct permission to a user
 func (m *SimpleRBACManager) AssignPermission(ctx context.Context, user *User, permission Permission) error {
@@ -300,7 +291,6 @@ func (m *SimpleRBACManager) AssignPermission(ctx context.Context, user *User, pe
 	// Add the permission
 	user.Permissions = append(user.Permissions, permission)
 	return nil
-}
 
 // RevokePermission revokes a direct permission from a user
 func (m *SimpleRBACManager) RevokePermission(ctx context.Context, user *User, permission Permission) error {
@@ -315,7 +305,6 @@ func (m *SimpleRBACManager) RevokePermission(ctx context.Context, user *User, pe
 	}
 
 	return ErrPermissionNotFound
-}
 
 // GetRolePermissions gets all permissions for a role
 func (m *SimpleRBACManager) GetRolePermissions(ctx context.Context, role string) ([]Permission, error) {
@@ -331,7 +320,6 @@ func (m *SimpleRBACManager) GetRolePermissions(ctx context.Context, role string)
 	result := make([]Permission, len(permissions))
 	copy(result, permissions)
 	return result, nil
-}
 
 // GetUserPermissions gets all permissions for a user (both direct and role-based)
 func (m *SimpleRBACManager) GetUserPermissions(ctx context.Context, user *User) []Permission {
@@ -365,7 +353,6 @@ func (m *SimpleRBACManager) GetUserPermissions(ctx context.Context, user *User) 
 	}
 
 	return result
-}
 
 // AddRolePermission adds a permission to a role
 func (m *SimpleRBACManager) AddRolePermission(ctx context.Context, role string, permission Permission) error {
@@ -388,7 +375,6 @@ func (m *SimpleRBACManager) AddRolePermission(ctx context.Context, role string, 
 	// Add the permission
 	m.rolePermissions[role] = append(permissions, permission)
 	return nil
-}
 
 // RemoveRolePermission removes a permission from a role
 func (m *SimpleRBACManager) RemoveRolePermission(ctx context.Context, role string, permission Permission) error {
@@ -411,7 +397,6 @@ func (m *SimpleRBACManager) RemoveRolePermission(ctx context.Context, role strin
 	}
 
 	return ErrPermissionNotFound
-}
 
 // CreateRole creates a new role with the specified permissions
 func (m *SimpleRBACManager) CreateRole(ctx context.Context, role string, permissions []Permission) error {
@@ -428,7 +413,6 @@ func (m *SimpleRBACManager) CreateRole(ctx context.Context, role string, permiss
 
 	m.rolePermissions[role] = permissionsCopy
 	return nil
-}
 
 // DeleteRole deletes a role
 func (m *SimpleRBACManager) DeleteRole(ctx context.Context, role string) error {
@@ -441,7 +425,6 @@ func (m *SimpleRBACManager) DeleteRole(ctx context.Context, role string) error {
 
 	delete(m.rolePermissions, role)
 	return nil
-}
 
 // GetAllRoles gets all defined roles
 func (m *SimpleRBACManager) GetAllRoles(ctx context.Context) []string {
@@ -454,7 +437,6 @@ func (m *SimpleRBACManager) GetAllRoles(ctx context.Context) []string {
 	}
 
 	return roles
-}
 
 // AddRole adds a role with default permissions
 func (m *SimpleRBACManager) AddRole(role string, description string) error {
@@ -467,7 +449,6 @@ func (m *SimpleRBACManager) AddRole(role string, description string) error {
 
 	m.rolePermissions[role] = []Permission{}
 	return nil
-}
 
 // AddPermission adds a permission to the system
 func (m *SimpleRBACManager) AddPermission(permission Permission, description string) error {
@@ -475,12 +456,10 @@ func (m *SimpleRBACManager) AddPermission(permission Permission, description str
 	// In a real system, you might want to store permissions in a database
 	// For now, we just return success as permissions are defined as constants
 	return nil
-}
 
 // AddPermissionToRole adds a permission to a role
 func (m *SimpleRBACManager) AddPermissionToRole(role string, permission Permission) error {
 	return m.AddRolePermission(context.Background(), role, permission)
-}
 
 // Authorize checks if a user is authorized to perform an action on a resource
 func (m *SimpleRBACManager) Authorize(ctx context.Context, user *User, permission Permission) error {
@@ -488,14 +467,12 @@ func (m *SimpleRBACManager) Authorize(ctx context.Context, user *User, permissio
 		return fmt.Errorf("%w: user %s does not have permission %s", ErrUnauthorized, user.Username, permission)
 	}
 	return nil
-}
 
 // RequirePermission is a middleware-style function that checks if a user has a permission
 func (m *SimpleRBACManager) RequirePermission(permission Permission) func(ctx context.Context, user *User) error {
 	return func(ctx context.Context, user *User) error {
 		return m.Authorize(ctx, user, permission)
 	}
-}
 
 // RequireRole is a middleware-style function that checks if a user has a role
 func (m *SimpleRBACManager) RequireRole(role string) func(ctx context.Context, user *User) error {
@@ -505,7 +482,6 @@ func (m *SimpleRBACManager) RequireRole(role string) func(ctx context.Context, u
 		}
 		return nil
 	}
-}
 
 // RequireAnyRole is a middleware-style function that checks if a user has any of the specified roles
 func (m *SimpleRBACManager) RequireAnyRole(roles ...string) func(ctx context.Context, user *User) error {
@@ -517,7 +493,6 @@ func (m *SimpleRBACManager) RequireAnyRole(roles ...string) func(ctx context.Con
 		}
 		return fmt.Errorf("%w: user %s does not have any required roles", ErrUnauthorized, user.Username)
 	}
-}
 
 // RequireAllRoles is a middleware-style function that checks if a user has all of the specified roles
 func (m *SimpleRBACManager) RequireAllRoles(roles ...string) func(ctx context.Context, user *User) error {
@@ -529,7 +504,6 @@ func (m *SimpleRBACManager) RequireAllRoles(roles ...string) func(ctx context.Co
 		}
 		return nil
 	}
-}
 
 // RequireAnyPermission is a middleware-style function that checks if a user has any of the specified permissions
 func (m *SimpleRBACManager) RequireAnyPermission(permissions ...Permission) func(ctx context.Context, user *User) error {
@@ -541,7 +515,6 @@ func (m *SimpleRBACManager) RequireAnyPermission(permissions ...Permission) func
 		}
 		return fmt.Errorf("%w: user %s does not have any required permissions", ErrUnauthorized, user.Username)
 	}
-}
 
 // RequireAllPermissions is a middleware-style function that checks if a user has all of the specified permissions
 func (m *SimpleRBACManager) RequireAllPermissions(permissions ...Permission) func(ctx context.Context, user *User) error {
@@ -553,7 +526,6 @@ func (m *SimpleRBACManager) RequireAllPermissions(permissions ...Permission) fun
 		}
 		return nil
 	}
-}
 
 // RBACManagerAdapter wraps SimpleRBACManager to implement the RBACManager interface
 type RBACManagerAdapter struct {
@@ -563,51 +535,77 @@ type RBACManagerAdapter struct {
 // NewRBACManagerAdapter creates a new RBAC manager adapter
 func NewRBACManagerAdapter(manager *SimpleRBACManager) *RBACManagerAdapter {
 	return &RBACManagerAdapter{manager: manager}
-}
 
 // HasPermission checks if a user has a permission
 func (a *RBACManagerAdapter) HasPermission(userID string, permission string) (bool, error) {
 	// This is a simplified implementation
 	// In a real implementation, we would look up the user and check permissions
 	return false, nil
-}
 
 // HasRole checks if a user has a role
 func (a *RBACManagerAdapter) HasRole(userID string, role string) (bool, error) {
 	// This is a simplified implementation
 	// In a real implementation, we would look up the user and check roles
 	return false, nil
-}
 
 // AddRoleToUser adds a role to a user
 func (a *RBACManagerAdapter) AddRoleToUser(userID string, role string) error {
 	// This is a simplified implementation
 	// In a real implementation, we would update the user's roles
 	return nil
-}
 
 // RemoveRoleFromUser removes a role from a user
 func (a *RBACManagerAdapter) RemoveRoleFromUser(userID string, role string) error {
 	// This is a simplified implementation
 	// In a real implementation, we would update the user's roles
 	return nil
-}
 
 // GetUserRoles gets a user's roles
 func (a *RBACManagerAdapter) GetUserRoles(userID string) ([]string, error) {
 	// This is a simplified implementation
 	// In a real implementation, we would look up the user's roles
 	return []string{}, nil
-}
 
 // GetUserPermissions gets a user's permissions
 func (a *RBACManagerAdapter) GetUserPermissions(userID string) ([]string, error) {
 	// This is a simplified implementation
 	// In a real implementation, we would look up the user's permissions
 	return []string{}, nil
-}
 
 // Close closes the RBAC manager
 func (a *RBACManagerAdapter) Close() error {
 	return nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

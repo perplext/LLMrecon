@@ -17,7 +17,6 @@ import (
 type DefaultBundleValidator struct {
 	// Logger is the logger for validation operations
 	Logger io.Writer
-}
 
 // NewBundleValidator creates a new bundle validator
 func NewBundleValidator(logger io.Writer) BundleValidator {
@@ -27,7 +26,6 @@ func NewBundleValidator(logger io.Writer) BundleValidator {
 	return &DefaultBundleValidator{
 		Logger: logger,
 	}
-}
 
 // Validate validates a bundle with the specified validation level
 func (v *DefaultBundleValidator) Validate(bundle *Bundle, level ValidationLevel) (*ValidationResult, error) {
@@ -109,7 +107,6 @@ func (v *DefaultBundleValidator) Validate(bundle *Bundle, level ValidationLevel)
 		Valid:   true,
 		Message: "Bundle validation successful",
 	}, nil
-}
 
 // ValidateManifest validates a bundle manifest
 func (v *DefaultBundleValidator) ValidateManifest(manifest *BundleManifest) (*ValidationResult, error) {
@@ -216,7 +213,6 @@ func (v *DefaultBundleValidator) ValidateManifest(manifest *BundleManifest) (*Va
 	}
 
 	return result, nil
-}
 
 // ValidateSignature validates a bundle signature
 func (v *DefaultBundleValidator) ValidateSignature(bundle *Bundle, publicKey ed25519.PublicKey) (*ValidationResult, error) {
@@ -279,7 +275,6 @@ func (v *DefaultBundleValidator) ValidateSignature(bundle *Bundle, publicKey ed2
 
 	// Return success
 	return result, nil
-}
 
 // ValidateChecksums validates bundle checksums
 func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationResult, error) {
@@ -316,7 +311,7 @@ func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationR
 	}
 
 	// Read manifest file
-	manifestData, err := os.ReadFile(manifestPath)
+	manifestData, err := os.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		result.Valid = false
 		result.IsValid = false
@@ -350,7 +345,6 @@ func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationR
 			result.Errors = append(result.Errors, fmt.Sprintf("Failed to get file info for %s: %v", item.Path, err))
 			continue
 		}
-
 		if fileInfo.IsDir() {
 			// Calculate directory hash
 			dirHash, err := calculateDirectoryHash(itemPath)
@@ -361,7 +355,7 @@ func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationR
 			itemHash = dirHash
 		} else {
 			// Calculate file hash
-			fileData, err := os.ReadFile(itemPath)
+			fileData, err := os.ReadFile(filepath.Clean(itemPath))
 			if err != nil {
 				result.Errors = append(result.Errors, fmt.Sprintf("Failed to read file %s: %v", item.Path, err))
 				continue
@@ -394,7 +388,6 @@ func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationR
 	}
 	
 	return result, nil
-}
 
 // ValidateCompatibility validates bundle compatibility with current versions
 func (v *DefaultBundleValidator) ValidateCompatibility(bundle *Bundle, currentVersions map[string]*version.SemVersion) (*ValidationResult, error) {
@@ -508,20 +501,18 @@ func (v *DefaultBundleValidator) ValidateCompatibility(bundle *Bundle, currentVe
 		result.Message = "Compatibility validation failed"
 		return result, fmt.Errorf("compatibility validation failed: %d errors", len(result.Errors))
 	}
-
 	// Return success with warnings if any
 	if len(result.Warnings) > 0 {
 		result.Message = fmt.Sprintf("Compatibility validation successful with %d warnings", len(result.Warnings))
 	}
 
 	return result, nil
-}
 
 // calculateHash calculates the SHA-256 hash of data
 func calculateHash(data []byte) string {
 	hash := sha256.Sum256(data)
 	return fmt.Sprintf("sha256:%x", hash)
-}
+	
 
 // calculateDirectoryHash calculates the SHA-256 hash of a directory
 func calculateDirectoryHash(dirPath string) (string, error) {
@@ -556,7 +547,7 @@ func calculateDirectoryHash(dirPath string) (string, error) {
 
 		// If it's a regular file, add its contents to the hash
 		if !d.IsDir() {
-			data, err := os.ReadFile(path)
+			data, err := os.ReadFile(filepath.Clean(path))
 			if err != nil {
 				return err
 			}
@@ -572,7 +563,6 @@ func calculateDirectoryHash(dirPath string) (string, error) {
 
 	// Return the hash
 	return fmt.Sprintf("sha256:%x", h.Sum(nil)), nil
-}
 
 // getCurrentVersions gets the current versions of components
 func getCurrentVersions() (map[string]*version.SemVersion, error) {
@@ -586,4 +576,3 @@ func getCurrentVersions() (map[string]*version.SemVersion, error) {
 	return map[string]*version.SemVersion{
 		"core": &coreVersion,
 	}, nil
-}

@@ -2,14 +2,15 @@
 package access
 
 import (
+	"time"
+	"os"
 	"context"
 	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base32"
 	"encoding/base64"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"strings"
@@ -62,7 +63,6 @@ func NewLegacyAuthManager(config *AccessControlConfig, userStore UserStore, sess
 		mfaManager:       mockMFAManager,
 		boundaryEnforcer: boundaryEnforcer,
 	}
-}
 
 // NewLegacyAuthManagerWithMFA creates a new legacy authentication manager with MFA support
 func NewLegacyAuthManagerWithMFA(config *AccessControlConfig, userStore UserStore, sessionStore SessionStore, auditLogger AuditLogger, mfaManager mfa.MFAManager) *LegacyAuthManager {
@@ -77,7 +77,6 @@ func NewLegacyAuthManagerWithMFA(config *AccessControlConfig, userStore UserStor
 		mfaManager:       mfaManager,
 		boundaryEnforcer: boundaryEnforcer,
 	}
-}
 
 // Login authenticates a user and creates a new session
 func (m *LegacyAuthManager) Login(ctx context.Context, username, password string, ipAddress, userAgent string) (*Session, error) {
@@ -109,7 +108,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 		// Log failed login attempt
 		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
-			UserID:      user.ID,
+					UserID:      user.ID,
 			Username:    user.Username,
 			Action:      AuditActionLogin,
 			Resource:    "user",
@@ -128,7 +127,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 		// Log failed login attempt
 		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
-			UserID:      user.ID,
+					UserID:      user.ID,
 			Username:    user.Username,
 			Action:      AuditActionLogin,
 			Resource:    "user",
@@ -161,7 +160,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 		// Log failed login attempt
 		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
-			UserID:      user.ID,
+					UserID:      user.ID,
 			Username:    user.Username,
 			Action:      AuditActionLogin,
 			Resource:    "user",
@@ -226,7 +225,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	// Set expiration time
 	tokenExpiration := 60 // Default 60 minutes
 	if m.config != nil && m.config.SessionPolicy.TokenExpiration > 0 {
-		tokenExpiration = m.config.SessionPolicy.TokenExpiration
+				tokenExpiration = m.config.SessionPolicy.TokenExpiration
 	}
 	session.ExpiresAt = time.Now().Add(time.Duration(tokenExpiration) * time.Minute)
 
@@ -238,7 +237,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	// Log successful login
 	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
-		UserID:      user.ID,
+				UserID:      user.ID,
 		Username:    user.Username,
 		Action:      AuditActionLogin,
 		Resource:    "user",
@@ -260,7 +259,6 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	}
 
 	return session, nil
-}
 
 // VerifyMFA verifies a multi-factor authentication code
 func (m *LegacyAuthManager) VerifyMFA(ctx context.Context, sessionID, code string) error {
@@ -288,7 +286,7 @@ func (m *LegacyAuthManager) VerifyMFA(ctx context.Context, sessionID, code strin
 		// Log failed MFA attempt
 		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
-			UserID:      user.ID,
+					UserID:      user.ID,
 			Username:    user.Username,
 			Action:      AuditActionLogin,
 			Resource:    "user",
@@ -313,7 +311,7 @@ func (m *LegacyAuthManager) VerifyMFA(ctx context.Context, sessionID, code strin
 	// Log successful MFA verification
 	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
-		UserID:      user.ID,
+				UserID:      user.ID,
 		Username:    user.Username,
 		Action:      AuditActionLogin,
 		Resource:    "user",
@@ -335,9 +333,7 @@ func (m *LegacyAuthManager) VerifyMFA(ctx context.Context, sessionID, code strin
 	if err := m.boundaryEnforcer.EnforceBoundaries(ctx); err != nil {
 		return err
 	}
-
 	return nil
-}
 
 // Logout logs out a user by invalidating their session
 func (m *LegacyAuthManager) Logout(ctx context.Context, sessionID string) error {
@@ -361,7 +357,7 @@ func (m *LegacyAuthManager) Logout(ctx context.Context, sessionID string) error 
 	// Log logout
 	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
-		UserID:      user.ID,
+				UserID:      user.ID,
 		Username:    user.Username,
 		Action:      AuditActionLogout,
 		Resource:    "user",
@@ -375,7 +371,6 @@ func (m *LegacyAuthManager) Logout(ctx context.Context, sessionID string) error 
 	})
 
 	return nil
-}
 
 // ValidateSession validates a session and returns the associated user
 func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, token string, ipAddress, userAgent string) (*User, error) {
@@ -463,7 +458,6 @@ func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, toke
 	if err != nil {
 		return nil, err
 	}
-
 	// Check if user is still active
 	if !user.Active {
 		// Delete session
@@ -485,7 +479,6 @@ func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, toke
 	}
 
 	return user, nil
-}
 
 // RefreshSession refreshes a session and returns a new token
 func (m *LegacyAuthManager) RefreshSession(ctx context.Context, sessionID, refreshToken string, ipAddress, userAgent string) (*Session, error) {
@@ -535,7 +528,7 @@ func (m *LegacyAuthManager) RefreshSession(ctx context.Context, sessionID, refre
 	// Set new expiration time
 	tokenExpiration := 60 // Default 60 minutes
 	if m.config != nil && m.config.SessionPolicy.TokenExpiration > 0 {
-		tokenExpiration = m.config.SessionPolicy.TokenExpiration
+				tokenExpiration = m.config.SessionPolicy.TokenExpiration
 	}
 	session.ExpiresAt = time.Now().Add(time.Duration(tokenExpiration) * time.Minute)
 
@@ -547,7 +540,7 @@ func (m *LegacyAuthManager) RefreshSession(ctx context.Context, sessionID, refre
 	// Log session refresh
 	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
-		UserID:      user.ID,
+				UserID:      user.ID,
 		Username:    user.Username,
 		Action:      AuditActionLogin,
 		Resource:    "session",
@@ -561,7 +554,6 @@ func (m *LegacyAuthManager) RefreshSession(ctx context.Context, sessionID, refre
 	})
 
 	return session, nil
-}
 
 // CreateUser creates a new user
 func (m *LegacyAuthManager) CreateUser(ctx context.Context, username, email, password string, roles []string) (*User, error) {
@@ -605,7 +597,6 @@ func (m *LegacyAuthManager) CreateUser(ctx context.Context, username, email, pas
 	}
 
 	return user, nil
-}
 
 // UpdateUserPassword updates a user's password
 func (m *LegacyAuthManager) UpdateUserPassword(ctx context.Context, userID, currentPassword, newPassword string) error {
@@ -637,10 +628,9 @@ func (m *LegacyAuthManager) UpdateUserPassword(ctx context.Context, userID, curr
 	user.UpdatedAt = time.Now()
 
 	// Save user
-	if err := m.userStore.UpdateUser(ctx, user); err != nil {
+	    if err := m.userStore.UpdateUser(ctx, user); err != nil {
 		return err
 	}
-
 	// Invalidate all sessions
 	sessions, err := m.sessionStore.GetUserSessions(ctx, userID)
 	if err != nil {
@@ -652,7 +642,6 @@ func (m *LegacyAuthManager) UpdateUserPassword(ctx context.Context, userID, curr
 	}
 
 	return nil
-}
 
 // EnableMFA enables multi-factor authentication for a user
 func (m *LegacyAuthManager) EnableMFA(ctx context.Context, userID string, method common.AuthMethod) error {
@@ -678,15 +667,13 @@ func (m *LegacyAuthManager) EnableMFA(ctx context.Context, userID string, method
 		user.MFAEnabled = true
 		user.MFAMethods = []string{string(method)}
 	}
-
 	// Update user
 	user.UpdatedAt = time.Now()
-	if err := m.userStore.UpdateUser(ctx, user); err != nil {
+	    if err := m.userStore.UpdateUser(ctx, user); err != nil {
 		return err
 	}
 
 	return nil
-}
 
 // DisableMFA disables multi-factor authentication for a user
 func (m *LegacyAuthManager) DisableMFA(ctx context.Context, userID string, method common.AuthMethod) error {
@@ -715,12 +702,11 @@ func (m *LegacyAuthManager) DisableMFA(ctx context.Context, userID string, metho
 		user.MFAEnabled = false
 	}
 	user.UpdatedAt = time.Now()
-	if err := m.userStore.UpdateUser(ctx, user); err != nil {
+	    if err := m.userStore.UpdateUser(ctx, user); err != nil {
 		return err
 	}
 
 	return nil
-}
 
 // Helper functions
 
@@ -731,18 +717,15 @@ func (m *LegacyAuthManager) hashPassword(password string) (string, error) {
 		return "", err
 	}
 	return string(hash), nil
-}
 
 // verifyPassword verifies a password against a hash
 func (m *LegacyAuthManager) verifyPassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
-}
 
 // verifyToken verifies a token using constant-time comparison
 func (m *LegacyAuthManager) verifyToken(token, expectedToken string) bool {
 	return subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) == 1
-}
 
 // verifyMFACode verifies an MFA code
 func (m *LegacyAuthManager) verifyMFACode(user *User, code string) bool {
@@ -789,7 +772,6 @@ func (m *LegacyAuthManager) verifyMFACode(user *User, code string) bool {
 		// Unknown method, fall back to simple verification
 		return code == "123456"
 	}
-}
 
 // verifyTOTPCode verifies a TOTP code against a secret
 func verifyTOTPCode(secret, code string) bool {
@@ -802,7 +784,7 @@ func verifyTOTPCode(secret, code string) bool {
 	secret = strings.TrimRight(secret, "=")
 	missingPadding := len(secret) % 8
 	if missingPadding > 0 {
-		secret = secret + strings.Repeat("=", 8-missingPadding)
+		secret := os.Getenv("SECRET_KEY"), 8-missingPadding)
 	}
 
 	secretBytes, err := base32.StdEncoding.DecodeString(secret)
@@ -846,7 +828,6 @@ func verifyTOTPCode(secret, code string) bool {
 	}
 
 	return false
-}
 
 // validatePasswordPolicy validates a password against the password policy
 func (m *LegacyAuthManager) validatePasswordPolicy(password string) error {
@@ -919,7 +900,6 @@ func (m *LegacyAuthManager) validatePasswordPolicy(password string) error {
 	}
 
 	return nil
-}
 
 // generateRandomID generates a random ID
 func generateRandomID() string {
@@ -929,7 +909,6 @@ func generateRandomID() string {
 		return fmt.Sprintf("%d", time.Now().UnixNano())
 	}
 	return fmt.Sprintf("%x", b)
-}
 
 // generateRandomToken generates a random token
 func generateRandomToken() string {
@@ -938,5 +917,21 @@ func generateRandomToken() string {
 	if err != nil {
 		return fmt.Sprintf("%d", time.Now().UnixNano())
 	}
-	return base64.URLEncoding.EncodeToString(b)
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

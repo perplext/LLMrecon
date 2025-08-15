@@ -1,3 +1,6 @@
+// Package ratelimit provides adaptive rate limiting functionality for template execution.
+package ratelimit
+
 /*
 Package ratelimit provides adaptive rate limiting functionality for template execution.
 
@@ -134,4 +137,3 @@ control the rate of template executions. It can be integrated as follows:
     // Execute a template with rate limiting
     result, err := executor.ExecuteTemplate(ctx, template, data, userID)
 */
-package ratelimit

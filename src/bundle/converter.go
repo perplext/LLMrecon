@@ -16,7 +16,6 @@ type BundleConverter struct {
 	Logger io.Writer
 	// AuditTrail is the audit trail manager for logging operations
 	AuditTrail *trail.AuditTrailManager
-}
 
 // NewBundleConverter creates a new bundle converter
 func NewBundleConverter(creator *OfflineBundleCreator, logger io.Writer, auditTrail *trail.AuditTrailManager) *BundleConverter {
@@ -29,7 +28,6 @@ func NewBundleConverter(creator *OfflineBundleCreator, logger io.Writer, auditTr
 		Logger:     logger,
 		AuditTrail: auditTrail,
 	}
-}
 
 // ConvertToOfflineBundle converts a standard bundle to an offline bundle
 func (c *BundleConverter) ConvertToOfflineBundle(bundle *Bundle, outputPath string) (*OfflineBundle, error) {
@@ -64,14 +62,14 @@ func (c *BundleConverter) ConvertToOfflineBundle(bundle *Bundle, outputPath stri
 	}
 
 	// Create output directory
-	if err := os.MkdirAll(outputPath, 0755); err != nil {
+	if err := os.MkdirAll(outputPath, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
 	// Create required directories
 	for _, dir := range offlineBundle.Format.RequiredDirectories {
 		dirPath := filepath.Join(outputPath, dir)
-		if err := os.MkdirAll(dirPath, 0755); err != nil {
+		if err := os.MkdirAll(dirPath, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
@@ -97,20 +95,18 @@ func (c *BundleConverter) ConvertToOfflineBundle(bundle *Bundle, outputPath stri
 		}
 
 		// Create target directory if it doesn't exist
-		if err := os.MkdirAll(targetDir, 0755); err != nil {
+		if err := os.MkdirAll(targetDir, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create target directory: %w", err)
 		}
-
 		// Determine target path
 		targetPath := filepath.Join(targetDir, filepath.Base(item.Path))
-
 		// Copy file
-		sourceData, err := os.ReadFile(sourcePath)
+		sourceData, err := os.ReadFile(filepath.Clean(sourcePath))
 		if err != nil {
 			return nil, fmt.Errorf("failed to read source file: %w", err)
 		}
 
-		if err := os.WriteFile(targetPath, sourceData, 0644); err != nil {
+		if err := os.WriteFile(filepath.Clean(targetPath, sourceData, 0600)); err != nil {
 			return nil, fmt.Errorf("failed to write target file: %w", err)
 		}
 	}
@@ -148,7 +144,7 @@ See the documentation directory for usage instructions.
 		bundle.Manifest.BundleType, bundle.Manifest.CreatedAt.Format(time.RFC3339),
 		bundle.Manifest.Author.Name, bundle.Manifest.Author.Email)
 
-	if err := os.WriteFile(readmePath, []byte(readmeContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(readmePath, []byte(readmeContent)), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write README.md: %w", err)
 	}
 
@@ -201,12 +197,10 @@ See the documentation directory for usage instructions.
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
 	}
-
 	// Log conversion success
 	fmt.Fprintf(c.Logger, "Bundle converted successfully to offline format: %s\n", outputPath)
 
 	return offlineBundle, nil
-}
 
 // AutoDetectComplianceForTemplates automatically detects and adds compliance mappings for templates
 func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *OfflineBundle) error {
@@ -222,7 +216,7 @@ func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *Offlin
 
 		// Read template file
 		templatePath := filepath.Join(offlineBundle.BundlePath, item.Path)
-		templateData, err := os.ReadFile(templatePath)
+		templateData, err := os.ReadFile(filepath.Clean(templatePath))
 		if err != nil {
 			return fmt.Errorf("failed to read template file: %w", err)
 		}
@@ -249,7 +243,6 @@ func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *Offlin
 	fmt.Fprintf(c.Logger, "Compliance mapping auto-detection completed successfully\n")
 
 	return nil
-}
 
 // detectOwaspCategories analyzes template content and detects relevant OWASP LLM Top 10 categories
 func detectOwaspCategories(templateContent string) []string {
@@ -289,7 +282,6 @@ func detectOwaspCategories(templateContent string) []string {
 	}
 	
 	return categories
-}
 
 // detectISOControls analyzes template content and detects relevant ISO/IEC 42001 controls
 func detectISOControls(templateContent string) []string {
@@ -319,7 +311,6 @@ func detectISOControls(templateContent string) []string {
 	}
 	
 	return controls
-}
 
 // containsKeywords checks if any of the keywords are present in the content
 func containsKeywords(content string, keywords ...string) bool {
@@ -328,5 +319,3 @@ func containsKeywords(content string, keywords ...string) bool {
 			return true
 		}
 	}
-	return false
-}

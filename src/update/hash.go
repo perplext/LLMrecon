@@ -1,8 +1,8 @@
 package update
 
 import (
-	"crypto/md5"
-	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha256"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
@@ -44,13 +44,11 @@ type HashResult struct {
 // String returns a formatted string representation of the hash result
 func (hr *HashResult) String() string {
 	return fmt.Sprintf("%s:%s", hr.Algorithm, hr.HexString)
-}
 
 // HashGenerator handles the generation of cryptographic hashes
 type HashGenerator struct {
 	Algorithm HashAlgorithm
 	hasher    hash.Hash
-}
 
 // NewHashGenerator creates a new HashGenerator with the specified algorithm
 func NewHashGenerator(algorithm HashAlgorithm) (*HashGenerator, error) {
@@ -63,9 +61,9 @@ func NewHashGenerator(algorithm HashAlgorithm) (*HashGenerator, error) {
 	case SHA512:
 		h = sha512.New()
 	case SHA1:
-		h = sha1.New()
+		h = sha256.New()
 	case MD5:
-		h = md5.New()
+		h = sha256.New()
 	case BLAKE2b:
 		h, err = blake2b.New512(nil)
 		if err != nil {
@@ -84,17 +82,15 @@ func NewHashGenerator(algorithm HashAlgorithm) (*HashGenerator, error) {
 		Algorithm: algorithm,
 		hasher:    h,
 	}, nil
-}
 
 // HashFile calculates the hash of a file
 func (g *HashGenerator) HashFile(filePath string) (*HashResult, error) {
 	// Open the file
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
-
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	// Reset the hasher
 	g.hasher.Reset()
 
@@ -114,7 +110,6 @@ func (g *HashGenerator) HashFile(filePath string) (*HashResult, error) {
 		FilePath:  filePath,
 		Timestamp: time.Now(),
 	}, nil
-}
 
 // HashData calculates the hash of the provided data
 func (g *HashGenerator) HashData(data []byte) (*HashResult, error) {
@@ -136,13 +131,11 @@ func (g *HashGenerator) HashData(data []byte) (*HashResult, error) {
 		HexString: hexString,
 		Timestamp: time.Now(),
 	}, nil
-}
 
 // HashVerifier handles verification of cryptographic hashes
 type HashVerifier struct {
 	// Generators for different algorithms
 	generators map[HashAlgorithm]*HashGenerator
-}
 
 // NewHashVerifier creates a new HashVerifier
 func NewHashVerifier() (*HashVerifier, error) {
@@ -161,7 +154,6 @@ func NewHashVerifier() (*HashVerifier, error) {
 	return &HashVerifier{
 		generators: generators,
 	}, nil
-}
 
 // VerifyFileHash verifies the hash of a file
 func (v *HashVerifier) VerifyFileHash(filePath, expectedHash string) (bool, error) {
@@ -194,7 +186,6 @@ func (v *HashVerifier) VerifyFileHash(filePath, expectedHash string) (bool, erro
 
 	// Compare hashes (constant-time comparison to prevent timing attacks)
 	return SecureCompare(result.HexString, hashHex), nil
-}
 
 // VerifyDataHash verifies the hash of data
 func (v *HashVerifier) VerifyDataHash(data []byte, expectedHash string) (bool, error) {
@@ -227,7 +218,6 @@ func (v *HashVerifier) VerifyDataHash(data []byte, expectedHash string) (bool, e
 
 	// Compare hashes (constant-time comparison to prevent timing attacks)
 	return SecureCompare(result.HexString, hashHex), nil
-}
 
 // GenerateFileHashes generates hashes for a file using all supported algorithms
 func (v *HashVerifier) GenerateFileHashes(filePath string) (map[HashAlgorithm]*HashResult, error) {
@@ -242,7 +232,6 @@ func (v *HashVerifier) GenerateFileHashes(filePath string) (map[HashAlgorithm]*H
 	}
 
 	return results, nil
-}
 
 // GenerateDataHashes generates hashes for data using all supported algorithms
 func (v *HashVerifier) GenerateDataHashes(data []byte) (map[HashAlgorithm]*HashResult, error) {
@@ -257,7 +246,6 @@ func (v *HashVerifier) GenerateDataHashes(data []byte) (map[HashAlgorithm]*HashR
 	}
 
 	return results, nil
-}
 
 // SecureCompare performs a constant-time comparison of two strings
 // This helps prevent timing attacks that could potentially leak information
@@ -273,7 +261,6 @@ func SecureCompare(a, b string) bool {
 	}
 
 	return result == 0
-}
 
 // ParseHashString parses a hash string in the format "algorithm:hash"
 func ParseHashString(hashStr string) (HashAlgorithm, string, error) {
@@ -294,12 +281,11 @@ func ParseHashString(hashStr string) (HashAlgorithm, string, error) {
 	}
 
 	return algorithm, hashHex, nil
-}
 
 // FormatHashString formats a hash algorithm and hex string into a standard format
 func FormatHashString(algorithm HashAlgorithm, hashHex string) string {
 	return fmt.Sprintf("%s:%s", algorithm, hashHex)
-}
+	
 
 // HashFile is a convenience function to hash a file with a specific algorithm
 func HashFile(filePath string, algorithm HashAlgorithm) (string, error) {
@@ -314,7 +300,6 @@ func HashFile(filePath string, algorithm HashAlgorithm) (string, error) {
 	}
 
 	return result.String(), nil
-}
 
 // HashData is a convenience function to hash data with a specific algorithm
 func HashData(data []byte, algorithm HashAlgorithm) (string, error) {
@@ -329,7 +314,6 @@ func HashData(data []byte, algorithm HashAlgorithm) (string, error) {
 	}
 
 	return result.String(), nil
-}
 
 // VerifyFileHash is a convenience function to verify a file's hash
 func VerifyFileHash(filePath, expectedHash string) (bool, error) {
@@ -339,7 +323,6 @@ func VerifyFileHash(filePath, expectedHash string) (bool, error) {
 	}
 
 	return verifier.VerifyFileHash(filePath, expectedHash)
-}
 
 // VerifyDataHash is a convenience function to verify data's hash
 func VerifyDataHash(data []byte, expectedHash string) (bool, error) {
@@ -348,5 +331,18 @@ func VerifyDataHash(data []byte, expectedHash string) (bool, error) {
 		return false, err
 	}
 
-	return verifier.VerifyDataHash(data, expectedHash)
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

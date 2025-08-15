@@ -30,7 +30,6 @@ var bundleReportCmd = &cobra.Command{
 - Security assessment summaries`,
 	Args: cobra.ExactArgs(1),
 	RunE: runBundleReport,
-}
 
 func init() {
 	bundleCmd.AddCommand(bundleReportCmd)
@@ -41,7 +40,6 @@ func init() {
 	bundleReportCmd.Flags().BoolVar(&includeStatistics, "statistics", true, "Include detailed statistics")
 	bundleReportCmd.Flags().BoolVar(&includeCompliance, "compliance", true, "Include compliance mappings")
 	bundleReportCmd.Flags().BoolVar(&includeVulnDetails, "vuln-details", false, "Include detailed vulnerability information")
-}
 
 func runBundleReport(cmd *cobra.Command, args []string) error {
 	bundlePath := args[0]
@@ -52,7 +50,7 @@ func runBundleReport(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create output directory
-	if err := os.MkdirAll(reportOutput, 0755); err != nil {
+	if err := os.MkdirAll(reportOutput, 0700); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -92,7 +90,6 @@ func runBundleReport(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 	color.Green("✅ Report generation complete!")
 	return nil
-}
 
 type BundleReportData struct {
 	Metadata        BundleMetadata          `json:"metadata"`
@@ -119,7 +116,6 @@ type ReportSummary struct {
 	SecurityLevel       string   `json:"security_level"`
 	TopCategories       []string `json:"top_categories"`
 	RecommendationCount int      `json:"recommendation_count"`
-}
 
 type OWASPComplianceReport struct {
 	OverallScore     float64                       `json:"overall_score"`
@@ -152,21 +148,18 @@ type ISOComplianceReport struct {
 	Sections          map[string]ISOSection `json:"sections"`
 	Gaps              []ISOGap              `json:"gaps"`
 	Recommendations   []string              `json:"recommendations"`
-}
 
 type ISOSection struct {
 	Name       string   `json:"name"`
 	Compliance float64  `json:"compliance"`
 	Status     string   `json:"status"`
 	Evidence   []string `json:"evidence,omitempty"`
-}
 
 type ISOGap struct {
 	Requirement string `json:"requirement"`
 	Current     string `json:"current"`
 	Expected    string `json:"expected"`
 	Priority    string `json:"priority"`
-}
 
 type BundleReportStatistics struct {
 	TemplatesByCategory  map[string]int `json:"templates_by_category"`
@@ -177,7 +170,6 @@ type BundleReportStatistics struct {
 	TotalDetectionRules  int            `json:"total_detection_rules"`
 	LanguageDistribution map[string]int `json:"language_distribution"`
 	UpdateFrequency      string         `json:"update_frequency"`
-}
 
 type VulnerabilityReport struct {
 	ID          string   `json:"id"`
@@ -207,7 +199,6 @@ func loadBundleForReport(bundlePath string) (*bundle.Bundle, error) {
 	}
 
 	return b, nil
-}
 
 func generateReportData(b *bundle.Bundle, reportType string) (*BundleReportData, error) {
 	data := &BundleReportData{
@@ -250,7 +241,6 @@ func generateReportData(b *bundle.Bundle, reportType string) (*BundleReportData,
 	}
 
 	return data, nil
-}
 
 func calculateSummary(b *bundle.Bundle) ReportSummary {
 	categoryCount := make(map[string]int)
@@ -280,7 +270,6 @@ func calculateSummary(b *bundle.Bundle) ReportSummary {
 		TopCategories:       topCategories,
 		RecommendationCount: countRecommendations(b),
 	}
-}
 
 func generateOWASPAnalysis(b *bundle.Bundle) *OWASPComplianceReport {
 	report := &OWASPComplianceReport{
@@ -317,7 +306,6 @@ func generateOWASPAnalysis(b *bundle.Bundle) *OWASPComplianceReport {
 	}
 
 	return report
-}
 
 func generateISOAnalysis(b *bundle.Bundle) *ISOComplianceReport {
 	report := &ISOComplianceReport{
@@ -357,7 +345,6 @@ func generateISOAnalysis(b *bundle.Bundle) *ISOComplianceReport {
 	report.Recommendations = generateISORecommendations(report)
 
 	return report
-}
 
 func generateStatistics(b *bundle.Bundle) *BundleReportStatistics {
 	stats := &BundleReportStatistics{
@@ -390,7 +377,6 @@ func generateStatistics(b *bundle.Bundle) *BundleReportStatistics {
 	stats.AverageComplexity = calculateAverageComplexity(b)
 
 	return stats
-}
 
 func generateVulnerabilityReport(b *bundle.Bundle) []VulnerabilityReport {
 	var vulnerabilities []VulnerabilityReport
@@ -428,7 +414,6 @@ func generateVulnerabilityReport(b *bundle.Bundle) []VulnerabilityReport {
 	}
 
 	return vulnerabilities
-}
 
 func generateCoverageReport(b *bundle.Bundle) *CoverageReport {
 	report := &CoverageReport{
@@ -477,9 +462,7 @@ func generateCoverageReport(b *bundle.Bundle) *CoverageReport {
 
 	// Identify uncovered areas
 	report.UncoveredAreas = identifyUncoveredAreas(report)
-
 	return report
-}
 
 func generateReportInFormat(data *BundleReportData, format, outputPath string) error {
 	// Simple report generation
@@ -490,22 +473,21 @@ func generateReportInFormat(data *BundleReportData, format, outputPath string) e
 		if err != nil {
 			return fmt.Errorf("marshaling report data: %w", err)
 		}
-		return os.WriteFile(outputPath, jsonData, 0644)
+		return os.WriteFile(filepath.Clean(outputPath, jsonData, 0600))
 
 	case "html":
 		// Generate simple HTML report
 		html := generateSimpleHTMLReport(data)
-		return os.WriteFile(outputPath, []byte(html), 0644)
+		return os.WriteFile(filepath.Clean(outputPath, []byte(html)), 0600)
 
 	case "markdown":
 		// Generate markdown report
 		md := generateMarkdownReport(data)
-		return os.WriteFile(outputPath, []byte(md), 0644)
+		return os.WriteFile(filepath.Clean(outputPath, []byte(md)), 0600)
 
 	default:
 		return fmt.Errorf("unsupported format: %s", format)
 	}
-}
 
 // Helper functions
 
@@ -517,7 +499,6 @@ func extractCategory(path string) string {
 		}
 	}
 	return ""
-}
 
 func calculateComplianceScore(b *bundle.Bundle) float64 {
 	// Simple scoring based on template coverage
@@ -530,7 +511,6 @@ func calculateComplianceScore(b *bundle.Bundle) float64 {
 	}
 
 	return score * 100
-}
 
 func determineSecurityLevel(b *bundle.Bundle) string {
 	score := calculateComplianceScore(b)
@@ -546,7 +526,6 @@ func determineSecurityLevel(b *bundle.Bundle) string {
 	default:
 		return "Critical"
 	}
-}
 
 func countRecommendations(b *bundle.Bundle) int {
 	// Count based on missing categories and low coverage
@@ -564,7 +543,6 @@ func countRecommendations(b *bundle.Bundle) int {
 	count = (expectedCategories - len(categories)) * 2
 
 	return count
-}
 
 func analyzeCategory(b *bundle.Bundle, category string) CategoryCompliance {
 	templateCount := 0
@@ -589,7 +567,6 @@ func analyzeCategory(b *bundle.Bundle, category string) CategoryCompliance {
 		TemplateCount: templateCount,
 		Coverage:      coverage,
 	}
-}
 
 func identifyCoverageGaps(scores map[string]CategoryCompliance) []string {
 	var gaps []string
@@ -601,7 +578,6 @@ func identifyCoverageGaps(scores map[string]CategoryCompliance) []string {
 	}
 
 	return gaps
-}
 
 func generateOWASPRecommendations(report *OWASPComplianceReport) []string {
 	var recommendations []string
@@ -622,7 +598,6 @@ func generateOWASPRecommendations(report *OWASPComplianceReport) []string {
 	}
 
 	return recommendations
-}
 
 func parseTemplateMetadata(tmpl bundle.ContentItem) *TemplateMetadata {
 	// This would parse the actual template content
@@ -631,12 +606,10 @@ func parseTemplateMetadata(tmpl bundle.ContentItem) *TemplateMetadata {
 		Severity: "High",
 		Type:     "Detection",
 	}
-}
 
 type TemplateMetadata struct {
 	Severity string
 	Type     string
-}
 
 func hasTemplatesForCategory(b *bundle.Bundle, category string) bool {
 	for _, tmpl := range getTemplatesFromBundle(b) {
@@ -645,7 +618,6 @@ func hasTemplatesForCategory(b *bundle.Bundle, category string) bool {
 		}
 	}
 	return false
-}
 
 func getDetectionMethods(b *bundle.Bundle, category string) []string {
 	// This would analyze templates to extract detection methods
@@ -654,7 +626,6 @@ func getDetectionMethods(b *bundle.Bundle, category string) []string {
 		"Behavioral analysis",
 		"Statistical anomaly detection",
 	}
-}
 
 func getMitigationStrategies(category string) []string {
 	// Return standard mitigations per category
@@ -676,7 +647,6 @@ func getMitigationStrategies(category string) []string {
 	}
 
 	return []string{"Implement security best practices"}
-}
 
 func calculateCategoryCoverage(b *bundle.Bundle, category string) float64 {
 	count := 0
@@ -690,13 +660,11 @@ func calculateCategoryCoverage(b *bundle.Bundle, category string) float64 {
 		return 1.0 // Simple binary coverage for now
 	}
 	return 0.0
-}
 
 func calculateVectorCoverage(b *bundle.Bundle, vector string) float64 {
 	// This would analyze template content for attack vectors
 	// For now, return mock coverage
 	return 0.75
-}
 
 func identifyUncoveredAreas(report *CoverageReport) []string {
 	var uncovered []string
@@ -708,7 +676,6 @@ func identifyUncoveredAreas(report *CoverageReport) []string {
 	}
 
 	return uncovered
-}
 
 func assessISOSection(b *bundle.Bundle, sectionID string) float64 {
 	// Assess compliance based on bundle contents
@@ -723,7 +690,6 @@ func assessISOSection(b *bundle.Bundle, sectionID string) float64 {
 	default:
 		return 0.7
 	}
-}
 
 func getComplianceStatus(compliance float64) string {
 	switch {
@@ -736,7 +702,6 @@ func getComplianceStatus(compliance float64) string {
 	default:
 		return "Non-Compliant"
 	}
-}
 
 func calculateISOLevel(ratio float64) string {
 	switch {
@@ -749,7 +714,6 @@ func calculateISOLevel(ratio float64) string {
 	default:
 		return "Level 0 - Initial"
 	}
-}
 
 func identifyISOGaps(sections map[string]ISOSection) []ISOGap {
 	var gaps []ISOGap
@@ -766,7 +730,6 @@ func identifyISOGaps(sections map[string]ISOSection) []ISOGap {
 	}
 
 	return gaps
-}
 
 func generateISORecommendations(report *ISOComplianceReport) []string {
 	var recommendations []string
@@ -782,22 +745,18 @@ func generateISORecommendations(report *ISOComplianceReport) []string {
 	}
 
 	return recommendations
-}
 
 func countUniquePatterns(b *bundle.Bundle) int {
 	// Count unique detection patterns across templates
 	return len(getTemplatesFromBundle(b)) * 3 // Simplified calculation
-}
 
 func countDetectionRules(b *bundle.Bundle) int {
 	// Count total detection rules
 	return len(getTemplatesFromBundle(b)) * 5 // Simplified calculation
-}
 
 func calculateAverageComplexity(b *bundle.Bundle) float64 {
 	// Calculate average template complexity
 	return 3.5 // Mock value
-}
 
 func getTemplatesFromBundle(b *bundle.Bundle) []bundle.ContentItem {
 	var templates []bundle.ContentItem
@@ -807,7 +766,6 @@ func getTemplatesFromBundle(b *bundle.Bundle) []bundle.ContentItem {
 		}
 	}
 	return templates
-}
 
 func generateDetailedFindings(b *bundle.Bundle) []OWASPFinding {
 	// Generate detailed findings for each template
@@ -823,7 +781,6 @@ func generateDetailedFindings(b *bundle.Bundle) []OWASPFinding {
 	})
 
 	return findings
-}
 
 func generateSimpleHTMLReport(data *BundleReportData) string {
 	html := fmt.Sprintf(`<!DOCTYPE html>
@@ -863,7 +820,6 @@ th { background-color: #f2f2f2; }
 		data.Summary.SecurityLevel,
 	)
 	return html
-}
 
 func generateMarkdownReport(data *BundleReportData) string {
 	md := fmt.Sprintf(`# Bundle Analysis Report
@@ -891,5 +847,33 @@ func generateMarkdownReport(data *BundleReportData) string {
 		data.Summary.ComplianceScore,
 		data.Summary.SecurityLevel,
 	)
-	return md
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

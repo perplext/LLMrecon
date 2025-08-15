@@ -33,7 +33,6 @@ type ExecutionOptimizer struct {
 	running bool
 	// stopChan is used to stop the optimizer
 	stopChan chan struct{}
-}
 
 // ExecutionOptimizerConfig represents configuration for the execution optimizer
 type ExecutionOptimizerConfig struct {
@@ -59,7 +58,6 @@ type ExecutionOptimizerConfig struct {
 	ExecutionTimeout time.Duration
 	// EnableAdaptiveTimeouts enables adaptive timeouts based on template complexity
 	EnableAdaptiveTimeouts bool
-}
 
 // ExecutionOptimizerStats tracks statistics for the execution optimizer
 type ExecutionOptimizerStats struct {
@@ -85,7 +83,6 @@ type ExecutionOptimizerStats struct {
 	TimeoutErrors int64
 	// MemoryErrors is the number of memory-related errors
 	MemoryErrors int64
-}
 
 // DefaultExecutionOptimizerConfig returns default configuration for the execution optimizer
 func DefaultExecutionOptimizerConfig() *ExecutionOptimizerConfig {
@@ -102,7 +99,6 @@ func DefaultExecutionOptimizerConfig() *ExecutionOptimizerConfig {
 		ExecutionTimeout:            30 * time.Second,
 		EnableAdaptiveTimeouts:      true,
 	}
-}
 
 // NewExecutionOptimizer creates a new execution optimizer
 func NewExecutionOptimizer(engine *execution.Engine, config *ExecutionOptimizerConfig) (*ExecutionOptimizer, error) {
@@ -151,7 +147,6 @@ func NewExecutionOptimizer(engine *execution.Engine, config *ExecutionOptimizerC
 		stats:              &ExecutionOptimizerStats{},
 		stopChan:           make(chan struct{}),
 	}, nil
-}
 
 // Start starts the execution optimizer
 func (o *ExecutionOptimizer) Start() error {
@@ -181,7 +176,6 @@ func (o *ExecutionOptimizer) Start() error {
 	}
 
 	return nil
-}
 
 // Stop stops the execution optimizer
 func (o *ExecutionOptimizer) Stop() {
@@ -202,7 +196,6 @@ func (o *ExecutionOptimizer) Stop() {
 	if o.config.EnableConcurrencyOptimization && o.concurrencyManager != nil {
 		o.concurrencyManager.Stop()
 	}
-}
 
 // ExecuteTemplate executes a template with optimization
 func (o *ExecutionOptimizer) ExecuteTemplate(ctx context.Context, template *format.Template, data interface{}) (string, error) {
@@ -281,7 +274,6 @@ func (o *ExecutionOptimizer) ExecuteTemplate(ctx context.Context, template *form
 	}
 
 	return result, err
-}
 
 // executeWithConcurrencyManager executes a template using the concurrency manager
 func (o *ExecutionOptimizer) executeWithConcurrencyManager(ctx context.Context, template *format.Template, data interface{}) (string, error) {
@@ -308,7 +300,6 @@ func (o *ExecutionOptimizer) executeWithConcurrencyManager(ctx context.Context, 
 	case <-ctx.Done():
 		return "", ctx.Err()
 	}
-}
 
 // ExecuteTemplates executes multiple templates with optimization
 func (o *ExecutionOptimizer) ExecuteTemplates(ctx context.Context, templates []*format.Template, data interface{}) ([]string, error) {
@@ -386,7 +377,6 @@ func (o *ExecutionOptimizer) ExecuteTemplates(ctx context.Context, templates []*
 	}
 
 	return results, err
-}
 
 // executeTemplatesInBatches executes templates in batches
 func (o *ExecutionOptimizer) executeTemplatesInBatches(ctx context.Context, templates []*format.Template, data interface{}, batchSize int) ([]string, error) {
@@ -420,7 +410,6 @@ func (o *ExecutionOptimizer) executeTemplatesInBatches(ctx context.Context, temp
 	}
 
 	return results, nil
-}
 
 // executeBatch executes a batch of templates
 func (o *ExecutionOptimizer) executeBatch(ctx context.Context, templates []*format.Template, data interface{}) ([]string, error) {
@@ -458,7 +447,6 @@ func (o *ExecutionOptimizer) executeBatch(ctx context.Context, templates []*form
 	wg.Wait()
 
 	return results, firstErr
-}
 
 // GetStats returns statistics for the execution optimizer
 func (o *ExecutionOptimizer) GetStats() *ExecutionOptimizerStats {
@@ -481,7 +469,6 @@ func (o *ExecutionOptimizer) GetStats() *ExecutionOptimizerStats {
 	}
 
 	return stats
-}
 
 // GetConfig returns the configuration for the execution optimizer
 func (o *ExecutionOptimizer) GetConfig() *ExecutionOptimizerConfig {
@@ -489,7 +476,6 @@ func (o *ExecutionOptimizer) GetConfig() *ExecutionOptimizerConfig {
 	defer o.mutex.RUnlock()
 
 	return o.config
-}
 
 // SetConfig sets the configuration for the execution optimizer
 func (o *ExecutionOptimizer) SetConfig(config *ExecutionOptimizerConfig) {
@@ -501,7 +487,6 @@ func (o *ExecutionOptimizer) SetConfig(config *ExecutionOptimizerConfig) {
 	defer o.mutex.Unlock()
 
 	o.config = config
-}
 
 // IsRunning returns if the execution optimizer is running
 func (o *ExecutionOptimizer) IsRunning() bool {
@@ -509,22 +494,18 @@ func (o *ExecutionOptimizer) IsRunning() bool {
 	defer o.mutex.RUnlock()
 
 	return o.running
-}
 
 // GetMemoryProfiler returns the memory profiler
 func (o *ExecutionOptimizer) GetMemoryProfiler() *profiling.MemoryProfiler {
 	return o.profiler
-}
 
 // GetMemoryOptimizer returns the memory optimizer
 func (o *ExecutionOptimizer) GetMemoryOptimizer() *optimization.MemoryOptimizer {
 	return o.memoryOptimizer
-}
 
 // GetConcurrencyManager returns the concurrency manager
 func (o *ExecutionOptimizer) GetConcurrencyManager() *concurrency.ConcurrencyManager {
 	return o.concurrencyManager
-}
 
 // templateExecutionTask represents a template execution task for the concurrency manager
 type templateExecutionTask struct {
@@ -550,14 +531,29 @@ func (t *templateExecutionTask) Execute(ctx context.Context) error {
 	close(t.done)
 
 	return err
-}
 
 // ID returns the task ID
 func (t *templateExecutionTask) ID() string {
 	return t.id
-}
 
 // Priority returns the task priority
 func (t *templateExecutionTask) Priority() int {
 	return 0
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

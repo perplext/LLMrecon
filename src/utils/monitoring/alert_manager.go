@@ -7,16 +7,16 @@ type AlertManagerAdapter struct {
 	}
 }
 
+}
 // NewAlertManagerAdapter creates a new adapter for AlertManager
 func NewAlertManagerAdapter(manager interface{
 	CheckThreshold(name string, value interface{}, labels map[string]string) error
-}) *AlertManagerAdapter {
+) *AlertManagerAdapter {
 	return &AlertManagerAdapter{
 		manager: manager,
 	}
-}
 
 // CheckThreshold checks if a value exceeds a threshold
+}
 func (a *AlertManagerAdapter) CheckThreshold(name string, value interface{}, tags map[string]string) error {
 	return a.manager.CheckThreshold(name, value, tags)
-}

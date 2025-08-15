@@ -1,45 +1,81 @@
-// Package interfaces provides interfaces for template management components
 package interfaces
 
 import (
-	"context"
-
-	"github.com/perplext/LLMrecon/src/template/format"
+	"io"
 )
 
-// TemplateLoaderExtended defines extended interface for loading templates from various sources
-type TemplateLoaderExtended interface {
-	TemplateLoader
-	// LoadTemplate loads a template from a source
-	LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error)
-	
-	// LoadTemplateWithTimeout loads a template with a timeout
-	LoadTemplateWithTimeout(ctx context.Context, source string, sourceType string, timeout time.Duration) (*format.Template, error)
-	
-	// LoadTemplates loads multiple templates from a source
-	LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error)
-	
-	// LoadTemplatesWithTimeout loads multiple templates with a timeout
-	LoadTemplatesWithTimeout(ctx context.Context, source string, sourceType string, timeout time.Duration) ([]*format.Template, error)
-	
-	// ClearCache clears the template cache
-	ClearCache()
-}
-
-// TemplateSource represents the source type for templates
+// TemplateSource represents a source for templates
 type TemplateSource string
 
 const (
-	// FileSource indicates the template is from a file
-	FileSource TemplateSource = "file"
-	// DirectorySource indicates the template is from a directory
-	DirectorySource TemplateSource = "directory"
-	// GitHubSource indicates the template is from GitHub
-	GitHubSource TemplateSource = "github"
-	// GitLabSource indicates the template is from GitLab
-	GitLabSource TemplateSource = "gitlab"
-	// HTTPSource indicates the template is from HTTP
-	HTTPSource TemplateSource = "http"
-	// DatabaseSource indicates the template is from a database
-	DatabaseSource TemplateSource = "database"
+	// SourceFile indicates the template is from a file
+	SourceFile TemplateSource = "file"
+	// SourceURL indicates the template is from a URL
+	SourceURL TemplateSource = "url"
+	// SourceBytes indicates the template is from bytes
+	SourceBytes TemplateSource = "bytes"
+	// SourceReader indicates the template is from a reader
+	SourceReader TemplateSource = "reader"
 )
+
+// LoaderOptions represents options for template loading
+type LoaderOptions struct {
+	// Source is the source type
+	Source TemplateSource
+	// ValidateOnLoad indicates if validation should occur on load
+	ValidateOnLoad bool
+	// CacheEnabled indicates if caching is enabled
+	CacheEnabled bool
+}
+
+// TemplateLoaderExt extends the basic loader interface
+type TemplateLoaderExt interface {
+	TemplateLoader
+	
+	// LoadWithOptions loads a template with options
+	LoadWithOptions(source interface{}, options LoaderOptions) (Template, error)
+	
+	// LoadMultiple loads multiple templates
+	LoadMultiple(sources []interface{}) ([]Template, error)
+	
+	// ValidateSource validates a template source
+	ValidateSource(source interface{}) error
+}
+
+// DefaultLoader provides a default template loader implementation
+type DefaultLoader struct {
+	validator TemplateValidator
+	cache     TemplateCache
+}
+
+// NewDefaultLoader creates a new default loader
+func NewDefaultLoader(validator TemplateValidator, cache TemplateCache) *DefaultLoader {
+	return &DefaultLoader{
+		validator: validator,
+		cache:     cache,
+	}
+}
+
+// LoadFromFile loads a template from a file
+func (l *DefaultLoader) LoadFromFile(path string) (Template, error) {
+	// Implementation would go here
+	return nil, nil
+}
+
+// LoadFromReader loads a template from a reader
+func (l *DefaultLoader) LoadFromReader(reader io.Reader) (Template, error) {
+	// Implementation would go here
+	return nil, nil
+}
+
+// LoadFromBytes loads a template from bytes
+func (l *DefaultLoader) LoadFromBytes(data []byte) (Template, error) {
+	// Implementation would go here
+	return nil, nil
+}
+
+// LoadFromURL loads a template from a URL
+func (l *DefaultLoader) LoadFromURL(url string) (Template, error) {
+	// Implementation would go here
+	return nil, nil
+}

@@ -28,7 +28,6 @@ func NewSQLIncidentStore(db *sql.DB) (adapter.IncidentStore, error) {
 	}
 
 	return store, nil
-}
 
 // initSchema initializes the database schema
 func (s *SQLIncidentStore) initSchema() error {
@@ -74,7 +73,6 @@ func (s *SQLIncidentStore) initSchema() error {
 	}
 
 	return nil
-}
 
 // CreateIncident creates a new security incident
 func (s *SQLIncidentStore) CreateIncident(ctx context.Context, incident *adapter.IncidentEvent) error {
@@ -128,7 +126,6 @@ func (s *SQLIncidentStore) CreateIncident(ctx context.Context, incident *adapter
 	}
 
 	return nil
-}
 
 // GetIncidentByID retrieves a security incident by ID
 func (s *SQLIncidentStore) GetIncidentByID(ctx context.Context, id string) (*adapter.IncidentEvent, error) {
@@ -141,7 +138,7 @@ func (s *SQLIncidentStore) GetIncidentByID(ctx context.Context, id string) (*ada
 
 	row := s.db.QueryRowContext(ctx, query, id)
 	return s.scanIncident(row)
-}
+	
 
 // UpdateIncident updates an existing security incident
 func (s *SQLIncidentStore) UpdateIncident(ctx context.Context, incident *adapter.IncidentEvent) error {
@@ -195,7 +192,6 @@ func (s *SQLIncidentStore) UpdateIncident(ctx context.Context, incident *adapter
 	}
 
 	return nil
-}
 
 // DeleteIncident deletes a security incident
 func (s *SQLIncidentStore) DeleteIncident(ctx context.Context, id string) error {
@@ -215,7 +211,6 @@ func (s *SQLIncidentStore) DeleteIncident(ctx context.Context, id string) error 
 	}
 
 	return nil
-}
 
 // ListIncidents lists security incidents with optional filtering
 func (s *SQLIncidentStore) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*adapter.IncidentEvent, int, error) {
@@ -269,12 +264,10 @@ func (s *SQLIncidentStore) ListIncidents(ctx context.Context, filter map[string]
 
 	// Add order by
 	query += " ORDER BY created_at DESC"
-
 	// Add limit and offset
 	if limit > 0 {
 		query += " LIMIT ?"
 		args = append(args, limit)
-
 		if offset > 0 {
 			query += " OFFSET ?"
 			args = append(args, offset)
@@ -286,7 +279,7 @@ func (s *SQLIncidentStore) ListIncidents(ctx context.Context, filter map[string]
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to query incidents: %w", err)
 	}
-	defer rows.Close()
+	defer func() { if err := rows.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Scan results
 	var incidents []*adapter.IncidentEvent
@@ -319,7 +312,6 @@ func (s *SQLIncidentStore) ListIncidents(ctx context.Context, filter map[string]
 	}
 
 	return incidents, count, nil
-}
 
 // scanIncident scans a security incident from a database row
 func (s *SQLIncidentStore) scanIncident(row *sql.Row) (*adapter.IncidentEvent, error) {
@@ -366,7 +358,6 @@ func (s *SQLIncidentStore) scanIncident(row *sql.Row) (*adapter.IncidentEvent, e
 	}
 
 	return &incident, nil
-}
 
 // scanIncidentFromRows scans a security incident from database rows
 func (s *SQLIncidentStore) scanIncidentFromRows(rows *sql.Rows) (*adapter.IncidentEvent, error) {
@@ -410,9 +401,16 @@ func (s *SQLIncidentStore) scanIncidentFromRows(rows *sql.Rows) (*adapter.Incide
 	}
 
 	return &incident, nil
-}
 
 // Close closes the SQL connection
 func (s *SQLIncidentStore) Close() error {
 	return s.db.Close()
+}
+}
+}
+}
+}
+}
+}
+}
 }

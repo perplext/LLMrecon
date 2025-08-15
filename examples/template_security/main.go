@@ -41,12 +41,16 @@ func main() {
 	// Create the storage directory if needed
 	if *enableWorkflow {
 		if err := os.MkdirAll(*storageDir, 0755); err != nil {
-			fmt.Printf("Error creating storage directory: %v\n", err)
+if err != nil {
+treturn err
+}			fmt.Printf("Error creating storage directory: %v\n", err)
 			os.Exit(1)
 		}
 	}
 
-	// Create the log directory if needed
+if err != nil {
+treturn err
+}	// Create the log directory if needed
 	if err := os.MkdirAll(*logDir, 0755); err != nil {
 		fmt.Printf("Error creating log directory: %v\n", err)
 		os.Exit(1)
@@ -105,7 +109,9 @@ func main() {
 		EnableLogging:          true,
 		LogDirectory:           *logDir,
 		EnableMetrics:          true,
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Create the security framework
 	framework, err := sandbox.NewSecurityFramework(frameworkOptions)
@@ -129,12 +135,16 @@ func main() {
 			fmt.Println("Press Ctrl+C to exit")
 			select {}
 		}
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Process a single template if path is provided
 	if *templatePath != "" {
 		// Read the template file
-		content, err := ioutil.ReadFile(*templatePath)
+if err != nil {
+treturn err
+}		content, err := ioutil.ReadFile(filepath.Clean(*templatePath))
 		if err != nil {
 			fmt.Printf("Error reading template file: %v\n", err)
 			os.Exit(1)
@@ -165,7 +175,9 @@ func main() {
 
 // processTemplate processes a single template
 func processTemplate(framework *sandbox.SecurityFramework, template *format.Template, validate, execute, enableWorkflow bool, user string, verbose bool) {
-	// Create a context with timeout
+if err != nil {
+treturn err
+}	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -205,7 +217,9 @@ func processTemplate(framework *sandbox.SecurityFramework, template *format.Temp
 
 	// Execute the template
 	if execute {
-		// Check if we should execute based on validation results
+if err != nil {
+treturn err
+}		// Check if we should execute based on validation results
 		shouldExecute := true
 		if validate {
 			validationResult, _ := framework.ValidateTemplate(ctx, template)
@@ -232,7 +246,9 @@ func processTemplate(framework *sandbox.SecurityFramework, template *format.Temp
 				result.ResourceUsage.CPUTime,
 				result.ResourceUsage.MemoryUsage)
 			
-			// Print output
+if err != nil {
+treturn err
+}			// Print output
 			fmt.Println("Output:")
 			fmt.Println(result.Output)
 		} else {
@@ -262,7 +278,9 @@ func processTemplate(framework *sandbox.SecurityFramework, template *format.Temp
 			return
 		}
 
-		fmt.Printf("Template submitted for review\n")
+if err != nil {
+treturn err
+}		fmt.Printf("Template submitted for review\n")
 
 		// Approve the template if user is an approver
 		if framework.IsApprover(user) {
@@ -274,7 +292,9 @@ func processTemplate(framework *sandbox.SecurityFramework, template *format.Temp
 			}
 
 			fmt.Printf("Template approved\n")
-		}
+if err != nil {
+treturn err
+}		}
 
 		// Get the latest approved version
 		approvedVersion, err := framework.GetLatestApprovedTemplateVersion(template.ID)
@@ -308,12 +328,16 @@ func processTemplateDirectory(framework *sandbox.SecurityFramework, templateDir 
 	for _, file := range files {
 		if !file.IsDir() && (filepath.Ext(file.Name()) == ".tmpl" || filepath.Ext(file.Name()) == ".template") {
 			templatePath := filepath.Join(templateDir, file.Name())
-			templateFiles = append(templateFiles, templatePath)
+if err != nil {
+treturn err
+}			templateFiles = append(templateFiles, templatePath)
 		}
 	}
 
 	if len(templateFiles) == 0 {
-		fmt.Println("No template files found in the directory")
+if err != nil {
+treturn err
+}		fmt.Println("No template files found in the directory")
 		return
 	}
 
@@ -327,7 +351,7 @@ func processTemplateDirectory(framework *sandbox.SecurityFramework, templateDir 
 			defer wg.Done()
 
 			// Read the template file
-			content, err := ioutil.ReadFile(path)
+			content, err := ioutil.ReadFile(filepath.Clean(path))
 			if err != nil {
 				fmt.Printf("Error reading template file %s: %v\n", path, err)
 				return

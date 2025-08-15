@@ -14,7 +14,6 @@ type ContextBoundaryEnforcer struct {
 	boundaryConfig        *ContextBoundaryConfig
 	sanitizationPatterns  map[int][]*regexp.Regexp
 	normalizationPatterns []*regexp.Regexp
-}
 
 // NewContextBoundaryEnforcer creates a new context boundary enforcer
 func NewContextBoundaryEnforcer(config *ProtectionConfig) *ContextBoundaryEnforcer {
@@ -74,7 +73,6 @@ func NewContextBoundaryEnforcer(config *ProtectionConfig) *ContextBoundaryEnforc
 		sanitizationPatterns:  sanitizationPatterns,
 		normalizationPatterns: normalizationPatterns,
 	}
-}
 
 // EnforceBoundaries enforces context boundaries on a prompt
 func (e *ContextBoundaryEnforcer) EnforceBoundaries(ctx context.Context, prompt string) (string, *ProtectionResult, error) {
@@ -152,7 +150,6 @@ func (e *ContextBoundaryEnforcer) EnforceBoundaries(ctx context.Context, prompt 
 
 	result.ProcessingTime = time.Since(startTime)
 	return result.ProtectedPrompt, result, nil
-}
 
 // normalizePrompt normalizes a prompt by removing or replacing problematic characters
 func (e *ContextBoundaryEnforcer) normalizePrompt(prompt string) (string, []*Detection) {
@@ -250,7 +247,6 @@ func (e *ContextBoundaryEnforcer) normalizePrompt(prompt string) (string, []*Det
 	}
 	
 	return normalizedPrompt, detections
-}
 
 // sanitizePrompt sanitizes a prompt by removing or replacing potential injection patterns
 func (e *ContextBoundaryEnforcer) sanitizePrompt(prompt string) (string, []*Detection) {
@@ -309,14 +305,12 @@ func (e *ContextBoundaryEnforcer) sanitizePrompt(prompt string) (string, []*Dete
 	}
 	
 	return sanitizedPrompt, detections
-}
 
 // getContext extracts context around a match
 func getContext(text string, start, end int) string {
 	contextStart := maxInt(0, start-20)
 	contextEnd := minInt(len(text), end+20)
 	return text[contextStart:contextEnd]
-}
 
 // Helper function to get the minimum of two integers
 func minInt(a, b int) int {
@@ -324,12 +318,9 @@ func minInt(a, b int) int {
 		return a
 	}
 	return b
-}
 
 // Helper function to get the maximum of two integers
 func maxInt(a, b int) int {
 	if a < b {
 		return b
 	}
-	return a
-}

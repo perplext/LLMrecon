@@ -31,7 +31,6 @@ type TemplateManifest struct {
 	LastUpdated   string                  `json:"last_updated"`
 	Templates     map[string]TemplateEntry `json:"templates"`
 	Categories    map[string]CategoryInfo  `json:"categories"`
-}
 
 // NewTemplateManifest creates a new template manifest
 func NewTemplateManifest() *TemplateManifest {
@@ -41,7 +40,6 @@ func NewTemplateManifest() *TemplateManifest {
 		Templates:     make(map[string]TemplateEntry),
 		Categories:    make(map[string]CategoryInfo),
 	}
-}
 
 // ModuleEntry represents an entry in the module manifest
 type ModuleEntry struct {
@@ -55,7 +53,6 @@ type ModuleEntry struct {
 	Path        string   `json:"path"`
 	AddedAt     string   `json:"added_at,omitempty"`
 	UpdatedAt   string   `json:"updated_at,omitempty"`
-}
 
 // TypeInfo represents information about a module type
 type TypeInfo struct {
@@ -70,7 +67,6 @@ type ModuleManifest struct {
 	LastUpdated   string                 `json:"last_updated"`
 	Modules       map[string]ModuleEntry `json:"modules"`
 	Types         map[string]TypeInfo    `json:"types"`
-}
 
 // NewModuleManifest creates a new module manifest
 func NewModuleManifest() *ModuleManifest {
@@ -80,4 +76,3 @@ func NewModuleManifest() *ModuleManifest {
 		Modules:       make(map[string]ModuleEntry),
 		Types:         make(map[string]TypeInfo),
 	}
-}

@@ -27,7 +27,6 @@ type SecurityFramework struct {
 	metrics *MetricsCollector
 	// mutex is used for thread safety
 	mutex sync.RWMutex
-}
 
 // FrameworkOptions contains options for the security framework
 type FrameworkOptions struct {
@@ -47,7 +46,6 @@ type FrameworkOptions struct {
 	LogDirectory string
 	// EnableMetrics enables metrics collection
 	EnableMetrics bool
-}
 
 // DefaultFrameworkOptions returns the default framework options
 func DefaultFrameworkOptions() *FrameworkOptions {
@@ -61,7 +59,6 @@ func DefaultFrameworkOptions() *FrameworkOptions {
 		LogDirectory:           "",
 		EnableMetrics:          true,
 	}
-}
 
 // NewSecurityFramework creates a new security framework
 func NewSecurityFramework(options *FrameworkOptions) (*SecurityFramework, error) {
@@ -98,7 +95,7 @@ func NewSecurityFramework(options *FrameworkOptions) (*SecurityFramework, error)
 	
 	// Create the log directory if needed
 	if options.EnableLogging && options.LogDirectory != "" {
-		if err := os.MkdirAll(options.LogDirectory, 0755); err != nil {
+		if err := os.MkdirAll(options.LogDirectory, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create log directory: %w", err)
 		}
 	}
@@ -118,7 +115,6 @@ func NewSecurityFramework(options *FrameworkOptions) (*SecurityFramework, error)
 		metrics:   metrics,
 		mutex:     sync.RWMutex{},
 	}, nil
-}
 
 // ValidateTemplate validates a template
 func (f *SecurityFramework) ValidateTemplate(ctx context.Context, template *format.Template) (*ValidationResult, error) {
@@ -156,12 +152,11 @@ func (f *SecurityFramework) ValidateTemplate(ctx context.Context, template *form
 	}
 	
 	return result, nil
-}
 
 // ValidateTemplateFile validates a template file
 func (f *SecurityFramework) ValidateTemplateFile(ctx context.Context, templatePath string) (*ValidationResult, error) {
 	// Read the template file
-	content, err := ioutil.ReadFile(templatePath)
+	content, err := ioutil.ReadFile(filepath.Clean(templatePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read template file: %w", err)
 	}
@@ -177,7 +172,6 @@ func (f *SecurityFramework) ValidateTemplateFile(ctx context.Context, templatePa
 	
 	// Validate the template
 	return f.ValidateTemplate(ctx, template)
-}
 
 // ExecuteTemplate executes a template in the sandbox
 func (f *SecurityFramework) ExecuteTemplate(ctx context.Context, template *format.Template) (*ExecutionResult, error) {
@@ -201,12 +195,11 @@ func (f *SecurityFramework) ExecuteTemplate(ctx context.Context, template *forma
 	}
 	
 	return result, nil
-}
 
 // ExecuteTemplateFile executes a template file in the sandbox
 func (f *SecurityFramework) ExecuteTemplateFile(ctx context.Context, templatePath string) (*ExecutionResult, error) {
 	// Read the template file
-	content, err := ioutil.ReadFile(templatePath)
+	content, err := ioutil.ReadFile(filepath.Clean(templatePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read template file: %w", err)
 	}
@@ -222,7 +215,6 @@ func (f *SecurityFramework) ExecuteTemplateFile(ctx context.Context, templatePat
 	
 	// Execute the template
 	return f.ExecuteTemplate(ctx, template)
-}
 
 // CreateTemplateVersion creates a new version of a template
 func (f *SecurityFramework) CreateTemplateVersion(ctx context.Context, template *format.Template, user string) (*TemplateVersion, error) {
@@ -241,7 +233,6 @@ func (f *SecurityFramework) CreateTemplateVersion(ctx context.Context, template 
 	}
 	
 	return version, nil
-}
 
 // GetTemplateVersion gets a template version
 func (f *SecurityFramework) GetTemplateVersion(templateID, versionID string) (*TemplateVersion, error) {
@@ -249,7 +240,6 @@ func (f *SecurityFramework) GetTemplateVersion(templateID, versionID string) (*T
 	defer f.mutex.RUnlock()
 	
 	return f.workflow.GetVersion(templateID, versionID)
-}
 
 // GetLatestTemplateVersion gets the latest version of a template
 func (f *SecurityFramework) GetLatestTemplateVersion(templateID string) (*TemplateVersion, error) {
@@ -257,7 +247,6 @@ func (f *SecurityFramework) GetLatestTemplateVersion(templateID string) (*Templa
 	defer f.mutex.RUnlock()
 	
 	return f.workflow.GetLatestVersion(templateID)
-}
 
 // GetLatestApprovedTemplateVersion gets the latest approved version of a template
 func (f *SecurityFramework) GetLatestApprovedTemplateVersion(templateID string) (*TemplateVersion, error) {
@@ -265,7 +254,6 @@ func (f *SecurityFramework) GetLatestApprovedTemplateVersion(templateID string) 
 	defer f.mutex.RUnlock()
 	
 	return f.workflow.GetLatestApprovedVersion(templateID)
-}
 
 // SubmitTemplateForReview submits a template version for review
 func (f *SecurityFramework) SubmitTemplateForReview(templateID, versionID, user string) error {
@@ -286,7 +274,6 @@ func (f *SecurityFramework) SubmitTemplateForReview(templateID, versionID, user 
 	}
 	
 	return nil
-}
 
 // ApproveTemplate approves a template version
 func (f *SecurityFramework) ApproveTemplate(templateID, versionID, user string) error {
@@ -307,7 +294,6 @@ func (f *SecurityFramework) ApproveTemplate(templateID, versionID, user string) 
 	}
 	
 	return nil
-}
 
 // RejectTemplate rejects a template version
 func (f *SecurityFramework) RejectTemplate(templateID, versionID, user, reason string) error {
@@ -328,7 +314,6 @@ func (f *SecurityFramework) RejectTemplate(templateID, versionID, user, reason s
 	}
 	
 	return nil
-}
 
 // AddApprover adds an approver to the workflow
 func (f *SecurityFramework) AddApprover(approver string) {
@@ -336,7 +321,6 @@ func (f *SecurityFramework) AddApprover(approver string) {
 	defer f.mutex.Unlock()
 	
 	f.workflow.AddApprover(approver)
-}
 
 // IsApprover checks if a user is an approver
 func (f *SecurityFramework) IsApprover(user string) bool {
@@ -344,7 +328,6 @@ func (f *SecurityFramework) IsApprover(user string) bool {
 	defer f.mutex.RUnlock()
 	
 	return f.workflow.IsApprover(user)
-}
 
 // logValidationResult logs a validation result
 func (f *SecurityFramework) logValidationResult(result *ValidationResult) {
@@ -370,7 +353,6 @@ func (f *SecurityFramework) logValidationResult(result *ValidationResult) {
 	// Write to log file
 	logFile := filepath.Join(f.options.LogDirectory, "validation.log")
 	f.appendToLogFile(logFile, logEntry)
-}
 
 // logExecutionResult logs an execution result
 func (f *SecurityFramework) logExecutionResult(result *ExecutionResult, template *format.Template) {
@@ -398,20 +380,18 @@ func (f *SecurityFramework) logExecutionResult(result *ExecutionResult, template
 	// Write to log file
 	logFile := filepath.Join(f.options.LogDirectory, "execution.log")
 	f.appendToLogFile(logFile, logEntry)
-}
 
 // appendToLogFile appends a log entry to a file
 func (f *SecurityFramework) appendToLogFile(logFile, logEntry string) {
 	// Open the log file in append mode
-	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Write the log entry
 	file.WriteString(logEntry)
-}
 
 // GetMetrics returns the metrics from the metrics collector
 func (f *SecurityFramework) GetMetrics() map[string]interface{} {
@@ -429,7 +409,6 @@ func (f *SecurityFramework) GetMetrics() map[string]interface{} {
 		"execution":  f.metrics.GetExecutionMetrics(),
 		"workflow":   f.metrics.GetWorkflowMetrics(),
 	}
-}
 
 // GetAlerts returns the alerts from the metrics collector
 func (f *SecurityFramework) GetAlerts() []Alert {
@@ -441,7 +420,6 @@ func (f *SecurityFramework) GetAlerts() []Alert {
 	}
 	
 	return f.metrics.GetAlerts()
-}
 
 // GetAlertsByLevel returns alerts by level from the metrics collector
 func (f *SecurityFramework) GetAlertsByLevel(level AlertLevel) []Alert {
@@ -453,7 +431,6 @@ func (f *SecurityFramework) GetAlertsByLevel(level AlertLevel) []Alert {
 	}
 	
 	return f.metrics.GetAlertsByLevel(level)
-}
 
 // ClearAlerts clears all alerts from the metrics collector
 func (f *SecurityFramework) ClearAlerts() {
@@ -465,7 +442,6 @@ func (f *SecurityFramework) ClearAlerts() {
 	}
 	
 	f.metrics.ClearAlerts()
-}
 
 // ResetMetrics resets all metrics in the metrics collector
 func (f *SecurityFramework) ResetMetrics() {
@@ -477,7 +453,6 @@ func (f *SecurityFramework) ResetMetrics() {
 	}
 	
 	f.metrics.ResetMetrics()
-}
 
 // ValidationResult represents the result of template validation
 type ValidationResult struct {
@@ -491,7 +466,6 @@ type ValidationResult struct {
 	ValidationTime time.Duration
 	// Timestamp is the time of validation
 	Timestamp time.Time
-}
 
 // HasCriticalIssues checks if the validation result has critical issues
 func (r *ValidationResult) HasCriticalIssues() bool {
@@ -501,7 +475,6 @@ func (r *ValidationResult) HasCriticalIssues() bool {
 		}
 	}
 	return false
-}
 
 // HasHighIssues checks if the validation result has high severity issues
 func (r *ValidationResult) HasHighIssues() bool {
@@ -511,7 +484,6 @@ func (r *ValidationResult) HasHighIssues() bool {
 		}
 	}
 	return false
-}
 
 // GetIssuesBySeverity gets issues by severity
 func (r *ValidationResult) GetIssuesBySeverity(severity common.SeverityLevel) []*security.SecurityIssue {
@@ -521,5 +493,3 @@ func (r *ValidationResult) GetIssuesBySeverity(severity common.SeverityLevel) []
 			issues = append(issues, issue)
 		}
 	}
-	return issues
-}

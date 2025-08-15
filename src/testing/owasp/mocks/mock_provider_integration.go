@@ -18,7 +18,6 @@ type TestRunnerWithMockProviders struct {
 	Fixtures map[types.VulnerabilityType][]fixtures.TestFixture
 	// Default provider type to use
 	DefaultProviderType core.ProviderType
-}
 
 // NewTestRunnerWithMockProviders creates a new test runner with mock providers
 func NewTestRunnerWithMockProviders() *TestRunnerWithMockProviders {
@@ -27,12 +26,10 @@ func NewTestRunnerWithMockProviders() *TestRunnerWithMockProviders {
 		Fixtures:            make(map[types.VulnerabilityType][]fixtures.TestFixture),
 		DefaultProviderType: core.OpenAIProvider,
 	}
-}
 
 // RegisterFixtures registers test fixtures for a vulnerability type
 func (r *TestRunnerWithMockProviders) RegisterFixtures(vulnerabilityType types.VulnerabilityType, fixturesList []fixtures.TestFixture) {
 	r.Fixtures[vulnerabilityType] = fixturesList
-}
 
 // RegisterAllFixtures registers all available test fixtures
 func (r *TestRunnerWithMockProviders) RegisterAllFixtures() {
@@ -47,7 +44,6 @@ func (r *TestRunnerWithMockProviders) RegisterAllFixtures() {
 	r.RegisterFixtures(types.ExcessiveAgencyVulnerability, fixtures.GetExcessiveAgencyFixtures())
 	r.RegisterFixtures(types.OverrelianceVulnerability, fixtures.GetOverrelianceFixtures())
 	r.RegisterFixtures(types.ModelTheftVulnerability, fixtures.GetModelTheftFixtures())
-}
 
 // SetupMockProvidersForVulnerability configures mock providers for a specific vulnerability type
 func (r *TestRunnerWithMockProviders) SetupMockProvidersForVulnerability(vulnerabilityType types.VulnerabilityType) {
@@ -79,7 +75,6 @@ func (r *TestRunnerWithMockProviders) SetupMockProvidersForVulnerability(vulnera
 			provider.SetVulnerableResponses(responses)
 		}
 	}
-}
 
 // createVulnerabilityBehaviorFromFixtures creates a vulnerability behavior based on fixtures
 func (r *TestRunnerWithMockProviders) createVulnerabilityBehaviorFromFixtures(
@@ -123,7 +118,6 @@ func (r *TestRunnerWithMockProviders) createVulnerabilityBehaviorFromFixtures(
 			"fixture_count":      len(fixturesList),
 		},
 	}
-}
 
 // RunTest runs a test for a specific fixture
 func (r *TestRunnerWithMockProviders) RunTest(
@@ -160,7 +154,6 @@ func (r *TestRunnerWithMockProviders) RunTest(
 	}
 
 	return result, nil
-}
 
 // runAttackVector runs a test for a specific attack vector
 func (r *TestRunnerWithMockProviders) runAttackVector(
@@ -208,7 +201,6 @@ func (r *TestRunnerWithMockProviders) runAttackVector(
 		Vulnerable: vulnerable,
 		Response:   response,
 	}, nil
-}
 
 // RunAllTests runs all tests for all registered fixtures
 func (r *TestRunnerWithMockProviders) RunAllTests(ctx context.Context) (*TestSuiteResult, error) {
@@ -241,7 +233,6 @@ func (r *TestRunnerWithMockProviders) RunAllTests(ctx context.Context) (*TestSui
 	}
 
 	return result, nil
-}
 
 // TestResult represents the result of running a test
 type TestResult struct {
@@ -258,7 +249,6 @@ type AttackResult struct {
 	Vulnerable bool
 	Response   *core.ChatCompletionResponse
 	Error      string
-}
 
 // TestSuiteResult represents the result of running all tests
 type TestSuiteResult struct {
@@ -276,7 +266,6 @@ func (r *TestSuiteResult) GetVulnerableCount() int {
 		}
 	}
 	return count
-}
 
 // GetTotalCount returns the total number of tests
 func (r *TestSuiteResult) GetTotalCount() int {
@@ -285,12 +274,10 @@ func (r *TestSuiteResult) GetTotalCount() int {
 		count += len(results)
 	}
 	return count
-}
 
 // GetVulnerabilityTypeResults returns the results for a specific vulnerability type
 func (r *TestSuiteResult) GetVulnerabilityTypeResults(vulnerabilityType types.VulnerabilityType) []*TestResult {
 	return r.Results[vulnerabilityType]
-}
 
 // GetProviderResults returns the results for a specific provider type
 func (r *TestSuiteResult) GetProviderResults(providerType core.ProviderType) []*TestResult {
@@ -302,5 +289,13 @@ func (r *TestSuiteResult) GetProviderResults(providerType core.ProviderType) []*
 			}
 		}
 	}
-	return results
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

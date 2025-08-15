@@ -64,7 +64,6 @@ type ProgressTracker struct {
 	cancel          context.CancelFunc
 	done            chan struct{}
 	metadata        map[string]interface{}
-}
 
 // NewProgressTracker creates a new progress tracker
 func NewProgressTracker(ctx context.Context) *ProgressTracker {
@@ -90,14 +89,12 @@ func NewProgressTracker(ctx context.Context) *ProgressTracker {
 	go p.backgroundUpdater()
 	
 	return p
-}
 
 // AddHandler adds a progress handler
 func (p *ProgressTracker) AddHandler(handler ProgressHandler) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.handlers = append(p.handlers, handler)
-}
 
 // SetStage updates the current stage
 func (p *ProgressTracker) SetStage(stage ProgressStage, operation string) {
@@ -107,7 +104,6 @@ func (p *ProgressTracker) SetStage(stage ProgressStage, operation string) {
 	p.mu.Unlock()
 	
 	p.sendUpdate()
-}
 
 // SetTotal sets the total bytes and items
 func (p *ProgressTracker) SetTotal(bytes int64, items int) {
@@ -117,31 +113,26 @@ func (p *ProgressTracker) SetTotal(bytes int64, items int) {
 	p.mu.Unlock()
 	
 	p.sendUpdate()
-}
 
 // UpdateBytes updates bytes processed
 func (p *ProgressTracker) UpdateBytes(bytes int64) {
 	atomic.AddInt64(&p.bytesProcessed, bytes)
-}
 
 // UpdateItems updates items processed
 func (p *ProgressTracker) UpdateItems(count int) {
 	atomic.AddInt32(&p.itemsProcessed, int32(count))
-}
 
 // SetCurrentFile sets the current file being processed
 func (p *ProgressTracker) SetCurrentFile(file string) {
 	p.mu.Lock()
 	p.currentFile = file
 	p.mu.Unlock()
-}
 
 // SetMetadata sets custom metadata
 func (p *ProgressTracker) SetMetadata(key string, value interface{}) {
 	p.mu.Lock()
 	p.metadata[key] = value
 	p.mu.Unlock()
-}
 
 // Fail marks the operation as failed
 func (p *ProgressTracker) Fail(err error) {
@@ -154,7 +145,6 @@ func (p *ProgressTracker) Fail(err error) {
 	p.notifyHandlers(event)
 	
 	p.Close()
-}
 
 // Complete marks the operation as completed
 func (p *ProgressTracker) Complete() {
@@ -165,13 +155,11 @@ func (p *ProgressTracker) Complete() {
 	
 	p.sendUpdate()
 	p.Close()
-}
 
 // Close stops the progress tracker
 func (p *ProgressTracker) Close() {
 	p.cancel()
 	<-p.done
-}
 
 // backgroundUpdater sends periodic updates
 func (p *ProgressTracker) backgroundUpdater() {
@@ -188,7 +176,6 @@ func (p *ProgressTracker) backgroundUpdater() {
 			p.sendUpdate()
 		}
 	}
-}
 
 // sendUpdate sends a progress update
 func (p *ProgressTracker) sendUpdate() {
@@ -202,7 +189,6 @@ func (p *ProgressTracker) sendUpdate() {
 	
 	event := p.createEvent()
 	p.notifyHandlers(event)
-}
 
 // createEvent creates a progress event
 func (p *ProgressTracker) createEvent() ProgressEvent {
@@ -255,7 +241,6 @@ func (p *ProgressTracker) createEvent() ProgressEvent {
 		CurrentFile:    p.currentFile,
 		Metadata:       metadata,
 	}
-}
 
 // notifyHandlers notifies all registered handlers
 func (p *ProgressTracker) notifyHandlers(event ProgressEvent) {
@@ -267,7 +252,6 @@ func (p *ProgressTracker) notifyHandlers(event ProgressEvent) {
 	for _, handler := range handlers {
 		handler(event)
 	}
-}
 
 // ProgressReader wraps a reader to track reading progress
 type ProgressReader struct {
@@ -282,7 +266,6 @@ func NewProgressReader(reader io.Reader, tracker *ProgressTracker) *ProgressRead
 		reader:  reader,
 		tracker: tracker,
 	}
-}
 
 // Read implements io.Reader
 func (pr *ProgressReader) Read(p []byte) (n int, err error) {
@@ -292,7 +275,6 @@ func (pr *ProgressReader) Read(p []byte) (n int, err error) {
 		pr.tracker.UpdateBytes(int64(n))
 	}
 	return
-}
 
 // ProgressWriter wraps a writer to track writing progress
 type ProgressWriter struct {
@@ -307,7 +289,6 @@ func NewProgressWriter(writer io.Writer, tracker *ProgressTracker) *ProgressWrit
 		writer:  writer,
 		tracker: tracker,
 	}
-}
 
 // Write implements io.Writer
 func (pw *ProgressWriter) Write(p []byte) (n int, err error) {
@@ -317,7 +298,6 @@ func (pw *ProgressWriter) Write(p []byte) (n int, err error) {
 		pw.tracker.UpdateBytes(int64(n))
 	}
 	return
-}
 
 // ConsoleProgressHandler creates a console progress handler
 func ConsoleProgressHandler() ProgressHandler {
@@ -353,7 +333,6 @@ func ConsoleProgressHandler() ProgressHandler {
 			}
 		}
 	}
-}
 
 // JSONProgressHandler creates a JSON progress handler
 func JSONProgressHandler(writer io.Writer) ProgressHandler {
@@ -382,7 +361,6 @@ func JSONProgressHandler(writer io.Writer) ProgressHandler {
 		
 		encoder.Encode(jsonEvent)
 	}
-}
 
 // Helper functions
 func formatBytes(bytes int64) string {
@@ -396,7 +374,6 @@ func formatBytes(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
-}
 
 func formatDuration(d time.Duration) string {
 	if d < 0 {
@@ -412,5 +389,23 @@ func formatDuration(d time.Duration) string {
 	if d < time.Hour {
 		return fmt.Sprintf("%dm %ds remaining", int(d.Minutes()), int(d.Seconds())%60)
 	}
-	return fmt.Sprintf("%dh %dm remaining", int(d.Hours()), int(d.Minutes())%60)
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

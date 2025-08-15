@@ -116,7 +116,6 @@ type UserPolicyConfig struct {
 	
 	// ResetInterval is the interval at which the user's tokens are reset
 	ResetInterval string `json:"reset_interval"`
-}
 
 // DefaultConfig returns the default rate limit configuration
 func DefaultConfig() *RateLimitConfig {
@@ -170,7 +169,6 @@ func DefaultConfig() *RateLimitConfig {
 	config.Advanced.MaxStatsEvents = 1000
 	
 	return config
-}
 
 // LoadConfig loads the rate limit configuration from a file
 func LoadConfig(filePath string) (*RateLimitConfig, error) {
@@ -181,7 +179,7 @@ func LoadConfig(filePath string) (*RateLimitConfig, error) {
 		
 		// Create parent directory if needed
 		dir := filepath.Dir(filePath)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create directory: %w", err)
 		}
 		
@@ -191,7 +189,7 @@ func LoadConfig(filePath string) (*RateLimitConfig, error) {
 			return nil, fmt.Errorf("failed to marshal default config: %w", err)
 		}
 		
-		if err := ioutil.WriteFile(filePath, data, 0644); err != nil {
+		if err := ioutil.WriteFile(filePath, data, 0600); err != nil {
 			return nil, fmt.Errorf("failed to write default config: %w", err)
 		}
 		
@@ -199,7 +197,7 @@ func LoadConfig(filePath string) (*RateLimitConfig, error) {
 	}
 	
 	// Read and parse the file
-	data, err := ioutil.ReadFile(filePath)
+	data, err := ioutil.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
@@ -210,7 +208,6 @@ func LoadConfig(filePath string) (*RateLimitConfig, error) {
 	}
 	
 	return &config, nil
-}
 
 // CreateLimiterFromConfig creates a rate limiter from the configuration
 func CreateLimiterFromConfig(config *RateLimitConfig) (interface{}, error) {
@@ -329,7 +326,6 @@ func CreateLimiterFromConfig(config *RateLimitConfig) (interface{}, error) {
 	}
 	
 	return limiter, nil
-}
 
 // ParseUserPolicyFromConfig parses a user policy from the configuration
 func ParseUserPolicyFromConfig(policyConfig UserPolicyConfig) (*UserRateLimitPolicy, error) {
@@ -347,4 +343,6 @@ func ParseUserPolicyFromConfig(policyConfig UserPolicyConfig) (*UserRateLimitPol
 		MaxTokens:     policyConfig.MaxTokens,
 		ResetInterval: resetInterval,
 	}, nil
+}
+}
 }

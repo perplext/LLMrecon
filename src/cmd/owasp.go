@@ -26,7 +26,6 @@ defined in the OWASP Top 10 for LLMs.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
-}
 
 // testCmd represents the test command
 var owaspTestCmd = &cobra.Command{
@@ -69,7 +68,6 @@ and generates a detailed report.`,
 		// Run the test
 		runOWASPTest(provider, model, format, output, useMock)
 	},
-}
 
 // vulnerabilityCmd represents the vulnerability command
 var owaspVulnerabilityCmd = &cobra.Command{
@@ -118,7 +116,6 @@ and generates a detailed report.`,
 		// Run the vulnerability test
 		runOWASPVulnerabilityTest(provider, model, vulnerability, format, output, useMock)
 	},
-}
 
 // mockCmd represents the mock command
 var owaspMockCmd = &cobra.Command{
@@ -130,7 +127,6 @@ for testing without using real LLM providers.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
-}
 
 // createMockCmd represents the create command for mock
 var owaspCreateMockCmd = &cobra.Command{
@@ -148,7 +144,6 @@ This command creates a new configuration file with customizable vulnerable respo
 		// Create mock configuration
 		createMockProviderConfig(output)
 	},
-}
 
 func init() {
 	rootCmd.AddCommand(owaspCmd)
@@ -174,7 +169,6 @@ func init() {
 
 	// Flags for the create-mock command
 	owaspCreateMockCmd.Flags().String("output", "mock-provider-config.json", "Output file path for the mock provider configuration")
-}
 
 // runOWASPTest runs a comprehensive OWASP compliance test
 func runOWASPTest(providerName string, modelName string, formatName string, outputPath string, useMock bool) {
@@ -255,7 +249,6 @@ func runOWASPTest(providerName string, modelName string, formatName string, outp
 	if totalTests > 0 {
 		fmt.Printf("Compliance score: %.2f%%\n", float64(passingTests)/float64(totalTests)*100)
 	}
-}
 
 // runOWASPVulnerabilityTest runs tests for a specific OWASP vulnerability
 func runOWASPVulnerabilityTest(providerName string, modelName string, vulnerabilityName string, formatName string, outputPath string, useMock bool) {
@@ -351,7 +344,6 @@ func runOWASPVulnerabilityTest(providerName string, modelName string, vulnerabil
 		complianceScore = float64(passingTests) / float64(totalTests) * 100
 	}
 	fmt.Printf("Compliance score: %.2f%%\n", complianceScore)
-}
 
 // createMockProviderConfig creates a mock provider configuration
 func createMockProviderConfig(outputPath string) {
@@ -360,7 +352,6 @@ func createMockProviderConfig(outputPath string) {
 
 	// TODO: Implement mock provider configuration creation
 	fmt.Println("Mock provider configuration created successfully")
-}
 
 // Helper function to create a provider
 func createProvider(providerName string) (core.Provider, error) {
@@ -376,7 +367,6 @@ func createProvider(providerName string) (core.Provider, error) {
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", providerName)
 	}
-}
 
 // Helper function to parse vulnerability type
 func parseVulnerabilityType(vulnerabilityName string) (types.VulnerabilityType, error) {
@@ -404,7 +394,6 @@ func parseVulnerabilityType(vulnerabilityName string) (types.VulnerabilityType, 
 	default:
 		return "", fmt.Errorf("unsupported vulnerability type: %s", vulnerabilityName)
 	}
-}
 
 // Helper function to parse report format
 func parseReportFormat(formatName string) (reporting.ReportFormat, error) {
@@ -428,7 +417,6 @@ func parseReportFormat(formatName string) (reporting.ReportFormat, error) {
 	default:
 		return "", fmt.Errorf("unsupported report format: %s", formatName)
 	}
-}
 
 // Helper function to get file extension for a report format
 func getFileExtension(format reporting.ReportFormat) string {
@@ -452,4 +440,3 @@ func getFileExtension(format reporting.ReportFormat) string {
 	default:
 		return "txt"
 	}
-}

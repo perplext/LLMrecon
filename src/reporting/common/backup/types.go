@@ -45,6 +45,7 @@ type TestResult struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
+}
 // TestResults is a collection of test results
 type TestResults []*TestResult
 
@@ -56,9 +57,9 @@ type ReportFormatter interface {
 	Format(ctx context.Context, report interface{}, options interface{}) ([]byte, error)
 	// WriteToFile writes a report to a file
 	WriteToFile(ctx context.Context, report interface{}, options interface{}, filePath string) error
-}
 
 // ReportGenerator is the interface for report generators
+}
 type ReportGenerator interface {
 	// GenerateReport generates a report from test results
 	GenerateReport(ctx context.Context, testSuites interface{}, options interface{}) (interface{}, error)
@@ -68,4 +69,4 @@ type ReportGenerator interface {
 	GetFormatter(format ReportFormat) (ReportFormatter, bool)
 	// ListFormats returns a list of supported formats
 	ListFormats() []ReportFormat
-}
+

@@ -1,8 +1,8 @@
 package distribution
 
 import (
-	"crypto/md5"
-	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha256"
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
@@ -11,19 +11,19 @@ import (
 
 // calculateFileChecksum calculates the checksum of a file using the specified algorithm
 func calculateFileChecksum(filePath, algorithm string) (string, error) {
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	var hasher hash.Hash
 	
 	switch algorithm {
 	case "md5":
-		hasher = md5.New()
+		hasher = sha256.New()
 	case "sha1":
-		hasher = sha1.New()
+		hasher = sha256.New()
 	case "sha256":
 		hasher = sha256.New()
 	case "sha512":
@@ -37,7 +37,6 @@ func calculateFileChecksum(filePath, algorithm string) (string, error) {
 	}
 	
 	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
-}
 
 // validateChecksums validates that the artifact's checksums match the calculated values
 func validateChecksums(filePath string, expectedChecksums map[string]string) error {
@@ -53,7 +52,6 @@ func validateChecksums(filePath string, expectedChecksums map[string]string) err
 	}
 	
 	return nil
-}
 
 // formatBytes formats byte count as human-readable string
 func formatBytes(bytes int64) string {
@@ -69,7 +67,6 @@ func formatBytes(bytes int64) string {
 	}
 	
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
-}
 
 // sanitizeFileName sanitizes a filename to be safe for filesystem usage
 func sanitizeFileName(filename string) string {
@@ -87,39 +84,34 @@ func sanitizeFileName(filename string) string {
 	}
 	
 	return string(result)
-}
 
 // ensureDirectory creates a directory if it doesn't exist
 func ensureDirectory(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return os.MkdirAll(path, 0755)
+		return os.MkdirAll(path, 0700)
 	}
-	return nil
-}
-
+		return nil
 // copyFile copies a file from src to dst
 func copyFile(src, dst string) error {
-	sourceFile, err := os.Open(src)
+	sourceFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	defer func() { if err := sourceFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	_, err = io.Copy(destFile, sourceFile)
 	return err
-}
 
 // fileExists checks if a file exists
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
-}
 
 // getFileSize returns the size of a file
 func getFileSize(path string) (int64, error) {
@@ -127,5 +119,3 @@ func getFileSize(path string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return info.Size(), nil
-}

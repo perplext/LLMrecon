@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -26,7 +26,6 @@ type CacheManagerOptions struct {
 	CompressionLevel int
 	// PruneInterval is the interval at which to prune the cache
 	PruneInterval time.Duration
-}
 
 // DefaultCacheManagerOptions returns default cache manager options
 func DefaultCacheManagerOptions() *CacheManagerOptions {
@@ -38,7 +37,6 @@ func DefaultCacheManagerOptions() *CacheManagerOptions {
 		CompressionLevel: 6,
 		PruneInterval:    10 * time.Minute,
 	}
-}
 
 // CacheManager manages caching for repository operations
 type CacheManager struct {
@@ -56,7 +54,6 @@ type CacheManager struct {
 	pruneTimer *time.Timer
 	// stats tracks cache statistics
 	stats *CacheStats
-}
 
 // CacheStats tracks statistics for the cache manager
 type CacheStats struct {
@@ -76,7 +73,6 @@ type CacheStats struct {
 	TotalLookups int64
 	// HitRatio is the overall hit ratio
 	HitRatio float64
-}
 
 // NewCacheManager creates a new cache manager
 func NewCacheManager(manager *Manager, options *CacheManagerOptions) *CacheManager {
@@ -102,7 +98,6 @@ func NewCacheManager(manager *Manager, options *CacheManagerOptions) *CacheManag
 	}
 
 	return cacheManager
-}
 
 // FindFile finds a file in all repositories with caching
 func (c *CacheManager) FindFile(ctx context.Context, path string) (Repository, error) {
@@ -166,7 +161,6 @@ func (c *CacheManager) FindFile(ctx context.Context, path string) (Repository, e
 	}
 	
 	return repo, err
-}
 
 // FindFiles finds files matching a pattern in all repositories with caching
 func (c *CacheManager) FindFiles(ctx context.Context, pattern string) (map[Repository][]FileInfo, error) {
@@ -238,7 +232,6 @@ func (c *CacheManager) FindFiles(ctx context.Context, pattern string) (map[Repos
 	}
 	
 	return result, err
-}
 
 // GetFile gets a file from any repository that has it with caching
 func (c *CacheManager) GetFile(ctx context.Context, path string) (io.ReadCloser, error) {
@@ -306,7 +299,6 @@ func (c *CacheManager) GetFile(ctx context.Context, path string) (io.ReadCloser,
 	
 	// Return file content as a ReadCloser
 	return ioutil.NopCloser(strings.NewReader(string(content))), nil
-}
 
 // GetFileFromRepo gets a file from a specific repository with caching
 func (c *CacheManager) GetFileFromRepo(ctx context.Context, repoName, path string) (io.ReadCloser, error) {
@@ -344,7 +336,6 @@ func (c *CacheManager) GetFileFromRepo(ctx context.Context, repoName, path strin
 		// Return file content as a ReadCloser
 		return ioutil.NopCloser(strings.NewReader(string(content))), nil
 	}
-
 	// Cache miss
 	c.stats.TotalMisses++
 	c.stats.FileMisses++
@@ -374,7 +365,6 @@ func (c *CacheManager) GetFileFromRepo(ctx context.Context, repoName, path strin
 	
 	// Return file content as a ReadCloser
 	return ioutil.NopCloser(strings.NewReader(string(content))), nil
-}
 
 // Clear clears all caches
 func (c *CacheManager) Clear() {
@@ -391,7 +381,6 @@ func (c *CacheManager) Clear() {
 
 	// Reset statistics
 	c.stats = &CacheStats{}
-}
 
 // ClearQueryCache clears the query cache
 func (c *CacheManager) ClearQueryCache() {
@@ -401,7 +390,6 @@ func (c *CacheManager) ClearQueryCache() {
 	if c.queryCache != nil {
 		c.queryCache.Clear()
 	}
-}
 
 // ClearFileCache clears the file cache
 func (c *CacheManager) ClearFileCache() {
@@ -411,7 +399,6 @@ func (c *CacheManager) ClearFileCache() {
 	if c.fileCache != nil {
 		c.fileCache.Clear()
 	}
-}
 
 // GetStats returns statistics about the cache
 func (c *CacheManager) GetStats() map[string]interface{} {
@@ -439,7 +426,6 @@ func (c *CacheManager) GetStats() map[string]interface{} {
 	}
 
 	return stats
-}
 
 // Prune removes old entries from all caches
 func (c *CacheManager) Prune() int {
@@ -457,7 +443,6 @@ func (c *CacheManager) Prune() int {
 	}
 
 	return count
-}
 
 // SetMaxSize sets the maximum size of the caches
 func (c *CacheManager) SetMaxSize(maxSize int) {
@@ -477,7 +462,6 @@ func (c *CacheManager) SetMaxSize(maxSize int) {
 	if c.fileCache != nil {
 		c.fileCache.SetMaxSize(maxSize)
 	}
-}
 
 // SetDefaultTTL sets the default TTL for cache entries
 func (c *CacheManager) SetDefaultTTL(ttl time.Duration) {
@@ -497,7 +481,6 @@ func (c *CacheManager) SetDefaultTTL(ttl time.Duration) {
 	if c.fileCache != nil {
 		c.fileCache.SetDefaultTTL(ttl)
 	}
-}
 
 // SetCompressionEnabled sets whether compression is enabled
 func (c *CacheManager) SetCompressionEnabled(enabled bool) {
@@ -513,7 +496,6 @@ func (c *CacheManager) SetCompressionEnabled(enabled bool) {
 	if c.fileCache != nil {
 		c.fileCache.SetCompressionEnabled(enabled)
 	}
-}
 
 // SetCompressionLevel sets the compression level (1-9)
 func (c *CacheManager) SetCompressionLevel(level int) {
@@ -533,7 +515,6 @@ func (c *CacheManager) SetCompressionLevel(level int) {
 	if c.fileCache != nil {
 		c.fileCache.SetCompressionLevel(level)
 	}
-}
 
 // SetPruneInterval sets the interval at which to prune the cache
 func (c *CacheManager) SetPruneInterval(interval time.Duration) {
@@ -551,7 +532,6 @@ func (c *CacheManager) SetPruneInterval(interval time.Duration) {
 		c.pruneTimer.Stop()
 		c.startPruneTimer()
 	}
-}
 
 // startPruneTimer starts the prune timer
 func (c *CacheManager) startPruneTimer() {
@@ -559,20 +539,17 @@ func (c *CacheManager) startPruneTimer() {
 		c.Prune()
 		c.startPruneTimer()
 	})
-}
 
 // updateHitRatio updates the overall hit ratio
 func (c *CacheManager) updateHitRatio() {
 	if c.stats.TotalLookups > 0 {
 		c.stats.HitRatio = float64(c.stats.TotalHits) / float64(c.stats.TotalLookups)
 	}
-}
 
 // hashQuery generates a hash for a query
 func hashQuery(query string) string {
-	hash := md5.Sum([]byte(query))
+	hash := sha256.Sum256([]byte(query))
 	return hex.EncodeToString(hash[:])
-}
 
 // DefaultCacheManager is the default cache manager
 var DefaultCacheManager = NewCacheManager(DefaultManager, DefaultCacheManagerOptions())
@@ -580,19 +557,15 @@ var DefaultCacheManager = NewCacheManager(DefaultManager, DefaultCacheManagerOpt
 // FindFile finds a file in all repositories with caching using the default cache manager
 func FindFileWithCache(ctx context.Context, path string) (Repository, error) {
 	return DefaultCacheManager.FindFile(ctx, path)
-}
 
 // FindFiles finds files matching a pattern in all repositories with caching using the default cache manager
 func FindFilesWithCache(ctx context.Context, pattern string) (map[Repository][]FileInfo, error) {
 	return DefaultCacheManager.FindFiles(ctx, pattern)
-}
 
 // GetFile gets a file from any repository that has it with caching using the default cache manager
 func GetFileWithCache(ctx context.Context, path string) (io.ReadCloser, error) {
 	return DefaultCacheManager.GetFile(ctx, path)
-}
 
 // GetFileFromRepo gets a file from a specific repository with caching using the default cache manager
 func GetFileFromRepoWithCache(ctx context.Context, repoName, path string) (io.ReadCloser, error) {
 	return DefaultCacheManager.GetFileFromRepo(ctx, repoName, path)
-}

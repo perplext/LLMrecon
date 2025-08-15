@@ -20,7 +20,6 @@ func NewTemplateServiceAdapter(manager management.TemplateManager) *TemplateServ
 	return &TemplateServiceAdapter{
 		manager: manager,
 	}
-}
 
 // ListTemplates lists templates with filtering
 func (a *TemplateServiceAdapter) ListTemplates(filter TemplateFilter) ([]Template, error) {
@@ -81,7 +80,6 @@ func (a *TemplateServiceAdapter) ListTemplates(filter TemplateFilter) ([]Templat
 	}
 	
 	return results, nil
-}
 
 // GetTemplate gets a single template by ID
 func (a *TemplateServiceAdapter) GetTemplate(id string) (*Template, error) {
@@ -116,7 +114,6 @@ func (a *TemplateServiceAdapter) GetTemplate(id string) (*Template, error) {
 		References:  tmpl.GetReferences(),
 		LastUpdated: time.Now(), // TODO: Get actual update time
 	}, nil
-}
 
 // GetCategories returns all available categories
 func (a *TemplateServiceAdapter) GetCategories() ([]string, error) {
@@ -151,7 +148,6 @@ func (a *TemplateServiceAdapter) GetCategories() ([]string, error) {
 	}
 	
 	return categories, nil
-}
 
 // ValidateTemplate validates a template
 func (a *TemplateServiceAdapter) ValidateTemplate(template *Template) error {
@@ -166,7 +162,6 @@ func (a *TemplateServiceAdapter) ValidateTemplate(template *Template) error {
 		return fmt.Errorf("template category is required")
 	}
 	return nil
-}
 
 // matchesSearch checks if template matches search query
 func (a *TemplateServiceAdapter) matchesSearch(tmpl management.Template, search string) bool {
@@ -174,7 +169,6 @@ func (a *TemplateServiceAdapter) matchesSearch(tmpl management.Template, search 
 	return strings.Contains(strings.ToLower(tmpl.GetName()), search) ||
 		strings.Contains(strings.ToLower(tmpl.GetDescription()), search) ||
 		strings.Contains(strings.ToLower(tmpl.GetID()), search)
-}
 
 // hasTags checks if template has any of the specified tags
 func (a *TemplateServiceAdapter) hasTags(tmpl management.Template, tags []string) bool {
@@ -191,13 +185,11 @@ func (a *TemplateServiceAdapter) hasTags(tmpl management.Template, tags []string
 	}
 	
 	return false
-}
 
 // ModuleServiceAdapter adapts the provider system to the API service interface
 type ModuleServiceAdapter struct {
 	providerFactory core.ProviderFactory
 	registry        map[core.ProviderType]core.Provider
-}
 
 // NewModuleServiceAdapter creates a new module service adapter
 func NewModuleServiceAdapter(providerFactory core.ProviderFactory) *ModuleServiceAdapter {
@@ -205,7 +197,6 @@ func NewModuleServiceAdapter(providerFactory core.ProviderFactory) *ModuleServic
 		providerFactory: providerFactory,
 		registry:        make(map[core.ProviderType]core.Provider),
 	}
-}
 
 // ListModules lists available provider modules
 func (a *ModuleServiceAdapter) ListModules() ([]Module, error) {
@@ -254,7 +245,6 @@ func (a *ModuleServiceAdapter) ListModules() ([]Module, error) {
 	}
 	
 	return modules, nil
-}
 
 // GetModule gets a specific module by ID
 func (a *ModuleServiceAdapter) GetModule(id string) (*Module, error) {
@@ -292,7 +282,6 @@ func (a *ModuleServiceAdapter) GetModule(id string) (*Module, error) {
 			Enabled: true,
 		},
 	}, nil
-}
 
 // UpdateModuleConfig updates module configuration
 func (a *ModuleServiceAdapter) UpdateModuleConfig(id string, config ModuleConfig) error {
@@ -305,7 +294,6 @@ func (a *ModuleServiceAdapter) UpdateModuleConfig(id string, config ModuleConfig
 	}
 	
 	return nil
-}
 
 // ReloadModule reloads a module
 func (a *ModuleServiceAdapter) ReloadModule(id string) error {
@@ -317,7 +305,6 @@ func (a *ModuleServiceAdapter) ReloadModule(id string) error {
 	}
 	
 	return nil
-}
 
 // getOrCreateProvider gets or creates a provider instance
 func (a *ModuleServiceAdapter) getOrCreateProvider(providerType core.ProviderType) (core.Provider, error) {
@@ -345,7 +332,6 @@ func (a *ModuleServiceAdapter) getOrCreateProvider(providerType core.ProviderTyp
 	a.registry[providerType] = provider
 	
 	return provider, nil
-}
 
 // ScanServiceAdapter adapts the scan system to the API service interface
 type ScanServiceAdapter struct {
@@ -365,7 +351,6 @@ func (a *ScanServiceAdapter) CreateScan(request CreateScanRequest) (*Scan, error
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}, nil
-}
 
 // GetScan gets a scan by ID
 func (a *ScanServiceAdapter) GetScan(id string) (*Scan, error) {
@@ -389,7 +374,6 @@ func (a *ScanServiceAdapter) GetScan(id string) (*Scan, error) {
 			TemplateRuns: []TemplateExecution{},
 		},
 	}, nil
-}
 
 // ListScans lists scans with filtering
 func (a *ScanServiceAdapter) ListScans(filter ScanFilter) ([]Scan, error) {
@@ -403,13 +387,11 @@ func (a *ScanServiceAdapter) ListScans(filter ScanFilter) ([]Scan, error) {
 			UpdatedAt: time.Now(),
 		},
 	}, nil
-}
 
 // CancelScan cancels a scan
 func (a *ScanServiceAdapter) CancelScan(id string) error {
 	// Placeholder implementation
 	return nil
-}
 
 // GetScanResults gets scan results
 func (a *ScanServiceAdapter) GetScanResults(id string) (*ScanResults, error) {
@@ -424,7 +406,6 @@ func (a *ScanServiceAdapter) GetScanResults(id string) (*ScanResults, error) {
 		Findings: []Finding{},
 		TemplateRuns: []TemplateExecution{},
 	}, nil
-}
 
 // UpdateServiceAdapter adapts the update system to the API service interface
 type UpdateServiceAdapter struct {
@@ -436,7 +417,6 @@ func NewUpdateServiceAdapter() *UpdateServiceAdapter {
 	return &UpdateServiceAdapter{
 		updateManager: update.NewUpdateManager(update.DefaultConfig(), &DefaultLogger{}),
 	}
-}
 
 // CheckForUpdates checks for available updates
 func (a *UpdateServiceAdapter) CheckForUpdates() (*VersionInfo, error) {
@@ -484,7 +464,6 @@ func (a *UpdateServiceAdapter) CheckForUpdates() (*VersionInfo, error) {
 	}
 	
 	return versionInfo, nil
-}
 
 // PerformUpdate performs system updates
 func (a *UpdateServiceAdapter) PerformUpdate(request UpdateRequest) (*UpdateResponse, error) {
@@ -544,7 +523,6 @@ func (a *UpdateServiceAdapter) PerformUpdate(request UpdateRequest) (*UpdateResp
 		Status:  status,
 		Updates: updates,
 	}, nil
-}
 
 // GetUpdateHistory gets update history
 func (a *UpdateServiceAdapter) GetUpdateHistory() ([]UpdateResult, error) {
@@ -565,7 +543,6 @@ func (a *UpdateServiceAdapter) GetUpdateHistory() ([]UpdateResult, error) {
 			Message:    "Templates updated successfully",
 		},
 	}, nil
-}
 
 // BundleServiceAdapter adapts the bundle system to the API service interface
 type BundleServiceAdapter struct {
@@ -575,7 +552,6 @@ type BundleServiceAdapter struct {
 // NewBundleServiceAdapter creates a new bundle service adapter
 func NewBundleServiceAdapter() *BundleServiceAdapter {
 	return &BundleServiceAdapter{}
-}
 
 // ListBundles lists available bundles
 func (a *BundleServiceAdapter) ListBundles() ([]BundleInfo, error) {
@@ -613,7 +589,6 @@ func (a *BundleServiceAdapter) ListBundles() ([]BundleInfo, error) {
 	}
 	
 	return bundles, nil
-}
 
 // ExportBundle creates a new bundle
 func (a *BundleServiceAdapter) ExportBundle(request ExportBundleRequest) (*BundleOperationResult, error) {
@@ -626,7 +601,6 @@ func (a *BundleServiceAdapter) ExportBundle(request ExportBundleRequest) (*Bundl
 		Templates: request.Templates,
 		Modules:  request.Modules,
 	}, nil
-}
 
 // ImportBundle imports a bundle
 func (a *BundleServiceAdapter) ImportBundle(request ImportBundleRequest) (*BundleOperationResult, error) {
@@ -637,7 +611,6 @@ func (a *BundleServiceAdapter) ImportBundle(request ImportBundleRequest) (*Bundl
 		Status:   "success",
 		Message:  "Bundle imported successfully",
 	}, nil
-}
 
 // GetBundle gets a specific bundle by ID
 func (a *BundleServiceAdapter) GetBundle(id string) (*BundleInfo, error) {
@@ -649,13 +622,11 @@ func (a *BundleServiceAdapter) GetBundle(id string) (*BundleInfo, error) {
 		CreatedAt:   time.Now(),
 		Size:        1024,
 	}, nil
-}
 
 // DeleteBundle deletes a bundle
 func (a *BundleServiceAdapter) DeleteBundle(id string) error {
 	// In a real implementation, this would delete the bundle
 	return nil
-}
 
 // ComplianceServiceAdapter adapts the compliance system to the API service interface
 type ComplianceServiceAdapter struct {
@@ -667,7 +638,6 @@ func NewComplianceServiceAdapter(templateManager management.TemplateManager) *Co
 	return &ComplianceServiceAdapter{
 		templateManager: templateManager,
 	}
-}
 
 // GenerateReport generates a compliance report
 func (a *ComplianceServiceAdapter) GenerateReport(request ComplianceReportRequest) (*ComplianceReport, error) {
@@ -717,7 +687,6 @@ func (a *ComplianceServiceAdapter) GenerateReport(request ComplianceReportReques
 		},
 		Results:    findings,
 	}, nil
-}
 
 // CheckCompliance checks compliance status
 func (a *ComplianceServiceAdapter) CheckCompliance(framework string) (*ComplianceStatus, error) {
@@ -740,7 +709,6 @@ func (a *ComplianceServiceAdapter) CheckCompliance(framework string) (*Complianc
 			ComplianceScore:   calculateOverallScore(report.Results),
 		},
 	}, nil
-}
 
 // GetComplianceHistory gets compliance history for a framework
 func (a *ComplianceServiceAdapter) GetComplianceHistory(framework string, days int) ([]ComplianceTrend, error) {
@@ -758,7 +726,6 @@ func (a *ComplianceServiceAdapter) GetComplianceHistory(framework string, days i
 	}
 	
 	return trends, nil
-}
 
 // assessOWASPCompliance assesses OWASP LLM Top 10 compliance
 func (a *ComplianceServiceAdapter) assessOWASPCompliance(templates []management.Template) ([]ComplianceResult, float64) {
@@ -816,7 +783,6 @@ func (a *ComplianceServiceAdapter) assessOWASPCompliance(templates []management.
 	
 	score := float64(compliantCount) / float64(len(categories)) * 100
 	return findings, score
-}
 
 // assessISO42001Compliance assesses ISO/IEC 42001 compliance
 func (a *ComplianceServiceAdapter) assessISO42001Compliance(templates []management.Template) ([]ComplianceResult, float64) {
@@ -862,7 +828,6 @@ func (a *ComplianceServiceAdapter) assessISO42001Compliance(templates []manageme
 	
 	score := float64(compliantCount) / float64(len(requirements)) * 100
 	return findings, score
-}
 
 // assessNISTCompliance assesses NIST AI RMF compliance
 func (a *ComplianceServiceAdapter) assessNISTCompliance(templates []management.Template) ([]ComplianceResult, float64) {
@@ -910,7 +875,6 @@ func (a *ComplianceServiceAdapter) assessNISTCompliance(templates []management.T
 	}
 	
 	return findings, score
-}
 
 // Helper functions for compliance calculations
 func calculateOverallScore(results []ComplianceResult) float64 {
@@ -926,7 +890,6 @@ func calculateOverallScore(results []ComplianceResult) float64 {
 	}
 	
 	return float64(compliant) / float64(len(results)) * 100.0
-}
 
 func countCompliantControls(results []ComplianceResult) int {
 	count := 0
@@ -936,7 +899,6 @@ func countCompliantControls(results []ComplianceResult) int {
 		}
 	}
 	return count
-}
 
 func getRiskLevel(score float64) string {
 	if score >= 80 {
@@ -947,14 +909,12 @@ func getRiskLevel(score float64) string {
 		return "high"
 	}
 	return "critical"
-}
 
 // DefaultLogger provides a simple logger implementation
 type DefaultLogger struct{}
 
 func (l *DefaultLogger) Info(msg string) {
 	fmt.Printf("INFO: %s\n", msg)
-}
 
 func (l *DefaultLogger) Error(msg string, err error) {
 	if err != nil {
@@ -962,15 +922,12 @@ func (l *DefaultLogger) Error(msg string, err error) {
 	} else {
 		fmt.Printf("ERROR: %s\n", msg)
 	}
-}
 
 func (l *DefaultLogger) Debug(msg string) {
 	fmt.Printf("DEBUG: %s\n", msg)
-}
 
 func (l *DefaultLogger) Warn(msg string) {
 	fmt.Printf("WARN: %s\n", msg)
-}
 
 // CreateAPIServices creates all API service implementations
 func CreateAPIServices() (*Services, error) {
@@ -1004,4 +961,41 @@ func CreateAPIServices() (*Services, error) {
 		BundleManager:     bundleManager,
 		ComplianceManager: complianceManager,
 	}, nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

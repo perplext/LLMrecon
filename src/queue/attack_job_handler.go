@@ -24,7 +24,6 @@ type AttackJobPayload struct {
 	Parameters     map[string]interface{}     `json:"parameters"`
 	Configuration  AttackConfiguration        `json:"configuration"`
 	Metadata       map[string]interface{}     `json:"metadata"`
-}
 
 // AttackConfiguration defines configuration for attack execution
 type AttackConfiguration struct {
@@ -34,7 +33,6 @@ type AttackConfiguration struct {
 	ConcurrentLimit int           `json:"concurrent_limit"`
 	StopOnSuccess   bool          `json:"stop_on_success"`
 	CollectMetrics  bool          `json:"collect_metrics"`
-}
 
 // AttackResult defines the result of attack execution
 type AttackResult struct {
@@ -73,7 +71,6 @@ func NewAttackJobHandler(
 		templateEngine:  templateEngine,
 		logger:          logger,
 	}
-}
 
 // ProcessJob processes a job based on its type
 func (h *AttackJobHandler) ProcessJob(ctx context.Context, job *Job) error {
@@ -93,7 +90,6 @@ func (h *AttackJobHandler) ProcessJob(ctx context.Context, job *Job) error {
 	default:
 		return fmt.Errorf("unknown job type: %s", job.Type)
 	}
-}
 
 // GetJobTypes returns the job types this handler can process
 func (h *AttackJobHandler) GetJobTypes() []string {
@@ -104,7 +100,6 @@ func (h *AttackJobHandler) GetJobTypes() []string {
 		JobTypeProviderTest,
 		JobTypeComplianceCheck,
 	}
-}
 
 // processAttackJob processes a single attack job
 func (h *AttackJobHandler) processAttackJob(ctx context.Context, job *Job) error {
@@ -148,7 +143,6 @@ func (h *AttackJobHandler) processAttackJob(ctx context.Context, job *Job) error
 	)
 	
 	return nil
-}
 
 // processBatchAttackJob processes a batch of attacks
 func (h *AttackJobHandler) processBatchAttackJob(ctx context.Context, job *Job) error {
@@ -220,7 +214,6 @@ func (h *AttackJobHandler) processBatchAttackJob(ctx context.Context, job *Job) 
 	)
 	
 	return nil
-}
 
 // processTemplateValidationJob validates a template
 func (h *AttackJobHandler) processTemplateValidationJob(ctx context.Context, job *Job) error {
@@ -258,7 +251,6 @@ func (h *AttackJobHandler) processTemplateValidationJob(ctx context.Context, job
 	)
 	
 	return nil
-}
 
 // processProviderTestJob tests provider connectivity and functionality
 func (h *AttackJobHandler) processProviderTestJob(ctx context.Context, job *Job) error {
@@ -302,7 +294,6 @@ func (h *AttackJobHandler) processProviderTestJob(ctx context.Context, job *Job)
 	)
 	
 	return nil
-}
 
 // processComplianceCheckJob performs compliance checks
 func (h *AttackJobHandler) processComplianceCheckJob(ctx context.Context, job *Job) error {
@@ -338,8 +329,6 @@ func (h *AttackJobHandler) processComplianceCheckJob(ctx context.Context, job *J
 	)
 	
 	return nil
-}
-
 // Helper methods
 
 // parseAttackPayload parses attack payload from job payload
@@ -355,13 +344,10 @@ func (h *AttackJobHandler) parseAttackPayload(payload map[string]interface{}) (*
 	}
 	
 	return &attackPayload, nil
-}
-
 // BatchAttackPayload defines payload for batch attacks
 type BatchAttackPayload struct {
 	Attacks       []*AttackJobPayload `json:"attacks"`
 	Configuration AttackConfiguration `json:"configuration"`
-}
 
 // parseBatchPayload parses batch attack payload
 func (h *AttackJobHandler) parseBatchPayload(payload map[string]interface{}) (*BatchAttackPayload, error) {
@@ -376,7 +362,7 @@ func (h *AttackJobHandler) parseBatchPayload(payload map[string]interface{}) (*B
 	}
 	
 	return &batchPayload, nil
-}
+	
 
 // executeAttack executes a single attack
 func (h *AttackJobHandler) executeAttack(ctx context.Context, payload *AttackJobPayload) (*AttackResult, error) {
@@ -412,7 +398,6 @@ func (h *AttackJobHandler) executeAttack(ctx context.Context, payload *AttackJob
 	}
 	
 	return result, nil
-}
 
 // validateTemplateStructure validates template structure
 func (h *AttackJobHandler) validateTemplateStructure(template interfaces.Template) error {
@@ -433,7 +418,6 @@ func (h *AttackJobHandler) validateTemplateStructure(template interfaces.Templat
 	
 	// Additional validations can be added here
 	return nil
-}
 
 // performOWASPLLMChecks performs OWASP LLM compliance checks
 func (h *AttackJobHandler) performOWASPLLMChecks() []string {
@@ -449,7 +433,6 @@ func (h *AttackJobHandler) performOWASPLLMChecks() []string {
 		"LLM09: Overreliance",
 		"LLM10: Model Theft",
 	}
-}
 
 // performISO42001Checks performs ISO 42001 compliance checks
 func (h *AttackJobHandler) performISO42001Checks() []string {
@@ -465,4 +448,15 @@ func (h *AttackJobHandler) performISO42001Checks() []string {
 		"Bias Mitigation",
 		"Continuous Monitoring",
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -19,7 +19,6 @@ type TemplateStructureOptimizer struct {
 	optimizationStats OptimizationStats
 	// optimizationRules contains the rules for optimizing templates
 	optimizationRules []OptimizationRule
-}
 
 // OptimizationStats tracks optimization statistics
 type OptimizationStats struct {
@@ -27,7 +26,6 @@ type OptimizationStats struct {
 	TotalOptimizations int64
 	// OptimizationsByRule tracks optimizations by rule
 	OptimizationsByRule map[string]int64
-}
 
 // OptimizationRule represents a rule for optimizing templates
 type OptimizationRule struct {
@@ -37,7 +35,6 @@ type OptimizationRule struct {
 	Description string
 	// ApplyFunc is the function to apply the rule
 	ApplyFunc func(*format.Template) (bool, error)
-}
 
 // NewTemplateStructureOptimizer creates a new template structure optimizer
 func NewTemplateStructureOptimizer() *TemplateStructureOptimizer {
@@ -51,7 +48,6 @@ func NewTemplateStructureOptimizer() *TemplateStructureOptimizer {
 	optimizer.initializeRules()
 
 	return optimizer
-}
 
 // initializeRules initializes the optimization rules
 func (o *TemplateStructureOptimizer) initializeRules() {
@@ -82,7 +78,6 @@ func (o *TemplateStructureOptimizer) initializeRules() {
 			ApplyFunc:   o.normalizeTemplateStructure,
 		},
 	}
-}
 
 // OptimizeTemplate optimizes a template by applying various structural optimizations
 func (o *TemplateStructureOptimizer) OptimizeTemplate(template *format.Template) (*format.Template, error) {
@@ -113,7 +108,6 @@ func (o *TemplateStructureOptimizer) OptimizeTemplate(template *format.Template)
 	o.mutex.Unlock()
 
 	return optimizedTemplate, nil
-}
 
 // OptimizeTemplates optimizes multiple templates
 func (o *TemplateStructureOptimizer) OptimizeTemplates(templates []*format.Template) ([]*format.Template, error) {
@@ -152,7 +146,6 @@ func (o *TemplateStructureOptimizer) OptimizeTemplates(templates []*format.Templ
 	}
 
 	return optimizedTemplates, nil
-}
 
 // removeRedundantWhitespace removes redundant whitespace from template content
 func (o *TemplateStructureOptimizer) removeRedundantWhitespace(template *format.Template) (bool, error) {
@@ -188,7 +181,6 @@ func (o *TemplateStructureOptimizer) removeRedundantWhitespace(template *format.
 	}
 	
 	return modified, nil
-}
 
 // optimizeWhitespace optimizes whitespace in a string while preserving code blocks
 func (o *TemplateStructureOptimizer) optimizeWhitespace(content string) string {
@@ -229,7 +221,6 @@ func (o *TemplateStructureOptimizer) optimizeWhitespace(content string) string {
 	}
 
 	return strings.TrimSpace(result.String())
-}
 
 // optimizeRegexPatterns optimizes regex patterns in detection criteria
 func (o *TemplateStructureOptimizer) optimizeRegexPatterns(template *format.Template) (bool, error) {
@@ -267,7 +258,6 @@ func (o *TemplateStructureOptimizer) optimizeRegexPatterns(template *format.Temp
 	}
 	
 	return modified, nil
-}
 
 // optimizeRegex optimizes a regex pattern for better performance
 func (o *TemplateStructureOptimizer) optimizeRegex(pattern string) (string, error) {
@@ -301,7 +291,6 @@ func (o *TemplateStructureOptimizer) optimizeRegex(pattern string) (string, erro
 	}
 	
 	return optimized, nil
-}
 
 // consolidateVariations consolidates similar test variations
 func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Template) (bool, error) {
@@ -365,7 +354,6 @@ func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Temp
 	}
 	
 	return false, nil
-}
 
 // optimizeDetectionCriteria optimizes detection criteria for faster matching
 func (o *TemplateStructureOptimizer) optimizeDetectionCriteria(template *format.Template) (bool, error) {
@@ -397,13 +385,11 @@ func (o *TemplateStructureOptimizer) optimizeDetectionCriteria(template *format.
 	}
 	
 	return modified, nil
-}
 
 // optimizeStringMatch optimizes a string match pattern
 func (o *TemplateStructureOptimizer) optimizeStringMatch(match string) string {
 	// Trim whitespace
 	return strings.TrimSpace(match)
-}
 
 // normalizeTemplateStructure normalizes template structure for consistent processing
 func (o *TemplateStructureOptimizer) normalizeTemplateStructure(template *format.Template) (bool, error) {
@@ -432,7 +418,6 @@ func (o *TemplateStructureOptimizer) normalizeTemplateStructure(template *format
 	}
 	
 	return modified, nil
-}
 
 // cloneTemplate creates a deep copy of a template
 func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *format.Template {
@@ -494,7 +479,6 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 	}
 	
 	return clone
-}
 
 // GetOptimizationStats returns statistics about the optimizer
 func (o *TemplateStructureOptimizer) GetOptimizationStats() map[string]interface{} {
@@ -511,4 +495,3 @@ func (o *TemplateStructureOptimizer) GetOptimizationStats() map[string]interface
 		"total_optimizations": o.optimizationStats.TotalOptimizations,
 		"optimizations_by_rule": ruleStats,
 	}
-}

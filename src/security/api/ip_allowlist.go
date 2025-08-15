@@ -25,9 +25,9 @@ type IPAllowlistConfig struct {
 	ConfigFile string
 	// ExemptPaths is a list of paths exempt from IP allowlisting
 	ExemptPaths []string
-}
 
 // DefaultIPAllowlistConfig returns the default IP allowlist configuration
+}
 func DefaultIPAllowlistConfig() *IPAllowlistConfig {
 	return &IPAllowlistConfig{
 		Enabled:        false,
@@ -35,7 +35,6 @@ func DefaultIPAllowlistConfig() *IPAllowlistConfig {
 		TrustedProxies: []string{"127.0.0.1", "::1"},
 		ExemptPaths:    []string{"/health", "/metrics", "/api/v1/auth"},
 	}
-}
 
 // IPAllowlist implements IP allowlisting for API requests
 type IPAllowlist struct {
@@ -43,9 +42,9 @@ type IPAllowlist struct {
 	allowedIPs   map[string]bool
 	allowedCIDRs []*net.IPNet
 	mu           sync.RWMutex
-}
 
 // NewIPAllowlist creates a new IP allowlist
+}
 func NewIPAllowlist(config *IPAllowlistConfig) (*IPAllowlist, error) {
 	if config == nil {
 		config = DefaultIPAllowlistConfig()
@@ -62,7 +61,6 @@ func NewIPAllowlist(config *IPAllowlistConfig) (*IPAllowlist, error) {
 	}
 
 	return allowlist, nil
-}
 
 // loadAllowlist loads the allowlist from configuration
 func (al *IPAllowlist) loadAllowlist() error {
@@ -86,7 +84,6 @@ func (al *IPAllowlist) loadAllowlist() error {
 		}
 		al.allowedCIDRs = append(al.allowedCIDRs, ipnet)
 	}
-
 	// Load from file if specified
 	if al.config.ConfigFile != "" {
 		if err := al.loadFromFile(); err != nil {
@@ -95,7 +92,7 @@ func (al *IPAllowlist) loadAllowlist() error {
 	}
 
 	return nil
-}
+	
 
 // loadFromFile loads the allowlist from a file
 func (al *IPAllowlist) loadFromFile() error {
@@ -105,7 +102,7 @@ func (al *IPAllowlist) loadFromFile() error {
 	}
 
 	// Read the file
-	data, err := ioutil.ReadFile(al.config.ConfigFile)
+	data, err := ioutil.ReadFile(filepath.Clean(al.config.ConfigFile))
 	if err != nil {
 		return err
 	}
@@ -134,7 +131,6 @@ func (al *IPAllowlist) loadFromFile() error {
 	}
 
 	return nil
-}
 
 // SaveToFile saves the allowlist to a file
 func (al *IPAllowlist) SaveToFile() error {
@@ -168,12 +164,10 @@ func (al *IPAllowlist) SaveToFile() error {
 	// Marshal the configuration
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
-		return err
 	}
 
 	// Write the file
-	return ioutil.WriteFile(al.config.ConfigFile, data, 0644)
-}
+	return ioutil.WriteFile(al.config.ConfigFile, data, 0600)
 
 // AddIP adds an IP to the allowlist
 func (al *IPAllowlist) AddIP(ip string) error {
@@ -192,7 +186,6 @@ func (al *IPAllowlist) AddIP(ip string) error {
 	}
 
 	return nil
-}
 
 // RemoveIP removes an IP from the allowlist
 func (al *IPAllowlist) RemoveIP(ip string) {
@@ -211,7 +204,6 @@ func (al *IPAllowlist) RemoveIP(ip string) {
 			}
 		}
 	}
-}
 
 // IsEnabled returns whether the allowlist is enabled
 func (al *IPAllowlist) IsEnabled() bool {
@@ -219,7 +211,6 @@ func (al *IPAllowlist) IsEnabled() bool {
 	defer al.mu.RUnlock()
 
 	return al.config.Enabled
-}
 
 // SetEnabled sets whether the allowlist is enabled
 func (al *IPAllowlist) SetEnabled(enabled bool) {
@@ -227,7 +218,6 @@ func (al *IPAllowlist) SetEnabled(enabled bool) {
 	defer al.mu.Unlock()
 
 	al.config.Enabled = enabled
-}
 
 // IsAllowed checks if an IP is allowed
 func (al *IPAllowlist) IsAllowed(ip string) bool {
@@ -255,7 +245,6 @@ func (al *IPAllowlist) IsAllowed(ip string) bool {
 	}
 
 	return false
-}
 
 // IsExempt checks if a path is exempt from IP allowlisting
 func (al *IPAllowlist) IsExempt(path string) bool {
@@ -269,7 +258,6 @@ func (al *IPAllowlist) IsExempt(path string) bool {
 	}
 
 	return false
-}
 
 // GetClientIP gets the client IP from a request
 func (al *IPAllowlist) GetClientIP(r *http.Request) string {
@@ -295,7 +283,6 @@ func (al *IPAllowlist) GetClientIP(r *http.Request) string {
 		return r.RemoteAddr
 	}
 	return ip
-}
 
 // isTrustedProxy checks if an IP is a trusted proxy
 func (al *IPAllowlist) isTrustedProxy(ip string) bool {
@@ -305,7 +292,6 @@ func (al *IPAllowlist) isTrustedProxy(ip string) bool {
 		}
 	}
 	return false
-}
 
 // Middleware returns a middleware function for IP allowlisting
 func (al *IPAllowlist) Middleware(next http.Handler) http.Handler {
@@ -337,4 +323,15 @@ func (al *IPAllowlist) Middleware(next http.Handler) http.Handler {
 		// Call the next handler
 		next.ServeHTTP(w, r)
 	})
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

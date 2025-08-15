@@ -47,7 +47,6 @@ type ReleaseAsset struct {
 	SignatureURL string
 	Platform     string
 	Architecture string
-}
 
 // UpdateManifest represents metadata about updates
 type UpdateManifest struct {
@@ -59,7 +58,6 @@ type UpdateManifest struct {
 	MinVersion  string            `json:"min_version"`
 	MaxVersion  string            `json:"max_version"`
 	ChangelogURL string           `json:"changelog_url"`
-}
 
 // ComponentInfo represents information about a component
 type ComponentInfo struct {
@@ -71,7 +69,6 @@ type ComponentInfo struct {
 	Checksum    string `json:"checksum"`
 	Required    bool   `json:"required"`
 	Description string `json:"description"`
-}
 
 // Bundle represents an offline update bundle
 type Bundle struct {
@@ -128,7 +125,6 @@ type ModuleInfo struct {
 	Size            int64             `json:"size"`
 	Checksum        string            `json:"checksum"`
 	LastUpdated     time.Time         `json:"last_updated"`
-}
 
 // UpdateProgress represents progress of an update operation
 type UpdateProgress struct {
@@ -140,7 +136,6 @@ type UpdateProgress struct {
 	Message       string
 	StartTime     time.Time
 	EstimatedTime time.Duration
-}
 
 // UpdateError represents an error during update
 type UpdateError struct {
@@ -150,7 +145,6 @@ type UpdateError struct {
 	Err       error
 	Fatal     bool
 	Retry     bool
-}
 
 // Error implements the error interface
 func (e *UpdateError) Error() string {
@@ -158,12 +152,10 @@ func (e *UpdateError) Error() string {
 		return fmt.Sprintf("%s %s: %s: %v", e.Component, e.Operation, e.Message, e.Err)
 	}
 	return fmt.Sprintf("%s %s: %s", e.Component, e.Operation, e.Message)
-}
 
 // Unwrap returns the underlying error
 func (e *UpdateError) Unwrap() error {
 	return e.Err
-}
 
 // UpdateOptions represents options for update operations
 type UpdateOptions struct {
@@ -179,7 +171,6 @@ type UpdateOptions struct {
 	Timeout          time.Duration
 	ProgressCallback func(*UpdateProgress)
 	ErrorCallback    func(*UpdateError) bool // Return true to continue
-}
 
 // ChangelogEntry represents an entry in a changelog
 type ChangelogEntry struct {
@@ -193,7 +184,6 @@ type ChangelogEntry struct {
 	Breaking    bool      `json:"breaking"`
 	Security    bool      `json:"security"`
 	References  []string  `json:"references"`
-}
 
 // Changelog represents a collection of changelog entries
 type Changelog struct {
@@ -201,7 +191,6 @@ type Changelog struct {
 	Format      string           `json:"format"`
 	LastUpdated time.Time        `json:"last_updated"`
 	Entries     []ChangelogEntry `json:"entries"`
-}
 
 // RepositoryStatus represents the status of a repository
 type RepositoryStatus struct {
@@ -215,7 +204,6 @@ type RepositoryStatus struct {
 	TotalSize    int64     `json:"total_size"`
 	Error        string    `json:"error,omitempty"`
 	Version      string    `json:"version"`
-}
 
 // UpdateStatistics represents statistics about updates
 type UpdateStatistics struct {
@@ -227,7 +215,6 @@ type UpdateStatistics struct {
 	TotalDownloadSize   int64         `json:"total_download_size"`
 	UpdatesByComponent  map[string]int `json:"updates_by_component"`
 	ErrorsByType        map[string]int `json:"errors_by_type"`
-}
 
 // Constants for update operations
 const (
@@ -302,7 +289,6 @@ const (
 func IsValidVersion(version string) bool {
 	// Simple validation - in real implementation would use semver
 	return version != "" && len(version) > 0
-}
 
 // IsValidComponent checks if a component name is valid
 func IsValidComponent(component string) bool {
@@ -313,19 +299,16 @@ func IsValidComponent(component string) bool {
 		}
 	}
 	return false
-}
 
 // GetPlatformString returns the current platform string
 func GetPlatformString() string {
 	// Would be implemented based on runtime.GOOS
 	return "linux" // placeholder
-}
 
 // GetArchString returns the current architecture string
 func GetArchString() string {
 	// Would be implemented based on runtime.GOARCH
 	return "amd64" // placeholder
-}
 
 // FormatFileSize formats a file size in bytes to human readable format
 func FormatFileSize(bytes int64) string {
@@ -339,7 +322,6 @@ func FormatFileSize(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
-}
 
 // FormatDuration formats a duration to human readable format
 func FormatDuration(duration time.Duration) string {
@@ -349,5 +331,5 @@ func FormatDuration(duration time.Duration) string {
 	if duration < time.Hour {
 		return fmt.Sprintf("%.0fm", duration.Minutes())
 	}
-	return fmt.Sprintf("%.1fh", duration.Hours())
+}
 }

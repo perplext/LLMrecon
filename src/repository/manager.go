@@ -13,14 +13,12 @@ type Manager struct {
 	
 	// mutex protects the repositories map
 	mutex sync.RWMutex
-}
 
 // NewManager creates a new repository manager
 func NewManager() *Manager {
 	return &Manager{
 		repositories: make(map[string]Repository),
 	}
-}
 
 // AddRepository adds a repository to the manager
 func (m *Manager) AddRepository(repo Repository) error {
@@ -36,7 +34,6 @@ func (m *Manager) AddRepository(repo Repository) error {
 	m.repositories[repo.GetName()] = repo
 	
 	return nil
-}
 
 // RemoveRepository removes a repository from the manager
 func (m *Manager) RemoveRepository(name string) error {
@@ -60,7 +57,6 @@ func (m *Manager) RemoveRepository(name string) error {
 	delete(m.repositories, name)
 	
 	return nil
-}
 
 // GetRepository gets a repository by name
 func (m *Manager) GetRepository(name string) (Repository, error) {
@@ -74,7 +70,6 @@ func (m *Manager) GetRepository(name string) (Repository, error) {
 	}
 	
 	return repo, nil
-}
 
 // ListRepositories lists all repositories
 func (m *Manager) ListRepositories() []Repository {
@@ -90,7 +85,6 @@ func (m *Manager) ListRepositories() []Repository {
 	}
 	
 	return result
-}
 
 // ConnectAll connects to all repositories
 func (m *Manager) ConnectAll(ctx context.Context) error {
@@ -105,7 +99,6 @@ func (m *Manager) ConnectAll(ctx context.Context) error {
 	}
 	
 	return nil
-}
 
 // DisconnectAll disconnects from all repositories
 func (m *Manager) DisconnectAll() error {
@@ -123,7 +116,7 @@ func (m *Manager) DisconnectAll() error {
 	}
 	
 	return lastErr
-}
+	
 
 // CreateRepository creates a new repository from a configuration
 func (m *Manager) CreateRepository(config *Config) (Repository, error) {
@@ -139,7 +132,6 @@ func (m *Manager) CreateRepository(config *Config) (Repository, error) {
 	}
 	
 	return repo, nil
-}
 
 // FindFile finds a file in all repositories
 func (m *Manager) FindFile(ctx context.Context, path string) (Repository, error) {
@@ -165,7 +157,6 @@ func (m *Manager) FindFile(ctx context.Context, path string) (Repository, error)
 	}
 	
 	return nil, fmt.Errorf("file '%s' not found in any repository", path)
-}
 
 // FindFiles finds files matching a pattern in all repositories
 func (m *Manager) FindFiles(ctx context.Context, pattern string) (map[Repository][]FileInfo, error) {
@@ -194,7 +185,6 @@ func (m *Manager) FindFiles(ctx context.Context, pattern string) (map[Repository
 	}
 	
 	return result, nil
-}
 
 // GetFileFromRepo gets a file from a specific repository
 func (m *Manager) GetFileFromRepo(ctx context.Context, repoName, path string) (io.ReadCloser, error) {
@@ -206,7 +196,6 @@ func (m *Manager) GetFileFromRepo(ctx context.Context, repoName, path string) (i
 	
 	// Get file
 	return repo.GetFile(ctx, path)
-}
 
 // GetFile gets a file from any repository that has it
 func (m *Manager) GetFile(ctx context.Context, path string) (io.ReadCloser, error) {
@@ -218,7 +207,6 @@ func (m *Manager) GetFile(ctx context.Context, path string) (io.ReadCloser, erro
 	
 	// Get file
 	return repo.GetFile(ctx, path)
-}
 
 // DefaultManager is the default repository manager
 var DefaultManager = NewManager()
@@ -226,54 +214,43 @@ var DefaultManager = NewManager()
 // AddRepository adds a repository to the default manager
 func AddRepository(repo Repository) error {
 	return DefaultManager.AddRepository(repo)
-}
 
 // RemoveRepository removes a repository from the default manager
 func RemoveRepository(name string) error {
 	return DefaultManager.RemoveRepository(name)
-}
 
 // GetRepository gets a repository by name from the default manager
 func GetRepository(name string) (Repository, error) {
 	return DefaultManager.GetRepository(name)
-}
 
 // ListRepositories lists all repositories in the default manager
 func ListRepositories() []Repository {
 	return DefaultManager.ListRepositories()
-}
 
 // ConnectAll connects to all repositories in the default manager
 func ConnectAll(ctx context.Context) error {
 	return DefaultManager.ConnectAll(ctx)
-}
 
 // DisconnectAll disconnects from all repositories in the default manager
 func DisconnectAll() error {
 	return DefaultManager.DisconnectAll()
-}
 
 // CreateRepository creates a new repository from a configuration and adds it to the default manager
 func CreateRepository(config *Config) (Repository, error) {
 	return DefaultManager.CreateRepository(config)
-}
 
 // FindFile finds a file in all repositories in the default manager
 func FindFile(ctx context.Context, path string) (Repository, error) {
 	return DefaultManager.FindFile(ctx, path)
-}
 
 // FindFiles finds files matching a pattern in all repositories in the default manager
 func FindFiles(ctx context.Context, pattern string) (map[Repository][]FileInfo, error) {
 	return DefaultManager.FindFiles(ctx, pattern)
-}
 
 // GetFileFromRepo gets a file from a specific repository in the default manager
 func GetFileFromRepo(ctx context.Context, repoName, path string) (io.ReadCloser, error) {
 	return DefaultManager.GetFileFromRepo(ctx, repoName, path)
-}
 
 // GetFile gets a file from any repository that has it in the default manager
 func GetFile(ctx context.Context, path string) (io.ReadCloser, error) {
 	return DefaultManager.GetFile(ctx, path)
-}

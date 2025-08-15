@@ -37,14 +37,15 @@ type CertificateInfo struct {
 	LastChecked     time.Time
 }
 
+}
 // CRLInfo contains information about a Certificate Revocation List
 type CRLInfo struct {
 	CRL         *pkix.CertificateList
 	LastUpdated time.Time
 	NextUpdate  time.Time
 	URL         string
-}
 
+}
 // TrustChainManager manages certificate trust chains and validation
 type TrustChainManager struct {
 	// Root certificates (trusted anchors)
@@ -63,9 +64,9 @@ type TrustChainManager struct {
 	cacheExpiration time.Duration
 	// Mutex for thread safety
 	mu sync.RWMutex
-}
 
 // NewTrustChainManager creates a new trust chain manager
+}
 func NewTrustChainManager() *TrustChainManager {
 	return &TrustChainManager{
 		rootCerts:         make(map[string]*x509.Certificate),
@@ -76,9 +77,9 @@ func NewTrustChainManager() *TrustChainManager {
 		ocspCheckEnabled:  true,
 		cacheExpiration:   24 * time.Hour,
 	}
-}
 
 // AddRootCertificate adds a root certificate to the trust store
+}
 func (m *TrustChainManager) AddRootCertificate(cert *x509.Certificate) error {
 	if cert == nil {
 		return errors.New("certificate cannot be nil")
@@ -100,9 +101,9 @@ func (m *TrustChainManager) AddRootCertificate(cert *x509.Certificate) error {
 	m.certInfoCache = make(map[string]*CertificateInfo)
 
 	return nil
-}
 
 // AddRootCertificateFromPEM adds a root certificate from PEM data
+}
 func (m *TrustChainManager) AddRootCertificateFromPEM(pemData []byte) error {
 	cert, err := parseCertificateFromPEM(pemData)
 	if err != nil {
@@ -110,19 +111,19 @@ func (m *TrustChainManager) AddRootCertificateFromPEM(pemData []byte) error {
 	}
 
 	return m.AddRootCertificate(cert)
-}
 
 // AddRootCertificateFromFile adds a root certificate from a file
+}
 func (m *TrustChainManager) AddRootCertificateFromFile(filePath string) error {
-	pemData, err := ioutil.ReadFile(filePath)
+	pemData, err := ioutil.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return fmt.Errorf("failed to read certificate file: %w", err)
 	}
 
 	return m.AddRootCertificateFromPEM(pemData)
-}
 
 // AddIntermediateCertificate adds an intermediate certificate to the trust store
+}
 func (m *TrustChainManager) AddIntermediateCertificate(cert *x509.Certificate) error {
 	if cert == nil {
 		return errors.New("certificate cannot be nil")
@@ -144,9 +145,9 @@ func (m *TrustChainManager) AddIntermediateCertificate(cert *x509.Certificate) e
 	m.certInfoCache = make(map[string]*CertificateInfo)
 
 	return nil
-}
 
 // AddIntermediateCertificateFromPEM adds an intermediate certificate from PEM data
+}
 func (m *TrustChainManager) AddIntermediateCertificateFromPEM(pemData []byte) error {
 	cert, err := parseCertificateFromPEM(pemData)
 	if err != nil {
@@ -154,19 +155,19 @@ func (m *TrustChainManager) AddIntermediateCertificateFromPEM(pemData []byte) er
 	}
 
 	return m.AddIntermediateCertificate(cert)
-}
 
 // AddIntermediateCertificateFromFile adds an intermediate certificate from a file
+}
 func (m *TrustChainManager) AddIntermediateCertificateFromFile(filePath string) error {
-	pemData, err := ioutil.ReadFile(filePath)
+	pemData, err := ioutil.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return fmt.Errorf("failed to read certificate file: %w", err)
 	}
 
 	return m.AddIntermediateCertificateFromPEM(pemData)
-}
 
 // RemoveCertificate removes a certificate from the trust store
+}
 func (m *TrustChainManager) RemoveCertificate(cert *x509.Certificate) {
 	if cert == nil {
 		return
@@ -182,33 +183,33 @@ func (m *TrustChainManager) RemoveCertificate(cert *x509.Certificate) {
 
 	// Clear cache
 	m.certInfoCache = make(map[string]*CertificateInfo)
-}
 
 // SetCRLCheckEnabled sets whether CRL checking is enabled
+}
 func (m *TrustChainManager) SetCRLCheckEnabled(enabled bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	m.crlCheckEnabled = enabled
-}
 
 // SetOCSPCheckEnabled sets whether OCSP checking is enabled
+}
 func (m *TrustChainManager) SetOCSPCheckEnabled(enabled bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	m.ocspCheckEnabled = enabled
-}
 
 // SetCacheExpiration sets the cache expiration duration
+}
 func (m *TrustChainManager) SetCacheExpiration(duration time.Duration) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	m.cacheExpiration = duration
-}
 
 // parseCertificateFromPEM parses a certificate from PEM data
+}
 func parseCertificateFromPEM(pemData []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(pemData)
 	if block == nil || block.Type != "CERTIFICATE" {
@@ -220,5 +221,3 @@ func parseCertificateFromPEM(pemData []byte) (*x509.Certificate, error) {
 		return nil, fmt.Errorf("failed to parse certificate: %w", err)
 	}
 
-	return cert, nil
-}

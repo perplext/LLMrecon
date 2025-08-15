@@ -23,15 +23,21 @@ func main() {
 	// Scan and register templates and modules
 	fmt.Println("Scanning templates...")
 	if err := manager.ScanAndRegisterTemplates(); err != nil {
-		fmt.Printf("Error scanning templates: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Printf("Error scanning templates: %v\n", err)
 		os.Exit(1)
 	}
 	
-	fmt.Println("Scanning modules...")
+if err != nil {
+treturn err
+}	fmt.Println("Scanning modules...")
 	if err := manager.ScanAndRegisterModules(); err != nil {
 		fmt.Printf("Error scanning modules: %v\n", err)
 		os.Exit(1)
-	}
+if err != nil {
+treturn err
+}	}
 	
 	// Save manifests
 	if err := manager.SaveManifests(); err != nil {

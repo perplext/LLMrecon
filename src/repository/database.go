@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"strings"
+	"time"
 
 	// Import database drivers as needed
 	_ "github.com/go-sql-driver/mysql"
@@ -27,6 +29,7 @@ const (
 // DatabaseRepository implements the Repository interface for database repositories
 type DatabaseRepository struct {
 	*BaseRepository
+}
 
 	// db is the database connection
 	db *sql.DB
@@ -39,7 +42,6 @@ type DatabaseRepository struct {
 
 	// auditLogger is the audit logger for repository operations
 	auditLogger *RepositoryAuditLogger
-}
 
 // DatabaseConfig extends the repository Config with database-specific options
 type DatabaseConfig struct {
@@ -51,7 +53,6 @@ type DatabaseConfig struct {
 
 	// ConnectionString is the database connection string
 	ConnectionString string
-}
 
 // NewDatabaseRepository creates a new database repository
 func NewDatabaseRepository(config *Config) (Repository, error) {
@@ -83,7 +84,6 @@ func NewDatabaseRepository(config *Config) (Repository, error) {
 		tableName:      tableName,
 		auditLogger:    auditLogger,
 	}, nil
-}
 
 // parseDatabaseURL parses a database URL to extract database type, table name, and connection string
 // Format: dbtype://connection_string#table_name
@@ -119,7 +119,6 @@ func parseDatabaseURL(urlStr string) (DatabaseType, string, string, error) {
 	}
 
 	return dbType, tableName, connStrAndTable, nil
-}
 
 // Connect establishes a connection to the database repository
 func (r *DatabaseRepository) Connect(ctx context.Context) error {
@@ -180,7 +179,6 @@ func (r *DatabaseRepository) Connect(ctx context.Context) error {
 	r.setConnected(true)
 
 	return nil
-}
 
 // ensureTableExists ensures the templates table exists in the database
 func (r *DatabaseRepository) ensureTableExists(ctx context.Context) error {
@@ -227,7 +225,6 @@ func (r *DatabaseRepository) ensureTableExists(ctx context.Context) error {
 	// Execute create table statement
 	_, err := r.db.ExecContext(ctx, createTableSQL)
 	return err
-}
 
 // Disconnect closes the connection to the database repository
 func (r *DatabaseRepository) Disconnect() error {
@@ -253,7 +250,6 @@ func (r *DatabaseRepository) Disconnect() error {
 	r.setConnected(false)
 
 	return nil
-}
 
 // ListFiles lists files in the database repository matching the pattern
 func (r *DatabaseRepository) ListFiles(ctx context.Context, pattern string) ([]FileInfo, error) {
@@ -295,7 +291,7 @@ func (r *DatabaseRepository) ListFiles(ctx context.Context, pattern string) ([]F
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		defer func() { if err := rows.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 		// Process results
 		for rows.Next() {
@@ -321,7 +317,6 @@ func (r *DatabaseRepository) ListFiles(ctx context.Context, pattern string) ([]F
 	}
 
 	return result, nil
-}
 
 // GetFile retrieves a file from the database repository
 func (r *DatabaseRepository) GetFile(ctx context.Context, path string) (io.ReadCloser, error) {
@@ -372,7 +367,6 @@ func (r *DatabaseRepository) GetFile(ctx context.Context, path string) (io.ReadC
 		filePath:    path,
 		baseURL:     r.config.URL,
 	}, nil
-}
 
 // FileExists checks if a file exists in the database repository
 func (r *DatabaseRepository) FileExists(ctx context.Context, path string) (bool, error) {
@@ -410,13 +404,11 @@ func (r *DatabaseRepository) FileExists(ctx context.Context, path string) (bool,
 	}
 
 	return exists, nil
-}
 
 // GetBranch returns the branch of the repository
 // Database repositories don't have branches, so this returns an empty string
 func (r *DatabaseRepository) GetBranch() string {
 	return ""
-}
 
 // GetLastModified gets the last modified time of a file in the database repository
 func (r *DatabaseRepository) GetLastModified(ctx context.Context, path string) (time.Time, error) {
@@ -454,7 +446,6 @@ func (r *DatabaseRepository) GetLastModified(ctx context.Context, path string) (
 	}
 
 	return lastModified, nil
-}
 
 // StoreFile stores a file in the database repository
 func (r *DatabaseRepository) StoreFile(ctx context.Context, path string, name string, content []byte, isDirectory bool) error {
@@ -510,7 +501,6 @@ func (r *DatabaseRepository) StoreFile(ctx context.Context, path string, name st
 
 		return err
 	})
-}
 
 // DeleteFile deletes a file from the database repository
 func (r *DatabaseRepository) DeleteFile(ctx context.Context, path string) error {
@@ -539,10 +529,19 @@ func (r *DatabaseRepository) DeleteFile(ctx context.Context, path string) error 
 		_, err := r.db.ExecContext(ctx, query, path)
 		return err
 	})
-}
 
 // init registers the database repository type with the default factory
 func init() {
 	// Register the Database repository type
-	DefaultFactory.Register("database", NewDatabaseRepository)
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

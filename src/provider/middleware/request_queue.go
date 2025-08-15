@@ -16,7 +16,6 @@ type RequestQueueConfig struct {
 	MaxWaitTime time.Duration
 	// PriorityLevels is the number of priority levels
 	PriorityLevels int
-}
 
 // QueuedRequest represents a request in the queue
 type QueuedRequest struct {
@@ -30,7 +29,6 @@ type QueuedRequest struct {
 	Function func(ctx context.Context) (interface{}, error)
 	// ResultChan is the channel to send the result to
 	ResultChan chan *QueuedResult
-}
 
 // QueuedResult represents the result of a queued request
 type QueuedResult struct {
@@ -38,7 +36,6 @@ type QueuedResult struct {
 	Result interface{}
 	// Error is the error from the request
 	Error error
-}
 
 // RequestQueueMiddleware provides request queuing functionality
 type RequestQueueMiddleware struct {
@@ -55,7 +52,6 @@ type RequestQueueMiddleware struct {
 	shutdownChan chan struct{}
 	// isRunning indicates whether the queue is running
 	isRunning bool
-}
 
 // NewRequestQueueMiddleware creates a new request queue middleware
 func NewRequestQueueMiddleware(config RequestQueueConfig, workerCount int) *RequestQueueMiddleware {
@@ -90,7 +86,6 @@ func NewRequestQueueMiddleware(config RequestQueueConfig, workerCount int) *Requ
 	}
 
 	return middleware
-}
 
 // Start starts the request queue workers
 func (rq *RequestQueueMiddleware) Start() {
@@ -109,7 +104,6 @@ func (rq *RequestQueueMiddleware) Start() {
 		rq.workerWg.Add(1)
 		go rq.worker()
 	}
-}
 
 // Stop stops the request queue workers
 func (rq *RequestQueueMiddleware) Stop() {
@@ -124,7 +118,6 @@ func (rq *RequestQueueMiddleware) Stop() {
 
 	// Wait for workers to finish
 	rq.workerWg.Wait()
-}
 
 // Execute executes a function with request queuing
 func (rq *RequestQueueMiddleware) Execute(ctx context.Context, priority int, fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
@@ -164,7 +157,6 @@ func (rq *RequestQueueMiddleware) Execute(ctx context.Context, priority int, fn 
 	case <-time.After(rq.config.MaxWaitTime):
 		return nil, errors.New("request timed out in queue")
 	}
-}
 
 // enqueue adds a request to the queue
 func (rq *RequestQueueMiddleware) enqueue(request QueuedRequest) bool {
@@ -183,7 +175,6 @@ func (rq *RequestQueueMiddleware) enqueue(request QueuedRequest) bool {
 	// Add the request to the appropriate queue
 	rq.queues[request.Priority] = append(rq.queues[request.Priority], request)
 	return true
-}
 
 // dequeue removes and returns the next request from the queue
 func (rq *RequestQueueMiddleware) dequeue() (QueuedRequest, bool) {
@@ -203,7 +194,6 @@ func (rq *RequestQueueMiddleware) dequeue() (QueuedRequest, bool) {
 
 	// No requests in the queue
 	return QueuedRequest{}, false
-}
 
 // worker processes requests from the queue
 func (rq *RequestQueueMiddleware) worker() {
@@ -248,14 +238,12 @@ func (rq *RequestQueueMiddleware) worker() {
 
 		// Execute the request
 		result, err := request.Function(request.Context)
-
 		// Send the result
 		request.ResultChan <- &QueuedResult{
 			Result: result,
 			Error:  err,
 		}
 	}
-}
 
 // GetQueueStats returns statistics about the queue
 func (rq *RequestQueueMiddleware) GetQueueStats() map[string]interface{} {
@@ -283,7 +271,6 @@ func (rq *RequestQueueMiddleware) GetQueueStats() map[string]interface{} {
 	stats["total_queue_size"] = totalQueueSize
 
 	return stats
-}
 
 // UpdateConfig updates the request queue configuration
 func (rq *RequestQueueMiddleware) UpdateConfig(config RequestQueueConfig) {
@@ -305,4 +292,3 @@ func (rq *RequestQueueMiddleware) UpdateConfig(config RequestQueueConfig) {
 		}
 		rq.queues = newQueues
 	}
-}

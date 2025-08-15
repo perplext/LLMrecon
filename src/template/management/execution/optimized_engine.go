@@ -3,7 +3,7 @@ package execution
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -29,7 +29,6 @@ type OptimizedTemplateExecutor struct {
 	stats ExecutionStats
 	// statsMutex protects the stats
 	statsMutex sync.RWMutex
-}
 
 // ResponseCache is a cache for LLM responses
 type ResponseCache struct {
@@ -43,7 +42,6 @@ type ResponseCache struct {
 	ttl time.Duration
 	// stats tracks cache statistics
 	stats CacheStats
-}
 
 // ResponseCacheEntry represents a cached LLM response
 type ResponseCacheEntry struct {
@@ -55,7 +53,6 @@ type ResponseCacheEntry struct {
 	ExpiresAt time.Time
 	// Size is an estimate of the response size in bytes
 	Size int
-}
 
 // CacheStats tracks cache statistics
 type CacheStats struct {
@@ -67,7 +64,6 @@ type CacheStats struct {
 	Evictions int64
 	// TotalLookups is the total number of lookups
 	TotalLookups int64
-}
 
 // WorkPool manages a pool of workers for concurrent execution
 type WorkPool struct {
@@ -77,7 +73,6 @@ type WorkPool struct {
 	wg sync.WaitGroup
 	// size is the size of the worker pool
 	size int
-}
 
 // ExecutionStats tracks execution statistics
 type ExecutionStats struct {
@@ -93,7 +88,6 @@ type ExecutionStats struct {
 	TotalExecutionTime time.Duration
 	// RetryCount is the number of retries performed
 	RetryCount int64
-}
 
 // NewOptimizedTemplateExecutor creates a new optimized template executor
 func NewOptimizedTemplateExecutor(defaultOptions *ExecutionOptions, cacheSize int, cacheTTL time.Duration, workerPoolSize int) *OptimizedTemplateExecutor {
@@ -137,7 +131,6 @@ func NewOptimizedTemplateExecutor(defaultOptions *ExecutionOptions, cacheSize in
 		responseCache:    responseCache,
 		workPool:         workPool,
 	}
-}
 
 // newWorkPool creates a new work pool
 func newWorkPool(size int) *WorkPool {
@@ -157,17 +150,14 @@ func newWorkPool(size int) *WorkPool {
 	}
 
 	return pool
-}
 
 // RegisterProvider registers an LLM provider
 func (e *OptimizedTemplateExecutor) RegisterProvider(provider interfaces.LLMProvider) {
 	e.providers[provider.GetName()] = provider
-}
 
 // RegisterDetectionEngine registers a detection engine
 func (e *OptimizedTemplateExecutor) RegisterDetectionEngine(engine interfaces.DetectionEngine) {
 	e.detectionEngines[engine.GetName()] = engine
-}
 
 // Execute executes a template
 func (e *OptimizedTemplateExecutor) Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*interfaces.TemplateResult, error) {
@@ -269,7 +259,6 @@ func (e *OptimizedTemplateExecutor) Execute(ctx context.Context, template *forma
 	e.statsMutex.Unlock()
 
 	return result, nil
-}
 
 // ExecuteBatch executes multiple templates concurrently
 func (e *OptimizedTemplateExecutor) ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
@@ -322,7 +311,6 @@ func (e *OptimizedTemplateExecutor) ExecuteBatch(ctx context.Context, templates 
 	
 	// Return results
 	return results, lastError
-}
 
 // executeWithRetry executes a template with retry logic
 func (e *OptimizedTemplateExecutor) executeWithRetry(ctx context.Context, template *format.Template, provider interfaces.LLMProvider, options *ExecutionOptions) (string, error) {
@@ -378,7 +366,6 @@ func (e *OptimizedTemplateExecutor) executeWithRetry(ctx context.Context, templa
 	}
 
 	return response, nil
-}
 
 // mergeOptions merges user options with default options
 func (e *OptimizedTemplateExecutor) mergeOptions(userOptions map[string]interface{}) *ExecutionOptions {
@@ -452,7 +439,6 @@ func (e *OptimizedTemplateExecutor) mergeOptions(userOptions map[string]interfac
 	}
 
 	return options
-}
 
 // generateCacheKey generates a cache key for a template and options
 func (e *OptimizedTemplateExecutor) generateCacheKey(template *format.Template, options *ExecutionOptions) string {
@@ -483,9 +469,8 @@ func (e *OptimizedTemplateExecutor) generateCacheKey(template *format.Template, 
 	}
 
 	// Generate MD5 hash
-	hash := md5.Sum(jsonData)
+	hash := sha256.Sum256(jsonData)
 	return hex.EncodeToString(hash[:])
-}
 
 // getCachedResponse gets a response from the cache
 func (e *OptimizedTemplateExecutor) getCachedResponse(key string) (string, bool) {
@@ -509,7 +494,6 @@ func (e *OptimizedTemplateExecutor) getCachedResponse(key string) (string, bool)
 
 	e.responseCache.stats.Hits++
 	return entry.Response, true
-}
 
 // cacheResponse caches a response
 func (e *OptimizedTemplateExecutor) cacheResponse(key string, response string, options map[string]interface{}) {
@@ -552,7 +536,6 @@ func (e *OptimizedTemplateExecutor) cacheResponse(key string, response string, o
 
 	// Add to cache
 	e.responseCache.cache[key] = entry
-}
 
 // ClearCache clears the response cache
 func (e *OptimizedTemplateExecutor) ClearCache() {
@@ -560,7 +543,6 @@ func (e *OptimizedTemplateExecutor) ClearCache() {
 	defer e.responseCache.mutex.Unlock()
 
 	e.responseCache.cache = make(map[string]*ResponseCacheEntry)
-}
 
 // GetCacheStats returns statistics about the cache
 func (e *OptimizedTemplateExecutor) GetCacheStats() map[string]interface{} {
@@ -580,7 +562,6 @@ func (e *OptimizedTemplateExecutor) GetCacheStats() map[string]interface{} {
 		"evictions": e.responseCache.stats.Evictions,
 		"hit_rate":  hitRate,
 	}
-}
 
 // GetExecutionStats returns statistics about the executor
 func (e *OptimizedTemplateExecutor) GetExecutionStats() map[string]interface{} {
@@ -613,7 +594,6 @@ func (e *OptimizedTemplateExecutor) GetExecutionStats() map[string]interface{} {
 		"cache_rate":            cacheRate,
 		"retry_count":           e.stats.RetryCount,
 	}
-}
 
 // GetProviders returns the list of registered providers
 func (e *OptimizedTemplateExecutor) GetProviders() []string {
@@ -622,7 +602,6 @@ func (e *OptimizedTemplateExecutor) GetProviders() []string {
 		providers = append(providers, name)
 	}
 	return providers
-}
 
 // GetDetectionEngines returns the list of registered detection engines
 func (e *OptimizedTemplateExecutor) GetDetectionEngines() []string {
@@ -631,7 +610,6 @@ func (e *OptimizedTemplateExecutor) GetDetectionEngines() []string {
 		engines = append(engines, name)
 	}
 	return engines
-}
 
 // SetMaxConcurrent sets the maximum number of concurrent executions
 func (e *OptimizedTemplateExecutor) SetMaxConcurrent(max int) {
@@ -639,7 +617,6 @@ func (e *OptimizedTemplateExecutor) SetMaxConcurrent(max int) {
 		return
 	}
 	e.defaultOptions.MaxConcurrent = max
-}
 
 // SetCacheTTL sets the time-to-live for cache entries
 func (e *OptimizedTemplateExecutor) SetCacheTTL(ttl time.Duration) {
@@ -647,7 +624,6 @@ func (e *OptimizedTemplateExecutor) SetCacheTTL(ttl time.Duration) {
 		return
 	}
 	e.responseCache.ttl = ttl
-}
 
 // SetCacheSize sets the maximum size of the cache
 func (e *OptimizedTemplateExecutor) SetCacheSize(size int) {
@@ -655,7 +631,6 @@ func (e *OptimizedTemplateExecutor) SetCacheSize(size int) {
 		return
 	}
 	e.responseCache.maxSize = size
-}
 
 // SetWorkerPoolSize sets the size of the worker pool
 func (e *OptimizedTemplateExecutor) SetWorkerPoolSize(size int) {
@@ -669,4 +644,3 @@ func (e *OptimizedTemplateExecutor) SetWorkerPoolSize(size int) {
 
 	// Close old pool
 	close(oldPool.workers)
-}

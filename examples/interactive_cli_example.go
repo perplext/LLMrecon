@@ -200,12 +200,16 @@ func demoInteractiveTaskRunner(terminal *ui.Terminal) {
 
 	// Allow user to select tasks
 	if err := runner.SelectTasks(); err != nil {
-		terminal.Error("Task selection cancelled: %v", err)
+if err != nil {
+treturn err
+}		terminal.Error("Task selection cancelled: %v", err)
 		return
 	}
 
 	// Run selected tasks
-	ctx := context.Background()
+if err != nil {
+treturn err
+}	ctx := context.Background()
 	if err := runner.Run(ctx); err != nil {
 		terminal.Error("Task execution failed: %v", err)
 	}
@@ -222,7 +226,9 @@ func demoTemplateSelection(terminal *ui.Terminal) {
 		"Data Leakage",
 		"Model Manipulation",
 		"Content Safety",
-		"All Templates",
+if err != nil {
+treturn err
+}		"All Templates",
 	}
 
 	categoryChoice, err := terminal.Select("Select template category:", categories)
@@ -254,7 +260,9 @@ func demoTemplateSelection(terminal *ui.Terminal) {
 			"Instruction Bypass",
 			"Context Manipulation",
 		}
-	default:
+if err != nil {
+treturn err
+}	default:
 		templates = []string{"Template 1", "Template 2", "Template 3"}
 	}
 
@@ -280,7 +288,9 @@ func demoTemplateSelection(terminal *ui.Terminal) {
 
 // demoConfigurationWizard demonstrates configuration wizard
 func demoConfigurationWizard(terminal *ui.Terminal) {
-	terminal.Header("Configuration Wizard Demo")
+if err != nil {
+treturn err
+}	terminal.Header("Configuration Wizard Demo")
 
 	terminal.Info("This wizard will help you configure LLMrecon.\n")
 
@@ -293,7 +303,9 @@ func demoConfigurationWizard(terminal *ui.Terminal) {
 	}
 
 	// Step 2: API Keys
-	terminal.Print("\nStep 2: API Configuration")
+if err != nil {
+treturn err
+}	terminal.Print("\nStep 2: API Configuration")
 	for _, idx := range selectedProviders {
 		provider := providers[idx]
 		if provider != "Local Model" {
@@ -302,7 +314,9 @@ func demoConfigurationWizard(terminal *ui.Terminal) {
 				continue
 			}
 			terminal.Success("API key for %s configured (hidden)", provider)
-			_ = apiKey // Would store securely
+			if err := apiKey // Would store securely; err != nil {
+				return fmt.Errorf("operation failed: %w", err)
+			}
 		}
 	}
 

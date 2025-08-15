@@ -40,7 +40,6 @@ type RotationPolicy struct {
 	LastRotation time.Time `json:"last_rotation"`
 	// WarningDays is the number of days before expiration to start showing warnings
 	WarningDays int `json:"warning_days"`
-}
 
 // Credential represents a secure credential
 type Credential struct {
@@ -70,7 +69,6 @@ type Credential struct {
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
 	// LastUsedAt is when the credential was last used
 	LastUsedAt time.Time `json:"last_used_at,omitempty"`
-}
 
 // SecureVault manages secure storage of credentials
 type SecureVault struct {
@@ -92,7 +90,6 @@ type SecureVault struct {
 	rotationChecker *time.Ticker
 	// alertCallback is called when credentials need rotation
 	alertCallback func(credential *Credential, daysUntilExpiration int)
-}
 
 // VaultOptions contains options for creating a new vault
 type VaultOptions struct {
@@ -106,7 +103,6 @@ type VaultOptions struct {
 	RotationCheckInterval time.Duration
 	// AlertCallback is called when a credential needs rotation
 	AlertCallback func(credential *Credential, daysUntilExpiration int)
-}
 
 // NewSecureVault creates a new secure vault
 func NewSecureVault(filePath string, options VaultOptions) (*SecureVault, error) {
@@ -152,7 +148,6 @@ func NewSecureVault(filePath string, options VaultOptions) (*SecureVault, error)
 	}
 
 	return vault, nil
-}
 
 // startRotationChecker starts the rotation checker
 func (v *SecureVault) startRotationChecker() {
@@ -162,7 +157,6 @@ func (v *SecureVault) startRotationChecker() {
 			v.checkCredentialRotation()
 		}
 	}()
-}
 
 // checkCredentialRotation checks for credentials that need rotation
 func (v *SecureVault) checkCredentialRotation() {
@@ -201,13 +195,10 @@ func (v *SecureVault) checkCredentialRotation() {
 			v.alertCallback(cred, daysUntilRotation)
 		}
 	}
-}
 
 // deriveKey derives an encryption key from a passphrase
 func deriveKey(passphrase string, salt []byte) ([]byte, error) {
 	return scrypt.Key([]byte(passphrase), salt, 32768, 8, 1, 32)
-}
-
 // encrypt encrypts data using AES-GCM
 func (v *SecureVault) encrypt(data []byte) (string, error) {
 	block, err := aes.NewCipher(v.encryptionKey)
@@ -232,7 +223,6 @@ func (v *SecureVault) encrypt(data []byte) (string, error) {
 
 	// Encode as base64
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
-}
 
 // decrypt decrypts data using AES-GCM
 func (v *SecureVault) decrypt(encryptedData string) ([]byte, error) {
@@ -261,12 +251,11 @@ func (v *SecureVault) decrypt(encryptedData string) ([]byte, error) {
 
 	// Decrypt the data
 	return gcm.Open(nil, nonce, ciphertext, nil)
-}
 
 // load loads credentials from the file
 func (v *SecureVault) load() error {
 	// Read file
-	data, err := os.ReadFile(v.filePath)
+	data, err := os.ReadFile(filepath.Clean(v.filePath))
 	if err != nil {
 		return err
 	}
@@ -293,7 +282,6 @@ func (v *SecureVault) load() error {
 	}
 
 	return nil
-}
 
 // Save saves credentials to the file
 func (v *SecureVault) Save() error {
@@ -320,8 +308,7 @@ func (v *SecureVault) Save() error {
 	}
 
 	// Write to file with secure permissions
-	return os.WriteFile(v.filePath, []byte(encryptedData), 0600)
-}
+	return os.WriteFile(filepath.Clean(v.filePath, []byte(encryptedData)), 0600)
 
 // GetCredential gets a credential by ID
 func (v *SecureVault) GetCredential(id string) (*Credential, error) {
@@ -345,7 +332,6 @@ func (v *SecureVault) GetCredential(id string) (*Credential, error) {
 	}
 
 	return cred, nil
-}
 
 // StoreCredential stores a credential
 func (v *SecureVault) StoreCredential(cred *Credential) error {
@@ -399,7 +385,6 @@ func (v *SecureVault) StoreCredential(cred *Credential) error {
 	}
 
 	return nil
-}
 
 // DeleteCredential deletes a credential by ID
 func (v *SecureVault) DeleteCredential(id string) error {
@@ -446,7 +431,6 @@ func (v *SecureVault) DeleteCredential(id string) error {
 	}
 
 	return nil
-}
 
 // ListCredentials lists all credentials
 func (v *SecureVault) ListCredentials() ([]*Credential, error) {
@@ -464,7 +448,6 @@ func (v *SecureVault) ListCredentials() ([]*Credential, error) {
 	}
 
 	return credentials, nil
-}
 
 // ListCredentialsByService lists credentials for a specific service
 func (v *SecureVault) ListCredentialsByService(service string) ([]*Credential, error) {
@@ -484,7 +467,6 @@ func (v *SecureVault) ListCredentialsByService(service string) ([]*Credential, e
 	}
 
 	return credentials, nil
-}
 
 // ListCredentialsByType lists credentials of a specific type
 func (v *SecureVault) ListCredentialsByType(credType CredentialType) ([]*Credential, error) {
@@ -504,7 +486,6 @@ func (v *SecureVault) ListCredentialsByType(credType CredentialType) ([]*Credent
 	}
 
 	return credentials, nil
-}
 
 // ListCredentialsByTag lists credentials with a specific tag
 func (v *SecureVault) ListCredentialsByTag(tag string) ([]*Credential, error) {
@@ -527,7 +508,6 @@ func (v *SecureVault) ListCredentialsByTag(tag string) ([]*Credential, error) {
 	}
 
 	return credentials, nil
-}
 
 // RotateCredential marks a credential as rotated
 func (v *SecureVault) RotateCredential(id string, newValue string) error {
@@ -558,7 +538,6 @@ func (v *SecureVault) RotateCredential(id string, newValue string) error {
 	}
 
 	return nil
-}
 
 // GetCredentialsNeedingRotation returns credentials that need rotation
 func (v *SecureVault) GetCredentialsNeedingRotation() ([]*Credential, error) {
@@ -594,7 +573,6 @@ func (v *SecureVault) GetCredentialsNeedingRotation() ([]*Credential, error) {
 	}
 
 	return credentials, nil
-}
 
 // Close closes the vault and stops any background processes
 func (v *SecureVault) Close() error {
@@ -602,7 +580,6 @@ func (v *SecureVault) Close() error {
 		v.rotationChecker.Stop()
 	}
 	return v.Save()
-}
 
 // GenerateCredentialID generates a unique ID for a credential
 func GenerateCredentialID(service string, name string) string {
@@ -614,5 +591,3 @@ func GenerateCredentialID(service string, name string) string {
 	hash := h.Sum(nil)
 	
 	// Use first 8 bytes of hash as ID
-	return fmt.Sprintf("%s-%s-%x", service, name, hash[:8])
-}

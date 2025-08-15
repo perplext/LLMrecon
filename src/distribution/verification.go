@@ -24,7 +24,6 @@ func NewUpdateVerifier(config VerificationConfig, logger Logger) UpdateVerifier 
 		logger:      logger,
 		trustedKeys: make(map[string]*PublicKey),
 	}
-}
 
 func (uv *UpdateVerifierImpl) VerifyChecksum(ctx context.Context, artifact *BuildArtifact) error {
 	if !uv.config.Required {
@@ -43,7 +42,6 @@ func (uv *UpdateVerifierImpl) VerifyChecksum(ctx context.Context, artifact *Buil
 	uv.logger.Info("Checksum verification successful", "algorithm", uv.config.ChecksumAlgo, "checksum", expectedChecksum[:16]+"...")
 	
 	return nil
-}
 
 func (uv *UpdateVerifierImpl) VerifySignature(ctx context.Context, artifact *BuildArtifact) error {
 	if !uv.config.Required {
@@ -70,7 +68,6 @@ func (uv *UpdateVerifierImpl) VerifySignature(ctx context.Context, artifact *Bui
 	uv.logger.Info("Signature verification successful", "keyID", artifact.Signature.KeyID)
 	
 	return nil
-}
 
 func (uv *UpdateVerifierImpl) VerifyChain(ctx context.Context, artifact *BuildArtifact) error {
 	// Verify both checksum and signature
@@ -92,7 +89,6 @@ func (uv *UpdateVerifierImpl) VerifyChain(ctx context.Context, artifact *BuildAr
 	uv.logger.Info("Complete verification chain successful", "artifact", artifact.Name)
 	
 	return nil
-}
 
 func (uv *UpdateVerifierImpl) AddTrustedKey(ctx context.Context, key *PublicKey) error {
 	// Validate key format
@@ -104,7 +100,6 @@ func (uv *UpdateVerifierImpl) AddTrustedKey(ctx context.Context, key *PublicKey)
 	uv.logger.Info("Added trusted key", "keyID", key.ID, "algorithm", key.Algorithm)
 	
 	return nil
-}
 
 func (uv *UpdateVerifierImpl) RemoveTrustedKey(ctx context.Context, keyID string) error {
 	if _, exists := uv.trustedKeys[keyID]; !exists {
@@ -115,7 +110,6 @@ func (uv *UpdateVerifierImpl) RemoveTrustedKey(ctx context.Context, keyID string
 	uv.logger.Info("Removed trusted key", "keyID", keyID)
 	
 	return nil
-}
 
 func (uv *UpdateVerifierImpl) ListTrustedKeys(ctx context.Context) ([]PublicKey, error) {
 	keys := make([]PublicKey, 0, len(uv.trustedKeys))
@@ -124,18 +118,15 @@ func (uv *UpdateVerifierImpl) ListTrustedKeys(ctx context.Context) ([]PublicKey,
 	}
 	
 	return keys, nil
-}
 
 func (uv *UpdateVerifierImpl) GetVerificationConfig() VerificationConfig {
 	return uv.config
-}
 
 func (uv *UpdateVerifierImpl) UpdateConfig(ctx context.Context, config VerificationConfig) error {
 	uv.config = config
 	uv.logger.Info("Updated verification config", "required", config.Required, "checksumAlgo", config.ChecksumAlgo)
 	
 	return nil
-}
 
 // Internal methods
 
@@ -167,7 +158,6 @@ func (uv *UpdateVerifierImpl) verifySignatureWithKey(artifact *BuildArtifact, tr
 	}
 	
 	return nil
-}
 
 func (uv *UpdateVerifierImpl) validatePublicKey(key *PublicKey) error {
 	if key.ID == "" {
@@ -194,7 +184,6 @@ func (uv *UpdateVerifierImpl) validatePublicKey(key *PublicKey) error {
 	}
 	
 	return nil
-}
 
 func (uv *UpdateVerifierImpl) verifyCertificatePinning(artifact *BuildArtifact) error {
 	if len(uv.config.PinnedCerts) == 0 {
@@ -205,20 +194,17 @@ func (uv *UpdateVerifierImpl) verifyCertificatePinning(artifact *BuildArtifact) 
 	uv.logger.Info("Verifying certificate pinning", "artifact", artifact.Name, "pinnedCerts", len(uv.config.PinnedCerts))
 	
 	return nil
-}
 
 // CertificateManager handles certificate operations
-type CertificateManager struct {
+ype CertificateManager struct {
 	config VerificationConfig
 	logger Logger
-}
 
 func NewCertificateManager(config VerificationConfig, logger Logger) *CertificateManager {
 	return &CertificateManager{
 		config: config,
 		logger: logger,
 	}
-}
 
 func (cm *CertificateManager) GenerateKeyPair() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -227,7 +213,7 @@ func (cm *CertificateManager) GenerateKeyPair() (*rsa.PrivateKey, *rsa.PublicKey
 	}
 	
 	return privateKey, &privateKey.PublicKey, nil
-}
+	
 
 func (cm *CertificateManager) CreateSelfSignedCertificate(privateKey *rsa.PrivateKey, subject string) (*x509.Certificate, error) {
 	template := x509.Certificate{
@@ -253,7 +239,6 @@ func (cm *CertificateManager) CreateSelfSignedCertificate(privateKey *rsa.Privat
 	}
 	
 	return cert, nil
-}
 
 func (cm *CertificateManager) ExportPrivateKeyPEM(privateKey *rsa.PrivateKey) ([]byte, error) {
 	privateKeyDER := x509.MarshalPKCS1PrivateKey(privateKey)
@@ -263,7 +248,6 @@ func (cm *CertificateManager) ExportPrivateKeyPEM(privateKey *rsa.PrivateKey) ([
 	})
 	
 	return privateKeyPEM, nil
-}
 
 func (cm *CertificateManager) ExportPublicKeyPEM(publicKey *rsa.PublicKey) ([]byte, error) {
 	publicKeyDER, err := x509.MarshalPKIXPublicKey(publicKey)
@@ -277,14 +261,12 @@ func (cm *CertificateManager) ExportPublicKeyPEM(publicKey *rsa.PublicKey) ([]by
 	})
 	
 	return publicKeyPEM, nil
-}
 
 func (cm *CertificateManager) ExportCertificatePEM(cert *x509.Certificate) []byte {
 	return pem.EncodeToMemory(&pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: cert.Raw,
 	})
-}
 
 // Helper functions
 import (
@@ -294,5 +276,21 @@ import (
 
 func generateSerial() *big.Int {
 	serialNumber, _ := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
-	return serialNumber
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

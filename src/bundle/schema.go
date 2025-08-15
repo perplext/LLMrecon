@@ -1,6 +1,10 @@
 package bundle
 
 import (
+	"os"
+	"path/filepath"
+	"time"
+	"strings"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,13 +14,14 @@ import (
 
 // SchemaValidator provides functionality for validating bundle manifests against a schema
 type SchemaValidator struct {
+    	schemaLoader gojsonschema.JSONLoader
+    }
 	schemaLoader gojsonschema.JSONLoader
-}
 
 // NewSchemaValidator creates a new schema validator with the specified schema path
 func NewSchemaValidator(schemaPath string) (*SchemaValidator, error) {
 	// Check if the schema file exists
-	if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
+	    if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("schema file not found: %s", schemaPath)
 	}
 
@@ -26,7 +31,6 @@ func NewSchemaValidator(schemaPath string) (*SchemaValidator, error) {
 	return &SchemaValidator{
 		schemaLoader: schemaLoader,
 	}, nil
-}
 
 // NewDefaultSchemaValidator creates a new schema validator with the default schema path
 func NewDefaultSchemaValidator() (*SchemaValidator, error) {
@@ -37,10 +41,15 @@ func NewDefaultSchemaValidator() (*SchemaValidator, error) {
 	}
 
 	execDir := filepath.Dir(execPath)
-	schemaPath := filepath.Join(execDir, "..", "schemas", "bundle-manifest-schema.json")
+		schemaPath := filepath.Join(execDir, "..", "schemas", "bundle-manifest-schema.json")
+	// Prevent path traversal
+	    if strings.Contains(schemaPath, "..") {
+		        return nil, fmt.Errorf("path traversal detected")
+	}
+	    schemaPath = filepath.Clean(schemaPath)
 
 	// Check if the schema file exists at the default location
-	if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
+	    if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
 		// Try to find the schema in the current working directory
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -48,13 +57,12 @@ func NewDefaultSchemaValidator() (*SchemaValidator, error) {
 		}
 
 		schemaPath = filepath.Join(cwd, "schemas", "bundle-manifest-schema.json")
-		if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
+		    if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
 			return nil, fmt.Errorf("schema file not found at default locations")
 		}
 	}
 
 	return NewSchemaValidator(schemaPath)
-}
 
 // ValidateManifestFile validates a manifest file against the schema
 func (v *SchemaValidator) ValidateManifestFile(manifestPath string) (*ValidationResult, error) {
@@ -90,7 +98,6 @@ func (v *SchemaValidator) ValidateManifestFile(manifestPath string) (*Validation
 	}
 
 	return validationResult, nil
-}
 
 // ValidateManifestJSON validates a manifest JSON string against the schema
 func (v *SchemaValidator) ValidateManifestJSON(manifestJSON string) (*ValidationResult, error) {
@@ -121,7 +128,6 @@ func (v *SchemaValidator) ValidateManifestJSON(manifestJSON string) (*Validation
 	}
 
 	return validationResult, nil
-}
 
 // ValidateManifestStruct validates a manifest struct against the schema
 func (v *SchemaValidator) ValidateManifestStruct(manifest *BundleManifest) (*ValidationResult, error) {
@@ -133,12 +139,11 @@ func (v *SchemaValidator) ValidateManifestStruct(manifest *BundleManifest) (*Val
 
 	// Validate the manifest JSON
 	return v.ValidateManifestJSON(string(manifestJSON))
-}
 
 // LoadSchemaFromFile loads a JSON schema from a file
 func LoadSchemaFromFile(schemaPath string) (map[string]interface{}, error) {
 	// Read the schema file
-	schemaData, err := ioutil.ReadFile(schemaPath)
+	schemaData, err := ioutil.ReadFile(filepath.Clean(schemaPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read schema file: %w", err)
 	}
@@ -150,7 +155,6 @@ func LoadSchemaFromFile(schemaPath string) (map[string]interface{}, error) {
 	}
 
 	return schema, nil
-}
 
 // GenerateExampleManifest generates an example manifest based on the schema
 func GenerateExampleManifest() *BundleManifest {
@@ -186,7 +190,6 @@ func GenerateExampleManifest() *BundleManifest {
 			MinVersion: "1.0.0",
 		},
 	}
-}
 
 // SaveExampleManifest saves an example manifest to a file
 func SaveExampleManifest(outputPath string) error {
@@ -200,14 +203,12 @@ func SaveExampleManifest(outputPath string) error {
 	}
 
 	// Write the manifest to the file
-	if err := ioutil.WriteFile(outputPath, manifestJSON, 0644); err != nil {
+	if err := ioutil.WriteFile(outputPath, manifestJSON, 0600); err != nil {
 		return fmt.Errorf("failed to write manifest file: %w", err)
 	}
 
 	return nil
-}
 
 // getCurrentTime returns the current time
 func getCurrentTime() time.Time {
 	return time.Now()
-}

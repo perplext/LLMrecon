@@ -87,7 +87,6 @@ func (ks *FileKeyStore) GetRSAPrivateKey(id string) (*rsa.PrivateKey, error) {
 	default:
 		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
 	}
-}
 
 // GetRSAPublicKey gets an RSA public key by ID
 func (ks *FileKeyStore) GetRSAPublicKey(id string) (*rsa.PublicKey, error) {
@@ -165,7 +164,6 @@ func (ks *FileKeyStore) GetRSAPublicKey(id string) (*rsa.PublicKey, error) {
 	default:
 		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
 	}
-}
 
 // GetECDSAPrivateKey gets an ECDSA private key by ID
 func (ks *FileKeyStore) GetECDSAPrivateKey(id string) (*ecdsa.PrivateKey, error) {
@@ -243,7 +241,6 @@ func (ks *FileKeyStore) GetECDSAPrivateKey(id string) (*ecdsa.PrivateKey, error)
 	default:
 		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
 	}
-}
 
 // GetECDSAPublicKey gets an ECDSA public key by ID
 func (ks *FileKeyStore) GetECDSAPublicKey(id string) (*ecdsa.PublicKey, error) {
@@ -312,7 +309,6 @@ func (ks *FileKeyStore) GetECDSAPublicKey(id string) (*ecdsa.PublicKey, error) {
 	default:
 		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
 	}
-}
 
 // GetEd25519PrivateKey gets an Ed25519 private key by ID
 func (ks *FileKeyStore) GetEd25519PrivateKey(id string) (ed25519.PrivateKey, error) {
@@ -380,7 +376,6 @@ func (ks *FileKeyStore) GetEd25519PrivateKey(id string) (ed25519.PrivateKey, err
 	default:
 		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
 	}
-}
 
 // GetEd25519PublicKey gets an Ed25519 public key by ID
 func (ks *FileKeyStore) GetEd25519PublicKey(id string) (ed25519.PublicKey, error) {
@@ -449,7 +444,6 @@ func (ks *FileKeyStore) GetEd25519PublicKey(id string) (ed25519.PublicKey, error
 	default:
 		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
 	}
-}
 
 // GetCertificate gets a certificate by ID
 func (ks *FileKeyStore) GetCertificate(id string) (*x509.Certificate, error) {
@@ -491,4 +485,3 @@ func (ks *FileKeyStore) GetCertificate(id string) (*x509.Certificate, error) {
 	default:
 		return nil, fmt.Errorf("unsupported certificate format: %s", key.Material.Format)
 	}
-}

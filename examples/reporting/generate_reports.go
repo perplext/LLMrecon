@@ -19,7 +19,7 @@ func main() {
 	testSuiteFile := os.Args[1]
 
 	// Read test suite file
-	suiteData, err := os.ReadFile(testSuiteFile)
+	suiteData, err := os.ReadFile(filepath.Clean(testSuiteFile))
 	if err != nil {
 		fmt.Printf("Error reading test suite file: %v\n", err)
 		os.Exit(1)
@@ -28,17 +28,23 @@ func main() {
 	// Parse test suite
 	var suite reporting.TestSuite
 	if err := json.Unmarshal(suiteData, &suite); err != nil {
-		fmt.Printf("Error parsing test suite file: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Printf("Error parsing test suite file: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Create output directory
-	outputDir := "reports"
+if err != nil {
+treturn err
+}	outputDir := "reports"
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		fmt.Printf("Error creating output directory: %v\n", err)
 		os.Exit(1)
 	}
-
+if err != nil {
+treturn err
+}
 	// Create factory and report generator
 	factory := reporting.NewFormatterFactory()
 	generator, err := factory.CreateDefaultReportGenerator()
@@ -83,7 +89,9 @@ func main() {
 			OutputPath:         outputFile,
 			Metadata: map[string]interface{}{
 				"generated_by":    "example script",
-				"source_file":     testSuiteFile,
+if err != nil {
+treturn err
+}				"source_file":     testSuiteFile,
 			},
 		}
 

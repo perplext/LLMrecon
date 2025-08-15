@@ -48,7 +48,7 @@ func (e *UpdateExecutor) executeBinaryPatchUpdate(ctx context.Context, pkg *Upda
 
 	// Create session directory for patched binary
 	sessionDir := filepath.Join(transaction.SessionDir, "bin")
-	if err := os.MkdirAll(sessionDir, 0755); err != nil {
+	if err := os.MkdirAll(sessionDir, 0700); err != nil {
 		return fmt.Errorf("failed to create session directory for binary: %w", err)
 	}
 
@@ -57,7 +57,6 @@ func (e *UpdateExecutor) executeBinaryPatchUpdate(ctx context.Context, pkg *Upda
 	if err := pkg.ExtractFile(patchPath, sessionPatchPath); err != nil {
 		return fmt.Errorf("failed to extract patch: %w", err)
 	}
-
 	// Create temporary file for patched binary
 	sessionBinaryPath := filepath.Join(sessionDir, fmt.Sprintf("LLMrecon-%s", platform))
 	if err := copyFile(installBinaryPath, sessionBinaryPath); err != nil {
@@ -103,7 +102,6 @@ func (e *UpdateExecutor) executeBinaryPatchUpdate(ctx context.Context, pkg *Upda
 	e.CurrentVersions["binary"] = binaryVersion
 
 	return nil
-}
 
 // executeTemplatesPatchUpdate executes a templates patch update
 func (e *UpdateExecutor) executeTemplatesPatchUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -139,10 +137,9 @@ func (e *UpdateExecutor) executeTemplatesPatchUpdate(ctx context.Context, pkg *U
 
 	// Get backup path
 	backupTemplatesPath := filepath.Join(transaction.BackupDir, "templates")
-
 	// Create session directory for patched templates
 	sessionDir := filepath.Join(transaction.SessionDir, "templates")
-	if err := os.MkdirAll(sessionDir, 0755); err != nil {
+	if err := os.MkdirAll(sessionDir, 0700); err != nil {
 		return fmt.Errorf("failed to create session directory for templates: %w", err)
 	}
 
@@ -171,7 +168,6 @@ func (e *UpdateExecutor) executeTemplatesPatchUpdate(ctx context.Context, pkg *U
 		installTemplatesPath,
 		backupTemplatesPath,
 	)
-
 	// Execute operation
 	if err := transaction.ExecuteOperation(ctx, operation); err != nil {
 		return fmt.Errorf("failed to execute templates update operation: %w", err)
@@ -197,7 +193,6 @@ func (e *UpdateExecutor) executeTemplatesPatchUpdate(ctx context.Context, pkg *U
 	e.CurrentVersions["templates"] = templatesVersion
 
 	return nil
-}
 
 // executeModulesPatchUpdate executes a modules patch update
 func (e *UpdateExecutor) executeModulesPatchUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -215,7 +210,6 @@ func (e *UpdateExecutor) executeModulesPatchUpdate(ctx context.Context, pkg *Upd
 		if currentVersion.String() != fromVersion.String() {
 			continue
 		}
-
 		// Get patch path in package
 		patchPath := pkg.GetModulePatchPath(modulePatch.ID, modulePatch.FromVersion, modulePatch.ToVersion)
 
@@ -227,7 +221,7 @@ func (e *UpdateExecutor) executeModulesPatchUpdate(ctx context.Context, pkg *Upd
 
 		// Create session directory for patched module
 		sessionDir := filepath.Join(transaction.SessionDir, "modules", modulePatch.ID)
-		if err := os.MkdirAll(sessionDir, 0755); err != nil {
+		if err := os.MkdirAll(sessionDir, 0700); err != nil {
 			return fmt.Errorf("failed to create session directory for module: %w", err)
 		}
 
@@ -282,5 +276,3 @@ func (e *UpdateExecutor) executeModulesPatchUpdate(ctx context.Context, pkg *Upd
 		e.CurrentVersions[fmt.Sprintf("module.%s", modulePatch.ID)] = moduleVersion
 	}
 
-	return nil
-}

@@ -22,6 +22,7 @@ type ComplianceReportingSystem struct {
     config          ComplianceConfig
 }
 
+}
 // ComplianceConfig holds configuration for compliance reporting
 type ComplianceConfig struct {
     EnabledFrameworks   []string
@@ -31,6 +32,7 @@ type ComplianceConfig struct {
     ReportFormats       []ReportFormat
 }
 
+}
 // ComplianceFramework represents a compliance framework
 type ComplianceFramework struct {
     ID              string                 `json:"id"`
@@ -46,6 +48,7 @@ type ComplianceFramework struct {
     Metadata        map[string]interface{} `json:"metadata"`
 }
 
+}
 // Category represents a compliance category
 type Category struct {
     ID              string          `json:"id"`
@@ -54,8 +57,8 @@ type Category struct {
     Requirements    []string        `json:"requirements"`
     Priority        Priority        `json:"priority"`
     Parent          string          `json:"parent,omitempty"`
-}
 
+}
 // Requirement represents a compliance requirement
 type Requirement struct {
     ID              string                 `json:"id"`
@@ -68,8 +71,8 @@ type Requirement struct {
     Evidence        []EvidenceType         `json:"evidence_required"`
     References      []string               `json:"references"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // RequirementLevel defines requirement levels
 type RequirementLevel string
 
@@ -101,8 +104,8 @@ type Control struct {
     LastTested      time.Time             `json:"last_tested"`
     TestResults     []*TestResult          `json:"test_results"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // ControlType defines control types
 type ControlType string
 
@@ -133,8 +136,8 @@ type TestProcedure struct {
     ActualResults   []string               `json:"actual_results,omitempty"`
     Status          TestStatus             `json:"status"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // TestStep represents a test step
 type TestStep struct {
     Order       int    `json:"order"`
@@ -144,6 +147,7 @@ type TestStep struct {
     Passed      bool   `json:"passed"`
 }
 
+}
 // TestStatus defines test status
 type TestStatus string
 
@@ -165,8 +169,8 @@ type TestResult struct {
     Evidence        []string               `json:"evidence"`
     Recommendations []string               `json:"recommendations"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // EvidenceType defines evidence types
 type EvidenceType string
 
@@ -187,8 +191,8 @@ type MappingRule struct {
     Relationship    string                 `json:"relationship"`
     Strength        float64                `json:"strength"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // Assessment represents a compliance assessment
 type Assessment struct {
     ID              string                 `json:"id"`
@@ -206,6 +210,7 @@ type Assessment struct {
     Metadata        map[string]interface{} `json:"metadata"`
 }
 
+}
 // AssessmentScope defines assessment scope
 type AssessmentScope struct {
     Systems         []string `json:"systems"`
@@ -215,6 +220,7 @@ type AssessmentScope struct {
     TimeFrame       string   `json:"timeframe"`
 }
 
+}
 // AssessmentStatus defines assessment status
 type AssessmentStatus string
 
@@ -238,8 +244,8 @@ type AssessmentResults struct {
     Strengths           []string               `json:"strengths"`
     Weaknesses          []string               `json:"weaknesses"`
     Metrics             map[string]interface{} `json:"metrics"`
-}
 
+}
 // RiskLevel defines risk levels
 type RiskLevel string
 
@@ -263,8 +269,8 @@ type ComplianceGap struct {
     Owner           string                 `json:"owner"`
     Status          GapStatus              `json:"status"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // GapStatus defines gap status
 type GapStatus string
 
@@ -290,6 +296,7 @@ type Finding struct {
     Metadata        map[string]interface{} `json:"metadata"`
 }
 
+}
 // SeverityLevel defines severity levels
 type SeverityLevel string
 
@@ -326,8 +333,8 @@ type Recommendation struct {
     Owner           string                 `json:"owner"`
     Status          RecommendationStatus   `json:"status"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // RecommendationStatus defines recommendation status
 type RecommendationStatus string
 
@@ -354,14 +361,15 @@ type Evidence struct {
     Metadata        map[string]interface{} `json:"metadata"`
 }
 
+}
 // CustodyEntry represents chain of custody entry
 type CustodyEntry struct {
     Timestamp   time.Time `json:"timestamp"`
     Actor       string    `json:"actor"`
     Action      string    `json:"action"`
     Description string    `json:"description"`
-}
 
+}
 // ComplianceReport represents a compliance report
 type ComplianceReport struct {
     ID              string                 `json:"id"`
@@ -380,8 +388,8 @@ type ComplianceReport struct {
     Distribution    []string               `json:"distribution"`
     Classification  string                 `json:"classification"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // ReportType defines report types
 type ReportType string
 
@@ -413,6 +421,7 @@ type ReportPeriod struct {
     Label   string    `json:"label"`
 }
 
+}
 // ExecutiveSummary represents executive summary
 type ExecutiveSummary struct {
     Overview        string                 `json:"overview"`
@@ -424,6 +433,7 @@ type ExecutiveSummary struct {
     Metrics         map[string]interface{} `json:"metrics"`
 }
 
+}
 // ReportSection represents a report section
 type ReportSection struct {
     ID              string                 `json:"id"`
@@ -437,6 +447,7 @@ type ReportSection struct {
     Metadata        map[string]interface{} `json:"metadata"`
 }
 
+}
 // Table represents a data table
 type Table struct {
     ID      string      `json:"id"`
@@ -446,6 +457,7 @@ type Table struct {
     Footer  []string    `json:"footer,omitempty"`
 }
 
+}
 // Chart represents a chart
 type Chart struct {
     ID      string                 `json:"id"`
@@ -455,14 +467,15 @@ type Chart struct {
     Options map[string]interface{} `json:"options"`
 }
 
+}
 // Appendix represents report appendix
 type Appendix struct {
     ID      string  `json:"id"`
     Title   string  `json:"title"`
     Content string  `json:"content"`
     Type    string  `json:"type"`
-}
 
+}
 // SecurityControl represents an implemented security control
 type SecurityControl struct {
     ID              string                 `json:"id"`
@@ -480,6 +493,7 @@ type SecurityControl struct {
     Metadata        map[string]interface{} `json:"metadata"`
 }
 
+}
 // ImplementationDetails contains control implementation details
 type ImplementationDetails struct {
     Method          string    `json:"method"`
@@ -489,6 +503,7 @@ type ImplementationDetails struct {
     ImplementedDate time.Time `json:"implemented_date"`
 }
 
+}
 // TestingDetails contains control testing details
 type TestingDetails struct {
     Frequency       string       `json:"frequency"`
@@ -498,6 +513,7 @@ type TestingDetails struct {
     Results         []TestResult `json:"results"`
 }
 
+}
 // MonitoringDetails contains control monitoring details
 type MonitoringDetails struct {
     Method          string   `json:"method"`
@@ -507,6 +523,7 @@ type MonitoringDetails struct {
     Dashboard       string   `json:"dashboard"`
 }
 
+}
 // ComplianceAuditor performs compliance audits
 type ComplianceAuditor struct {
     frameworks  map[string]*ComplianceFramework
@@ -514,6 +531,7 @@ type ComplianceAuditor struct {
     mu          sync.RWMutex
 }
 
+}
 // ReportGenerator generates compliance reports
 type ReportGenerator struct {
     templates   map[string]*ReportTemplate
@@ -521,6 +539,7 @@ type ReportGenerator struct {
     mu          sync.RWMutex
 }
 
+}
 // ReportTemplate represents a report template
 type ReportTemplate struct {
     ID          string                 `json:"id"`
@@ -529,8 +548,8 @@ type ReportTemplate struct {
     Structure   []TemplateSection      `json:"structure"`
     Styles      map[string]interface{} `json:"styles"`
     Variables   []string               `json:"variables"`
-}
 
+}
 // TemplateSection represents a template section
 type TemplateSection struct {
     Name        string   `json:"name"`
@@ -540,18 +559,20 @@ type TemplateSection struct {
     Children    []string `json:"children"`
 }
 
+}
 // Formatter interface for report formatting
 type Formatter interface {
     Format(report *ComplianceReport) ([]byte, error)
-}
 
 // ComplianceTracker tracks compliance status
+}
 type ComplianceTracker struct {
     status      map[string]*ComplianceStatus
     history     map[string][]*StatusChange
     mu          sync.RWMutex
 }
 
+}
 // ComplianceStatus represents current compliance status
 type ComplianceStatus struct {
     Framework       string                 `json:"framework"`
@@ -563,6 +584,7 @@ type ComplianceStatus struct {
     Metadata        map[string]interface{} `json:"metadata"`
 }
 
+}
 // StatusChange represents a status change
 type StatusChange struct {
     Timestamp   time.Time              `json:"timestamp"`
@@ -571,8 +593,8 @@ type StatusChange struct {
     Reason      string                 `json:"reason"`
     ChangedBy   string                 `json:"changed_by"`
     Metadata    map[string]interface{} `json:"metadata"`
-}
 
+}
 // TrendPoint represents a trend data point
 type TrendPoint struct {
     Timestamp   time.Time `json:"timestamp"`
@@ -580,6 +602,7 @@ type TrendPoint struct {
     Label       string    `json:"label"`
 }
 
+}
 // ComplianceRepository stores compliance data
 type ComplianceRepository struct {
     storage     map[string]interface{}
@@ -587,6 +610,7 @@ type ComplianceRepository struct {
     mu          sync.RWMutex
 }
 
+}
 // NewComplianceReportingSystem creates a new compliance reporting system
 func NewComplianceReportingSystem(config ComplianceConfig) *ComplianceReportingSystem {
     return &ComplianceReportingSystem{
@@ -601,9 +625,9 @@ func NewComplianceReportingSystem(config ComplianceConfig) *ComplianceReportingS
         repository:  NewComplianceRepository(),
         config:      config,
     }
-}
 
 // LoadFramework loads a compliance framework
+}
 func (crs *ComplianceReportingSystem) LoadFramework(ctx context.Context, framework *ComplianceFramework) error {
     crs.mu.Lock()
     defer crs.mu.Unlock()
@@ -624,9 +648,9 @@ func (crs *ComplianceReportingSystem) LoadFramework(ctx context.Context, framewo
     crs.auditor.LoadFramework(framework)
 
     return nil
-}
 
 // StartAssessment starts a compliance assessment
+}
 func (crs *ComplianceReportingSystem) StartAssessment(ctx context.Context, assessment *Assessment) error {
     crs.mu.Lock()
     defer crs.mu.Unlock()
@@ -651,9 +675,9 @@ func (crs *ComplianceReportingSystem) StartAssessment(ctx context.Context, asses
     }
 
     return nil
-}
 
 // GenerateReport generates a compliance report
+}
 func (crs *ComplianceReportingSystem) GenerateReport(ctx context.Context, assessmentID string, reportType ReportType, format ReportFormat) (*ComplianceReport, error) {
     crs.mu.RLock()
     assessment, exists := crs.assessments[assessmentID]
@@ -702,24 +726,24 @@ func (crs *ComplianceReportingSystem) GenerateReport(ctx context.Context, assess
     crs.mu.Unlock()
 
     return report, nil
-}
 
 // NewComplianceAuditor creates a new compliance auditor
+}
 func NewComplianceAuditor() *ComplianceAuditor {
     return &ComplianceAuditor{
         frameworks: make(map[string]*ComplianceFramework),
         controls:   make(map[string]*SecurityControl),
     }
-}
 
 // LoadFramework loads a framework into the auditor
+}
 func (ca *ComplianceAuditor) LoadFramework(framework *ComplianceFramework) {
     ca.mu.Lock()
     defer ca.mu.Unlock()
     ca.frameworks[framework.ID] = framework
-}
 
 // AuditControl audits a security control
+}
 func (ca *ComplianceAuditor) AuditControl(control *SecurityControl, requirements []string) (*TestResult, error) {
     result := &TestResult{
         ID:       generateTestResultID(),
@@ -739,9 +763,9 @@ func (ca *ComplianceAuditor) AuditControl(control *SecurityControl, requirements
     }
 
     return result, nil
-}
 
 // testControl tests a security control
+}
 func (ca *ComplianceAuditor) testControl(control *SecurityControl, requirements []string) []string {
     var findings []string
     
@@ -755,17 +779,17 @@ func (ca *ComplianceAuditor) testControl(control *SecurityControl, requirements 
     }
     
     return findings
-}
 
 // NewReportGenerator creates a new report generator
+}
 func NewReportGenerator() *ReportGenerator {
     return &ReportGenerator{
         templates:  make(map[string]*ReportTemplate),
         formatters: make(map[ReportFormat]Formatter),
     }
-}
 
 // FormatReport formats a compliance report
+}
 func (rg *ReportGenerator) FormatReport(report *ComplianceReport, format ReportFormat) ([]byte, error) {
     rg.mu.RLock()
     formatter, exists := rg.formatters[format]
@@ -777,17 +801,17 @@ func (rg *ReportGenerator) FormatReport(report *ComplianceReport, format ReportF
     }
 
     return formatter.Format(report)
-}
 
 // NewComplianceTracker creates a new compliance tracker
+}
 func NewComplianceTracker() *ComplianceTracker {
     return &ComplianceTracker{
         status:  make(map[string]*ComplianceStatus),
         history: make(map[string][]*StatusChange),
     }
-}
 
 // UpdateStatus updates compliance status
+}
 func (ct *ComplianceTracker) UpdateStatus(framework string, score float64, status string) {
     ct.mu.Lock()
     defer ct.mu.Unlock()
@@ -821,17 +845,17 @@ func (ct *ComplianceTracker) UpdateStatus(framework string, score float64, statu
         Value:     score,
         Label:     status,
     })
-}
 
 // NewComplianceRepository creates a new compliance repository
+}
 func NewComplianceRepository() *ComplianceRepository {
     return &ComplianceRepository{
         storage: make(map[string]interface{}),
         indices: make(map[string]map[string]string),
     }
-}
 
 // Store stores compliance data
+}
 func (cr *ComplianceRepository) Store(dataType, id string, data interface{}) error {
     cr.mu.Lock()
     defer cr.mu.Unlock()
@@ -846,9 +870,9 @@ func (cr *ComplianceRepository) Store(dataType, id string, data interface{}) err
     cr.indices[dataType][id] = key
 
     return nil
-}
 
 // Helper functions
+}
 func (crs *ComplianceReportingSystem) validateFramework(framework *ComplianceFramework) error {
     if framework.Name == "" {
         return fmt.Errorf("framework name is required")
@@ -857,7 +881,6 @@ func (crs *ComplianceReportingSystem) validateFramework(framework *ComplianceFra
         return fmt.Errorf("framework must have requirements")
     }
     return nil
-}
 
 func (crs *ComplianceReportingSystem) validateAssessmentScope(assessment *Assessment) error {
     if assessment.Framework == "" {
@@ -867,7 +890,6 @@ func (crs *ComplianceReportingSystem) validateAssessmentScope(assessment *Assess
         return fmt.Errorf("assessment must have systems in scope")
     }
     return nil
-}
 
 func (crs *ComplianceReportingSystem) runAutomatedAssessment(ctx context.Context, assessment *Assessment) {
     // Implement automated assessment logic
@@ -902,7 +924,6 @@ func (crs *ComplianceReportingSystem) runAutomatedAssessment(ctx context.Context
     assessment.Status = AssessmentCompleted
     endTime := time.Now()
     assessment.EndDate = &endTime
-}
 
 func (crs *ComplianceReportingSystem) findControlsForRequirement(requirementID string) []*SecurityControl {
     var controls []*SecurityControl
@@ -916,7 +937,6 @@ func (crs *ComplianceReportingSystem) findControlsForRequirement(requirementID s
     }
     
     return controls
-}
 
 func (crs *ComplianceReportingSystem) generateExecutiveSummary(assessment *Assessment) *ExecutiveSummary {
     summary := &ExecutiveSummary{
@@ -949,7 +969,6 @@ func (crs *ComplianceReportingSystem) generateExecutiveSummary(assessment *Asses
     }
 
     return summary
-}
 
 func (crs *ComplianceReportingSystem) generateReportSections(assessment *Assessment, reportType ReportType) []*ReportSection {
     sections := []*ReportSection{
@@ -986,7 +1005,6 @@ func (crs *ComplianceReportingSystem) generateReportSections(assessment *Assessm
     }
 
     return sections
-}
 
 func (crs *ComplianceReportingSystem) generateAppendices(assessment *Assessment) []*Appendix {
     return []*Appendix{
@@ -1003,13 +1021,13 @@ func (crs *ComplianceReportingSystem) generateAppendices(assessment *Assessment)
             Type:    "reference",
         },
     }
-}
 
+}
 func (crs *ComplianceReportingSystem) generateScopeContent(assessment *Assessment) string {
     return fmt.Sprintf("Assessment scope includes %d systems and %d requirements",
         len(assessment.Scope.Systems), len(assessment.Scope.Requirements))
-}
 
+}
 func (crs *ComplianceReportingSystem) generateMethodologyContent(assessment *Assessment) string {
     return "Assessment conducted using automated testing and manual review procedures"
 }
@@ -1022,28 +1040,26 @@ func (crs *ComplianceReportingSystem) generateResultsContent(assessment *Assessm
             assessment.Results.RequirementsTotal)
     }
     return "Results pending"
-}
 
 func (crs *ComplianceReportingSystem) generateFindingsContent(assessment *Assessment) string {
     return fmt.Sprintf("Total findings: %d", len(assessment.Findings))
-}
 
+}
 func (crs *ComplianceReportingSystem) generateRecommendationsContent(assessment *Assessment) string {
     return fmt.Sprintf("Total recommendations: %d", len(assessment.Recommendations))
-}
 
+}
 func generateFrameworkID() string {
     return fmt.Sprintf("framework_%d", time.Now().UnixNano())
-}
 
+}
 func generateAssessmentID() string {
     return fmt.Sprintf("assessment_%d", time.Now().UnixNano())
-}
 
+}
 func generateReportID() string {
     return fmt.Sprintf("report_%d", time.Now().UnixNano())
-}
 
+}
 func generateTestResultID() string {
     return fmt.Sprintf("test_%d", time.Now().UnixNano())
-}

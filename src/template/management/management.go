@@ -59,7 +59,6 @@ type TemplateParser interface {
 	Validate(template *format.Template) error
 	// ResolveVariables resolves variables in a template
 	ResolveVariables(template *format.Template, variables map[string]interface{}) error
-}
 
 // TemplateExecutor is the interface for executing templates
 type TemplateExecutor interface {
@@ -67,13 +66,11 @@ type TemplateExecutor interface {
 	Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*TemplateResult, error)
 	// ExecuteBatch executes multiple templates
 	ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*TemplateResult, error)
-}
 
 // TemplateReporter is the interface for generating reports
 type TemplateReporter interface {
 	// GenerateReport generates a report for template execution results
 	GenerateReport(results []*TemplateResult, format string) ([]byte, error)
-}
 
 // TemplateCache is the interface for caching templates
 type TemplateCache interface {
@@ -85,7 +82,6 @@ type TemplateCache interface {
 	Delete(id string)
 	// Clear clears the cache
 	Clear()
-}
 
 // TemplateRegistry is the interface for registering templates
 type TemplateRegistry interface {
@@ -97,7 +93,6 @@ type TemplateRegistry interface {
 	Get(id string) (*format.Template, error)
 	// List lists all templates in the registry
 	List() []*format.Template
-}
 
 // TemplateHook is a function that runs before or after template execution
 type TemplateHook func(ctx context.Context, template *format.Template, result *TemplateResult) error
@@ -120,7 +115,6 @@ type TemplateManagerOptions struct {
 	PreExecutionHooks []TemplateHook
 	// PostExecutionHooks are functions to run after template execution
 	PostExecutionHooks []TemplateHook
-}
 
 // DefaultTemplateManager is the default implementation of TemplateManager
 type DefaultTemplateManager struct {
@@ -140,7 +134,6 @@ type DefaultTemplateManager struct {
 	preExecutionHooks []TemplateHook
 	// postExecutionHooks are functions to run after template execution
 	postExecutionHooks []TemplateHook
-}
 
 // NewTemplateManager creates a new template manager
 func NewTemplateManager(options *TemplateManagerOptions) (TemplateManager, error) {
@@ -168,7 +161,6 @@ func NewTemplateManager(options *TemplateManagerOptions) (TemplateManager, error
 		postExecutionHooks: options.PostExecutionHooks,
 	}
 	return NewTemplateManagerWrapper(manager), nil
-}
 
 // LoadTemplate loads a template from a source
 func (m *DefaultTemplateManager) LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error) {
@@ -182,7 +174,6 @@ func (m *DefaultTemplateManager) LoadTemplate(ctx context.Context, source string
 				if err := m.parser.Validate(template); err != nil {
 					return nil, fmt.Errorf("failed to validate template: %w", err)
 				}
-
 				if err := m.registry.Register(template); err != nil {
 					return nil, fmt.Errorf("failed to register template: %w", err)
 				}
@@ -197,7 +188,6 @@ func (m *DefaultTemplateManager) LoadTemplate(ctx context.Context, source string
 	}
 
 	return nil, fmt.Errorf("no loader could handle source type: %s", sourceType)
-}
 
 // LoadTemplates loads multiple templates from a source
 func (m *DefaultTemplateManager) LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error) {
@@ -228,7 +218,6 @@ func (m *DefaultTemplateManager) LoadTemplates(ctx context.Context, source strin
 	}
 
 	return nil, fmt.Errorf("no loader could handle source type: %s", sourceType)
-}
 
 // LoadTemplatesFromSources loads templates from the specified sources
 func (m *DefaultTemplateManager) LoadTemplatesFromSources(ctx context.Context, sources []types.TemplateSource) error {
@@ -243,7 +232,6 @@ func (m *DefaultTemplateManager) LoadTemplatesFromSources(ctx context.Context, s
 	}
 
 	return nil
-}
 
 // GetTemplate gets a template by ID
 func (m *DefaultTemplateManager) GetTemplate(id string) (*format.Template, error) {
@@ -266,17 +254,14 @@ func (m *DefaultTemplateManager) GetTemplate(id string) (*format.Template, error
 	}
 
 	return template, nil
-}
 
 // ListTemplates lists all templates
 func (m *DefaultTemplateManager) ListTemplates() []*format.Template {
 	return m.registry.List()
-}
 
 // ValidateTemplate validates a template
 func (m *DefaultTemplateManager) ValidateTemplate(template *format.Template) error {
 	return m.parser.Validate(template)
-}
 
 // GetCategories returns a list of all template categories
 func (m *DefaultTemplateManager) GetCategories() ([]string, error) {
@@ -295,7 +280,6 @@ func (m *DefaultTemplateManager) GetCategories() ([]string, error) {
 		result = append(result, category)
 	}
 	return result, nil
-}
 
 // Interface wrapper methods to match TemplateManager interface
 
@@ -306,8 +290,6 @@ func (m *DefaultTemplateManager) GetTemplateInterface(id string) (Template, erro
 		return nil, err
 	}
 	return template, nil
-}
-
 // ListTemplatesInterface wraps ListTemplates to match interface
 func (m *DefaultTemplateManager) ListTemplatesInterface() ([]Template, error) {
 	templates := m.ListTemplates()
@@ -316,7 +298,6 @@ func (m *DefaultTemplateManager) ListTemplatesInterface() ([]Template, error) {
 		result[i] = template
 	}
 	return result, nil
-}
 
 // LoadTemplateInterface wraps LoadTemplate to match interface
 func (m *DefaultTemplateManager) LoadTemplateInterface(path string) (Template, error) {
@@ -325,7 +306,6 @@ func (m *DefaultTemplateManager) LoadTemplateInterface(path string) (Template, e
 		return nil, err
 	}
 	return template, nil
-}
 
 // ValidateTemplateInterface wraps ValidateTemplate to match interface
 func (m *DefaultTemplateManager) ValidateTemplateInterface(template Template) error {
@@ -333,7 +313,6 @@ func (m *DefaultTemplateManager) ValidateTemplateInterface(template Template) er
 		return m.ValidateTemplate(formatTemplate)
 	}
 	return fmt.Errorf("unsupported template type")
-}
 
 // ExecuteTemplate executes a template
 func (m *DefaultTemplateManager) ExecuteTemplate(ctx context.Context, templateID string, options map[string]interface{}) (*types.TemplateResult, error) {
@@ -362,7 +341,6 @@ func (m *DefaultTemplateManager) ExecuteTemplate(ctx context.Context, templateID
 		Status:       types.StatusExecuting,
 		Tags:         template.Info.Tags,
 	}
-
 	// Create interface result for hooks
 	ifaceResult := &interfaces.TemplateResult{
 		TemplateID: templateID,
@@ -422,7 +400,6 @@ func (m *DefaultTemplateManager) ExecuteTemplate(ctx context.Context, templateID
 	}
 
 	return result, nil
-}
 
 // ExecuteTemplates executes multiple templates
 func (m *DefaultTemplateManager) ExecuteTemplates(ctx context.Context, templateIDs []string, options map[string]interface{}) ([]*types.TemplateResult, error) {
@@ -447,7 +424,6 @@ func (m *DefaultTemplateManager) ExecuteTemplates(ctx context.Context, templateI
 	}
 
 	return results, nil
-}
 
 // Execute executes a template
 func (m *DefaultTemplateManager) Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*interfaces.TemplateResult, error) {
@@ -480,12 +456,10 @@ func (m *DefaultTemplateManager) Execute(ctx context.Context, template *format.T
 	result.Success = true
 
 	return result, nil
-}
 
 // ExecuteBatch executes multiple templates
 func (m *DefaultTemplateManager) ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
 	return m.executor.ExecuteBatch(ctx, templates, options)
-}
 
 // GetLoader returns the template loader
 func (m *DefaultTemplateManager) GetLoader() types.TemplateLoader {
@@ -494,12 +468,10 @@ func (m *DefaultTemplateManager) GetLoader() types.TemplateLoader {
 		return m.loaders[0]
 	}
 	return nil
-}
 
 // GetExecutor returns the template executor
 func (m *DefaultTemplateManager) GetExecutor() interfaces.TemplateExecutor {
 	return m.executor
-}
 
 // GenerateReport generates a report for template execution results
 func (m *DefaultTemplateManager) GenerateReport(results []*types.TemplateResult, format string) ([]byte, error) {
@@ -532,5 +504,3 @@ func (m *DefaultTemplateManager) GenerateReport(results []*types.TemplateResult,
 		return nil, fmt.Errorf("failed to generate report: %w", err)
 	}
 
-	return report, nil
-}

@@ -35,12 +35,10 @@ type Metric struct {
 	Buckets     map[float64]int // For histogram metrics
 	Sum         float64         // For histogram metrics
 	Count       int             // For histogram metrics
-}
 
 // MetricsSubscriber is an interface for components that want to be notified of metric updates
 type MetricsSubscriber interface {
 	OnMetricUpdate(metric *Metric)
-}
 
 // NewMetricsManager creates a new metrics manager
 func NewMetricsManager() *MetricsManager {
@@ -53,7 +51,6 @@ func NewMetricsManager() *MetricsManager {
 	manager.initSystemMetrics()
 	
 	return manager
-}
 
 // initSystemMetrics initializes system-level metrics
 func (m *MetricsManager) initSystemMetrics() {
@@ -78,7 +75,6 @@ func (m *MetricsManager) initSystemMetrics() {
 	
 	// Goroutine metrics
 	m.RegisterGauge("system.goroutines", "Number of goroutines", nil)
-}
 
 // RegisterCounter registers a new counter metric
 func (m *MetricsManager) RegisterCounter(name, description string, labels map[string]string) *Metric {
@@ -95,7 +91,6 @@ func (m *MetricsManager) RegisterCounter(name, description string, labels map[st
 	
 	m.metrics[name] = metric
 	return metric
-}
 
 // RegisterGauge registers a new gauge metric
 func (m *MetricsManager) RegisterGauge(name, description string, labels map[string]string) *Metric {
@@ -112,7 +107,6 @@ func (m *MetricsManager) RegisterGauge(name, description string, labels map[stri
 	
 	m.metrics[name] = metric
 	return metric
-}
 
 // RegisterHistogram registers a new histogram metric
 func (m *MetricsManager) RegisterHistogram(name, description string, buckets []float64, labels map[string]string) *Metric {
@@ -137,7 +131,6 @@ func (m *MetricsManager) RegisterHistogram(name, description string, buckets []f
 	
 	m.metrics[name] = metric
 	return metric
-}
 
 // GetMetric gets a metric by name
 func (m *MetricsManager) GetMetric(name string) (*Metric, bool) {
@@ -146,7 +139,6 @@ func (m *MetricsManager) GetMetric(name string) (*Metric, bool) {
 	
 	metric, ok := m.metrics[name]
 	return metric, ok
-}
 
 // IncrementCounter increments a counter metric by the given value
 func (m *MetricsManager) IncrementCounter(name string, value float64) error {
@@ -169,7 +161,6 @@ func (m *MetricsManager) IncrementCounter(name string, value float64) error {
 	m.notifySubscribers(metric)
 	
 	return nil
-}
 
 // SetGauge sets a gauge metric to the given value
 func (m *MetricsManager) SetGauge(name string, value float64) error {
@@ -192,7 +183,6 @@ func (m *MetricsManager) SetGauge(name string, value float64) error {
 	m.notifySubscribers(metric)
 	
 	return nil
-}
 
 // ObserveHistogram adds an observation to a histogram metric
 func (m *MetricsManager) ObserveHistogram(name string, value float64) error {
@@ -224,7 +214,6 @@ func (m *MetricsManager) ObserveHistogram(name string, value float64) error {
 	m.notifySubscribers(metric)
 	
 	return nil
-}
 
 // Subscribe adds a subscriber to be notified of metric updates
 func (m *MetricsManager) Subscribe(subscriber MetricsSubscriber) {
@@ -232,7 +221,6 @@ func (m *MetricsManager) Subscribe(subscriber MetricsSubscriber) {
 	defer m.mutex.Unlock()
 	
 	m.subscribers = append(m.subscribers, subscriber)
-}
 
 // Unsubscribe removes a subscriber
 func (m *MetricsManager) Unsubscribe(subscriber MetricsSubscriber) {
@@ -245,14 +233,12 @@ func (m *MetricsManager) Unsubscribe(subscriber MetricsSubscriber) {
 			break
 		}
 	}
-}
 
 // notifySubscribers notifies all subscribers of a metric update
 func (m *MetricsManager) notifySubscribers(metric *Metric) {
 	for _, subscriber := range m.subscribers {
 		subscriber.OnMetricUpdate(metric)
 	}
-}
 
 // CollectSystemMetrics collects system metrics
 func (m *MetricsManager) CollectSystemMetrics() {
@@ -280,7 +266,6 @@ func (m *MetricsManager) CollectSystemMetrics() {
 	
 	// Update goroutine metrics
 	m.SetGauge("system.goroutines", float64(runtime.NumGoroutine()))
-}
 
 // StartCollectingSystemMetrics starts collecting system metrics at the specified interval
 func (m *MetricsManager) StartCollectingSystemMetrics(interval time.Duration) chan struct{} {
@@ -301,7 +286,6 @@ func (m *MetricsManager) StartCollectingSystemMetrics(interval time.Duration) ch
 	}()
 	
 	return stopChan
-}
 
 // GetAllMetrics returns all metrics
 func (m *MetricsManager) GetAllMetrics() map[string]*Metric {
@@ -315,7 +299,6 @@ func (m *MetricsManager) GetAllMetrics() map[string]*Metric {
 	}
 	
 	return metrics
-}
 
 // GetMetricsByPrefix returns all metrics with the given prefix
 func (m *MetricsManager) GetMetricsByPrefix(prefix string) map[string]*Metric {
@@ -330,7 +313,6 @@ func (m *MetricsManager) GetMetricsByPrefix(prefix string) map[string]*Metric {
 	}
 	
 	return metrics
-}
 
 // GetMetricValue gets the value of a metric
 func (m *MetricsManager) GetMetricValue(name string) (float64, error) {
@@ -343,7 +325,6 @@ func (m *MetricsManager) GetMetricValue(name string) (float64, error) {
 	}
 	
 	return metric.Value, nil
-}
 
 // ResetMetric resets a metric to its initial value
 func (m *MetricsManager) ResetMetric(name string) error {
@@ -374,7 +355,6 @@ func (m *MetricsManager) ResetMetric(name string) error {
 	m.notifySubscribers(metric)
 	
 	return nil
-}
 
 // GetHistogramStats gets statistics for a histogram metric
 func (m *MetricsManager) GetHistogramStats(name string) (sum float64, count int, buckets map[float64]int, err error) {
@@ -396,5 +376,21 @@ func (m *MetricsManager) GetHistogramStats(name string) (sum float64, count int,
 		bucketsCopy[bucket] = count
 	}
 	
-	return metric.Sum, metric.Count, bucketsCopy, nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

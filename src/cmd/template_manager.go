@@ -30,7 +30,6 @@ var templateCmd = &cobra.Command{
 	Use:   "template",
 	Short: "Manage vulnerability templates",
 	Long:  `Create, list, and manage vulnerability templates for the LLMreconing Tool.`,
-}
 
 // templateListCmd represents the template list command
 var templateListCmd = &cobra.Command{
@@ -79,7 +78,6 @@ var templateListCmd = &cobra.Command{
 			}
 		}
 	},
-}
 
 // templateCreateCmd represents the template create command
 var templateCreateCmd = &cobra.Command{
@@ -138,7 +136,7 @@ var templateCreateCmd = &cobra.Command{
 
 		// Create category directory if it doesn't exist
 		categoryDir := filepath.Join(baseDir, "templates", templateCategory)
-		if err := os.MkdirAll(categoryDir, 0755); err != nil {
+		if err := os.MkdirAll(categoryDir, 0700); err != nil {
 			fmt.Printf("Error creating category directory: %v\n", err)
 			return
 		}
@@ -165,14 +163,12 @@ var templateCreateCmd = &cobra.Command{
 		fmt.Printf("Template '%s' created successfully at %s\n", templateName, templatePath)
 		fmt.Println("Remember to edit the template to add your test prompt and detection criteria.")
 	},
-}
 
 // moduleCmd represents the module command
 var moduleCmd = &cobra.Command{
 	Use:   "module",
 	Short: "Manage modules",
 	Long:  `Create, list, and manage modules for the LLMreconing Tool.`,
-}
 
 // moduleListCmd represents the module list command
 var moduleListCmd = &cobra.Command{
@@ -221,7 +217,6 @@ var moduleListCmd = &cobra.Command{
 			}
 		}
 	},
-}
 
 // moduleCreateCmd represents the module create command
 var moduleCreateCmd = &cobra.Command{
@@ -273,7 +268,6 @@ var moduleCreateCmd = &cobra.Command{
 
 		// Create manifest manager
 		manager := manifest.NewManager(baseDir)
-
 		// Load manifests
 		if err := manager.LoadManifests(); err != nil {
 			fmt.Printf("Error loading manifests: %v\n", err)
@@ -292,7 +286,7 @@ var moduleCreateCmd = &cobra.Command{
 		}
 
 		// Create module directory if it doesn't exist
-		if err := os.MkdirAll(moduleDir, 0755); err != nil {
+		if err := os.MkdirAll(moduleDir, 0700); err != nil {
 			fmt.Printf("Error creating module directory: %v\n", err)
 			return
 		}
@@ -315,11 +309,10 @@ var moduleCreateCmd = &cobra.Command{
 			fmt.Printf("Error saving manifests: %v\n", err)
 			return
 		}
-
 		fmt.Printf("Module '%s' created successfully at %s\n", moduleName, modulePath)
 		fmt.Println("Remember to edit the module to add your specific configuration.")
 	},
-}
+	
 
 // scanCmd represents the scan command
 var scanCmd = &cobra.Command{
@@ -364,7 +357,6 @@ var scanCmd = &cobra.Command{
 		fmt.Printf("Scan complete. Found %d templates and %d modules.\n",
 			len(templateManifest.Templates), len(moduleManifest.Modules))
 	},
-}
 
 // getBaseDir returns the base directory for the LLMreconing Tool
 func getBaseDir() (string, error) {
@@ -376,7 +368,6 @@ func getBaseDir() (string, error) {
 	}
 
 	return cwd, nil
-}
 
 func init() {
 	rootCmd.AddCommand(templateCmd)
@@ -407,4 +398,3 @@ func init() {
 	moduleCreateCmd.Flags().StringVar(&moduleAuthor, "author", "", "Module author")
 	moduleCreateCmd.Flags().StringVar(&moduleType, "type", "", "Module type (provider, utility, detector)")
 	moduleCreateCmd.Flags().StringSliceVar(&moduleTags, "tags", []string{}, "Module tags (comma-separated)")
-}

@@ -50,7 +50,6 @@ type DistributedLimiter struct {
 	
 	// Whether to use local fallback if Redis is unavailable
 	localFallbackEnabled bool
-}
 
 // NewDistributedLimiter creates a new distributed rate limiter using Redis
 func NewDistributedLimiter(redisClient redis.UniversalClient, keyPrefix string, globalQPS float64, globalBurst int, defaultUserQPS float64, defaultUserBurst int) *DistributedLimiter {
@@ -116,7 +115,6 @@ func NewDistributedLimiter(redisClient redis.UniversalClient, keyPrefix string, 
 		localLimiter:        localLimiter,
 		localFallbackEnabled: true,
 	}
-}
 
 // Acquire acquires a token from the global limiter
 func (l *DistributedLimiter) Acquire(ctx context.Context) error {
@@ -170,7 +168,6 @@ func (l *DistributedLimiter) Acquire(ctx context.Context) error {
 	}
 	
 	return nil
-}
 
 // AcquireForUser acquires a token for a specific user
 func (l *DistributedLimiter) AcquireForUser(ctx context.Context, userID string) error {
@@ -248,7 +245,6 @@ func (l *DistributedLimiter) AcquireForUser(ctx context.Context, userID string) 
 	}
 	
 	return nil
-}
 
 // tryAcquireRedis attempts to acquire tokens from Redis using the token bucket algorithm
 func (l *DistributedLimiter) tryAcquireRedis(ctx context.Context, key string, rate float64, burst int, tokens int) (bool, error) {
@@ -264,26 +260,21 @@ func (l *DistributedLimiter) tryAcquireRedis(ctx context.Context, key string, ra
 	// Parse the result
 	resultArray, ok := result.([]interface{})
 	if !ok || len(resultArray) < 1 {
-		return false, fmt.Errorf("unexpected result from Redis: %v", result)
 	}
 	
 	allowed, ok := resultArray[0].(int64)
 	if !ok {
-		return false, fmt.Errorf("unexpected result type from Redis: %T", resultArray[0])
 	}
 	
 	return allowed == 1, nil
-}
 
 // Release releases a token (no-op for token bucket)
 func (l *DistributedLimiter) Release() {
 	// No-op for token bucket
-}
 
 // ReleaseForUser releases a token for a specific user (no-op for token bucket)
 func (l *DistributedLimiter) ReleaseForUser(userID string) {
 	// No-op for token bucket
-}
 
 // SetUserPolicy sets a rate limit policy for a specific user
 func (l *DistributedLimiter) SetUserPolicy(policy *UserRateLimitPolicy) {
@@ -296,7 +287,6 @@ func (l *DistributedLimiter) SetUserPolicy(policy *UserRateLimitPolicy) {
 	if l.localFallbackEnabled {
 		l.localLimiter.SetUserPolicy(policy)
 	}
-}
 
 // GetUserPolicy gets the rate limit policy for a specific user
 func (l *DistributedLimiter) GetUserPolicy(userID string) *UserRateLimitPolicy {
@@ -304,12 +294,10 @@ func (l *DistributedLimiter) GetUserPolicy(userID string) *UserRateLimitPolicy {
 	defer l.mu.RUnlock()
 	
 	return l.userPolicies[userID]
-}
 
 // EnableLocalFallback enables or disables local fallback
 func (l *DistributedLimiter) EnableLocalFallback(enabled bool) {
 	l.localFallbackEnabled = enabled
-}
 
 // GetStats returns statistics about the rate limiter
 func (l *DistributedLimiter) GetStats() map[string]interface{} {
@@ -332,7 +320,6 @@ func (l *DistributedLimiter) GetStats() map[string]interface{} {
 	}
 	
 	return stats
-}
 
 // FlushRedis flushes all rate limit data from Redis
 // This should be used with caution, as it will reset all rate limits
@@ -367,9 +354,7 @@ func (l *DistributedLimiter) FlushRedis(ctx context.Context) error {
 	}
 	
 	return nil
-}
 
 // Close closes the distributed limiter and releases resources
 func (l *DistributedLimiter) Close() error {
 	return l.client.Close()
-}

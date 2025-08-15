@@ -34,7 +34,6 @@ type RepositoryInfo struct {
 	HasUpdates bool
 	// Last sync time
 	LastSync time.Time
-}
 
 // RepositoryManager handles operations on template repositories
 type RepositoryManager struct {
@@ -42,7 +41,6 @@ type RepositoryManager struct {
 	BaseDir string
 	// Map of repository information by name
 	Repositories map[string]*RepositoryInfo
-}
 
 // NewRepositoryManager creates a new RepositoryManager
 func NewRepositoryManager(baseDir string) *RepositoryManager {
@@ -50,7 +48,6 @@ func NewRepositoryManager(baseDir string) *RepositoryManager {
 		BaseDir:      baseDir,
 		Repositories: make(map[string]*RepositoryInfo),
 	}
-}
 
 // AddRepository adds a repository to the manager
 func (rm *RepositoryManager) AddRepository(name string, repoType RepositoryType, url string) (*RepositoryInfo, error) {
@@ -70,7 +67,6 @@ func (rm *RepositoryManager) AddRepository(name string, repoType RepositoryType,
 	rm.Repositories[name] = repo
 
 	return repo, nil
-}
 
 // SyncRepository syncs a repository (clone if it doesn't exist, pull if it does)
 func (rm *RepositoryManager) SyncRepository(name string) error {
@@ -80,7 +76,7 @@ func (rm *RepositoryManager) SyncRepository(name string) error {
 	}
 
 	// Create parent directories if they don't exist
-	if err := os.MkdirAll(filepath.Dir(repo.LocalPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(repo.LocalPath), 0700); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -105,7 +101,6 @@ func (rm *RepositoryManager) SyncRepository(name string) error {
 	}
 
 	return nil
-}
 
 // updateRepositoryInfo updates the version information for a repository
 func (rm *RepositoryManager) updateRepositoryInfo(name string) error {
@@ -138,7 +133,7 @@ func (rm *RepositoryManager) updateRepositoryInfo(name string) error {
 	repo.LastSync = time.Now()
 
 	return nil
-}
+	}
 
 // GetTemplateVersion returns the version of the templates in a repository
 func (rm *RepositoryManager) GetTemplateVersion(name string) (version.Version, error) {
@@ -151,7 +146,7 @@ func (rm *RepositoryManager) GetTemplateVersion(name string) (version.Version, e
 	versionFilePath := filepath.Join(repo.LocalPath, "VERSION")
 	if _, err := os.Stat(versionFilePath); err == nil {
 		// Read version from file
-		versionBytes, err := os.ReadFile(versionFilePath)
+		versionBytes, err := os.ReadFile(filepath.Clean(versionFilePath))
 		if err != nil {
 			return version.Version{}, fmt.Errorf("failed to read version file: %w", err)
 		}
@@ -177,7 +172,6 @@ func (rm *RepositoryManager) GetTemplateVersion(name string) (version.Version, e
 	}
 
 	return version.Version{}, fmt.Errorf("could not determine template version")
-}
 
 // ListRepositories returns a list of all repositories
 func (rm *RepositoryManager) ListRepositories() []*RepositoryInfo {
@@ -186,7 +180,6 @@ func (rm *RepositoryManager) ListRepositories() []*RepositoryInfo {
 		repos = append(repos, repo)
 	}
 	return repos
-}
 
 // GetRepository returns a repository by name
 func (rm *RepositoryManager) GetRepository(name string) (*RepositoryInfo, error) {
@@ -195,7 +188,6 @@ func (rm *RepositoryManager) GetRepository(name string) (*RepositoryInfo, error)
 		return nil, fmt.Errorf("repository '%s' not found", name)
 	}
 	return repo, nil
-}
 
 // RemoveRepository removes a repository
 func (rm *RepositoryManager) RemoveRepository(name string) error {
@@ -214,5 +206,3 @@ func (rm *RepositoryManager) RemoveRepository(name string) error {
 	// Remove from map
 	delete(rm.Repositories, name)
 
-	return nil
-}

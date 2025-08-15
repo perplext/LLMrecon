@@ -89,8 +89,8 @@ type Client struct {
     
     // Template engine
     Templates *TemplateEngine
-}
 ` + "```" + `
+}
 
 ### Methods
 
@@ -117,5 +117,5 @@ type Provider interface {
     Name() string
     SendPrompt(ctx context.Context, prompt string, opts *Options) (string, error)
     GetModels() []string
-}
 ` + "```" + `
+}

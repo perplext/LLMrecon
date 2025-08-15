@@ -14,7 +14,6 @@ func NewMFAMiddleware(authManager *AuthManager) *MFAMiddleware {
 	return &MFAMiddleware{
 		authManager: authManager,
 	}
-}
 
 // RequireMFA creates middleware that requires MFA verification
 func (m *MFAMiddleware) RequireMFA(next http.Handler) http.Handler {
@@ -61,7 +60,6 @@ func (m *MFAMiddleware) RequireMFA(next http.Handler) http.Handler {
 		// Call next handler with updated context
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
-}
 
 // OptionalMFA creates middleware that adds MFA status to context but doesn't require it
 func (m *MFAMiddleware) OptionalMFA(next http.Handler) http.Handler {
@@ -99,7 +97,6 @@ func (m *MFAMiddleware) OptionalMFA(next http.Handler) http.Handler {
 		// Call next handler with updated context
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
-}
 
 // MFAVerifyHandler handles MFA verification
 func (m *MFAMiddleware) MFAVerifyHandler(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +150,6 @@ func (m *MFAMiddleware) MFAVerifyHandler(w http.ResponseWriter, r *http.Request)
 		redirectURL = "/"
 	}
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
-}
 
 // MFARequiredFunc is a function that determines if MFA is required for a request
 type MFARequiredFunc func(r *http.Request) bool
@@ -167,8 +163,6 @@ func (m *MFAMiddleware) ConditionalMFA(condition MFARequiredFunc, next http.Hand
 			m.OptionalMFA(next).ServeHTTP(w, r)
 		}
 	})
-}
-
 // MFAByRole creates middleware that requires MFA for users with specific roles
 func (m *MFAMiddleware) MFAByRole(roles []string, next http.Handler) http.Handler {
 	return m.ConditionalMFA(func(r *http.Request) bool {
@@ -200,7 +194,6 @@ func (m *MFAMiddleware) MFAByRole(roles []string, next http.Handler) http.Handle
 
 		return false
 	}, next)
-}
 
 // MFAByPath creates middleware that requires MFA for specific paths
 func (m *MFAMiddleware) MFAByPath(paths []string, next http.Handler) http.Handler {
@@ -213,4 +206,9 @@ func (m *MFAMiddleware) MFAByPath(paths []string, next http.Handler) http.Handle
 		}
 		return false
 	}, next)
+}
+}
+}
+}
+}
 }

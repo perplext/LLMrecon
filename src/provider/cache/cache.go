@@ -21,7 +21,6 @@ type CacheEntry struct {
 	Value interface{}
 	// Expiration is the expiration time
 	Expiration time.Time
-}
 
 // Cache is a simple in-memory cache
 type Cache struct {
@@ -37,7 +36,6 @@ type Cache struct {
 	evictionPolicy EvictionPolicy
 	// metrics tracks cache metrics
 	metrics *CacheMetrics
-}
 
 // EvictionPolicy is the policy for evicting entries from the cache
 type EvictionPolicy string
@@ -61,7 +59,6 @@ type CacheMetrics struct {
 	Evictions int
 	// mutex is a mutex for concurrent access to metrics
 	mutex sync.RWMutex
-}
 
 // NewCache creates a new cache
 func NewCache(defaultTTL time.Duration, maxEntries int, evictionPolicy EvictionPolicy) *Cache {
@@ -72,7 +69,6 @@ func NewCache(defaultTTL time.Duration, maxEntries int, evictionPolicy EvictionP
 		evictionPolicy: evictionPolicy,
 		metrics:        &CacheMetrics{},
 	}
-}
 
 // Set sets a value in the cache
 func (c *Cache) Set(key CacheKey, value interface{}, ttl time.Duration) {
@@ -96,7 +92,6 @@ func (c *Cache) Set(key CacheKey, value interface{}, ttl time.Duration) {
 		Value:      value,
 		Expiration: expiration,
 	}
-}
 
 // Get gets a value from the cache
 func (c *Cache) Get(key CacheKey) (interface{}, bool) {
@@ -127,7 +122,6 @@ func (c *Cache) Get(key CacheKey) (interface{}, bool) {
 	c.metrics.Hits++
 	c.metrics.mutex.Unlock()
 	return entry.Value, true
-}
 
 // Delete deletes a value from the cache
 func (c *Cache) Delete(key CacheKey) {
@@ -135,7 +129,6 @@ func (c *Cache) Delete(key CacheKey) {
 	defer c.mutex.Unlock()
 
 	delete(c.entries, key)
-}
 
 // Clear clears the cache
 func (c *Cache) Clear() {
@@ -143,7 +136,6 @@ func (c *Cache) Clear() {
 	defer c.mutex.Unlock()
 
 	c.entries = make(map[CacheKey]*CacheEntry)
-}
 
 // Size returns the number of entries in the cache
 func (c *Cache) Size() int {
@@ -151,7 +143,6 @@ func (c *Cache) Size() int {
 	defer c.mutex.RUnlock()
 
 	return len(c.entries)
-}
 
 // Keys returns the keys in the cache
 func (c *Cache) Keys() []CacheKey {
@@ -164,7 +155,6 @@ func (c *Cache) Keys() []CacheKey {
 	}
 
 	return keys
-}
 
 // evict evicts an entry from the cache
 func (c *Cache) evict() {
@@ -184,7 +174,6 @@ func (c *Cache) evict() {
 	default:
 		c.evictLRU() // Default to LRU
 	}
-}
 
 // evictLRU evicts the least recently used entry
 func (c *Cache) evictLRU() {
@@ -201,21 +190,18 @@ func (c *Cache) evictLRU() {
 
 	// Delete the oldest entry
 	delete(c.entries, oldestKey)
-}
 
 // evictLFU evicts the least frequently used entry
 // This is a simplified implementation that uses expiration time as a proxy for frequency
 func (c *Cache) evictLFU() {
 	// For now, just use LRU
 	c.evictLRU()
-}
 
 // evictFIFO evicts the first in, first out entry
 // This is a simplified implementation that uses expiration time as a proxy for insertion time
 func (c *Cache) evictFIFO() {
 	// For now, just use LRU
 	c.evictLRU()
-}
 
 // GetMetrics returns the cache metrics
 func (c *Cache) GetMetrics() *CacheMetrics {
@@ -228,7 +214,6 @@ func (c *Cache) GetMetrics() *CacheMetrics {
 		Misses:    c.metrics.Misses,
 		Evictions: c.metrics.Evictions,
 	}
-}
 
 // ResetMetrics resets the cache metrics
 func (c *Cache) ResetMetrics() {
@@ -238,7 +223,6 @@ func (c *Cache) ResetMetrics() {
 	c.metrics.Hits = 0
 	c.metrics.Misses = 0
 	c.metrics.Evictions = 0
-}
 
 // GenerateKey generates a cache key from a request
 func GenerateKey(providerType core.ProviderType, operation string, request interface{}) (CacheKey, error) {
@@ -254,7 +238,6 @@ func GenerateKey(providerType core.ProviderType, operation string, request inter
 	// Hash key
 	hash := sha256.Sum256([]byte(key))
 	return CacheKey(hex.EncodeToString(hash[:])), nil
-}
 
 // ProviderCache is a cache for provider responses
 type ProviderCache struct {
@@ -264,7 +247,6 @@ type ProviderCache struct {
 	enabled bool
 	// mutex is a mutex for concurrent access to enabled
 	mutex sync.RWMutex
-}
 
 // NewProviderCache creates a new provider cache
 func NewProviderCache(defaultTTL time.Duration, maxEntries int, evictionPolicy EvictionPolicy) *ProviderCache {
@@ -272,7 +254,6 @@ func NewProviderCache(defaultTTL time.Duration, maxEntries int, evictionPolicy E
 		cache:   NewCache(defaultTTL, maxEntries, evictionPolicy),
 		enabled: true,
 	}
-}
 
 // Get gets a value from the cache
 func (c *ProviderCache) Get(providerType core.ProviderType, operation string, request interface{}) (interface{}, bool) {
@@ -292,7 +273,6 @@ func (c *ProviderCache) Get(providerType core.ProviderType, operation string, re
 
 	// Get from cache
 	return c.cache.Get(key)
-}
 
 // Set sets a value in the cache
 func (c *ProviderCache) Set(providerType core.ProviderType, operation string, request interface{}, response interface{}, ttl time.Duration) error {
@@ -314,7 +294,6 @@ func (c *ProviderCache) Set(providerType core.ProviderType, operation string, re
 	c.cache.Set(key, response, ttl)
 
 	return nil
-}
 
 // Delete deletes a value from the cache
 func (c *ProviderCache) Delete(providerType core.ProviderType, operation string, request interface{}) error {
@@ -328,12 +307,10 @@ func (c *ProviderCache) Delete(providerType core.ProviderType, operation string,
 	c.cache.Delete(key)
 
 	return nil
-}
 
 // Clear clears the cache
 func (c *ProviderCache) Clear() {
 	c.cache.Clear()
-}
 
 // Enable enables caching
 func (c *ProviderCache) Enable() {
@@ -341,7 +318,6 @@ func (c *ProviderCache) Enable() {
 	defer c.mutex.Unlock()
 
 	c.enabled = true
-}
 
 // Disable disables caching
 func (c *ProviderCache) Disable() {
@@ -349,7 +325,6 @@ func (c *ProviderCache) Disable() {
 	defer c.mutex.Unlock()
 
 	c.enabled = false
-}
 
 // IsEnabled returns whether caching is enabled
 func (c *ProviderCache) IsEnabled() bool {
@@ -357,22 +332,18 @@ func (c *ProviderCache) IsEnabled() bool {
 	defer c.mutex.RUnlock()
 
 	return c.enabled
-}
 
 // GetMetrics returns the cache metrics
 func (c *ProviderCache) GetMetrics() *CacheMetrics {
 	return c.cache.GetMetrics()
-}
 
 // ResetMetrics resets the cache metrics
 func (c *ProviderCache) ResetMetrics() {
 	c.cache.ResetMetrics()
-}
 
 // Size returns the number of entries in the cache
 func (c *ProviderCache) Size() int {
 	return c.cache.Size()
-}
 
 // CachingProvider wraps a provider with caching
 type CachingProvider struct {
@@ -380,7 +351,6 @@ type CachingProvider struct {
 	provider core.Provider
 	// cache is the cache
 	cache *ProviderCache
-}
 
 // NewCachingProvider creates a new caching provider
 func NewCachingProvider(provider core.Provider, cache *ProviderCache) *CachingProvider {
@@ -388,17 +358,14 @@ func NewCachingProvider(provider core.Provider, cache *ProviderCache) *CachingPr
 		provider: provider,
 		cache:    cache,
 	}
-}
 
 // GetType returns the type of provider
 func (p *CachingProvider) GetType() core.ProviderType {
 	return p.provider.GetType()
-}
 
 // GetConfig returns the configuration for the provider
 func (p *CachingProvider) GetConfig() *core.ProviderConfig {
 	return p.provider.GetConfig()
-}
 
 // GetModels returns a list of available models
 func (p *CachingProvider) GetModels(ctx context.Context) ([]core.ModelInfo, error) {
@@ -417,7 +384,6 @@ func (p *CachingProvider) GetModels(ctx context.Context) ([]core.ModelInfo, erro
 	p.cache.Set(p.GetType(), "GetModels", nil, models, 1*time.Hour)
 
 	return models, nil
-}
 
 // GetModelInfo returns information about a specific model
 func (p *CachingProvider) GetModelInfo(ctx context.Context, modelID string) (*core.ModelInfo, error) {
@@ -436,7 +402,6 @@ func (p *CachingProvider) GetModelInfo(ctx context.Context, modelID string) (*co
 	p.cache.Set(p.GetType(), "GetModelInfo", modelID, modelInfo, 1*time.Hour)
 
 	return modelInfo, nil
-}
 
 // TextCompletion generates a text completion
 func (p *CachingProvider) TextCompletion(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
@@ -455,7 +420,6 @@ func (p *CachingProvider) TextCompletion(ctx context.Context, request *core.Text
 	p.cache.Set(p.GetType(), "TextCompletion", request, response, 24*time.Hour)
 
 	return response, nil
-}
 
 // ChatCompletion generates a chat completion
 func (p *CachingProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -474,13 +438,11 @@ func (p *CachingProvider) ChatCompletion(ctx context.Context, request *core.Chat
 	p.cache.Set(p.GetType(), "ChatCompletion", request, response, 24*time.Hour)
 
 	return response, nil
-}
 
 // StreamingChatCompletion generates a streaming chat completion
 func (p *CachingProvider) StreamingChatCompletion(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
 	// Streaming responses are not cached
 	return p.provider.StreamingChatCompletion(ctx, request, callback)
-}
 
 // CreateEmbedding creates an embedding
 func (p *CachingProvider) CreateEmbedding(ctx context.Context, request *core.EmbeddingRequest) (*core.EmbeddingResponse, error) {
@@ -499,7 +461,6 @@ func (p *CachingProvider) CreateEmbedding(ctx context.Context, request *core.Emb
 	p.cache.Set(p.GetType(), "CreateEmbedding", request, response, 24*time.Hour)
 
 	return response, nil
-}
 
 // CountTokens counts the number of tokens in a text
 func (p *CachingProvider) CountTokens(ctx context.Context, text string, modelID string) (int, error) {
@@ -527,7 +488,6 @@ func (p *CachingProvider) CountTokens(ctx context.Context, text string, modelID 
 	p.cache.Set(p.GetType(), "CountTokens", key, count, 24*time.Hour)
 
 	return count, nil
-}
 
 // SupportsModel returns whether the provider supports a specific model
 func (p *CachingProvider) SupportsModel(ctx context.Context, modelID string) bool {
@@ -543,7 +503,6 @@ func (p *CachingProvider) SupportsModel(ctx context.Context, modelID string) boo
 	p.cache.Set(p.GetType(), "SupportsModel", modelID, supports, 1*time.Hour)
 
 	return supports
-}
 
 // SupportsCapability returns whether the provider supports a specific capability
 func (p *CachingProvider) SupportsCapability(ctx context.Context, capability core.ModelCapability) bool {
@@ -559,9 +518,7 @@ func (p *CachingProvider) SupportsCapability(ctx context.Context, capability cor
 	p.cache.Set(p.GetType(), "SupportsCapability", capability, supports, 1*time.Hour)
 
 	return supports
-}
 
 // Close closes the provider and releases any resources
 func (p *CachingProvider) Close() error {
 	return p.provider.Close()
-}

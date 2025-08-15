@@ -12,14 +12,12 @@ import (
 type BasicInMemoryUserStore struct {
 	users map[string]*User
 	mu    sync.RWMutex
-}
 
 // NewBasicInMemoryUserStore creates a new basic in-memory user store
 func NewBasicInMemoryUserStore() *BasicInMemoryUserStore {
 	return &BasicInMemoryUserStore{
 		users: make(map[string]*User),
 	}
-}
 
 // CreateUser creates a new user
 func (s *BasicInMemoryUserStore) CreateUser(ctx context.Context, user *User) error {
@@ -46,7 +44,6 @@ func (s *BasicInMemoryUserStore) CreateUser(ctx context.Context, user *User) err
 	s.users[user.ID] = &userCopy
 
 	return nil
-}
 
 // GetUserByID retrieves a user by ID
 func (s *BasicInMemoryUserStore) GetUserByID(ctx context.Context, userID string) (*User, error) {
@@ -61,7 +58,6 @@ func (s *BasicInMemoryUserStore) GetUserByID(ctx context.Context, userID string)
 	// Return a copy to prevent modification
 	userCopy := *user
 	return &userCopy, nil
-}
 
 // GetUserByUsername retrieves a user by username
 func (s *BasicInMemoryUserStore) GetUserByUsername(ctx context.Context, username string) (*User, error) {
@@ -77,7 +73,6 @@ func (s *BasicInMemoryUserStore) GetUserByUsername(ctx context.Context, username
 	}
 
 	return nil, errors.New("user not found")
-}
 
 // GetUserByEmail retrieves a user by email
 func (s *BasicInMemoryUserStore) GetUserByEmail(ctx context.Context, email string) (*User, error) {
@@ -93,7 +88,6 @@ func (s *BasicInMemoryUserStore) GetUserByEmail(ctx context.Context, email strin
 	}
 
 	return nil, errors.New("user not found")
-}
 
 // UpdateUser updates an existing user
 func (s *BasicInMemoryUserStore) UpdateUser(ctx context.Context, user *User) error {
@@ -120,7 +114,6 @@ func (s *BasicInMemoryUserStore) UpdateUser(ctx context.Context, user *User) err
 	s.users[user.ID] = &userCopy
 
 	return nil
-}
 
 // DeleteUser deletes a user
 func (s *BasicInMemoryUserStore) DeleteUser(ctx context.Context, userID string) error {
@@ -136,7 +129,6 @@ func (s *BasicInMemoryUserStore) DeleteUser(ctx context.Context, userID string) 
 	delete(s.users, userID)
 
 	return nil
-}
 
 // ListUsers lists all users
 func (s *BasicInMemoryUserStore) ListUsers(ctx context.Context) ([]*User, error) {
@@ -151,20 +143,17 @@ func (s *BasicInMemoryUserStore) ListUsers(ctx context.Context) ([]*User, error)
 	}
 
 	return users, nil
-}
 
 // BasicInMemorySessionStore is an in-memory implementation of SessionStore
 type BasicInMemorySessionStore struct {
 	sessions map[string]*Session
 	mu       sync.RWMutex
-}
 
 // NewBasicInMemorySessionStore creates a new basic in-memory session store
 func NewBasicInMemorySessionStore() *BasicInMemorySessionStore {
 	return &BasicInMemorySessionStore{
 		sessions: make(map[string]*Session),
 	}
-}
 
 // CreateSession creates a new session
 func (s *BasicInMemorySessionStore) CreateSession(ctx context.Context, session *Session) error {
@@ -181,7 +170,6 @@ func (s *BasicInMemorySessionStore) CreateSession(ctx context.Context, session *
 	s.sessions[session.ID] = &sessionCopy
 
 	return nil
-}
 
 // GetSession retrieves a session by ID
 func (s *BasicInMemorySessionStore) GetSession(ctx context.Context, sessionID string) (*Session, error) {
@@ -196,7 +184,6 @@ func (s *BasicInMemorySessionStore) GetSession(ctx context.Context, sessionID st
 	// Return a copy to prevent modification
 	sessionCopy := *session
 	return &sessionCopy, nil
-}
 
 // UpdateSession updates an existing session
 func (s *BasicInMemorySessionStore) UpdateSession(ctx context.Context, session *Session) error {
@@ -213,7 +200,6 @@ func (s *BasicInMemorySessionStore) UpdateSession(ctx context.Context, session *
 	s.sessions[session.ID] = &sessionCopy
 
 	return nil
-}
 
 // DeleteSession deletes a session
 func (s *BasicInMemorySessionStore) DeleteSession(ctx context.Context, sessionID string) error {
@@ -229,7 +215,6 @@ func (s *BasicInMemorySessionStore) DeleteSession(ctx context.Context, sessionID
 	delete(s.sessions, sessionID)
 
 	return nil
-}
 
 // DeleteUserSessions deletes all sessions for a user
 func (s *BasicInMemorySessionStore) DeleteUserSessions(ctx context.Context, userID string) error {
@@ -244,7 +229,6 @@ func (s *BasicInMemorySessionStore) DeleteUserSessions(ctx context.Context, user
 	}
 
 	return nil
-}
 
 // ListUserSessions lists all sessions for a user
 func (s *BasicInMemorySessionStore) ListUserSessions(ctx context.Context, userID string) ([]*Session, error) {
@@ -261,7 +245,6 @@ func (s *BasicInMemorySessionStore) ListUserSessions(ctx context.Context, userID
 	}
 
 	return sessions, nil
-}
 
 // CleanupExpiredSessions cleans up expired sessions
 func (s *BasicInMemorySessionStore) CleanupExpiredSessions(ctx context.Context) error {
@@ -275,5 +258,3 @@ func (s *BasicInMemorySessionStore) CleanupExpiredSessions(ctx context.Context) 
 		}
 	}
 
-	return nil
-}

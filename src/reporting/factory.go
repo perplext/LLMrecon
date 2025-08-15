@@ -9,12 +9,10 @@ import (
 // init initializes the reporting package
 func init() {
 	// Formatters are registered in their respective packages
-}
 
 // CreateFormatter creates a formatter for the specified format
 func CreateFormatter(format common.ReportFormat, options map[string]interface{}) (common.ReportFormatter, error) {
 	return common.CreateFormatter(format, options)
-}
 
 // CreateDefaultReportGenerator creates a default report generator with all formatters registered
 func CreateDefaultReportGenerator() (*DefaultReportGenerator, error) {
@@ -40,5 +38,3 @@ func CreateDefaultReportGenerator() (*DefaultReportGenerator, error) {
 		generator.RegisterFormatter(formatter)
 	}
 	
-	return generator, nil
-}

@@ -23,7 +23,6 @@ type EnhancedInjectionPatternLibrary struct {
 	updateInterval      time.Duration
 	dataDir             string
 	mu                  sync.RWMutex
-}
 
 // PatternStats tracks statistics for pattern matches
 type PatternStats struct {
@@ -46,7 +45,6 @@ type EmergingPattern struct {
 	Confidence    float64   `json:"confidence"`
 	Examples      []string  `json:"examples"`
 	Validated     bool      `json:"validated"`
-}
 
 // CustomPattern represents a user-defined pattern
 type CustomPattern struct {
@@ -56,14 +54,13 @@ type CustomPattern struct {
 	CreationTime  time.Time `json:"creation_time"`
 	Enabled       bool      `json:"enabled"`
 	Categories    []string  `json:"categories"`
-}
 
 // NewEnhancedInjectionPatternLibrary creates a new enhanced injection pattern library
 func NewEnhancedInjectionPatternLibrary(dataDir string) (*EnhancedInjectionPatternLibrary, error) {
 	baseLibrary := NewInjectionPatternLibrary()
 	
 	// Create the data directory if it doesn't exist
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	if err := os.MkdirAll(dataDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 	
@@ -88,7 +85,6 @@ func NewEnhancedInjectionPatternLibrary(dataDir string) (*EnhancedInjectionPatte
 	}
 	
 	return library, nil
-}
 
 // initializePatternCategories initializes the pattern categories
 func (l *EnhancedInjectionPatternLibrary) initializePatternCategories() {
@@ -134,14 +130,13 @@ func (l *EnhancedInjectionPatternLibrary) initializePatternCategories() {
 			l.categorizedPatterns["unusual_pattern"] = append(l.categorizedPatterns["unusual_pattern"], pattern)
 		}
 	}
-}
 
 // loadPatternsFromDisk loads patterns from disk
 func (l *EnhancedInjectionPatternLibrary) loadPatternsFromDisk() error {
 	// Load pattern stats
 	statsFile := filepath.Join(l.dataDir, "pattern_stats.json")
 	if _, err := os.Stat(statsFile); err == nil {
-		data, err := ioutil.ReadFile(statsFile)
+		data, err := ioutil.ReadFile(filepath.Clean(statsFile))
 		if err != nil {
 			return fmt.Errorf("failed to read pattern stats file: %w", err)
 		}
@@ -157,7 +152,7 @@ func (l *EnhancedInjectionPatternLibrary) loadPatternsFromDisk() error {
 	// Load emerging patterns
 	emergingFile := filepath.Join(l.dataDir, "emerging_patterns.json")
 	if _, err := os.Stat(emergingFile); err == nil {
-		data, err := ioutil.ReadFile(emergingFile)
+		data, err := ioutil.ReadFile(filepath.Clean(emergingFile))
 		if err != nil {
 			return fmt.Errorf("failed to read emerging patterns file: %w", err)
 		}
@@ -173,7 +168,7 @@ func (l *EnhancedInjectionPatternLibrary) loadPatternsFromDisk() error {
 	// Load custom patterns
 	customFile := filepath.Join(l.dataDir, "custom_patterns.json")
 	if _, err := os.Stat(customFile); err == nil {
-		data, err := ioutil.ReadFile(customFile)
+		data, err := ioutil.ReadFile(filepath.Clean(customFile))
 		if err != nil {
 			return fmt.Errorf("failed to read custom patterns file: %w", err)
 		}
@@ -199,7 +194,7 @@ func (l *EnhancedInjectionPatternLibrary) loadPatternsFromDisk() error {
 	}
 	
 	return nil
-}
+	
 
 // savePatternsToDisc saves patterns to disk
 func (l *EnhancedInjectionPatternLibrary) savePatternsToDisc() error {
@@ -213,7 +208,7 @@ func (l *EnhancedInjectionPatternLibrary) savePatternsToDisc() error {
 		return fmt.Errorf("failed to marshal pattern stats: %w", err)
 	}
 	
-	if err := ioutil.WriteFile(statsFile, statsData, 0644); err != nil {
+	if err := ioutil.WriteFile(statsFile, statsData, 0600); err != nil {
 		return fmt.Errorf("failed to write pattern stats file: %w", err)
 	}
 	
@@ -224,7 +219,7 @@ func (l *EnhancedInjectionPatternLibrary) savePatternsToDisc() error {
 		return fmt.Errorf("failed to marshal emerging patterns: %w", err)
 	}
 	
-	if err := ioutil.WriteFile(emergingFile, emergingData, 0644); err != nil {
+	if err := ioutil.WriteFile(emergingFile, emergingData, 0600); err != nil {
 		return fmt.Errorf("failed to write emerging patterns file: %w", err)
 	}
 	
@@ -235,12 +230,11 @@ func (l *EnhancedInjectionPatternLibrary) savePatternsToDisc() error {
 		return fmt.Errorf("failed to marshal custom patterns: %w", err)
 	}
 	
-	if err := ioutil.WriteFile(customFile, customData, 0644); err != nil {
+	if err := ioutil.WriteFile(customFile, customData, 0600); err != nil {
 		return fmt.Errorf("failed to write custom patterns file: %w", err)
 	}
 	
 	return nil
-}
 
 // DetectPatternsEnhanced detects patterns in a prompt with enhanced detection
 func (l *EnhancedInjectionPatternLibrary) DetectPatternsEnhanced(prompt string, result *ProtectionResult) {
@@ -312,7 +306,6 @@ func (l *EnhancedInjectionPatternLibrary) DetectPatternsEnhanced(prompt string, 
 			l.lastUpdateTime = time.Now()
 		}()
 	}
-}
 
 // AddEmergingPattern adds a new emerging pattern
 func (l *EnhancedInjectionPatternLibrary) AddEmergingPattern(pattern string, description string, source string, examples []string, confidence float64) error {
@@ -350,7 +343,6 @@ func (l *EnhancedInjectionPatternLibrary) AddEmergingPattern(pattern string, des
 	
 	// Save to disk
 	return l.savePatternsToDisc()
-}
 
 // AddCustomPattern adds a new custom pattern
 func (l *EnhancedInjectionPatternLibrary) AddCustomPattern(pattern string, description string, creator string, categories []string) error {
@@ -392,7 +384,6 @@ func (l *EnhancedInjectionPatternLibrary) AddCustomPattern(pattern string, descr
 	
 	// Save to disk
 	return l.savePatternsToDisc()
-}
 
 // ValidateEmergingPattern validates an emerging pattern
 func (l *EnhancedInjectionPatternLibrary) ValidateEmergingPattern(pattern string, validated bool) error {
@@ -420,7 +411,6 @@ func (l *EnhancedInjectionPatternLibrary) ValidateEmergingPattern(pattern string
 	}
 	
 	return fmt.Errorf("pattern not found")
-}
 
 // EnableCustomPattern enables or disables a custom pattern
 func (l *EnhancedInjectionPatternLibrary) EnableCustomPattern(pattern string, enabled bool) error {
@@ -438,7 +428,6 @@ func (l *EnhancedInjectionPatternLibrary) EnableCustomPattern(pattern string, en
 	}
 	
 	return fmt.Errorf("pattern not found")
-}
 
 // GetPatternsByCategory gets patterns by category
 func (l *EnhancedInjectionPatternLibrary) GetPatternsByCategory(category string) ([]*InjectionPattern, error) {
@@ -451,7 +440,6 @@ func (l *EnhancedInjectionPatternLibrary) GetPatternsByCategory(category string)
 	}
 	
 	return patterns, nil
-}
 
 // GetEmergingPatterns gets all emerging patterns
 func (l *EnhancedInjectionPatternLibrary) GetEmergingPatterns() []*EmergingPattern {
@@ -459,7 +447,6 @@ func (l *EnhancedInjectionPatternLibrary) GetEmergingPatterns() []*EmergingPatte
 	defer l.mu.RUnlock()
 	
 	return l.emergingPatterns
-}
 
 // GetCustomPatterns gets all custom patterns
 func (l *EnhancedInjectionPatternLibrary) GetCustomPatterns() []*CustomPattern {
@@ -467,7 +454,6 @@ func (l *EnhancedInjectionPatternLibrary) GetCustomPatterns() []*CustomPattern {
 	defer l.mu.RUnlock()
 	
 	return l.customPatterns
-}
 
 // GetPatternStats gets statistics for a pattern
 func (l *EnhancedInjectionPatternLibrary) GetPatternStats(pattern string) (*PatternStats, error) {
@@ -480,7 +466,6 @@ func (l *EnhancedInjectionPatternLibrary) GetPatternStats(pattern string) (*Patt
 	}
 	
 	return stats, nil
-}
 
 // updatePatternStats updates statistics for a pattern
 func (l *EnhancedInjectionPatternLibrary) updatePatternStats(pattern string, category string) {
@@ -517,7 +502,6 @@ func (l *EnhancedInjectionPatternLibrary) updatePatternStats(pattern string, cat
 			stats.Categories = append(stats.Categories, category)
 		}
 	}
-}
 
 // findPatternLocation finds the location of a pattern in a prompt
 func findPatternLocation(prompt string, pattern string) *DetectionLocation {
@@ -560,4 +544,17 @@ func findPatternLocation(prompt string, pattern string) *DetectionLocation {
 		End:     end,
 		Context: context,
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

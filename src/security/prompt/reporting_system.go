@@ -43,7 +43,6 @@ func NewReportingSystem(config *ProtectionConfig) *ReportingSystem {
 	system.Start()
 
 	return system
-}
 
 // Start starts the reporting system
 func (r *ReportingSystem) Start() {
@@ -58,7 +57,6 @@ func (r *ReportingSystem) Start() {
 
 	// Start the reporting loop
 	go r.reportingLoop()
-}
 
 // Stop stops the reporting system
 func (r *ReportingSystem) Stop() {
@@ -71,13 +69,11 @@ func (r *ReportingSystem) Stop() {
 
 	r.running = false
 	close(r.stopChan)
-}
 
 // Close closes the reporting system and releases resources
 func (r *ReportingSystem) Close() error {
 	r.Stop()
 	return nil
-}
 
 // reportingLoop is the main reporting loop
 func (r *ReportingSystem) reportingLoop() {
@@ -96,7 +92,6 @@ func (r *ReportingSystem) reportingLoop() {
 			return
 		}
 	}
-}
 
 // processReport processes a new report
 func (r *ReportingSystem) processReport(report *InjectionReport) {
@@ -131,12 +126,11 @@ func (r *ReportingSystem) processReport(report *InjectionReport) {
 			}
 		}()
 	}
-}
 
 // saveReportToLocalStorage saves a report to local storage
 func (r *ReportingSystem) saveReportToLocalStorage(report *InjectionReport) {
 	// Ensure the directory exists
-	if err := os.MkdirAll(r.reportingConfig.LocalStoragePath, 0755); err != nil {
+	if err := os.MkdirAll(r.reportingConfig.LocalStoragePath, 0700); err != nil {
 		// Log the error
 		// This would be implemented with a proper logging system
 		fmt.Printf("Error creating directory for reports: %v\n", err)
@@ -159,13 +153,12 @@ func (r *ReportingSystem) saveReportToLocalStorage(report *InjectionReport) {
 	}
 
 	// Write to file
-	if err := os.WriteFile(filename, data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(filename, data, 0600)); err != nil {
 		// Log the error
 		// This would be implemented with a proper logging system
 		fmt.Printf("Error writing report to file: %v\n", err)
 		return
 	}
-}
 
 // sendReports sends reports to the reporting endpoint
 func (r *ReportingSystem) sendReports() {
@@ -181,7 +174,6 @@ func (r *ReportingSystem) sendReports() {
 	// For now, we'll just log that reports would be sent
 	// This would be implemented with a proper logging system
 	fmt.Printf("Would send %d reports to %s\n", len(r.reports), r.reportingConfig.ReportingEndpoint)
-}
 
 // ReportDetections reports detections from a protection result
 func (r *ReportingSystem) ReportDetections(ctx context.Context, result *ProtectionResult) {
@@ -230,7 +222,6 @@ func (r *ReportingSystem) ReportDetections(ctx context.Context, result *Protecti
 			fmt.Println("Report channel is full, dropping report")
 		}
 	}
-}
 
 // GetReports gets all reports
 func (r *ReportingSystem) GetReports() []*InjectionReport {
@@ -242,7 +233,6 @@ func (r *ReportingSystem) GetReports() []*InjectionReport {
 	copy(reports, r.reports)
 
 	return reports
-}
 
 // GetReportsByType gets reports by detection type
 func (r *ReportingSystem) GetReportsByType(detectionType DetectionType) []*InjectionReport {
@@ -258,7 +248,6 @@ func (r *ReportingSystem) GetReportsByType(detectionType DetectionType) []*Injec
 	}
 
 	return reports
-}
 
 // GetReportByID gets a report by ID
 func (r *ReportingSystem) GetReportByID(reportID string) *InjectionReport {
@@ -273,7 +262,6 @@ func (r *ReportingSystem) GetReportByID(reportID string) *InjectionReport {
 	}
 
 	return nil
-}
 
 // calculateSeverity calculates the severity of a detection
 func calculateSeverity(detection *Detection, result *ProtectionResult) float64 {
@@ -321,5 +309,15 @@ func calculateSeverity(detection *Detection, result *ProtectionResult) float64 {
 		severity = max(severity, 0.7)
 	}
 
-	return severity
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

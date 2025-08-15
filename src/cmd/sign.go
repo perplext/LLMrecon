@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"path/filepath"
 	"fmt"
 	"strings"
 
@@ -63,10 +64,9 @@ If no private key is provided, the command can generate a new key pair.`,
 				fmt.Fprintf(os.Stderr, "Error generating key pair: %v\n", err)
 				os.Exit(1)
 			}
-
 			// Ensure key output directory exists
 			if keyOutputDir != "" {
-				if err := os.MkdirAll(keyOutputDir, 0755); err != nil {
+				if err := os.MkdirAll(keyOutputDir, 0700); err != nil {
 					fmt.Fprintf(os.Stderr, "Error creating key output directory: %v\n", err)
 					os.Exit(1)
 				}
@@ -77,11 +77,11 @@ If no private key is provided, the command can generate a new key pair.`,
 			publicKeyPath := filepath.Join(keyOutputDir, fmt.Sprintf("public_key_%s.pem", strings.ToLower(algorithm)))
 
 			// Write keys to files
-			if err := os.WriteFile(privateKeyPath, []byte(privateKeyPEM), 0600); err != nil {
+			if err := os.WriteFile(filepath.Clean(privateKeyPath, []byte(privateKeyPEM)), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing private key: %v\n", err)
 				os.Exit(1)
 			}
-			if err := os.WriteFile(publicKeyPath, []byte(publicKeyPEM), 0644); err != nil {
+			if err := os.WriteFile(filepath.Clean(publicKeyPath, []byte(publicKeyPEM)), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing public key: %v\n", err)
 				os.Exit(1)
 			}
@@ -89,7 +89,6 @@ If no private key is provided, the command can generate a new key pair.`,
 			fmt.Printf("Key pair generated successfully:\n")
 			fmt.Printf("Private key: %s\n", privateKeyPath)
 			fmt.Printf("Public key: %s\n", publicKeyPath)
-
 			// Use the generated private key for signing
 			keyFile = privateKeyPath
 		}
@@ -98,7 +97,7 @@ If no private key is provided, the command can generate a new key pair.`,
 		var privateKeyData string
 		if keyFile != "" {
 			// Read private key from file
-			keyBytes, err := os.ReadFile(keyFile)
+			keyBytes, err := os.ReadFile(filepath.Clean(keyFile))
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error reading private key file: %v\n", err)
 				os.Exit(1)
@@ -146,7 +145,7 @@ If no private key is provided, the command can generate a new key pair.`,
 		// Output signature
 		if outputFile != "" {
 			// Write signature to file
-			if err := os.WriteFile(outputFile, []byte(signature), 0644); err != nil {
+			if err := os.WriteFile(filepath.Clean(outputFile, []byte(signature)), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing signature to file: %v\n", err)
 				os.Exit(1)
 			}
@@ -156,7 +155,6 @@ If no private key is provided, the command can generate a new key pair.`,
 			fmt.Printf("Signature: %s\n", signature)
 		}
 	},
-}
 
 func init() {
 	rootCmd.AddCommand(signCmd)
@@ -168,4 +166,3 @@ func init() {
 	signCmd.Flags().BoolP("generate-keys", "g", false, "Generate a new key pair")
 	signCmd.Flags().String("key-output-dir", ".", "Directory to store generated keys")
 	signCmd.Flags().BoolP("checksum", "c", false, "Calculate and output SHA-256 checksum")
-}

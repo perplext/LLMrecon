@@ -13,14 +13,12 @@ import (
 type PDFFormatter struct {
 	// customTemplate is the path to a custom template file
 	customTemplate string
-}
 
 // NewPDFFormatter creates a new PDF formatter
 func NewPDFFormatter(customTemplate string) *PDFFormatter {
 	return &PDFFormatter{
 		customTemplate: customTemplate,
 	}
-}
 
 // FormatReport formats a report and writes it to the given writer
 func (f *PDFFormatter) FormatReport(results api.TestResults, writer io.Writer) error {
@@ -45,7 +43,6 @@ func (f *PDFFormatter) FormatReport(results api.TestResults, writer io.Writer) e
 	
 	// Generate the PDF
 	return pdf.Output(writer)
-}
 
 // Format formats a report as PDF
 func (f *PDFFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
@@ -64,12 +61,10 @@ func (f *PDFFormatter) Format(ctx context.Context, reportInterface interface{}, 
 	}
 	
 	return buf.Bytes(), nil
-}
 
 // GetFormat returns the format supported by this formatter
 func (f *PDFFormatter) GetFormat() api.ReportFormat {
 	return api.PDFFormat
-}
 
 // WriteToFile writes a report to a file
 func (f *PDFFormatter) WriteToFile(ctx context.Context, reportInterface interface{}, optionsInterface interface{}, filePath string) error {
@@ -80,7 +75,7 @@ func (f *PDFFormatter) WriteToFile(ctx context.Context, reportInterface interfac
 
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
@@ -89,7 +84,7 @@ func (f *PDFFormatter) WriteToFile(ctx context.Context, reportInterface interfac
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", filePath, err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Format and write the report
 	if err := f.FormatReport(results, file); err != nil {
@@ -97,7 +92,6 @@ func (f *PDFFormatter) WriteToFile(ctx context.Context, reportInterface interfac
 	}
 
 	return nil
-}
 
 // generateCoverPage generates the cover page of the report
 func (f *PDFFormatter) generateCoverPage(pdf *gofpdf.Fpdf, results api.TestResults) {
@@ -125,7 +119,6 @@ func (f *PDFFormatter) generateCoverPage(pdf *gofpdf.Fpdf, results api.TestResul
 	pdf.Cell(0, 10, "LLMrecon Tool")
 	pdf.Ln(5)
 	pdf.Cell(0, 10, fmt.Sprintf("© %d", time.Now().Year()))
-}
 
 // generateResultsPage generates the results page of the report
 func (f *PDFFormatter) generateResultsPage(pdf *gofpdf.Fpdf, results api.TestResults) {
@@ -136,7 +129,6 @@ func (f *PDFFormatter) generateResultsPage(pdf *gofpdf.Fpdf, results api.TestRes
 	
 	// Create results table
 	f.addResultsTable(pdf, results)
-}
 
 // addResultsTable adds a results table to the PDF
 func (f *PDFFormatter) addResultsTable(pdf *gofpdf.Fpdf, results api.TestResults) {
@@ -193,12 +185,9 @@ func (f *PDFFormatter) addResultsTable(pdf *gofpdf.Fpdf, results api.TestResults
 			pdf.Ln(4)
 		}
 	}
-}
 
 // truncateString truncates a string to the specified length and adds "..." if truncated
 func (f *PDFFormatter) truncateString(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
 	}
-	return s[:maxLen-3] + "..."
-}

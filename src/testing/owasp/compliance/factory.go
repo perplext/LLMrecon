@@ -11,7 +11,6 @@ type ComplianceServiceFactory struct {
 	customServices map[string]ComplianceService
 	// mutex for thread safety
 	mu sync.RWMutex
-}
 
 // NewComplianceServiceFactory creates a new compliance service factory
 func NewComplianceServiceFactory() *ComplianceServiceFactory {
@@ -19,21 +18,18 @@ func NewComplianceServiceFactory() *ComplianceServiceFactory {
 		defaultService: NewComplianceService(),
 		customServices: make(map[string]ComplianceService),
 	}
-}
 
 // GetDefaultService returns the default compliance service
 func (f *ComplianceServiceFactory) GetDefaultService() ComplianceService {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 	return f.defaultService
-}
 
 // RegisterCustomService registers a custom compliance service
 func (f *ComplianceServiceFactory) RegisterCustomService(name string, service ComplianceService) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.customServices[name] = service
-}
 
 // GetCustomService returns a custom compliance service by name
 func (f *ComplianceServiceFactory) GetCustomService(name string) (ComplianceService, bool) {
@@ -41,7 +37,6 @@ func (f *ComplianceServiceFactory) GetCustomService(name string) (ComplianceServ
 	defer f.mu.RUnlock()
 	service, exists := f.customServices[name]
 	return service, exists
-}
 
 // GetAllServices returns all registered compliance services
 func (f *ComplianceServiceFactory) GetAllServices() map[string]ComplianceService {
@@ -56,5 +51,3 @@ func (f *ComplianceServiceFactory) GetAllServices() map[string]ComplianceService
 		services[name] = service
 	}
 	
-	return services
-}

@@ -76,7 +76,6 @@ func RunMockProviderExample() {
 			float64(vulnCount)/float64(len(providerResults))*100,
 		)
 	}
-}
 
 // RunCustomVulnerabilityTest demonstrates how to test a specific vulnerability
 func RunCustomVulnerabilityTest(vulnerabilityType types.VulnerabilityType) {
@@ -147,7 +146,6 @@ func RunCustomVulnerabilityTest(vulnerabilityType types.VulnerabilityType) {
 			}
 		}
 	}
-}
 
 // RunCustomProviderTest demonstrates how to test a specific provider
 func RunCustomProviderTest(providerType core.ProviderType) {
@@ -214,12 +212,9 @@ func RunCustomProviderTest(providerType core.ProviderType) {
 	fmt.Printf("  Requests: %d\n", metrics.Requests)
 	fmt.Printf("  Tokens: %d\n", metrics.Tokens)
 	fmt.Printf("  Errors: %d\n", metrics.Errors)
-}
 
 // Helper function to truncate a string
 func truncateString(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
 	}
-	return s[:maxLen-3] + "..."
-}

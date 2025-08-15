@@ -42,7 +42,6 @@ type SecurityManager interface {
 
 	// Close closes the security manager
 	Close() error
-}
 
 // UserManager defines the interface for managing users
 type UserManager interface {
@@ -69,7 +68,6 @@ type UserManager interface {
 
 	// Close closes the user manager
 	Close() error
-}
 
 // LegacyAuthManagerInterface defines the interface for authentication (legacy)
 type LegacyAuthManagerInterface interface {
@@ -93,7 +91,6 @@ type LegacyAuthManagerInterface interface {
 
 	// Close closes the auth manager
 	Close() error
-}
 
 // RBACManager defines the interface for role-based access control
 type RBACManager interface {
@@ -117,7 +114,6 @@ type RBACManager interface {
 
 	// Close closes the RBAC manager
 	Close() error
-}
 
 // LegacyAuditLogger defines the interface for audit logging (legacy)
 type LegacyAuditLogger interface {
@@ -129,7 +125,6 @@ type LegacyAuditLogger interface {
 
 	// Close closes the audit logger
 	Close() error
-}
 
 // Factory creates access control system components
 type Factory interface {
@@ -149,5 +144,3 @@ type Factory interface {
 	CreateRBACManager() (RBACManager, error)
 
 	// CreateAuditLogger creates a new audit logger
-	CreateAuditLogger() (LegacyAuditLogger, error)
-}

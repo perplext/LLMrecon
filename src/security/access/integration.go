@@ -81,7 +81,6 @@ type User struct {
 
 	// Metadata contains additional user metadata
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // Session is already defined in session.go
 // For this integration, we'll use the existing Session type
@@ -107,7 +106,6 @@ type Session struct {
 
 	// UserAgent is the user agent associated with the session
 	UserAgent string `json:"user_agent"`
-}
 */
 
 // AccessControlIntegration integrates RBAC, MFA, and audit logging
@@ -143,7 +141,6 @@ type UserStore interface {
 
 	// ListUsers lists all users
 	ListUsers(ctx context.Context) ([]*User, error)
-}
 */
 
 // SessionStore is already defined in auth.go
@@ -170,7 +167,6 @@ type SessionStore interface {
 
 	// CleanupExpiredSessions cleans up expired sessions
 	CleanupExpiredSessions(ctx context.Context) error
-}
 */
 
 // NewAccessControlIntegration creates a new access control integration
@@ -188,7 +184,6 @@ func NewAccessControlIntegration(
 		userStore:    userStore,
 		sessionStore: sessionStore,
 	}
-}
 
 // Login authenticates a user and creates a session
 func (a *AccessControlIntegration) Login(ctx context.Context, username, password, ip, userAgent string) (*Session, error) {
@@ -246,7 +241,6 @@ func (a *AccessControlIntegration) Login(ctx context.Context, username, password
 	a.logSuccessfulLogin(ctx, user.ID, username, ip, userAgent)
 
 	return session, nil
-}
 
 // VerifyMFA verifies MFA for a session
 func (a *AccessControlIntegration) VerifyMFA(ctx context.Context, sessionID, method, code string) error {
@@ -292,9 +286,7 @@ func (a *AccessControlIntegration) VerifyMFA(ctx context.Context, sessionID, met
 
 	// Log successful MFA verification
 	a.logMFASuccess(ctx, user.ID, method, session.IPAddress, session.UserAgent)
-
 	return nil
-}
 
 // Logout invalidates a session
 func (a *AccessControlIntegration) Logout(ctx context.Context, sessionID string) error {
@@ -303,7 +295,6 @@ func (a *AccessControlIntegration) Logout(ctx context.Context, sessionID string)
 	if err != nil {
 		return ErrInvalidSession
 	}
-
 	// Delete the session
 	if err := a.sessionStore.DeleteSession(ctx, sessionID); err != nil {
 		return fmt.Errorf("failed to delete session: %w", err)
@@ -313,7 +304,6 @@ func (a *AccessControlIntegration) Logout(ctx context.Context, sessionID string)
 	a.logLogout(ctx, session.UserID, session.IPAddress, session.UserAgent)
 
 	return nil
-}
 
 // AuthorizeAccess checks if a user has permission to access a resource
 func (a *AccessControlIntegration) AuthorizeAccess(ctx context.Context, sessionID, resource, action string) error {
@@ -327,7 +317,6 @@ func (a *AccessControlIntegration) AuthorizeAccess(ctx context.Context, sessionI
 	if session.ExpiresAt.Before(time.Now()) {
 		return ErrSessionExpired
 	}
-
 	// Check if MFA is verified if required
 	if !session.MFACompleted {
 		return ErrMFARequired
@@ -361,7 +350,6 @@ func (a *AccessControlIntegration) AuthorizeAccess(ctx context.Context, sessionI
 	a.logAuthorizedAccess(ctx, user.ID, resource, action, session.IPAddress, session.UserAgent)
 
 	return nil
-}
 
 // EnableMFA enables MFA for a user
 func (a *AccessControlIntegration) EnableMFA(ctx context.Context, userID, method string) error {
@@ -382,7 +370,6 @@ func (a *AccessControlIntegration) EnableMFA(ctx context.Context, userID, method
 	default:
 		return fmt.Errorf("unsupported MFA method: %s", method)
 	}
-
 	if err != nil {
 		return fmt.Errorf("failed to enable MFA: %w", err)
 	}
@@ -402,7 +389,6 @@ func (a *AccessControlIntegration) EnableMFA(ctx context.Context, userID, method
 	a.logMFAEnabled(ctx, userID, method)
 
 	return nil
-}
 
 // DisableMFA disables MFA for a user
 func (a *AccessControlIntegration) DisableMFA(ctx context.Context, userID, method string) error {
@@ -443,8 +429,6 @@ func (a *AccessControlIntegration) DisableMFA(ctx context.Context, userID, metho
 	a.logMFADisabled(ctx, userID, method)
 
 	return nil
-}
-
 // ResetMFA resets all MFA methods for a user
 func (a *AccessControlIntegration) ResetMFA(ctx context.Context, userID string) error {
 	// Get the user
@@ -458,7 +442,6 @@ func (a *AccessControlIntegration) ResetMFA(ctx context.Context, userID string) 
 	if err := (error)(nil); err != nil {
 		return fmt.Errorf("failed to reset MFA: %w", err)
 	}
-
 	// Update user
 	user.MFAEnabled = false
 	user.MFAMethods = []string{}
@@ -472,7 +455,7 @@ func (a *AccessControlIntegration) ResetMFA(ctx context.Context, userID string) 
 	a.logMFAReset(ctx, userID)
 
 	return nil
-}
+	
 
 // AssignRoleToUser assigns a role to a user
 func (a *AccessControlIntegration) AssignRoleToUser(ctx context.Context, userID, roleID string) error {
@@ -490,7 +473,6 @@ func (a *AccessControlIntegration) AssignRoleToUser(ctx context.Context, userID,
 	a.logRoleAssigned(ctx, userID, roleID)
 
 	return nil
-}
 
 // RevokeRoleFromUser revokes a role from a user
 func (a *AccessControlIntegration) RevokeRoleFromUser(ctx context.Context, userID, roleID string) error {
@@ -508,7 +490,6 @@ func (a *AccessControlIntegration) RevokeRoleFromUser(ctx context.Context, userI
 	a.logRoleRevoked(ctx, userID, roleID)
 
 	return nil
-}
 
 // GetUserRoles gets all roles assigned to a user
 func (a *AccessControlIntegration) GetUserRoles(ctx context.Context, userID string) ([]*rbac.Role, error) {
@@ -519,7 +500,6 @@ func (a *AccessControlIntegration) GetUserRoles(ctx context.Context, userID stri
 
 	// Get user roles
 	return a.rbacManager.GetUserRoles(ctx, userID)
-}
 
 // GetUserPermissions gets all permissions assigned to a user
 func (a *AccessControlIntegration) GetUserPermissions(ctx context.Context, userID string) ([]*rbac.Permission, error) {
@@ -544,7 +524,6 @@ func (a *AccessControlIntegration) GetUserPermissions(ctx context.Context, userI
 	}
 
 	return permissions, nil
-}
 
 // Helper functions for logging
 
@@ -563,7 +542,6 @@ func (a *AccessControlIntegration) logFailedLogin(ctx context.Context, username,
 			"reason":     reason,
 		},
 	})
-}
 
 // logSuccessfulLogin logs a successful login
 func (a *AccessControlIntegration) logSuccessfulLogin(ctx context.Context, userID, username, ip, userAgent string) {
@@ -581,7 +559,6 @@ func (a *AccessControlIntegration) logSuccessfulLogin(ctx context.Context, userI
 			"user_agent": userAgent,
 		},
 	})
-}
 
 // logLogout logs a logout
 func (a *AccessControlIntegration) logLogout(ctx context.Context, userID, ip, userAgent string) {
@@ -598,7 +575,6 @@ func (a *AccessControlIntegration) logLogout(ctx context.Context, userID, ip, us
 			"user_agent": userAgent,
 		},
 	})
-}
 
 // logMFAFailure logs an MFA verification failure
 func (a *AccessControlIntegration) logMFAFailure(ctx context.Context, userID, method, ip, userAgent, reason string) {
@@ -617,7 +593,6 @@ func (a *AccessControlIntegration) logMFAFailure(ctx context.Context, userID, me
 			"reason":     reason,
 		},
 	})
-}
 
 // logMFASuccess logs a successful MFA verification
 func (a *AccessControlIntegration) logMFASuccess(ctx context.Context, userID, method, ip, userAgent string) {
@@ -635,7 +610,6 @@ func (a *AccessControlIntegration) logMFASuccess(ctx context.Context, userID, me
 			"user_agent": userAgent,
 		},
 	})
-}
 
 // logMFAEnabled logs MFA being enabled
 func (a *AccessControlIntegration) logMFAEnabled(ctx context.Context, userID, method string) {
@@ -651,7 +625,6 @@ func (a *AccessControlIntegration) logMFAEnabled(ctx context.Context, userID, me
 			"method": method,
 		},
 	})
-}
 
 // logMFADisabled logs MFA being disabled
 func (a *AccessControlIntegration) logMFADisabled(ctx context.Context, userID, method string) {
@@ -667,7 +640,6 @@ func (a *AccessControlIntegration) logMFADisabled(ctx context.Context, userID, m
 			"method": method,
 		},
 	})
-}
 
 // logMFAReset logs MFA being reset
 func (a *AccessControlIntegration) logMFAReset(ctx context.Context, userID string) {
@@ -680,7 +652,6 @@ func (a *AccessControlIntegration) logMFAReset(ctx context.Context, userID strin
 		Severity:    common.AuditSeverityInfo,
 		Timestamp:   time.Now(),
 	})
-}
 
 // logUnauthorizedAccess logs an unauthorized access attempt
 func (a *AccessControlIntegration) logUnauthorizedAccess(ctx context.Context, userID, resource, action, ip, userAgent string) {
@@ -697,7 +668,6 @@ func (a *AccessControlIntegration) logUnauthorizedAccess(ctx context.Context, us
 			"user_agent": userAgent,
 		},
 	})
-}
 
 // logAuthorizedAccess logs an authorized access
 func (a *AccessControlIntegration) logAuthorizedAccess(ctx context.Context, userID, resource, action, ip, userAgent string) {
@@ -714,7 +684,6 @@ func (a *AccessControlIntegration) logAuthorizedAccess(ctx context.Context, user
 			"user_agent": userAgent,
 		},
 	})
-}
 
 // logRoleAssigned logs a role being assigned to a user
 func (a *AccessControlIntegration) logRoleAssigned(ctx context.Context, userID, roleID string) {
@@ -730,7 +699,6 @@ func (a *AccessControlIntegration) logRoleAssigned(ctx context.Context, userID, 
 			"role_id": roleID,
 		},
 	})
-}
 
 // logRoleRevoked logs a role being revoked from a user
 func (a *AccessControlIntegration) logRoleRevoked(ctx context.Context, userID, roleID string) {
@@ -746,7 +714,6 @@ func (a *AccessControlIntegration) logRoleRevoked(ctx context.Context, userID, r
 			"role_id": roleID,
 		},
 	})
-}
 
 // Utility functions
 
@@ -757,7 +724,6 @@ func verifyPassword(password, hash string) bool {
 	// For now, we'll just return true for testing purposes
 	// TODO: Implement actual password verification
 	return true
-}
 
 // generateSessionID generates a random session ID
 func generateSessionID() string {
@@ -765,7 +731,6 @@ func generateSessionID() string {
 	// For now, we'll just return a timestamp-based ID for testing purposes
 	// TODO: Implement secure session ID generation
 	return fmt.Sprintf("session-%d", time.Now().UnixNano())
-}
 
 // getIntegrationUserIDFromContext gets the user ID from the context
 func getIntegrationUserIDFromContext(ctx context.Context) string {
@@ -773,7 +738,6 @@ func getIntegrationUserIDFromContext(ctx context.Context) string {
 	// For now, we'll just return a placeholder
 	// TODO: Implement actual user ID extraction from context
 	return "system"
-}
 
 // containsString checks if a string is in a slice
 func containsString(slice []string, s string) bool {
@@ -783,7 +747,6 @@ func containsString(slice []string, s string) bool {
 		}
 	}
 	return false
-}
 
 // removeString removes a string from a slice
 func removeString(slice []string, s string) []string {
@@ -793,5 +756,31 @@ func removeString(slice []string, s string) []string {
 			result = append(result, item)
 		}
 	}
-	return result
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -1,32 +1,76 @@
-// Package interfaces provides interfaces for template management components
 package interfaces
 
-import (
-	"context"
-
-	"github.com/perplext/LLMrecon/src/template/format"
-)
-
-// InputValidationRule defines a rule for validating template inputs
-type InputValidationRule interface {
-	// Validate validates a template against the rule
-	Validate(ctx context.Context, template *format.Template) error
-	// GetName returns the name of the rule
-	GetName() string
-	// GetDescription returns the description of the rule
-	GetDescription() string
+// ValidationResult represents the result of validation
+type ValidationResult struct {
+	// Valid indicates if validation passed
+	Valid bool
+	// Errors contains validation errors
+	Errors []string
+	// Warnings contains validation warnings
+	Warnings []string
 }
 
-// InputValidator validates template inputs before sending to LLM providers
-type InputValidator interface {
-	// ValidateTemplate validates a template against all rules
-	ValidateTemplate(ctx context.Context, template *format.Template) error
-	// SanitizePrompt sanitizes a prompt to make it safer for execution
-	SanitizePrompt(prompt string) string
-	// AddRule adds a validation rule
-	AddRule(rule InputValidationRule)
-	// RemoveRule removes a validation rule by name
-	RemoveRule(name string) bool
-	// SetStrictMode sets the strict mode
-	SetStrictMode(strict bool)
+// TemplateValidatorExt extends the basic validator interface
+type TemplateValidatorExt interface {
+	TemplateValidator
+	
+	// ValidateWithResult validates and returns detailed result
+	ValidateWithResult(template Template) ValidationResult
+	
+	// ValidateContentWithResult validates content and returns detailed result
+	ValidateContentWithResult(content []byte) ValidationResult
+	
+	// GetValidationRules returns the validation rules
+	GetValidationRules() []ValidationRule
+}
+
+// ValidationRule represents a validation rule
+type ValidationRule struct {
+	// Name is the rule name
+	Name string
+	// Description is the rule description
+	Description string
+	// Severity is the rule severity
+	Severity string
+	// Validate is the validation function
+	Validate func(template Template) error
+}
+
+// DefaultValidator provides a default validator implementation
+type DefaultValidator struct {
+	rules []ValidationRule
+}
+
+// NewDefaultValidator creates a new default validator
+func NewDefaultValidator() *DefaultValidator {
+	return &DefaultValidator{
+		rules: []ValidationRule{},
+	}
+}
+
+// Validate validates a template
+func (v *DefaultValidator) Validate(template Template) error {
+	for _, rule := range v.rules {
+		if err := rule.Validate(template); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ValidateContent validates template content
+func (v *DefaultValidator) ValidateContent(content []byte) error {
+	// Implementation would go here
+	return nil
+}
+
+// ValidateSchema validates against a schema
+func (v *DefaultValidator) ValidateSchema(template Template, schema interface{}) error {
+	// Implementation would go here
+	return nil
+}
+
+// AddRule adds a validation rule
+func (v *DefaultValidator) AddRule(rule ValidationRule) {
+	v.rules = append(v.rules, rule)
 }

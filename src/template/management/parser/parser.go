@@ -17,7 +17,6 @@ type TemplateParser struct {
 	schemaValidator interfaces.SchemaValidator
 	// variablePattern is the regex pattern for template variables
 	variablePattern *regexp.Regexp
-}
 
 // NewTemplateParser creates a new template parser
 func NewTemplateParser(schemaValidator interfaces.SchemaValidator) (*TemplateParser, error) {
@@ -31,7 +30,6 @@ func NewTemplateParser(schemaValidator interfaces.SchemaValidator) (*TemplatePar
 		schemaValidator: schemaValidator,
 		variablePattern: variablePattern,
 	}, nil
-}
 
 // Parse parses a template
 func (p *TemplateParser) Parse(template *format.Template) error {
@@ -57,7 +55,6 @@ func (p *TemplateParser) Parse(template *format.Template) error {
 	}
 
 	return nil
-}
 
 // Validate validates a template
 func (p *TemplateParser) Validate(template *format.Template) error {
@@ -73,7 +70,6 @@ func (p *TemplateParser) Validate(template *format.Template) error {
 	}
 
 	return nil
-}
 
 // ResolveVariables resolves variables in a template
 func (p *TemplateParser) ResolveVariables(template *format.Template, variables map[string]interface{}) error {
@@ -112,7 +108,6 @@ func (p *TemplateParser) ResolveVariables(template *format.Template, variables m
 	}
 
 	return nil
-}
 
 // ExtractVariables extracts variables from a template
 func (p *TemplateParser) ExtractVariables(template *format.Template) ([]string, error) {
@@ -138,7 +133,6 @@ func (p *TemplateParser) ExtractVariables(template *format.Template) ([]string, 
 	}
 
 	return variables, nil
-}
 
 // getNestedValue gets a nested value from a map using dot notation
 func getNestedValue(data map[string]interface{}, key string) (interface{}, bool) {
@@ -168,7 +162,6 @@ func getNestedValue(data map[string]interface{}, key string) (interface{}, bool)
 	}
 
 	return nil, false
-}
 
 // convertToString converts a value to a string representation for JSON
 func convertToString(value interface{}) (string, error) {
@@ -187,7 +180,6 @@ func convertToString(value interface{}) (string, error) {
 		}
 		return string(data), nil
 	}
-}
 
 // ValidateTemplateInheritance validates template inheritance
 func (p *TemplateParser) ValidateTemplateInheritance(template *format.Template, parentTemplate *format.Template) error {
@@ -205,7 +197,6 @@ func (p *TemplateParser) ValidateTemplateInheritance(template *format.Template, 
 	}
 
 	return nil
-}
 
 // MergeTemplates merges a child template with its parent template
 func (p *TemplateParser) MergeTemplates(childTemplate, parentTemplate *format.Template) (*format.Template, error) {
@@ -229,5 +220,3 @@ func (p *TemplateParser) MergeTemplates(childTemplate, parentTemplate *format.Te
 	// Override test definition
 	mergedTemplate.Test = childTemplate.Test
 
-	return &mergedTemplate, nil
-}

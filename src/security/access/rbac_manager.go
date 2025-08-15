@@ -11,20 +11,17 @@ import (
 type TypesRBACManager struct {
 	config *AccessControlConfig
 	mu     sync.RWMutex
-}
 
 // NewTypesRBACManager creates a new RBAC manager with types config
 func NewTypesRBACManager(config *AccessControlConfig) *TypesRBACManager {
 	return &TypesRBACManager{
 		config: config,
 	}
-}
 
 // Initialize initializes the RBAC manager
 func (m *TypesRBACManager) Initialize(ctx context.Context) error {
 	// Nothing to initialize for now
 	return nil
-}
 
 // GetRoles returns all available roles
 func (m *TypesRBACManager) GetRoles(ctx context.Context) []string {
@@ -32,7 +29,6 @@ func (m *TypesRBACManager) GetRoles(ctx context.Context) []string {
 	defer m.mu.RUnlock()
 
 	return m.config.RBACConfig.DefaultRoles
-}
 
 // GetRolePermissions returns the permissions for a role
 func (m *TypesRBACManager) GetRolePermissions(ctx context.Context, role string) ([]string, error) {
@@ -58,7 +54,6 @@ func (m *TypesRBACManager) GetRolePermissions(ctx context.Context, role string) 
 	}
 
 	return permissions, nil
-}
 
 // RoleHasPermission checks if a role has a specific permission
 func (m *TypesRBACManager) RoleHasPermission(ctx context.Context, role string, permission string) (bool, error) {
@@ -91,7 +86,6 @@ func (m *TypesRBACManager) RoleHasPermission(ctx context.Context, role string, p
 	}
 
 	return false, nil
-}
 
 // AddRole adds a new role
 func (m *TypesRBACManager) AddRole(ctx context.Context, role string) error {
@@ -110,7 +104,6 @@ func (m *TypesRBACManager) AddRole(ctx context.Context, role string) error {
 	m.config.RBACConfig.RolePermissions[role] = []string{}
 
 	return nil
-}
 
 // RemoveRole removes a role
 func (m *TypesRBACManager) RemoveRole(ctx context.Context, role string) error {
@@ -142,7 +135,6 @@ func (m *TypesRBACManager) RemoveRole(ctx context.Context, role string) error {
 	delete(m.config.RBACConfig.RolePermissions, role)
 
 	return nil
-}
 
 // AddPermissionToRole adds a permission to a role
 func (m *TypesRBACManager) AddPermissionToRole(ctx context.Context, role string, permission string) error {
@@ -179,7 +171,6 @@ func (m *TypesRBACManager) AddPermissionToRole(ctx context.Context, role string,
 	m.config.RBACConfig.RolePermissions[role] = permissions
 
 	return nil
-}
 
 // RemovePermissionFromRole removes a permission from a role
 func (m *TypesRBACManager) RemovePermissionFromRole(ctx context.Context, role string, permission string) error {
@@ -226,7 +217,6 @@ func (m *TypesRBACManager) RemovePermissionFromRole(ctx context.Context, role st
 	m.config.RBACConfig.RolePermissions[role] = newPermissions
 
 	return nil
-}
 
 // UserHasPermission checks if a user has a specific permission
 func (m *TypesRBACManager) UserHasPermission(ctx context.Context, user *User, permission string) (bool, error) {
@@ -252,7 +242,6 @@ func (m *TypesRBACManager) UserHasPermission(ctx context.Context, user *User, pe
 	}
 
 	return false, nil
-}
 
 // AddPermissionToUser adds a permission directly to a user
 func (m *TypesRBACManager) AddPermissionToUser(ctx context.Context, user *User, permission string) error {
@@ -267,7 +256,6 @@ func (m *TypesRBACManager) AddPermissionToUser(ctx context.Context, user *User, 
 	user.Permissions = append(user.Permissions, permission)
 
 	return nil
-}
 
 // RemovePermissionFromUser removes a permission directly from a user
 func (m *TypesRBACManager) RemovePermissionFromUser(ctx context.Context, user *User, permission string) error {
@@ -293,7 +281,6 @@ func (m *TypesRBACManager) RemovePermissionFromUser(ctx context.Context, user *U
 	user.Permissions = newPermissions
 
 	return nil
-}
 
 // AddRoleToUser adds a role to a user
 func (m *TypesRBACManager) AddRoleToUser(ctx context.Context, user *User, role string) error {
@@ -323,7 +310,6 @@ func (m *TypesRBACManager) AddRoleToUser(ctx context.Context, user *User, role s
 	user.Roles = append(user.Roles, role)
 
 	return nil
-}
 
 // RemoveRoleFromUser removes a role from a user
 func (m *TypesRBACManager) RemoveRoleFromUser(ctx context.Context, user *User, role string) error {
@@ -349,7 +335,6 @@ func (m *TypesRBACManager) RemoveRoleFromUser(ctx context.Context, user *User, r
 	user.Roles = newRoles
 
 	return nil
-}
 
 // GetUserPermissions returns all permissions a user has
 func (m *TypesRBACManager) GetUserPermissions(ctx context.Context, user *User) ([]string, error) {
@@ -379,5 +364,3 @@ func (m *TypesRBACManager) GetUserPermissions(ctx context.Context, user *User) (
 		result = append(result, p)
 	}
 
-	return result, nil
-}

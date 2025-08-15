@@ -2,10 +2,13 @@
 package owasp
 
 import (
-	"context"
+	"math/big"
+	cryptorand "crypto/rand"
+	
+		"context"
 	"errors"
 	"fmt"
-	"math/rand"
+	"crypto/rand"
 	"sync"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
@@ -27,7 +30,6 @@ type MockLLMProviderImpl struct {
 	errorRate float64
 	// Mutex for thread safety
 	mu sync.RWMutex
-}
 
 // NewMockLLMProvider creates a new mock LLM provider for testing
 func NewMockLLMProvider(config *core.ProviderConfig) *MockLLMProviderImpl {
@@ -67,14 +69,12 @@ func NewMockLLMProvider(config *core.ProviderConfig) *MockLLMProviderImpl {
 		responseDelay:      0,
 		errorRate:          0.0,
 	}
-}
 
 // SetVulnerableResponses sets the vulnerable responses for specific test cases
 func (p *MockLLMProviderImpl) SetVulnerableResponses(vulnerableResponses map[string]string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.vulnerableResponses = vulnerableResponses
-}
 
 // GetVulnerableResponse gets a vulnerable response for a specific test case
 func (p *MockLLMProviderImpl) GetVulnerableResponse(testCaseID string) (string, bool) {
@@ -82,21 +82,18 @@ func (p *MockLLMProviderImpl) GetVulnerableResponse(testCaseID string) (string, 
 	defer p.mu.RUnlock()
 	response, ok := p.vulnerableResponses[testCaseID]
 	return response, ok
-}
 
 // SetDefaultResponse sets the default response for test cases without specific vulnerable responses
 func (p *MockLLMProviderImpl) SetDefaultResponse(response string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.defaultResponse = response
-}
 
 // SetResponseDelay sets a delay for responses to simulate latency
 func (p *MockLLMProviderImpl) SetResponseDelay(delay time.Duration) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.responseDelay = delay
-}
 
 // SetErrorRate sets the error rate for responses (0.0 to 1.0)
 func (p *MockLLMProviderImpl) SetErrorRate(rate float64) {
@@ -108,7 +105,6 @@ func (p *MockLLMProviderImpl) SetErrorRate(rate float64) {
 		rate = 1.0
 	}
 	p.errorRate = rate
-}
 
 // ResetState resets the state of the mock provider
 func (p *MockLLMProviderImpl) ResetState() {
@@ -118,7 +114,6 @@ func (p *MockLLMProviderImpl) ResetState() {
 	p.defaultResponse = "This is a default response from the mock LLM provider."
 	p.responseDelay = 0
 	p.errorRate = 0.0
-}
 
 // ChatCompletion generates a chat completion
 func (p *MockLLMProviderImpl) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -131,7 +126,7 @@ func (p *MockLLMProviderImpl) ChatCompletion(ctx context.Context, request *core.
 	}
 
 	// Simulate errors based on error rate
-	if p.errorRate > 0 && rand.Float64() < p.errorRate {
+	if p.errorRate > 0 && randFloat64() < p.errorRate {
 		return nil, errors.New("simulated error from mock LLM provider")
 	}
 
@@ -154,7 +149,9 @@ func (p *MockLLMProviderImpl) ChatCompletion(ctx context.Context, request *core.
 	} else {
 		// If no test case ID, try to extract from the last message
 		if len(request.Messages) > 0 {
-			_ = request.Messages[len(request.Messages)-1] // lastMessage - could be used for future test case ID extraction
+			if err := request.Messages[len(request.Messages)-1] // lastMessage - could be used for future test case ID extraction; err != nil {
+				return fmt.Errorf("operation failed: %w", err)
+			}
 			// Check if the message contains a test case ID marker
 			// Format: [TEST_CASE_ID:123]
 			// TODO: Implement more sophisticated extraction if needed
@@ -188,7 +185,6 @@ func (p *MockLLMProviderImpl) ChatCompletion(ctx context.Context, request *core.
 	}
 
 	return response, nil
-}
 
 // TextCompletion generates a text completion
 func (p *MockLLMProviderImpl) TextCompletion(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
@@ -201,7 +197,7 @@ func (p *MockLLMProviderImpl) TextCompletion(ctx context.Context, request *core.
 	}
 
 	// Simulate errors based on error rate
-	if p.errorRate > 0 && rand.Float64() < p.errorRate {
+	if p.errorRate > 0 && randFloat64() < p.errorRate {
 		return nil, errors.New("simulated error from mock LLM provider")
 	}
 
@@ -245,7 +241,6 @@ func (p *MockLLMProviderImpl) TextCompletion(ctx context.Context, request *core.
 	}
 
 	return response, nil
-}
 
 // StreamingChatCompletion generates a streaming chat completion
 func (p *MockLLMProviderImpl) StreamingChatCompletion(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
@@ -258,7 +253,7 @@ func (p *MockLLMProviderImpl) StreamingChatCompletion(ctx context.Context, reque
 	}
 
 	// Simulate errors based on error rate
-	if p.errorRate > 0 && rand.Float64() < p.errorRate {
+	if p.errorRate > 0 && randFloat64() < p.errorRate {
 		return errors.New("simulated error from mock LLM provider")
 	}
 
@@ -319,7 +314,6 @@ func (p *MockLLMProviderImpl) StreamingChatCompletion(ctx context.Context, reque
 	}
 
 	return nil
-}
 
 // CreateEmbedding creates an embedding
 func (p *MockLLMProviderImpl) CreateEmbedding(ctx context.Context, request *core.EmbeddingRequest) (*core.EmbeddingResponse, error) {
@@ -332,7 +326,7 @@ func (p *MockLLMProviderImpl) CreateEmbedding(ctx context.Context, request *core
 	}
 
 	// Simulate errors based on error rate
-	if p.errorRate > 0 && rand.Float64() < p.errorRate {
+	if p.errorRate > 0 && randFloat64() < p.errorRate {
 		return nil, errors.New("simulated error from mock LLM provider")
 	}
 
@@ -370,14 +364,12 @@ func (p *MockLLMProviderImpl) CreateEmbedding(ctx context.Context, request *core
 	}
 
 	return response, nil
-}
 
 // CountTokens counts the number of tokens in a text
 func (p *MockLLMProviderImpl) CountTokens(ctx context.Context, text string, modelID string) (int, error) {
 	// Mock implementation - just count words as a simple approximation
 	words := splitIntoChunks(text, 1)
 	return len(words), nil
-}
 
 // GetAllUsageMetrics returns all usage metrics for the provider
 func (p *MockLLMProviderImpl) GetAllUsageMetrics() (map[string]*core.UsageMetrics, error) {
@@ -395,7 +387,6 @@ func (p *MockLLMProviderImpl) GetAllUsageMetrics() (map[string]*core.UsageMetric
 			ModelID:              "mock-llm-model",
 		},
 	}, nil
-}
 
 // GetRateLimitConfig returns the rate limit configuration
 func (p *MockLLMProviderImpl) GetRateLimitConfig() *core.RateLimitConfig {
@@ -406,7 +397,6 @@ func (p *MockLLMProviderImpl) GetRateLimitConfig() *core.RateLimitConfig {
 		MaxConcurrentRequests: 10,
 		BurstSize:            20,
 	}
-}
 
 // GetRetryConfig returns the retry configuration
 func (p *MockLLMProviderImpl) GetRetryConfig() *core.RetryConfig {
@@ -418,7 +408,6 @@ func (p *MockLLMProviderImpl) GetRetryConfig() *core.RetryConfig {
 		BackoffMultiplier:    2.0,
 		RetryableStatusCodes: []int{429, 500, 502, 503, 504},
 	}
-}
 
 // GetUsageMetrics returns the usage metrics for a specific model
 func (p *MockLLMProviderImpl) GetUsageMetrics(modelID string) (*core.UsageMetrics, error) {
@@ -434,25 +423,21 @@ func (p *MockLLMProviderImpl) GetUsageMetrics(modelID string) (*core.UsageMetric
 		RequestsPerMinute:    0,
 		ModelID:              modelID,
 	}, nil
-}
 
 // ResetUsageMetrics resets the usage metrics
 func (p *MockLLMProviderImpl) ResetUsageMetrics() error {
 	// Mock implementation - nothing to reset
 	return nil
-}
 
 // UpdateRateLimitConfig updates the rate limit configuration
 func (p *MockLLMProviderImpl) UpdateRateLimitConfig(config *core.RateLimitConfig) error {
 	// Mock implementation - nothing to update
 	return nil
-}
 
 // UpdateRetryConfig updates the retry configuration
 func (p *MockLLMProviderImpl) UpdateRetryConfig(config *core.RetryConfig) error {
 	// Mock implementation - nothing to update
 	return nil
-}
 
 // Helper function to split a string into chunks
 func splitIntoChunks(s string, chunkSize int) []string {
@@ -472,7 +457,6 @@ func splitIntoChunks(s string, chunkSize int) []string {
 	}
 	
 	return chunks
-}
 
 // Helper function to generate a mock embedding
 func generateMockEmbedding(input string, dimensions int) []float64 {
@@ -504,4 +488,22 @@ func generateMockEmbedding(input string, dimensions int) []float64 {
 	}
 
 	return embedding
-}
+
+// Secure random number generation helpers
+func randInt(max int) int {
+    n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+    if err != nil {
+        panic(err)
+    }
+    return int(n.Int64())
+
+func randInt64(max int64) int64 {
+    n, err := rand.Int(rand.Reader, big.NewInt(max))
+    if err != nil {
+        panic(err)
+    }
+    return n.Int64()
+
+func randFloat64() float64 {
+    bytes := make([]byte, 8)
+    rand.Read(bytes)

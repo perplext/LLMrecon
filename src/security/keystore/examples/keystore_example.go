@@ -42,7 +42,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create key store: %v", err)
 	}
-	defer ks.Close()
+	defer func() { if err := ks.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Generate RSA signing key
 	rsaKey, err := generateRSASigningKey(ks)
@@ -78,7 +78,6 @@ func main() {
 	demonstrateKeyExportImport(ks, ecdsaKey.Metadata.ID)
 
 	log.Println("Key store example completed successfully")
-}
 
 // generateRSASigningKey generates an RSA key for digital signatures
 func generateRSASigningKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
@@ -94,7 +93,6 @@ func generateRSASigningKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
 	}
 
 	return ks.GenerateKey(keystore.RSAKey, "RSA-2048", metadata)
-}
 
 // generateECDSASigningKey generates an ECDSA key for digital signatures
 func generateECDSASigningKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
@@ -110,7 +108,6 @@ func generateECDSASigningKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
 	}
 
 	return ks.GenerateKey(keystore.ECDSAKey, "ECDSA-P256", metadata)
-}
 
 // generateSymmetricKey generates a symmetric key for encryption
 func generateSymmetricKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
@@ -124,9 +121,7 @@ func generateSymmetricKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
 		Description:     "Example symmetric encryption key",
 		RotationPeriod:  30, // 30 days
 	}
-
 	return ks.GenerateKey(keystore.SymmetricKey, "AES-256", metadata)
-}
 
 // listAllKeys lists all keys in the key store
 func listAllKeys(ks *keystore.FileKeyStore) {
@@ -165,7 +160,6 @@ func listAllKeys(ks *keystore.FileKeyStore) {
 		return
 	}
 	log.Printf("Found %d keys with tag 'example'", len(exampleKeys))
-}
 
 // demonstrateRSAKeyUsage demonstrates how to use an RSA key for signing and verification
 func demonstrateRSAKeyUsage(ks *keystore.FileKeyStore, keyID string) {
@@ -196,7 +190,6 @@ func demonstrateRSAKeyUsage(ks *keystore.FileKeyStore, keyID string) {
 		return
 	}
 	log.Printf("Created signature: %s", hex.EncodeToString(signature))
-
 	// Verify the signature
 	err = rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, hash[:], signature)
 	if err != nil {
@@ -204,7 +197,6 @@ func demonstrateRSAKeyUsage(ks *keystore.FileKeyStore, keyID string) {
 		return
 	}
 	log.Println("Signature verified successfully")
-}
 
 // demonstrateKeyRotation demonstrates key rotation
 func demonstrateKeyRotation(ks *keystore.FileKeyStore, keyID string) {
@@ -215,7 +207,6 @@ func demonstrateKeyRotation(ks *keystore.FileKeyStore, keyID string) {
 		return
 	}
 	log.Printf("Original key: %s (%s)", originalKey.Name, originalKey.ID)
-
 	// Rotate the key
 	rotatedKey, err := ks.RotateKey(keyID)
 	if err != nil {
@@ -235,7 +226,6 @@ func demonstrateKeyRotation(ks *keystore.FileKeyStore, keyID string) {
 	for _, key := range keys {
 		log.Printf("  - %s (%s): %s, %s, %s", key.Name, key.ID, key.Type, key.Usage, key.Algorithm)
 	}
-}
 
 // demonstrateKeyExportImport demonstrates key export and import
 func demonstrateKeyExportImport(ks *keystore.FileKeyStore, keyID string) {
@@ -246,7 +236,6 @@ func demonstrateKeyExportImport(ks *keystore.FileKeyStore, keyID string) {
 		return
 	}
 	log.Printf("Original key: %s (%s)", originalKey.Name, originalKey.ID)
-
 	// Export the key in PEM format (public key only)
 	exportedPEM, err := ks.ExportKey(keyID, "PEM", false)
 	if err != nil {
@@ -287,4 +276,3 @@ func demonstrateKeyExportImport(ks *keystore.FileKeyStore, keyID string) {
 	for _, key := range keys {
 		log.Printf("  - %s (%s): %s, %s, %s", key.Name, key.ID, key.Type, key.Usage, key.Algorithm)
 	}
-}

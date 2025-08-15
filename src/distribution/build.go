@@ -56,7 +56,6 @@ type CodeSigner interface {
 	Sign(ctx context.Context, artifact *BuildArtifact, config PlatformSigningConfig) error
 	Verify(ctx context.Context, artifact *BuildArtifact) error
 	GetCertificateInfo() (*CertificateInfo, error)
-}
 
 // CertificateInfo contains signing certificate information
 type CertificateInfo struct {
@@ -66,7 +65,6 @@ type CertificateInfo struct {
 	NotAfter   time.Time `json:"not_after"`
 	Serial     string    `json:"serial"`
 	Thumbprint string    `json:"thumbprint"`
-}
 
 // NewBuildPipeline creates a new build pipeline
 func NewBuildPipeline(config *Config, logger Logger) BuildPipeline {
@@ -82,7 +80,6 @@ func NewBuildPipeline(config *Config, logger Logger) BuildPipeline {
 		workerPool: make(chan struct{}, 4), // Default 4 concurrent builds
 		workers:    4,
 	}
-}
 
 // Build starts a new build for the specified targets
 func (bp *BuildPipelineImpl) Build(ctx context.Context, version string, targets []BuildTarget) (*BuildResult, error) {
@@ -120,7 +117,6 @@ func (bp *BuildPipelineImpl) Build(ctx context.Context, version string, targets 
 		Status:    BuildStatePending,
 		StartTime: execution.StartTime,
 	}, nil
-}
 
 // GetBuildStatus returns the current status of a build
 func (bp *BuildPipelineImpl) GetBuildStatus(buildID string) (*BuildStatus, error) {
@@ -142,7 +138,6 @@ func (bp *BuildPipelineImpl) GetBuildStatus(buildID string) (*BuildStatus, error
 		Message:   bp.getStatusMessage(execution),
 		UpdatedAt: time.Now(),
 	}, nil
-}
 
 // ListBuilds returns a list of builds matching the filters
 func (bp *BuildPipelineImpl) ListBuilds(ctx context.Context, filters BuildFilters) ([]BuildInfo, error) {
@@ -207,7 +202,6 @@ func (bp *BuildPipelineImpl) ListBuilds(ctx context.Context, filters BuildFilter
 	}
 	
 	return builds, nil
-}
 
 // CleanupBuilds removes old build records
 func (bp *BuildPipelineImpl) CleanupBuilds(ctx context.Context, olderThan time.Time) error {
@@ -229,7 +223,6 @@ func (bp *BuildPipelineImpl) CleanupBuilds(ctx context.Context, olderThan time.T
 	bp.logger.Info("Cleaned up builds", "count", cleaned, "olderThan", olderThan)
 	
 	return nil
-}
 
 // Internal methods
 
@@ -307,7 +300,6 @@ func (bp *BuildPipelineImpl) executeBuild(execution *BuildExecution) {
 	}
 	
 	bp.logger.Info("Build execution completed", "buildID", execution.ID, "artifacts", artifactCount, "errors", len(execution.Errors))
-}
 
 func (bp *BuildPipelineImpl) buildTarget(ctx context.Context, buildDir, version string, target BuildTarget) (*BuildArtifact, error) {
 	// Set up build environment
@@ -414,19 +406,16 @@ func (bp *BuildPipelineImpl) buildTarget(ctx context.Context, buildDir, version 
 	}
 	
 	return artifact, nil
-}
 
 func (bp *BuildPipelineImpl) createBuildDirectory(buildID string) (string, error) {
 	tempDir := os.TempDir()
 	buildDir := filepath.Join(tempDir, "LLMrecon-build", buildID)
 	
-	if err := os.MkdirAll(buildDir, 0755); err != nil {
+	if err := os.MkdirAll(buildDir, 0700); err != nil {
 		return "", err
 	}
 	
 	return buildDir, nil
-}
-
 func (bp *BuildPipelineImpl) calculateChecksums(filePath string) (map[string]string, error) {
 	checksums := make(map[string]string)
 	
@@ -451,13 +440,11 @@ func (bp *BuildPipelineImpl) calculateChecksums(filePath string) (map[string]str
 	}
 	
 	return checksums, nil
-}
 
 func (bp *BuildPipelineImpl) compressArtifact(ctx context.Context, artifact *BuildArtifact) (*BuildArtifact, error) {
 	// This would implement compression logic
 	// For now, just return the original artifact
 	return artifact, nil
-}
 
 func (bp *BuildPipelineImpl) updateBuildStatus(execution *BuildExecution, status BuildState, progress int, message string) {
 	execution.Mutex.Lock()
@@ -473,7 +460,6 @@ func (bp *BuildPipelineImpl) updateBuildStatus(execution *BuildExecution, status
 		"status":   string(status),
 		"progress": progress,
 	})
-}
 
 func (bp *BuildPipelineImpl) logBuild(execution *BuildExecution, level, target, message string, details map[string]interface{}) {
 	logEntry := BuildLogEntry{
@@ -489,7 +475,6 @@ func (bp *BuildPipelineImpl) logBuild(execution *BuildExecution, level, target, 
 	execution.Mutex.Unlock()
 	
 	bp.logger.Info("Build log", "buildID", execution.ID, "level", level, "target", target, "message", message)
-}
 
 func (bp *BuildPipelineImpl) getStatusMessage(execution *BuildExecution) string {
 	switch execution.Status {
@@ -506,7 +491,6 @@ func (bp *BuildPipelineImpl) getStatusMessage(execution *BuildExecution) string 
 	default:
 		return "Unknown status"
 	}
-}
 
 // Utility functions
 
@@ -517,15 +501,12 @@ func contains(slice []BuildState, item BuildState) bool {
 		}
 	}
 	return false
-}
 
 func generateBuildID() string {
 	return fmt.Sprintf("build_%d_%d", time.Now().UnixNano(), time.Now().Unix())
-}
 
 func generateArtifactID() string {
 	return fmt.Sprintf("artifact_%d_%d", time.Now().UnixNano(), time.Now().Unix())
-}
 
 // Mock implementations for dependencies
 
@@ -539,7 +520,6 @@ func NewArtifactStorage(config ArtifactStorageConfig, logger Logger) ArtifactSto
 	default:
 		return &LocalStorage{config: config, logger: logger}
 	}
-}
 
 // NewCodeSigner creates a new code signer
 func NewCodeSigner(config SigningConfig, logger Logger) CodeSigner {
@@ -547,13 +527,11 @@ func NewCodeSigner(config SigningConfig, logger Logger) CodeSigner {
 		return &NoOpSigner{}
 	}
 	return &DefaultCodeSigner{config: config, logger: logger}
-}
 
 // Simple storage implementations (mock)
 type LocalStorage struct {
 	config ArtifactStorageConfig
 	logger Logger
-}
 
 func (ls *LocalStorage) Store(ctx context.Context, artifact *BuildArtifact) (*StorageLocation, error) {
 	return &StorageLocation{
@@ -561,54 +539,42 @@ func (ls *LocalStorage) Store(ctx context.Context, artifact *BuildArtifact) (*St
 		Key:      artifact.Name,
 		URL:      fmt.Sprintf("file://%s", artifact.Name),
 	}, nil
-}
 
 func (ls *LocalStorage) Retrieve(ctx context.Context, location *StorageLocation, writer io.Writer) error {
 	return nil
-}
 
 func (ls *LocalStorage) Delete(ctx context.Context, location *StorageLocation) error {
 	return nil
-}
 
 func (ls *LocalStorage) Exists(ctx context.Context, location *StorageLocation) (bool, error) {
 	return true, nil
-}
 
 func (ls *LocalStorage) GetMetadata(ctx context.Context, location *StorageLocation) (*ArtifactMetadata, error) {
 	return &ArtifactMetadata{}, nil
-}
 
 func (ls *LocalStorage) UpdateMetadata(ctx context.Context, location *StorageLocation, metadata *ArtifactMetadata) error {
 	return nil
-}
 
 func (ls *LocalStorage) List(ctx context.Context, filters StorageFilters) ([]StorageLocation, error) {
 	return []StorageLocation{}, nil
-}
 
 func (ls *LocalStorage) Search(ctx context.Context, query string) ([]StorageLocation, error) {
 	return []StorageLocation{}, nil
-}
 
 func (ls *LocalStorage) Cleanup(ctx context.Context, retentionPolicy RetentionPolicy) error {
 	return nil
-}
 
 func (ls *LocalStorage) GetStorageUsage(ctx context.Context) (*StorageUsage, error) {
 	return &StorageUsage{}, nil
-}
 
 // S3Storage and GCSStorage would be similar implementations for cloud storage
 
 type S3Storage struct {
 	config ArtifactStorageConfig
 	logger Logger
-}
 
 func (s3 *S3Storage) Store(ctx context.Context, artifact *BuildArtifact) (*StorageLocation, error) {
 	return &StorageLocation{Provider: "s3"}, nil
-}
 
 func (s3 *S3Storage) Retrieve(ctx context.Context, location *StorageLocation, writer io.Writer) error { return nil }
 func (s3 *S3Storage) Delete(ctx context.Context, location *StorageLocation) error { return nil }
@@ -623,11 +589,9 @@ func (s3 *S3Storage) GetStorageUsage(ctx context.Context) (*StorageUsage, error)
 type GCSStorage struct {
 	config ArtifactStorageConfig
 	logger Logger
-}
 
 func (gcs *GCSStorage) Store(ctx context.Context, artifact *BuildArtifact) (*StorageLocation, error) {
 	return &StorageLocation{Provider: "gcs"}, nil
-}
 
 func (gcs *GCSStorage) Retrieve(ctx context.Context, location *StorageLocation, writer io.Writer) error { return nil }
 func (gcs *GCSStorage) Delete(ctx context.Context, location *StorageLocation) error { return nil }
@@ -644,20 +608,16 @@ type NoOpSigner struct{}
 
 func (nos *NoOpSigner) Sign(ctx context.Context, artifact *BuildArtifact, config PlatformSigningConfig) error {
 	return nil
-}
 
 func (nos *NoOpSigner) Verify(ctx context.Context, artifact *BuildArtifact) error {
 	return nil
-}
 
 func (nos *NoOpSigner) GetCertificateInfo() (*CertificateInfo, error) {
 	return &CertificateInfo{}, nil
-}
 
 type DefaultCodeSigner struct {
 	config SigningConfig
 	logger Logger
-}
 
 func (dcs *DefaultCodeSigner) Sign(ctx context.Context, artifact *BuildArtifact, config PlatformSigningConfig) error {
 	dcs.logger.Info("Signing artifact", "artifact", artifact.Name, "platform", artifact.Platform)
@@ -669,11 +629,9 @@ func (dcs *DefaultCodeSigner) Sign(ctx context.Context, artifact *BuildArtifact,
 		Timestamp: time.Now(),
 	}
 	return nil
-}
 
 func (dcs *DefaultCodeSigner) Verify(ctx context.Context, artifact *BuildArtifact) error {
 	return nil
-}
 
 func (dcs *DefaultCodeSigner) GetCertificateInfo() (*CertificateInfo, error) {
 	return &CertificateInfo{
@@ -682,4 +640,54 @@ func (dcs *DefaultCodeSigner) GetCertificateInfo() (*CertificateInfo, error) {
 		NotBefore: time.Now().Add(-24 * time.Hour),
 		NotAfter:  time.Now().Add(365 * 24 * time.Hour),
 	}, nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

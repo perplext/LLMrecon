@@ -27,7 +27,9 @@ func main() {
 
 	// Load configurations from environment variables
 	if err := configManager.LoadFromEnv(); err != nil {
-		fmt.Printf("Failed to load configurations from environment variables: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Printf("Failed to load configurations from environment variables: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -44,12 +46,16 @@ func main() {
 	// Create a model registry
 	modelRegistry := registry.NewModelRegistry()
 
-	// Get OpenAI provider
+if err != nil {
+treturn err
+}	// Get OpenAI provider
 	openaiProvider, err := providerFactory.GetProvider(core.OpenAIProvider)
 	if err != nil {
 		fmt.Printf("Failed to get OpenAI provider: %v\n", err)
 		os.Exit(1)
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Get Anthropic provider
 	anthropicProvider, err := providerFactory.GetProvider(core.AnthropicProvider)
@@ -58,7 +64,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Register providers
+if err != nil {
+treturn err
+}	// Register providers
 	providerRegistry.RegisterProvider(openaiProvider)
 	providerRegistry.RegisterProvider(anthropicProvider)
 
@@ -70,7 +78,9 @@ func main() {
 
 	// Get all models
 	models := modelRegistry.GetAllModels()
-	fmt.Printf("Available models: %d\n", len(models))
+if err != nil {
+treturn err
+}	fmt.Printf("Available models: %d\n", len(models))
 	for _, model := range models {
 		fmt.Printf("- %s (%s): %s\n", model.ID, model.Provider, model.Type)
 	}
@@ -91,7 +101,9 @@ func main() {
 		},
 		MaxTokens:   100,
 		Temperature: 0.7,
-	})
+if err != nil {
+treturn err
+}	})
 	if err != nil {
 		fmt.Printf("Failed to generate chat completion with OpenAI: %v\n", err)
 	} else {
@@ -108,20 +120,26 @@ func main() {
 				Content: "Hello, who are you?",
 			},
 		},
-		MaxTokens:   100,
+if err != nil {
+treturn err
+}		MaxTokens:   100,
 		Temperature: 0.7,
 	})
 	if err != nil {
 		fmt.Printf("Failed to generate chat completion with Anthropic: %v\n", err)
 	} else {
 		fmt.Printf("Response: %s\n", anthropicChatResponse.Choices[0].Message.Content)
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Example: Get provider by capability
 	fmt.Println("\nGet provider by capability:")
 	embeddingProvider, err := providerRegistry.GetProviderByCapability(core.EmbeddingCapability)
 	if err != nil {
-		fmt.Printf("Failed to get provider by capability: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Printf("Failed to get provider by capability: %v\n", err)
 	} else {
 		fmt.Printf("Provider for embedding: %s\n", embeddingProvider.GetType())
 	}

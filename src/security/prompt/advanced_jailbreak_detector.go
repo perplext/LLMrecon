@@ -26,8 +26,8 @@ type AdvancedJailbreakDetector struct {
 	adaptiveThreshold       float64
 	lastUpdateTime          time.Time
 	updateInterval          time.Duration
-}
 
+}
 // NewAdvancedJailbreakDetector creates a new advanced jailbreak detector
 func NewAdvancedJailbreakDetector(config *ProtectionConfig, patternLibrary *InjectionPatternLibrary) *AdvancedJailbreakDetector {
 	baseDetector := NewJailbreakDetector(config, patternLibrary)
@@ -179,9 +179,9 @@ func NewAdvancedJailbreakDetector(config *ProtectionConfig, patternLibrary *Inje
 		lastUpdateTime:         time.Now(),
 		updateInterval:         time.Hour * 24, // Update patterns daily
 	}
-}
 
 // DetectAdvancedJailbreak performs advanced jailbreak detection
+}
 func (d *AdvancedJailbreakDetector) DetectAdvancedJailbreak(ctx context.Context, prompt string) (*ProtectionResult, error) {
 	// First run the base detector
 	baseResult, err := d.JailbreakDetector.DetectJailbreak(ctx, prompt)
@@ -211,9 +211,9 @@ func (d *AdvancedJailbreakDetector) DetectAdvancedJailbreak(ctx context.Context,
 	d.adjustThresholdBasedOnHistory()
 	
 	return baseResult, nil
-}
 
 // detectSemanticPatterns detects semantic patterns in the prompt
+}
 func (d *AdvancedJailbreakDetector) detectSemanticPatterns(prompt string, result *ProtectionResult) {
 	promptLower := strings.ToLower(prompt)
 	
@@ -256,9 +256,9 @@ func (d *AdvancedJailbreakDetector) detectSemanticPatterns(prompt string, result
 			}
 		}
 	}
-}
 
 // detectContextualPatterns detects contextual patterns in the prompt
+}
 func (d *AdvancedJailbreakDetector) detectContextualPatterns(prompt string, result *ProtectionResult) {
 	promptLower := strings.ToLower(prompt)
 	
@@ -301,9 +301,9 @@ func (d *AdvancedJailbreakDetector) detectContextualPatterns(prompt string, resu
 			}
 		}
 	}
-}
 
 // detectMultiStagePatterns detects multi-stage attack patterns in the prompt
+}
 func (d *AdvancedJailbreakDetector) detectMultiStagePatterns(prompt string, result *ProtectionResult) {
 	promptLower := strings.ToLower(prompt)
 	
@@ -357,9 +357,9 @@ func (d *AdvancedJailbreakDetector) detectMultiStagePatterns(prompt string, resu
 			}
 		}
 	}
-}
 
 // detectObfuscationTechniques detects obfuscation techniques in the prompt
+}
 func (d *AdvancedJailbreakDetector) detectObfuscationTechniques(prompt string, result *ProtectionResult) {
 	for technique, pattern := range d.obfuscationTechniques {
 		matches := pattern.FindAllStringIndex(prompt, -1)
@@ -392,9 +392,9 @@ func (d *AdvancedJailbreakDetector) detectObfuscationTechniques(prompt string, r
 			result.RiskScore = max(result.RiskScore, confidence)
 		}
 	}
-}
 
 // detectLanguageManipulation detects language manipulation techniques in the prompt
+}
 func (d *AdvancedJailbreakDetector) detectLanguageManipulation(prompt string, result *ProtectionResult) {
 	for technique, pattern := range d.languageManipulation {
 		matches := pattern.FindAllStringIndex(prompt, -1)
@@ -427,9 +427,9 @@ func (d *AdvancedJailbreakDetector) detectLanguageManipulation(prompt string, re
 			result.RiskScore = max(result.RiskScore, confidence)
 		}
 	}
-}
 
 // detectEmergingTechniques detects emerging jailbreak techniques in the prompt
+}
 func (d *AdvancedJailbreakDetector) detectEmergingTechniques(prompt string, result *ProtectionResult) {
 	for technique, pattern := range d.emergingTechniques {
 		matches := pattern.FindAllStringIndex(prompt, -1)
@@ -462,9 +462,9 @@ func (d *AdvancedJailbreakDetector) detectEmergingTechniques(prompt string, resu
 			result.RiskScore = max(result.RiskScore, confidence)
 		}
 	}
-}
 
 // storeDetection stores a detection for future reference
+}
 func (d *AdvancedJailbreakDetector) storeDetection(detection *Detection) {
 	// Add to recent detections
 	d.recentDetections = append(d.recentDetections, detection)
@@ -473,9 +473,9 @@ func (d *AdvancedJailbreakDetector) storeDetection(detection *Detection) {
 	if len(d.recentDetections) > d.maxRecentDetections {
 		d.recentDetections = d.recentDetections[1:]
 	}
-}
 
 // adjustThresholdBasedOnHistory adjusts the detection threshold based on recent history
+}
 func (d *AdvancedJailbreakDetector) adjustThresholdBasedOnHistory() {
 	// Count recent detections
 	recentCount := len(d.recentDetections)
@@ -491,16 +491,16 @@ func (d *AdvancedJailbreakDetector) adjustThresholdBasedOnHistory() {
 		// Few detections, use standard threshold
 		d.adaptiveThreshold = 0.75
 	}
-}
 
 // updatePatterns updates the patterns based on new information
+}
 func (d *AdvancedJailbreakDetector) updatePatterns() {
 	// In a real implementation, this would fetch new patterns from a central repository
 	// For now, we'll just update the timestamp
 	d.lastUpdateTime = time.Now()
-}
 
 // extractContext extracts the context around a match
+}
 func extractContext(text string, match string) string {
 	// Find the match in the text
 	index := strings.Index(strings.ToLower(text), strings.ToLower(match))
@@ -530,5 +530,3 @@ func extractContext(text string, match string) string {
 		context = context + "..."
 	}
 	
-	return context
-}

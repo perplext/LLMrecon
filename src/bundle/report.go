@@ -91,7 +91,6 @@ type ImportResult struct {
 	SkippedFiles []string `json:"skipped_files,omitempty"`
 	// ErrorMessage contains the error message if the import failed
 	ErrorMessage string `json:"error_message,omitempty"`
-}
 
 // ImportReport represents a report of an import operation
 type ImportReport struct {
@@ -105,7 +104,6 @@ type ImportReport struct {
 	Format ReportFormat `json:"format"`
 	// GeneratedAt is the time the report was generated
 	GeneratedAt time.Time `json:"generated_at"`
-}
 
 // ReportGenerator defines the interface for generating reports
 type ReportGenerator interface {
@@ -115,13 +113,11 @@ type ReportGenerator interface {
 	WriteReport(report *ImportReport, writer io.Writer) error
 	// SaveReport saves a report to a file
 	SaveReport(report *ImportReport, path string) error
-}
 
 // DefaultReportGenerator is the default implementation of ReportGenerator
 type DefaultReportGenerator struct {
 	// Logger is the logger for report generation operations
 	Logger io.Writer
-}
 
 // NewReportGenerator creates a new report generator
 func NewReportGenerator(logger io.Writer) ReportGenerator {
@@ -131,7 +127,6 @@ func NewReportGenerator(logger io.Writer) ReportGenerator {
 	return &DefaultReportGenerator{
 		Logger: logger,
 	}
-}
 
 // GenerateReport generates a report of an import operation
 func (g *DefaultReportGenerator) GenerateReport(result *ImportResult, level ReportLevel, format ReportFormat) (*ImportReport, error) {
@@ -170,7 +165,6 @@ func (g *DefaultReportGenerator) GenerateReport(result *ImportResult, level Repo
 	// For verbose level, keep all information
 
 	return report, nil
-}
 
 // WriteReport writes a report to a writer
 func (g *DefaultReportGenerator) WriteReport(report *ImportReport, writer io.Writer) error {
@@ -184,13 +178,12 @@ func (g *DefaultReportGenerator) WriteReport(report *ImportReport, writer io.Wri
 	default:
 		return fmt.Errorf("unsupported report format: %s", report.Format)
 	}
-}
 
 // SaveReport saves a report to a file
 func (g *DefaultReportGenerator) SaveReport(report *ImportReport, path string) error {
 	// Create the directory if it doesn't exist
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
@@ -199,18 +192,16 @@ func (g *DefaultReportGenerator) SaveReport(report *ImportReport, path string) e
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", path, err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Write the report to the file
 	return g.WriteReport(report, file)
-}
 
 // writeJSONReport writes a report in JSON format
 func (g *DefaultReportGenerator) writeJSONReport(report *ImportReport, writer io.Writer) error {
 	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(report)
-}
 
 // writeTextReport writes a report in plain text format
 func (g *DefaultReportGenerator) writeTextReport(report *ImportReport, writer io.Writer) error {
@@ -305,7 +296,6 @@ func (g *DefaultReportGenerator) writeTextReport(report *ImportReport, writer io
 	fmt.Fprintf(writer, "\nReport generated at: %s\n", report.GeneratedAt.Format(time.RFC3339))
 
 	return nil
-}
 
 // writeMarkdownReport writes a report in markdown format
 func (g *DefaultReportGenerator) writeMarkdownReport(report *ImportReport, writer io.Writer) error {
@@ -412,7 +402,6 @@ func (g *DefaultReportGenerator) writeMarkdownReport(report *ImportReport, write
 	fmt.Fprintf(writer, "*Report generated at: %s*\n", report.GeneratedAt.Format(time.RFC3339))
 
 	return nil
-}
 
 // getStatusString returns a string representation of a success status
 func getStatusString(success bool) string {
@@ -420,7 +409,6 @@ func getStatusString(success bool) string {
 		return "Success"
 	}
 	return "Failed"
-}
 
 // ReportManager defines the interface for managing reports
 type ReportManager interface {
@@ -432,7 +420,6 @@ type ReportManager interface {
 	GetReportPath(bundleID string, format ReportFormat) string
 	// ListReports lists all reports in a directory
 	ListReports(dir string) ([]string, error)
-}
 
 // DefaultReportManager is the default implementation of ReportManager
 type DefaultReportManager struct {
@@ -442,7 +429,6 @@ type DefaultReportManager struct {
 	ReportsDir string
 	// Logger is the logger for report management operations
 	Logger io.Writer
-}
 
 // NewReportManager creates a new report manager
 func NewReportManager(reportsDir string, logger io.Writer) ReportManager {
@@ -454,17 +440,14 @@ func NewReportManager(reportsDir string, logger io.Writer) ReportManager {
 		ReportsDir: reportsDir,
 		Logger:     logger,
 	}
-}
 
 // CreateImportReport creates a report for an import operation
 func (m *DefaultReportManager) CreateImportReport(result *ImportResult, level ReportLevel, format ReportFormat) (*ImportReport, error) {
 	return m.Generator.GenerateReport(result, level, format)
-}
 
 // SaveImportReport saves an import report to a file
 func (m *DefaultReportManager) SaveImportReport(report *ImportReport, path string) error {
 	return m.Generator.SaveReport(report, path)
-}
 
 // GetReportPath gets the path for a report
 func (m *DefaultReportManager) GetReportPath(bundleID string, format ReportFormat) string {
@@ -472,7 +455,6 @@ func (m *DefaultReportManager) GetReportPath(bundleID string, format ReportForma
 	timestamp := time.Now().Format("20060102-150405")
 	filename := fmt.Sprintf("import-%s-%s.%s", bundleID, timestamp, format)
 	return filepath.Join(m.ReportsDir, filename)
-}
 
 // ListReports lists all reports in a directory
 func (m *DefaultReportManager) ListReports(dir string) ([]string, error) {
@@ -482,7 +464,7 @@ func (m *DefaultReportManager) ListReports(dir string) ([]string, error) {
 	}
 
 	// Create the directory if it doesn't exist
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
@@ -501,11 +483,9 @@ func (m *DefaultReportManager) ListReports(dir string) ([]string, error) {
 	}
 
 	return reports, nil
-}
 
 // isReportFile checks if a filename is a report file
 func isReportFile(filename string) bool {
 	// Check if the filename starts with "import-" and has a valid extension
 	ext := filepath.Ext(filename)
 	return len(filename) > 7 && filename[:7] == "import-" && (ext == ".json" || ext == ".txt" || ext == ".md")
-}

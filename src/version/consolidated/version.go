@@ -28,7 +28,6 @@ type VersionInfo struct {
 	
 	// Metadata is additional metadata for the template or module
 	Metadata map[string]interface{}
-}
 
 // NewVersionInfo creates a new version info object
 func NewVersionInfo(id string, version string, author string, description string) (*VersionInfo, error) {
@@ -49,34 +48,28 @@ func NewVersionInfo(id string, version string, author string, description string
 		Tags:        []string{},
 		Metadata:    make(map[string]interface{}),
 	}, nil
-}
 
 // WithTag adds a tag to the version info
 func (v *VersionInfo) WithTag(tag string) *VersionInfo {
 	v.Tags = append(v.Tags, tag)
 	return v
-}
 
 // WithMetadata adds metadata to the version info
 func (v *VersionInfo) WithMetadata(key string, value interface{}) *VersionInfo {
 	v.Metadata[key] = value
 	return v
-}
 
 // IsCompatible checks if the version info is compatible with another version info
 func (v *VersionInfo) IsCompatible(other *VersionInfo) bool {
 	return v.Version.IsCompatible(other.Version)
-}
 
 // IsBackwardsCompatible checks if the version info is backwards compatible with another version info
 func (v *VersionInfo) IsBackwardsCompatible(other *VersionInfo) bool {
 	return v.Version.IsBackwardsCompatible(other.Version)
-}
 
 // GetVersionString returns the string representation of the version
 func (v *VersionInfo) GetVersionString() string {
 	return v.Version.String()
-}
 
 // UpdateVersion updates the version and sets the updated timestamp
 func (v *VersionInfo) UpdateVersion(version string) error {
@@ -89,22 +82,17 @@ func (v *VersionInfo) UpdateVersion(version string) error {
 	v.UpdatedAt = time.Now()
 	
 	return nil
-}
 
 // IncrementMajor increments the major version
 func (v *VersionInfo) IncrementMajor() {
 	v.Version = v.Version.IncrementMajor()
 	v.UpdatedAt = time.Now()
-}
 
 // IncrementMinor increments the minor version
 func (v *VersionInfo) IncrementMinor() {
 	v.Version = v.Version.IncrementMinor()
 	v.UpdatedAt = time.Now()
-}
 
 // IncrementPatch increments the patch version
 func (v *VersionInfo) IncrementPatch() {
 	v.Version = v.Version.IncrementPatch()
-	v.UpdatedAt = time.Now()
-}

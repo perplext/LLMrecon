@@ -106,21 +106,18 @@ func NewAccessControlManager(config *AccessControlConfig) (*AccessControlManager
 		incidentStore:   incidentStore,
 		vulnStore:       vulnStore,
 	}, nil
-}
 
 // GetRBACManager returns the RBAC manager
 func (m *AccessControlManager) GetRBACManager() RBACManager {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.rbacManager
-}
 
 // GetUserManager returns the user manager
 func (m *AccessControlManager) GetUserManager() UserManager {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.userManager
-}
 
 // Initialize initializes the access control system
 func (m *AccessControlManager) Initialize(ctx context.Context) error {
@@ -146,7 +143,6 @@ func (m *AccessControlManager) Initialize(ctx context.Context) error {
 	})
 
 	return nil
-}
 
 // Close closes the access control system
 func (m *AccessControlManager) Close(ctx context.Context) error {
@@ -172,33 +168,26 @@ func (m *AccessControlManager) Close(ctx context.Context) error {
 	})
 
 	return nil
-}
 
 // Login authenticates a user and creates a new session
 func (m *AccessControlManager) Login(ctx context.Context, username, password string, ipAddress, userAgent string) (*Session, error) {
 	return m.authManager.Login(ctx, username, password, ipAddress, userAgent)
-}
 
 // Logout logs out a user by invalidating their session
 func (m *AccessControlManager) Logout(ctx context.Context, sessionID string) error {
 	return m.authManager.Logout(ctx, sessionID)
-}
 
 // ValidateSession validates a session and returns whether it's valid
 func (m *AccessControlManager) ValidateSession(ctx context.Context, token string) (bool, error) {
 	return m.authManager.VerifySession(ctx, token)
-}
 
 // RefreshSession refreshes a session and returns a new token
 func (m *AccessControlManager) RefreshSession(ctx context.Context, refreshToken string) (*Session, error) {
 	return m.authManager.RefreshSession(ctx, refreshToken)
-}
 
 // VerifyMFA verifies a multi-factor authentication code
 func (m *AccessControlManager) VerifyMFA(ctx context.Context, sessionID, code string) error {
 	return m.authManager.VerifyMFA(ctx, sessionID, code)
-}
-
 // HasPermission checks if a user has a specific permission
 func (m *AccessControlManager) HasPermission(ctx context.Context, user *User, permission Permission) bool {
 	hasPermission, err := m.rbacManager.HasPermission(user.ID, string(permission))
@@ -206,7 +195,6 @@ func (m *AccessControlManager) HasPermission(ctx context.Context, user *User, pe
 		return false
 	}
 	return hasPermission
-}
 
 // HasRole checks if a user has a specific role
 func (m *AccessControlManager) HasRole(ctx context.Context, user *User, role rbac.Role) bool {
@@ -215,7 +203,6 @@ func (m *AccessControlManager) HasRole(ctx context.Context, user *User, role rba
 		return false
 	}
 	return hasRole
-}
 
 // CreateUser creates a new user
 func (m *AccessControlManager) CreateUser(ctx context.Context, username, email, password string, roles []string, createdBy string) (*User, error) {
@@ -241,7 +228,6 @@ func (m *AccessControlManager) CreateUser(ctx context.Context, username, email, 
 		Roles:    user.Roles,
 		Active:   user.Active,
 	}, nil
-}
 
 // UpdateUser updates an existing user
 func (m *AccessControlManager) UpdateUser(ctx context.Context, id, username, email string, roles []string, active bool, updatedBy string) (*User, error) {
@@ -267,12 +253,10 @@ func (m *AccessControlManager) UpdateUser(ctx context.Context, id, username, ema
 		Roles:    user.Roles,
 		Active:   user.Active,
 	}, nil
-}
 
 // DeleteUser deletes a user
 func (m *AccessControlManager) DeleteUser(ctx context.Context, id, deletedBy string) error {
 	return m.userManager.DeleteUser(id)
-}
 
 // GetUser retrieves a user by ID
 func (m *AccessControlManager) GetUser(ctx context.Context, id string) (*User, error) {
@@ -280,7 +264,6 @@ func (m *AccessControlManager) GetUser(ctx context.Context, id string) (*User, e
 	if err != nil {
 		return nil, err
 	}
-
 	// Convert models.User to local User type
 	return &User{
 		ID:       user.ID,
@@ -289,7 +272,6 @@ func (m *AccessControlManager) GetUser(ctx context.Context, id string) (*User, e
 		Roles:    user.Roles,
 		Active:   user.Active,
 	}, nil
-}
 
 // GetUserByUsername retrieves a user by username
 func (m *AccessControlManager) GetUserByUsername(ctx context.Context, username string) (*User, error) {
@@ -306,7 +288,6 @@ func (m *AccessControlManager) GetUserByUsername(ctx context.Context, username s
 		Roles:    user.Roles,
 		Active:   user.Active,
 	}, nil
-}
 
 // ListUsers lists all users
 func (m *AccessControlManager) ListUsers(ctx context.Context) ([]*User, error) {
@@ -328,19 +309,17 @@ func (m *AccessControlManager) ListUsers(ctx context.Context) ([]*User, error) {
 	}
 
 	return result, nil
-}
+	
 
 // ChangePassword changes a user's password
 func (m *AccessControlManager) ChangePassword(ctx context.Context, id, currentPassword, newPassword, updatedBy string) error {
 	// Use the auth manager for password operations
 	return m.authManager.UpdateUserPassword(ctx, id, currentPassword, newPassword)
-}
 
 // ResetPassword resets a user's password (admin function)
 func (m *AccessControlManager) ResetPassword(ctx context.Context, id, newPassword, resetBy string) error {
 	// Use the auth manager for password operations
 	return m.authManager.UpdateUserPassword(ctx, id, "", newPassword) // Admin reset, no current password needed
-}
 
 // LockUser locks a user account
 func (m *AccessControlManager) LockUser(ctx context.Context, id, lockedBy string, reason string) error {
@@ -352,7 +331,6 @@ func (m *AccessControlManager) LockUser(ctx context.Context, id, lockedBy string
 
 	user.Locked = true
 	return m.userManager.UpdateUser(user)
-}
 
 // UnlockUser unlocks a user account
 func (m *AccessControlManager) UnlockUser(ctx context.Context, id, unlockedBy string) error {
@@ -364,19 +342,17 @@ func (m *AccessControlManager) UnlockUser(ctx context.Context, id, unlockedBy st
 
 	user.Locked = false
 	return m.userManager.UpdateUser(user)
-}
 
 // EnableMFA enables multi-factor authentication for a user
 func (m *AccessControlManager) EnableMFA(ctx context.Context, id string, method common.AuthMethod, enabledBy string) error {
 	// Use the auth manager for MFA operations
 	return m.authManager.EnableMFA(ctx, id, method)
-}
 
 // DisableMFA disables multi-factor authentication for a user
 func (m *AccessControlManager) DisableMFA(ctx context.Context, id string, method common.AuthMethod, disabledBy string) error {
 	// Use the auth manager for MFA operations
 	return m.authManager.DisableMFA(ctx, id, method)
-}
+	
 
 // LogAudit logs an audit event
 func (m *AccessControlManager) LogAudit(ctx context.Context, log *AuditLog) error {
@@ -384,14 +360,12 @@ func (m *AccessControlManager) LogAudit(ctx context.Context, log *AuditLog) erro
 	// This would need to be implemented separately if needed
 
 	return m.auditLogger.LogAudit(ctx, log)
-}
 
 // QueryAuditLogs queries audit logs
 func (m *AccessControlManager) QueryAuditLogs(ctx context.Context, filter *AuditLogFilter) ([]*AuditLog, error) {
 	// Note: QueryAuditLogs is not available on AuditManager
 	// This is a placeholder implementation
 	return []*AuditLog{}, nil
-}
 
 // CreateIncident creates a new security incident
 func (m *AccessControlManager) CreateIncident(ctx context.Context, title, description string, severity AuditSeverity, reportedBy string, auditLogIDs []string, metadata map[string]interface{}) (*SecurityIncident, error) {
@@ -414,7 +388,6 @@ func (m *AccessControlManager) CreateIncident(ctx context.Context, title, descri
 		AuditLogIDs: auditLogIDs,
 		Metadata:    metadata,
 	}, nil
-}
 
 // UpdateIncidentStatus updates the status of a security incident
 func (m *AccessControlManager) UpdateIncidentStatus(ctx context.Context, id string, status IncidentStatus, assignedTo, updatedBy string) error {
@@ -429,7 +402,6 @@ func (m *AccessControlManager) UpdateIncidentStatus(ctx context.Context, id stri
 
 	// Update the incident
 	return m.securityManager.UpdateIncident(modelsIncident)
-}
 
 // GetIncident retrieves a security incident by ID
 func (m *AccessControlManager) GetIncident(ctx context.Context, id string) (*SecurityIncident, error) {
@@ -448,7 +420,6 @@ func (m *AccessControlManager) GetIncident(ctx context.Context, id string) (*Sec
 		CreatedAt:   modelsIncident.ReportedAt,
 		ReportedBy:  modelsIncident.ReportedBy,
 	}, nil
-}
 
 // ListIncidents lists security incidents based on filters
 func (m *AccessControlManager) ListIncidents(ctx context.Context, filter *IncidentFilter) ([]*SecurityIncident, error) {
@@ -485,9 +456,7 @@ func (m *AccessControlManager) ListIncidents(ctx context.Context, filter *Incide
 			ReportedBy:  modelsIncident.ReportedBy,
 		}
 	}
-
 	return result, nil
-}
 
 // CreateVulnerability creates a new vulnerability
 func (m *AccessControlManager) CreateVulnerability(ctx context.Context, title, description string, severity AuditSeverity, affectedSystem, cve, reportedBy string, metadata map[string]interface{}) (*Vulnerability, error) {
@@ -497,7 +466,6 @@ func (m *AccessControlManager) CreateVulnerability(ctx context.Context, title, d
 	if err != nil {
 		return nil, err
 	}
-
 	// Convert back to local Vulnerability type
 	return &Vulnerability{
 		ID:             modelsVuln.ID,
@@ -511,7 +479,6 @@ func (m *AccessControlManager) CreateVulnerability(ctx context.Context, title, d
 		CVE:            cve,
 		Metadata:       metadata,
 	}, nil
-}
 
 // UpdateVulnerabilityStatus updates the status of a vulnerability
 func (m *AccessControlManager) UpdateVulnerabilityStatus(ctx context.Context, id string, status VulnerabilityStatus, assignedTo, remediationPlan, updatedBy string) error {
@@ -526,7 +493,6 @@ func (m *AccessControlManager) UpdateVulnerabilityStatus(ctx context.Context, id
 
 	// Update the vulnerability
 	return m.securityManager.UpdateVulnerability(modelsVuln)
-}
 
 // GetVulnerability retrieves a vulnerability by ID
 func (m *AccessControlManager) GetVulnerability(ctx context.Context, id string) (*Vulnerability, error) {
@@ -545,7 +511,6 @@ func (m *AccessControlManager) GetVulnerability(ctx context.Context, id string) 
 		CreatedAt:   modelsVuln.ReportedAt,
 		ReportedBy:  modelsVuln.ReportedBy,
 	}, nil
-}
 
 // ListVulnerabilities lists vulnerabilities based on filters
 func (m *AccessControlManager) ListVulnerabilities(ctx context.Context, filter *VulnerabilityFilter) ([]*Vulnerability, error) {
@@ -565,7 +530,6 @@ func (m *AccessControlManager) ListVulnerabilities(ctx context.Context, filter *
 			filterMap["cve_id"] = filter.CveID
 		}
 	}
-
 	// Call SecurityManager with default pagination
 	modelsVulns, _, err := m.securityManager.ListVulnerabilities(filterMap, 0, 100)
 	if err != nil {
@@ -587,8 +551,6 @@ func (m *AccessControlManager) ListVulnerabilities(ctx context.Context, filter *
 	}
 
 	return result, nil
-}
-
 // Private helper methods
 
 // initializeDefaultRoles initializes the default roles and permissions
@@ -597,7 +559,6 @@ func (m *AccessControlManager) initializeDefaultRoles() {
 	// Role and permission initialization would need to be handled elsewhere
 	// or the interface would need to be extended to support these operations
 	// For now, this is a placeholder that does nothing
-}
 
 // createAdminUser creates the default admin user if it doesn't exist
 func (m *AccessControlManager) createAdminUser(ctx context.Context) error {
@@ -646,5 +607,38 @@ func (m *AccessControlManager) createAdminUser(ctx context.Context) error {
 		},
 	})
 
-	return nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

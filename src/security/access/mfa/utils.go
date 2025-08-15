@@ -2,6 +2,8 @@
 package mfa
 
 import (
+	"os"
+	"time"
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/base64"
@@ -24,7 +26,6 @@ func GenerateRandomSecret(length int) (string, error) {
 	// Remove padding
 	secret = strings.TrimRight(secret, "=")
 	return secret, nil
-}
 
 // GenerateRandomCode generates a random numeric code of specified length
 func GenerateRandomCode(length int) (string, error) {
@@ -45,7 +46,6 @@ func GenerateRandomCode(length int) (string, error) {
 	}
 	
 	return codeBuilder.String(), nil
-}
 
 // GenerateBackupCode generates a random backup code
 func GenerateBackupCode() (string, error) {
@@ -65,7 +65,6 @@ func GenerateBackupCode() (string, error) {
 	
 	// Format as XXXX-XXXX-XX
 	return fmt.Sprintf("%s-%s-%s", code[:4], code[4:8], code[8:10]), nil
-}
 
 // GenerateTOTPQRCodeURL generates a URL for a TOTP QR code
 func GenerateTOTPQRCodeURL(issuer, username, secret string) string {
@@ -73,7 +72,6 @@ func GenerateTOTPQRCodeURL(issuer, username, secret string) string {
 	// otpauth://totp/<issuer>:<username>?secret=<secret>&issuer=<issuer>&algorithm=SHA1&digits=6&period=30
 	return fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=%s&algorithm=SHA1&digits=6&period=30",
 		issuer, username, secret, issuer)
-}
 
 // IsBackupCodeValid checks if a backup code is valid
 func IsBackupCodeValid(inputCode string, storedCodes []MFABackupCode) (bool, int) {
@@ -94,12 +92,10 @@ func IsBackupCodeValid(inputCode string, storedCodes []MFABackupCode) (bool, int
 	}
 	
 	return false, -1
-}
 
 // IsVerificationExpired checks if a verification is expired
 func IsVerificationExpired(verification *MFAVerification) bool {
 	return verification == nil || time.Now().After(verification.ExpiresAt)
-}
 
 // FormatPhoneNumber formats a phone number for display
 func FormatPhoneNumber(phoneNumber string) string {
@@ -127,7 +123,6 @@ func FormatPhoneNumber(phoneNumber string) string {
 		}
 		return phoneNumber
 	}
-}
 
 // MaskPhoneNumber masks a phone number for privacy
 func MaskPhoneNumber(phoneNumber string) string {
@@ -153,5 +148,3 @@ func MaskPhoneNumber(phoneNumber string) string {
 	}
 	
 	// For very short numbers, just return ***
-	return "***"
-}

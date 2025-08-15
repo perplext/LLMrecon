@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"container/list"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
 	"math"
@@ -27,7 +27,6 @@ type QueryCacheEntry struct {
 	LastAccessed time.Time
 	// Compressed indicates if the value is compressed
 	Compressed bool
-}
 
 // QueryCache is a cache for database query results
 type QueryCache struct {
@@ -57,7 +56,6 @@ type QueryCache struct {
 	minTTL time.Duration
 	// maxTTL is the maximum TTL for adaptive TTL
 	maxTTL time.Duration
-}
 
 // NewQueryCache creates a new query cache
 func NewQueryCache(defaultTTL time.Duration, maxSize int, enableCompression bool) *QueryCache {
@@ -81,7 +79,6 @@ func NewQueryCache(defaultTTL time.Duration, maxSize int, enableCompression bool
 		minTTL:            5 * time.Minute,
 		maxTTL:            24 * time.Hour,
 	}
-}
 
 // Get gets a query result from the cache
 func (c *QueryCache) Get(query string) (interface{}, bool) {
@@ -133,12 +130,10 @@ func (c *QueryCache) Get(query string) (interface{}, bool) {
 
 	c.stats.Hits++
 	return value, true
-}
 
 // Set sets a query result in the cache
 func (c *QueryCache) Set(query string, value interface{}) {
 	c.SetWithTTL(query, value, c.defaultTTL)
-}
 
 // SetWithTTL sets a query result in the cache with a specific TTL
 func (c *QueryCache) SetWithTTL(query string, value interface{}, ttl time.Duration) {
@@ -189,7 +184,6 @@ func (c *QueryCache) SetWithTTL(query string, value interface{}, ttl time.Durati
 		// Check if cache exceeds max size
 		c.evictIfNeeded()
 	}
-}
 
 // Delete deletes a query result from the cache
 func (c *QueryCache) Delete(query string) {
@@ -200,7 +194,6 @@ func (c *QueryCache) Delete(query string) {
 	defer c.mutex.Unlock()
 
 	c.removeEntry(queryHash)
-}
 
 // Clear clears the cache
 func (c *QueryCache) Clear() {
@@ -211,7 +204,6 @@ func (c *QueryCache) Clear() {
 	c.evictionList = list.New()
 	c.evictionMap = make(map[string]*list.Element)
 	c.currentSize = 0
-}
 
 // Size returns the number of entries in the cache
 func (c *QueryCache) Size() int {
@@ -219,7 +211,6 @@ func (c *QueryCache) Size() int {
 	defer c.mutex.RUnlock()
 
 	return len(c.cache)
-}
 
 // Prune removes entries from the cache that are older than the specified duration
 func (c *QueryCache) Prune(maxAge time.Duration) int {
@@ -240,7 +231,6 @@ func (c *QueryCache) Prune(maxAge time.Duration) int {
 	}
 
 	return count
-}
 
 // GetStats returns statistics about the cache
 func (c *QueryCache) GetStats() map[string]interface{} {
@@ -266,7 +256,6 @@ func (c *QueryCache) GetStats() map[string]interface{} {
 		"adaptive_ttl":      c.adaptiveTTL,
 		"memory_usage_bytes": c.currentSize,
 	}
-}
 
 // SetMaxSize sets the maximum size of the cache
 func (c *QueryCache) SetMaxSize(maxSize int) {
@@ -281,7 +270,6 @@ func (c *QueryCache) SetMaxSize(maxSize int) {
 
 	// Evict entries if needed
 	c.evictIfNeeded()
-}
 
 // SetDefaultTTL sets the default TTL for cache entries
 func (c *QueryCache) SetDefaultTTL(ttl time.Duration) {
@@ -293,7 +281,6 @@ func (c *QueryCache) SetDefaultTTL(ttl time.Duration) {
 	defer c.mutex.Unlock()
 
 	c.defaultTTL = ttl
-}
 
 // SetCompressionEnabled sets whether compression is enabled
 func (c *QueryCache) SetCompressionEnabled(enabled bool) {
@@ -301,7 +288,6 @@ func (c *QueryCache) SetCompressionEnabled(enabled bool) {
 	defer c.mutex.Unlock()
 
 	c.enableCompression = enabled
-}
 
 // SetCompressionLevel sets the compression level (1-9)
 func (c *QueryCache) SetCompressionLevel(level int) {
@@ -313,7 +299,6 @@ func (c *QueryCache) SetCompressionLevel(level int) {
 	defer c.mutex.Unlock()
 
 	c.compressionLevel = level
-}
 
 // SetAdaptiveTTL sets whether adaptive TTL is enabled
 func (c *QueryCache) SetAdaptiveTTL(enabled bool) {
@@ -321,7 +306,6 @@ func (c *QueryCache) SetAdaptiveTTL(enabled bool) {
 	defer c.mutex.Unlock()
 
 	c.adaptiveTTL = enabled
-}
 
 // SetAdaptiveTTLRange sets the range for adaptive TTL
 func (c *QueryCache) SetAdaptiveTTLRange(min, max time.Duration) {
@@ -334,13 +318,11 @@ func (c *QueryCache) SetAdaptiveTTLRange(min, max time.Duration) {
 
 	c.minTTL = min
 	c.maxTTL = max
-}
 
 // hashQuery generates a hash for a query
 func (c *QueryCache) hashQuery(query string) string {
-	hash := md5.Sum([]byte(query))
+	hash := sha256.Sum256([]byte(query))
 	return hex.EncodeToString(hash[:])
-}
 
 // removeEntry removes an entry from the cache
 func (c *QueryCache) removeEntry(queryHash string) {
@@ -358,14 +340,12 @@ func (c *QueryCache) removeEntry(queryHash string) {
 	// Remove from cache
 	c.currentSize -= entry.Size
 	delete(c.cache, queryHash)
-}
 
 // updateEntryPosition updates the position of an entry in the eviction list
 func (c *QueryCache) updateEntryPosition(queryHash string) {
 	if elem, ok := c.evictionMap[queryHash]; ok {
 		c.evictionList.MoveToFront(elem)
 	}
-}
 
 // evictIfNeeded evicts entries if the cache exceeds the maximum size
 func (c *QueryCache) evictIfNeeded() {
@@ -383,7 +363,6 @@ func (c *QueryCache) evictIfNeeded() {
 		c.removeEntry(queryHash)
 		c.stats.Evictions++
 	}
-}
 
 // compress compresses a value
 func (c *QueryCache) compress(value interface{}) interface{} {
@@ -409,7 +388,6 @@ func (c *QueryCache) compress(value interface{}) interface{} {
 	}
 
 	return compressed.Bytes()
-}
 
 // decompress decompresses a value
 func (c *QueryCache) decompress(value interface{}) interface{} {
@@ -441,7 +419,6 @@ func (c *QueryCache) decompress(value interface{}) interface{} {
 	}
 
 	return result
-}
 
 // extendTTL extends the TTL of an entry based on access count
 func (c *QueryCache) extendTTL(entry *QueryCacheEntry) {
@@ -465,7 +442,6 @@ func (c *QueryCache) extendTTL(entry *QueryCacheEntry) {
 
 	// Update expiration time
 	entry.ExpiresAt = time.Now().Add(newTTL)
-}
 
 // estimateSize estimates the size of a value in bytes
 func estimateSize(value interface{}) int {
@@ -486,4 +462,3 @@ func estimateSize(value interface{}) int {
 		}
 		return buf.Len()
 	}
-}

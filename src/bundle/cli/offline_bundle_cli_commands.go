@@ -81,7 +81,6 @@ func (c *OfflineBundleCLI) createValidateCommand() *cobra.Command {
 	cmd.MarkFlagRequired("bundle")
 
 	return cmd
-}
 
 // createExportCommand creates the 'export' command
 func (c *OfflineBundleCLI) createExportCommand() *cobra.Command {
@@ -97,7 +96,6 @@ func (c *OfflineBundleCLI) createExportCommand() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to load signing key: %w", err)
 			}
-
 			// Load bundle
 			creator := bundle.NewOfflineBundleCreator(privateKey, bundle.Author{}, c.Output, c.AuditTrailManager)
 			offlineBundle, err := creator.LoadOfflineBundle(bundlePath)
@@ -125,7 +123,6 @@ func (c *OfflineBundleCLI) createExportCommand() *cobra.Command {
 	cmd.MarkFlagRequired("output")
 
 	return cmd
-}
 
 // createIncrementalCommand creates the 'incremental' command
 func (c *OfflineBundleCLI) createIncrementalCommand() *cobra.Command {
@@ -152,7 +149,7 @@ func (c *OfflineBundleCLI) createIncrementalCommand() *cobra.Command {
 			// Read changes file
 			var changes []string
 			if changesFile != "" {
-				changesData, err := os.ReadFile(changesFile)
+				changesData, err := os.ReadFile(filepath.Clean(changesFile))
 				if err != nil {
 					return fmt.Errorf("failed to read changes file: %w", err)
 				}
@@ -193,7 +190,6 @@ func (c *OfflineBundleCLI) createIncrementalCommand() *cobra.Command {
 	cmd.MarkFlagRequired("version")
 
 	return cmd
-}
 
 // createKeygenCommand creates the 'keygen' command
 func (c *OfflineBundleCLI) createKeygenCommand() *cobra.Command {
@@ -219,17 +215,17 @@ func (c *OfflineBundleCLI) createKeygenCommand() *cobra.Command {
 			publicKeyPath := filepath.Join(outputPath, "offline_bundle_public.key")
 
 			// Create output directory if it doesn't exist
-			if err := os.MkdirAll(outputPath, 0755); err != nil {
+			if err := os.MkdirAll(outputPath, 0700); err != nil {
 				return fmt.Errorf("failed to create output directory: %w", err)
 			}
 
 			// Write private key
-			if err := os.WriteFile(privateKeyPath, []byte(privateKeyEncoded), 0600); err != nil {
+			if err := os.WriteFile(filepath.Clean(privateKeyPath, []byte(privateKeyEncoded)), 0600); err != nil {
 				return fmt.Errorf("failed to write private key: %w", err)
 			}
 
 			// Write public key
-			if err := os.WriteFile(publicKeyPath, []byte(publicKeyEncoded), 0644); err != nil {
+			if err := os.WriteFile(filepath.Clean(publicKeyPath, []byte(publicKeyEncoded)), 0600); err != nil {
 				return fmt.Errorf("failed to write public key: %w", err)
 			}
 
@@ -244,5 +240,3 @@ func (c *OfflineBundleCLI) createKeygenCommand() *cobra.Command {
 	// Add flags
 	cmd.Flags().StringVarP(&outputPath, "output", "o", ".", "Output directory for the key files")
 
-	return cmd
-}

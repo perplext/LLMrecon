@@ -21,7 +21,6 @@ type ModelTheftValidator struct {
 	architectureExtractionPatterns []*regexp.Regexp
 	// systematicQueryPatterns contains patterns for detecting systematic querying
 	systematicQueryPatterns []*regexp.Regexp
-}
 
 // NewModelTheftValidator creates a new model theft validator
 func NewModelTheftValidator() *ModelTheftValidator {
@@ -70,7 +69,6 @@ func NewModelTheftValidator() *ModelTheftValidator {
 		architectureExtractionPatterns: architectureExtractionPatterns,
 		systematicQueryPatterns:        systematicQueryPatterns,
 	}
-}
 
 // ValidatePrompt validates a prompt for model theft vulnerabilities
 func (v *ModelTheftValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -265,7 +263,6 @@ func (v *ModelTheftValidator) ValidatePrompt(ctx context.Context, prompt string,
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for model theft vulnerabilities
 func (v *ModelTheftValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -438,5 +435,3 @@ func (v *ModelTheftValidator) ValidateResponse(ctx context.Context, response str
 		}
 	}
 
-	return results, nil
-}

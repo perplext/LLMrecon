@@ -71,7 +71,6 @@ type RateLimitRequest struct {
 	Burst     int64         `json:"burst"`
 	Cost      int64         `json:"cost"`
 	Timestamp time.Time     `json:"timestamp"`
-}
 
 // RateLimitResult represents the result of a rate limit check
 type RateLimitResult struct {
@@ -94,7 +93,6 @@ type RateLimitMetrics struct {
 	RedisErrors        int64 `json:"redis_errors"`
 	AverageLatency     time.Duration `json:"average_latency"`
 	AllowRate          float64 `json:"allow_rate"`
-}
 
 // RateLimitScripts contains Lua scripts for atomic Redis operations
 type RateLimitScripts struct {
@@ -125,7 +123,6 @@ func DefaultDistributedRateLimitConfig() DistributedRateLimitConfig {
 		EnableMetrics:      true,
 		MetricsInterval:    30 * time.Second,
 	}
-}
 
 // NewDistributedRateLimiter creates a new distributed rate limiter
 func NewDistributedRateLimiter(config DistributedRateLimitConfig, logger Logger) (*DistributedRateLimiter, error) {
@@ -164,7 +161,6 @@ func NewDistributedRateLimiter(config DistributedRateLimitConfig, logger Logger)
 	}
 	
 	return limiter, nil
-}
 
 // Start starts the distributed rate limiter
 func (d *DistributedRateLimiter) Start() error {
@@ -188,7 +184,6 @@ func (d *DistributedRateLimiter) Start() error {
 	
 	d.logger.Info("Distributed rate limiter started")
 	return nil
-}
 
 // Stop stops the distributed rate limiter
 func (d *DistributedRateLimiter) Stop() error {
@@ -205,7 +200,6 @@ func (d *DistributedRateLimiter) Stop() error {
 	
 	d.logger.Info("Distributed rate limiter stopped")
 	return nil
-}
 
 // Allow checks if a request is allowed under the rate limit
 func (d *DistributedRateLimiter) Allow(request *RateLimitRequest) (*RateLimitResult, error) {
@@ -248,7 +242,6 @@ func (d *DistributedRateLimiter) Allow(request *RateLimitRequest) (*RateLimitRes
 	)
 	
 	return result, nil
-}
 
 // AllowN checks if N requests are allowed under the rate limit
 func (d *DistributedRateLimiter) AllowN(key string, n int64) (*RateLimitResult, error) {
@@ -257,8 +250,6 @@ func (d *DistributedRateLimiter) AllowN(key string, n int64) (*RateLimitResult, 
 		Cost: n,
 	}
 	return d.Allow(request)
-}
-
 // Reset resets the rate limit for a key
 func (d *DistributedRateLimiter) Reset(key string) error {
 	fullKey := d.getRedisKey(key)
@@ -271,7 +262,6 @@ func (d *DistributedRateLimiter) Reset(key string) error {
 	
 	d.logger.Info("Rate limit reset", "key", key)
 	return nil
-}
 
 // GetStatus returns the current status for a key without consuming quota
 func (d *DistributedRateLimiter) GetStatus(key string) (*RateLimitResult, error) {
@@ -280,7 +270,6 @@ func (d *DistributedRateLimiter) GetStatus(key string) (*RateLimitResult, error)
 		Cost: 0, // Don't consume quota
 	}
 	return d.Allow(request)
-}
 
 // GetMetrics returns current rate limiting metrics
 func (d *DistributedRateLimiter) GetMetrics() *RateLimitMetrics {
@@ -293,7 +282,6 @@ func (d *DistributedRateLimiter) GetMetrics() *RateLimitMetrics {
 	}
 	
 	return d.metrics
-}
 
 // Private methods
 
@@ -313,7 +301,6 @@ func (d *DistributedRateLimiter) executeRateLimit(request *RateLimitRequest) (*R
 	default:
 		return nil, fmt.Errorf("unknown algorithm: %s", d.config.Algorithm)
 	}
-}
 
 // executeTokenBucket implements token bucket algorithm
 func (d *DistributedRateLimiter) executeTokenBucket(request *RateLimitRequest) (*RateLimitResult, error) {
@@ -335,7 +322,6 @@ func (d *DistributedRateLimiter) executeTokenBucket(request *RateLimitRequest) (
 	}
 	
 	return d.parseScriptResult(result, request)
-}
 
 // executeSlidingWindow implements sliding window algorithm
 func (d *DistributedRateLimiter) executeSlidingWindow(request *RateLimitRequest) (*RateLimitResult, error) {
@@ -358,7 +344,6 @@ func (d *DistributedRateLimiter) executeSlidingWindow(request *RateLimitRequest)
 	}
 	
 	return d.parseScriptResult(result, request)
-}
 
 // executeFixedWindow implements fixed window algorithm
 func (d *DistributedRateLimiter) executeFixedWindow(request *RateLimitRequest) (*RateLimitResult, error) {
@@ -381,7 +366,6 @@ func (d *DistributedRateLimiter) executeFixedWindow(request *RateLimitRequest) (
 	}
 	
 	return d.parseScriptResult(result, request)
-}
 
 // executeLeakyBucket implements leaky bucket algorithm
 func (d *DistributedRateLimiter) executeLeakyBucket(request *RateLimitRequest) (*RateLimitResult, error) {
@@ -403,7 +387,6 @@ func (d *DistributedRateLimiter) executeLeakyBucket(request *RateLimitRequest) (
 	}
 	
 	return d.parseScriptResult(result, request)
-}
 
 // parseScriptResult parses the result from Lua scripts
 func (d *DistributedRateLimiter) parseScriptResult(result interface{}, request *RateLimitRequest) (*RateLimitResult, error) {
@@ -433,12 +416,10 @@ func (d *DistributedRateLimiter) parseScriptResult(result interface{}, request *
 		WindowSize:   request.Window,
 		CurrentUsage: currentUsage,
 	}, nil
-}
 
 // getRedisKey returns the full Redis key for rate limiting
 func (d *DistributedRateLimiter) getRedisKey(key string) string {
 	return fmt.Sprintf("%s:%s", d.config.KeyPrefix, key)
-}
 
 // updateRequestMetrics updates request-level metrics
 func (d *DistributedRateLimiter) updateRequestMetrics(result *RateLimitResult, latency time.Duration) {
@@ -457,7 +438,6 @@ func (d *DistributedRateLimiter) updateRequestMetrics(result *RateLimitResult, l
 	} else {
 		d.metrics.AverageLatency = (d.metrics.AverageLatency + latency) / 2
 	}
-}
 
 // cleanupLoop performs periodic cleanup of expired keys
 func (d *DistributedRateLimiter) cleanupLoop() {
@@ -472,7 +452,6 @@ func (d *DistributedRateLimiter) cleanupLoop() {
 			return
 		}
 	}
-}
 
 // performCleanup removes expired rate limit keys
 func (d *DistributedRateLimiter) performCleanup() {
@@ -493,7 +472,6 @@ func (d *DistributedRateLimiter) performCleanup() {
 	if cleaned > 0 {
 		d.logger.Info("Cleaned up expired rate limit keys", "count", cleaned)
 	}
-}
 
 // metricsLoop periodically updates metrics
 func (d *DistributedRateLimiter) metricsLoop() {
@@ -508,7 +486,6 @@ func (d *DistributedRateLimiter) metricsLoop() {
 			return
 		}
 	}
-}
 
 // updateMetrics updates system-level metrics
 func (d *DistributedRateLimiter) updateMetrics() {
@@ -524,7 +501,6 @@ func (d *DistributedRateLimiter) updateMetrics() {
 	d.mutex.Lock()
 	d.metrics.ActiveKeys = int64(len(keys))
 	d.mutex.Unlock()
-}
 
 // Lua scripts for atomic operations
 
@@ -667,3 +643,20 @@ end
 
 return cleaned
 `
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}

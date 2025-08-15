@@ -19,7 +19,6 @@ type PluginDiscovery struct {
 	validators []PluginValidator
 	// mutex is a mutex for concurrent access
 	mutex sync.RWMutex
-}
 
 // NewPluginDiscovery creates a new plugin discovery
 func NewPluginDiscovery(pluginDirs []string) *PluginDiscovery {
@@ -27,7 +26,6 @@ func NewPluginDiscovery(pluginDirs []string) *PluginDiscovery {
 		pluginDirs: pluginDirs,
 		validators: make([]PluginValidator, 0),
 	}
-}
 
 // AddValidator adds a plugin validator
 func (d *PluginDiscovery) AddValidator(validator PluginValidator) {
@@ -35,7 +33,6 @@ func (d *PluginDiscovery) AddValidator(validator PluginValidator) {
 	defer d.mutex.Unlock()
 	
 	d.validators = append(d.validators, validator)
-}
 
 // AddPluginDir adds a plugin directory
 func (d *PluginDiscovery) AddPluginDir(dir string) {
@@ -50,7 +47,6 @@ func (d *PluginDiscovery) AddPluginDir(dir string) {
 	}
 	
 	d.pluginDirs = append(d.pluginDirs, dir)
-}
 
 // GetPluginDirs returns the plugin directories
 func (d *PluginDiscovery) GetPluginDirs() []string {
@@ -60,7 +56,6 @@ func (d *PluginDiscovery) GetPluginDirs() []string {
 	dirs := make([]string, len(d.pluginDirs))
 	copy(dirs, d.pluginDirs)
 	return dirs
-}
 
 // DiscoverPlugins discovers plugins in the plugin directories
 func (d *PluginDiscovery) DiscoverPlugins() ([]*ProviderPlugin, []error) {
@@ -117,14 +112,12 @@ func (d *PluginDiscovery) DiscoverPlugins() ([]*ProviderPlugin, []error) {
 	}
 	
 	return plugins, errors
-}
 
 // isPluginFile checks if a file is a plugin file
 func (d *PluginDiscovery) isPluginFile(fileName string) bool {
 	// Check file extension
 	ext := filepath.Ext(fileName)
 	return ext == ".so" || ext == ".dll" || ext == ".dylib"
-}
 
 // loadPlugin loads a plugin from a file
 func (d *PluginDiscovery) loadPlugin(pluginPath string) (*ProviderPlugin, error) {
@@ -176,8 +169,6 @@ func (d *PluginDiscovery) loadPlugin(pluginPath string) (*ProviderPlugin, error)
 	}
 	
 	return providerPlugin, nil
-}
-
 // loadLegacyPlugin loads a legacy plugin
 func (d *PluginDiscovery) loadLegacyPlugin(pluginPath string, plug *plugin.Plugin) (*ProviderPlugin, error) {
 	// Get provider type
@@ -227,7 +218,6 @@ func (d *PluginDiscovery) loadLegacyPlugin(pluginPath string, plug *plugin.Plugi
 	}
 	
 	return providerPlugin, nil
-}
 
 // loadPluginMetadata loads plugin metadata from a file
 func (d *PluginDiscovery) loadPluginMetadata(metadataPath string) (*PluginMetadata, error) {
@@ -237,7 +227,7 @@ func (d *PluginDiscovery) loadPluginMetadata(metadataPath string) (*PluginMetada
 	}
 	
 	// Read metadata file
-	data, err := ioutil.ReadFile(metadataPath)
+	data, err := ioutil.ReadFile(filepath.Clean(metadataPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read metadata file: %w", err)
 	}
@@ -249,13 +239,11 @@ func (d *PluginDiscovery) loadPluginMetadata(metadataPath string) (*PluginMetada
 	}
 	
 	return &metadata, nil
-}
 
 // LegacyPluginAdapter adapts legacy plugins to the new plugin interface
 type LegacyPluginAdapter struct {
 	providerType core.ProviderType
 	constructor  func(*core.ProviderConfig) (core.Provider, error)
-}
 
 // GetMetadata returns metadata about the plugin
 func (a *LegacyPluginAdapter) GetMetadata() *PluginMetadata {
@@ -264,15 +252,11 @@ func (a *LegacyPluginAdapter) GetMetadata() *PluginMetadata {
 		ProviderType: a.providerType,
 		Version:      "1.0.0", // Default version for legacy plugins
 	}
-}
 
 // CreateProvider creates a new provider instance
 func (a *LegacyPluginAdapter) CreateProvider(config *core.ProviderConfig) (core.Provider, error) {
 	return a.constructor(config)
-}
 
 // ValidateConfig validates the provider configuration
 func (a *LegacyPluginAdapter) ValidateConfig(config *core.ProviderConfig) error {
 	// Legacy plugins don't have explicit validation
-	return nil
-}

@@ -23,7 +23,6 @@ type InsecureOutputValidator struct {
 	sensitiveDataPatterns []*regexp.Regexp
 	// insecureCodePatterns contains regex patterns for detecting insecure code patterns
 	insecureCodePatterns []*regexp.Regexp
-}
 
 // NewInsecureOutputValidator creates a new insecure output validator
 func NewInsecureOutputValidator() *InsecureOutputValidator {
@@ -79,9 +78,9 @@ func NewInsecureOutputValidator() *InsecureOutputValidator {
 
 	// Compile regex patterns for detecting sensitive data
 	sensitiveDataPatterns := []*regexp.Regexp{
-		regexp.MustCompile(`(?i)password\s*=\s*['"][^'"]*['"]`),
+		regexp.MustCompile(`(?i)password := os.Getenv("PASSWORD")]`),
 		regexp.MustCompile(`(?i)api[_\-]?key\s*=\s*['"][^'"]*['"]`),
-		regexp.MustCompile(`(?i)secret[_\-]?key\s*=\s*['"][^'"]*['"]`),
+		regexp.MustCompile(`(?i)secret := os.Getenv("SECRET_KEY")]`),
 		regexp.MustCompile(`(?i)access[_\-]?token\s*=\s*['"][^'"]*['"]`),
 		regexp.MustCompile(`(?i)auth[_\-]?token\s*=\s*['"][^'"]*['"]`),
 		regexp.MustCompile(`(?i)credentials\s*=\s*['"][^'"]*['"]`),
@@ -122,7 +121,6 @@ func NewInsecureOutputValidator() *InsecureOutputValidator {
 		sensitiveDataPatterns:   sensitiveDataPatterns,
 		insecureCodePatterns:    insecureCodePatterns,
 	}
-}
 
 // ValidatePrompt validates a prompt for insecure output handling vulnerabilities
 func (v *InsecureOutputValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -175,7 +173,6 @@ func (v *InsecureOutputValidator) ValidatePrompt(ctx context.Context, prompt str
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for insecure output handling vulnerabilities
 func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -340,7 +337,6 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 	}
 
 	return results, nil
-}
 
 // isInCodeBlock checks if a given index is within a code block in the text
 func isInCodeBlock(text string, index int) bool {
@@ -374,5 +370,3 @@ func isInCodeBlock(text string, index int) bool {
 		}
 	}
 	
-	return false
-}

@@ -26,7 +26,6 @@ type PipelineConfig struct {
 	ReportFormats       []common.ReportFormat  `json:"report_formats"`
 	NotificationConfig  *NotificationConfig    `json:"notification_config,omitempty"`
 	ScheduleConfig      *ScheduleConfig        `json:"schedule_config,omitempty"`
-}
 
 // NotificationConfig represents the configuration for pipeline notifications
 type NotificationConfig struct {
@@ -59,7 +58,6 @@ func NewPipeline(verifier TemplateVerifier, options *VerificationOptions) *Pipel
 		results:  make([]*VerificationResult, 0),
 		summary:  nil,
 	}
-}
 
 // RunVerification runs the template security verification pipeline
 func (p *Pipeline) RunVerification(ctx context.Context, config *PipelineConfig) error {
@@ -69,7 +67,7 @@ func (p *Pipeline) RunVerification(ctx context.Context, config *PipelineConfig) 
 
 	// Create output directory if it doesn't exist
 	if config.OutputDirectory != "" {
-		if err := os.MkdirAll(config.OutputDirectory, 0755); err != nil {
+		if err := os.MkdirAll(config.OutputDirectory, 0700); err != nil {
 			return fmt.Errorf("failed to create output directory: %w", err)
 		}
 	}
@@ -127,17 +125,14 @@ func (p *Pipeline) RunVerification(ctx context.Context, config *PipelineConfig) 
 	}
 
 	return nil
-}
 
 // GetResults returns the verification results
 func (p *Pipeline) GetResults() []*VerificationResult {
 	return p.results
-}
 
 // GetSummary returns the summary of the pipeline results
 func (p *Pipeline) GetSummary() *VerificationSummary {
 	return p.summary
-}
 
 // ConvertToTestResults converts the verification results to test results
 func (p *Pipeline) ConvertToTestResults() []*common.TestResult {
@@ -218,7 +213,6 @@ func (p *Pipeline) ConvertToTestResults() []*common.TestResult {
 	}
 
 	return testResults
-}
 
 // generateAndSaveReports generates and saves reports in the specified formats
 func (p *Pipeline) generateAndSaveReports(ctx context.Context, config *PipelineConfig) error {
@@ -246,7 +240,7 @@ func (p *Pipeline) generateAndSaveReports(ctx context.Context, config *PipelineC
 
 		// Save the report to file
 		outputPath := filepath.Join(config.OutputDirectory, fmt.Sprintf("template_security_report.%s", strings.ToLower(string(format))))
-		if err := os.WriteFile(outputPath, []byte(formattedReport), 0644); err != nil {
+		if err := os.WriteFile(filepath.Clean(outputPath, []byte(formattedReport)), 0600); err != nil {
 			return fmt.Errorf("failed to save report to file: %w", err)
 		}
 
@@ -254,7 +248,6 @@ func (p *Pipeline) generateAndSaveReports(ctx context.Context, config *PipelineC
 	}
 
 	return nil
-}
 
 // sendNotifications sends notifications about the verification results
 func (p *Pipeline) sendNotifications(config *NotificationConfig) error {
@@ -306,7 +299,6 @@ func (p *Pipeline) sendNotifications(config *NotificationConfig) error {
 	}
 
 	return nil
-}
 
 // RunScheduledVerification runs the template security verification pipeline on a schedule
 func RunScheduledVerification(ctx context.Context, pipeline *Pipeline, config *PipelineConfig) {
@@ -345,12 +337,15 @@ func RunScheduledVerification(ctx context.Context, pipeline *Pipeline, config *P
 			return
 		}
 	}
-}
 
 // getComplianceStatus returns the status string based on compliance
 func getComplianceStatus(compliant bool) string {
 	if compliant {
 		return "passed"
 	}
-	return "failed"
+}
+}
+}
+}
+}
 }

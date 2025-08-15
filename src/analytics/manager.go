@@ -19,7 +19,6 @@ type Manager struct {
 	dashboardEngine *DashboardEngine
 	logger          Logger
 	mu              sync.RWMutex
-}
 
 // Config holds analytics configuration
 type Config struct {
@@ -55,7 +54,6 @@ type Config struct {
 	DataEncryption     bool
 	AccessControl      bool
 	AuditLogging       bool
-}
 
 // StorageType represents different storage backends
 type StorageType string
@@ -83,7 +81,6 @@ type Logger interface {
 	Error(msg string, err error)
 	Debug(msg string)
 	Warn(msg string)
-}
 
 // NewManager creates a new analytics manager
 func NewManager(config *Config, logger Logger) (*Manager, error) {
@@ -108,7 +105,6 @@ func NewManager(config *Config, logger Logger) (*Manager, error) {
 	}
 	
 	return manager, nil
-}
 
 // DefaultConfig returns default analytics configuration
 func DefaultConfig() *Config {
@@ -140,7 +136,6 @@ func DefaultConfig() *Config {
 		AccessControl:      false,
 		AuditLogging:       true,
 	}
-}
 
 // Start initializes and starts analytics collection
 func (m *Manager) Start(ctx context.Context) error {
@@ -175,7 +170,7 @@ func (m *Manager) Start(ctx context.Context) error {
 	
 	m.logger.Info("Analytics manager started successfully")
 	return nil
-}
+	
 
 // Stop gracefully shuts down analytics components
 func (m *Manager) Stop() error {
@@ -202,7 +197,6 @@ func (m *Manager) Stop() error {
 	
 	m.logger.Info("Analytics manager stopped")
 	return nil
-}
 
 // RecordScanResult records a scan result for analytics
 func (m *Manager) RecordScanResult(result *ScanResult) error {
@@ -211,7 +205,6 @@ func (m *Manager) RecordScanResult(result *ScanResult) error {
 	}
 	
 	return m.collector.RecordScanResult(result)
-}
 
 // RecordMetric records a custom metric
 func (m *Manager) RecordMetric(metric *Metric) error {
@@ -220,22 +213,18 @@ func (m *Manager) RecordMetric(metric *Metric) error {
 	}
 	
 	return m.collector.RecordMetric(metric)
-}
 
 // GetDashboard returns dashboard data
 func (m *Manager) GetDashboard(timeRange TimeRange) (*Dashboard, error) {
 	return m.dashboardEngine.GenerateDashboard(timeRange)
-}
 
 // GetTrends returns trend analysis data
 func (m *Manager) GetTrends(params *TrendParams) (*TrendAnalysis, error) {
 	return m.trendAnalyzer.AnalyzeTrends(params)
-}
 
 // GetReport generates an analytics report
 func (m *Manager) GetReport(params *ReportParams) (*Report, error) {
 	return m.reportGenerator.GenerateReport(params)
-}
 
 // GetMetrics retrieves metrics data
 func (m *Manager) GetMetrics(query *MetricsQuery) (*MetricsResult, error) {
@@ -243,12 +232,10 @@ func (m *Manager) GetMetrics(query *MetricsQuery) (*MetricsResult, error) {
 	defer m.mu.RUnlock()
 	
 	return m.storage.QueryMetrics(query)
-}
 
 // GetComparisonAnalysis performs comparative analysis
 func (m *Manager) GetComparisonAnalysis(params *ComparisonParams) (*ComparisonResult, error) {
 	return m.performComparison(params)
-}
 
 // ExportData exports analytics data in specified format
 func (m *Manager) ExportData(params *ExportParams) ([]byte, error) {
@@ -262,7 +249,6 @@ func (m *Manager) ExportData(params *ExportParams) ([]byte, error) {
 	default:
 		return nil, fmt.Errorf("unsupported export format: %s", params.Format)
 	}
-}
 
 // GetAnalyticsSummary returns a high-level analytics summary
 func (m *Manager) GetAnalyticsSummary() (*AnalyticsSummary, error) {
@@ -296,7 +282,6 @@ func (m *Manager) GetAnalyticsSummary() (*AnalyticsSummary, error) {
 	summary.StorageStats = m.getStorageStats()
 	
 	return summary, nil
-}
 
 // runCleanup performs periodic cleanup of old data
 func (m *Manager) runCleanup(ctx context.Context) {
@@ -313,7 +298,6 @@ func (m *Manager) runCleanup(ctx context.Context) {
 			}
 		}
 	}
-}
 
 // performCleanup removes old data according to retention policy
 func (m *Manager) performCleanup() error {
@@ -340,7 +324,6 @@ func (m *Manager) performCleanup() error {
 	
 	m.logger.Info("Data cleanup completed")
 	return nil
-}
 
 // performComparison performs comparative analysis
 func (m *Manager) performComparison(params *ComparisonParams) (*ComparisonResult, error) {
@@ -360,7 +343,6 @@ func (m *Manager) performComparison(params *ComparisonParams) (*ComparisonResult
 	default:
 		return nil, fmt.Errorf("unsupported comparison type: %s", params.Type)
 	}
-}
 
 // compareTimeRanges compares metrics across different time ranges
 func (m *Manager) compareTimeRanges(params *ComparisonParams) (*ComparisonResult, error) {
@@ -391,10 +373,8 @@ func (m *Manager) compareTimeRanges(params *ComparisonParams) (*ComparisonResult
 	result.calculateDeltas()
 	
 	return result, nil
-}
 
 // Helper methods
-
 func (m *Manager) getStorageStats() StorageStats {
 	stats := StorageStats{}
 	
@@ -408,7 +388,6 @@ func (m *Manager) getStorageStats() StorageStats {
 	}
 	
 	return stats
-}
 
 func (m *Manager) aggregateMetrics(metrics *MetricsResult) map[string]float64 {
 	aggregated := make(map[string]float64)
@@ -420,7 +399,6 @@ func (m *Manager) aggregateMetrics(metrics *MetricsResult) map[string]float64 {
 	}
 	
 	return aggregated
-}
 
 func (m *Manager) exportJSON(params *ExportParams) ([]byte, error) {
 	data, err := m.gatherExportData(params)
@@ -429,17 +407,14 @@ func (m *Manager) exportJSON(params *ExportParams) ([]byte, error) {
 	}
 	
 	return json.MarshalIndent(data, "", "  ")
-}
 
 func (m *Manager) exportCSV(params *ExportParams) ([]byte, error) {
 	// Implementation for CSV export
 	return nil, fmt.Errorf("CSV export not yet implemented")
-}
 
 func (m *Manager) exportExcel(params *ExportParams) ([]byte, error) {
 	// Implementation for Excel export
 	return nil, fmt.Errorf("Excel export not yet implemented")
-}
 
 func (m *Manager) gatherExportData(params *ExportParams) (interface{}, error) {
 	switch params.DataType {
@@ -456,19 +431,16 @@ func (m *Manager) gatherExportData(params *ExportParams) (interface{}, error) {
 	default:
 		return nil, fmt.Errorf("unsupported data type: %s", params.DataType)
 	}
-}
 
 // compareTargets compares metrics across different targets
 func (m *Manager) compareTargets(params *ComparisonParams) (*ComparisonResult, error) {
 	// Implementation for target comparison
 	return nil, fmt.Errorf("target comparison not yet implemented")
-}
 
 // compareTemplates compares metrics across different templates
 func (m *Manager) compareTemplates(params *ComparisonParams) (*ComparisonResult, error) {
 	// Implementation for template comparison
 	return nil, fmt.Errorf("template comparison not yet implemented")
-}
 
 // calculateBasicStats calculates basic statistics from metrics
 func (summary *AnalyticsSummary) calculateBasicStats(metrics *MetricsResult) {
@@ -502,7 +474,6 @@ func (summary *AnalyticsSummary) calculateBasicStats(metrics *MetricsResult) {
 			summary.MedianScanDuration = durations[len(durations)/2]
 		}
 	}
-}
 
 // calculateDeltas calculates percentage changes between comparisons
 func (result *ComparisonResult) calculateDeltas() {
@@ -523,4 +494,29 @@ func (result *ComparisonResult) calculateDeltas() {
 			}
 		}
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

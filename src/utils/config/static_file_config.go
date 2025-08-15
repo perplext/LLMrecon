@@ -23,7 +23,6 @@ type StaticFileHandlerConfig struct {
 	
 	// File extensions to compress
 	CompressExtensions []string `json:"compress_extensions"`
-}
 
 // DefaultStaticFileHandlerConfig returns default configuration for the static file handler
 func DefaultStaticFileHandlerConfig() *StaticFileHandlerConfig {
@@ -39,4 +38,3 @@ func DefaultStaticFileHandlerConfig() *StaticFileHandlerConfig {
 		CacheExpirationSeconds: int(time.Hour.Seconds()),
 		CompressExtensions:     []string{".html", ".css", ".js", ".json", ".xml", ".txt", ".md"},
 	}
-}

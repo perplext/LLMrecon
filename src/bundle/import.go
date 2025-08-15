@@ -32,7 +32,6 @@ type ImportOptions struct {
 	User string
 	// AuditLogger is the logger for audit events
 	AuditLogger *errors.AuditLogger
-}
 
 // ImportResult is defined in report.go
 
@@ -46,7 +45,6 @@ type BundleImporter interface {
 	CreateBackup(context.Context, string, string) (string, error)
 	// RestoreBackup restores a backup
 	RestoreBackup(context.Context, string, string) error
-}
 
 // DefaultBundleImporter is the default implementation of BundleImporter
 type DefaultBundleImporter struct {
@@ -70,7 +68,6 @@ type DefaultBundleImporter struct {
 	ErrorReporter errors.ErrorReporter
 	// CollectedErrors tracks errors that occurred during import
 	CollectedErrors []*errors.BundleError
-}
 
 // NewBundleImporter creates a new bundle importer
 func NewBundleImporter(validator BundleValidator, reportManager ReportManager, logger io.Writer) BundleImporter {
@@ -98,7 +95,7 @@ func NewBundleImporter(validator BundleValidator, reportManager ReportManager, l
 			os.TempDir(), 
 			time.Now().Format("20060102")),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 
-		0644,
+		0600,
 	)
 	if err != nil {
 		// Fall back to the main logger if audit log file creation fails
@@ -137,7 +134,6 @@ func NewBundleImporter(validator BundleValidator, reportManager ReportManager, l
 		ErrorReporter:       errorReporter,
 		CollectedErrors:     []*errors.BundleError{},
 	}
-}
 
 // Import imports a bundle with the specified options
 func (i *DefaultBundleImporter) Import(ctx context.Context, bundlePath string, options ImportOptions) (*ImportResult, error) {
@@ -754,7 +750,7 @@ func (i *DefaultBundleImporter) Import(ctx context.Context, bundlePath string, o
 		}
 
 		// Create parent directories
-		err = os.MkdirAll(filepath.Dir(dstPath), 0755)
+		err = os.MkdirAll(filepath.Dir(dstPath), 0700)
 		if err != nil {
 			result.Message = fmt.Sprintf("Failed to create directory for %s: %s", item.Path, err.Error())
 			result.Errors = append(result.Errors, err.Error())
@@ -990,7 +986,6 @@ func (i *DefaultBundleImporter) Import(ctx context.Context, bundlePath string, o
 	
 	// Return the result
 	return result, nil
-}
 
 // ValidateBeforeImport validates a bundle before importing
 func (i *DefaultBundleImporter) ValidateBeforeImport(ctx context.Context, bundlePath string, level ValidationLevel) (*ValidationResult, error) {
@@ -1006,7 +1001,6 @@ func (i *DefaultBundleImporter) ValidateBeforeImport(ctx context.Context, bundle
 
 	// Validate the bundle
 	return i.Validator.Validate(bundle, level)
-}
 
 // CreateBackup creates a backup of the target directory
 func (i *DefaultBundleImporter) CreateBackup(ctx context.Context, targetDir, backupDir string) (string, error) {
@@ -1017,7 +1011,7 @@ func (i *DefaultBundleImporter) CreateBackup(ctx context.Context, targetDir, bac
 
 	// Create backup directory if it doesn't exist
 	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-		err = os.MkdirAll(backupDir, 0755)
+		err = os.MkdirAll(backupDir, 0700)
 		if err != nil {
 			return "", fmt.Errorf("failed to create backup directory: %w", err)
 		}
@@ -1028,7 +1022,7 @@ func (i *DefaultBundleImporter) CreateBackup(ctx context.Context, targetDir, bac
 	backupPath := filepath.Join(backupDir, backupName)
 
 	// Create backup directory
-	err := os.Mkdir(backupPath, 0755)
+	err := os.Mkdir(backupPath, 0700)
 	if err != nil {
 		return "", fmt.Errorf("failed to create backup directory: %w", err)
 	}
@@ -1040,7 +1034,6 @@ func (i *DefaultBundleImporter) CreateBackup(ctx context.Context, targetDir, bac
 	}
 
 	return backupPath, nil
-}
 
 // RestoreBackup restores a backup
 func (i *DefaultBundleImporter) RestoreBackup(ctx context.Context, backupPath, targetDir string) error {
@@ -1052,7 +1045,7 @@ func (i *DefaultBundleImporter) RestoreBackup(ctx context.Context, backupPath, t
 	// Check if target directory exists
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
 		// Create target directory
-		err = os.MkdirAll(targetDir, 0755)
+		err = os.MkdirAll(targetDir, 0700)
 		if err != nil {
 			return fmt.Errorf("failed to create target directory: %w", err)
 		}
@@ -1071,7 +1064,6 @@ func (i *DefaultBundleImporter) RestoreBackup(ctx context.Context, backupPath, t
 	}
 
 	return nil
-}
 
 // checkForConflicts checks for conflicts between the bundle and the target directory
 func (i *DefaultBundleImporter) checkForConflicts(ctx context.Context, tempDir, targetDir string, content []ContentItem) ([]string, error) {
@@ -1087,6 +1079,5 @@ func (i *DefaultBundleImporter) checkForConflicts(ctx context.Context, tempDir, 
 	}
 
 	return conflicts, nil
-}
 
 // Note: clearDirectory function is defined in utils.go

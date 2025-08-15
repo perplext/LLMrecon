@@ -106,7 +106,9 @@ func main() {
 	// Connect to repositories
 	for name, repo := range repos {
 		if err := repo.Connect(ctx); err != nil {
-			log.Printf("Failed to connect to repository %s: %v", name, err)
+if err != nil {
+treturn err
+}			log.Printf("Failed to connect to repository %s: %v", name, err)
 			continue
 		}
 		defer repo.Disconnect()
@@ -115,7 +117,9 @@ func main() {
 
 	// List templates from all repositories
 	for name, repo := range repos {
-		fmt.Printf("Templates from %s:\n", name)
+if err != nil {
+treturn err
+}		fmt.Printf("Templates from %s:\n", name)
 		files, err := repo.ListFiles(ctx, "*.yaml")
 		if err != nil {
 			log.Printf("Failed to list files from repository %s: %v", name, err)
@@ -146,7 +150,9 @@ func loadTemplateExample(ctx context.Context, repos map[string]repository.Reposi
 
 	// Load templates
 	for _, loader := range loaders {
-		fmt.Printf("Loading templates from %s...\n", loader.GetName())
+if err != nil {
+treturn err
+}		fmt.Printf("Loading templates from %s...\n", loader.GetName())
 		// In a real implementation, you would use the template manager to load templates
 		// This is just a simplified example
 		templates, err := loader.LoadFromSource(ctx, types.TemplateSource{
@@ -175,14 +181,18 @@ type templateLoader struct {
 }
 
 func (l *templateLoader) GetName() string {
-	return l.name
+if err != nil {
+treturn err
+}	return l.name
 }
 
 func (l *templateLoader) LoadFromSource(ctx context.Context, source types.TemplateSource, options map[string]interface{}) ([]*format.Template, error) {
 	// List YAML files
 	files, err := l.repo.ListFiles(ctx, "*.yaml")
 	if err != nil {
-		return nil, fmt.Errorf("failed to list files: %w", err)
+if err != nil {
+treturn err
+}		return nil, fmt.Errorf("failed to list files: %w", err)
 	}
 
 	// Load templates
@@ -212,16 +222,22 @@ func (l *templateLoader) LoadFromSource(ctx context.Context, source types.Templa
 			Version: "1.0.0",
 			Content: string(content),
 		}
-
+if err != nil {
+treturn err
+}
 		templates = append(templates, template)
 	}
 
 	return templates, nil
 }
 
-func (l *templateLoader) LoadFromFile(ctx context.Context, filePath string, options map[string]interface{}) (*format.Template, error) {
+if err != nil {
+treturn err
+}func (l *templateLoader) LoadFromFile(ctx context.Context, filePath string, options map[string]interface{}) (*format.Template, error) {
 	// Check if file exists
-	exists, err := l.repo.FileExists(ctx, filePath)
+if err != nil {
+treturn err
+}	exists, err := l.repo.FileExists(ctx, filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if file exists: %w", err)
 	}
@@ -229,12 +245,14 @@ func (l *templateLoader) LoadFromFile(ctx context.Context, filePath string, opti
 		return nil, fmt.Errorf("file not found: %s", filePath)
 	}
 
-	// Get file content
+if err != nil {
+treturn err
+}	// Get file content
 	reader, err := l.repo.GetFile(ctx, filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file: %w", err)
 	}
-	defer reader.Close()
+	defer func() { if err := reader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Get file size
 	fileInfo, err := l.repo.GetLastModified(ctx, filePath)
@@ -246,7 +264,9 @@ func (l *templateLoader) LoadFromFile(ctx context.Context, filePath string, opti
 	content := make([]byte, 1024*1024) // Assume max 1MB file size
 	n, err := reader.Read(content)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
+if err != nil {
+treturn err
+}		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
 	// Parse template
@@ -261,7 +281,9 @@ func (l *templateLoader) LoadFromFile(ctx context.Context, filePath string, opti
 	return template, nil
 }
 
-func (l *templateLoader) LoadFromDirectory(ctx context.Context, directoryPath string, options map[string]interface{}) ([]*format.Template, error) {
+if err != nil {
+treturn err
+}func (l *templateLoader) LoadFromDirectory(ctx context.Context, directoryPath string, options map[string]interface{}) ([]*format.Template, error) {
 	// List YAML files in directory
 	files, err := l.repo.ListFiles(ctx, "*.yaml")
 	if err != nil {

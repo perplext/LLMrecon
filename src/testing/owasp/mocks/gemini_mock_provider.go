@@ -41,7 +41,6 @@ func NewGeminiMockProvider() *GeminiMockProvider {
 	return &GeminiMockProvider{
 		BaseMockProviderImpl: base,
 	}
-}
 
 // setupGeminiVulnerabilityBehaviors configures Gemini-specific vulnerability behaviors
 func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
@@ -135,7 +134,6 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"detection_capability": "query pattern analysis",
 		},
 	})
-}
 
 // ChatCompletion overrides the base implementation to add Gemini-specific behavior
 func (p *GeminiMockProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -171,7 +169,6 @@ func (p *GeminiMockProvider) ChatCompletion(ctx context.Context, request *core.C
 
 	// Fall back to the base implementation
 	return p.BaseMockProviderImpl.ChatCompletion(ctx, request)
-}
 
 // shouldSimulateSafetyFilters checks if safety filters should be simulated
 func (p *GeminiMockProvider) shouldSimulateSafetyFilters(request *core.ChatCompletionRequest) bool {
@@ -200,7 +197,6 @@ func (p *GeminiMockProvider) shouldSimulateSafetyFilters(request *core.ChatCompl
 	}
 
 	return false
-}
 
 // shouldSimulateMultimodalResponse checks if a multimodal response should be simulated
 func (p *GeminiMockProvider) shouldSimulateMultimodalResponse(request *core.ChatCompletionRequest) bool {
@@ -227,7 +223,6 @@ func (p *GeminiMockProvider) shouldSimulateMultimodalResponse(request *core.Chat
 	}
 
 	return false
-}
 
 // generateMultimodalResponse generates a mock multimodal response
 func (p *GeminiMockProvider) generateMultimodalResponse(request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -253,7 +248,6 @@ func (p *GeminiMockProvider) generateMultimodalResponse(request *core.ChatComple
 			TotalTokens:      int64(p.estimateTokenCountForMessages(request.Messages)) + 600,
 		},
 	}, nil
-}
 
 // estimateTokenCountForMessages estimates the token count for a list of chat messages
 func (p *GeminiMockProvider) estimateTokenCountForMessages(messages []core.ChatMessage) int {
@@ -277,7 +271,6 @@ func (p *GeminiMockProvider) estimateTokenCountForMessages(messages []core.ChatM
 	tokenCount += 3
 	
 	return tokenCount
-}
 
 // estimateTokenCount estimates the token count for a text
 // Gemini-specific implementation
@@ -288,5 +281,10 @@ func (p *GeminiMockProvider) estimateTokenCount(text string) int {
 	
 	// Gemini's tokenization is similar to OpenAI but with some differences
 	// This is a simplified approximation
-	return (len(text) + 3) / 4
+}
+}
+}
+}
+}
+}
 }

@@ -18,7 +18,6 @@ type RepositoryUpdater struct {
 	downloader *Downloader
 	verifier   *Verifier
 	logger     Logger
-}
 
 // NewRepositoryUpdater creates a new repository updater
 func NewRepositoryUpdater(config *Config, downloader *Downloader, verifier *Verifier, logger Logger) *RepositoryUpdater {
@@ -28,7 +27,6 @@ func NewRepositoryUpdater(config *Config, downloader *Downloader, verifier *Veri
 		verifier:   verifier,
 		logger:     logger,
 	}
-}
 
 // UpdateFromGitHub updates templates/modules from GitHub repository
 func (ru *RepositoryUpdater) UpdateFromGitHub(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
@@ -76,7 +74,6 @@ func (ru *RepositoryUpdater) UpdateFromGitHub(ctx context.Context, repo Reposito
 	
 	ru.logger.Info(fmt.Sprintf("Successfully updated %d files from %s", len(updatedFiles), repo.Name))
 	return updatedFiles, nil
-}
 
 // UpdateFromGitLab updates templates/modules from GitLab repository
 func (ru *RepositoryUpdater) UpdateFromGitLab(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
@@ -124,8 +121,6 @@ func (ru *RepositoryUpdater) UpdateFromGitLab(ctx context.Context, repo Reposito
 	
 	ru.logger.Info(fmt.Sprintf("Successfully updated %d files from %s", len(updatedFiles), repo.Name))
 	return updatedFiles, nil
-}
-
 // UpdateFromHTTP updates from HTTP repository
 func (ru *RepositoryUpdater) UpdateFromHTTP(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
 	ru.logger.Info(fmt.Sprintf("Updating from HTTP repository: %s", repo.URL))
@@ -145,8 +140,6 @@ func (ru *RepositoryUpdater) UpdateFromHTTP(ctx context.Context, repo Repository
 	
 	ru.logger.Info(fmt.Sprintf("Successfully updated %d files from %s", len(updatedFiles), repo.Name))
 	return updatedFiles, nil
-}
-
 // UpdateFromLocal updates from local repository
 func (ru *RepositoryUpdater) UpdateFromLocal(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
 	ru.logger.Info(fmt.Sprintf("Updating from local repository: %s", repo.URL))
@@ -159,7 +152,7 @@ func (ru *RepositoryUpdater) UpdateFromLocal(ctx context.Context, repo Repositor
 	
 	ru.logger.Info(fmt.Sprintf("Successfully updated %d files from %s", len(updatedFiles), repo.Name))
 	return updatedFiles, nil
-}
+	
 
 // downloadRepositoryArchive downloads repository archive
 func (ru *RepositoryUpdater) downloadRepositoryArchive(ctx context.Context, url, token, repoName string) (string, error) {
@@ -180,7 +173,7 @@ func (ru *RepositoryUpdater) downloadRepositoryArchive(ctx context.Context, url,
 	if err != nil {
 		return "", fmt.Errorf("failed to download archive: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("download failed: %d %s", resp.StatusCode, resp.Status)
@@ -191,7 +184,7 @@ func (ru *RepositoryUpdater) downloadRepositoryArchive(ctx context.Context, url,
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
-	defer tempFile.Close()
+	defer func() { if err := tempFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Download with progress
 	_, err = io.Copy(tempFile, resp.Body)
@@ -201,7 +194,6 @@ func (ru *RepositoryUpdater) downloadRepositoryArchive(ctx context.Context, url,
 	}
 	
 	return tempFile.Name(), nil
-}
 
 // extractAndInstall extracts archive and installs files
 func (ru *RepositoryUpdater) extractAndInstall(archivePath, targetDir, repoName string) ([]string, error) {
@@ -225,7 +217,7 @@ func (ru *RepositoryUpdater) extractAndInstall(archivePath, targetDir, repoName 
 	
 	// Create target directory with repository name
 	repoTargetDir := filepath.Join(targetDir, repoName)
-	if err := os.MkdirAll(repoTargetDir, 0755); err != nil {
+	if err := os.MkdirAll(repoTargetDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create target directory: %w", err)
 	}
 	
@@ -236,7 +228,6 @@ func (ru *RepositoryUpdater) extractAndInstall(archivePath, targetDir, repoName 
 	}
 	
 	return updatedFiles, nil
-}
 
 // extractArchive extracts various archive formats
 func (ru *RepositoryUpdater) extractArchive(archivePath, destDir string) error {
@@ -253,9 +244,9 @@ func (ru *RepositoryUpdater) extractArchive(archivePath, destDir string) error {
 		}
 		return fmt.Errorf("unsupported archive format: %s", ext)
 	default:
-		return fmt.Errorf("unsupported archive format: %s", ext)
+			return fmt.Errorf("unsupported archive format: %s", ext)
 	}
-}
+	
 
 // extractZip extracts a ZIP archive
 func (ru *RepositoryUpdater) extractZip(archivePath, destDir string) error {
@@ -263,7 +254,7 @@ func (ru *RepositoryUpdater) extractZip(archivePath, destDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open zip: %w", err)
 	}
-	defer reader.Close()
+	defer func() { if err := reader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	for _, file := range reader.File {
 		if err := ru.extractZipFile(file, destDir); err != nil {
@@ -272,8 +263,6 @@ func (ru *RepositoryUpdater) extractZip(archivePath, destDir string) error {
 	}
 	
 	return nil
-}
-
 // extractZipFile extracts a single file from ZIP
 func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) error {
 	// Clean the file path
@@ -289,7 +278,7 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 	}
 	
 	// Create directory if needed
-	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 		return err
 	}
 	
@@ -298,13 +287,13 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
+	defer func() { if err := reader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	destFile, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	_, err = io.Copy(destFile, reader)
 	if err != nil {
@@ -313,15 +302,13 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 	
 	// Set file permissions
 	return os.Chmod(destPath, file.FileInfo().Mode())
-}
-
 // extractTar extracts a TAR archive
 func (ru *RepositoryUpdater) extractTar(archivePath, destDir string, compressed bool) error {
-	file, err := os.Open(archivePath)
+	file, err := os.Open(filepath.Clean(archivePath))
 	if err != nil {
 		return fmt.Errorf("failed to open tar: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	var reader io.Reader = file
 	
@@ -330,7 +317,7 @@ func (ru *RepositoryUpdater) extractTar(archivePath, destDir string, compressed 
 		if err != nil {
 			return fmt.Errorf("failed to create gzip reader: %w", err)
 		}
-		defer gzReader.Close()
+		defer func() { if err := gzReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		reader = gzReader
 	}
 	
@@ -351,7 +338,6 @@ func (ru *RepositoryUpdater) extractTar(archivePath, destDir string, compressed 
 	}
 	
 	return nil
-}
 
 // extractTarEntry extracts a single entry from TAR
 func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reader, destDir string) error {
@@ -368,7 +354,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		return os.MkdirAll(destPath, os.FileMode(header.Mode))
 	case tar.TypeReg:
 		// Create directory if needed
-		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 			return err
 		}
 		
@@ -377,7 +363,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		if err != nil {
 			return err
 		}
-		defer destFile.Close()
+		defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		
 		_, err = io.Copy(destFile, reader)
 		if err != nil {
@@ -390,7 +376,6 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		// Skip other file types (symlinks, etc.)
 		return nil
 	}
-}
 
 // findExtractedDirectory finds the main directory in extracted archive
 func (ru *RepositoryUpdater) findExtractedDirectory(tempDir string) (string, error) {
@@ -418,7 +403,6 @@ func (ru *RepositoryUpdater) findExtractedDirectory(tempDir string) (string, err
 	
 	// No directories found, use temp dir
 	return tempDir, nil
-}
 
 // copyAndTrackFiles copies files and tracks what was updated
 func (ru *RepositoryUpdater) copyAndTrackFiles(srcDir, destDir string) ([]string, error) {
@@ -430,7 +414,7 @@ func (ru *RepositoryUpdater) copyAndTrackFiles(srcDir, destDir string) ([]string
 		}
 		
 		// Skip directories
-		if info.IsDir() {
+			if info.IsDir() {
 			return nil
 		}
 		
@@ -455,7 +439,7 @@ func (ru *RepositoryUpdater) copyAndTrackFiles(srcDir, destDir string) ([]string
 		
 		if needsUpdate {
 			// Create destination directory
-			if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 				return err
 			}
 			
@@ -472,7 +456,6 @@ func (ru *RepositoryUpdater) copyAndTrackFiles(srcDir, destDir string) ([]string
 	})
 	
 	return updatedFiles, err
-}
 
 // fileNeedsUpdate checks if a file needs updating
 func (ru *RepositoryUpdater) fileNeedsUpdate(srcPath, destPath string) (bool, error) {
@@ -503,21 +486,20 @@ func (ru *RepositoryUpdater) fileNeedsUpdate(srcPath, destPath string) (bool, er
 	
 	// Files appear to be the same
 	return false, nil
-}
 
 // copyFile copies a file from source to destination
 func (ru *RepositoryUpdater) copyFile(src, dst string) error {
-	sourceFile, err := os.Open(src)
+	sourceFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	defer func() { if err := sourceFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	_, err = io.Copy(destFile, sourceFile)
 	if err != nil {
@@ -530,20 +512,15 @@ func (ru *RepositoryUpdater) copyFile(src, dst string) error {
 	}
 	
 	return nil
-}
-
 // copyLocalRepository copies from local repository
 func (ru *RepositoryUpdater) copyLocalRepository(srcDir, destDir, repoName string) ([]string, error) {
 	repoDestDir := filepath.Join(destDir, repoName)
-	if err := os.MkdirAll(repoDestDir, 0755); err != nil {
+	if err := os.MkdirAll(repoDestDir, 0700); err != nil {
 		return nil, err
 	}
 	
 	return ru.copyAndTrackFiles(srcDir, repoDestDir)
-}
-
 // Helper functions for repository parsing and commit tracking
-
 // parseGitHubURL parses GitHub repository URL
 func (ru *RepositoryUpdater) parseGitHubURL(repoURL string) (*GitHubRepoInfo, error) {
 	u, err := url.Parse(repoURL)
@@ -563,7 +540,6 @@ func (ru *RepositoryUpdater) parseGitHubURL(repoURL string) (*GitHubRepoInfo, er
 		Owner: parts[0],
 		Repo:  parts[1],
 	}, nil
-}
 
 // parseGitLabURL parses GitLab repository URL
 func (ru *RepositoryUpdater) parseGitLabURL(repoURL string) (*GitLabRepoInfo, error) {
@@ -585,7 +561,6 @@ func (ru *RepositoryUpdater) parseGitLabURL(repoURL string) (*GitLabRepoInfo, er
 		Owner: parts[0],
 		Repo:  parts[1],
 	}, nil
-}
 
 // getLatestGitHubCommit gets the latest commit from GitHub
 func (ru *RepositoryUpdater) getLatestGitHubCommit(ctx context.Context, repoInfo *GitHubRepoInfo, branch, token string) (*GitHubCommit, error) {
@@ -609,7 +584,7 @@ func (ru *RepositoryUpdater) getLatestGitHubCommit(ctx context.Context, repoInfo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitHub API error: %d", resp.StatusCode)
@@ -621,7 +596,6 @@ func (ru *RepositoryUpdater) getLatestGitHubCommit(ctx context.Context, repoInfo
 	}
 	
 	return &commit, nil
-}
 
 // getLatestGitLabCommit gets the latest commit from GitLab
 func (ru *RepositoryUpdater) getLatestGitLabCommit(ctx context.Context, repoInfo *GitLabRepoInfo, branch, token string) (*GitLabCommit, error) {
@@ -646,7 +620,7 @@ func (ru *RepositoryUpdater) getLatestGitLabCommit(ctx context.Context, repoInfo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitLab API error: %d", resp.StatusCode)
@@ -658,35 +632,31 @@ func (ru *RepositoryUpdater) getLatestGitLabCommit(ctx context.Context, repoInfo
 	}
 	
 	return &commit, nil
-}
 
 // getCurrentCommit gets the current commit hash for a repository
 func (ru *RepositoryUpdater) getCurrentCommit(targetDir, repoName string) string {
 	commitFile := filepath.Join(targetDir, repoName, ".commit")
-	if data, err := os.ReadFile(commitFile); err == nil {
+	if data, err := os.ReadFile(filepath.Clean(commitFile)); err == nil {
 		return strings.TrimSpace(string(data))
 	}
 	return ""
-}
 
 // updateCommitTracking updates the commit tracking file
 func (ru *RepositoryUpdater) updateCommitTracking(targetDir, repoName, commit string) error {
 	commitFile := filepath.Join(targetDir, repoName, ".commit")
 	commitDir := filepath.Dir(commitFile)
 	
-	if err := os.MkdirAll(commitDir, 0755); err != nil {
+	if err := os.MkdirAll(commitDir, 0700); err != nil {
 		return err
 	}
 	
-	return os.WriteFile(commitFile, []byte(commit), 0644)
-}
+	return os.WriteFile(filepath.Clean(commitFile, []byte(commit)), 0600)
 
 // Data structures for repository information
 
 type GitHubRepoInfo struct {
 	Owner string
 	Repo  string
-}
 
 type GitLabRepoInfo struct {
 	Host  string
@@ -708,5 +678,24 @@ type GitLabCommit struct {
 	ID           string    `json:"id"`
 	Title        string    `json:"title"`
 	Message      string    `json:"message"`
-	AuthoredDate time.Time `json:"authored_date"`
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

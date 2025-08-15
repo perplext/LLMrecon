@@ -12,7 +12,6 @@ import (
 type SecurityManagerAdapter struct {
 	legacyManager interface{}
 	converter     SecurityConverter
-}
 
 // SecurityConverter converts between legacy and new security models
 type SecurityConverter interface {
@@ -27,7 +26,6 @@ type SecurityConverter interface {
 	
 	// FromModelVulnerability converts a model vulnerability to a legacy vulnerability
 	FromModelVulnerability(vulnerability *models.Vulnerability) (interface{}, error)
-}
 
 // NewSecurityManagerAdapter creates a new security manager adapter
 func NewSecurityManagerAdapter(legacyManager interface{}, converter SecurityConverter) interfaces.SecurityManager {
@@ -35,7 +33,6 @@ func NewSecurityManagerAdapter(legacyManager interface{}, converter SecurityConv
 		legacyManager: legacyManager,
 		converter:     converter,
 	}
-}
 
 // Initialize initializes the security manager
 func (a *SecurityManagerAdapter) Initialize(ctx context.Context) error {
@@ -47,7 +44,6 @@ func (a *SecurityManagerAdapter) Initialize(ctx context.Context) error {
 	}
 	
 	return nil
-}
 
 // ReportIncident reports a security incident
 func (a *SecurityManagerAdapter) ReportIncident(ctx context.Context, title, description string, severity models.SecurityIncidentSeverity) (*models.SecurityIncident, error) {
@@ -86,7 +82,6 @@ func (a *SecurityManagerAdapter) ReportIncident(ctx context.Context, title, desc
 		Status:      models.SecurityIncidentStatusOpen,
 		ReportedAt:  time.Now(),
 	}, nil
-}
 
 // GetIncident retrieves a security incident by ID
 func (a *SecurityManagerAdapter) GetIncident(ctx context.Context, incidentID string) (*models.SecurityIncident, error) {
@@ -109,7 +104,6 @@ func (a *SecurityManagerAdapter) GetIncident(ctx context.Context, incidentID str
 		Title:  "Placeholder Incident",
 		Status: models.SecurityIncidentStatusOpen,
 	}, nil
-}
 
 // UpdateIncident updates a security incident
 func (a *SecurityManagerAdapter) UpdateIncident(ctx context.Context, incident *models.SecurityIncident) error {
@@ -128,7 +122,6 @@ func (a *SecurityManagerAdapter) UpdateIncident(ctx context.Context, incident *m
 	
 	// Fallback implementation
 	return nil
-}
 
 // CloseIncident closes a security incident
 func (a *SecurityManagerAdapter) CloseIncident(ctx context.Context, incidentID, resolution string) error {
@@ -141,7 +134,6 @@ func (a *SecurityManagerAdapter) CloseIncident(ctx context.Context, incidentID, 
 	
 	// Fallback implementation
 	return nil
-}
 
 // ListIncidents lists security incidents
 func (a *SecurityManagerAdapter) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.SecurityIncident, int, error) {
@@ -169,7 +161,6 @@ func (a *SecurityManagerAdapter) ListIncidents(ctx context.Context, filter map[s
 	
 	// Fallback implementation
 	return []*models.SecurityIncident{}, 0, nil
-}
 
 // ReportVulnerability reports a security vulnerability
 func (a *SecurityManagerAdapter) ReportVulnerability(ctx context.Context, title, description string, severity models.VulnerabilitySeverity) (*models.Vulnerability, error) {
@@ -208,7 +199,6 @@ func (a *SecurityManagerAdapter) ReportVulnerability(ctx context.Context, title,
 		Status:      models.VulnerabilityStatusOpen,
 		ReportedAt:  time.Now(),
 	}, nil
-}
 
 // GetVulnerability retrieves a security vulnerability by ID
 func (a *SecurityManagerAdapter) GetVulnerability(ctx context.Context, vulnerabilityID string) (*models.Vulnerability, error) {
@@ -231,7 +221,6 @@ func (a *SecurityManagerAdapter) GetVulnerability(ctx context.Context, vulnerabi
 		Title:  "Placeholder Vulnerability",
 		Status: models.VulnerabilityStatusOpen,
 	}, nil
-}
 
 // UpdateVulnerability updates a security vulnerability
 func (a *SecurityManagerAdapter) UpdateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
@@ -250,7 +239,6 @@ func (a *SecurityManagerAdapter) UpdateVulnerability(ctx context.Context, vulner
 	
 	// Fallback implementation
 	return nil
-}
 
 // MitigateVulnerability marks a security vulnerability as mitigated
 func (a *SecurityManagerAdapter) MitigateVulnerability(ctx context.Context, vulnerabilityID, mitigation string) error {
@@ -263,7 +251,6 @@ func (a *SecurityManagerAdapter) MitigateVulnerability(ctx context.Context, vuln
 	
 	// Fallback implementation
 	return nil
-}
 
 // ResolveVulnerability marks a security vulnerability as resolved
 func (a *SecurityManagerAdapter) ResolveVulnerability(ctx context.Context, vulnerabilityID string) error {
@@ -276,7 +263,6 @@ func (a *SecurityManagerAdapter) ResolveVulnerability(ctx context.Context, vulne
 	
 	// Fallback implementation
 	return nil
-}
 
 // ListVulnerabilities lists security vulnerabilities
 func (a *SecurityManagerAdapter) ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Vulnerability, int, error) {
@@ -304,7 +290,6 @@ func (a *SecurityManagerAdapter) ListVulnerabilities(ctx context.Context, filter
 	
 	// Fallback implementation
 	return []*models.Vulnerability{}, 0, nil
-}
 
 // Close closes the security manager
 func (a *SecurityManagerAdapter) Close() error {
@@ -317,7 +302,6 @@ func (a *SecurityManagerAdapter) Close() error {
 	
 	// Fallback implementation
 	return nil
-}
 
 // CreateIncident creates a new security incident
 func (a *SecurityManagerAdapter) CreateIncident(ctx context.Context, incident *models.SecurityIncident) error {
@@ -336,7 +320,6 @@ func (a *SecurityManagerAdapter) CreateIncident(ctx context.Context, incident *m
 	
 	// Fallback implementation - do nothing
 	return nil
-}
 
 // CreateVulnerability creates a new security vulnerability
 func (a *SecurityManagerAdapter) CreateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
@@ -355,7 +338,6 @@ func (a *SecurityManagerAdapter) CreateVulnerability(ctx context.Context, vulner
 	
 	// Fallback implementation - do nothing
 	return nil
-}
 
 // DeleteIncident deletes a security incident
 func (a *SecurityManagerAdapter) DeleteIncident(ctx context.Context, id string) error {
@@ -368,7 +350,6 @@ func (a *SecurityManagerAdapter) DeleteIncident(ctx context.Context, id string) 
 	
 	// Fallback implementation - do nothing
 	return nil
-}
 
 // GetIncidentByID retrieves a security incident by ID
 func (a *SecurityManagerAdapter) GetIncidentByID(ctx context.Context, id string) (*models.SecurityIncident, error) {
@@ -391,7 +372,6 @@ func (a *SecurityManagerAdapter) GetIncidentByID(ctx context.Context, id string)
 		Title:  "Placeholder Incident",
 		Status: models.SecurityIncidentStatusOpen,
 	}, nil
-}
 
 // GetVulnerabilityByID retrieves a security vulnerability by ID
 func (a *SecurityManagerAdapter) GetVulnerabilityByID(ctx context.Context, id string) (*models.Vulnerability, error) {
@@ -414,7 +394,6 @@ func (a *SecurityManagerAdapter) GetVulnerabilityByID(ctx context.Context, id st
 		Title:  "Placeholder Vulnerability",
 		Status: models.VulnerabilityStatusOpen,
 	}, nil
-}
 
 // DeleteVulnerability deletes a security vulnerability
 func (a *SecurityManagerAdapter) DeleteVulnerability(ctx context.Context, id string) error {
@@ -427,7 +406,6 @@ func (a *SecurityManagerAdapter) DeleteVulnerability(ctx context.Context, id str
 	
 	// Fallback implementation - do nothing
 	return nil
-}
 
 // UpdateVulnerabilityStatus updates the status of a vulnerability
 func (a *SecurityManagerAdapter) UpdateVulnerabilityStatus(ctx context.Context, id string, status models.VulnerabilityStatus) error {
@@ -439,5 +417,3 @@ func (a *SecurityManagerAdapter) UpdateVulnerabilityStatus(ctx context.Context, 
 	}
 	
 	// Fallback implementation - do nothing
-	return nil
-}

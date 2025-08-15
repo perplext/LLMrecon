@@ -23,7 +23,6 @@ type CreateUserRequest struct {
 	MFAMethods  []common.AuthMethod `json:"mfa_methods,omitempty"`
 	Permissions []string          `json:"permissions,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // UpdateUserRequest represents a request to update a user
 type UpdateUserRequest struct {
@@ -45,7 +44,6 @@ type ResetPasswordRequest struct {
 type ManageMFARequest struct {
 	Enabled  bool     `json:"enabled"`
 	Methods  []string `json:"methods,omitempty"`
-}
 
 // UserResponse represents a user response
 type UserResponse struct {
@@ -92,7 +90,6 @@ if !ok {
 		}
 		ok = true
 	}
-}
 	if !ok {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
 		return
@@ -187,7 +184,6 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Users retrieved successfully", resp)
-}
 
 // handleCreateUser handles creating a new user
 func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -217,7 +213,6 @@ if !ok {
 		}
 		ok = true
 	}
-}
 	if !ok {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
 		return
@@ -344,7 +339,6 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusCreated, "User created successfully", convertUserToResponse(user))
-}
 
 // handleGetUser handles retrieving a user
 func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
@@ -374,7 +368,6 @@ if !ok {
 		}
 		ok = true
 	}
-}
 	if !ok {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
 		return
@@ -408,7 +401,6 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User retrieved successfully", convertUserToResponse(user))
-}
 
 // handleUpdateUser handles updating a user
 func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -438,7 +430,6 @@ if !ok {
 		}
 		ok = true
 	}
-}
 	if !ok {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
 		return
@@ -451,7 +442,6 @@ if !ok {
 		WriteErrorResponse(w, http.StatusBadRequest, "User ID is required")
 		return
 	}
-
 	// Parse request
 	var req UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -539,7 +529,6 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User updated successfully", convertUserToResponse(user))
-}
 
 // handleDeleteUser handles deleting a user
 func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -569,7 +558,6 @@ if !ok {
 		}
 		ok = true
 	}
-}
 	if !ok {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
 		return
@@ -589,7 +577,6 @@ if !ok {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
-
 	// Prevent self-deletion
 	if currentUser.ID == userID {
 		WriteErrorResponse(w, http.StatusBadRequest, "Cannot delete your own account")
@@ -605,7 +592,6 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User deleted successfully", nil)
-}
 
 // handleResetPassword handles resetting a user's password
 func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
@@ -635,12 +621,10 @@ if !ok {
 		}
 		ok = true
 	}
-}
 	if !ok {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
 		return
 	}
-
 	// Get user ID from URL
 	vars := mux.Vars(r)
 	userID := vars["id"]
@@ -661,7 +645,6 @@ if !ok {
 		WriteErrorResponse(w, http.StatusBadRequest, "Password is required")
 		return
 	}
-
 	// Check permissions
 	rbacManager := s.accessManager.GetRBACManager()
 	isSelf := currentUser.ID == userID
@@ -689,7 +672,6 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Password reset successfully", nil)
-}
 
 // handleLockUser handles locking a user account
 func (s *Server) handleLockUser(w http.ResponseWriter, r *http.Request) {
@@ -719,7 +701,6 @@ if !ok {
 		}
 		ok = true
 	}
-}
 	if !ok {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
 		return
@@ -761,7 +742,6 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User locked successfully", nil)
-}
 
 // handleUnlockUser handles unlocking a user account
 func (s *Server) handleUnlockUser(w http.ResponseWriter, r *http.Request) {
@@ -791,7 +771,6 @@ if !ok {
 		}
 		ok = true
 	}
-}
 	if !ok {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
 		return
@@ -827,7 +806,6 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User unlocked successfully", nil)
-}
 
 // handleManageUserMFA handles managing a user's MFA settings
 func (s *Server) handleManageUserMFA(w http.ResponseWriter, r *http.Request) {
@@ -857,7 +835,6 @@ if !ok {
 		}
 		ok = true
 	}
-}
 	if !ok {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
 		return
@@ -910,7 +887,6 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "MFA settings updated successfully", nil)
-}
 
 // convertUserToResponse converts a user to a response format
 func convertUserToResponse(user interface{}) UserResponse {
@@ -981,4 +957,10 @@ func convertUserToResponse(user interface{}) UserResponse {
 		// Return an empty response if the type is not recognized
 		return UserResponse{}
 	}
+}
+}
+}
+}
+}
+}
 }

@@ -40,26 +40,22 @@ type Notification struct {
 	Component string `json:"component,omitempty"`
 	// Details contains additional details about the notification
 	Details map[string]interface{} `json:"details,omitempty"`
-}
 
 // NotificationHandler is an interface for handling notifications
 type NotificationHandler interface {
 	// HandleNotification handles a notification
 	HandleNotification(notification *Notification) error
-}
 
 // ConsoleNotificationHandler handles notifications by writing to a console
 type ConsoleNotificationHandler struct {
 	// Writer is the writer for notification output
 	Writer io.Writer
-}
 
 // NewConsoleNotificationHandler creates a new console notification handler
 func NewConsoleNotificationHandler(writer io.Writer) *ConsoleNotificationHandler {
 	return &ConsoleNotificationHandler{
 		Writer: writer,
 	}
-}
 
 // HandleNotification handles a notification by writing to the console
 func (h *ConsoleNotificationHandler) HandleNotification(notification *Notification) error {
@@ -97,20 +93,17 @@ func (h *ConsoleNotificationHandler) HandleNotification(notification *Notificati
 	fmt.Fprintln(h.Writer)
 
 	return nil
-}
 
 // JSONNotificationHandler handles notifications by writing JSON to a writer
 type JSONNotificationHandler struct {
 	// Writer is the writer for JSON notification output
 	Writer io.Writer
-}
 
 // NewJSONNotificationHandler creates a new JSON notification handler
 func NewJSONNotificationHandler(writer io.Writer) *JSONNotificationHandler {
 	return &JSONNotificationHandler{
 		Writer: writer,
 	}
-}
 
 // HandleNotification handles a notification by writing JSON to the writer
 func (h *JSONNotificationHandler) HandleNotification(notification *Notification) error {
@@ -131,7 +124,6 @@ func (h *JSONNotificationHandler) HandleNotification(notification *Notification)
 	}
 
 	return nil
-}
 
 // WebhookNotificationHandler handles notifications by sending them to a webhook
 type WebhookNotificationHandler struct {
@@ -139,7 +131,6 @@ type WebhookNotificationHandler struct {
 	URL string
 	// Headers are the HTTP headers to include in the webhook request
 	Headers map[string]string
-}
 
 // NewWebhookNotificationHandler creates a new webhook notification handler
 func NewWebhookNotificationHandler(url string, headers map[string]string) *WebhookNotificationHandler {
@@ -147,7 +138,6 @@ func NewWebhookNotificationHandler(url string, headers map[string]string) *Webho
 		URL:     url,
 		Headers: headers,
 	}
-}
 
 // HandleNotification handles a notification by sending it to a webhook
 func (h *WebhookNotificationHandler) HandleNotification(notification *Notification) error {
@@ -155,25 +145,21 @@ func (h *WebhookNotificationHandler) HandleNotification(notification *Notificati
 	// For now, we'll just log that webhook notification is not implemented
 	fmt.Printf("Webhook notification not implemented (URL: %s)\n", h.URL)
 	return nil
-}
 
 // NotificationManager manages notification handlers
 type NotificationManager struct {
 	// Handlers is the list of notification handlers
 	Handlers []NotificationHandler
-}
 
 // NewNotificationManager creates a new notification manager
 func NewNotificationManager() *NotificationManager {
 	return &NotificationManager{
 		Handlers: make([]NotificationHandler, 0),
 	}
-}
 
 // AddHandler adds a notification handler
 func (m *NotificationManager) AddHandler(handler NotificationHandler) {
 	m.Handlers = append(m.Handlers, handler)
-}
 
 // SendNotification sends a notification to all handlers
 func (m *NotificationManager) SendNotification(notification *Notification) error {
@@ -184,7 +170,6 @@ func (m *NotificationManager) SendNotification(notification *Notification) error
 		}
 	}
 	return lastErr
-}
 
 // NotifyUpdateStarted sends a notification that an update has started
 func (m *NotificationManager) NotifyUpdateStarted(transactionID, packageID string, details map[string]interface{}) error {
@@ -197,7 +182,6 @@ func (m *NotificationManager) NotifyUpdateStarted(transactionID, packageID strin
 		Details:       details,
 	}
 	return m.SendNotification(notification)
-}
 
 // NotifyUpdateCompleted sends a notification that an update has completed
 func (m *NotificationManager) NotifyUpdateCompleted(transactionID, packageID string, details map[string]interface{}) error {
@@ -210,7 +194,6 @@ func (m *NotificationManager) NotifyUpdateCompleted(transactionID, packageID str
 		Details:       details,
 	}
 	return m.SendNotification(notification)
-}
 
 // NotifyUpdateFailed sends a notification that an update has failed
 func (m *NotificationManager) NotifyUpdateFailed(transactionID, packageID, reason string, details map[string]interface{}) error {
@@ -223,7 +206,6 @@ func (m *NotificationManager) NotifyUpdateFailed(transactionID, packageID, reaso
 		Details:       details,
 	}
 	return m.SendNotification(notification)
-}
 
 // NotifyUpdateRolledBack sends a notification that an update has been rolled back
 func (m *NotificationManager) NotifyUpdateRolledBack(transactionID, packageID string, details map[string]interface{}) error {
@@ -236,7 +218,6 @@ func (m *NotificationManager) NotifyUpdateRolledBack(transactionID, packageID st
 		Details:       details,
 	}
 	return m.SendNotification(notification)
-}
 
 // NotifyComponentUpdated sends a notification that a component has been updated
 func (m *NotificationManager) NotifyComponentUpdated(transactionID, packageID, component, componentID string, details map[string]interface{}) error {
@@ -250,7 +231,6 @@ func (m *NotificationManager) NotifyComponentUpdated(transactionID, packageID, c
 		Details:       details,
 	}
 	return m.SendNotification(notification)
-}
 
 // NotifyVerificationFailed sends a notification that a verification has failed
 func (m *NotificationManager) NotifyVerificationFailed(packageID, reason string, details map[string]interface{}) error {
@@ -261,5 +241,3 @@ func (m *NotificationManager) NotifyVerificationFailed(packageID, reason string,
 		PackageID: packageID,
 		Details:   details,
 	}
-	return m.SendNotification(notification)
-}

@@ -19,7 +19,6 @@ type TrainingDataPoisoningValidator struct {
 	maliciousContentPatterns []*regexp.Regexp
 	// adversarialExamplePatterns contains patterns for detecting adversarial examples
 	adversarialExamplePatterns []*regexp.Regexp
-}
 
 // NewTrainingDataPoisoningValidator creates a new training data poisoning validator
 func NewTrainingDataPoisoningValidator() *TrainingDataPoisoningValidator {
@@ -64,7 +63,6 @@ func NewTrainingDataPoisoningValidator() *TrainingDataPoisoningValidator {
 		maliciousContentPatterns:  maliciousContentPatterns,
 		adversarialExamplePatterns: adversarialExamplePatterns,
 	}
-}
 
 // ValidatePrompt validates a prompt for training data poisoning vulnerabilities
 func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -190,7 +188,6 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for training data poisoning vulnerabilities
 func (v *TrainingDataPoisoningValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -261,5 +258,3 @@ func (v *TrainingDataPoisoningValidator) ValidateResponse(ctx context.Context, r
 		}
 	}
 
-	return results, nil
-}

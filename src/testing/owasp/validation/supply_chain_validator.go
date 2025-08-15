@@ -21,7 +21,6 @@ type SupplyChainValidator struct {
 	externalAPIPatterns []*regexp.Regexp
 	// untrustedSourcePatterns contains patterns for detecting references to untrusted sources
 	untrustedSourcePatterns []*regexp.Regexp
-}
 
 // NewSupplyChainValidator creates a new supply chain validator
 func NewSupplyChainValidator() *SupplyChainValidator {
@@ -70,7 +69,6 @@ func NewSupplyChainValidator() *SupplyChainValidator {
 		externalAPIPatterns:       externalAPIPatterns,
 		untrustedSourcePatterns:   untrustedSourcePatterns,
 	}
-}
 
 // ValidatePrompt validates a prompt for supply chain vulnerabilities
 func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -230,7 +228,6 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for supply chain vulnerabilities
 func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -362,5 +359,3 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 		}
 	}
 
-	return results, nil
-}
