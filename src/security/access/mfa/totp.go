@@ -3,7 +3,7 @@ package mfa
 import (
 	"os"
 	"time"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec G505 - SHA1 required by TOTP RFC 6238
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"

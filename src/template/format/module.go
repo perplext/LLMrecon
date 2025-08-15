@@ -31,7 +31,7 @@ func LoadModule(path string) (*Module, error) {
 
 // Save saves the module to the specified directory
 func (m *Module) Save(dir string) error {
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil { // Restrict directory permissions
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 	
