@@ -39,7 +39,7 @@ jobs:
       - name: Run Python tests
         run: |
           echo "Running Python module tests..."
-          python -c "import sys; sys.path.insert(0, '.'); from ml.agents.multi_armed_bandit import MultiArmedBandit; print('✓ Multi-armed bandit module loads')"
+          python -c "import sys; sys.path.insert(0, '.'); from ml.agents.multi_armed_bandit import MultiArmedBanditOptimizer; print('✓ Multi-armed bandit module loads')"
           python -c "import sys; sys.path.insert(0, '.'); from ml.data.attack_data_pipeline import AttackDataPipeline; print('✓ Attack data pipeline module loads')"
           echo "Python tests passed!"
 
