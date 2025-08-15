@@ -2,13 +2,14 @@
 package communication
 
 import (
-	"time"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"sync"
+	"time"
 )
 
 // TLSConfig represents the configuration for TLS
@@ -29,6 +30,7 @@ type TLSConfig struct {
 	PinnedCerts []string
 	// ServerName is the server name to check against
 	ServerName string
+}
 
 // DefaultTLSConfig returns the default TLS configuration
 func DefaultTLSConfig() *TLSConfig {
@@ -37,6 +39,7 @@ func DefaultTLSConfig() *TLSConfig {
 		InsecureSkipVerify: false,
 		CertPinning:        false,
 	}
+}
 
 // TLSManager manages TLS configurations and clients
 type TLSManager struct {
@@ -54,6 +57,7 @@ func NewTLSManager() *TLSManager {
 		clients:  make(map[string]*http.Client),
 		certPool: x509.NewCertPool(),
 	}
+}
 
 // AddConfig adds a TLS configuration
 func (m *TLSManager) AddConfig(name string, config *TLSConfig) error {
@@ -116,6 +120,7 @@ func (m *TLSManager) AddConfig(name string, config *TLSConfig) error {
 	}
 
 	return nil
+}
 
 // GetClient returns an HTTP client with the specified TLS configuration
 func (m *TLSManager) GetClient(name string) (*http.Client, error) {
@@ -128,6 +133,7 @@ func (m *TLSManager) GetClient(name string) (*http.Client, error) {
 	}
 
 	return client, nil
+}
 
 // GetDefaultClient returns the default HTTP client
 func (m *TLSManager) GetDefaultClient() (*http.Client, error) {
@@ -139,6 +145,7 @@ func (m *TLSManager) GetDefaultClient() (*http.Client, error) {
 	}
 
 	return m.clients[m.defaultName], nil
+}
 
 // SetDefaultConfig sets the default TLS configuration
 func (m *TLSManager) SetDefaultConfig(name string) error {
@@ -151,6 +158,7 @@ func (m *TLSManager) SetDefaultConfig(name string) error {
 
 	m.defaultName = name
 	return nil
+}
 
 // LoadSystemCertificates loads system certificates into the cert pool
 func (m *TLSManager) LoadSystemCertificates() error {
@@ -164,6 +172,7 @@ func (m *TLSManager) LoadSystemCertificates() error {
 
 	m.certPool = systemPool
 	return nil
+}
 
 // VerifyCertificate verifies a certificate against the cert pool
 func (m *TLSManager) VerifyCertificate(cert *x509.Certificate) error {
@@ -182,9 +191,14 @@ func (m *TLSManager) VerifyCertificate(cert *x509.Certificate) error {
 	}
 
 	return nil
+}
 
 // ConfigureTLSForServer configures TLS for an HTTP server
 func ConfigureTLSForServer(config *TLSConfig) (*tls.Config, error) {
+	if config == nil {
+		return nil, fmt.Errorf("TLS configuration is nil")
+	}
+	
 	minVersion := config.MinVersion
 	if minVersion < tls.VersionTLS12 {
 		minVersion = tls.VersionTLS12 // Enforce minimum TLS 1.2
@@ -218,11 +232,5 @@ func ConfigureTLSForServer(config *TLSConfig) (*tls.Config, error) {
 		tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
 	}
 
-}
-}
-}
-}
-}
-}
-}
+	return tlsConfig, nil
 }
