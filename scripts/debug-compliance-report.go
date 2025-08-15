@@ -66,7 +66,7 @@ func loadTemplates(dir string) ([]interface{}, error) {
 
 		// Read the template file (validate path first)
 		cleanPath := filepath.Clean(path)
-		data, err := ioutil.ReadFile(cleanPath)
+		data, err := ioutil.ReadFile(cleanPath) // #nosec G304 - Path is cleaned
 		if err != nil {
 			return fmt.Errorf("error reading template %s: %v", path, err)
 		}

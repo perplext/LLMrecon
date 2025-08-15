@@ -47,8 +47,7 @@ func (p *MockLLMProvider) SendPrompt(ctx context.Context, prompt string, options
 	processingTime := time.Duration(float64(baseProcessingTime) * currentLoad)
 	
 	// Add some randomness (±20%)
-	// #nosec G404 - Using math/rand for simulation timing is appropriate
-	randomFactor := 0.8 + (mathrand.Float64() * 0.4) // 0.8 to 1.2
+	randomFactor := 0.8 + (mathrand.Float64() * 0.4) // 0.8 to 1.2 #nosec G404
 	processingTime = time.Duration(float64(processingTime) * randomFactor)
 
 	fmt.Printf("[%s] Processing request from user %s (load: %.2f, time: %v)\n", 
@@ -163,8 +162,7 @@ func SimulateUserActivity(
 			}
 
 			// Wait before next request
-			// #nosec G404 - Using math/rand for simulation jitter is appropriate
-			jitter := time.Duration(mathrand.Int63n(int64(interval) / 5))
+			jitter := time.Duration(mathrand.Int63n(int64(interval) / 5)) // #nosec G404
 			select {
 			case <-ctx.Done():
 				return

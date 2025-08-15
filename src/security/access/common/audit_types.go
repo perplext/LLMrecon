@@ -110,10 +110,10 @@ const (
 	AuditActionApiRequest                  AuditAction = "api.request"
 	AuditActionApiResponse                 AuditAction = "api.response"
 	AuditActionApiRateLimitExceeded        AuditAction = "api.rate_limit.exceeded"
-	AuditActionApiKeyCreate                AuditAction = "api.key.create"
-	AuditActionApiKeyUpdate                AuditAction = "api.key.update"
-	AuditActionApiKeyDelete                AuditAction = "api.key.delete"
-	AuditActionApiKeyRotate                AuditAction = "api.key.rotate"
+	AuditActionApiKeyCreate                AuditAction = "api.key.create" // #nosec G101 - Not a credential
+	AuditActionApiKeyUpdate                AuditAction = "api.key.update" // #nosec G101 - Not a credential
+	AuditActionApiKeyDelete                AuditAction = "api.key.delete" // #nosec G101 - Not a credential
+	AuditActionApiKeyRotate                AuditAction = "api.key.rotate" // #nosec G101 - Not a credential
 
 	// Audit-related actions
 	AuditActionAuditLogView                AuditAction = "audit.log.view"

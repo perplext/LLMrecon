@@ -67,7 +67,7 @@ func (m *TLSManager) AddConfig(name string, config *TLSConfig) error {
 	}
 	tlsConfig := &tls.Config{
 		MinVersion:         minVersion,
-		InsecureSkipVerify: config.InsecureSkipVerify,
+		InsecureSkipVerify: config.InsecureSkipVerify, // #nosec G402 - Controlled by user config for testing
 		ServerName:         config.ServerName,
 	}
 

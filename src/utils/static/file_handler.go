@@ -3,7 +3,7 @@ package static
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/md5"
+	"crypto/md5" // #nosec G501 - MD5 only used for ETags, not security
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -236,8 +236,8 @@ func (h *FileHandler) cacheFile(filePath string, file *os.File, info os.FileInfo
 	// Reset file position
 	file.Seek(0, 0)
 
-	// Calculate ETag
-	hash := md5.Sum(content)
+	// Calculate ETag (MD5 is acceptable for ETags, not for security)
+	hash := md5.Sum(content) // #nosec G401 - MD5 is fine for ETags
 	etag := hex.EncodeToString(hash[:])
 
 	// Create cached file
@@ -452,8 +452,8 @@ func (h *FileHandler) ServeFile(fileName string, content []byte) *FileResponse {
 	// Determine content type
 	contentType := getContentType(fileName)
 	
-	// Calculate ETag
-	hash := md5.Sum(content)
+	// Calculate ETag (MD5 is acceptable for ETags, not for security)
+	hash := md5.Sum(content) // #nosec G401 - MD5 is fine for ETags
 	etag := hex.EncodeToString(hash[:])
 	
 	// Create response
@@ -524,8 +524,8 @@ func (h *FileHandler) cacheFileContent(fileName string, content []byte, contentT
 		return
 	}
 	
-	// Calculate ETag
-	hash := md5.Sum(content)
+	// Calculate ETag (MD5 is acceptable for ETags, not for security)
+	hash := md5.Sum(content) // #nosec G401 - MD5 is fine for ETags
 	etag := hex.EncodeToString(hash[:])
 	
 	// Create cached file
