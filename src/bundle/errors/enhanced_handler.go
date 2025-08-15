@@ -3,9 +3,9 @@ package errors
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/binary"
 	"fmt"
-	"math/rand"
 	"os"
 	"strings"
 	"sync"

@@ -124,8 +124,12 @@ func NewSecureClient(options *ConnectionSecurityOptions) (*SecureClient, error) 
 	}
 
 	// Create TLS config
+	minVersion := options.MinTLSVersion
+	if minVersion < tls.VersionTLS12 {
+		minVersion = tls.VersionTLS12 // Enforce minimum TLS 1.2
+	}
 	tlsConfig := &tls.Config{
-		MinVersion: options.MinTLSVersion,
+		MinVersion: minVersion,
 		RootCAs:    rootCAs,
 	}
 

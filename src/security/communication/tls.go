@@ -61,8 +61,12 @@ func (m *TLSManager) AddConfig(name string, config *TLSConfig) error {
 	defer m.mu.Unlock()
 
 	// Create TLS configuration
+	minVersion := config.MinVersion
+	if minVersion < tls.VersionTLS12 {
+		minVersion = tls.VersionTLS12 // Enforce minimum TLS 1.2
+	}
 	tlsConfig := &tls.Config{
-		MinVersion:         config.MinVersion,
+		MinVersion:         minVersion,
 		InsecureSkipVerify: config.InsecureSkipVerify,
 		ServerName:         config.ServerName,
 	}
@@ -181,8 +185,12 @@ func (m *TLSManager) VerifyCertificate(cert *x509.Certificate) error {
 
 // ConfigureTLSForServer configures TLS for an HTTP server
 func ConfigureTLSForServer(config *TLSConfig) (*tls.Config, error) {
+	minVersion := config.MinVersion
+	if minVersion < tls.VersionTLS12 {
+		minVersion = tls.VersionTLS12 // Enforce minimum TLS 1.2
+	}
 	tlsConfig := &tls.Config{
-		MinVersion: config.MinVersion,
+		MinVersion: minVersion,
 	}
 
 	// Load certificates if provided

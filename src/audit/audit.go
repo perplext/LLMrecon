@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"os/user"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -79,8 +81,14 @@ func NewAuditLogger(writer io.Writer, user string) *AuditLogger {
 
 // NewFileAuditLogger creates a new audit logger that writes to a file
 func NewFileAuditLogger(filePath string) (*AuditLogger, error) {
+	// Validate and clean the file path to prevent path traversal
+	cleanPath := filepath.Clean(filePath)
+	if filepath.IsAbs(cleanPath) && !strings.HasPrefix(cleanPath, "/tmp/") && !strings.HasPrefix(cleanPath, "/var/log/") {
+		return nil, fmt.Errorf("invalid audit log path: must be relative or in allowed directories")
+	}
+	
 	// Create or open the file with append mode
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	file, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open audit log file: %w", err)
 	}

@@ -68,6 +68,7 @@ func (v *MetadataValidator) ValidateField(field string, value interface{}) error
 		}
 	}
 	return nil
+}
 
 // NormalizeMetadata normalizes metadata fields
 func (v *MetadataValidator) NormalizeMetadata(metadata map[string]interface{}) map[string]interface{} {
@@ -95,16 +96,19 @@ func (v *MetadataValidator) NormalizeMetadata(metadata map[string]interface{}) m
 	}
 	
 	return normalized
+}
 
 // GetRequiredFields returns the list of required fields
 func (v *MetadataValidator) GetRequiredFields() []string {
 	return v.RequiredFields
 }
 
+
 // GetOptionalFields returns the list of optional fields
 func (v *MetadataValidator) GetOptionalFields() []string {
 	return v.OptionalFields
 }
+
 
 // IsRequiredField checks if a field is required
 func (v *MetadataValidator) IsRequiredField(field string) bool {
@@ -114,6 +118,7 @@ func (v *MetadataValidator) IsRequiredField(field string) bool {
 		}
 	}
 	return false
+}
 
 // IsOptionalField checks if a field is optional
 func (v *MetadataValidator) IsOptionalField(field string) bool {
@@ -123,13 +128,9 @@ func (v *MetadataValidator) IsOptionalField(field string) bool {
 		}
 	}
 	return false
+}
 
 // IsValidField checks if a field is valid (either required or optional)
 func (v *MetadataValidator) IsValidField(field string) bool {
 	return v.IsRequiredField(field) || v.IsOptionalField(field)
-}
-}
-}
-}
-}
 }
