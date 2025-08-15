@@ -43,7 +43,7 @@ func (t *Template) Save(dir string) error {
 	}
 	
 	targetPath := filepath.Join(dir, t.Name)
-	if err := os.WriteFile(targetPath, t.Content, 0644); err != nil {
+	if err := os.WriteFile(targetPath, t.Content, 0600); err != nil {
 		return fmt.Errorf("failed to write template: %w", err)
 	}
 	

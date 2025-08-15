@@ -26,6 +26,7 @@ func NewSecurityManagerAdapter(
 		vulnerabilityStore: vulnerabilityStore,
 		auditLogger:        auditLogger,
 	}
+}
 
 // CreateIncident creates a new security incident
 func (a *SecurityManagerAdapter) CreateIncident(ctx context.Context, incident *models.SecurityIncident) error {
@@ -50,26 +51,32 @@ func (a *SecurityManagerAdapter) DeleteIncident(ctx context.Context, id string) 
 // ListIncidents lists security incidents with filtering
 func (a *SecurityManagerAdapter) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.SecurityIncident, int, error) {
 	return a.incidentStore.ListIncidents(ctx, filter, offset, limit)
+}
 
 // CreateVulnerability creates a new vulnerability
 func (a *SecurityManagerAdapter) CreateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	return a.vulnerabilityStore.CreateVulnerability(ctx, vulnerability)
+}
 
 // GetVulnerabilityByID retrieves a vulnerability by ID
 func (a *SecurityManagerAdapter) GetVulnerabilityByID(ctx context.Context, id string) (*models.Vulnerability, error) {
 	return a.vulnerabilityStore.GetVulnerabilityByID(ctx, id)
+}
 
 // UpdateVulnerability updates an existing vulnerability
 func (a *SecurityManagerAdapter) UpdateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	return a.vulnerabilityStore.UpdateVulnerability(ctx, vulnerability)
+}
 
 // DeleteVulnerability deletes a vulnerability
 func (a *SecurityManagerAdapter) DeleteVulnerability(ctx context.Context, id string) error {
 	return a.vulnerabilityStore.DeleteVulnerability(ctx, id)
+}
 
 // ListVulnerabilities lists vulnerabilities with filtering
 func (a *SecurityManagerAdapter) ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Vulnerability, int, error) {
 	return a.vulnerabilityStore.ListVulnerabilities(ctx, filter, offset, limit)
+}
 
 // UpdateVulnerabilityStatus updates the status of a vulnerability
 func (a *SecurityManagerAdapter) UpdateVulnerabilityStatus(ctx context.Context, id string, status models.VulnerabilityStatus) error {
@@ -80,14 +87,5 @@ func (a *SecurityManagerAdapter) UpdateVulnerabilityStatus(ctx context.Context, 
 	
 	vulnerability.Status = status
 	return a.UpdateVulnerability(ctx, vulnerability)
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }
 }

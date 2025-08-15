@@ -154,8 +154,9 @@ treturn err
 			return nil
 		}
 
-		// Read the template file
-		data, err := ioutil.ReadFile(path)
+		// Read the template file (validate path first)
+		cleanPath := filepath.Clean(path)
+		data, err := ioutil.ReadFile(cleanPath)
 		if err != nil {
 			return fmt.Errorf("error reading template %s: %v", path, err)
 		}
@@ -206,7 +207,7 @@ treturn err
 		fmt.Println(string(data))
 	} else {
 		// Output to file
-		if err := ioutil.WriteFile(opts.OutputFile, data, 0644); err != nil {
+		if err := ioutil.WriteFile(opts.OutputFile, data, 0600); err != nil {
 			return fmt.Errorf("error writing report to file: %v", err)
 		}
 		if opts.Verbose {

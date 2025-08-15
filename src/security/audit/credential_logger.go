@@ -68,6 +68,7 @@ func NewCredentialAuditLogger(filePath string, options CredentialAuditLoggerOpti
 	}
 
 	return logger, nil
+}
 
 // LogCredentialEvent logs a credential event
 func (l *CredentialAuditLogger) LogCredentialEvent(eventType string, credentialID string, service string, success bool, errorMessage string, metadata map[string]string) error {
@@ -118,6 +119,7 @@ func (l *CredentialAuditLogger) LogCredentialEvent(eventType string, credentialI
 	}
 
 	return nil
+}
 
 // LogCredentialAccess logs a credential access event
 func (l *CredentialAuditLogger) LogCredentialAccess(credentialID, service, operation string) error {
@@ -239,6 +241,7 @@ func (l *CredentialAuditLogger) GetAuditEvents(limit int, filter map[string]stri
 	}
 
 	return events, nil
+}
 
 // RotateLogFile rotates the audit log file
 func (l *CredentialAuditLogger) RotateLogFile() error {
@@ -258,7 +261,5 @@ func (l *CredentialAuditLogger) RotateLogFile() error {
 		return fmt.Errorf("failed to rotate audit log file: %w", err)
 	}
 
-}
-}
-}
+	return nil
 }

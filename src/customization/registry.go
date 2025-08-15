@@ -61,7 +61,7 @@ func (r *Registry) Save() error {
 		return fmt.Errorf("failed to create registry directory: %w", err)
 	}
 	
-	if err := os.WriteFile(filepath.Clean(r.FilePath), data, 0640); err != nil {
+	if err := os.WriteFile(filepath.Clean(r.FilePath), data, 0600); err != nil {
 		return fmt.Errorf("failed to write registry file: %w", err)
 	}
 	
