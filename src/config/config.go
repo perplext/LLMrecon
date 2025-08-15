@@ -2,8 +2,9 @@
 package config
 
 import (
-	"os"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -17,7 +18,6 @@ type Config struct {
 		// GitLab is the URL for an optional internal GitLab repository for updates
 		GitLab string `mapstructure:"gitlab"`
 	} `mapstructure:"update_sources"`
-}
 
 	// APIKeys stores API keys for different services
 	APIKeys struct {
@@ -50,10 +50,9 @@ type Config struct {
 		// Public key for verifying signatures
 		PublicKey string `mapstructure:"public_key"`
 	} `mapstructure:"security"`
+}
 
-}
 // DefaultConfig returns the default configuration
-}
 func DefaultConfig() *Config {
 	cfg := &Config{}
 
@@ -153,3 +152,4 @@ func SaveConfig(cfg *Config) error {
 
 	configPath := filepath.Join(homeDir, ".LLMrecon.yaml")
 	return v.WriteConfigAs(configPath)
+}

@@ -84,6 +84,7 @@ type ComparisonInsight struct {
 	Description string      `json:"description"`
 	Evidence    []string    `json:"evidence"`
 	Confidence  float64     `json:"confidence"`
+}
 
 // InsightType represents different types of insights
 type InsightType string
