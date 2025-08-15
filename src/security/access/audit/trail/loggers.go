@@ -21,7 +21,7 @@ func NewFileLogger(logPath string) (*FileLogger, error) {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
 	
-	file, err := os.OpenFile(filepath.Clean(logPath), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0640)
+	file, err := os.OpenFile(filepath.Clean(logPath), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -78,7 +78,7 @@ func (r *RotatingLogger) rotate() error {
 	
 	// Create new file with timestamp
 	newPath := fmt.Sprintf("%s-%s.log", r.basePath, time.Now().Format("20060102-150405"))
-	file, err := os.OpenFile(filepath.Clean(newPath), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0640)
+	file, err := os.OpenFile(filepath.Clean(newPath), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to create new log file: %w", err)
 	}

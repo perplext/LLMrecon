@@ -394,17 +394,17 @@ func (l *AuditLogger) generateSummaryReport(events []AuditEvent, writer io.Write
 	defer csv.Flush()
 
 	// Write header
-	csv.Write([]string{"Report Type", "Generated At", "Total Events"})
-	csv.Write([]string{string(summary.ReportType), summary.GeneratedAt.Format(time.RFC3339), fmt.Sprintf("%d", summary.TotalEvents)})
+	_ = csv.Write([]string{"Report Type", "Generated At", "Total Events"})
+	_ = csv.Write([]string{string(summary.ReportType), summary.GeneratedAt.Format(time.RFC3339), fmt.Sprintf("%d", summary.TotalEvents)})
 
 	// Write time range
-	csv.Write([]string{"Time Range Start", "Time Range End"})
-	csv.Write([]string{summary.TimeRange.Start.Format(time.RFC3339), summary.TimeRange.End.Format(time.RFC3339)})
+	_ = csv.Write([]string{"Time Range Start", "Time Range End"})
+	_ = csv.Write([]string{summary.TimeRange.Start.Format(time.RFC3339), summary.TimeRange.End.Format(time.RFC3339)})
 
-	// Write event counts
-	csv.Write([]string{"Event Type", "Count"})
+	// Write event counts  
+	_ = csv.Write([]string{"Event Type", "Count"})
 	for eventType, count := range summary.EventCounts {
-		csv.Write([]string{eventType, fmt.Sprintf("%d", count)})
+		_ = csv.Write([]string{eventType, fmt.Sprintf("%d", count)})
 	}
 
 	// Write bundle counts
