@@ -422,6 +422,7 @@ func (h *HealthChecker) performHealthCheck() {
 	} else {
 		h.handleHealthCheckFailure(fmt.Errorf("health check returned status %d", resp.StatusCode), time.Since(start))
 	}
+}
 
 // handleHealthCheckSuccess handles successful health checks
 func (h *HealthChecker) handleHealthCheckSuccess(latency time.Duration) {
@@ -434,6 +435,7 @@ func (h *HealthChecker) handleHealthCheckSuccess(latency time.Duration) {
 	h.metrics.ConnectionsReused++
 	
 	h.logger.Debug("Health check passed", "provider", h.metrics.ProviderType, "latency", latency)
+}
 
 // handleHealthCheckFailure handles failed health checks
 func (h *HealthChecker) handleHealthCheckFailure(err error, latency time.Duration) {
@@ -445,6 +447,7 @@ func (h *HealthChecker) handleHealthCheckFailure(err error, latency time.Duratio
 	h.metrics.ConnectionErrors++
 	
 	h.logger.Warn("Health check failed", "provider", h.metrics.ProviderType, "error", err, "latency", latency)
+}
 
 // Utility functions
 
@@ -453,6 +456,7 @@ func NewConnectionPoolMetrics() *ConnectionPoolMetrics {
 	return &ConnectionPoolMetrics{
 		ProviderMetrics: make(map[ProviderType]*ProviderPoolMetrics),
 	}
+}
 
 // NewProviderPoolMetrics creates new provider pool metrics
 func NewProviderPoolMetrics(providerType ProviderType) *ProviderPoolMetrics {
@@ -460,12 +464,6 @@ func NewProviderPoolMetrics(providerType ProviderType) *ProviderPoolMetrics {
 		ProviderType: providerType,
 		HealthStatus: "unknown",
 	}
-}
-}
-}
-}
-}
-}
 }
 }
 }
