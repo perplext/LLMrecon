@@ -2,8 +2,8 @@
 package config
 
 import (
-	"os"
 	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -17,7 +17,6 @@ type Config struct {
 		// GitLab is the URL for an optional internal GitLab repository for updates
 		GitLab string `mapstructure:"gitlab"`
 	} `mapstructure:"update_sources"`
-}
 
 	// APIKeys stores API keys for different services
 	APIKeys struct {

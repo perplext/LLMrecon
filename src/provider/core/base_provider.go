@@ -432,9 +432,9 @@ func (p *BaseProvider) ResetUsageMetrics() error {
 	}
 
 	return nil
+}
 
 // UpdateUsageMetrics updates the usage metrics for a model
-}
 func (p *BaseProvider) UpdateUsageMetrics(modelID string, tokens int64, duration time.Duration, err error) {
 	p.usageMetricsMutex.Lock()
 	defer p.usageMetricsMutex.Unlock()
@@ -444,4 +444,6 @@ func (p *BaseProvider) UpdateUsageMetrics(modelID string, tokens int64, duration
 		metrics = NewUsageMetrics(modelID)
 		p.usageMetrics[modelID] = metrics
 	}
-
+	
+	metrics.Update(tokens, duration, err)
+}

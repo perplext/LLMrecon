@@ -51,6 +51,7 @@ type ConnectionPoolManager struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	wg        sync.WaitGroup
+}
 
 // ProviderConnectionPool manages connections for a specific provider
 type ProviderConnectionPool struct {
@@ -64,6 +65,7 @@ type ProviderConnectionPool struct {
 	ctx          context.Context
 	cancel       context.CancelFunc
 	wg           sync.WaitGroup
+}
 
 // ConnectionPoolMetrics tracks connection pool performance
 type ConnectionPoolMetrics struct {
@@ -78,6 +80,7 @@ type ConnectionPoolMetrics struct {
 	
 	// Per-provider metrics
 	ProviderMetrics map[ProviderType]*ProviderPoolMetrics `json:"provider_metrics"`
+}
 
 // ProviderPoolMetrics tracks metrics for a specific provider pool
 type ProviderPoolMetrics struct {
@@ -104,6 +107,7 @@ type HealthChecker struct {
 	cancel   context.CancelFunc
 	ticker   *time.Ticker
 	wg       sync.WaitGroup
+}
 
 // DefaultConnectionPoolConfig returns default configuration
 func DefaultConnectionPoolConfig() ConnectionPoolConfig {
@@ -122,6 +126,7 @@ func DefaultConnectionPoolConfig() ConnectionPoolConfig {
 		HealthCheckInterval:   30 * time.Second,
 		HealthCheckTimeout:    5 * time.Second,
 	}
+}
 
 // NewConnectionPoolManager creates a new connection pool manager
 func NewConnectionPoolManager(config ConnectionPoolConfig, logger Logger) *ConnectionPoolManager {
@@ -137,6 +142,7 @@ func NewConnectionPoolManager(config ConnectionPoolConfig, logger Logger) *Conne
 	}
 	
 	return manager
+}
 
 // CreatePool creates a connection pool for a specific provider
 func (m *ConnectionPoolManager) CreatePool(providerType ProviderType, config ConnectionPoolConfig) (*ProviderConnectionPool, error) {
