@@ -29,6 +29,7 @@ type AnalyzerOptions struct {
 	
 	// ModulePatterns are the patterns for module files
 	ModulePatterns []string
+}
 
 // DefaultAnalyzerOptions returns the default analyzer options
 func DefaultAnalyzerOptions() *AnalyzerOptions {
@@ -55,6 +56,7 @@ type Analyzer struct {
 	
 	// DependencyGraph is the dependency graph
 	DependencyGraph *DependencyGraph
+}
 
 // NewAnalyzer creates a new version analyzer
 func NewAnalyzer(localRepo, remoteRepo interfaces.Repository, options *AnalyzerOptions) *Analyzer {
@@ -92,6 +94,7 @@ type AnalysisResult struct {
 	
 	// AnalysisTime is the time the analysis was performed
 	AnalysisTime time.Time
+}
 
 // AnalyzeTemplate analyzes a template
 func (a *Analyzer) AnalyzeTemplate(ctx context.Context, templatePath string) (*AnalysisResult, error) {

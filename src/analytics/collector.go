@@ -32,24 +32,28 @@ type MetricsCollector struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
+}
 
 // MetricProcessor interface for processing individual metrics
 type MetricProcessor interface {
 	Process(ctx context.Context, metric Metric) (Metric, error)
 	GetType() string
 	IsEnabled() bool
+}
 
 // MetricAggregator interface for aggregating metrics over time windows
 type MetricAggregator interface {
 	Aggregate(ctx context.Context, metrics []Metric, window TimeWindow) (AggregatedMetric, error)
 	GetWindowSizes() []time.Duration
 	Reset()
+}
 
 // CollectionHook allows custom logic during metric collection
 type CollectionHook interface {
 	PreCollection(ctx context.Context, scanID string) error
 	PostCollection(ctx context.Context, scanID string, metrics []Metric) error
 	OnError(ctx context.Context, err error, scanID string)
+}
 
 // ScanTracker tracks metrics for an active scan
 type ScanTracker struct {
@@ -63,6 +67,7 @@ type ScanTracker struct {
 	CurrentPhase  string
 	Metrics       []Metric
 	mu            sync.RWMutex
+}
 
 // SystemMetrics tracks system-level performance metrics
 type SystemMetrics struct {
@@ -74,6 +79,7 @@ type SystemMetrics struct {
 	ThreadCount   int
 	LastUpdated   time.Time
 	mu            sync.RWMutex
+}
 
 // NetworkStats tracks network I/O statistics
 type NetworkStats struct {

@@ -268,7 +268,7 @@ func (m *ConnectionPoolManager) createProviderPool(providerType ProviderType, co
 	// Configure TLS if needed
 	if config.InsecureSkipVerify {
 		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: false // Fixed: Enable cert validation,
+			InsecureSkipVerify: false, // Fixed: Enable cert validation
 		}
 	}
 	
@@ -303,6 +303,7 @@ func (m *ConnectionPoolManager) createProviderPool(providerType ProviderType, co
 	healthChecker.metrics = pool.metrics
 	
 	return pool, nil
+}
 
 // metricsLoop periodically updates connection pool metrics
 func (m *ConnectionPoolManager) metricsLoop() {
@@ -317,6 +318,7 @@ func (m *ConnectionPoolManager) metricsLoop() {
 			return
 		}
 	}
+}
 
 // updateMetrics updates connection pool metrics
 func (m *ConnectionPoolManager) updateMetrics() {
@@ -326,6 +328,7 @@ func (m *ConnectionPoolManager) updateMetrics() {
 	for _, pool := range m.pools {
 		pool.updateMetrics()
 	}
+}
 
 // ProviderConnectionPool methods
 
@@ -341,6 +344,7 @@ func (p *ProviderConnectionPool) Start() error {
 	}
 	
 	return nil
+}
 
 // Stop stops the provider connection pool
 func (p *ProviderConnectionPool) Stop() {
@@ -350,23 +354,27 @@ func (p *ProviderConnectionPool) Stop() {
 	
 	// Close idle connections
 	p.transport.CloseIdleConnections()
+}
 
 // GetClient returns the HTTP client for this pool
 func (p *ProviderConnectionPool) GetClient() *http.Client {
 	p.metrics.ConnectionsReused++
 	return p.client
+}
 
 // updateMetrics updates provider pool metrics
 func (p *ProviderConnectionPool) updateMetrics() {
 	// Note: Go's http.Transport doesn't expose connection count directly
 	// These would need to be tracked through custom transport or monitoring
 	p.metrics.LastHealthCheck = time.Now()
+}
 
 // GetMetrics returns provider pool metrics
 func (p *ProviderConnectionPool) GetMetrics() *ProviderPoolMetrics {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	return p.metrics
+}
 
 // HealthChecker methods
 
@@ -380,12 +388,14 @@ func (h *HealthChecker) start() {
 			return
 		}
 	}
+}
 
 // stop stops the health checker
 func (h *HealthChecker) stop() {
 	h.cancel()
 	h.ticker.Stop()
 	h.wg.Wait()
+}
 
 // performHealthCheck performs a health check on the connection pool
 func (h *HealthChecker) performHealthCheck() {
