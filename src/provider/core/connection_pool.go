@@ -224,6 +224,7 @@ func (m *ConnectionPoolManager) Stop() error {
 	
 	m.logger.Info("Connection pool manager stopped")
 	return nil
+}
 
 // GetMetrics returns current connection pool metrics
 func (m *ConnectionPoolManager) GetMetrics() *ConnectionPoolMetrics {
@@ -241,7 +242,7 @@ func (m *ConnectionPoolManager) GetMetrics() *ConnectionPoolMetrics {
 	m.metrics.IdleConnections = totalIdle
 	
 	return m.metrics
-
+}
 // createProviderPool creates a connection pool for a specific provider
 func (m *ConnectionPoolManager) createProviderPool(providerType ProviderType, config ConnectionPoolConfig) (*ProviderConnectionPool, error) {
 	ctx, cancel := context.WithCancel(m.ctx)

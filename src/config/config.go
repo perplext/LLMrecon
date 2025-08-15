@@ -4,6 +4,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -151,3 +152,4 @@ func SaveConfig(cfg *Config) error {
 
 	configPath := filepath.Join(homeDir, ".LLMrecon.yaml")
 	return v.WriteConfigAs(configPath)
+}
