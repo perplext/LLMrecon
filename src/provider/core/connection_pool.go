@@ -164,6 +164,7 @@ func (m *ConnectionPoolManager) CreatePool(providerType ProviderType, config Con
 	
 	m.logger.Info("Created connection pool", "provider", providerType, "max_idle", config.MaxIdleConns)
 	return pool, nil
+}
 
 // GetPool returns the connection pool for a provider
 func (m *ConnectionPoolManager) GetPool(providerType ProviderType) (*ProviderConnectionPool, error) {
@@ -176,6 +177,7 @@ func (m *ConnectionPoolManager) GetPool(providerType ProviderType) (*ProviderCon
 	}
 	
 	return pool, nil
+}
 
 // GetClient returns an HTTP client for a provider with connection pooling
 func (m *ConnectionPoolManager) GetClient(providerType ProviderType) (*http.Client, error) {
@@ -185,6 +187,7 @@ func (m *ConnectionPoolManager) GetClient(providerType ProviderType) (*http.Clie
 	}
 	
 	return pool.client, nil
+}
 
 // Start starts the connection pool manager and health checkers
 func (m *ConnectionPoolManager) Start() error {
@@ -205,6 +208,7 @@ func (m *ConnectionPoolManager) Start() error {
 	
 	m.logger.Info("Connection pool manager started")
 	return nil
+}
 
 // Stop stops the connection pool manager
 func (m *ConnectionPoolManager) Stop() error {

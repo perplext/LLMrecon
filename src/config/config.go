@@ -49,10 +49,9 @@ type Config struct {
 		// Public key for verifying signatures
 		PublicKey string `mapstructure:"public_key"`
 	} `mapstructure:"security"`
+}
 
-}
 // DefaultConfig returns the default configuration
-}
 func DefaultConfig() *Config {
 	cfg := &Config{}
 
