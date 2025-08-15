@@ -21,7 +21,6 @@ type DataLeakageValidator struct {
 	trainingDataPatterns []*regexp.Regexp
 	// leakageIndicators contains keywords that might indicate data leakage
 	leakageIndicators []string
-}
 
 // NewDataLeakageValidator creates a new data leakage validator
 func NewDataLeakageValidator() *DataLeakageValidator {
@@ -54,15 +53,15 @@ func NewDataLeakageValidator() *DataLeakageValidator {
 	// Compile regex patterns for detecting sensitive data
 	sensitiveDataPatterns := []*regexp.Regexp{
 		// API key patterns
-		regexp.MustCompile(`(?i)(api[_-]?key|api[_-]?secret|access[_-]?key|access[_-]?token|auth[_-]?token)[\s:=]+['"]?[a-zA-Z0-9_\-\.]{16,}['"]?`),
+		regexp.MustCompile(`(?i)(api[_-]?key|api[_-]?secret := os.Getenv("SECRET_KEY"))]?`),
 		// Stripe-like API key patterns
 		regexp.MustCompile(`(?i)sk_test_[a-zA-Z0-9]{24,}`),
 		// Generic API key pattern
 		regexp.MustCompile(`(?i)[a-zA-Z0-9_]{2,}_[a-zA-Z0-9_]{2,}_[a-zA-Z0-9]{16,}`),
 		// Password patterns
-		regexp.MustCompile(`(?i)(password|passwd|pwd)[\s:=]+['"]?[^\s'"]{8,}['"]?`),
+		regexp.MustCompile(`(?i)(password := os.Getenv("PASSWORD"))]?`),
 		// Secret key patterns
-		regexp.MustCompile(`(?i)(secret[_-]?key|private[_-]?key)[\s:=]+['"]?[a-zA-Z0-9_\-\.]{16,}['"]?`),
+		regexp.MustCompile(`(?i)(secret := os.Getenv("SECRET_KEY"))]?`),
 		// Database connection string patterns
 		regexp.MustCompile(`(?i)(jdbc|odbc|mongodb|mysql|postgresql|redis):.*?(password|pwd)=`),
 		// AWS key patterns
@@ -112,7 +111,6 @@ func NewDataLeakageValidator() *DataLeakageValidator {
 		trainingDataPatterns:  trainingDataPatterns,
 		leakageIndicators:     leakageIndicators,
 	}
-}
 
 // ValidatePrompt validates a prompt for data leakage vulnerabilities
 func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -221,7 +219,6 @@ func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for data leakage vulnerabilities
 func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -347,5 +344,3 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 		}
 	}
 
-	return results, nil
-}

@@ -23,7 +23,6 @@ type ComplianceMapper interface {
 	
 	// GetSupportedStandards returns all supported compliance standards
 	GetSupportedStandards(ctx context.Context) ([]ComplianceStandard, error)
-}
 
 // ComplianceReporter is an interface for generating compliance reports
 type ComplianceReporter interface {
@@ -35,10 +34,8 @@ type ComplianceReporter interface {
 	
 	// GetComplianceStatus returns the compliance status for a test suite
 	GetComplianceStatus(ctx context.Context, testSuite *types.TestSuite, standard ComplianceStandard) (*StandardComplianceResult, error)
-}
 
 // ComplianceService is an interface that combines mapping and reporting capabilities
 type ComplianceService interface {
 	ComplianceMapper
 	ComplianceReporter
-}

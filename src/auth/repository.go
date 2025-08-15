@@ -11,14 +11,12 @@ import (
 type RepositoryAuthenticator struct {
 	// authManager is the authentication manager
 	authManager AuthManager
-}
 
 // NewRepositoryAuthenticator creates a new repository authenticator
 func NewRepositoryAuthenticator(authManager AuthManager) *RepositoryAuthenticator {
 	return &RepositoryAuthenticator{
 		authManager: authManager,
 	}
-}
 
 // AuthenticateRepository authenticates a repository with credentials
 func (a *RepositoryAuthenticator) AuthenticateRepository(ctx context.Context, repo repository.Repository, credID string) error {
@@ -48,7 +46,6 @@ func (a *RepositoryAuthenticator) AuthenticateRepository(ctx context.Context, re
 	updateConfigWithCredentials(config, creds)
 	
 	return nil
-}
 
 // getRepositoryConfig gets the configuration from a repository
 func getRepositoryConfig(repo repository.Repository) *repository.Config {
@@ -63,7 +60,6 @@ func getRepositoryConfig(repo repository.Repository) *repository.Config {
 	)
 	
 	return config
-}
 
 // updateConfigWithCredentials updates a repository configuration with credentials
 func updateConfigWithCredentials(config *repository.Config, creds *Credentials) {
@@ -87,7 +83,6 @@ func updateConfigWithCredentials(config *repository.Config, creds *Credentials) 
 		// This would require extending the repository.Config type
 		// to support certificate-based authentication
 	}
-}
 
 // AuthorizeRepositoryOperation authorizes a repository operation
 func (a *RepositoryAuthenticator) AuthorizeRepositoryOperation(user *User, repo repository.Repository, operation Permission) error {
@@ -97,7 +92,6 @@ func (a *RepositoryAuthenticator) AuthorizeRepositoryOperation(user *User, repo 
 	}
 	
 	return nil
-}
 
 // DefaultRepositoryAuthenticator is the default repository authenticator
 var DefaultRepositoryAuthenticator *RepositoryAuthenticator
@@ -105,4 +99,3 @@ var DefaultRepositoryAuthenticator *RepositoryAuthenticator
 // InitDefaultRepositoryAuthenticator initializes the default repository authenticator
 func InitDefaultRepositoryAuthenticator(authManager AuthManager) {
 	DefaultRepositoryAuthenticator = NewRepositoryAuthenticator(authManager)
-}

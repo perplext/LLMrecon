@@ -20,13 +20,13 @@ type AuthManagerImpl struct {
 	auditLogger  AuditLogger
 	initialized  bool
 	config       *AuthConfig
-}
 
 // AuthConfig contains configuration for the auth manager
 type AuthConfig struct {
 	// Session configuration
 	SessionTimeout     time.Duration
 	SessionMaxInactive time.Duration
+}
 
 	// Password configuration
 	PasswordMinLength      int
@@ -39,7 +39,6 @@ type AuthConfig struct {
 	// MFA configuration
 	MFAEnabled bool
 	MFAMethods []string
-}
 
 // NewAuthManagerImpl creates a new auth manager implementation
 func NewAuthManagerImpl(userStore interfaces.UserStore, sessionStore interfaces.SessionStore, auditLogger AuditLogger, config *AuthConfig) *AuthManagerImpl {
@@ -58,7 +57,6 @@ func NewAuthManagerImpl(userStore interfaces.UserStore, sessionStore interfaces.
 		auditLogger:  auditLogger,
 		config:       config,
 	}
-}
 
 // Initialize initializes the auth manager
 func (m *AuthManagerImpl) Initialize(ctx context.Context) error {
@@ -67,7 +65,6 @@ func (m *AuthManagerImpl) Initialize(ctx context.Context) error {
 
 	m.initialized = true
 	return nil
-}
 
 // Login authenticates a user
 func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) (*models.Session, error) {
@@ -95,7 +92,9 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 			Timestamp:   time.Now(),
 		}
 
-		_ = m.auditLogger.LogAudit(ctx, auditLog)
+		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 
 		return nil, errors.New("invalid username or password")
 	}
@@ -119,8 +118,9 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 			Status:      "failed_inactive",
 			Timestamp:   time.Now(),
 		}
-
-		_ = m.auditLogger.LogAudit(ctx, auditLog)
+		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 
 		return nil, errors.New("user account is inactive")
 	}
@@ -145,7 +145,9 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 			Timestamp:   time.Now(),
 		}
 
-		_ = m.auditLogger.LogAudit(ctx, auditLog)
+		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 
 		return nil, errors.New("user account is locked")
 	}
@@ -162,7 +164,9 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 		}
 
 		// Update the user
-		_ = m.userStore.UpdateUser(ctx, user)
+		if err := m.userStore.UpdateUser(ctx, user); err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 
 		// Log failed login attempt
 		ipAddress := getIPFromContext(ctx)
@@ -182,8 +186,9 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 			Timestamp:   time.Now(),
 		}
 
-		_ = m.auditLogger.LogAudit(ctx, auditLog)
-
+		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 		return nil, errors.New("invalid username or password")
 	}
 
@@ -192,7 +197,9 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 	user.LastLogin = time.Now()
 
 	// Update the user
-	_ = m.userStore.UpdateUser(ctx, user)
+	if err := m.userStore.UpdateUser(ctx, user); err != nil {
+		return fmt.Errorf("operation failed: %w", err)
+	}
 
 	// Create a new session
 	session := &models.Session{
@@ -230,10 +237,11 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 		Timestamp:   time.Now(),
 	}
 
-	_ = m.auditLogger.LogAudit(ctx, auditLog)
+	if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+		return fmt.Errorf("operation failed: %w", err)
+	}
 
 	return session, nil
-}
 
 // Logout logs out a user
 func (m *AuthManagerImpl) Logout(ctx context.Context, sessionID string) error {
@@ -278,10 +286,11 @@ func (m *AuthManagerImpl) Logout(ctx context.Context, sessionID string) error {
 		Timestamp:   time.Now(),
 	}
 
-	_ = m.auditLogger.LogAudit(ctx, auditLog)
+	if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+		return fmt.Errorf("operation failed: %w", err)
+	}
 
 	return nil
-}
 
 // ValidateSession validates a session
 func (m *AuthManagerImpl) ValidateSession(ctx context.Context, sessionID string) (*models.Session, error) {
@@ -293,7 +302,6 @@ func (m *AuthManagerImpl) ValidateSession(ctx context.Context, sessionID string)
 	if err != nil {
 		return nil, err
 	}
-
 	// Check if the session has expired
 	if time.Now().After(session.ExpiresAt) {
 		return nil, errors.New("session has expired")
@@ -303,17 +311,20 @@ func (m *AuthManagerImpl) ValidateSession(ctx context.Context, sessionID string)
 	if time.Now().Sub(session.LastActivity) > m.config.SessionMaxInactive {
 		// Mark session as expired
 		session.ExpiresAt = time.Now()
-		_ = m.sessionStore.UpdateSession(ctx, session)
+		if err := m.sessionStore.UpdateSession(ctx, session); err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 
 		return nil, errors.New("session has been inactive for too long")
 	}
 
 	// Update the last activity time
 	session.LastActivity = time.Now()
-	_ = m.sessionStore.UpdateSession(ctx, session)
+	if err := m.sessionStore.UpdateSession(ctx, session); err != nil {
+		return fmt.Errorf("operation failed: %w", err)
+	}
 
 	return session, nil
-}
 
 // RefreshSession refreshes a session
 func (m *AuthManagerImpl) RefreshSession(ctx context.Context, sessionID string) (*models.Session, error) {
@@ -342,7 +353,6 @@ func (m *AuthManagerImpl) RefreshSession(ctx context.Context, sessionID string) 
 	}
 
 	return session, nil
-}
 
 // ChangePassword changes a user's password
 func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error {
@@ -371,7 +381,9 @@ func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPasswor
 			Status:      "failed",
 		}
 
-		_ = m.auditLogger.LogAudit(ctx, auditLog)
+		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 
 		return errors.New("incorrect old password")
 	}
@@ -396,7 +408,9 @@ func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPasswor
 			Timestamp:   time.Now(),
 		}
 
-		_ = m.auditLogger.LogAudit(ctx, auditLog)
+		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 
 		return err
 	}
@@ -415,7 +429,6 @@ func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPasswor
 	if err != nil {
 		return err
 	}
-
 	// Log password change
 	ipAddress := getIPFromContext(ctx)
 	userAgent := getUserAgentFromContext(ctx)
@@ -433,10 +446,11 @@ func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPasswor
 		Timestamp:   time.Now(),
 	}
 
-	_ = m.auditLogger.LogAudit(ctx, auditLog)
+	if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+		return fmt.Errorf("operation failed: %w", err)
+	}
 
 	return nil
-}
 
 // ResetPassword resets a user's password
 func (m *AuthManagerImpl) ResetPassword(ctx context.Context, userID, newPassword string) error {
@@ -465,7 +479,9 @@ func (m *AuthManagerImpl) ResetPassword(ctx context.Context, userID, newPassword
 			Status:      "failed",
 		}
 
-		_ = m.auditLogger.LogAudit(ctx, auditLog)
+		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 
 		return err
 	}
@@ -504,10 +520,11 @@ func (m *AuthManagerImpl) ResetPassword(ctx context.Context, userID, newPassword
 		Timestamp:   time.Now(),
 	}
 
-	_ = m.auditLogger.LogAudit(ctx, auditLog)
+	if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
+		return fmt.Errorf("operation failed: %w", err)
+	}
 
 	return nil
-}
 
 // Close closes the auth manager
 func (m *AuthManagerImpl) Close() error {
@@ -516,7 +533,6 @@ func (m *AuthManagerImpl) Close() error {
 
 	m.initialized = false
 	return nil
-}
 
 // validatePassword validates a password against the password policy
 func (m *AuthManagerImpl) validatePassword(password string) error {
@@ -582,7 +598,6 @@ func (m *AuthManagerImpl) validatePassword(password string) error {
 	}
 
 	return nil
-}
 
 // Helper functions to get context values
 func getIPFromContext(ctx context.Context) string {
@@ -596,7 +611,6 @@ func getIPFromContext(ctx context.Context) string {
 	}
 
 	return ip
-}
 
 func getUserAgentFromContext(ctx context.Context) string {
 	if ctx == nil {
@@ -608,5 +622,14 @@ func getUserAgentFromContext(ctx context.Context) string {
 		return ""
 	}
 
-	return userAgent
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

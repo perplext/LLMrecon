@@ -11,7 +11,6 @@ type Provider interface {
 	Execute(ctx context.Context, request *Request) (*Response, error)
 	Validate() error
 	Close() error
-}
 
 // Factory interface for creating provider instances
 type Factory interface {
@@ -19,7 +18,6 @@ type Factory interface {
 	GetSupportedProviders() []string
 	GetProviderInfo(name string) (*ProviderInfo, error)
 	RegisterProvider(name string, creator ProviderCreator) error
-}
 
 // ProviderCreator is a function that creates a provider instance
 type ProviderCreator func(config map[string]interface{}) (Provider, error)
@@ -32,7 +30,6 @@ type Request struct {
 	Parameters map[string]interface{} `json:"parameters,omitempty"`
 	Body       interface{}            `json:"body,omitempty"`
 	Timeout    int                    `json:"timeout,omitempty"`
-}
 
 // Response represents a response from a provider
 type Response struct {
@@ -50,4 +47,3 @@ type ProviderInfo struct {
 	Description  string            `json:"description"`
 	Capabilities []string          `json:"capabilities"`
 	ConfigSchema map[string]string `json:"config_schema"`
-}

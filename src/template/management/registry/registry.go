@@ -18,7 +18,6 @@ type TemplateRegistry struct {
 	metadata map[string]*TemplateMetadata
 	// metadataMutex is a mutex for the metadata map
 	metadataMutex sync.RWMutex
-}
 
 // TemplateMetadata contains metadata about a template
 type TemplateMetadata struct {
@@ -34,7 +33,6 @@ type TemplateMetadata struct {
 	Source string
 	// Path is the path to the template file
 	Path string
-}
 
 // NewTemplateRegistry creates a new template registry
 func NewTemplateRegistry() *TemplateRegistry {
@@ -42,7 +40,6 @@ func NewTemplateRegistry() *TemplateRegistry {
 		templates: make(map[string]*format.Template),
 		metadata:  make(map[string]*TemplateMetadata),
 	}
-}
 
 // Register registers a template
 func (r *TemplateRegistry) Register(template *format.Template) error {
@@ -79,7 +76,6 @@ func (r *TemplateRegistry) Register(template *format.Template) error {
 	r.metadataMutex.Unlock()
 
 	return nil
-}
 
 // Unregister unregisters a template
 func (r *TemplateRegistry) Unregister(id string) error {
@@ -103,7 +99,6 @@ func (r *TemplateRegistry) Unregister(id string) error {
 	r.metadataMutex.Unlock()
 
 	return nil
-}
 
 // Update updates a template
 func (r *TemplateRegistry) Update(template *format.Template) error {
@@ -137,7 +132,6 @@ func (r *TemplateRegistry) Update(template *format.Template) error {
 	r.metadataMutex.Unlock()
 
 	return nil
-}
 
 // Get gets a template by ID
 func (r *TemplateRegistry) Get(id string) (*format.Template, error) {
@@ -159,7 +153,6 @@ func (r *TemplateRegistry) Get(id string) (*format.Template, error) {
 	r.metadataMutex.Unlock()
 
 	return template, nil
-}
 
 // List lists all templates
 func (r *TemplateRegistry) List() []*format.Template {
@@ -172,7 +165,6 @@ func (r *TemplateRegistry) List() []*format.Template {
 	}
 
 	return templates
-}
 
 // GetMetadata gets metadata for a template
 func (r *TemplateRegistry) GetMetadata(id string) (map[string]interface{}, error) {
@@ -194,7 +186,6 @@ func (r *TemplateRegistry) GetMetadata(id string) (map[string]interface{}, error
 	result["path"] = metadata.Path
 
 	return result, nil
-}
 
 // SetMetadata sets metadata for a template
 func (r *TemplateRegistry) SetMetadata(id string, metadata map[string]interface{}) error {
@@ -255,7 +246,6 @@ func (r *TemplateRegistry) SetMetadata(id string, metadata map[string]interface{
 	r.metadataMutex.Unlock()
 
 	return nil
-}
 
 // FindByTag finds templates by tag
 func (r *TemplateRegistry) FindByTag(tag string) []*format.Template {
@@ -279,7 +269,6 @@ func (r *TemplateRegistry) FindByTag(tag string) []*format.Template {
 	}
 
 	return templates
-}
 
 // FindByTags finds templates by multiple tags (AND logic)
 func (r *TemplateRegistry) FindByTags(tags []string) []*format.Template {
@@ -316,7 +305,6 @@ func (r *TemplateRegistry) FindByTags(tags []string) []*format.Template {
 	}
 
 	return templates
-}
 
 // FindBySource finds templates by source
 func (r *TemplateRegistry) FindBySource(source string) []*format.Template {
@@ -335,14 +323,12 @@ func (r *TemplateRegistry) FindBySource(source string) []*format.Template {
 	}
 
 	return templates
-}
 
 // Count returns the number of registered templates
 func (r *TemplateRegistry) Count() int {
 	r.templatesMutex.RLock()
 	defer r.templatesMutex.RUnlock()
 	return len(r.templates)
-}
 
 // Clear clears all templates
 func (r *TemplateRegistry) Clear() {
@@ -353,7 +339,6 @@ func (r *TemplateRegistry) Clear() {
 	r.metadataMutex.Lock()
 	r.metadata = make(map[string]*TemplateMetadata)
 	r.metadataMutex.Unlock()
-}
 
 // SetSource sets the source of a template
 func (r *TemplateRegistry) SetSource(id string, source string) error {
@@ -381,7 +366,6 @@ func (r *TemplateRegistry) SetSource(id string, source string) error {
 	r.metadataMutex.Unlock()
 
 	return nil
-}
 
 // SetPath sets the path of a template
 func (r *TemplateRegistry) SetPath(id string, path string) error {
@@ -409,7 +393,6 @@ func (r *TemplateRegistry) SetPath(id string, path string) error {
 	r.metadataMutex.Unlock()
 
 	return nil
-}
 
 // GetPath gets the path of a template
 func (r *TemplateRegistry) GetPath(id string) (string, error) {
@@ -422,7 +405,6 @@ func (r *TemplateRegistry) GetPath(id string) (string, error) {
 	}
 
 	return metadata.Path, nil
-}
 
 // GetSource gets the source of a template
 func (r *TemplateRegistry) GetSource(id string) (string, error) {
@@ -434,5 +416,3 @@ func (r *TemplateRegistry) GetSource(id string) (string, error) {
 		return "", fmt.Errorf("metadata for template with ID %s does not exist", id)
 	}
 
-	return metadata.Source, nil
-}

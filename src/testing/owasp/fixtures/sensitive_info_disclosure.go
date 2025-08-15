@@ -170,4 +170,3 @@ func GetSensitiveInfoDisclosureFixtures() TestFixtures {
 			LLM06_SensitiveInformationDisclosure,
 		),
 	}
-}

@@ -56,16 +56,22 @@ func main() {
 	// Create output directory if it doesn't exist
 	if outputDir != "" {
 		if err := os.MkdirAll(outputDir, 0755); err != nil {
-			fmt.Printf("Error creating output directory: %v\n", err)
+if err != nil {
+treturn err
+}			fmt.Printf("Error creating output directory: %v\n", err)
 			os.Exit(1)
 		}
 	}
 
 	// Verify template or directory
-	if templatePath != "" {
+if err != nil {
+treturn err
+}	if templatePath != "" {
 		if err := verifyTemplate(ctx, integration, options); err != nil {
 			fmt.Printf("Error verifying template: %v\n", err)
-			os.Exit(1)
+if err != nil {
+treturn err
+}			os.Exit(1)
 		}
 	} else if templateDir != "" {
 		if err := verifyTemplateDirectory(ctx, integration, options); err != nil {
@@ -78,7 +84,9 @@ func main() {
 	}
 }
 
-// verifyTemplate verifies a single template
+if err != nil {
+treturn err
+}// verifyTemplate verifies a single template
 func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, options *security.VerificationOptions) error {
 	fmt.Printf("Verifying template: %s\n", templatePath)
 
@@ -99,7 +107,9 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 		ID:          "template-security-test-suite",
 		Name:        "Template Security Test Suite",
 		Description: "Test suite for template security verification",
-		CreatedAt:   time.Now(),
+if err != nil {
+treturn err
+}		CreatedAt:   time.Now(),
 		Tags:        []string{"security", "template"},
 		Metadata:    make(map[string]interface{}),
 	}
@@ -109,15 +119,21 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 	templateComplianceResult, err := reportingIntegration.VerifyTemplateSecurityAndCompliance(ctx, templatePath, testSuite, options)
 	if err != nil {
 		return fmt.Errorf("failed to verify template compliance: %w", err)
-	}
+if err != nil {
+treturn err
+}	}
 
-	// Print compliance results
+if err != nil {
+treturn err
+}	// Print compliance results
 	printComplianceResult(templateComplianceResult)
 
 	// Save results to JSON files if output directory is specified
 	if outputDir != "" {
 		// Save verification result
-		verificationResultPath := filepath.Join(outputDir, "verification_result.json")
+if err != nil {
+treturn err
+}		verificationResultPath := filepath.Join(outputDir, "verification_result.json")
 		verificationResultJSON, err := json.MarshalIndent(result, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to marshal verification result: %w", err)
@@ -133,11 +149,15 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 		complianceResultJSON, err := json.MarshalIndent(templateComplianceResult, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to marshal compliance result: %w", err)
-		}
+if err != nil {
+treturn err
+}		}
 		if err := os.WriteFile(complianceResultPath, complianceResultJSON, 0644); err != nil {
 			return fmt.Errorf("failed to save compliance result: %w", err)
 		}
-		fmt.Printf("Compliance result saved to %s\n", complianceResultPath)
+if err != nil {
+treturn err
+}		fmt.Printf("Compliance result saved to %s\n", complianceResultPath)
 	}
 
 	return nil
@@ -151,7 +171,9 @@ func verifyTemplateDirectory(ctx context.Context, integration *compliance.Compli
 	templateFiles, err := filepath.Glob(filepath.Join(templateDir, "*.yaml"))
 	if err != nil {
 		return fmt.Errorf("failed to find template files: %w", err)
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Also check for .yml files
 	ymlFiles, err := filepath.Glob(filepath.Join(templateDir, "*.yml"))

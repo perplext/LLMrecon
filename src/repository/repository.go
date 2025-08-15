@@ -58,7 +58,6 @@ type Repository interface {
 	
 	// GetLastModified gets the last modified time of a file in the repository
 	GetLastModified(ctx context.Context, filePath string) (time.Time, error)
-}
 
 // FileInfo represents information about a file in a repository
 type FileInfo struct {
@@ -76,7 +75,6 @@ type FileInfo struct {
 	
 	// IsDirectory indicates if the file is a directory
 	IsDirectory bool
-}
 
 // RepositoryInfo represents information about a repository
 type RepositoryInfo struct {
@@ -98,7 +96,6 @@ type RepositoryInfo struct {
 	Description string
 	// LastSynced is the time the repository was last synced
 	LastSynced time.Time
-}
 
 // Config represents the configuration for a repository
 type Config struct {
@@ -140,7 +137,6 @@ type Config struct {
 	
 	// RetryDelay is the delay between retries
 	RetryDelay time.Duration
-}
 
 // NewConfig creates a new repository configuration with default values
 func NewConfig(repoType RepositoryType, name, url string) *Config {
@@ -154,4 +150,3 @@ func NewConfig(repoType RepositoryType, name, url string) *Config {
 		RetryCount:      3,
 		RetryDelay:      2 * time.Second,
 	}
-}

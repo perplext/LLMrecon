@@ -21,7 +21,6 @@ type RateLimiter struct {
 	mutex sync.RWMutex
 	// enabled indicates whether rate limiting is enabled
 	enabled bool
-}
 
 // NewRateLimiter creates a new rate limiter
 func NewRateLimiter(requestsPerMinute, tokensPerMinute, maxConcurrentRequests, burstSize int) *RateLimiter {
@@ -47,7 +46,6 @@ func NewRateLimiter(requestsPerMinute, tokensPerMinute, maxConcurrentRequests, b
 		concurrencyLimiter: make(chan struct{}, maxConcurrentRequests),
 		enabled:            true,
 	}
-}
 
 // Wait waits for rate limiting to allow a request
 func (l *RateLimiter) Wait(ctx context.Context) error {
@@ -73,7 +71,6 @@ func (l *RateLimiter) Wait(ctx context.Context) error {
 	}
 
 	return nil
-}
 
 // Release releases the concurrency limiter
 func (l *RateLimiter) Release() {
@@ -91,7 +88,6 @@ func (l *RateLimiter) Release() {
 	default:
 		// Nothing to release
 	}
-}
 
 // WaitForTokens waits for rate limiting to allow tokens
 func (l *RateLimiter) WaitForTokens(ctx context.Context, tokens int) error {
@@ -109,7 +105,6 @@ func (l *RateLimiter) WaitForTokens(ctx context.Context, tokens int) error {
 	}
 
 	return nil
-}
 
 // Enable enables rate limiting
 func (l *RateLimiter) Enable() {
@@ -117,7 +112,6 @@ func (l *RateLimiter) Enable() {
 	defer l.mutex.Unlock()
 
 	l.enabled = true
-}
 
 // Disable disables rate limiting
 func (l *RateLimiter) Disable() {
@@ -125,7 +119,6 @@ func (l *RateLimiter) Disable() {
 	defer l.mutex.Unlock()
 
 	l.enabled = false
-}
 
 // IsEnabled returns whether rate limiting is enabled
 func (l *RateLimiter) IsEnabled() bool {
@@ -133,7 +126,6 @@ func (l *RateLimiter) IsEnabled() bool {
 	defer l.mutex.RUnlock()
 
 	return l.enabled
-}
 
 // UpdateLimits updates the rate limits
 func (l *RateLimiter) UpdateLimits(requestsPerMinute, tokensPerMinute, maxConcurrentRequests, burstSize int) {
@@ -176,7 +168,6 @@ func (l *RateLimiter) UpdateLimits(requestsPerMinute, tokensPerMinute, maxConcur
 			}
 		}
 	}
-}
 
 // GetLimits returns the current rate limits
 func (l *RateLimiter) GetLimits() (requestsPerMinute, tokensPerMinute, maxConcurrentRequests, burstSize int) {
@@ -189,20 +180,17 @@ func (l *RateLimiter) GetLimits() (requestsPerMinute, tokensPerMinute, maxConcur
 	burstSize = l.requestLimiter.Burst()
 
 	return
-}
 
 // RateLimiterMiddleware is middleware that applies rate limiting to a provider
 type RateLimiterMiddleware struct {
 	// rateLimiter is the rate limiter
 	rateLimiter *RateLimiter
-}
 
 // NewRateLimiterMiddleware creates a new rate limiter middleware
 func NewRateLimiterMiddleware(requestsPerMinute, tokensPerMinute, maxConcurrentRequests, burstSize int) *RateLimiterMiddleware {
 	return &RateLimiterMiddleware{
 		rateLimiter: NewRateLimiter(requestsPerMinute, tokensPerMinute, maxConcurrentRequests, burstSize),
 	}
-}
 
 // Execute executes a function with rate limiting
 func (m *RateLimiterMiddleware) Execute(ctx context.Context, tokens int, fn func(ctx context.Context) error) error {
@@ -221,12 +209,10 @@ func (m *RateLimiterMiddleware) Execute(ctx context.Context, tokens int, fn func
 
 	// Execute the function
 	return fn(ctx)
-}
 
 // GetRateLimiter returns the rate limiter
 func (m *RateLimiterMiddleware) GetRateLimiter() *RateLimiter {
 	return m.rateLimiter
-}
 
 // ProviderRateLimiter manages rate limiters for multiple providers
 type ProviderRateLimiter struct {
@@ -234,14 +220,12 @@ type ProviderRateLimiter struct {
 	rateLimiters map[string]*RateLimiter
 	// mutex is a mutex for concurrent access to rateLimiters
 	mutex sync.RWMutex
-}
 
 // NewProviderRateLimiter creates a new provider rate limiter
 func NewProviderRateLimiter() *ProviderRateLimiter {
 	return &ProviderRateLimiter{
 		rateLimiters: make(map[string]*RateLimiter),
 	}
-}
 
 // GetRateLimiter gets or creates a rate limiter for a provider
 func (p *ProviderRateLimiter) GetRateLimiter(providerKey string, requestsPerMinute, tokensPerMinute, maxConcurrentRequests, burstSize int) *RateLimiter {
@@ -255,7 +239,6 @@ func (p *ProviderRateLimiter) GetRateLimiter(providerKey string, requestsPerMinu
 	}
 
 	return rateLimiter
-}
 
 // UpdateRateLimiter updates a rate limiter for a provider
 func (p *ProviderRateLimiter) UpdateRateLimiter(providerKey string, requestsPerMinute, tokensPerMinute, maxConcurrentRequests, burstSize int) {
@@ -269,7 +252,6 @@ func (p *ProviderRateLimiter) UpdateRateLimiter(providerKey string, requestsPerM
 	} else {
 		rateLimiter.UpdateLimits(requestsPerMinute, tokensPerMinute, maxConcurrentRequests, burstSize)
 	}
-}
 
 // RemoveRateLimiter removes a rate limiter for a provider
 func (p *ProviderRateLimiter) RemoveRateLimiter(providerKey string) {
@@ -277,7 +259,6 @@ func (p *ProviderRateLimiter) RemoveRateLimiter(providerKey string) {
 	defer p.mutex.Unlock()
 
 	delete(p.rateLimiters, providerKey)
-}
 
 // GetAllRateLimiters returns all rate limiters
 func (p *ProviderRateLimiter) GetAllRateLimiters() map[string]*RateLimiter {
@@ -291,7 +272,6 @@ func (p *ProviderRateLimiter) GetAllRateLimiters() map[string]*RateLimiter {
 	}
 
 	return rateLimitersCopy
-}
 
 // EnableRateLimiter enables a rate limiter for a provider
 func (p *ProviderRateLimiter) EnableRateLimiter(providerKey string) {
@@ -301,7 +281,6 @@ func (p *ProviderRateLimiter) EnableRateLimiter(providerKey string) {
 	if rateLimiter, ok := p.rateLimiters[providerKey]; ok {
 		rateLimiter.Enable()
 	}
-}
 
 // DisableRateLimiter disables a rate limiter for a provider
 func (p *ProviderRateLimiter) DisableRateLimiter(providerKey string) {
@@ -311,7 +290,6 @@ func (p *ProviderRateLimiter) DisableRateLimiter(providerKey string) {
 	if rateLimiter, ok := p.rateLimiters[providerKey]; ok {
 		rateLimiter.Disable()
 	}
-}
 
 // EnableAllRateLimiters enables all rate limiters
 func (p *ProviderRateLimiter) EnableAllRateLimiters() {
@@ -321,7 +299,6 @@ func (p *ProviderRateLimiter) EnableAllRateLimiters() {
 	for _, rateLimiter := range p.rateLimiters {
 		rateLimiter.Enable()
 	}
-}
 
 // DisableAllRateLimiters disables all rate limiters
 func (p *ProviderRateLimiter) DisableAllRateLimiters() {
@@ -331,4 +308,3 @@ func (p *ProviderRateLimiter) DisableAllRateLimiters() {
 	for _, rateLimiter := range p.rateLimiters {
 		rateLimiter.Disable()
 	}
-}

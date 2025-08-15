@@ -38,7 +38,6 @@ type MetricsCollector struct {
 
 	// Alerts
 	alerts []Alert
-}
 
 // Alert represents a security alert
 type Alert struct {
@@ -52,7 +51,6 @@ type Alert struct {
 	TemplateID string
 	// Issues are the security issues that triggered the alert
 	Issues []*security.SecurityIssue
-}
 
 // AlertLevel represents the level of an alert
 type AlertLevel string
@@ -79,7 +77,6 @@ func NewMetricsCollector() *MetricsCollector {
 		averageResourceUsage: ResourceUsage{},
 		alerts:              []Alert{},
 	}
-}
 
 // RecordValidation records a template validation
 func (m *MetricsCollector) RecordValidation(result *ValidationResult) {
@@ -108,7 +105,6 @@ func (m *MetricsCollector) RecordValidation(result *ValidationResult) {
 	} else if result.HasHighIssues() {
 		m.createAlert(AlertLevelWarning, "Template has high severity security issues", result.Template.ID, result.Issues)
 	}
-}
 
 // RecordExecution records a template execution
 func (m *MetricsCollector) RecordExecution(result *ExecutionResult, templateID string) {
@@ -141,7 +137,6 @@ func (m *MetricsCollector) RecordExecution(result *ExecutionResult, templateID s
 	if result.ResourceUsage.MemoryUsage > 500 {
 		m.createAlert(AlertLevelWarning, "Template has high memory usage", templateID, nil)
 	}
-}
 
 // RecordWorkflowAction records a workflow action
 func (m *MetricsCollector) RecordWorkflowAction(action string, version *TemplateVersion) {
@@ -171,7 +166,6 @@ func (m *MetricsCollector) RecordWorkflowAction(action string, version *Template
 			m.createAlert(AlertLevelWarning, "High risk template in workflow: "+action, version.TemplateID, version.SecurityIssues)
 		}
 	}
-}
 
 // GetValidationMetrics gets the validation metrics
 func (m *MetricsCollector) GetValidationMetrics() map[string]interface{} {
@@ -186,7 +180,6 @@ func (m *MetricsCollector) GetValidationMetrics() map[string]interface{} {
 		"issuesBySeverity":      m.issuesBySeverity,
 		"templatesByRisk":       m.templatesByRisk,
 	}
-}
 
 // GetExecutionMetrics gets the execution metrics
 func (m *MetricsCollector) GetExecutionMetrics() map[string]interface{} {
@@ -202,7 +195,6 @@ func (m *MetricsCollector) GetExecutionMetrics() map[string]interface{} {
 			"memoryUsage": m.averageResourceUsage.MemoryUsage,
 		},
 	}
-}
 
 // GetWorkflowMetrics gets the workflow metrics
 func (m *MetricsCollector) GetWorkflowMetrics() map[string]interface{} {
@@ -216,7 +208,6 @@ func (m *MetricsCollector) GetWorkflowMetrics() map[string]interface{} {
 		"pendingTemplates":    m.pendingTemplates,
 		"deprecatedTemplates": m.deprecatedTemplates,
 	}
-}
 
 // GetAlerts gets the alerts
 func (m *MetricsCollector) GetAlerts() []Alert {
@@ -224,7 +215,6 @@ func (m *MetricsCollector) GetAlerts() []Alert {
 	defer m.mutex.RUnlock()
 
 	return m.alerts
-}
 
 // GetAlertsByLevel gets alerts by level
 func (m *MetricsCollector) GetAlertsByLevel(level AlertLevel) []Alert {
@@ -239,7 +229,6 @@ func (m *MetricsCollector) GetAlertsByLevel(level AlertLevel) []Alert {
 	}
 
 	return alerts
-}
 
 // ClearAlerts clears all alerts
 func (m *MetricsCollector) ClearAlerts() {
@@ -247,7 +236,6 @@ func (m *MetricsCollector) ClearAlerts() {
 	defer m.mutex.Unlock()
 
 	m.alerts = []Alert{}
-}
 
 // createAlert creates a new alert
 func (m *MetricsCollector) createAlert(level AlertLevel, message string, templateID string, issues []*security.SecurityIssue) {
@@ -260,7 +248,6 @@ func (m *MetricsCollector) createAlert(level AlertLevel, message string, templat
 	}
 
 	m.alerts = append(m.alerts, alert)
-}
 
 // ResetMetrics resets all metrics
 func (m *MetricsCollector) ResetMetrics() {
@@ -288,5 +275,3 @@ func (m *MetricsCollector) ResetMetrics() {
 	m.pendingTemplates = 0
 	m.deprecatedTemplates = 0
 
-	m.alerts = []Alert{}
-}

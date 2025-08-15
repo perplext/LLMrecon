@@ -19,7 +19,6 @@ type BaseComplianceMapper struct {
 	supportedStandards []ComplianceStandard
 	// mutex for thread safety
 	mu sync.RWMutex
-}
 
 // NewBaseComplianceMapper creates a new base compliance mapper
 func NewBaseComplianceMapper() *BaseComplianceMapper {
@@ -38,7 +37,6 @@ func NewBaseComplianceMapper() *BaseComplianceMapper {
 	mapper.loadDefaultMappings()
 
 	return mapper
-}
 
 // MapTestResult maps a test result to compliance requirements
 func (m *BaseComplianceMapper) MapTestResult(ctx context.Context, testResult *types.TestResult) ([]*ComplianceMapping, error) {
@@ -56,7 +54,6 @@ func (m *BaseComplianceMapper) MapTestResult(ctx context.Context, testResult *ty
 	}
 
 	return mappings, nil
-}
 
 // MapTestSuite maps a test suite to compliance requirements
 func (m *BaseComplianceMapper) MapTestSuite(ctx context.Context, testSuite *types.TestSuite) (map[types.VulnerabilityType][]*ComplianceMapping, error) {
@@ -78,7 +75,6 @@ func (m *BaseComplianceMapper) MapTestSuite(ctx context.Context, testSuite *type
 	}
 
 	return result, nil
-}
 
 // GetRequirementsForVulnerability returns compliance requirements for a specific vulnerability type
 func (m *BaseComplianceMapper) GetRequirementsForVulnerability(ctx context.Context, vulnerabilityType types.VulnerabilityType) ([]*ComplianceRequirement, error) {
@@ -96,7 +92,6 @@ func (m *BaseComplianceMapper) GetRequirementsForVulnerability(ctx context.Conte
 	}
 
 	return requirements, nil
-}
 
 // GetRequirementsForStandard returns all requirements for a specific compliance standard
 func (m *BaseComplianceMapper) GetRequirementsForStandard(ctx context.Context, standard ComplianceStandard) ([]*ComplianceRequirement, error) {
@@ -114,7 +109,6 @@ func (m *BaseComplianceMapper) GetRequirementsForStandard(ctx context.Context, s
 	}
 
 	return requirements, nil
-}
 
 // GetSupportedStandards returns all supported compliance standards
 func (m *BaseComplianceMapper) GetSupportedStandards(ctx context.Context) ([]ComplianceStandard, error) {
@@ -122,7 +116,6 @@ func (m *BaseComplianceMapper) GetSupportedStandards(ctx context.Context) ([]Com
 	defer m.mu.RUnlock()
 
 	return m.supportedStandards, nil
-}
 
 // RegisterRequirement registers a compliance requirement
 func (m *BaseComplianceMapper) RegisterRequirement(requirement *ComplianceRequirement) error {
@@ -140,7 +133,6 @@ func (m *BaseComplianceMapper) RegisterRequirement(requirement *ComplianceRequir
 
 	standardReqs[requirement.ID] = requirement
 	return nil
-}
 
 // RegisterMapping registers a mapping between a vulnerability type and compliance requirements
 func (m *BaseComplianceMapper) RegisterMapping(vulnerabilityType types.VulnerabilityType, requirements []*ComplianceRequirement) error {
@@ -158,7 +150,6 @@ func (m *BaseComplianceMapper) RegisterMapping(vulnerabilityType types.Vulnerabi
 
 	m.mappings[vulnerabilityType] = append(m.mappings[vulnerabilityType], mapping)
 	return nil
-}
 
 // loadDefaultMappings loads the default mappings between vulnerability types and compliance requirements
 func (m *BaseComplianceMapper) loadDefaultMappings() {
@@ -388,4 +379,3 @@ func (m *BaseComplianceMapper) loadDefaultMappings() {
 			Requirements:      []*ComplianceRequirement{owaspLLM10, iso42001_8_2},
 		},
 	}
-}

@@ -15,12 +15,10 @@ func matchPattern(path, pattern string) bool {
 	}
 	
 	return matched
-}
 
 // GetFileExtension gets the extension of a file
 func GetFileExtension(path string) string {
 	return strings.ToLower(filepath.Ext(path))
-}
 
 // IsTextFile checks if a file is a text file based on its extension
 func IsTextFile(path string) bool {
@@ -48,7 +46,6 @@ func IsTextFile(path string) bool {
 	}
 	
 	return textExtensions[ext]
-}
 
 // IsBinaryFile checks if a file is a binary file based on its extension
 func IsBinaryFile(path string) bool {
@@ -85,7 +82,6 @@ func IsBinaryFile(path string) bool {
 	}
 	
 	return binaryExtensions[ext]
-}
 
 // IsCodeFile checks if a file is a code file based on its extension
 func IsCodeFile(path string) bool {
@@ -122,7 +118,6 @@ func IsCodeFile(path string) bool {
 	}
 	
 	return codeExtensions[ext]
-}
 
 // IsConfigFile checks if a file is a configuration file based on its extension
 func IsConfigFile(path string) bool {
@@ -151,5 +146,3 @@ func IsConfigFile(path string) bool {
 		"requirements.txt": true,
 	}
 	
-	return configExtensions[ext] || configFiles[basename]
-}

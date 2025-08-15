@@ -2,6 +2,7 @@
 package types
 
 import (
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/access/common"
 )
@@ -158,5 +159,5 @@ type AccessControlConfig struct {
 	} `json:"sessionPolicy"`
 
 	// RolePermissions maps roles to their permissions
-	RolePermissions map[string][]string `json:"rolePermissions,omitempty"`
+	RolePermissions map[string][]string `json:"rolePermissions"`
 }

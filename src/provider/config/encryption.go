@@ -41,7 +41,6 @@ func EncryptData(plaintext []byte, passphrase string) ([]byte, error) {
 	base64.StdEncoding.Encode(encoded, ciphertext)
 
 	return encoded, nil
-}
 
 // DecryptData decrypts data using AES-GCM
 func DecryptData(ciphertext []byte, passphrase string) ([]byte, error) {
@@ -52,7 +51,6 @@ func DecryptData(ciphertext []byte, passphrase string) ([]byte, error) {
 		return nil, err
 	}
 	decoded = decoded[:n]
-
 	// Create a new AES cipher using the key
 	key := deriveKey(passphrase)
 	block, err := aes.NewCipher(key)
@@ -71,7 +69,6 @@ func DecryptData(ciphertext []byte, passphrase string) ([]byte, error) {
 	if len(decoded) < nonceSize {
 		return nil, fmt.Errorf("ciphertext too short")
 	}
-
 	// Extract the nonce and ciphertext
 	nonce, ciphertextBytes := decoded[:nonceSize], decoded[nonceSize:]
 
@@ -82,13 +79,11 @@ func DecryptData(ciphertext []byte, passphrase string) ([]byte, error) {
 	}
 
 	return plaintext, nil
-}
 
 // deriveKey derives a 32-byte key from a passphrase using SHA-256
 func deriveKey(passphrase string) []byte {
 	hash := sha256.Sum256([]byte(passphrase))
 	return hash[:]
-}
 
 // GenerateEncryptionKey generates a random encryption key
 func GenerateEncryptionKey() ([]byte, error) {
@@ -97,12 +92,12 @@ func GenerateEncryptionKey() ([]byte, error) {
 		return nil, err
 	}
 	return key, nil
-}
+	
 
 // EncryptConfig encrypts a configuration file
 func EncryptConfig(inputFile, outputFile, passphrase string) error {
 	// Read input file
-	data, err := os.ReadFile(inputFile)
+	data, err := os.ReadFile(filepath.Clean(inputFile))
 	if err != nil {
 		return fmt.Errorf("failed to read input file: %w", err)
 	}
@@ -114,17 +109,17 @@ func EncryptConfig(inputFile, outputFile, passphrase string) error {
 	}
 
 	// Write output file
-	if err := os.WriteFile(outputFile, encryptedData, 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(outputFile, encryptedData, 0600)); err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}
 
 	return nil
-}
+	
 
 // DecryptConfig decrypts a configuration file
 func DecryptConfig(inputFile, outputFile, passphrase string) error {
 	// Read input file
-	data, err := os.ReadFile(inputFile)
+	data, err := os.ReadFile(filepath.Clean(inputFile))
 	if err != nil {
 		return fmt.Errorf("failed to read input file: %w", err)
 	}
@@ -136,12 +131,12 @@ func DecryptConfig(inputFile, outputFile, passphrase string) error {
 	}
 
 	// Write output file
-	if err := os.WriteFile(outputFile, decryptedData, 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(outputFile, decryptedData, 0600)); err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}
 
 	return nil
-}
+	
 
 // UpdateEncrypt updates the encrypt function in the ConfigManager
 func (m *ConfigManager) UpdateEncrypt() {
@@ -160,7 +155,6 @@ func (m *ConfigManager) UpdateEncrypt() {
 		if err != nil {
 			return nil, err
 		}
-
 		// Create a new GCM cipher
 		gcm, err := cipher.NewGCM(block)
 		if err != nil {
@@ -203,11 +197,9 @@ func (m *ConfigManager) UpdateEncrypt() {
 
 		// Get the nonce and ciphertext
 		nonce, ciphertext := data[:gcm.NonceSize()], data[gcm.NonceSize():]
-
 		// Decrypt the data
 		return gcm.Open(nil, nonce, ciphertext, nil)
 	}
-}
 
 // EncryptSensitiveData encrypts sensitive data in a provider configuration
 func (m *ConfigManager) EncryptSensitiveData(config *core.ProviderConfig) error {
@@ -230,7 +222,6 @@ func (m *ConfigManager) EncryptSensitiveData(config *core.ProviderConfig) error 
 	}
 
 	return nil
-}
 
 // DecryptSensitiveData decrypts sensitive data in a provider configuration
 func (m *ConfigManager) DecryptSensitiveData(config *core.ProviderConfig) error {
@@ -252,5 +243,3 @@ func (m *ConfigManager) DecryptSensitiveData(config *core.ProviderConfig) error 
 		config.OrgID = string(decryptedOrgID)
 	}
 
-	return nil
-}

@@ -30,7 +30,6 @@ type StateStore interface {
 	Load(id string) ([]byte, error)
 	Delete(id string) error
 	List() ([]string, error)
-}
 
 // StateCheckpoint represents a saved state
 type StateCheckpoint struct {
@@ -40,7 +39,6 @@ type StateCheckpoint struct {
 	TurnCount int
 	Data      []byte
 	Metadata  map[string]interface{}
-}
 
 // AttackState tracks the overall attack progress
 type AttackState struct {
@@ -54,7 +52,6 @@ type AttackState struct {
 	Conversations   []*ConversationState
 	Vulnerabilities []Vulnerability
 	mu              sync.RWMutex
-}
 
 // AttackStatus represents the attack state
 type AttackStatus string
@@ -75,7 +72,6 @@ type Vulnerability struct {
 	Description string
 	Evidence    []Evidence
 	Discovered  time.Time
-}
 
 // Evidence supports a vulnerability finding
 type Evidence struct {
@@ -101,7 +97,6 @@ func NewStateManager(config StateConfig, store StateStore) *StateManager {
 	}
 
 	return sm
-}
 
 // CreateAttackState initializes a new attack state
 func (sm *StateManager) CreateAttackState(targetModel, attackType string) *AttackState {
@@ -115,7 +110,6 @@ func (sm *StateManager) CreateAttackState(targetModel, attackType string) *Attac
 		Conversations:   []*ConversationState{},
 		Vulnerabilities: []Vulnerability{},
 	}
-}
 
 // RegisterConversation adds a conversation to tracking
 func (sm *StateManager) RegisterConversation(state *ConversationState) error {
@@ -130,7 +124,6 @@ func (sm *StateManager) RegisterConversation(state *ConversationState) error {
 	}
 
 	return nil
-}
 
 // UpdateState updates conversation state and creates checkpoint if needed
 func (sm *StateManager) UpdateState(stateID string, updater func(*ConversationState)) error {
@@ -151,7 +144,6 @@ func (sm *StateManager) UpdateState(stateID string, updater func(*ConversationSt
 	}
 
 	return nil
-}
 
 // RecordVulnerability adds a discovered vulnerability
 func (sm *StateManager) RecordVulnerability(attackState *AttackState, vuln Vulnerability) {
@@ -164,7 +156,6 @@ func (sm *StateManager) RecordVulnerability(attackState *AttackState, vuln Vulne
 
 	// Update success metrics
 	sm.updateSuccessMetrics(attackState)
-}
 
 // RecoverState recovers a conversation state from checkpoint
 func (sm *StateManager) RecoverState(stateID string) (*ConversationState, error) {
@@ -193,7 +184,6 @@ func (sm *StateManager) RecoverState(stateID string) (*ConversationState, error)
 	}
 
 	return nil, fmt.Errorf("state not found: %s", stateID)
-}
 
 // GetCheckpoints retrieves checkpoints for a state
 func (sm *StateManager) GetCheckpoints(stateID string) []*StateCheckpoint {
@@ -201,7 +191,6 @@ func (sm *StateManager) GetCheckpoints(stateID string) []*StateCheckpoint {
 	defer sm.mu.RUnlock()
 
 	return sm.checkpoints[stateID]
-}
 
 // RollbackToCheckpoint restores state to a checkpoint
 func (sm *StateManager) RollbackToCheckpoint(checkpointID string) error {
@@ -231,7 +220,6 @@ func (sm *StateManager) RollbackToCheckpoint(checkpointID string) error {
 
 	sm.states[checkpoint.StateID] = state
 	return nil
-}
 
 // AnalyzeAttackProgress analyzes overall attack progress
 func (sm *StateManager) AnalyzeAttackProgress(attackState *AttackState) AttackAnalysis {
@@ -270,7 +258,6 @@ func (sm *StateManager) AnalyzeAttackProgress(attackState *AttackState) AttackAn
 	}
 
 	return analysis
-}
 
 // AttackAnalysis contains attack analysis results
 type AttackAnalysis struct {
@@ -304,7 +291,6 @@ func (sm *StateManager) checkpointRoutine() {
 			}
 		}
 	}
-}
 
 // shouldCheckpoint determines if checkpoint is needed
 func (sm *StateManager) shouldCheckpoint(state *ConversationState) bool {
@@ -320,8 +306,6 @@ func (sm *StateManager) shouldCheckpoint(state *ConversationState) bool {
 	timeDiff := time.Since(lastCheckpoint.Timestamp)
 
 	return turnDiff >= 5 || timeDiff >= sm.config.CheckpointInterval
-}
-
 // createCheckpoint creates a new checkpoint
 func (sm *StateManager) createCheckpoint(state *ConversationState) error {
 	data, err := sm.serializeState(state)
@@ -355,7 +339,6 @@ func (sm *StateManager) createCheckpoint(state *ConversationState) error {
 	}
 
 	return nil
-}
 
 // serializeState converts state to bytes
 func (sm *StateManager) serializeState(state *ConversationState) ([]byte, error) {
@@ -378,7 +361,6 @@ func (sm *StateManager) serializeState(state *ConversationState) ([]byte, error)
 	}
 
 	return data, nil
-}
 
 // deserializeState converts bytes to state
 func (sm *StateManager) deserializeState(data []byte, state *ConversationState) error {
@@ -393,7 +375,6 @@ func (sm *StateManager) deserializeState(data []byte, state *ConversationState) 
 	}
 
 	return json.Unmarshal(data, state)
-}
 
 // updateSuccessMetrics updates attack success metrics
 func (sm *StateManager) updateSuccessMetrics(attackState *AttackState) {
@@ -420,7 +401,6 @@ func (sm *StateManager) updateSuccessMetrics(attackState *AttackState) {
 	attackState.SuccessMetrics["avg_turns_per_conversation"] = totalTurns / totalConversations
 	attackState.SuccessMetrics["avg_extractions_per_conversation"] = totalExtractions / totalConversations
 	attackState.SuccessMetrics["vulnerability_discovery_rate"] = float64(len(attackState.Vulnerabilities)) / totalConversations
-}
 
 // calculateSuccessRate calculates overall success rate
 func (sm *StateManager) calculateSuccessRate(attackState *AttackState) float64 {
@@ -452,59 +432,48 @@ func (sm *StateManager) calculateSuccessRate(attackState *AttackState) float64 {
 	}
 
 	return totalScore / totalWeight
-}
 
 // Helper functions for compression and encryption (placeholders)
 func compress(data []byte) []byte {
 	// Implement compression
 	return data
-}
 
 func decompress(data []byte) []byte {
 	// Implement decompression
 	return data
-}
 
 func encrypt(data []byte) []byte {
 	// Implement encryption
 	return data
-}
 
 func decrypt(data []byte) []byte {
 	// Implement decryption
 	return data
-}
 
 func generateAttackID() string {
 	return fmt.Sprintf("attack_%d", time.Now().UnixNano())
-}
 
 func generateVulnID() string {
 	return fmt.Sprintf("vuln_%d", time.Now().UnixNano())
-}
 
 func generateCheckpointID() string {
 	return fmt.Sprintf("checkpoint_%d", time.Now().UnixNano())
-}
 
 // InMemoryStateStore provides in-memory state storage
 type InMemoryStateStore struct {
 	data map[string][]byte
 	mu   sync.RWMutex
-}
 
 func NewInMemoryStateStore() *InMemoryStateStore {
 	return &InMemoryStateStore{
 		data: make(map[string][]byte),
 	}
-}
 
 func (s *InMemoryStateStore) Save(id string, data []byte) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data[id] = data
 	return nil
-}
 
 func (s *InMemoryStateStore) Load(id string) ([]byte, error) {
 	s.mu.RLock()
@@ -514,14 +483,12 @@ func (s *InMemoryStateStore) Load(id string) ([]byte, error) {
 		return nil, fmt.Errorf("not found: %s", id)
 	}
 	return data, nil
-}
 
 func (s *InMemoryStateStore) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.data, id)
 	return nil
-}
 
 func (s *InMemoryStateStore) List() ([]string, error) {
 	s.mu.RLock()
@@ -530,5 +497,27 @@ func (s *InMemoryStateStore) List() ([]string, error) {
 	for id := range s.data {
 		ids = append(ids, id)
 	}
-	return ids, nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

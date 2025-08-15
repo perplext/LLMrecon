@@ -24,7 +24,6 @@ type DeltaManifest struct {
 type DeltaSize struct {
 	Compressed   int64 `json:"compressed"`
 	Uncompressed int64 `json:"uncompressed"`
-}
 
 // DeltaOperations contains lists of operations by type
 type DeltaOperations struct {
@@ -32,7 +31,6 @@ type DeltaOperations struct {
 	Update []UpdateOperation `json:"update"`
 	Delete []DeleteOperation `json:"delete"`
 	Patch  []PatchOperation  `json:"patch"`
-}
 
 // AddOperation represents a file addition
 type AddOperation struct {
@@ -51,13 +49,11 @@ type UpdateOperation struct {
 	NewHash        string `json:"newHash"`
 	PatchAvailable bool   `json:"patchAvailable"`
 	PatchSize      int64  `json:"patchSize,omitempty"`
-}
 
 // DeleteOperation represents a file deletion
 type DeleteOperation struct {
 	Path string `json:"path"`
 	Type string `json:"type"`
-}
 
 // PatchOperation represents a patch to be applied
 type PatchOperation struct {
@@ -65,19 +61,16 @@ type PatchOperation struct {
 	Type      string `json:"type"`
 	PatchFile string `json:"patchFile"`
 	Algorithm string `json:"algorithm"`
-}
 
 // DeltaDependencies specifies version requirements
 type DeltaDependencies struct {
 	Required   []string `json:"required"`
 	Compatible []string `json:"compatible"`
-}
 
 // RollbackInfo contains rollback configuration
 type RollbackInfo struct {
 	Supported        bool `json:"supported"`
 	SnapshotRequired bool `json:"snapshotRequired"`
-}
 
 // UpdateContext holds the context for an update operation
 type UpdateContext struct {
@@ -98,7 +91,6 @@ type UpdatePlan struct {
 	SpaceRequired int64       `json:"spaceRequired"`
 	BackupSize    int64       `json:"backupSize"`
 	EstimatedTime int         `json:"estimatedTime"`
-}
 
 // Operation represents a single update operation
 type Operation struct {
@@ -106,7 +98,6 @@ type Operation struct {
 	Path      string      `json:"path"`
 	Details   interface{} `json:"details"`
 	Completed bool        `json:"completed"`
-}
 
 // UpdateProgress tracks update progress
 type UpdateProgress struct {
@@ -137,13 +128,12 @@ type FileBackup struct {
 type DeltaBundle struct {
 	Path     string
 	Manifest *DeltaManifest
-}
 
 // LoadDeltaBundle loads a delta bundle from disk
 func LoadDeltaBundle(path string) (*DeltaBundle, error) {
 	// Load manifest
 	manifestPath := filepath.Join(path, "delta-manifest.json")
-	manifestData, err := os.ReadFile(manifestPath)
+	manifestData, err := os.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read delta manifest: %w", err)
 	}
@@ -157,7 +147,6 @@ func LoadDeltaBundle(path string) (*DeltaBundle, error) {
 		Path:     path,
 		Manifest: &manifest,
 	}, nil
-}
 
 // GenerateDelta generates a delta bundle between two versions
 func GenerateDelta(oldBundle, newBundle *Bundle) (*DeltaBundle, error) {
@@ -232,7 +221,6 @@ func GenerateDelta(oldBundle, newBundle *Bundle) (*DeltaBundle, error) {
 	}
 
 	return delta, nil
-}
 
 // PrepareUpdate prepares an update plan
 func PrepareUpdate(ctx *UpdateContext) (*UpdatePlan, error) {
@@ -298,7 +286,6 @@ func PrepareUpdate(ctx *UpdateContext) (*UpdatePlan, error) {
 	}
 
 	return plan, nil
-}
 
 // CreateBackup creates a backup of files that will be modified
 func CreateBackup(ctx *UpdateContext) (*Backup, error) {
@@ -309,7 +296,7 @@ func CreateBackup(ctx *UpdateContext) (*Backup, error) {
 	}
 
 	// Ensure backup directory exists
-	if err := os.MkdirAll(ctx.BackupPath, 0755); err != nil {
+	if err := os.MkdirAll(ctx.BackupPath, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create backup directory: %w", err)
 	}
 
@@ -323,7 +310,6 @@ func CreateBackup(ctx *UpdateContext) (*Backup, error) {
 			if err != nil {
 				continue // File might already be deleted
 			}
-
 			// Calculate hash
 			hash, err := calculateDeltaFileHash(sourcePath)
 			if err != nil {
@@ -356,13 +342,10 @@ func CreateBackup(ctx *UpdateContext) (*Backup, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal backup manifest: %w", err)
 	}
-
-	if err := os.WriteFile(manifestPath, data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(manifestPath, data, 0600)); err != nil {
 		return nil, fmt.Errorf("failed to save backup manifest: %w", err)
 	}
-
 	return backup, nil
-}
 
 // ApplyOperations applies update operations
 func ApplyOperations(ctx *UpdateContext, ops []Operation) error {
@@ -395,7 +378,6 @@ func ApplyOperations(ctx *UpdateContext, ops []Operation) error {
 	}
 
 	return nil
-}
 
 // applyAddOperation adds a new file
 func applyAddOperation(ctx *UpdateContext, op Operation) error {
@@ -405,13 +387,12 @@ func applyAddOperation(ctx *UpdateContext, op Operation) error {
 	destPath := filepath.Join(ctx.BundlePath, addOp.Path)
 
 	// Ensure directory exists
-	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 		return err
 	}
 
 	// Copy file
 	return copyDeltaFile(sourcePath, destPath)
-}
 
 // applyUpdateOperation updates an existing file
 func applyUpdateOperation(ctx *UpdateContext, op Operation) error {
@@ -422,7 +403,6 @@ func applyUpdateOperation(ctx *UpdateContext, op Operation) error {
 
 	// Copy new version
 	return copyDeltaFile(sourcePath, destPath)
-}
 
 // applyDeleteOperation deletes a file
 func applyDeleteOperation(ctx *UpdateContext, op Operation) error {
@@ -430,7 +410,6 @@ func applyDeleteOperation(ctx *UpdateContext, op Operation) error {
 	
 	targetPath := filepath.Join(ctx.BundlePath, deleteOp.Path)
 	return os.Remove(targetPath)
-}
 
 // applyPatchOperation applies a patch to a file
 func applyPatchOperation(ctx *UpdateContext, op Operation) error {
@@ -438,7 +417,6 @@ func applyPatchOperation(ctx *UpdateContext, op Operation) error {
 	// This would use bsdiff or similar for binary patches
 	// and unified diff for text patches
 	return fmt.Errorf("patch operations not yet implemented")
-}
 
 // RollbackUpdate rolls back an update using a backup
 func RollbackUpdate(ctx *UpdateContext, backup *Backup) error {
@@ -447,10 +425,9 @@ func RollbackUpdate(ctx *UpdateContext, backup *Backup) error {
 		destPath := filepath.Join(ctx.BundlePath, path)
 		
 		// Ensure directory exists
-		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 			return fmt.Errorf("failed to create directory for %s: %w", path, err)
 		}
-
 		// Restore file
 		if err := copyDeltaFile(backupFile.BackupPath, destPath); err != nil {
 			return fmt.Errorf("failed to restore %s: %w", path, err)
@@ -471,15 +448,14 @@ func RollbackUpdate(ctx *UpdateContext, backup *Backup) error {
 	}
 
 	return nil
-}
 
 // calculateDeltaFileHash calculates SHA-256 hash of a file for delta operations
 func calculateDeltaFileHash(path string) (string, error) {
-	file, err := os.Open(path)
+	file, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	h := sha256.New()
 	if _, err := io.Copy(h, file); err != nil {
@@ -487,25 +463,22 @@ func calculateDeltaFileHash(path string) (string, error) {
 	}
 
 	return fmt.Sprintf("sha256:%x", h.Sum(nil)), nil
-}
-
 // copyDeltaFile copies a file from source to destination for delta operations
 func copyDeltaFile(src, dst string) error {
-	source, err := os.Open(src)
+	source, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return err
 	}
-	defer source.Close()
+	defer func() { if err := source.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	destination, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer destination.Close()
+	defer func() { if err := destination.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	_, err = io.Copy(destination, source)
 	return err
-}
 
 // CompressDelta compresses a delta bundle
 func CompressDelta(deltaPath string, outputPath string) error {
@@ -513,14 +486,12 @@ func CompressDelta(deltaPath string, outputPath string) error {
 	if err != nil {
 		return err
 	}
-	defer output.Close()
-
+	defer func() { if err := output.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	gzWriter := gzip.NewWriter(output)
-	defer gzWriter.Close()
+	defer func() { if err := gzWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// TODO: Implement tar + gzip compression of delta directory
 	return fmt.Errorf("delta compression not yet implemented")
-}
 
 // Update applies an update to the bundle
 func (uc *UpdateContext) Update() error {
@@ -554,7 +525,6 @@ func (uc *UpdateContext) Update() error {
 	}
 
 	return nil
-}
 
 // updateVersionInfo updates the bundle version information
 func (uc *UpdateContext) updateVersionInfo() error {
@@ -562,7 +532,7 @@ func (uc *UpdateContext) updateVersionInfo() error {
 	manifestPath := filepath.Join(uc.BundlePath, "manifest.json")
 	
 	// Load current manifest
-	data, err := os.ReadFile(manifestPath)
+	data, err := os.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return err
 	}
@@ -582,5 +552,12 @@ func (uc *UpdateContext) updateVersionInfo() error {
 		return err
 	}
 
-	return os.WriteFile(manifestPath, updatedData, 0644)
+}
+}
+}
+}
+}
+}
+}
+}
 }

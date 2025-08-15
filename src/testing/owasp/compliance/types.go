@@ -12,12 +12,10 @@ type ComplianceStandard string
 // ID returns the ID of the compliance standard
 func (s ComplianceStandard) ID() string {
 	return string(s)
-}
 
 // Name returns the name of the compliance standard
 func (s ComplianceStandard) Name() string {
 	return string(s)
-}
 
 // Supported compliance standards
 const (
@@ -45,7 +43,6 @@ type ComplianceRequirement struct {
 	Category string `json:"category"`
 	// References contains links to additional information about the requirement
 	References []string `json:"references"`
-}
 
 // ComplianceMapping represents a mapping between a vulnerability type and compliance requirements
 type ComplianceMapping struct {
@@ -53,7 +50,6 @@ type ComplianceMapping struct {
 	VulnerabilityType types.VulnerabilityType `json:"vulnerability_type"`
 	// Requirements is a list of compliance requirements that this vulnerability maps to
 	Requirements []*ComplianceRequirement `json:"requirements"`
-}
 
 // ComplianceReport represents a compliance report for a test suite
 type ComplianceReport struct {
@@ -75,7 +71,6 @@ type ComplianceReport struct {
 	OverallCompliance float64 `json:"overall_compliance"`
 	// Options contains the options used to generate the report
 	Options *ComplianceReportOptions `json:"options,omitempty"`
-}
 
 // StandardComplianceResult represents compliance results for a specific standard
 type StandardComplianceResult struct {
@@ -95,7 +90,6 @@ type StandardComplianceResult struct {
 	TotalRequirements int `json:"total_requirements"`
 	// Summary is a summary of the compliance results
 	Summary string `json:"summary"`
-}
 
 // RequirementComplianceResult represents compliance results for a specific requirement
 type RequirementComplianceResult struct {
@@ -113,7 +107,6 @@ type RequirementComplianceResult struct {
 	Recommendations []string `json:"recommendations"`
 	// Reason contains the reason for compliance or non-compliance
 	Reason string `json:"reason,omitempty"`
-}
 
 // ComplianceReportOptions represents options for generating a compliance report
 type ComplianceReportOptions struct {
@@ -130,5 +123,3 @@ type ComplianceReportOptions struct {
 	// Title is the title of the report
 	Title string `json:"title"`
 	// Metadata contains additional metadata for the report
-	Metadata map[string]interface{} `json:"metadata"`
-}

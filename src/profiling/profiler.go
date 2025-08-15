@@ -70,7 +70,6 @@ type MetricValue struct {
 	Timestamp time.Time
 	// Labels are additional metadata for the measurement
 	Labels map[string]string
-}
 
 // MetricSeries represents a series of metric measurements
 type MetricSeries struct {
@@ -86,7 +85,6 @@ type MetricSeries struct {
 	Summary MetricSummary
 	// mutex protects the metric series
 	mutex sync.RWMutex
-}
 
 // MetricSummary contains summary statistics for a metric series
 type MetricSummary struct {
@@ -106,7 +104,6 @@ type MetricSummary struct {
 	StdDev float64
 	// Count is the number of measurements
 	Count int
-}
 
 // Profiler collects and analyzes performance metrics
 type Profiler struct {
@@ -124,7 +121,6 @@ type Profiler struct {
 	isRunning bool
 	// config is the profiler configuration
 	config *ProfilerConfig
-}
 
 // ProfilerConfig contains configuration for the profiler
 type ProfilerConfig struct {
@@ -142,7 +138,6 @@ type ProfilerConfig struct {
 	MaxSamples int
 	// Tags are additional metadata for all metrics
 	Tags map[string]string
-}
 
 // NewProfiler creates a new profiler
 func NewProfiler(config *ProfilerConfig) *Profiler {
@@ -164,7 +159,6 @@ func NewProfiler(config *ProfilerConfig) *Profiler {
 		startTime: time.Now(),
 		config:    config,
 	}
-}
 
 // Start starts the profiler
 func (p *Profiler) Start() error {
@@ -192,7 +186,6 @@ func (p *Profiler) Start() error {
 	p.startTime = time.Now()
 
 	return nil
-}
 
 // Stop stops the profiler
 func (p *Profiler) Stop() error {
@@ -218,7 +211,7 @@ func (p *Profiler) Stop() error {
 		if err != nil {
 			return fmt.Errorf("failed to create memory profile file: %w", err)
 		}
-		defer f.Close()
+		defer func() { if err := f.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		runtime.GC() // Get up-to-date statistics
 		if err := pprof.WriteHeapProfile(f); err != nil {
 			return fmt.Errorf("failed to write memory profile: %w", err)
@@ -228,7 +221,6 @@ func (p *Profiler) Stop() error {
 	p.isRunning = false
 
 	return nil
-}
 
 // RegisterMetric registers a new metric
 func (p *Profiler) RegisterMetric(name string, metricType MetricType, description string, unit MetricUnit) {
@@ -252,7 +244,6 @@ func (p *Profiler) RegisterMetric(name string, metricType MetricType, descriptio
 			Count: 0,
 		},
 	}
-}
 
 // RecordMetric records a metric value
 func (p *Profiler) RecordMetric(name string, value float64, labels map[string]string) {
@@ -317,12 +308,10 @@ func (p *Profiler) RecordMetric(name string, value float64, labels map[string]st
 	if metric.Summary.Count%10 == 0 {
 		p.updateMetricSummary(metric)
 	}
-}
 
 // RecordDuration records a duration metric
 func (p *Profiler) RecordDuration(name string, duration time.Duration, labels map[string]string) {
 	p.RecordMetric(name, float64(duration.Milliseconds()), labels)
-}
 
 // StartTimer starts a timer for measuring durations
 func (p *Profiler) StartTimer(name string, labels map[string]string) func() {
@@ -331,7 +320,6 @@ func (p *Profiler) StartTimer(name string, labels map[string]string) func() {
 		duration := time.Since(startTime)
 		p.RecordDuration(name, duration, labels)
 	}
-}
 
 // GetMetric gets a metric by name
 func (p *Profiler) GetMetric(name string) (*MetricSeries, bool) {
@@ -340,7 +328,6 @@ func (p *Profiler) GetMetric(name string) (*MetricSeries, bool) {
 
 	metric, exists := p.metrics[name]
 	return metric, exists
-}
 
 // GetMetrics gets all metrics
 func (p *Profiler) GetMetrics() map[string]*MetricSeries {
@@ -354,7 +341,6 @@ func (p *Profiler) GetMetrics() map[string]*MetricSeries {
 	}
 
 	return metrics
-}
 
 // GetReport generates a profiling report
 func (p *Profiler) GetReport() map[string]interface{} {
@@ -411,7 +397,6 @@ func (p *Profiler) GetReport() map[string]interface{} {
 	report["metrics"] = metricSummaries
 
 	return report
-}
 
 // SaveReport saves a profiling report to a file
 func (p *Profiler) SaveReport(filePath string) error {
@@ -422,7 +407,7 @@ func (p *Profiler) SaveReport(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create report file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Write report header
 	fmt.Fprintf(file, "Profiling Report - %s\n", report["timestamp"])
@@ -463,9 +448,7 @@ func (p *Profiler) SaveReport(filePath string) error {
 			}
 		}
 	}
-
 	return nil
-}
 
 // CaptureMemoryProfile captures a memory profile
 func (p *Profiler) CaptureMemoryProfile(filePath string) error {
@@ -474,18 +457,15 @@ func (p *Profiler) CaptureMemoryProfile(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create memory profile file: %w", err)
 	}
-	defer file.Close()
-
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	// Run garbage collection to get up-to-date statistics
 	runtime.GC()
-
 	// Write heap profile
 	if err := pprof.WriteHeapProfile(file); err != nil {
 		return fmt.Errorf("failed to write memory profile: %w", err)
 	}
 
 	return nil
-}
 
 // CaptureCPUProfile captures a CPU profile
 func (p *Profiler) CaptureCPUProfile(filePath string, duration time.Duration) error {
@@ -494,7 +474,7 @@ func (p *Profiler) CaptureCPUProfile(filePath string, duration time.Duration) er
 	if err != nil {
 		return fmt.Errorf("failed to create CPU profile file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Start CPU profiling
 	if err := pprof.StartCPUProfile(file); err != nil {
@@ -508,19 +488,16 @@ func (p *Profiler) CaptureCPUProfile(filePath string, duration time.Duration) er
 	pprof.StopCPUProfile()
 
 	return nil
-}
 
 // RecordMemoryUsage records current memory usage
 func (p *Profiler) RecordMemoryUsage(name string, labels map[string]string) {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 	p.RecordMetric(name, float64(memStats.Alloc), labels)
-}
 
 // RecordGoroutineCount records current goroutine count
 func (p *Profiler) RecordGoroutineCount(name string, labels map[string]string) {
 	p.RecordMetric(name, float64(runtime.NumGoroutine()), labels)
-}
 
 // updateMetricSummary updates the summary statistics for a metric
 func (p *Profiler) updateMetricSummary(metric *MetricSeries) {
@@ -564,7 +541,6 @@ func (p *Profiler) updateMetricSummary(metric *MetricSeries) {
 		}
 		metric.Summary.StdDev = (sumSquaredDiff / float64(len(values)-1))
 	}
-}
 
 // sortFloat64s sorts a slice of float64 values
 func sortFloat64s(values []float64) {
@@ -576,4 +552,3 @@ func sortFloat64s(values []float64) {
 			}
 		}
 	}
-}

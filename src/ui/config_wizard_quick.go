@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"os"
 	"fmt"
 )
 
@@ -43,9 +44,9 @@ func (qs *QuickSetup) basicSetup() error {
 		
 	case 3: // Local
 		provider.Type = "local"
-		endpoint, _ := qs.wizard.terminal.Prompt("Local model endpoint (default: http://localhost:8080): ")
+		endpoint, _ := qs.wizard.terminal.Prompt("Local model endpoint (default: https://localhost:8443): ")
 		if endpoint == "" {
-			endpoint = "http://localhost:8080"
+			endpoint = "https://localhost:8443"
 		}
 		provider.Endpoint = endpoint
 	}
@@ -95,7 +96,6 @@ func (qs *QuickSetup) basicSetup() error {
 	}
 
 	return qs.saveQuickConfig("basic")
-}
 
 func (qs *QuickSetup) professionalSetup() error {
 	qs.wizard.terminal.Info("Setting up professional configuration...")
@@ -187,7 +187,6 @@ func (qs *QuickSetup) professionalSetup() error {
 	}
 
 	return qs.saveQuickConfig("professional")
-}
 
 func (qs *QuickSetup) enterpriseSetup() error {
 	qs.wizard.terminal.Info("Setting up enterprise configuration...")
@@ -303,7 +302,6 @@ func (qs *QuickSetup) enterpriseSetup() error {
 	}
 
 	return qs.saveQuickConfig("enterprise")
-}
 
 func (qs *QuickSetup) developmentSetup() error {
 	qs.wizard.terminal.Info("Setting up development configuration...")
@@ -314,7 +312,7 @@ func (qs *QuickSetup) developmentSetup() error {
 			Name:     "Local LLaMA",
 			Type:     "local",
 			Enabled:  true,
-			Endpoint: "http://localhost:8080",
+			Endpoint: "https://localhost:8443",
 			Model:    "llama-2-7b",
 			Settings: map[string]interface{}{
 				"temperature": 0.7,
@@ -377,7 +375,6 @@ func (qs *QuickSetup) developmentSetup() error {
 	}
 
 	return qs.saveQuickConfig("development")
-}
 
 func (qs *QuickSetup) cicdSetup() error {
 	qs.wizard.terminal.Info("Setting up CI/CD pipeline configuration...")
@@ -448,13 +445,11 @@ func (qs *QuickSetup) cicdSetup() error {
 	}
 
 	return qs.saveQuickConfig("cicd")
-}
 
 // Helper methods
 
 func (qs *QuickSetup) promptAPIKey(provider string) (string, error) {
 	return qs.wizard.promptAPIKey(provider)
-}
 
 func (qs *QuickSetup) saveQuickConfig(preset string) error {
 	qs.wizard.terminal.Info("\nConfiguration Summary:")
@@ -472,7 +467,7 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 	default:
 		homeDir, _ := os.UserHomeDir()
 		configDir := filepath.Join(homeDir, ".LLMrecon")
-		os.MkdirAll(configDir, 0755)
+		os.MkdirAll(configDir, 0700)
 		configPath = filepath.Join(configDir, "config.yaml")
 	}
 
@@ -528,5 +523,3 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 		}, true)
 	}
 
-	return nil
-}

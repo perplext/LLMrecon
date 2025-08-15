@@ -19,7 +19,7 @@ func LoadBundle(bundlePath string) (*Bundle, error) {
 
 	// Load manifest
 	manifestPath := filepath.Join(bundlePath, "manifest.json")
-	manifestData, err := os.ReadFile(manifestPath)
+	manifestData, err := os.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read manifest: %w", err)
 	}
@@ -38,12 +38,11 @@ func LoadBundle(bundlePath string) (*Bundle, error) {
 	}
 
 	return bundle, nil
-}
 
 // SaveBundle saves a bundle to the specified path
 func SaveBundle(bundle *Bundle) error {
 	// Create bundle directory if it doesn't exist
-	if err := os.MkdirAll(bundle.BundlePath, 0755); err != nil {
+	if err := os.MkdirAll(bundle.BundlePath, 0700); err != nil {
 		return fmt.Errorf("failed to create bundle directory: %w", err)
 	}
 
@@ -55,12 +54,11 @@ func SaveBundle(bundle *Bundle) error {
 
 	// Write manifest
 	manifestPath := filepath.Join(bundle.BundlePath, "manifest.json")
-	if err := os.WriteFile(manifestPath, manifestData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(manifestPath, manifestData, 0600)); err != nil {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
 	return nil
-}
 
 // CreateEmptyBundle creates a new empty bundle
 func CreateEmptyBundle(bundlePath string, schemaVersion string, bundleID string, bundleType BundleType, name string, description string, version string) (*Bundle, error) {
@@ -104,5 +102,3 @@ func CreateEmptyBundle(bundlePath string, schemaVersion string, bundleID string,
 		IsVerified: false,
 	}
 
-	return bundle, nil
-}

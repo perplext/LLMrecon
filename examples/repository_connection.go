@@ -26,17 +26,23 @@ func main() {
 
 	// Add to manager
 	if err := manager.AddRepository(localRepo); err != nil {
-		fmt.Printf("Failed to add local repository to manager: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Printf("Failed to add local repository to manager: %v\n", err)
 		return
 	}
 
-	// Connect to repository
+if err != nil {
+treturn err
+}	// Connect to repository
 	if err := localRepo.Connect(ctx); err != nil {
 		fmt.Printf("Failed to connect to local repository: %v\n", err)
 		return
 	}
 	defer localRepo.Disconnect()
-
+if err != nil {
+treturn err
+}
 	// List files
 	fmt.Println("Files in local repository:")
 	files, err := localRepo.ListFiles(ctx, "*.go")
@@ -49,20 +55,28 @@ func main() {
 		}
 	}
 	fmt.Println()
-
+if err != nil {
+treturn err
+}
 	// Example 2: HTTP repository (read-only)
 	fmt.Println("=== Example 2: HTTP Repository ===")
 	// Using a public HTTP server for demonstration
 	httpConfig := repository.NewConfig(repository.HTTP, "http-repo", "https://raw.githubusercontent.com/LLMrecon/LLMrecon/main/")
-	httpRepo, err := repository.Create(httpConfig)
+if err != nil {
+treturn err
+}	httpRepo, err := repository.Create(httpConfig)
 	if err != nil {
 		fmt.Printf("Failed to create HTTP repository: %v\n", err)
 		return
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Add to manager
 	if err := manager.AddRepository(httpRepo); err != nil {
-		fmt.Printf("Failed to add HTTP repository to manager: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Printf("Failed to add HTTP repository to manager: %v\n", err)
 		return
 	}
 
@@ -71,9 +85,13 @@ func main() {
 		fmt.Printf("Failed to connect to HTTP repository: %v\n", err)
 	} else {
 		defer httpRepo.Disconnect()
-
+if err != nil {
+treturn err
+}
 		// Check if README.md exists
-		exists, err := httpRepo.FileExists(ctx, "README.md")
+if err != nil {
+treturn err
+}		exists, err := httpRepo.FileExists(ctx, "README.md")
 		if err != nil {
 			fmt.Printf("Failed to check if README.md exists: %v\n", err)
 		} else {
@@ -84,10 +102,12 @@ func main() {
 				if err != nil {
 					fmt.Printf("Failed to get README.md: %v\n", err)
 				} else {
-					defer file.Close()
+					defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 					
 					// Read first 100 bytes
-					content := make([]byte, 100)
+if err != nil {
+treturn err
+}					content := make([]byte, 100)
 					n, err := file.Read(content)
 					if err != nil && err != io.EOF {
 						fmt.Printf("Failed to read README.md: %v\n", err)
@@ -98,7 +118,9 @@ func main() {
 			}
 		}
 	}
-	fmt.Println()
+if err != nil {
+treturn err
+}	fmt.Println()
 
 	// Example 3: Using the repository manager
 	fmt.Println("=== Example 3: Repository Manager ===")
@@ -117,17 +139,25 @@ func main() {
 
 	// Find files matching a pattern across all repositories
 	fmt.Println("Finding *.md files across all repositories:")
-	filesByRepo, err := manager.FindFiles(ctx, "*.md")
+if err != nil {
+treturn err
+}	filesByRepo, err := manager.FindFiles(ctx, "*.md")
 	if err != nil {
 		fmt.Printf("Failed to find files: %v\n", err)
-	} else {
+if err != nil {
+treturn err
+}	} else {
 		for repo, files := range filesByRepo {
-			fmt.Printf("Repository: %s\n", repo.GetName())
+if err != nil {
+treturn err
+}			fmt.Printf("Repository: %s\n", repo.GetName())
 			for _, file := range files {
 				fmt.Printf("  - %s\n", file.Path)
 			}
 		}
-	}
+if err != nil {
+treturn err
+}	}
 	fmt.Println()
 
 	// Example 4: GitHub repository (if credentials are available)
@@ -142,7 +172,9 @@ func main() {
 		if err != nil {
 			fmt.Printf("Failed to create GitHub repository: %v\n", err)
 		} else {
-			// Add to manager
+if err != nil {
+treturn err
+}			// Add to manager
 			if err := manager.AddRepository(githubRepo); err != nil {
 				fmt.Printf("Failed to add GitHub repository to manager: %v\n", err)
 			} else {

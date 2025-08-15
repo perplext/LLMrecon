@@ -21,7 +21,6 @@ type HTTPRepository struct {
 	
 	// auditLogger is the audit logger for repository operations
 	auditLogger *RepositoryAuditLogger
-}
 
 // NewHTTPRepository creates a new HTTP repository
 func NewHTTPRepository(config *Config) (Repository, error) {
@@ -51,7 +50,6 @@ func NewHTTPRepository(config *Config) (Repository, error) {
 		baseURL:        baseURL,
 		auditLogger:    auditLogger,
 	}, nil
-}
 
 // Connect establishes a connection to the HTTP repository
 func (r *HTTPRepository) Connect(ctx context.Context) error {
@@ -107,7 +105,7 @@ func (r *HTTPRepository) Connect(ctx context.Context) error {
 		r.setLastError(err)
 		return fmt.Errorf("failed to connect to HTTP repository: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Check response status
 	if resp.StatusCode >= 400 {
@@ -120,7 +118,6 @@ func (r *HTTPRepository) Connect(ctx context.Context) error {
 	r.setConnected(true)
 	
 	return nil
-}
 
 // Disconnect closes the connection to the HTTP repository
 func (r *HTTPRepository) Disconnect() error {
@@ -136,7 +133,6 @@ func (r *HTTPRepository) Disconnect() error {
 	r.client = nil
 	
 	return nil
-}
 
 // ListFiles lists files in the HTTP repository matching the pattern
 // Note: HTTP repositories typically don't support directory listing,
@@ -161,7 +157,7 @@ func (r *HTTPRepository) ListFiles(ctx context.Context, pattern string) ([]FileI
 		return nil, err
 	}
 	defer r.ReleaseConnection()
-	
+		
 	// Create result slice
 	var result []FileInfo
 	
@@ -183,7 +179,7 @@ func (r *HTTPRepository) ListFiles(ctx context.Context, pattern string) ([]FileI
 		if err != nil {
 			return err
 		}
-		defer resp.Body.Close()
+		defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		
 		// Check response status
 		if resp.StatusCode != http.StatusOK {
@@ -268,7 +264,6 @@ func (r *HTTPRepository) ListFiles(ctx context.Context, pattern string) ([]FileI
 	}
 	
 	return result, nil
-}
 
 // extractLinksFromHTML extracts links from HTML content
 // This is a simplified implementation and may not work for all HTML formats
@@ -306,7 +301,6 @@ func extractLinksFromHTML(html string) []string {
 	}
 	
 	return links
-}
 
 // GetFile retrieves a file from the HTTP repository
 func (r *HTTPRepository) GetFile(ctx context.Context, filePath string) (io.ReadCloser, error) {
@@ -394,7 +388,7 @@ func (r *HTTPRepository) GetFile(ctx context.Context, filePath string) (io.ReadC
 		filePath:    filePath,
 		baseURL:     r.baseURL,
 	}, nil
-}
+	
 
 // connectionCloser wraps an io.ReadCloser and calls a release function when closed
 type connectionCloser struct {
@@ -404,12 +398,11 @@ type connectionCloser struct {
 	auditLogger *RepositoryAuditLogger
 	filePath    string
 	baseURL     string
-}
 
 // Close closes the underlying ReadCloser and calls the release function
 func (c *connectionCloser) Close() error {
 	// Close the underlying ReadCloser
-	err := c.ReadCloser.Close()
+		err := c.ReadCloser.Close()
 	
 	// Call the release function
 	c.release()
@@ -420,7 +413,6 @@ func (c *connectionCloser) Close() error {
 	}
 	
 	return err
-}
 
 // FileExists checks if a file exists in the HTTP repository
 func (r *HTTPRepository) FileExists(ctx context.Context, filePath string) (bool, error) {
@@ -465,7 +457,7 @@ func (r *HTTPRepository) FileExists(ctx context.Context, filePath string) (bool,
 			}
 			return err
 		}
-		defer resp.Body.Close()
+		defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		
 		// Check response status
 		if resp.StatusCode == http.StatusOK {
@@ -479,9 +471,8 @@ func (r *HTTPRepository) FileExists(ctx context.Context, filePath string) (bool,
 			// Log file does not exist
 			if r.auditLogger != nil {
 				r.auditLogger.LogFileExists(ctx, r.baseURL, filePath, false)
-			}
+				}
 		} else {
-			// Create error for unexpected status code
 			statusErr := fmt.Errorf("HTTP repository returned status code %d for file %s", resp.StatusCode, filePath)
 			
 			// Log file exists check failure
@@ -500,13 +491,11 @@ func (r *HTTPRepository) FileExists(ctx context.Context, filePath string) (bool,
 	}
 	
 	return exists, nil
-}
 
 // GetBranch returns the branch of the repository
 // HTTP repositories don't have branches, so this returns an empty string
 func (r *HTTPRepository) GetBranch() string {
 	return ""
-}
 
 // GetLastModified gets the last modified time of a file in the HTTP repository
 func (r *HTTPRepository) GetLastModified(ctx context.Context, filePath string) (time.Time, error) {
@@ -543,7 +532,7 @@ func (r *HTTPRepository) GetLastModified(ctx context.Context, filePath string) (
 		if err != nil {
 			return err
 		}
-		defer resp.Body.Close()
+		defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		
 		// Check response status
 		if resp.StatusCode != http.StatusOK {
@@ -594,5 +583,3 @@ func (r *HTTPRepository) GetLastModified(ctx context.Context, filePath string) (
 		r.auditLogger.LogGetLastModified(ctx, r.baseURL, filePath, lastModified)
 	}
 	
-	return lastModified, nil
-}

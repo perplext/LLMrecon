@@ -19,12 +19,10 @@ func NewUserStoreAdapter(store interfaces.UserStore) *UserStoreAdapter {
 	return &UserStoreAdapter{
 		store: store,
 	}
-}
 
 // Close closes the user store
 func (a *UserStoreAdapter) Close() error {
 	return a.store.Close()
-}
 
 // CreateUser creates a new user
 func (a *UserStoreAdapter) CreateUser(ctx context.Context, user *models.User) error {
@@ -38,7 +36,6 @@ func (a *UserStoreAdapter) CreateUser(ctx context.Context, user *models.User) er
 	}
 	
 	return nil
-}
 
 // GetUserByID retrieves a user by ID
 func (a *UserStoreAdapter) GetUserByID(ctx context.Context, id string) (*models.User, error) {
@@ -52,7 +49,6 @@ func (a *UserStoreAdapter) GetUserByID(ctx context.Context, id string) (*models.
 	user := converters.InterfaceUserToModelUser(interfaceUser)
 	
 	return user, nil
-}
 
 // GetUserByUsername retrieves a user by username
 func (a *UserStoreAdapter) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
@@ -66,7 +62,6 @@ func (a *UserStoreAdapter) GetUserByUsername(ctx context.Context, username strin
 	user := converters.InterfaceUserToModelUser(interfaceUser)
 	
 	return user, nil
-}
 
 // GetUserByEmail retrieves a user by email
 func (a *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -80,7 +75,6 @@ func (a *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*m
 	user := converters.InterfaceUserToModelUser(interfaceUser)
 	
 	return user, nil
-}
 
 // UpdateUser updates an existing user
 func (a *UserStoreAdapter) UpdateUser(ctx context.Context, user *models.User) error {
@@ -94,13 +88,11 @@ func (a *UserStoreAdapter) UpdateUser(ctx context.Context, user *models.User) er
 	}
 	
 	return nil
-}
 
 // DeleteUser deletes a user by ID
 func (a *UserStoreAdapter) DeleteUser(ctx context.Context, id string) error {
 	// Delete user from store
 	return a.store.DeleteUser(ctx, id)
-}
 
 // ListUsers lists all users
 func (a *UserStoreAdapter) ListUsers(ctx context.Context) ([]*models.User, error) {
@@ -116,5 +108,11 @@ func (a *UserStoreAdapter) ListUsers(ctx context.Context) ([]*models.User, error
 		users[i] = converters.InterfaceUserToModelUser(interfaceUser)
 	}
 	
-	return users, nil
+}
+}
+}
+}
+}
+}
+}
 }

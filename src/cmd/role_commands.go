@@ -298,7 +298,6 @@ func initRoleCommands() {
 			})
 
 			fmt.Printf("Role deleted successfully: %s\n", roleName)
-
 			return nil
 		},
 	}
@@ -357,7 +356,6 @@ func initRoleCommands() {
 					"permission_name": permissionName,
 				},
 			})
-
 			fmt.Printf("Permission added to role successfully:\n")
 			fmt.Printf("Role: %s\n", roleName)
 			fmt.Printf("Permission: %s\n", permissionName)
@@ -424,7 +422,6 @@ func initRoleCommands() {
 			fmt.Printf("Permission removed from role successfully:\n")
 			fmt.Printf("Role: %s\n", roleName)
 			fmt.Printf("Permission: %s\n", permissionName)
-
 			return nil
 		},
 	}
@@ -501,4 +498,3 @@ func initRoleCommands() {
 		},
 	}
 	roleCmd.AddCommand(checkRoleCmd)
-}

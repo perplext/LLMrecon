@@ -12,7 +12,6 @@ type DefaultProviderFactory struct {
 	providerCreators map[ProviderType]ProviderCreator
 	// mutex is a mutex for concurrent access to providerCreators
 	mutex sync.RWMutex
-}
 
 // ProviderCreator is a function that creates a provider with the given configuration
 type ProviderCreator func(config *ProviderConfig) (Provider, error)
@@ -22,14 +21,12 @@ func NewDefaultProviderFactory() *DefaultProviderFactory {
 	return &DefaultProviderFactory{
 		providerCreators: make(map[ProviderType]ProviderCreator),
 	}
-}
 
 // RegisterProviderCreator registers a provider creator function for a provider type
 func (f *DefaultProviderFactory) RegisterProviderCreator(providerType ProviderType, creator ProviderCreator) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 	f.providerCreators[providerType] = creator
-}
 
 // CreateProvider creates a provider with the given configuration
 func (f *DefaultProviderFactory) CreateProvider(config *ProviderConfig) (Provider, error) {
@@ -42,7 +39,6 @@ func (f *DefaultProviderFactory) CreateProvider(config *ProviderConfig) (Provide
 	}
 
 	return creator(config)
-}
 
 // GetSupportedProviderTypes returns the provider types supported by this factory
 func (f *DefaultProviderFactory) GetSupportedProviderTypes() []ProviderType {
@@ -55,7 +51,6 @@ func (f *DefaultProviderFactory) GetSupportedProviderTypes() []ProviderType {
 	}
 
 	return types
-}
 
 // DefaultProviderRegistry is the default implementation of the ProviderRegistry interface
 type DefaultProviderRegistry struct {
@@ -69,7 +64,6 @@ type DefaultProviderRegistry struct {
 	capabilityProviderMap map[ModelCapability][]ProviderType
 	// mutex is a mutex for concurrent access to the registry
 	mutex sync.RWMutex
-}
 
 // NewDefaultProviderRegistry creates a new default provider registry
 func NewDefaultProviderRegistry() *DefaultProviderRegistry {
@@ -79,7 +73,6 @@ func NewDefaultProviderRegistry() *DefaultProviderRegistry {
 		modelProviderMap:     make(map[string]ProviderType),
 		capabilityProviderMap: make(map[ModelCapability][]ProviderType),
 	}
-}
 
 // RegisterProvider registers a provider
 func (r *DefaultProviderRegistry) RegisterProvider(provider Provider) error {
@@ -110,7 +103,6 @@ func (r *DefaultProviderRegistry) RegisterProvider(provider Provider) error {
 	}
 
 	return nil
-}
 
 // RegisterProviderFactory registers a provider factory
 func (r *DefaultProviderRegistry) RegisterProviderFactory(factory ProviderFactory) error {
@@ -119,7 +111,6 @@ func (r *DefaultProviderRegistry) RegisterProviderFactory(factory ProviderFactor
 
 	r.providerFactories = append(r.providerFactories, factory)
 	return nil
-}
 
 // GetProvider returns a provider by type
 func (r *DefaultProviderRegistry) GetProvider(providerType ProviderType) (Provider, error) {
@@ -155,7 +146,6 @@ func (r *DefaultProviderRegistry) GetProvider(providerType ProviderType) (Provid
 	}
 
 	return nil, fmt.Errorf("provider with type %s not found", providerType)
-}
 
 // GetProviderByModel returns a provider that supports a specific model
 func (r *DefaultProviderRegistry) GetProviderByModel(modelID string) (Provider, error) {
@@ -168,7 +158,6 @@ func (r *DefaultProviderRegistry) GetProviderByModel(modelID string) (Provider, 
 	}
 
 	return r.GetProvider(providerType)
-}
 
 // GetProviderByCapability returns a provider that supports a specific capability
 func (r *DefaultProviderRegistry) GetProviderByCapability(capability ModelCapability) (Provider, error) {
@@ -182,7 +171,6 @@ func (r *DefaultProviderRegistry) GetProviderByCapability(capability ModelCapabi
 
 	// Return the first provider that supports the capability
 	return r.GetProvider(providerTypes[0])
-}
 
 // GetAllProviders returns all registered providers
 func (r *DefaultProviderRegistry) GetAllProviders() []Provider {
@@ -195,7 +183,6 @@ func (r *DefaultProviderRegistry) GetAllProviders() []Provider {
 	}
 
 	return providers
-}
 
 // GetAllProviderTypes returns all registered provider types
 func (r *DefaultProviderRegistry) GetAllProviderTypes() []ProviderType {
@@ -208,7 +195,6 @@ func (r *DefaultProviderRegistry) GetAllProviderTypes() []ProviderType {
 	}
 
 	return types
-}
 
 // DefaultModelRegistry is the default implementation of the ModelRegistry interface
 type DefaultModelRegistry struct {
@@ -222,7 +208,6 @@ type DefaultModelRegistry struct {
 	capabilityModels map[ModelCapability][]string
 	// mutex is a mutex for concurrent access to the registry
 	mutex sync.RWMutex
-}
 
 // NewDefaultModelRegistry creates a new default model registry
 func NewDefaultModelRegistry() *DefaultModelRegistry {
@@ -232,7 +217,6 @@ func NewDefaultModelRegistry() *DefaultModelRegistry {
 		typeModels:      make(map[ModelType][]string),
 		capabilityModels: make(map[ModelCapability][]string),
 	}
-}
 
 // RegisterModel registers a model
 func (r *DefaultModelRegistry) RegisterModel(model *ModelInfo) error {
@@ -266,7 +250,6 @@ func (r *DefaultModelRegistry) RegisterModel(model *ModelInfo) error {
 	}
 
 	return nil
-}
 
 // GetModel returns a model by ID
 func (r *DefaultModelRegistry) GetModel(modelID string) (*ModelInfo, error) {
@@ -279,7 +262,6 @@ func (r *DefaultModelRegistry) GetModel(modelID string) (*ModelInfo, error) {
 	}
 
 	return model, nil
-}
 
 // GetModelsByProvider returns models by provider
 func (r *DefaultModelRegistry) GetModelsByProvider(providerType ProviderType) ([]*ModelInfo, error) {
@@ -297,7 +279,6 @@ func (r *DefaultModelRegistry) GetModelsByProvider(providerType ProviderType) ([
 	}
 
 	return models, nil
-}
 
 // GetModelsByType returns models by type
 func (r *DefaultModelRegistry) GetModelsByType(modelType ModelType) ([]*ModelInfo, error) {
@@ -315,7 +296,6 @@ func (r *DefaultModelRegistry) GetModelsByType(modelType ModelType) ([]*ModelInf
 	}
 
 	return models, nil
-}
 
 // GetModelsByCapability returns models by capability
 func (r *DefaultModelRegistry) GetModelsByCapability(capability ModelCapability) ([]*ModelInfo, error) {
@@ -333,7 +313,6 @@ func (r *DefaultModelRegistry) GetModelsByCapability(capability ModelCapability)
 	}
 
 	return models, nil
-}
 
 // GetAllModels returns all registered models
 func (r *DefaultModelRegistry) GetAllModels() []*ModelInfo {
@@ -345,5 +324,3 @@ func (r *DefaultModelRegistry) GetAllModels() []*ModelInfo {
 		models = append(models, model)
 	}
 
-	return models
-}

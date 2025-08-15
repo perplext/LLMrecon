@@ -26,7 +26,6 @@ func NewBundleManager(config *Config, logger Logger) *BundleManager {
 		verifier: NewVerifier(config, logger),
 		logger:   logger,
 	}
-}
 
 // ExportBundle exports an offline update bundle
 func (bm *BundleManager) ExportBundle(options *BundleExportOptions) (*BundleInfo, error) {
@@ -101,7 +100,6 @@ func (bm *BundleManager) ExportBundle(options *BundleExportOptions) (*BundleInfo
 		bundleInfo.Path, FormatFileSize(bundleInfo.Size)))
 	
 	return bundleInfo, nil
-}
 
 // ImportBundle imports an offline update bundle
 func (bm *BundleManager) ImportBundle(bundlePath string, options *BundleImportOptions) (*ImportResult, error) {
@@ -166,7 +164,6 @@ func (bm *BundleManager) ImportBundle(bundlePath string, options *BundleImportOp
 	
 	bm.logger.Info("Bundle import completed successfully")
 	return result, nil
-}
 
 // addBinaryToBundle adds binary to the bundle
 func (bm *BundleManager) addBinaryToBundle(bundle *Bundle, workspaceDir string, totalSize *int64) error {
@@ -179,7 +176,7 @@ func (bm *BundleManager) addBinaryToBundle(bundle *Bundle, workspaceDir string, 
 	binaryName := filepath.Base(execPath)
 	workspacePath := filepath.Join(workspaceDir, "binary", binaryName)
 	
-	if err := os.MkdirAll(filepath.Dir(workspacePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(workspacePath), 0700); err != nil {
 		return err
 	}
 	
@@ -216,7 +213,6 @@ func (bm *BundleManager) addBinaryToBundle(bundle *Bundle, workspaceDir string, 
 	*totalSize += info.Size()
 	
 	return nil
-}
 
 // addTemplatesToBundle adds templates to the bundle
 func (bm *BundleManager) addTemplatesToBundle(bundle *Bundle, workspaceDir string, totalSize *int64) error {
@@ -227,7 +223,7 @@ func (bm *BundleManager) addTemplatesToBundle(bundle *Bundle, workspaceDir strin
 	}
 	
 	templatesWorkspaceDir := filepath.Join(workspaceDir, "templates")
-	if err := os.MkdirAll(templatesWorkspaceDir, 0755); err != nil {
+	if err := os.MkdirAll(templatesWorkspaceDir, 0700); err != nil {
 		return err
 	}
 	
@@ -254,7 +250,7 @@ func (bm *BundleManager) addTemplatesToBundle(bundle *Bundle, workspaceDir strin
 		workspacePath := filepath.Join(templatesWorkspaceDir, relPath)
 		
 		// Create directory if needed
-		if err := os.MkdirAll(filepath.Dir(workspacePath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(workspacePath), 0700); err != nil {
 			return err
 		}
 		
@@ -289,7 +285,6 @@ func (bm *BundleManager) addTemplatesToBundle(bundle *Bundle, workspaceDir strin
 	})
 	
 	return err
-}
 
 // addModulesToBundle adds modules to the bundle
 func (bm *BundleManager) addModulesToBundle(bundle *Bundle, workspaceDir string, totalSize *int64) error {
@@ -300,7 +295,7 @@ func (bm *BundleManager) addModulesToBundle(bundle *Bundle, workspaceDir string,
 	}
 	
 	modulesWorkspaceDir := filepath.Join(workspaceDir, "modules")
-	if err := os.MkdirAll(modulesWorkspaceDir, 0755); err != nil {
+	if err := os.MkdirAll(modulesWorkspaceDir, 0700); err != nil {
 		return err
 	}
 	
@@ -327,7 +322,7 @@ func (bm *BundleManager) addModulesToBundle(bundle *Bundle, workspaceDir string,
 		workspacePath := filepath.Join(modulesWorkspaceDir, relPath)
 		
 		// Create directory if needed
-		if err := os.MkdirAll(filepath.Dir(workspacePath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(workspacePath), 0700); err != nil {
 			return err
 		}
 		
@@ -362,7 +357,6 @@ func (bm *BundleManager) addModulesToBundle(bundle *Bundle, workspaceDir string,
 	})
 	
 	return err
-}
 
 // createBundleArchive creates the final bundle archive
 func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outputPath string, totalSize int64) (*BundleInfo, error) {
@@ -373,12 +367,12 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 		return nil, fmt.Errorf("failed to marshal manifest: %w", err)
 	}
 	
-	if err := os.WriteFile(manifestPath, manifestData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(manifestPath, manifestData, 0600)); err != nil {
 		return nil, fmt.Errorf("failed to write manifest: %w", err)
 	}
 	
 	// Create ZIP archive
-	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0700); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 	
@@ -386,10 +380,10 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bundle file: %w", err)
 	}
-	defer zipFile.Close()
+	defer func() { if err := zipFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
+	defer func() { if err := zipWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Add all files to ZIP
 	err = filepath.Walk(workspaceDir, func(path string, info os.FileInfo, err error) error {
@@ -413,11 +407,11 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 		}
 		
 		// Copy file content
-		file, err := os.Open(path)
+		file, err := os.Open(filepath.Clean(path))
 		if err != nil {
 			return err
 		}
-		defer file.Close()
+		defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		
 		_, err = io.Copy(zipFileWriter, file)
 		return err
@@ -426,7 +420,7 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ZIP archive: %w", err)
 	}
-	
+		
 	// Get final file size
 	zipWriter.Close()
 	zipFile.Close()
@@ -444,7 +438,6 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 		Signed:       false,
 		Bundle:       bundle,
 	}, nil
-}
 
 // verifyBundleIntegrity verifies bundle integrity
 func (bm *BundleManager) verifyBundleIntegrity(bundlePath string) error {
@@ -458,7 +451,6 @@ func (bm *BundleManager) verifyBundleIntegrity(bundlePath string) error {
 	}
 	
 	return nil
-}
 
 // extractBundle extracts and parses a bundle
 func (bm *BundleManager) extractBundle(bundlePath, workspaceDir string) (*Bundle, error) {
@@ -467,7 +459,7 @@ func (bm *BundleManager) extractBundle(bundlePath, workspaceDir string) (*Bundle
 	if err != nil {
 		return nil, fmt.Errorf("failed to open bundle: %w", err)
 	}
-	defer reader.Close()
+	defer func() { if err := reader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Extract files
 	for _, file := range reader.File {
@@ -478,7 +470,7 @@ func (bm *BundleManager) extractBundle(bundlePath, workspaceDir string) (*Bundle
 	
 	// Read manifest
 	manifestPath := filepath.Join(workspaceDir, "manifest.json")
-	manifestData, err := os.ReadFile(manifestPath)
+	manifestData, err := os.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read manifest: %w", err)
 	}
@@ -489,7 +481,6 @@ func (bm *BundleManager) extractBundle(bundlePath, workspaceDir string) (*Bundle
 	}
 	
 	return &bundle, nil
-}
 
 // extractBundleFile extracts a single file from bundle
 func (bm *BundleManager) extractBundleFile(file *zip.File, destDir string) error {
@@ -506,7 +497,7 @@ func (bm *BundleManager) extractBundleFile(file *zip.File, destDir string) error
 	}
 	
 	// Create directory if needed
-	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 		return err
 	}
 	
@@ -515,17 +506,16 @@ func (bm *BundleManager) extractBundleFile(file *zip.File, destDir string) error
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
+	defer func() { if err := reader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	destFile, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	_, err = io.Copy(destFile, reader)
 	return err
-}
 
 // checkVersionCompatibility checks if bundle is compatible
 func (bm *BundleManager) checkVersionCompatibility(bundle *Bundle, options *BundleImportOptions) error {
@@ -555,33 +545,31 @@ func (bm *BundleManager) checkVersionCompatibility(bundle *Bundle, options *Bund
 	}
 	
 	return nil
-}
-
+	
 // Helper functions
 
 func (bm *BundleManager) copyFile(src, dst string) error {
-	sourceFile, err := os.Open(src)
+	sourceFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	defer func() { if err := sourceFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	_, err = io.Copy(destFile, sourceFile)
 	return err
-}
 
 func (bm *BundleManager) calculateFileChecksum(filePath string) (string, error) {
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
@@ -589,22 +577,18 @@ func (bm *BundleManager) calculateFileChecksum(filePath string) (string, error) 
 	}
 	
 	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
-}
 
 func (bm *BundleManager) getCurrentBinaryVersion() string {
 	version, _ := GetCurrentVersion()
 	return version
-}
 
 func (bm *BundleManager) getTemplateVersion(filePath string) string {
 	// Simple version extraction - could be more sophisticated
 	return "1.0.0"
-}
 
 func (bm *BundleManager) getModuleVersion(filePath string) string {
 	// Simple version extraction - could be more sophisticated
 	return "1.0.0"
-}
 
 // Data structures
 
@@ -631,7 +615,6 @@ type BundleImportOptions struct {
 	ForceImport     bool
 	CreateBackup    bool
 	DryRun          bool
-}
 
 type BundleInfo struct {
 	Path           string
@@ -640,7 +623,6 @@ type BundleInfo struct {
 	ComponentCount int
 	Signed         bool
 	Bundle         *Bundle
-}
 
 type ImportResult struct {
 	Success        bool
@@ -658,11 +640,11 @@ func (bm *BundleManager) signBundle(bundlePath string, signingKey *rsa.PrivateKe
 	}
 	
 	// Calculate bundle hash
-	file, err := os.Open(bundlePath)
+	file, err := os.Open(filepath.Clean(bundlePath))
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
@@ -681,13 +663,11 @@ func (bm *BundleManager) signBundle(bundlePath string, signingKey *rsa.PrivateKe
 	signaturePath := bundlePath + ".sig"
 	signatureData := base64.StdEncoding.EncodeToString(signature)
 	
-	return os.WriteFile(signaturePath, []byte(signatureData), 0644)
-}
+	return os.WriteFile(filepath.Clean(signaturePath, []byte(signatureData)), 0600)
 
 func (bm *BundleManager) createImportBackup() error {
 	// Implementation for creating backup before import
 	return nil
-}
 
 func (bm *BundleManager) applyBundleUpdates(bundle *Bundle, workspaceDir string, options *BundleImportOptions) (*ImportResult, error) {
 	result := &ImportResult{
@@ -726,19 +706,33 @@ func (bm *BundleManager) applyBundleUpdates(bundle *Bundle, workspaceDir string,
 	}
 	
 	return result, nil
-}
 
 func (bm *BundleManager) applyBinaryUpdate(sourcePath string) error {
 	// Implementation for applying binary update
 	return nil
-}
 
 func (bm *BundleManager) applyTemplateUpdate(sourcePath string, component ComponentInfo) error {
 	// Implementation for applying template update
 	return nil
-}
 
 func (bm *BundleManager) applyModuleUpdate(sourcePath string, component ComponentInfo) error {
 	// Implementation for applying module update
-	return nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

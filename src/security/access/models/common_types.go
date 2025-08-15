@@ -2,6 +2,7 @@
 package models
 
 import (
+	"time"
 )
 
 // SecurityIncidentSeverity represents the severity of a security incident
@@ -155,5 +156,4 @@ type Vulnerability struct {
 	ResolvedBy      string                `json:"resolved_by,omitempty"`
 	AffectedSystems []string              `json:"affected_systems,omitempty"`
 	CVE             string                `json:"cve,omitempty"`
-	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }

@@ -22,7 +22,6 @@ type GitHubRepository struct {
 	
 	// repo is the GitHub repository name
 	repo string
-}
 
 // NewGitHubRepository creates a new GitHub repository
 func NewGitHubRepository(config *Config) (Repository, error) {
@@ -40,13 +39,12 @@ func NewGitHubRepository(config *Config) (Repository, error) {
 		owner:          owner,
 		repo:           repo,
 	}, nil
-}
 
 // parseGitHubURL parses a GitHub URL to extract owner and repo
 func parseGitHubURL(url string) (string, string, error) {
 	// Remove protocol and domain
 	url = strings.TrimPrefix(url, "https://github.com/")
-	url = strings.TrimPrefix(url, "http://github.com/")
+	url = strings.TrimPrefix(url, "https://github.com/")
 	
 	// Split by slash
 	parts := strings.Split(url, "/")
@@ -61,7 +59,6 @@ func parseGitHubURL(url string) (string, string, error) {
 	repo = strings.TrimSuffix(repo, ".git")
 	
 	return owner, repo, nil
-}
 
 // Connect establishes a connection to the GitHub repository
 func (r *GitHubRepository) Connect(ctx context.Context) error {
@@ -98,7 +95,6 @@ func (r *GitHubRepository) Connect(ctx context.Context) error {
 	r.setConnected(true)
 	
 	return nil
-}
 
 // Disconnect closes the connection to the GitHub repository
 func (r *GitHubRepository) Disconnect() error {
@@ -109,7 +105,6 @@ func (r *GitHubRepository) Disconnect() error {
 	r.client = nil
 	
 	return nil
-}
 
 // ListFiles lists files in the GitHub repository matching the pattern
 func (r *GitHubRepository) ListFiles(ctx context.Context, pattern string) ([]FileInfo, error) {
@@ -125,7 +120,7 @@ func (r *GitHubRepository) ListFiles(ctx context.Context, pattern string) ([]Fil
 	defer r.ReleaseConnection()
 	
 	// Create result slice
-	var result []FileInfo
+		var result []FileInfo
 	
 	// Use WithRetry for the operation
 	err := r.WithRetry(ctx, func() error {
@@ -178,7 +173,6 @@ func (r *GitHubRepository) ListFiles(ctx context.Context, pattern string) ([]Fil
 	}
 	
 	return result, nil
-}
 
 // GetFile retrieves a file from the GitHub repository
 func (r *GitHubRepository) GetFile(ctx context.Context, path string) (io.ReadCloser, error) {
@@ -238,11 +232,10 @@ func (r *GitHubRepository) GetFile(ctx context.Context, path string) (io.ReadClo
 			pw.CloseWithError(fetchErr)
 		} else {
 			pw.Close()
-		}
+			}
 	}()
 	
 	return pr, nil
-}
 
 // FileExists checks if a file exists in the GitHub repository
 func (r *GitHubRepository) FileExists(ctx context.Context, path string) (bool, error) {
@@ -288,13 +281,11 @@ func (r *GitHubRepository) FileExists(ctx context.Context, path string) (bool, e
 		return false, err
 	}
 	
-	return exists, nil
-}
+		return exists, nil
 
 // GetBranch returns the branch of the repository
 func (r *GitHubRepository) GetBranch() string {
 	return r.config.Branch
-}
 
 // GetLastModified gets the last modified time of a file in the GitHub repository
 func (r *GitHubRepository) GetLastModified(ctx context.Context, path string) (time.Time, error) {
@@ -310,7 +301,6 @@ func (r *GitHubRepository) GetLastModified(ctx context.Context, path string) (ti
 	defer r.ReleaseConnection()
 	
 	return r.getFileLastModified(ctx, path)
-}
 
 // getFileLastModified gets the last modified time of a file (internal implementation)
 func (r *GitHubRepository) getFileLastModified(ctx context.Context, path string) (time.Time, error) {
@@ -350,7 +340,6 @@ func (r *GitHubRepository) getFileLastModified(ctx context.Context, path string)
 	}
 	
 	return lastModified, nil
-}
 
 // matchPattern checks if a string matches a pattern (simple wildcard matching)
 func matchPattern(s, pattern string) bool {
@@ -395,5 +384,3 @@ func matchPattern(s, pattern string) bool {
 		current = current[index+len(part):]
 	}
 	
-	return true
-}

@@ -17,7 +17,6 @@ func NewUpdateNotifier(manager *NotificationManager) *UpdateNotifier {
 	return &UpdateNotifier{
 		manager: manager,
 	}
-}
 
 // NotifyAvailableUpdate creates and delivers a notification for an available update
 func (n *UpdateNotifier) NotifyAvailableUpdate(ctx context.Context, versionInfo *update.UpdateVersionInfo) error {
@@ -70,7 +69,6 @@ func (n *UpdateNotifier) NotifyAvailableUpdate(ctx context.Context, versionInfo 
 	}
 
 	return nil
-}
 
 // NotifyRequiredUpdate creates and delivers a notification for a required update
 func (n *UpdateNotifier) NotifyRequiredUpdate(ctx context.Context, versionInfo *update.UpdateVersionInfo) error {
@@ -124,7 +122,6 @@ func (n *UpdateNotifier) NotifyRequiredUpdate(ctx context.Context, versionInfo *
 	}
 
 	return nil
-}
 
 // NotifySecurityUpdate creates and delivers a notification for a security update
 func (n *UpdateNotifier) NotifySecurityUpdate(ctx context.Context, versionInfo *update.UpdateVersionInfo, details string) error {
@@ -159,7 +156,6 @@ func (n *UpdateNotifier) NotifySecurityUpdate(ctx context.Context, versionInfo *
 	if err != nil {
 		return fmt.Errorf("failed to create security update notification: %w", err)
 	}
-
 	// Set action URL if available
 	if versionInfo.DownloadURL != "" {
 		notification.ActionURL = versionInfo.DownloadURL
@@ -173,8 +169,6 @@ func (n *UpdateNotifier) NotifySecurityUpdate(ctx context.Context, versionInfo *
 	}
 
 	return nil
-}
-
 // NotifyUpdateSuccess creates and delivers a notification for a successful update
 func (n *UpdateNotifier) NotifyUpdateSuccess(ctx context.Context, fromVersion, toVersion string) error {
 	// Create metadata for the notification
@@ -205,8 +199,6 @@ func (n *UpdateNotifier) NotifyUpdateSuccess(ctx context.Context, fromVersion, t
 	}
 
 	return nil
-}
-
 // NotifyUpdateFailure creates and delivers a notification for a failed update
 func (n *UpdateNotifier) NotifyUpdateFailure(ctx context.Context, fromVersion, toVersion string, err error) error {
 	// Create metadata for the notification
@@ -219,7 +211,6 @@ func (n *UpdateNotifier) NotifyUpdateFailure(ctx context.Context, fromVersion, t
 	if err != nil {
 		metadata["error"] = err.Error()
 	}
-
 	// Create notification
 	notification, err := n.manager.CreateNotification(
 		UpdateAvailable,
@@ -241,7 +232,6 @@ func (n *UpdateNotifier) NotifyUpdateFailure(ctx context.Context, fromVersion, t
 	}
 
 	return nil
-}
 
 // ScheduleUpdateReminder schedules a reminder notification for a pending update
 func (n *UpdateNotifier) ScheduleUpdateReminder(ctx context.Context, versionInfo *update.UpdateVersionInfo, reminderTime time.Time) error {
@@ -294,5 +284,9 @@ func (n *UpdateNotifier) ScheduleUpdateReminder(ctx context.Context, versionInfo
 		return fmt.Errorf("failed to schedule update reminder notification: %w", err)
 	}
 
-	return nil
+}
+}
+}
+}
+}
 }

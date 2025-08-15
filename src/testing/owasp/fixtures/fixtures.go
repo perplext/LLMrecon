@@ -30,7 +30,6 @@ type TestFixture struct {
 	OWASPMapping string
 	// Metadata is additional metadata for the test fixture
 	Metadata map[string]interface{}
-}
 
 // ToTestCase converts a test fixture to a test case
 func (f *TestFixture) ToTestCase() *types.TestCase {
@@ -47,7 +46,6 @@ func (f *TestFixture) ToTestCase() *types.TestCase {
 		OWASPMapping:      f.OWASPMapping,
 		Metadata:          f.Metadata,
 	}
-}
 
 // TestFixtures is a collection of test fixtures
 type TestFixtures []*TestFixture
@@ -59,7 +57,6 @@ func (f TestFixtures) ToTestCases() []*types.TestCase {
 		testCases = append(testCases, fixture.ToTestCase())
 	}
 	return testCases
-}
 
 // OWASP Top 10 for LLM mappings
 const (
@@ -101,13 +98,11 @@ func NewTestFixture(
 		OWASPMapping:      owaspMapping,
 		Metadata:          make(map[string]interface{}),
 	}
-}
 
 // Helper function to add metadata to a test fixture
 func (f *TestFixture) WithMetadata(key string, value interface{}) *TestFixture {
 	f.Metadata[key] = value
 	return f
-}
 
 // Helper function to create a string match detection criteria
 func StringMatchCriteria(match string, caseSensitive bool) detection.DetectionCriteria {
@@ -116,7 +111,6 @@ func StringMatchCriteria(match string, caseSensitive bool) detection.DetectionCr
 		Match:         match,
 		CaseSensitive: caseSensitive,
 	}
-}
 
 // Helper function to create a regex match detection criteria
 func RegexMatchCriteria(pattern string, caseSensitive bool) detection.DetectionCriteria {
@@ -125,7 +119,6 @@ func RegexMatchCriteria(pattern string, caseSensitive bool) detection.DetectionC
 		Pattern:       pattern,
 		CaseSensitive: caseSensitive,
 	}
-}
 
 // Helper function to create a semantic match detection criteria
 func SemanticMatchCriteria(criteria string, threshold int) detection.DetectionCriteria {
@@ -134,7 +127,6 @@ func SemanticMatchCriteria(criteria string, threshold int) detection.DetectionCr
 		Criteria:  criteria,
 		Threshold: threshold,
 	}
-}
 
 // Helper function to create a custom function detection criteria
 func CustomFunctionCriteria(functionName string, context map[string]interface{}) detection.DetectionCriteria {
@@ -143,7 +135,6 @@ func CustomFunctionCriteria(functionName string, context map[string]interface{})
 		FunctionName: functionName,
 		Context:      context,
 	}
-}
 
 // Helper function to create a hybrid match detection criteria
 func HybridMatchCriteria(pattern string, criteria string, threshold int) detection.DetectionCriteria {
@@ -153,4 +144,3 @@ func HybridMatchCriteria(pattern string, criteria string, threshold int) detecti
 		Criteria:  criteria,
 		Threshold: threshold,
 	}
-}

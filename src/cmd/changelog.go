@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/perplext/LLMrecon/src/config"
@@ -41,7 +42,6 @@ You can filter the changelog by component and version range.`,
   # Output in JSON format
   LLMrecon changelog --json`,
 	RunE: runChangelog,
-}
 
 func init() {
 	rootCmd.AddCommand(changelogCmd)
@@ -55,7 +55,6 @@ func init() {
 	changelogCmd.Flags().Bool("only-breaking", false, "Show only breaking changes")
 	changelogCmd.Flags().Bool("only-security", false, "Show only security updates")
 	changelogCmd.Flags().Duration("timeout", 30*time.Second, "Timeout for fetching changelog")
-}
 
 func runChangelog(cmd *cobra.Command, args []string) error {
 	// Get flags
@@ -100,7 +99,6 @@ func runChangelog(cmd *cobra.Command, args []string) error {
 	}
 
 	return outputChangelogText(filtered)
-}
 
 // ChangelogEntry represents a single changelog entry
 type ChangelogEntry struct {
@@ -151,10 +149,8 @@ func fetchChangelog(ctx context.Context, cfg *config.Config, component string) (
 	if err != nil {
 		return nil, fmt.Errorf("fetching changelog: %w", err)
 	}
-	defer resp.Body.Close()
-
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Parse response based on format
@@ -169,7 +165,6 @@ func fetchChangelog(ctx context.Context, cfg *config.Config, component string) (
 	}
 
 	return &changelog, nil
-}
 
 func parseGitHubReleases(r io.Reader, component string) (*Changelog, error) {
 	var releases []struct {
@@ -206,7 +201,6 @@ func parseGitHubReleases(r io.Reader, component string) (*Changelog, error) {
 	}
 
 	return changelog, nil
-}
 
 func parseReleaseBody(body string, entry *ChangelogEntry) {
 	lines := strings.Split(body, "\n")
@@ -244,7 +238,6 @@ func parseReleaseBody(body string, entry *ChangelogEntry) {
 			}
 		}
 	}
-}
 
 func loadLocalChangelog(component string) (*Changelog, error) {
 	// Try to load from local cache
@@ -254,7 +247,7 @@ func loadLocalChangelog(component string) (*Changelog, error) {
 	}
 
 	cacheFile := fmt.Sprintf("%s/.LLMrecon/cache/changelog-%s.json", homeDir, component)
-	data, err := os.ReadFile(cacheFile)
+	data, err := os.ReadFile(filepath.Clean(cacheFile))
 	if err != nil {
 		return nil, fmt.Errorf("no cached changelog available")
 	}
@@ -265,7 +258,6 @@ func loadLocalChangelog(component string) (*Changelog, error) {
 	}
 
 	return &changelog, nil
-}
 
 func filterChangelog(changelog *Changelog, fromVersion, toVersion string, limit int, onlyBreaking, onlySecurity bool) *Changelog {
 	filtered := &Changelog{
@@ -337,7 +329,6 @@ func filterChangelog(changelog *Changelog, fromVersion, toVersion string, limit 
 	}
 
 	return filtered
-}
 
 func outputChangelogText(changelog *Changelog) error {
 	if len(changelog.Entries) == 0 {
@@ -412,13 +403,10 @@ func outputChangelogText(changelog *Changelog) error {
 	}
 
 	return nil
-}
-
 func outputChangelogJSON(changelog *Changelog) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(changelog)
-}
 
 // CacheChangelog saves changelog to local cache
 func CacheChangelog(changelog *Changelog) error {
@@ -428,7 +416,7 @@ func CacheChangelog(changelog *Changelog) error {
 	}
 
 	cacheDir := fmt.Sprintf("%s/.LLMrecon/cache", homeDir)
-	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
 		return err
 	}
 
@@ -438,5 +426,11 @@ func CacheChangelog(changelog *Changelog) error {
 		return err
 	}
 
-	return os.WriteFile(cacheFile, data, 0644)
+}
+}
+}
+}
+}
+}
+}
 }

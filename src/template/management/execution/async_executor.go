@@ -33,7 +33,6 @@ type AsyncTemplateExecutor struct {
 	isShutdown bool
 	// shutdownMutex protects isShutdown
 	shutdownMutex sync.RWMutex
-}
 
 // executionTask represents a template execution task
 type executionTask struct {
@@ -49,7 +48,6 @@ type executionTask struct {
 	priority int
 	// createdAt is the time the task was created
 	createdAt time.Time
-}
 
 // taskResult represents the result of a task execution
 type taskResult struct {
@@ -57,7 +55,6 @@ type taskResult struct {
 	result *interfaces.TemplateResult
 	// err is the execution error
 	err error
-}
 
 // resultCache is a cache for execution results
 type resultCache struct {
@@ -69,7 +66,6 @@ type resultCache struct {
 	maxSize int
 	// ttl is the time-to-live for cache entries
 	ttl time.Duration
-}
 
 // asyncExecutionStats tracks execution statistics
 type asyncExecutionStats struct {
@@ -87,7 +83,6 @@ type asyncExecutionStats struct {
 	AverageQueueTime time.Duration
 	// QueuedTasks is the current number of queued tasks
 	QueuedTasks int64
-}
 
 // advancedWorkPool is an advanced worker pool with dynamic scaling
 type advancedWorkPool struct {
@@ -107,7 +102,6 @@ type advancedWorkPool struct {
 	workerWg sync.WaitGroup
 	// shutdownCh is used to signal shutdown
 	shutdownCh chan struct{}
-}
 
 // priorityManager manages execution priorities
 type priorityManager struct {
@@ -117,7 +111,6 @@ type priorityManager struct {
 	mutex sync.RWMutex
 	// defaultPriority is the default priority
 	defaultPriority int
-}
 
 // NewAsyncTemplateExecutor creates a new async template executor
 func NewAsyncTemplateExecutor(baseExecutor *OptimizedTemplateExecutor, queueSize int, cacheSize int, cacheTTL time.Duration) *AsyncTemplateExecutor {
@@ -164,7 +157,6 @@ func NewAsyncTemplateExecutor(baseExecutor *OptimizedTemplateExecutor, queueSize
 	go executor.dispatchTasks()
 
 	return executor
-}
 
 // newAdvancedWorkPool creates a new advanced worker pool
 func newAdvancedWorkPool(workers, minWorkers, maxWorkers int, taskCh chan *executionTask) *advancedWorkPool {
@@ -183,7 +175,6 @@ func newAdvancedWorkPool(workers, minWorkers, maxWorkers int, taskCh chan *execu
 	go pool.manageWorkers()
 
 	return pool
-}
 
 // startWorkers starts a number of workers
 func (p *advancedWorkPool) startWorkers(count int) {
@@ -195,7 +186,6 @@ func (p *advancedWorkPool) startWorkers(count int) {
 		p.activeWorkers++
 		go p.worker()
 	}
-}
 
 // worker is a worker goroutine
 func (p *advancedWorkPool) worker() {
@@ -210,7 +200,6 @@ func (p *advancedWorkPool) worker() {
 
 			// Execute task
 			result, err := task.execute()
-
 			// Send result
 			task.resultCh <- &taskResult{
 				result: result,
@@ -222,7 +211,6 @@ func (p *advancedWorkPool) worker() {
 			return
 		}
 	}
-}
 
 // manageWorkers manages the worker pool size
 func (p *advancedWorkPool) manageWorkers() {
@@ -237,7 +225,6 @@ func (p *advancedWorkPool) manageWorkers() {
 			return
 		}
 	}
-}
 
 // adjustWorkerCount adjusts the worker count based on load
 func (p *advancedWorkPool) adjustWorkerCount() {
@@ -248,7 +235,9 @@ func (p *advancedWorkPool) adjustWorkerCount() {
 	queueLength := len(p.taskCh)
 
 	// Calculate target worker count
-	_ = p.activeWorkers // targetWorkers not used
+	if err := p.activeWorkers // targetWorkers not used; err != nil {
+		return fmt.Errorf("operation failed: %w", err)
+	}
 
 	// Increase workers if queue is filling up
 	if queueLength > p.activeWorkers*2 && p.activeWorkers < p.maxWorkers {
@@ -282,7 +271,6 @@ func (p *advancedWorkPool) adjustWorkerCount() {
 			}
 		}
 	}
-}
 
 // execute executes the task
 func (t *executionTask) execute() (*interfaces.TemplateResult, error) {
@@ -314,7 +302,6 @@ func (t *executionTask) execute() (*interfaces.TemplateResult, error) {
 	result.Duration = result.EndTime.Sub(result.StartTime)
 
 	return result, nil
-}
 
 // executeTemplate executes the template using the base executor
 func (t *executionTask) executeTemplate() (*interfaces.TemplateResult, error) {
@@ -326,7 +313,6 @@ func (t *executionTask) executeTemplate() (*interfaces.TemplateResult, error) {
 
 	// Execute template
 	return baseExecutor.Execute(t.ctx, t.template, t.options)
-}
 
 // dispatchTasks dispatches tasks to workers
 func (e *AsyncTemplateExecutor) dispatchTasks() {
@@ -344,7 +330,6 @@ func (e *AsyncTemplateExecutor) dispatchTasks() {
 			return
 		}
 	}
-}
 
 // Execute executes a template asynchronously
 func (e *AsyncTemplateExecutor) Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*interfaces.TemplateResult, error) {
@@ -408,7 +393,6 @@ func (e *AsyncTemplateExecutor) Execute(ctx context.Context, template *format.Te
 		e.statsMutex.Unlock()
 		return nil, ctx.Err()
 	}
-}
 
 // ExecuteBatch executes multiple templates asynchronously
 func (e *AsyncTemplateExecutor) ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
@@ -453,7 +437,6 @@ func (e *AsyncTemplateExecutor) ExecuteBatch(ctx context.Context, templates []*f
 			results[i] = result
 		}()
 	}
-
 	// Wait for all executions to complete
 	wg.Wait()
 	close(errorCh)
@@ -465,7 +448,6 @@ func (e *AsyncTemplateExecutor) ExecuteBatch(ctx context.Context, templates []*f
 	}
 
 	return results, lastError
-}
 
 // getPriority gets the priority from options
 func (e *AsyncTemplateExecutor) getPriority(options map[string]interface{}) int {
@@ -478,14 +460,12 @@ func (e *AsyncTemplateExecutor) getPriority(options map[string]interface{}) int 
 
 	// Return default priority
 	return e.priorityManager.defaultPriority
-}
 
 // isShuttingDown checks if the executor is shutting down
 func (e *AsyncTemplateExecutor) isShuttingDown() bool {
 	e.shutdownMutex.RLock()
 	defer e.shutdownMutex.RUnlock()
 	return e.isShutdown
-}
 
 // Shutdown shuts down the executor
 func (e *AsyncTemplateExecutor) Shutdown() {
@@ -506,7 +486,6 @@ func (e *AsyncTemplateExecutor) Shutdown() {
 
 	// Wait for workers to finish
 	e.workerPool.workerWg.Wait()
-}
 
 // GetExecutionStats returns statistics about the executor
 func (e *AsyncTemplateExecutor) GetExecutionStats() map[string]interface{} {
@@ -530,7 +509,6 @@ func (e *AsyncTemplateExecutor) GetExecutionStats() map[string]interface{} {
 		"min_workers":          e.workerPool.minWorkers,
 		"max_workers":          e.workerPool.maxWorkers,
 	}
-}
 
 // helper functions
 func min(a, b int) int {
@@ -538,11 +516,8 @@ func min(a, b int) int {
 		return a
 	}
 	return b
-}
 
 func max(a, b int) int {
 	if a > b {
 		return a
 	}
-	return b
-}

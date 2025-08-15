@@ -20,7 +20,6 @@ type InsecurePluginValidator struct {
 	pluginDataPatterns []*regexp.Regexp
 	// pluginEscapePatterns contains patterns for detecting plugin escape attempts
 	pluginEscapePatterns []*regexp.Regexp
-}
 
 // NewInsecurePluginValidator creates a new insecure plugin validator
 func NewInsecurePluginValidator() *InsecurePluginValidator {
@@ -69,7 +68,6 @@ func NewInsecurePluginValidator() *InsecurePluginValidator {
 		pluginDataPatterns:    pluginDataPatterns,
 		pluginEscapePatterns:  pluginEscapePatterns,
 	}
-}
 
 // ValidatePrompt validates a prompt for insecure plugin design vulnerabilities
 func (v *InsecurePluginValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -244,7 +242,6 @@ func (v *InsecurePluginValidator) ValidatePrompt(ctx context.Context, prompt str
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for insecure plugin design vulnerabilities
 func (v *InsecurePluginValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -355,5 +352,3 @@ func (v *InsecurePluginValidator) ValidateResponse(ctx context.Context, response
 		}
 	}
 
-	return results, nil
-}

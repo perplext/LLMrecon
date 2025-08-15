@@ -28,7 +28,6 @@ type AuditTrailManager struct {
 	loggers   []AuditLogger
 	signingKey []byte
 	mu        sync.RWMutex
-}
 
 // AuditConfig defines the configuration for the audit trail system
 type AuditConfig struct {
@@ -61,7 +60,6 @@ type AuditConfig struct {
 	
 	// Encryption key ID (if encryption is enabled)
 	EncryptionKeyID string `json:"encryption_key_id,omitempty"`
-}
 
 // LogQuery defines parameters for querying audit logs
 type LogQuery struct {
@@ -106,7 +104,6 @@ type LogQuery struct {
 	
 	// Sort direction (asc or desc)
 	SortDirection string `json:"sort_direction,omitempty"`
-}
 
 // LogQueryResult contains the results of a log query
 type LogQueryResult struct {
@@ -118,7 +115,6 @@ type LogQueryResult struct {
 	
 	// Whether there are more logs available
 	HasMore bool `json:"has_more"`
-}
 
 // ExportFormat defines the format for exporting audit logs
 type ExportFormat string
@@ -151,7 +147,6 @@ func NewAuditTrailManager(config *AuditConfig) (*AuditTrailManager, error) {
 	}
 	
 	return manager, nil
-}
 
 // AddLogger adds a logger to the manager
 func (m *AuditTrailManager) AddLogger(logger AuditLogger) {
@@ -159,7 +154,6 @@ func (m *AuditTrailManager) AddLogger(logger AuditLogger) {
 	defer m.mu.Unlock()
 	
 	m.loggers = append(m.loggers, logger)
-}
 
 // RemoveLogger removes a logger from the manager
 func (m *AuditTrailManager) RemoveLogger(loggerID string) error {
@@ -175,7 +169,6 @@ func (m *AuditTrailManager) RemoveLogger(loggerID string) error {
 	}
 	
 	return ErrLoggerNotFound
-}
 
 // Log records an audit log entry
 func (m *AuditTrailManager) Log(ctx context.Context, log *AuditLog) error {
@@ -211,7 +204,6 @@ func (m *AuditTrailManager) Log(ctx context.Context, log *AuditLog) error {
 	}
 	
 	return lastErr
-}
 
 // Query searches for audit logs matching the specified criteria
 func (m *AuditTrailManager) Query(ctx context.Context, query *LogQuery) (*LogQueryResult, error) {
@@ -246,7 +238,6 @@ func (m *AuditTrailManager) Query(ctx context.Context, query *LogQuery) (*LogQue
 	}
 	
 	return nil, errors.New("no logger supports querying")
-}
 
 // Export exports audit logs in the specified format
 func (m *AuditTrailManager) Export(ctx context.Context, query *LogQuery, format ExportFormat) ([]byte, error) {
@@ -267,7 +258,6 @@ func (m *AuditTrailManager) Export(ctx context.Context, query *LogQuery, format 
 	}
 	
 	return nil, errors.New("no logger supports exporting")
-}
 
 // VerifyLogIntegrity verifies the integrity of a log entry
 func (m *AuditTrailManager) VerifyLogIntegrity(log *AuditLog) (bool, error) {
@@ -293,23 +283,19 @@ func (m *AuditTrailManager) VerifyLogIntegrity(log *AuditLog) (bool, error) {
 	log.Signature = originalSignature
 	
 	return originalSignature == newSignature, nil
-}
 
 // GetLogLevel returns the current minimum log level
 func (m *AuditTrailManager) GetLogLevel() LogLevel {
 	return m.config.MinLogLevel
-}
 
 // SetLogLevel sets the minimum log level
 func (m *AuditTrailManager) SetLogLevel(level LogLevel) {
 	m.config.MinLogLevel = level
-}
 
 // GetConfig returns the current configuration
 func (m *AuditTrailManager) GetConfig() *AuditConfig {
 	configCopy := *m.config
 	return &configCopy
-}
 
 // Close closes all loggers and releases resources
 func (m *AuditTrailManager) Close() error {
@@ -326,7 +312,6 @@ func (m *AuditTrailManager) Close() error {
 	m.loggers = nil
 	
 	return lastErr
-}
 
 // Helper methods
 
@@ -335,7 +320,6 @@ func (m *AuditTrailManager) isLevelEnabled(level LogLevel) bool {
 	levelValue := logLevelValue(level)
 	minLevelValue := logLevelValue(m.config.MinLogLevel)
 	return levelValue >= minLevelValue
-}
 
 // logLevelValue returns the numeric value of a log level
 func logLevelValue(level LogLevel) int {
@@ -353,7 +337,6 @@ func logLevelValue(level LogLevel) int {
 	default:
 		return 1 // Default to info level
 	}
-}
 
 // redactSensitiveInfo redacts sensitive information from a log entry
 func (m *AuditTrailManager) redactSensitiveInfo(log *AuditLog) {
@@ -388,7 +371,6 @@ func (m *AuditTrailManager) redactSensitiveInfo(log *AuditLog) {
 			}
 		}
 	}
-}
 
 // generateSignature generates an HMAC signature for a log entry
 func (m *AuditTrailManager) generateSignature(log *AuditLog) (string, error) {
@@ -404,7 +386,6 @@ func (m *AuditTrailManager) generateSignature(log *AuditLog) (string, error) {
 	
 	// Return hex-encoded signature
 	return hex.EncodeToString(h.Sum(nil)), nil
-}
 
 // DefaultAuditConfig returns the default audit configuration
 func DefaultAuditConfig() *AuditConfig {
@@ -417,4 +398,3 @@ func DefaultAuditConfig() *AuditConfig {
 		IncludeStackTraces: true,
 		CompressLogs:       true,
 	}
-}

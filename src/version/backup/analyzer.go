@@ -28,7 +28,6 @@ type AnalyzerOptions struct {
 	
 	// ModulePatterns are the patterns for module files
 	ModulePatterns []string
-}
 
 // DefaultAnalyzerOptions returns the default analyzer options
 func DefaultAnalyzerOptions() *AnalyzerOptions {
@@ -40,7 +39,6 @@ func DefaultAnalyzerOptions() *AnalyzerOptions {
 		TemplatePatterns:        []string{"*.yaml", "*.yml"},
 		ModulePatterns:          []string{"*.yaml", "*.yml"},
 	}
-}
 
 // Analyzer analyzes template and module versions
 type Analyzer struct {
@@ -55,7 +53,6 @@ type Analyzer struct {
 	
 	// DependencyGraph is the dependency graph
 	DependencyGraph *DependencyGraph
-}
 
 // NewAnalyzer creates a new version analyzer
 func NewAnalyzer(localRepo, remoteRepo interfaces.Repository, options *AnalyzerOptions) *Analyzer {
@@ -69,7 +66,6 @@ func NewAnalyzer(localRepo, remoteRepo interfaces.Repository, options *AnalyzerO
 		RemoteRepo:      remoteRepo,
 		DependencyGraph: NewDependencyGraph(),
 	}
-}
 
 // AnalysisResult represents the result of a version analysis
 type AnalysisResult struct {
@@ -93,7 +89,6 @@ type AnalysisResult struct {
 	
 	// AnalysisTime is the time the analysis was performed
 	AnalysisTime time.Time
-}
 
 // AnalyzeTemplate analyzes a template
 func (a *Analyzer) AnalyzeTemplate(ctx context.Context, templatePath string) (*AnalysisResult, error) {
@@ -126,19 +121,19 @@ func (a *Analyzer) AnalyzeTemplate(ctx context.Context, templatePath string) (*A
 	if err != nil {
 		return nil, fmt.Errorf("failed to get local template: %w", err)
 	}
-	defer localReader.Close()
-	
+	defer func() { if err := localReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		
 	localContent, err := ReadFileContent(localReader, a.Options.DiffOptions.MaxContentSize)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read local template content: %w", err)
 	}
 	
-	// Get remote template
+		// Get remote template
 	remoteReader, err := a.RemoteRepo.GetFile(ctx, templatePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get remote template: %w", err)
 	}
-	defer remoteReader.Close()
+	defer func() { if err := remoteReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	remoteContent, err := ReadFileContent(remoteReader, a.Options.DiffOptions.MaxContentSize)
 	if err != nil {
@@ -227,7 +222,6 @@ func (a *Analyzer) AnalyzeTemplate(ctx context.Context, templatePath string) (*A
 	}
 	
 	return result, nil
-}
 
 // AnalyzeModule analyzes a module
 func (a *Analyzer) AnalyzeModule(ctx context.Context, modulePath string) (*AnalysisResult, error) {
@@ -235,13 +229,13 @@ func (a *Analyzer) AnalyzeModule(ctx context.Context, modulePath string) (*Analy
 	ctx, cancel := context.WithTimeout(ctx, a.Options.Timeout)
 	defer cancel()
 	
-	// Check if module exists in local repository
+		// Check if module exists in local repository
 	localExists, err := a.LocalRepo.FileExists(ctx, modulePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if module exists in local repository: %w", err)
 	}
 	
-	if !localExists {
+		if !localExists {
 		return nil, fmt.Errorf("module %s does not exist in local repository", modulePath)
 	}
 	
@@ -260,7 +254,7 @@ func (a *Analyzer) AnalyzeModule(ctx context.Context, modulePath string) (*Analy
 	if err != nil {
 		return nil, fmt.Errorf("failed to get local module: %w", err)
 	}
-	defer localReader.Close()
+	defer func() { if err := localReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	localContent, err := ReadFileContent(localReader, a.Options.DiffOptions.MaxContentSize)
 	if err != nil {
@@ -272,7 +266,7 @@ func (a *Analyzer) AnalyzeModule(ctx context.Context, modulePath string) (*Analy
 	if err != nil {
 		return nil, fmt.Errorf("failed to get remote module: %w", err)
 	}
-	defer remoteReader.Close()
+	defer func() { if err := remoteReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	remoteContent, err := ReadFileContent(remoteReader, a.Options.DiffOptions.MaxContentSize)
 	if err != nil {
@@ -361,7 +355,6 @@ func (a *Analyzer) AnalyzeModule(ctx context.Context, modulePath string) (*Analy
 	}
 	
 	return result, nil
-}
 
 // AnalyzeAll analyzes all templates and modules
 func (a *Analyzer) AnalyzeAll(ctx context.Context) (map[string]*AnalysisResult, error) {
@@ -404,7 +397,7 @@ func (a *Analyzer) AnalyzeAll(ctx context.Context) (map[string]*AnalysisResult, 
 		if ext != ".yaml" && ext != ".yml" {
 			continue
 		}
-		
+			
 		// Determine if it's a template or module
 		isTemplate := false
 		for _, pattern := range a.Options.TemplatePatterns {
@@ -434,7 +427,6 @@ func (a *Analyzer) AnalyzeAll(ctx context.Context) (map[string]*AnalysisResult, 
 	}
 	
 	return results, nil
-}
 
 // buildDependencyGraph builds a dependency graph for templates and modules
 func (a *Analyzer) buildDependencyGraph(ctx context.Context, rootPath string) error {
@@ -457,7 +449,7 @@ func (a *Analyzer) buildDependencyGraph(ctx context.Context, rootPath string) er
 	if err != nil {
 		return fmt.Errorf("failed to get file: %w", err)
 	}
-	defer reader.Close()
+	defer func() { if err := reader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	content, err := ReadFileContent(reader, a.Options.DiffOptions.MaxContentSize)
 	if err != nil {
@@ -541,7 +533,6 @@ func (a *Analyzer) buildDependencyGraph(ctx context.Context, rootPath string) er
 	}
 	
 	return nil
-}
 
 // findDependencyPath finds the path of a dependency
 func findDependencyPath(ctx context.Context, repo interfaces.Repository, depID string, patterns []string) string {
@@ -583,5 +574,3 @@ func findDependencyPath(ctx context.Context, repo interfaces.Repository, depID s
 		}
 	}
 	
-	return ""
-}

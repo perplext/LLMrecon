@@ -23,7 +23,6 @@ type OfflineBundleLoader struct {
 	auditTrail *trail.AuditTrailManager
 	// validationLevel is the level of validation to perform
 	validationLevel bundle.ValidationLevel
-}
 
 // NewOfflineBundleLoader creates a new offline bundle loader
 func NewOfflineBundleLoader(auditTrail *trail.AuditTrailManager) *OfflineBundleLoader {
@@ -32,7 +31,6 @@ func NewOfflineBundleLoader(auditTrail *trail.AuditTrailManager) *OfflineBundleL
 		auditTrail:      auditTrail,
 		validationLevel: bundle.StandardValidation,
 	}
-}
 
 // LoadFromSource loads templates from a specific source
 func (l *OfflineBundleLoader) LoadFromSource(ctx context.Context, source types.TemplateSource, options map[string]interface{}) ([]*format.Template, error) {
@@ -48,7 +46,6 @@ func (l *OfflineBundleLoader) LoadFromSource(ctx context.Context, source types.T
 
 	// Load templates from the offline bundle
 	return l.LoadFromPath(ctx, bundlePath, false)
-}
 
 // LoadFromPath loads templates from a specific path
 func (l *OfflineBundleLoader) LoadFromPath(ctx context.Context, path string, recursive bool) ([]*format.Template, error) {
@@ -125,30 +122,25 @@ func (l *OfflineBundleLoader) LoadFromPath(ctx context.Context, path string, rec
 	}
 
 	return templates, nil
-}
 
 // LoadFromRepository loads templates from a remote repository
 func (l *OfflineBundleLoader) LoadFromRepository(ctx context.Context, repoURL string, options map[string]interface{}) ([]*format.Template, error) {
 	// Not implemented for offline bundles
 	return nil, fmt.Errorf("loading from repository not supported for offline bundles")
-}
 
 // SetValidationLevel sets the validation level for offline bundles
 func (l *OfflineBundleLoader) SetValidationLevel(level bundle.ValidationLevel) {
 	l.validationLevel = level
-}
 
 // GetValidationLevel gets the current validation level
 func (l *OfflineBundleLoader) GetValidationLevel() bundle.ValidationLevel {
 	return l.validationLevel
-}
 
 // LoadTemplate loads a single template from a source
 func (l *OfflineBundleLoader) LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error) {
 	if sourceType != OfflineBundleSource {
 		return nil, fmt.Errorf("unsupported source type: %s", sourceType)
 	}
-
 	templates, err := l.LoadFromPath(ctx, source, false)
 	if err != nil {
 		return nil, err
@@ -159,7 +151,6 @@ func (l *OfflineBundleLoader) LoadTemplate(ctx context.Context, source string, s
 	}
 
 	return templates[0], nil
-}
 
 // LoadTemplates loads multiple templates from a source
 func (l *OfflineBundleLoader) LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error) {
@@ -167,5 +158,3 @@ func (l *OfflineBundleLoader) LoadTemplates(ctx context.Context, source string, 
 		return nil, fmt.Errorf("unsupported source type: %s", sourceType)
 	}
 
-	return l.LoadFromPath(ctx, source, false)
-}

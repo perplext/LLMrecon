@@ -49,9 +49,9 @@ func (c *Checker) AddAvailableFeature(feature string) {
 	}
 	
 	c.availableFeatures = append(c.availableFeatures, feature)
-}
 
 // RemoveAvailableFeature removes an available feature
+}
 func (c *Checker) RemoveAvailableFeature(feature string) {
 	var features []string
 	
@@ -62,25 +62,25 @@ func (c *Checker) RemoveAvailableFeature(feature string) {
 	}
 	
 	c.availableFeatures = features
-}
 
 // GetAvailableFeatures returns the list of available features
+}
 func (c *Checker) GetAvailableFeatures() []string {
 	return c.availableFeatures
-}
 
 // GetProviders returns the list of registered providers
+}
 func (c *Checker) GetProviders() map[string]*ProviderInfo {
 	return c.providers
-}
 
 // GetProvider returns information about a specific provider
+}
 func (c *Checker) GetProvider(providerID string) (*ProviderInfo, bool) {
 	provider, ok := c.providers[providerID]
 	return provider, ok
-}
 
 // IsModelSupported checks if a model is supported by a provider
+}
 func (c *Checker) IsModelSupported(providerID, model string) bool {
 	provider, ok := c.providers[providerID]
 	if !ok {
@@ -94,9 +94,9 @@ func (c *Checker) IsModelSupported(providerID, model string) bool {
 	}
 	
 	return false
-}
 
 // CheckCompatibility checks if a template is compatible with the current environment
+}
 func (c *Checker) CheckCompatibility(metadata *CompatibilityMetadata) (bool, []string) {
 	var issues []string
 	
@@ -134,9 +134,9 @@ func (c *Checker) CheckCompatibility(metadata *CompatibilityMetadata) (bool, []s
 	}
 	
 	return len(issues) == 0, issues
-}
 
 // CheckProviderCompatibility checks if a template is compatible with a specific provider
+}
 func (c *Checker) CheckProviderCompatibility(metadata *CompatibilityMetadata, providerID string) (bool, []string) {
 	var issues []string
 	
@@ -170,9 +170,9 @@ func (c *Checker) CheckProviderCompatibility(metadata *CompatibilityMetadata, pr
 	}
 	
 	return len(issues) == 0, issues
-}
 
 // CheckModelCompatibility checks if a template is compatible with a specific model
+}
 func (c *Checker) CheckModelCompatibility(metadata *CompatibilityMetadata, providerID, model string) (bool, []string) {
 	var issues []string
 	
@@ -210,18 +210,18 @@ func (c *Checker) CheckModelCompatibility(metadata *CompatibilityMetadata, provi
 	}
 	
 	return len(issues) == 0, issues
-}
 
 // Helper function to get provider IDs from the providers map
+}
 func getProviderIDs(providers map[string]*ProviderInfo) []string {
 	var ids []string
 	for id := range providers {
 		ids = append(ids, id)
 	}
 	return ids
-}
 
 // Helper function to get missing features
+}
 func getMissingFeatures(required, available []string) []string {
 	var missing []string
 	

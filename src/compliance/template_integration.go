@@ -24,7 +24,6 @@ func NewTemplateComplianceValidator() (*TemplateComplianceValidator, error) {
 	}
 
 	return validator, nil
-}
 
 // ValidateTemplateCompliance validates a template's compliance mappings
 func (v *TemplateComplianceValidator) ValidateTemplateCompliance(template map[string]interface{}) (bool, []string, error) {
@@ -73,7 +72,6 @@ func (v *TemplateComplianceValidator) ValidateTemplateCompliance(template map[st
 
 	// Validate the mapping
 	return v.owaspValidator.ValidateMapping(mapping)
-}
 
 // SuggestComplianceMapping suggests compliance mappings for a template based on its content
 func (v *TemplateComplianceValidator) SuggestComplianceMapping(template map[string]interface{}, templatePath string) (*ComplianceMapping, error) {
@@ -166,7 +164,6 @@ func (v *TemplateComplianceValidator) SuggestComplianceMapping(template map[stri
 	}
 
 	return mapping, nil
-}
 
 // inferCategoryFromPath tries to infer the OWASP LLM category from the template file path
 func inferCategoryFromPath(path string) (OWASPLLMCategory, OWASPLLMSubcategory) {
@@ -210,7 +207,6 @@ func inferCategoryFromPath(path string) (OWASPLLMCategory, OWASPLLMSubcategory) 
 	}
 
 	return "", ""
-}
 
 // GetComplianceCoverage calculates compliance coverage for a set of templates
 func (v *TemplateComplianceValidator) GetComplianceCoverage(templates []interface{}) (map[OWASPLLMCategory]float64, error) {
@@ -310,7 +306,6 @@ func (v *TemplateComplianceValidator) GetComplianceCoverage(templates []interfac
 	}
 
 	return coverage, nil
-}
 
 // GenerateComplianceReport generates a compliance report for a set of templates
 func (v *TemplateComplianceValidator) GenerateComplianceReport(templates []interface{}, reportID string, timestamp string) (*ComplianceReport, error) {
@@ -345,5 +340,8 @@ func (v *TemplateComplianceValidator) GenerateComplianceReport(templates []inter
 		})
 	}
 	
-	return report, nil
+}
+}
+}
+}
 }

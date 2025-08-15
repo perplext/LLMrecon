@@ -18,7 +18,6 @@ type ModelsUserStore interface {
 	DeleteUser(ctx context.Context, id string) error
 	ListUsers(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.User, int, error)
 	Close() error
-}
 
 // UserStore defines the interface for user storage operations using common.User
 type UserStore interface {
@@ -45,7 +44,6 @@ type UserStore interface {
 	
 	// Close closes the user store
 	Close() error
-}
 
 // UserStoreAdapter adapts a models.User store to the UserStore interface
 type UserStoreAdapter struct {
@@ -57,7 +55,6 @@ func NewUserStoreAdapter(store ModelsUserStore) UserStore {
 	return &UserStoreAdapter{
 		store: store,
 	}
-}
 
 // convertModelsUserToCommonUser converts a models.User to a common.User
 func convertModelsUserToCommonUser(user *models.User) *common.User {
@@ -85,7 +82,6 @@ func convertModelsUserToCommonUser(user *models.User) *common.User {
 		UpdatedAt:           user.UpdatedAt,
 		Metadata:            user.Metadata,
 	}
-}
 
 // convertCommonUserToModelsUser converts a common.User to a models.User
 func convertCommonUserToModelsUser(user *common.User) *models.User {
@@ -113,7 +109,6 @@ func convertCommonUserToModelsUser(user *common.User) *models.User {
 		UpdatedAt:           user.UpdatedAt,
 		Metadata:            user.Metadata,
 	}
-}
 
 // convertModelsUsersToCommonUsers converts a slice of models.User to a slice of common.User
 func convertModelsUsersToCommonUsers(users []*models.User) []*common.User {
@@ -125,12 +120,10 @@ func convertModelsUsersToCommonUsers(users []*models.User) []*common.User {
 		result[i] = convertModelsUserToCommonUser(user)
 	}
 	return result
-}
 
 // CreateUser creates a new user
 func (a *UserStoreAdapter) CreateUser(ctx context.Context, user *common.User) error {
 	return a.store.CreateUser(ctx, convertCommonUserToModelsUser(user))
-}
 
 // GetUserByID retrieves a user by ID
 func (a *UserStoreAdapter) GetUserByID(ctx context.Context, id string) (*common.User, error) {
@@ -139,7 +132,6 @@ func (a *UserStoreAdapter) GetUserByID(ctx context.Context, id string) (*common.
 		return nil, err
 	}
 	return convertModelsUserToCommonUser(user), nil
-}
 
 // GetUserByUsername retrieves a user by username
 func (a *UserStoreAdapter) GetUserByUsername(ctx context.Context, username string) (*common.User, error) {
@@ -148,7 +140,6 @@ func (a *UserStoreAdapter) GetUserByUsername(ctx context.Context, username strin
 		return nil, err
 	}
 	return convertModelsUserToCommonUser(user), nil
-}
 
 // GetUserByEmail retrieves a user by email
 func (a *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*common.User, error) {
@@ -157,17 +148,14 @@ func (a *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*c
 		return nil, err
 	}
 	return convertModelsUserToCommonUser(user), nil
-}
 
 // UpdateUser updates an existing user
 func (a *UserStoreAdapter) UpdateUser(ctx context.Context, user *common.User) error {
 	return a.store.UpdateUser(ctx, convertCommonUserToModelsUser(user))
-}
 
 // DeleteUser deletes a user
 func (a *UserStoreAdapter) DeleteUser(ctx context.Context, id string) error {
 	return a.store.DeleteUser(ctx, id)
-}
 
 // ListUsers lists users with optional filtering
 func (a *UserStoreAdapter) ListUsers(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*common.User, int, error) {
@@ -176,9 +164,18 @@ func (a *UserStoreAdapter) ListUsers(ctx context.Context, filter map[string]inte
 		return nil, 0, err
 	}
 	return convertModelsUsersToCommonUsers(users), count, nil
-}
 
 // Close closes the user store
 func (a *UserStoreAdapter) Close() error {
 	return a.store.Close()
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

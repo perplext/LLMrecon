@@ -21,7 +21,6 @@ type ConfigIntegration struct {
 	mutex sync.RWMutex
 	// initialized indicates whether the integration has been initialized
 	initialized bool
-}
 
 // NewConfigIntegration creates a new configuration integration
 func NewConfigIntegration(credManager *CredentialManager, cfg *config.Config) *ConfigIntegration {
@@ -29,7 +28,6 @@ func NewConfigIntegration(credManager *CredentialManager, cfg *config.Config) *C
 		credManager: credManager,
 		config:      cfg,
 	}
-}
 
 // Initialize initializes the integration
 func (i *ConfigIntegration) Initialize() error {
@@ -47,7 +45,6 @@ func (i *ConfigIntegration) Initialize() error {
 
 	i.initialized = true
 	return nil
-}
 
 // importExistingAPIKeys imports existing API keys from the configuration
 func (i *ConfigIntegration) importExistingAPIKeys() error {
@@ -61,7 +58,6 @@ func (i *ConfigIntegration) importExistingAPIKeys() error {
 			return fmt.Errorf("failed to import OpenAI API key: %w", err)
 		}
 	}
-
 	// Import Anthropic API key
 	if i.config.APIKeys.Anthropic != "" {
 		if err := i.credManager.SetAPIKey(
@@ -74,7 +70,6 @@ func (i *ConfigIntegration) importExistingAPIKeys() error {
 	}
 
 	return nil
-}
 
 // UpdateConfig updates the application configuration with credentials from the vault
 func (i *ConfigIntegration) UpdateConfig() error {
@@ -94,7 +89,6 @@ func (i *ConfigIntegration) UpdateConfig() error {
 	}
 
 	return nil
-}
 
 // SaveConfig saves the application configuration without sensitive data
 func (i *ConfigIntegration) SaveConfig() error {
@@ -108,7 +102,6 @@ func (i *ConfigIntegration) SaveConfig() error {
 
 	// Save the config
 	return config.SaveConfig(&configCopy)
-}
 
 // SetupGitIgnore ensures that sensitive files are added to .gitignore
 func (i *ConfigIntegration) SetupGitIgnore() error {
@@ -124,7 +117,7 @@ func (i *ConfigIntegration) SetupGitIgnore() error {
 	// Read existing .gitignore
 	var existingContent string
 	if _, err := os.Stat(gitignorePath); err == nil {
-		content, err := os.ReadFile(gitignorePath)
+		content, err := os.ReadFile(filepath.Clean(gitignorePath))
 		if err != nil {
 			return fmt.Errorf("failed to read .gitignore: %w", err)
 		}
@@ -170,13 +163,12 @@ func (i *ConfigIntegration) SetupGitIgnore() error {
 		}
 
 		// Write updated .gitignore
-		if err := os.WriteFile(gitignorePath, []byte(newContent), 0644); err != nil {
+		if err := os.WriteFile(filepath.Clean(gitignorePath, []byte(newContent)), 0600); err != nil {
 			return fmt.Errorf("failed to update .gitignore: %w", err)
 		}
 	}
 
 	return nil
-}
 
 // DefaultIntegration is the default configuration integration
 var DefaultIntegration *ConfigIntegration
@@ -216,5 +208,3 @@ func InitDefaultIntegration(configDir string, passphrase string, auditLogger *se
 		fmt.Printf("Warning: Failed to setup .gitignore: %v\n", err)
 	}
 
-	return nil
-}

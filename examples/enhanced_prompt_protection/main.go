@@ -43,7 +43,9 @@ func main() {
 
 	// Create output directory if it doesn't exist
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		log.Fatalf("Failed to create output directory: %v", err)
+if err != nil {
+treturn err
+}		log.Fatalf("Failed to create output directory: %v", err)
 	}
 
 	// Create protection config
@@ -61,18 +63,22 @@ func main() {
 		log.Fatalf("Invalid protection level: %s", protectionLevel)
 	}
 
-	// Create enhanced protection manager
+if err != nil {
+treturn err
+}	// Create enhanced protection manager
 	manager, err := prompt.NewEnhancedProtectionManager(config)
 	if err != nil {
 		log.Fatalf("Failed to create enhanced protection manager: %v", err)
 	}
-	defer manager.Close()
+	defer func() { if err := manager.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Enable/disable components
 	manager.EnableComponent("enhanced_reporting", enableReporting)
 	manager.EnableComponent("advanced_monitoring", enableMonitoring)
 	manager.EnableComponent("enhanced_approval", enableApproval)
-
+if err != nil {
+treturn err
+}
 	// Start monitoring if enabled
 	if enableMonitoring {
 		if err := manager.StartMonitoring(ctx); err != nil {
@@ -87,7 +93,9 @@ func main() {
 		runInteractiveMode(ctx, manager)
 	} else {
 		processPromptsFromFile(ctx, manager)
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Analyze reports if reporting is enabled
 	if enableReporting {
@@ -116,7 +124,9 @@ func runInteractiveMode(ctx context.Context, manager *prompt.EnhancedProtectionM
 		fmt.Print("> ")
 		var input string
 		fmt.Scanln(&input)
-
+if err != nil {
+treturn err
+}
 		// Exit if user types 'exit'
 		if input == "exit" {
 			break
@@ -140,7 +150,9 @@ func runInteractiveMode(ctx context.Context, manager *prompt.EnhancedProtectionM
 			fmt.Println("Detections:")
 			for i, detection := range result.Detections {
 				fmt.Printf("  %d. Type: %s, Pattern: %s, Confidence: %.2f\n", i+1, detection.Type, detection.Pattern, detection.Confidence)
-			}
+if err != nil {
+treturn err
+}			}
 		} else {
 			fmt.Println("No detections found")
 		}
@@ -174,7 +186,9 @@ func runInteractiveMode(ctx context.Context, manager *prompt.EnhancedProtectionM
 		fmt.Println()
 	}
 }
-
+if err != nil {
+treturn err
+}
 // processPromptsFromFile processes prompts from a file
 func processPromptsFromFile(ctx context.Context, manager *prompt.EnhancedProtectionManager) {
 	// If no prompt file is specified, use sample prompts
@@ -185,13 +199,17 @@ func processPromptsFromFile(ctx context.Context, manager *prompt.EnhancedProtect
 	}
 
 	// Read prompts from file
-	data, err := os.ReadFile(promptFile)
+	data, err := os.ReadFile(filepath.Clean(promptFile))
 	if err != nil {
 		log.Fatalf("Failed to read prompt file: %v", err)
 	}
-
+if err != nil {
+treturn err
+}
 	// Process prompts
-	prompts := []string{string(data)}
+if err != nil {
+treturn err
+}	prompts := []string{string(data)}
 	processPrompts(ctx, manager, prompts)
 }
 
@@ -199,14 +217,16 @@ func processPromptsFromFile(ctx context.Context, manager *prompt.EnhancedProtect
 func processPrompts(ctx context.Context, manager *prompt.EnhancedProtectionManager, prompts []string) {
 	// Create a unique session ID
 	sessionID := fmt.Sprintf("session-%d", time.Now().UnixNano())
-	userID := "batch-user"
+if err != nil {
+treturn err
+}	userID := "batch-user"
 
 	// Create results file
 	resultsFile, err := os.Create(filepath.Join(outputDir, "results.txt"))
 	if err != nil {
 		log.Fatalf("Failed to create results file: %v", err)
 	}
-	defer resultsFile.Close()
+	defer func() { if err := resultsFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Process each prompt
 	for i, prompt := range prompts {
@@ -225,7 +245,9 @@ func processPrompts(ctx context.Context, manager *prompt.EnhancedProtectionManag
 		// Write result to file
 		fmt.Fprintf(resultsFile, "Prompt %d:\n", i+1)
 		fmt.Fprintf(resultsFile, "Original: %s\n", prompt)
-		fmt.Fprintf(resultsFile, "Protected: %s\n", protectedPrompt)
+if err != nil {
+treturn err
+}		fmt.Fprintf(resultsFile, "Protected: %s\n", protectedPrompt)
 		fmt.Fprintf(resultsFile, "Risk score: %.2f\n", result.RiskScore)
 		fmt.Fprintf(resultsFile, "Action taken: %s\n", result.ActionTaken)
 		fmt.Fprintf(resultsFile, "Processing time: %v\n", result.ProcessingTime)

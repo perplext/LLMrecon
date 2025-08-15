@@ -346,7 +346,9 @@ func processTemplates(
 			
 			// Process template
 			_, err := executionOptimizer.ExecuteTemplate(context.Background(), template, nil)
-			
+if err != nil {
+treturn err
+}			
 			execDuration := time.Since(execStartTime)
 			
 			// Capture memory after execution
@@ -368,7 +370,9 @@ func processTemplates(
 		// Use concurrency manager directly
 		for _, template := range templates {
 			template := template // Create local copy for closure
-			
+if err != nil {
+treturn err
+}			
 			err := concurrencyManager.Submit(func(ctx context.Context) error {
 				execStartTime := time.Now()
 				
@@ -403,7 +407,9 @@ func processTemplates(
 			if err != nil {
 				log.Printf("Error submitting template %s: %v\n", template.ID, err)
 			}
-		}
+if err != nil {
+treturn err
+}		}
 		
 		// Wait for all tasks to complete
 		if err := concurrencyManager.Wait(context.Background()); err != nil {

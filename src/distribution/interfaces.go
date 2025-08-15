@@ -10,7 +10,6 @@ type Logger interface {
 	Warn(msg string, keysAndValues ...interface{})
 	Error(msg string, keysAndValues ...interface{})
 	Debug(msg string, keysAndValues ...interface{})
-}
 
 // BuildPipeline interface for building cross-platform binaries
 type BuildPipeline interface {
@@ -18,7 +17,6 @@ type BuildPipeline interface {
 	GetBuildStatus(buildID string) (*BuildStatus, error)
 	ListBuilds(ctx context.Context, filters BuildFilters) ([]BuildInfo, error)
 	CleanupBuilds(ctx context.Context, olderThan time.Time) error
-}
 
 // PackageManager interface for package manager integration
 type PackageManager interface {
@@ -37,7 +35,6 @@ type PackageManager interface {
 	GetType() PackageManagerType
 	IsAvailable() bool
 	Validate() error
-}
 
 // DistributionChannel interface for distribution channels
 type DistributionChannel interface {
@@ -61,7 +58,6 @@ type DistributionChannel interface {
 	GetSupportedPlatforms() []Platform
 	IsAvailable() bool
 	Validate() error
-}
 
 // UpdateVerifier interface for verifying updates
 type UpdateVerifier interface {
@@ -78,7 +74,6 @@ type UpdateVerifier interface {
 	// Configuration
 	GetVerificationConfig() VerificationConfig
 	UpdateConfig(ctx context.Context, config VerificationConfig) error
-}
 
 // InstallationAnalytics interface for tracking installations
 type InstallationAnalytics interface {
@@ -100,7 +95,6 @@ type InstallationAnalytics interface {
 	// Configuration
 	IsEnabled() bool
 	GetRetentionPeriod() time.Duration
-}
 
 // ReleaseManager interface for managing releases
 type ReleaseManager interface {
@@ -121,7 +115,6 @@ type ReleaseManager interface {
 	// Reporting
 	GetReleaseStatus(ctx context.Context, releaseID string) (*ReleaseStatus, error)
 	ListReleases(ctx context.Context, filters ReleaseFilters) ([]ReleaseInfo, error)
-}
 
 // ArtifactStorage interface for storing build artifacts
 type ArtifactStorage interface {
@@ -142,7 +135,6 @@ type ArtifactStorage interface {
 	// Cleanup operations
 	Cleanup(ctx context.Context, retentionPolicy RetentionPolicy) error
 	GetStorageUsage(ctx context.Context) (*StorageUsage, error)
-}
 
 // Data types for interfaces
 
@@ -188,7 +180,6 @@ type BuildInfo struct {
 	Targets   []BuildTarget `json:"targets"`
 	StartTime time.Time   `json:"start_time"`
 	Duration  time.Duration `json:"duration"`
-}
 
 type BuildFilters struct {
 	Status    []BuildState `json:"status,omitempty"`
@@ -205,7 +196,6 @@ type BuildError struct {
 	Error   string      `json:"error"`
 	Stage   string      `json:"stage"`
 	Details map[string]interface{} `json:"details,omitempty"`
-}
 
 type BuildState string
 
@@ -238,7 +228,6 @@ type Package struct {
 	Artifact *BuildArtifact  `json:"artifact"`
 	Location *StorageLocation `json:"location"`
 	CreatedAt time.Time      `json:"created_at"`
-}
 
 type PackageInfo struct {
 	Name         string            `json:"name"`
@@ -288,7 +277,6 @@ type Release struct {
 	PublishedAt *time.Time         `json:"published_at,omitempty"`
 	Status      ReleaseStatus      `json:"status"`
 	Metadata    map[string]interface{} `json:"metadata"`
-}
 
 type Asset struct {
 	ID           string            `json:"id"`
@@ -309,7 +297,6 @@ type ReleaseFilters struct {
 	CreatedAfter *time.Time    `json:"created_after,omitempty"`
 	Limit     int              `json:"limit,omitempty"`
 	Offset    int              `json:"offset,omitempty"`
-}
 
 type ReleaseStatus string
 
@@ -326,7 +313,6 @@ type Signature struct {
 	KeyID     string    `json:"key_id"`
 	Signature string    `json:"signature"`
 	Timestamp time.Time `json:"timestamp"`
-}
 
 type PublicKey struct {
 	ID          string    `json:"id"`
@@ -335,7 +321,6 @@ type PublicKey struct {
 	Fingerprint string    `json:"fingerprint"`
 	CreatedAt   time.Time `json:"created_at"`
 	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
-}
 
 // Analytics-related types
 type InstallationEvent struct {
@@ -349,7 +334,6 @@ type InstallationEvent struct {
 	IPAddress    string            `json:"ip_address"`
 	Country      string            `json:"country,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata"`
-}
 
 type UpdateEvent struct {
 	EventID         string            `json:"event_id"`
@@ -390,7 +374,6 @@ type ErrorEvent struct {
 	Platform     Platform          `json:"platform"`
 	Architecture Architecture      `json:"architecture"`
 	Metadata     map[string]interface{} `json:"metadata"`
-}
 
 type InstallationStats struct {
 	TotalInstalls     int64                    `json:"total_installs"`
@@ -401,7 +384,6 @@ type InstallationStats struct {
 	ByCountry         map[string]int64         `json:"by_country"`
 	GrowthRate        float64                  `json:"growth_rate"`
 	Period            TimePeriod               `json:"period"`
-}
 
 type UsageStats struct {
 	TotalSessions     int64                    `json:"total_sessions"`
@@ -420,7 +402,6 @@ type ErrorStats struct {
 	ErrorRate         float64                  `json:"error_rate"`
 	TopErrors         []ErrorSummary           `json:"top_errors"`
 	Period            TimePeriod               `json:"period"`
-}
 
 type ErrorSummary struct {
 	ErrorType    string  `json:"error_type"`
@@ -439,7 +420,6 @@ type AnalyticsFilters struct {
 	EndDate      *time.Time    `json:"end_date,omitempty"`
 	Limit        int           `json:"limit,omitempty"`
 	Offset       int           `json:"offset,omitempty"`
-}
 
 type AnalyticsReport struct {
 	ID               string               `json:"id"`
@@ -465,7 +445,6 @@ const (
 type TimePeriod struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
-}
 
 type ExportFormat string
 
@@ -497,7 +476,6 @@ type ReleaseExecution struct {
 	CompletedAt *time.Time           `json:"completed_at,omitempty"`
 	Logs        []ReleaseLog         `json:"logs"`
 	HealthStatus *HealthStatus       `json:"health_status,omitempty"`
-}
 
 type ReleaseExecutionStatus string
 
@@ -515,14 +493,12 @@ type ReleaseLog struct {
 	Level     string    `json:"level"`
 	Message   string    `json:"message"`
 	Context   map[string]interface{} `json:"context,omitempty"`
-}
 
 type HealthStatus struct {
 	Overall     HealthState           `json:"overall"`
 	Checks      []HealthCheckResult   `json:"checks"`
 	Score       float64               `json:"score"`
 	UpdatedAt   time.Time             `json:"updated_at"`
-}
 
 type HealthCheckResult struct {
 	Name      string      `json:"name"`
@@ -531,7 +507,6 @@ type HealthCheckResult struct {
 	Duration  time.Duration `json:"duration"`
 	Timestamp time.Time   `json:"timestamp"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
-}
 
 type HealthState string
 
@@ -550,7 +525,6 @@ type ReleaseInfo struct {
 	Progress    int                    `json:"progress"`
 	StartedAt   time.Time              `json:"started_at"`
 	CompletedAt *time.Time             `json:"completed_at,omitempty"`
-}
 
 // Storage-related types
 type StorageLocation struct {
@@ -584,14 +558,12 @@ type StorageFilters struct {
 	Tags         map[string]string `json:"tags,omitempty"`
 	Limit        int           `json:"limit,omitempty"`
 	Offset       int           `json:"offset,omitempty"`
-}
 
 type RetentionPolicy struct {
 	MaxAge       time.Duration `json:"max_age"`
 	MaxVersions  int           `json:"max_versions"`
 	MinVersions  int           `json:"min_versions"`
 	KeepLatest   bool          `json:"keep_latest"`
-}
 
 type StorageUsage struct {
 	TotalSize    int64     `json:"total_size"`
@@ -599,4 +571,3 @@ type StorageUsage struct {
 	ByPlatform   map[Platform]int64 `json:"by_platform"`
 	ByVersion    map[string]int64   `json:"by_version"`
 	LastUpdated  time.Time `json:"last_updated"`
-}

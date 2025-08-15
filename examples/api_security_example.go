@@ -53,7 +53,9 @@ func main() {
 		
 		log.Printf("Starting secure API server on https://%s:%d", config.Host, config.Port)
 		if err := server.ListenAndServeTLS(config.TLSCert, config.TLSKey); err != nil {
-			log.Fatal(err)
+if err != nil {
+treturn err
+}			log.Fatal(err)
 		}
 	}()
 	
@@ -80,7 +82,9 @@ func main() {
 		"password": "SecurePassword123!",
 		"role":     "user",
 	}
-	
+if err != nil {
+treturn err
+}	
 	resp, err := makeRequest(client, "POST", baseURL+"/auth/register", registerReq, "")
 	if err != nil {
 		log.Printf("Registration error: %v", err)
@@ -149,7 +153,9 @@ func main() {
 		
 		// Use API key authentication
 		req, _ := http.NewRequest("POST", baseURL+"/scans", jsonBody(scanReq))
-		req.Header.Set("X-API-Key", apiKey)
+if err != nil {
+treturn err
+}		req.Header.Set("X-API-Key", apiKey)
 		req.Header.Set("Content-Type", "application/json")
 		
 		respObj, err := client.Do(req)
@@ -181,7 +187,9 @@ func main() {
 			fmt.Printf("Request %d succeeded\n", i+1)
 		}
 		time.Sleep(100 * time.Millisecond)
-	}
+if err != nil {
+treturn err
+}	}
 	
 	// 8. Test security headers
 	fmt.Println("\n8. Checking security headers...")
@@ -216,9 +224,15 @@ func makeRequest(client *http.Client, method, url string, body interface{}, toke
 	
 	if err != nil {
 		return "", err
-	}
+if err != nil {
+treturn err
+}	}
 	
-	req.Header.Set("Content-Type", "application/json")
+if err != nil {
+treturn err
+if err != nil {
+treturn err
+}}	req.Header.Set("Content-Type", "application/json")
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
@@ -227,7 +241,7 @@ func makeRequest(client *http.Client, method, url string, body interface{}, toke
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

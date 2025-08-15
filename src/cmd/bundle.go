@@ -28,8 +28,6 @@ Bundles support OWASP LLM Top 10 categorization and compliance documentation.`,
   
   # View bundle information
   LLMrecon bundle info update.bundle`,
-}
 
 func init() {
 	rootCmd.AddCommand(bundleCmd)
-}

@@ -1,12 +1,13 @@
 // Package errors provides error handling functionality for bundle operations
 package errors
 
-import "io"
-
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 	"strings"
+	"time"
 )
 
 // RecoveryStrategy defines the interface for error recovery strategies
@@ -162,7 +163,7 @@ func (s *FileSystemRecoveryStrategy) Recover(ctx context.Context, err *BundleErr
 	}
 	
 	// Check the specific error message to determine recovery strategy
-	if os.IsNotExist(err.Original) {
+	if os.IsNotExist(err.Cause) {
 		// Try to create the directory
 		dirPath := filePath
 		if fileInfo, err := os.Stat(filePath); err == nil && !fileInfo.IsDir() {
@@ -171,7 +172,7 @@ func (s *FileSystemRecoveryStrategy) Recover(ctx context.Context, err *BundleErr
 		}
 		
 		// Create the directory
-		if err := os.MkdirAll(dirPath, 0755); err != nil {
+		if err := os.MkdirAll(dirPath, 0700); err != nil {
 			return false, fmt.Errorf("failed to create directory: %w", err)
 		}
 		
@@ -180,7 +181,7 @@ func (s *FileSystemRecoveryStrategy) Recover(ctx context.Context, err *BundleErr
 	}
 	
 	// Handle permission errors
-	if os.IsPermission(err.Original) {
+	if os.IsPermission(err.Cause) {
 		// Log that we can't automatically fix permission errors
 		fmt.Fprintf(s.Logger, "Permission error for %s - cannot automatically recover\n", filePath)
 		return false, fmt.Errorf("permission error requires manual intervention")
@@ -232,18 +233,17 @@ func (s *BackupRecoveryStrategy) Recover(ctx context.Context, err *BundleError) 
 	}
 	
 	// Ensure backup directory exists
-	if err := os.MkdirAll(s.BackupDir, 0755); err != nil {
+	if err := os.MkdirAll(s.BackupDir, 0700); err != nil {
 		return false, fmt.Errorf("failed to create backup directory: %w", err)
 	}
 	
 	// Create a new backup with timestamp
 	backupPath := fmt.Sprintf("%s/backup_%s", s.BackupDir, time.Now().Format("20060102_150405"))
-	
 	fmt.Fprintf(s.Logger, "Creating new backup at: %s\n", backupPath)
 	
 	// In a real implementation, this would copy files from targetDir to backupPath
 	// For now, we'll just create the directory
-	if err := os.MkdirAll(backupPath, 0755); err != nil {
+	if err := os.MkdirAll(backupPath, 0700); err != nil {
 		return false, fmt.Errorf("failed to create backup directory: %w", err)
 	}
 	
@@ -353,3 +353,4 @@ func (s *ConflictRecoveryStrategy) Recover(ctx context.Context, err *BundleError
 	
 	return true, nil
 }
+	

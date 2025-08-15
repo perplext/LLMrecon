@@ -37,7 +37,6 @@ type ResourceLimits struct {
 	NetworkAccess bool
 	// FileSystemAccess determines if file system access is allowed
 	FileSystemAccess bool
-}
 
 // DefaultResourceLimits returns the default resource limits
 func DefaultResourceLimits() ResourceLimits {
@@ -51,7 +50,6 @@ func DefaultResourceLimits() ResourceLimits {
 		NetworkAccess:    false,
 		FileSystemAccess: false,
 	}
-}
 
 // SandboxOptions defines options for the template sandbox
 type SandboxOptions struct {
@@ -75,7 +73,6 @@ type SandboxOptions struct {
 	LogDirectory string
 	// ValidationOptions are the options for template validation
 	ValidationOptions *security.VerificationOptions
-}
 
 // DefaultSandboxOptions returns the default sandbox options
 func DefaultSandboxOptions() *SandboxOptions {
@@ -100,7 +97,6 @@ func DefaultSandboxOptions() *SandboxOptions {
 		LogDirectory:       "",
 		ValidationOptions:  security.DefaultVerificationOptions(),
 	}
-}
 
 // ExecutionResult represents the result of template execution in the sandbox
 type ExecutionResult struct {
@@ -116,7 +112,6 @@ type ExecutionResult struct {
 	ResourceUsage ResourceUsage
 	// SecurityIssues contains security issues found during execution
 	SecurityIssues []*security.SecurityIssue
-}
 
 // ResourceUsage contains information about resource usage during execution
 type ResourceUsage struct {
@@ -130,7 +125,6 @@ type ResourceUsage struct {
 	FileOperations int
 	// NetworkOperations is the number of network operations
 	NetworkOperations int
-}
 
 // TemplateSandbox is the interface for template sandboxes
 type TemplateSandbox interface {
@@ -151,7 +145,6 @@ type TemplateSandbox interface {
 	
 	// SetAllowList sets the allow list for template execution
 	SetAllowList(allowList *AllowList)
-}
 
 // AllowList defines allowed operations for template execution
 type AllowList struct {
@@ -165,7 +158,6 @@ type AllowList struct {
 	NetworkDomains []string
 	// EnvironmentVariables is a list of allowed environment variables
 	EnvironmentVariables []string
-}
 
 // NewAllowList creates a new allow list with default values
 func NewAllowList() *AllowList {
@@ -200,4 +192,3 @@ func NewAllowList() *AllowList {
 			"USER",
 		},
 	}
-}

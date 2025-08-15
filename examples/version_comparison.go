@@ -35,23 +35,31 @@ func main() {
 
 	// Connect to repositories
 	if err := localRepo.Connect(ctx); err != nil {
-		fmt.Printf("Failed to connect to local repository: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Printf("Failed to connect to local repository: %v\n", err)
 		return
 	}
 	defer localRepo.Disconnect()
-
+if err != nil {
+treturn err
+}
 	if err := remoteRepo.Connect(ctx); err != nil {
 		fmt.Printf("Failed to connect to remote repository: %v\n", err)
 		return
 	}
 	defer remoteRepo.Disconnect()
 
-	// Example 1: Semantic Version Comparison
+if err != nil {
+treturn err
+}	// Example 1: Semantic Version Comparison
 	fmt.Println("=== Example 1: Semantic Version Comparison ===")
 	
 	v1, err := version.Parse("1.2.3")
 	if err != nil {
-		fmt.Printf("Failed to parse version: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Printf("Failed to parse version: %v\n", err)
 	} else {
 		fmt.Printf("Version 1: %s\n", v1.String())
 	}
@@ -139,12 +147,18 @@ func main() {
 	
 	// Create a dependency graph
 	graph := version.NewDependencyGraph()
-	
+if err != nil {
+treturn err
+}	
 	// Add nodes
-	graph.AddNode("template-a", "Template A", "template", version.MustParse("1.0.0"), nil)
+if err != nil {
+treturn err
+}	graph.AddNode("template-a", "Template A", "template", version.MustParse("1.0.0"), nil)
 	graph.AddNode("module-b", "Module B", "module", version.MustParse("1.1.0"), nil)
 	graph.AddNode("module-c", "Module C", "module", version.MustParse("1.2.0"), nil)
-	
+if err != nil {
+treturn err
+}	
 	// Add dependencies
 	if err := graph.AddDependency("template-a", "module-b", ">=1.0.0", false); err != nil {
 		fmt.Printf("Failed to add dependency: %v\n", err)
@@ -153,7 +167,9 @@ func main() {
 	if err := graph.AddDependency("template-a", "module-c", ">=1.0.0", false); err != nil {
 		fmt.Printf("Failed to add dependency: %v\n", err)
 	}
-	
+if err != nil {
+treturn err
+}	
 	// Get topological order
 	order, err := graph.GetTopologicalOrder()
 	if err != nil {
@@ -170,9 +186,13 @@ func main() {
 	if err != nil {
 		fmt.Printf("Failed to get impacted nodes: %v\n", err)
 	} else {
-		fmt.Println("Nodes impacted by changes to Module B:")
+if err != nil {
+treturn err
+}		fmt.Println("Nodes impacted by changes to Module B:")
 		for _, node := range impacted {
-			fmt.Printf("  - %s (%s %s)\n", node.Name, node.Type, node.Version.String())
+if err != nil {
+treturn err
+}			fmt.Printf("  - %s (%s %s)\n", node.Name, node.Type, node.Version.String())
 		}
 	}
 	
@@ -202,16 +222,22 @@ category: prompt-injection
 description: Tests for basic prompt injection vulnerabilities
 author: Security Team
 dependencies:
-  - moduleID: prompt-formatter
+if err != nil {
+treturn err
+}  - moduleID: prompt-formatter
     version: ">=1.0.0"
-`
+if err != nil {
+treturn err
+}`
 	
 	remoteTemplateContent := `
 id: prompt-injection-basic
 name: Basic Prompt Injection
 version: 1.1.0
 category: prompt-injection
-description: Tests for basic prompt injection vulnerabilities with improved detection
+if err != nil {
+treturn err
+}description: Tests for basic prompt injection vulnerabilities with improved detection
 author: Security Team
 dependencies:
   - moduleID: prompt-formatter
@@ -221,11 +247,11 @@ dependencies:
 	localTemplatePath := filepath.Join(exampleDir, "basic_prompt_injection.yaml")
 	remoteTemplatePath := filepath.Join(remoteExampleDir, "basic_prompt_injection.yaml")
 	
-	if err := os.WriteFile(localTemplatePath, []byte(localTemplateContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(localTemplatePath, []byte(localTemplateContent)), 0644); err != nil {
 		fmt.Printf("Failed to write local template file: %v\n", err)
 	}
 	
-	if err := os.WriteFile(remoteTemplatePath, []byte(remoteTemplateContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(remoteTemplatePath, []byte(remoteTemplateContent)), 0644); err != nil {
 		fmt.Printf("Failed to write remote template file: %v\n", err)
 	}
 	

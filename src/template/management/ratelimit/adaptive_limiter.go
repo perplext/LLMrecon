@@ -40,7 +40,6 @@ type UserRateLimitPolicy struct {
 	// ResetInterval is the interval at which the user's tokens are reset
 	// This controls how often the user's token allocation is refreshed
 	ResetInterval time.Duration
-}
 
 // AdaptiveLimiter implements an adaptive rate limiter with fairness mechanisms.
 //
@@ -55,6 +54,7 @@ type UserRateLimitPolicy struct {
 // During periods of high contention (when loadFactor < 0.8), the limiter activates
 // its fairness mechanisms, which queue requests and process them based on user priority.
 // This ensures that high-priority operations continue to function even when the system
+}
 // is under heavy load.
 type AdaptiveLimiter struct {
 	// Global limiter controls the overall system throughput
@@ -100,8 +100,8 @@ type AdaptiveLimiter struct {
 	
 	// Whether to collect statistics
 	statsEnabled bool
-}
 
+}
 // NewAdaptiveLimiter creates a new adaptive rate limiter
 func NewAdaptiveLimiter(globalQPS float64, globalBurst int, defaultUserQPS float64, defaultUserBurst int) *AdaptiveLimiter {
 	return &AdaptiveLimiter{
@@ -119,9 +119,9 @@ func NewAdaptiveLimiter(globalQPS float64, globalBurst int, defaultUserQPS float
 		stats:             NewStatsCollector(1000), // Keep the last 1000 events
 		statsEnabled:      true,
 	}
-}
 
 // Acquire acquires a token from the global limiter
+}
 func (l *AdaptiveLimiter) Acquire(ctx context.Context) error {
 	startTime := time.Now()
 	
@@ -154,7 +154,6 @@ func (l *AdaptiveLimiter) Acquire(ctx context.Context) error {
 	}
 	
 	return nil
-}
 
 // AcquireForUser acquires a token for a specific user with priority-based fairness.
 //
@@ -169,6 +168,7 @@ func (l *AdaptiveLimiter) Acquire(ctx context.Context) error {
 // that high-priority users receive preferential treatment.
 //
 // Returns an error if any rate limit is exceeded or if the context is canceled.
+}
 func (l *AdaptiveLimiter) AcquireForUser(ctx context.Context, userID string) error {
 	startTime := time.Now()
 	
@@ -272,19 +272,19 @@ func (l *AdaptiveLimiter) AcquireForUser(ctx context.Context, userID string) err
 	}
 	
 	return nil
-}
 
 // Release releases a token (no-op for token bucket)
+}
 func (l *AdaptiveLimiter) Release() {
 	// No-op for token bucket limiter
-}
 
 // ReleaseForUser releases a token for a specific user (no-op for token bucket)
+}
 func (l *AdaptiveLimiter) ReleaseForUser(userID string) {
 	// No-op for token bucket limiter
-}
 
 // getUserLimiter gets or creates a rate limiter for a specific user
+}
 func (l *AdaptiveLimiter) getUserLimiter(userID string) *rate.Limiter {
 	l.mu.RLock()
 	limiter, exists := l.userLimiters[userID]
@@ -313,31 +313,31 @@ func (l *AdaptiveLimiter) getUserLimiter(userID string) *rate.Limiter {
 	
 	l.userLimiters[userID] = limiter
 	return limiter
-}
 
 // GetLimit returns the current global rate limit
+}
 func (l *AdaptiveLimiter) GetLimit() int {
 	return l.globalLimiter.Burst()
-}
 
 // GetUserLimit returns the current rate limit for a specific user
+}
 func (l *AdaptiveLimiter) GetUserLimit(userID string) int {
 	limiter := l.getUserLimiter(userID)
 	return limiter.Burst()
-}
 
 // SetLimit sets the global rate limit
+}
 func (l *AdaptiveLimiter) SetLimit(limit int) {
 	l.globalLimiter.SetBurst(limit)
-}
 
 // SetUserLimit sets the rate limit for a specific user
+}
 func (l *AdaptiveLimiter) SetUserLimit(userID string, limit int) {
 	limiter := l.getUserLimiter(userID)
 	limiter.SetBurst(limit)
-}
 
 // SetUserPolicy sets a rate limit policy for a specific user
+}
 func (l *AdaptiveLimiter) SetUserPolicy(policy *UserRateLimitPolicy) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -349,15 +349,14 @@ func (l *AdaptiveLimiter) SetUserPolicy(policy *UserRateLimitPolicy) {
 		limiter.SetLimit(rate.Limit(policy.QPS))
 		limiter.SetBurst(policy.Burst)
 	}
-}
 
 // GetUserPolicy gets the rate limit policy for a specific user
+}
 func (l *AdaptiveLimiter) GetUserPolicy(userID string) *UserRateLimitPolicy {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	
 	return l.userPolicies[userID]
-}
 
 // applyDynamicAdjustment applies dynamic adjustments based on system load and user priority.
 // 
@@ -368,6 +367,7 @@ func (l *AdaptiveLimiter) GetUserPolicy(userID string) *UserRateLimitPolicy {
 //
 // The adjustment algorithm ensures that even during high load, high-priority users
 // maintain reasonable throughput while low-priority users are throttled more aggressively.
+}
 func (l *AdaptiveLimiter) applyDynamicAdjustment(userID string) {
 	if !l.dynamicAdjustment {
 		return
@@ -457,7 +457,6 @@ func (l *AdaptiveLimiter) applyDynamicAdjustment(userID string) {
 	// Update limiter
 	limiter.SetLimit(adjustedLimit)
 	limiter.SetBurst(adjustedBurst)
-}
 
 // SetLoadFactor sets the system load factor for dynamic adjustments
 func (l *AdaptiveLimiter) SetLoadFactor(factor float64) {
@@ -465,25 +464,25 @@ func (l *AdaptiveLimiter) SetLoadFactor(factor float64) {
 	defer l.mu.Unlock()
 	
 	l.loadFactor = factor
-}
 
 // EnableDynamicAdjustment enables or disables dynamic adjustment
+}
 func (l *AdaptiveLimiter) EnableDynamicAdjustment(enabled bool) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	
 	l.dynamicAdjustment = enabled
-}
 
 // EnableFairness enables or disables fairness mechanisms
+}
 func (l *AdaptiveLimiter) EnableFairness(enabled bool) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	
 	l.fairnessEnabled = enabled
-}
 
 // trackUsage tracks usage for a user
+}
 func (l *AdaptiveLimiter) trackUsage(userID string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -501,9 +500,9 @@ func (l *AdaptiveLimiter) trackUsage(userID string) {
 			l.lastResetTime = now
 		}
 	}
-}
 
 // checkUserTokens checks if a user has exceeded their token allocation
+}
 func (l *AdaptiveLimiter) checkUserTokens(userID string) bool {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -522,29 +521,28 @@ func (l *AdaptiveLimiter) checkUserTokens(userID string) bool {
 	
 	// Check if user has exceeded their token allocation
 	return usage < policy.MaxTokens
-}
 
 // GetUserUsage gets the current usage for a user
+}
 func (l *AdaptiveLimiter) GetUserUsage(userID string) int {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	
 	return l.userUsage[userID]
-}
 
 // ResetUserUsage resets the usage counter for a user
+}
 func (l *AdaptiveLimiter) ResetUserUsage(userID string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	
 	delete(l.userUsage, userID)
-}
 
 // ResetAllUserUsage resets all usage counters
+}
 func (l *AdaptiveLimiter) ResetAllUserUsage() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	
 	l.userUsage = make(map[string]int)
 	l.lastResetTime = time.Now()
-}

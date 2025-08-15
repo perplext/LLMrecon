@@ -15,17 +15,17 @@ import (
 type Handler struct {
 	service  *Service
 	validate *validator.Validate
-}
 
+}
 // NewHandler creates a new scan handler
 func NewHandler(service *Service) *Handler {
 	return &Handler{
 		service:  service,
 		validate: validator.New(),
 	}
-}
 
 // RegisterRoutes registers the scan API routes with the given router
+}
 func (h *Handler) RegisterRoutes(mux *http.ServeMux, middleware func(http.Handler) http.Handler) {
 	// Scan config endpoints
 	mux.Handle("/api/v1/scan-configs", middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -100,9 +100,9 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux, middleware func(http.Handle
 			http.Error(w, "Invalid path", http.StatusBadRequest)
 		}
 	})))
-}
 
 // listScanConfigs handles requests to list scan configurations
+}
 func (h *Handler) listScanConfigs(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
 	page, pageSize := getPaginationParams(r)
@@ -120,9 +120,9 @@ func (h *Handler) listScanConfigs(w http.ResponseWriter, r *http.Request) {
 		Pagination: *pagination,
 		Data:       configs,
 	})
-}
 
 // createScanConfig handles requests to create a new scan configuration
+}
 func (h *Handler) createScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	var req CreateScanConfigRequest
@@ -149,9 +149,9 @@ func (h *Handler) createScanConfig(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with the created config
 	h.respondWithJSON(w, http.StatusCreated, config)
-}
 
 // getScanConfig handles requests to get a scan configuration by ID
+}
 func (h *Handler) getScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/scan-configs/")
@@ -169,13 +169,12 @@ func (h *Handler) getScanConfig(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with the config
 	h.respondWithJSON(w, http.StatusOK, config)
-}
 
 // updateScanConfig handles requests to update a scan configuration
+}
 func (h *Handler) updateScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/scan-configs/")
-
 	// Parse request body
 	var req UpdateScanConfigRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -193,12 +192,11 @@ func (h *Handler) updateScanConfig(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
 	// Respond with the updated config
 	h.respondWithJSON(w, http.StatusOK, config)
-}
 
 // deleteScanConfig handles requests to delete a scan configuration
+}
 func (h *Handler) deleteScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/scan-configs/")
@@ -215,9 +213,9 @@ func (h *Handler) deleteScanConfig(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with success
 	w.WriteHeader(http.StatusNoContent)
-}
 
 // listScans handles requests to list scans
+}
 func (h *Handler) listScans(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
 	page, pageSize := getPaginationParams(r)
@@ -235,9 +233,9 @@ func (h *Handler) listScans(w http.ResponseWriter, r *http.Request) {
 		Pagination: *pagination,
 		Data:       scans,
 	})
-}
 
 // createScan handles requests to create a new scan
+}
 func (h *Handler) createScan(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	var req CreateScanRequest
@@ -265,13 +263,12 @@ func (h *Handler) createScan(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with the created scan
 	h.respondWithJSON(w, http.StatusAccepted, scan)
-}
 
 // getScan handles requests to get a scan by ID
+}
 func (h *Handler) getScan(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/scans/")
-
 	// Get scan
 	scan, err := h.service.GetScan(r.Context(), id)
 	if err != nil {
@@ -285,9 +282,9 @@ func (h *Handler) getScan(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with the scan
 	h.respondWithJSON(w, http.StatusOK, scan)
-}
 
 // cancelScan handles requests to cancel a running scan
+}
 func (h *Handler) cancelScan(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
 	path := r.URL.Path
@@ -306,14 +303,13 @@ func (h *Handler) cancelScan(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with the updated scan
 	h.respondWithJSON(w, http.StatusOK, scan)
-}
 
 // getScanResults handles requests to get the results for a scan
+}
 func (h *Handler) getScanResults(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
 	path := r.URL.Path
 	id := strings.TrimSuffix(strings.TrimPrefix(path, "/api/v1/scans/"), "/results")
-
 	// Parse query parameters
 	page, pageSize := getPaginationParams(r)
 	filters := getFilterParams(r)
@@ -334,9 +330,9 @@ func (h *Handler) getScanResults(w http.ResponseWriter, r *http.Request) {
 		Pagination: *pagination,
 		Data:       results,
 	})
-}
 
 // respondWithJSON writes a JSON response
+}
 func (h *Handler) respondWithJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -347,9 +343,9 @@ func (h *Handler) respondWithJSON(w http.ResponseWriter, status int, data interf
 		// instead of fmt.Printf
 		// fmt.Printf("Error encoding JSON response: %v\n", err)
 	}
-}
 
 // respondWithError writes an error response
+}
 func (h *Handler) respondWithError(w http.ResponseWriter, status int, message string, err error) {
 	// In a real implementation, we would log the error
 	// fmt.Printf("Error: %s: %v\n", message, err)
@@ -362,11 +358,11 @@ func (h *Handler) respondWithError(w http.ResponseWriter, status int, message st
 
 	// Write response
 	h.respondWithJSON(w, status, response)
-}
 
 // Helper functions
 
 // getPaginationParams extracts pagination parameters from the request
+}
 func getPaginationParams(r *http.Request) (int, int) {
 	// Get page parameter
 	pageStr := r.URL.Query().Get("page")
@@ -387,9 +383,9 @@ func getPaginationParams(r *http.Request) (int, int) {
 	}
 
 	return page, pageSize
-}
 
 // getFilterParams extracts filter parameters from the request
+}
 func getFilterParams(r *http.Request) FilterParams {
 	return FilterParams{
 		Status:    r.URL.Query().Get("status"),
@@ -398,11 +394,9 @@ func getFilterParams(r *http.Request) FilterParams {
 		EndDate:   r.URL.Query().Get("end_date"),
 		Search:    r.URL.Query().Get("search"),
 	}
-}
 
 // getUserIDFromContext gets the user ID from the request context
 // In a real implementation, this would come from authentication middleware
+}
 func getUserIDFromContext(ctx interface{}) string {
 	// Placeholder implementation
-	return "user-1"
-}

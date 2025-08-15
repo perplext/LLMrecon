@@ -65,7 +65,6 @@ type Conflict struct {
 	ResolutionPath string
 	// Resolved indicates whether the conflict has been resolved
 	Resolved bool
-}
 
 // ConflictResolution represents a resolution for a conflict
 type ConflictResolution struct {
@@ -79,7 +78,6 @@ type ConflictResolution struct {
 	Success bool
 	// Error is the error that occurred during resolution (if any)
 	Error error
-}
 
 // ConflictDetector defines the interface for conflict detection
 type ConflictDetector interface {
@@ -89,7 +87,6 @@ type ConflictDetector interface {
 	DetectContentConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error)
 	// DetectVersionConflicts detects version conflicts between the bundle and the target directory
 	DetectVersionConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error)
-}
 
 // ConflictResolver defines the interface for conflict resolution
 type ConflictResolver interface {
@@ -101,13 +98,11 @@ type ConflictResolver interface {
 	GetDefaultStrategy(conflictType ConflictType) ConflictResolutionStrategy
 	// SetDefaultStrategy sets the default resolution strategy for a conflict type
 	SetDefaultStrategy(conflictType ConflictType, strategy ConflictResolutionStrategy)
-}
 
 // DefaultConflictDetector is the default implementation of ConflictDetector
 type DefaultConflictDetector struct {
 	// Logger is the logger for conflict detection operations
 	Logger io.Writer
-}
 
 // NewConflictDetector creates a new conflict detector
 func NewConflictDetector(logger io.Writer) ConflictDetector {
@@ -117,7 +112,6 @@ func NewConflictDetector(logger io.Writer) ConflictDetector {
 	return &DefaultConflictDetector{
 		Logger: logger,
 	}
-}
 
 // DetectConflicts detects conflicts between the bundle and the target directory
 func (d *DefaultConflictDetector) DetectConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error) {
@@ -159,7 +153,6 @@ func (d *DefaultConflictDetector) DetectConflicts(ctx context.Context, bundle *B
 	conflicts = append(conflicts, versionConflicts...)
 
 	return conflicts, nil
-}
 
 // DetectContentConflicts detects content conflicts between the bundle and the target directory
 func (d *DefaultConflictDetector) DetectContentConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error) {
@@ -235,8 +228,6 @@ func (d *DefaultConflictDetector) DetectContentConflicts(ctx context.Context, bu
 	}
 
 	return conflicts, nil
-}
-
 // DetectVersionConflicts detects version conflicts between the bundle and the target directory
 func (d *DefaultConflictDetector) DetectVersionConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error) {
 	var conflicts []*Conflict
@@ -279,14 +270,12 @@ func (d *DefaultConflictDetector) DetectVersionConflicts(ctx context.Context, bu
 	}
 
 	return conflicts, nil
-}
 
 // getItemVersion gets the version of an item
 func (d *DefaultConflictDetector) getItemVersion(path string, itemType string) (string, error) {
 	// In a real implementation, this would parse the file to extract version information
 	// For now, we'll just return a mock version
 	return "1.0.0", nil
-}
 
 // DefaultConflictResolver is the default implementation of ConflictResolver
 type DefaultConflictResolver struct {
@@ -298,7 +287,6 @@ type DefaultConflictResolver struct {
 	PromptCallback func(conflict *Conflict) (ConflictResolutionStrategy, error)
 	// AuditLogger is used for logging audit events
 	AuditLogger *errors.AuditLogger
-}
 
 // NewConflictResolver creates a new conflict resolver
 func NewConflictResolver(logger io.Writer, auditLogger *errors.AuditLogger, promptCallback func(conflict *Conflict) (ConflictResolutionStrategy, error)) ConflictResolver {
@@ -327,7 +315,6 @@ func NewConflictResolver(logger io.Writer, auditLogger *errors.AuditLogger, prom
 		PromptCallback:    promptCallback,
 		AuditLogger:       auditLogger,
 	}
-}
 
 // ResolveConflict resolves a single conflict
 func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict *Conflict) (*ConflictResolution, error) {
@@ -505,12 +492,10 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 	}
 
 	return resolution, nil
-}
 // ResolveConflicts resolves multiple conflicts
 func (r *DefaultConflictResolver) ResolveConflicts(ctx context.Context, conflicts []*Conflict) ([]*ConflictResolution, error) {
 	var resolutions []*ConflictResolution
 	var errors []error
-
 	// Log audit event for batch conflict resolution start
 	if r.AuditLogger != nil {
 		details := map[string]interface{}{
@@ -585,7 +570,6 @@ func (r *DefaultConflictResolver) ResolveConflicts(ctx context.Context, conflict
 	}
 	
 	return resolutions, nil
-}
 
 // GetDefaultStrategy gets the default resolution strategy for a conflict type
 func (r *DefaultConflictResolver) GetDefaultStrategy(conflictType ConflictType) ConflictResolutionStrategy {
@@ -594,23 +578,21 @@ func (r *DefaultConflictResolver) GetDefaultStrategy(conflictType ConflictType) 
 		return PromptStrategy
 	}
 	return strategy
-}
 
 // SetDefaultStrategy sets the default resolution strategy for a conflict type
 func (r *DefaultConflictResolver) SetDefaultStrategy(conflictType ConflictType, strategy ConflictResolutionStrategy) {
 	r.DefaultStrategies[conflictType] = strategy
-}
 
 // mergeFiles merges two files and returns the path to the merged file
 func (r *DefaultConflictResolver) mergeFiles(sourcePath, targetPath string) (string, error) {
 	// In a real implementation, this would use a diff/merge algorithm
 	// For now, we'll just create a simple merged file
-	sourceData, err := os.ReadFile(sourcePath)
+	sourceData, err := os.ReadFile(filepath.Clean(sourcePath))
 	if err != nil {
 		return "", fmt.Errorf("failed to read source file: %w", err)
 	}
 
-	targetData, err := os.ReadFile(targetPath)
+	targetData, err := os.ReadFile(filepath.Clean(targetPath))
 	if err != nil {
 		return "", fmt.Errorf("failed to read target file: %w", err)
 	}
@@ -620,7 +602,7 @@ func (r *DefaultConflictResolver) mergeFiles(sourcePath, targetPath string) (str
 	if err != nil {
 		return "", fmt.Errorf("failed to create temporary file: %w", err)
 	}
-	defer tempFile.Close()
+	defer func() { if err := tempFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Write a simple merged file
 	_, err = tempFile.WriteString("<<<<<<< SOURCE\n")
@@ -645,16 +627,15 @@ func (r *DefaultConflictResolver) mergeFiles(sourcePath, targetPath string) (str
 	}
 
 	return tempFile.Name(), nil
-}
 
 // calculateFileHash calculates the SHA-256 hash of a file
 func calculateFileHash(path string) (string, error) {
 	// Open the file
-	file, err := os.Open(path)
+	file, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Create a new hash
 	hash := sha256.New()
@@ -669,5 +650,3 @@ func calculateFileHash(path string) (string, error) {
 	hashBytes := hash.Sum(nil)
 	hashString := hex.EncodeToString(hashBytes)
 
-	return hashString, nil
-}

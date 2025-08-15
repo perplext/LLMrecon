@@ -30,7 +30,6 @@ func NewSandbox(verifier security.TemplateVerifier, options *SandboxOptions) *De
 		allowList: NewAllowList(),
 		options:   options,
 	}
-}
 
 // Execute executes a template in the sandbox
 func (s *DefaultSandbox) Execute(ctx context.Context, template *format.Template, options *SandboxOptions) (*ExecutionResult, error) {
@@ -82,7 +81,6 @@ func (s *DefaultSandbox) Execute(ctx context.Context, template *format.Template,
 	result.SecurityIssues = issues
 	
 	return result, nil
-}
 
 // executeInSandbox executes a template in a controlled environment
 func (s *DefaultSandbox) executeInSandbox(ctx context.Context, template *format.Template, options *SandboxOptions) (*ExecutionResult, error) {
@@ -137,7 +135,6 @@ func (s *DefaultSandbox) executeInSandbox(ctx context.Context, template *format.
 			MemoryUsage:   10,
 		},
 	}, nil
-}
 
 // simulateTemplateExecution simulates template execution
 // In a real implementation, this would use actual containerization
@@ -160,7 +157,6 @@ func (s *DefaultSandbox) simulateTemplateExecution(template *format.Template, te
 	// In a real implementation, we would execute the template in a container
 	// For now, we'll just return a simulated output
 	return fmt.Sprintf("Simulated execution of template: %s", template.Name), nil
-}
 
 // ExecuteFile executes a template file in the sandbox
 func (s *DefaultSandbox) ExecuteFile(ctx context.Context, templatePath string, options *SandboxOptions) (*ExecutionResult, error) {
@@ -169,7 +165,7 @@ func (s *DefaultSandbox) ExecuteFile(ctx context.Context, templatePath string, o
 	}
 	
 	// Read the template file
-	content, err := ioutil.ReadFile(templatePath)
+	content, err := ioutil.ReadFile(filepath.Clean(templatePath))
 	if err != nil {
 		return &ExecutionResult{
 			Success: false,
@@ -191,7 +187,7 @@ func (s *DefaultSandbox) ExecuteFile(ctx context.Context, templatePath string, o
 	
 	// Execute the template
 	return s.Execute(ctx, template, options)
-}
+	
 
 // Validate validates a template against security rules
 func (s *DefaultSandbox) Validate(ctx context.Context, template *format.Template, options *SandboxOptions) ([]*security.SecurityIssue, error) {
@@ -212,7 +208,6 @@ func (s *DefaultSandbox) Validate(ctx context.Context, template *format.Template
 	allIssues := append(result.Issues, additionalIssues...)
 	
 	return allIssues, nil
-}
 
 // validateSandboxRules performs sandbox-specific validation
 func (s *DefaultSandbox) validateSandboxRules(template *format.Template, options *SandboxOptions) []*security.SecurityIssue {
@@ -257,7 +252,6 @@ func (s *DefaultSandbox) validateSandboxRules(template *format.Template, options
 	}
 	
 	return issues
-}
 
 // ValidateFile validates a template file against security rules
 func (s *DefaultSandbox) ValidateFile(ctx context.Context, templatePath string, options *SandboxOptions) ([]*security.SecurityIssue, error) {
@@ -266,7 +260,7 @@ func (s *DefaultSandbox) ValidateFile(ctx context.Context, templatePath string, 
 	}
 	
 	// Read the template file
-	content, err := ioutil.ReadFile(templatePath)
+	content, err := ioutil.ReadFile(filepath.Clean(templatePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read template file: %w", err)
 	}
@@ -282,14 +276,20 @@ func (s *DefaultSandbox) ValidateFile(ctx context.Context, templatePath string, 
 	
 	// Validate the template
 	return s.Validate(ctx, template, options)
-}
 
 // GetAllowList returns the allow list for template execution
 func (s *DefaultSandbox) GetAllowList() *AllowList {
 	return s.allowList
-}
 
 // SetAllowList sets the allow list for template execution
 func (s *DefaultSandbox) SetAllowList(allowList *AllowList) {
 	s.allowList = allowList
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -2,12 +2,9 @@
 package interfaces
 
 import (
+	"context"
 	"io"
 	"time"
-)
-
-import (
-	"context"
 )
 
 // FileInfo represents information about a file in a repository
@@ -81,38 +78,14 @@ type AuditLogger interface {
 	// LogRepositoryDisconnect logs a repository disconnection event
 	LogRepositoryDisconnect(ctx context.Context, repositoryID string)
 	
-	// LogFileList logs a file listing event
-	LogFileList(ctx context.Context, repositoryID, pattern string, count int)
+	// LogRepositoryAccess logs a repository access event
+	LogRepositoryAccess(ctx context.Context, repositoryID string, filePath string)
 	
-	// LogFileListFailure logs a failed file listing event
-	LogFileListFailure(ctx context.Context, repositoryID, pattern string, err error)
-	
-	// LogFileDownloadStart logs the start of a file download
-	LogFileDownloadStart(ctx context.Context, repositoryID, filePath string)
-	
-	// LogFileDownloadSuccess logs a successful file download
-	LogFileDownloadSuccess(ctx context.Context, repositoryID, filePath string, sizeBytes int64)
-	
-	// LogFileDownloadFailure logs a failed file download
-	LogFileDownloadFailure(ctx context.Context, repositoryID, filePath string, err error)
-	
-	// LogFileExists logs a file existence check
-	LogFileExists(ctx context.Context, repositoryID, filePath string, exists bool)
-	
-	// LogFileExistsFailure logs a failed file existence check
-	LogFileExistsFailure(ctx context.Context, repositoryID, filePath string, err error)
-	
-	// LogGetLastModified logs a last modified time check
-	LogGetLastModified(ctx context.Context, repositoryID, filePath string, modTime time.Time)
-	
-	// LogGetLastModifiedFailure logs a failed last modified time check
-	LogGetLastModifiedFailure(ctx context.Context, repositoryID, filePath string, err error)
-	
-	// GenerateComplianceReport generates a compliance report for repository operations
-	GenerateComplianceReport(ctx context.Context, repositoryID string, startTime, endTime time.Time) (string, error)
+	// LogRepositoryError logs a repository error event
+	LogRepositoryError(ctx context.Context, repositoryID string, err error)
 }
 
-// Factory defines the interface for creating repositories
+// Factory creates repository instances
 type Factory interface {
 	// CreateRepository creates a repository from a configuration
 	CreateRepository(config *Config) (Repository, error)

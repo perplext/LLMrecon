@@ -27,7 +27,6 @@ type ResultCacheEntry struct {
 	LastAccessed time.Time
 	// Compressed indicates if the result is compressed
 	Compressed bool
-}
 
 // ResultCache is a cache for template execution results
 type ResultCache struct {
@@ -57,7 +56,6 @@ type ResultCache struct {
 	minTTL time.Duration
 	// maxTTL is the maximum TTL for adaptive TTL
 	maxTTL time.Duration
-}
 
 // NewResultCache creates a new result cache
 func NewResultCache(defaultTTL time.Duration, maxSize int, enableCompression bool) *ResultCache {
@@ -81,7 +79,6 @@ func NewResultCache(defaultTTL time.Duration, maxSize int, enableCompression boo
 		minTTL:            1 * time.Minute,
 		maxTTL:            1 * time.Hour,
 	}
-}
 
 // Get gets a template execution result from the cache
 func (c *ResultCache) Get(key string) (*interfaces.TemplateResult, bool) {
@@ -130,12 +127,10 @@ func (c *ResultCache) Get(key string) (*interfaces.TemplateResult, bool) {
 
 	c.stats.Hits++
 	return result, true
-}
 
 // Set sets a template execution result in the cache
 func (c *ResultCache) Set(key string, result *interfaces.TemplateResult) {
 	c.SetWithTTL(key, result, c.defaultTTL)
-}
 
 // SetWithTTL sets a template execution result in the cache with a specific TTL
 func (c *ResultCache) SetWithTTL(key string, result *interfaces.TemplateResult, ttl time.Duration) {
@@ -187,7 +182,6 @@ func (c *ResultCache) SetWithTTL(key string, result *interfaces.TemplateResult, 
 		// Check if cache exceeds max size
 		c.evictIfNeeded()
 	}
-}
 
 // Delete deletes a template execution result from the cache
 func (c *ResultCache) Delete(key string) {
@@ -195,7 +189,6 @@ func (c *ResultCache) Delete(key string) {
 	defer c.mutex.Unlock()
 
 	c.removeEntry(key)
-}
 
 // Clear clears the cache
 func (c *ResultCache) Clear() {
@@ -206,7 +199,6 @@ func (c *ResultCache) Clear() {
 	c.evictionList = list.New()
 	c.evictionMap = make(map[string]*list.Element)
 	c.currentSize = 0
-}
 
 // Size returns the number of entries in the cache
 func (c *ResultCache) Size() int {
@@ -214,7 +206,6 @@ func (c *ResultCache) Size() int {
 	defer c.mutex.RUnlock()
 
 	return len(c.cache)
-}
 
 // Prune removes entries from the cache that are older than the specified duration
 func (c *ResultCache) Prune(maxAge time.Duration) int {
@@ -235,7 +226,6 @@ func (c *ResultCache) Prune(maxAge time.Duration) int {
 	}
 
 	return count
-}
 
 // GetStats returns statistics about the cache
 func (c *ResultCache) GetStats() map[string]interface{} {
@@ -261,7 +251,6 @@ func (c *ResultCache) GetStats() map[string]interface{} {
 		"adaptive_ttl":      c.adaptiveTTL,
 		"memory_usage_bytes": c.currentSize,
 	}
-}
 
 // SetMaxSize sets the maximum size of the cache
 func (c *ResultCache) SetMaxSize(maxSize int) {
@@ -276,7 +265,6 @@ func (c *ResultCache) SetMaxSize(maxSize int) {
 
 	// Evict entries if needed
 	c.evictIfNeeded()
-}
 
 // SetDefaultTTL sets the default TTL for cache entries
 func (c *ResultCache) SetDefaultTTL(ttl time.Duration) {
@@ -288,7 +276,6 @@ func (c *ResultCache) SetDefaultTTL(ttl time.Duration) {
 	defer c.mutex.Unlock()
 
 	c.defaultTTL = ttl
-}
 
 // SetCompressionEnabled sets whether compression is enabled
 func (c *ResultCache) SetCompressionEnabled(enabled bool) {
@@ -296,7 +283,6 @@ func (c *ResultCache) SetCompressionEnabled(enabled bool) {
 	defer c.mutex.Unlock()
 
 	c.enableCompression = enabled
-}
 
 // SetCompressionLevel sets the compression level (1-9)
 func (c *ResultCache) SetCompressionLevel(level int) {
@@ -308,7 +294,6 @@ func (c *ResultCache) SetCompressionLevel(level int) {
 	defer c.mutex.Unlock()
 
 	c.compressionLevel = level
-}
 
 // SetAdaptiveTTL sets whether adaptive TTL is enabled
 func (c *ResultCache) SetAdaptiveTTL(enabled bool) {
@@ -316,7 +301,6 @@ func (c *ResultCache) SetAdaptiveTTL(enabled bool) {
 	defer c.mutex.Unlock()
 
 	c.adaptiveTTL = enabled
-}
 
 // SetAdaptiveTTLRange sets the range for adaptive TTL
 func (c *ResultCache) SetAdaptiveTTLRange(min, max time.Duration) {
@@ -329,7 +313,6 @@ func (c *ResultCache) SetAdaptiveTTLRange(min, max time.Duration) {
 
 	c.minTTL = min
 	c.maxTTL = max
-}
 
 // removeEntry removes an entry from the cache
 func (c *ResultCache) removeEntry(key string) {
@@ -347,14 +330,12 @@ func (c *ResultCache) removeEntry(key string) {
 	// Remove from cache
 	c.currentSize -= entry.Size
 	delete(c.cache, key)
-}
 
 // updateEntryPosition updates the position of an entry in the eviction list
 func (c *ResultCache) updateEntryPosition(key string) {
 	if elem, ok := c.evictionMap[key]; ok {
 		c.evictionList.MoveToFront(elem)
 	}
-}
 
 // evictIfNeeded evicts entries if the cache exceeds the maximum size
 func (c *ResultCache) evictIfNeeded() {
@@ -372,7 +353,6 @@ func (c *ResultCache) evictIfNeeded() {
 		c.removeEntry(key)
 		c.stats.Evictions++
 	}
-}
 
 // compressResult compresses a template execution result
 func (c *ResultCache) compressResult(result *interfaces.TemplateResult) *interfaces.TemplateResult {
@@ -466,7 +446,6 @@ func (c *ResultCache) compressResult(result *interfaces.TemplateResult) *interfa
 	}
 
 	return compressedResult
-}
 
 // decompressResult decompresses a template execution result
 func (c *ResultCache) decompressResult(result *interfaces.TemplateResult) *interfaces.TemplateResult {
@@ -563,7 +542,6 @@ func (c *ResultCache) decompressResult(result *interfaces.TemplateResult) *inter
 	}
 
 	return decompressedResult
-}
 
 // extendTTL extends the TTL of an entry based on access count
 func (c *ResultCache) extendTTL(entry *ResultCacheEntry) {
@@ -587,7 +565,6 @@ func (c *ResultCache) extendTTL(entry *ResultCacheEntry) {
 
 	// Update expiration time
 	entry.ExpiresAt = time.Now().Add(newTTL)
-}
 
 // estimateResultSize estimates the size of a template execution result in bytes
 func estimateResultSize(result *interfaces.TemplateResult) int {
@@ -613,5 +590,3 @@ func estimateResultSize(result *interfaces.TemplateResult) int {
 	// Add fixed sizes for other fields
 	size += 100 // Estimate for timestamps, durations, etc.
 
-	return size
-}

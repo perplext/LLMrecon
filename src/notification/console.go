@@ -9,7 +9,6 @@ import (
 type ConsoleChannel struct {
 	id   string
 	name string
-}
 
 // NewConsoleChannel creates a new console notification channel
 func NewConsoleChannel() *ConsoleChannel {
@@ -17,17 +16,14 @@ func NewConsoleChannel() *ConsoleChannel {
 		id:   "console",
 		name: "Console",
 	}
-}
 
 // ID returns the unique identifier for the channel
 func (c *ConsoleChannel) ID() string {
 	return c.id
-}
 
 // Name returns the human-readable name of the channel
 func (c *ConsoleChannel) Name() string {
 	return c.name
-}
 
 // Deliver delivers a notification through the console
 func (c *ConsoleChannel) Deliver(notification *Notification) error {
@@ -98,10 +94,7 @@ func (c *ConsoleChannel) Deliver(notification *Notification) error {
 	fmt.Print(builder.String())
 	
 	return nil
-}
 
 // CanDeliver checks if the channel can deliver the notification
 func (c *ConsoleChannel) CanDeliver(notification *Notification) bool {
 	// Console channel can deliver all notifications
-	return true
-}

@@ -26,7 +26,6 @@ type DownloadOptions struct {
 	Resume bool
 	// Custom HTTP headers
 	Headers map[string]string
-}
 
 // DefaultDownloadOptions returns the default download options
 func DefaultDownloadOptions() *DownloadOptions {
@@ -38,13 +37,11 @@ func DefaultDownloadOptions() *DownloadOptions {
 		Resume:            true,
 		Headers:           make(map[string]string),
 	}
-}
 
 // Downloader handles secure downloading of files
 type Downloader struct {
 	client *http.Client
 	mutex  sync.Mutex
-}
 
 // NewDownloader creates a new Downloader
 func NewDownloader(options *DownloadOptions) *Downloader {
@@ -72,7 +69,6 @@ func NewDownloader(options *DownloadOptions) *Downloader {
 		client: client,
 		mutex:  sync.Mutex{},
 	}
-}
 
 // Download downloads a file from the given URL to the destination path
 func (d *Downloader) Download(ctx context.Context, url, destPath string, options *DownloadOptions) error {
@@ -82,7 +78,7 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 
 	// Create destination directory if it doesn't exist
 	destDir := filepath.Dir(destPath)
-	if err := os.MkdirAll(destDir, 0755); err != nil {
+	if err := os.MkdirAll(destDir, 0700); err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
 
@@ -95,13 +91,12 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 	// Check if file already exists
 	var file *os.File
 	var startOffset int64 = 0
-
 	if options.Resume && supportsResume {
 		// Try to open existing file for appending
 		if stat, err := os.Stat(destPath); err == nil {
 			startOffset = stat.Size()
 			if startOffset < fileSize {
-				file, err = os.OpenFile(destPath, os.O_APPEND|os.O_WRONLY, 0644)
+				file, err = os.OpenFile(destPath, os.O_APPEND|os.O_WRONLY, 0600)
 				if err != nil {
 					// If we can't open for appending, start from scratch
 					startOffset = 0
@@ -121,7 +116,7 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 		}
 		startOffset = 0
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Perform the download with retries
 	var lastErr error
@@ -163,7 +158,6 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 	}
 
 	return fmt.Errorf("download failed after %d attempts: %w", options.RetryAttempts, lastErr)
-}
 
 // getFileInfo gets information about the file at the given URL
 func (d *Downloader) getFileInfo(url string, headers map[string]string) (size int64, supportsResume bool, err error) {
@@ -181,10 +175,9 @@ func (d *Downloader) getFileInfo(url string, headers map[string]string) (size in
 	if err != nil {
 		return 0, false, err
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, false, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Check if server supports range requests
@@ -203,7 +196,6 @@ func (d *Downloader) getFileInfo(url string, headers map[string]string) (size in
 	}
 
 	return size, supportsResume, nil
-}
 
 // downloadWithRange downloads a file with range requests
 func (d *Downloader) downloadWithRange(ctx context.Context, url string, file *os.File, startOffset, fileSize int64, options *DownloadOptions) error {
@@ -226,7 +218,7 @@ func (d *Downloader) downloadWithRange(ctx context.Context, url string, file *os
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	if startOffset > 0 && resp.StatusCode != http.StatusPartialContent {
 		// Server doesn't support range requests or range is invalid
@@ -238,7 +230,6 @@ func (d *Downloader) downloadWithRange(ctx context.Context, url string, file *os
 		}
 		startOffset = 0
 	} else if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusPartialContent {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Create a buffer for copying
@@ -295,7 +286,6 @@ func (d *Downloader) downloadWithRange(ctx context.Context, url string, file *os
 	}
 
 	return nil
-}
 
 // DownloadWithProgress downloads a file with progress reporting to stdout
 func DownloadWithProgress(ctx context.Context, url, destPath string) error {
@@ -318,5 +308,3 @@ func DownloadWithProgress(ctx context.Context, url, destPath string) error {
 	} else {
 		fmt.Println("\rDownload failed.                                  ")
 	}
-	return err
-}

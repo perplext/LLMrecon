@@ -24,7 +24,6 @@ type AuditLogger interface {
 	
 	// Close releases any resources used by the logger
 	Close() error
-}
 
 // AuditQueryLogger extends AuditLogger with query capabilities
 type AuditQueryLogger interface {
@@ -32,7 +31,6 @@ type AuditQueryLogger interface {
 	
 	// Query searches for audit logs matching the specified criteria
 	Query(ctx context.Context, query *LogQuery) (*LogQueryResult, error)
-}
 
 // AuditExporter extends AuditLogger with export capabilities
 type AuditExporter interface {
@@ -40,7 +38,6 @@ type AuditExporter interface {
 	
 	// Export exports audit logs in the specified format
 	Export(ctx context.Context, logs []*AuditLog, format ExportFormat) ([]byte, error)
-}
 
 // FileLogger implements audit logging to files
 type FileLogger struct {
@@ -52,12 +49,11 @@ type FileLogger struct {
 	compress     bool
 	mu           sync.Mutex
 	rotationTime time.Time
-}
 
 // NewFileLogger creates a new file-based audit logger
 func NewFileLogger(directory string, maxFileSize int64, maxFiles int, compress bool) (*FileLogger, error) {
 	// Ensure directory exists
-	if err := os.MkdirAll(directory, 0755); err != nil {
+	if err := os.MkdirAll(directory, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
 	
@@ -75,12 +71,10 @@ func NewFileLogger(directory string, maxFileSize int64, maxFiles int, compress b
 	}
 	
 	return logger, nil
-}
 
 // GetID returns the unique identifier for this logger
 func (l *FileLogger) GetID() string {
 	return l.id
-}
 
 // Log records an audit log entry to a file
 func (l *FileLogger) Log(ctx context.Context, log *AuditLog) error {
@@ -90,7 +84,7 @@ func (l *FileLogger) Log(ctx context.Context, log *AuditLog) error {
 	// Convert log to JSON
 	data, err := log.ToJSON()
 	if err != nil {
-		return fmt.Errorf("failed to convert log to JSON: %w", err)
+			return fmt.Errorf("failed to convert log to JSON: %w", err)
 	}
 	
 	// Check if we need to rotate the log file
@@ -109,7 +103,6 @@ func (l *FileLogger) Log(ctx context.Context, log *AuditLog) error {
 	}
 	
 	return nil
-}
 
 // Query searches for audit logs matching the specified criteria
 func (l *FileLogger) Query(ctx context.Context, query *LogQuery) (*LogQueryResult, error) {
@@ -139,7 +132,7 @@ func (l *FileLogger) Query(ctx context.Context, query *LogQuery) (*LogQueryResul
 		
 		// Open the file
 		filePath := filepath.Join(l.directory, fileInfo.Name())
-		file, err := os.Open(filePath)
+		file, err := os.Open(filepath.Clean(filePath))
 		if err != nil {
 			continue // Skip files we can't open
 		}
@@ -153,7 +146,7 @@ func (l *FileLogger) Query(ctx context.Context, query *LogQuery) (*LogQueryResul
 				continue // Skip files we can't decompress
 			}
 			reader = gzReader
-			defer gzReader.Close()
+			defer func() { if err := gzReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		}
 		
 		// Process each line in the file
@@ -192,7 +185,6 @@ func (l *FileLogger) Query(ctx context.Context, query *LogQuery) (*LogQueryResul
 		TotalCount: totalCount,
 		HasMore:    totalCount > query.Offset+len(logs),
 	}, nil
-}
 
 // Export exports audit logs in the specified format
 func (l *FileLogger) Export(ctx context.Context, logs []*AuditLog, format ExportFormat) ([]byte, error) {
@@ -204,8 +196,6 @@ func (l *FileLogger) Export(ctx context.Context, logs []*AuditLog, format Export
 	default:
 		return nil, fmt.Errorf("unsupported export format: %s", format)
 	}
-}
-
 // Close closes the file logger
 func (l *FileLogger) Close() error {
 	l.mu.Lock()
@@ -218,7 +208,7 @@ func (l *FileLogger) Close() error {
 	}
 	
 	return nil
-}
+	
 
 // Helper methods for FileLogger
 
@@ -228,7 +218,7 @@ func (l *FileLogger) openLogFile() error {
 	filename := fmt.Sprintf("audit-%s.log", timestamp)
 	filePath := filepath.Join(l.directory, filename)
 	
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -237,7 +227,6 @@ func (l *FileLogger) openLogFile() error {
 	l.rotationTime = time.Now()
 	
 	return nil
-}
 
 // rotateLogFile rotates the current log file
 func (l *FileLogger) rotateLogFile() error {
@@ -247,7 +236,7 @@ func (l *FileLogger) rotateLogFile() error {
 			return fmt.Errorf("failed to close log file: %w", err)
 		}
 		l.currentFile = nil
-	}
+		}
 	
 	// Compress the old file if needed
 	if l.compress {
@@ -270,15 +259,14 @@ func (l *FileLogger) rotateLogFile() error {
 	}
 	
 	return nil
-}
 
 // getLogFiles returns all log files in the directory
 func (l *FileLogger) getLogFiles() ([]os.FileInfo, error) {
-	dir, err := os.Open(l.directory)
+	dir, err := os.Open(filepath.Clean(l.directory))
 	if err != nil {
 		return nil, err
 	}
-	defer dir.Close()
+	defer func() { if err := dir.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	fileInfos, err := dir.Readdir(-1)
 	if err != nil {
@@ -295,7 +283,6 @@ func (l *FileLogger) getLogFiles() ([]os.FileInfo, error) {
 	}
 	
 	return logFiles, nil
-}
 
 // cleanupOldFiles removes old log files when there are too many
 func (l *FileLogger) cleanupOldFiles() error {
@@ -318,7 +305,6 @@ func (l *FileLogger) cleanupOldFiles() error {
 	}
 	
 	return nil
-}
 
 // SyslogLogger implements audit logging to syslog
 type SyslogLogger struct {
@@ -338,12 +324,10 @@ func NewSyslogLogger(facility syslog.Priority, tag string) (*SyslogLogger, error
 		id:     "syslog-logger",
 		writer: writer,
 	}, nil
-}
 
 // GetID returns the unique identifier for this logger
 func (l *SyslogLogger) GetID() string {
 	return l.id
-}
 
 // Log records an audit log entry to syslog
 func (l *SyslogLogger) Log(ctx context.Context, log *AuditLog) error {
@@ -378,7 +362,6 @@ func (l *SyslogLogger) Log(ctx context.Context, log *AuditLog) error {
 	}
 	
 	return nil
-}
 
 // Close closes the syslog logger
 func (l *SyslogLogger) Close() error {
@@ -390,7 +373,6 @@ func (l *SyslogLogger) Close() error {
 	}
 	
 	return nil
-}
 
 // InMemoryLogger implements in-memory audit logging
 type InMemoryLogger struct {
@@ -398,7 +380,6 @@ type InMemoryLogger struct {
 	logs     []*AuditLog
 	maxLogs  int
 	mu       sync.RWMutex
-}
 
 // NewInMemoryLogger creates a new in-memory audit logger
 func NewInMemoryLogger(maxLogs int) *InMemoryLogger {
@@ -411,12 +392,10 @@ func NewInMemoryLogger(maxLogs int) *InMemoryLogger {
 		logs:    make([]*AuditLog, 0, maxLogs),
 		maxLogs: maxLogs,
 	}
-}
 
 // GetID returns the unique identifier for this logger
 func (l *InMemoryLogger) GetID() string {
 	return l.id
-}
 
 // Log records an audit log entry in memory
 func (l *InMemoryLogger) Log(ctx context.Context, log *AuditLog) error {
@@ -435,7 +414,6 @@ func (l *InMemoryLogger) Log(ctx context.Context, log *AuditLog) error {
 	}
 	
 	return nil
-}
 
 // Query searches for audit logs matching the specified criteria
 func (l *InMemoryLogger) Query(ctx context.Context, query *LogQuery) (*LogQueryResult, error) {
@@ -477,7 +455,6 @@ func (l *InMemoryLogger) Query(ctx context.Context, query *LogQuery) (*LogQueryR
 		TotalCount: totalCount,
 		HasMore:    totalCount > query.Offset+len(filtered),
 	}, nil
-}
 
 // Export exports audit logs in the specified format
 func (l *InMemoryLogger) Export(ctx context.Context, logs []*AuditLog, format ExportFormat) ([]byte, error) {
@@ -489,7 +466,6 @@ func (l *InMemoryLogger) Export(ctx context.Context, logs []*AuditLog, format Ex
 	default:
 		return nil, fmt.Errorf("unsupported export format: %s", format)
 	}
-}
 
 // Close closes the in-memory logger
 func (l *InMemoryLogger) Close() error {
@@ -499,7 +475,6 @@ func (l *InMemoryLogger) Close() error {
 	l.logs = nil
 	
 	return nil
-}
 
 // Helper functions
 
@@ -619,7 +594,6 @@ func matchesQuery(log *AuditLog, query *LogQuery) bool {
 	}
 	
 	return true
-}
 
 // sortLogs sorts logs by the specified field and direction
 func sortLogs(logs []*AuditLog, sortBy, sortDirection string) {
@@ -652,12 +626,11 @@ func sortLogs(logs []*AuditLog, sortBy, sortDirection string) {
 		}
 		return result
 	})
-}
 
 // exportAsJSON exports logs as JSON
 func exportAsJSON(logs []*AuditLog) ([]byte, error) {
 	return json.MarshalIndent(logs, "", "  ")
-}
+	
 
 // exportAsCSV exports logs as CSV
 func exportAsCSV(logs []*AuditLog) ([]byte, error) {
@@ -697,16 +670,15 @@ func exportAsCSV(logs []*AuditLog) ([]byte, error) {
 	
 	writer.Flush()
 	return []byte(buf.String()), nil
-}
 
 // compressFile compresses a file using gzip
 func compressFile(filePath string) error {
 	// Open the original file
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Create the compressed file
 	compressedPath := filePath + ".gz"
@@ -714,11 +686,11 @@ func compressFile(filePath string) error {
 	if err != nil {
 		return err
 	}
-	defer compressedFile.Close()
+	defer func() { if err := compressedFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Create a gzip writer
 	gzWriter := gzip.NewWriter(compressedFile)
-	defer gzWriter.Close()
+	defer func() { if err := gzWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Copy the file content to the gzip writer
 	if _, err := io.Copy(gzWriter, file); err != nil {
@@ -732,7 +704,6 @@ func compressFile(filePath string) error {
 	
 	// Remove the original file
 	return os.Remove(filePath)
-}
 
 // LineScanner is a simple line scanner that handles both LF and CRLF
 type LineScanner struct {
@@ -747,7 +718,6 @@ func NewLineScanner(reader io.Reader) *LineScanner {
 		reader: reader,
 		buffer: make([]byte, 4096),
 	}
-}
 
 // Scan advances to the next line
 func (s *LineScanner) Scan() bool {
@@ -773,7 +743,6 @@ func (s *LineScanner) Scan() bool {
 	// No newline found, read more
 	s.remaining = nil
 	return s.Scan()
-}
 
 // Text returns the current line
 func (s *LineScanner) Text() string {
@@ -793,5 +762,29 @@ func (s *LineScanner) Text() string {
 		line = line[:len(line)-1]
 	}
 	
-	return line
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

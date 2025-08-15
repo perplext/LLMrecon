@@ -22,6 +22,7 @@ type ThreatIntelligenceSystem struct {
     config          IntelConfig
 }
 
+}
 // IntelConfig holds configuration for threat intelligence
 type IntelConfig struct {
     MaxFeeds           int
@@ -30,8 +31,8 @@ type IntelConfig struct {
     AnalysisDepth      int
     AutoCorrelation    bool
     PredictionEnabled  bool
-}
 
+}
 // ThreatFeed represents a threat intelligence feed
 type ThreatFeed struct {
     ID          string              `json:"id"`
@@ -47,6 +48,7 @@ type ThreatFeed struct {
     Metadata    map[string]interface{} `json:"metadata"`
 }
 
+}
 // FeedType defines types of threat feeds
 type FeedType string
 
@@ -96,8 +98,8 @@ type ThreatIndicator struct {
     RelatedIOCs     []string              `json:"related_iocs"`
     Mitigations     []Mitigation          `json:"mitigations"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // IndicatorType defines indicator types
 type IndicatorType string
 
@@ -143,6 +145,7 @@ type Mitigation struct {
     Metadata    map[string]interface{} `json:"metadata"`
 }
 
+}
 // MitigationType defines mitigation types
 type MitigationType string
 
@@ -174,6 +177,7 @@ type VulnerabilityIntel struct {
     Metadata        map[string]interface{} `json:"metadata"`
 }
 
+}
 // VulnCategory defines vulnerability categories
 type VulnCategory string
 
@@ -196,6 +200,7 @@ type CVSSScore struct {
     Vector          string  `json:"vector"`
 }
 
+}
 // Patch represents a security patch
 type Patch struct {
     ID              string    `json:"id"`
@@ -205,6 +210,7 @@ type Patch struct {
     DownloadURL     string    `json:"download_url"`
 }
 
+}
 // ThreatActor represents a threat actor
 type ThreatActor struct {
     ID              string                 `json:"id"`
@@ -223,8 +229,8 @@ type ThreatActor struct {
     FirstSeen       time.Time             `json:"first_seen"`
     LastSeen        time.Time             `json:"last_seen"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // ActorType defines threat actor types
 type ActorType string
 
@@ -268,6 +274,7 @@ type TTP struct {
     Metadata    map[string]interface{} `json:"metadata"`
 }
 
+}
 // ThreatCampaign represents a threat campaign
 type ThreatCampaign struct {
     ID              string                 `json:"id"`
@@ -282,24 +289,24 @@ type ThreatCampaign struct {
     Impact          ImpactAssessment      `json:"impact"`
     Status          CampaignStatus        `json:"status"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // CampaignTarget represents a campaign target
 type CampaignTarget struct {
     Type        string   `json:"type"`
     Sector      string   `json:"sector"`
     Geography   []string `json:"geography"`
     Systems     []string `json:"systems"`
-}
 
+}
 // CampaignTimeline represents campaign timeline
 type CampaignTimeline struct {
     Started     time.Time  `json:"started"`
     Ended       *time.Time `json:"ended,omitempty"`
     Active      bool       `json:"active"`
     Duration    string     `json:"duration"`
-}
 
+}
 // ImpactAssessment represents impact assessment
 type ImpactAssessment struct {
     Severity        SeverityLevel          `json:"severity"`
@@ -308,8 +315,8 @@ type ImpactAssessment struct {
     SystemsAffected int                    `json:"systems_affected"`
     FinancialImpact string                 `json:"financial_impact,omitempty"`
     Reputation      string                 `json:"reputation_impact,omitempty"`
-}
 
+}
 // CampaignStatus defines campaign status
 type CampaignStatus string
 
@@ -326,8 +333,8 @@ type IntelligenceAnalyzer struct {
     trends      map[string]*Trend
     predictions map[string]*Prediction
     mu          sync.RWMutex
-}
 
+}
 // Pattern represents an identified pattern
 type Pattern struct {
     ID          string                 `json:"id"`
@@ -338,8 +345,8 @@ type Pattern struct {
     FirstSeen   time.Time             `json:"first_seen"`
     LastSeen    time.Time             `json:"last_seen"`
     Metadata    map[string]interface{} `json:"metadata"`
-}
 
+}
 // Trend represents a threat trend
 type Trend struct {
     ID          string                 `json:"id"`
@@ -353,6 +360,7 @@ type Trend struct {
     Metadata    map[string]interface{} `json:"metadata"`
 }
 
+}
 // TrendType defines trend types
 type TrendType string
 
@@ -379,8 +387,8 @@ type DataPoint struct {
     Value     float64     `json:"value"`
     Label     string      `json:"label"`
     Metadata  interface{} `json:"metadata,omitempty"`
-}
 
+}
 // ForecastPoint represents a forecast point
 type ForecastPoint struct {
     Timestamp   time.Time `json:"timestamp"`
@@ -390,6 +398,7 @@ type ForecastPoint struct {
     Lower       float64   `json:"lower_bound"`
 }
 
+}
 // Prediction represents a threat prediction
 type Prediction struct {
     ID              string                 `json:"id"`
@@ -404,8 +413,8 @@ type Prediction struct {
     CreatedAt       time.Time             `json:"created_at"`
     ValidUntil      time.Time             `json:"valid_until"`
     Metadata        map[string]interface{} `json:"metadata"`
-}
 
+}
 // PredictionType defines prediction types
 type PredictionType string
 
@@ -423,6 +432,7 @@ type ThreatCorrelator struct {
     mu           sync.RWMutex
 }
 
+}
 // Correlation represents a threat correlation
 type Correlation struct {
     ID          string                 `json:"id"`
@@ -434,6 +444,7 @@ type Correlation struct {
     Metadata    map[string]interface{} `json:"metadata"`
 }
 
+}
 // CorrelationType defines correlation types
 type CorrelationType string
 
@@ -450,8 +461,8 @@ type CorrelatedEntity struct {
     ID      string `json:"id"`
     Role    string `json:"role"`
     Weight  float64 `json:"weight"`
-}
 
+}
 // CorrelationRule defines correlation rules
 type CorrelationRule struct {
     ID          string                 `json:"id"`
@@ -462,8 +473,8 @@ type CorrelationRule struct {
     Priority    int                    `json:"priority"`
     Enabled     bool                   `json:"enabled"`
     Metadata    map[string]interface{} `json:"metadata"`
-}
 
+}
 // RuleCondition represents a rule condition
 type RuleCondition struct {
     Field    string      `json:"field"`
@@ -471,12 +482,13 @@ type RuleCondition struct {
     Value    interface{} `json:"value"`
 }
 
+}
 // RuleAction represents a rule action
 type RuleAction struct {
     Type       string                 `json:"type"`
     Parameters map[string]interface{} `json:"parameters"`
-}
 
+}
 // ThreatPredictor predicts threats
 type ThreatPredictor struct {
     models      map[string]*PredictionModel
@@ -484,6 +496,7 @@ type ThreatPredictor struct {
     mu          sync.RWMutex
 }
 
+}
 // PredictionModel represents a prediction model
 type PredictionModel struct {
     ID          string                 `json:"id"`
@@ -494,8 +507,8 @@ type PredictionModel struct {
     Features    []string              `json:"features"`
     LastTrained time.Time             `json:"last_trained"`
     Metadata    map[string]interface{} `json:"metadata"`
-}
 
+}
 // HistoricalData represents historical threat data
 type HistoricalData struct {
     TimeRange   TimeRange              `json:"time_range"`
@@ -503,12 +516,13 @@ type HistoricalData struct {
     Statistics  map[string]interface{} `json:"statistics"`
 }
 
+}
 // TimeRange represents a time range
 type TimeRange struct {
     Start time.Time `json:"start"`
     End   time.Time `json:"end"`
-}
 
+}
 // HistoricalIncident represents a historical incident
 type HistoricalIncident struct {
     ID          string                 `json:"id"`
@@ -522,6 +536,7 @@ type HistoricalIncident struct {
     Metadata    map[string]interface{} `json:"metadata"`
 }
 
+}
 // IntelRepository manages intelligence storage
 type IntelRepository struct {
     storage     map[string]interface{}
@@ -529,6 +544,7 @@ type IntelRepository struct {
     mu          sync.RWMutex
 }
 
+}
 // NewThreatIntelligenceSystem creates a new threat intelligence system
 func NewThreatIntelligenceSystem(config IntelConfig) *ThreatIntelligenceSystem {
     return &ThreatIntelligenceSystem{
@@ -543,9 +559,9 @@ func NewThreatIntelligenceSystem(config IntelConfig) *ThreatIntelligenceSystem {
         repository:      NewIntelRepository(),
         config:          config,
     }
-}
 
 // AddFeed adds a threat intelligence feed
+}
 func (tis *ThreatIntelligenceSystem) AddFeed(ctx context.Context, feed *ThreatFeed) error {
     tis.mu.Lock()
     defer tis.mu.Unlock()
@@ -564,9 +580,9 @@ func (tis *ThreatIntelligenceSystem) AddFeed(ctx context.Context, feed *ThreatFe
     go tis.monitorFeed(ctx, feed)
 
     return nil
-}
 
 // ImportIndicators imports threat indicators
+}
 func (tis *ThreatIntelligenceSystem) ImportIndicators(ctx context.Context, indicators []*ThreatIndicator) error {
     tis.mu.Lock()
     defer tis.mu.Unlock()
@@ -593,18 +609,18 @@ func (tis *ThreatIntelligenceSystem) ImportIndicators(ctx context.Context, indic
     }
 
     return nil
-}
 
 // NewIntelligenceAnalyzer creates a new intelligence analyzer
+}
 func NewIntelligenceAnalyzer() *IntelligenceAnalyzer {
     return &IntelligenceAnalyzer{
         patterns:    make(map[string]*Pattern),
         trends:      make(map[string]*Trend),
         predictions: make(map[string]*Prediction),
     }
-}
 
 // AnalyzeThreatLandscape analyzes the threat landscape
+}
 func (ia *IntelligenceAnalyzer) AnalyzeThreatLandscape(ctx context.Context, data map[string]interface{}) (*ThreatLandscape, error) {
     landscape := &ThreatLandscape{
         Timestamp:    time.Now(),
@@ -616,7 +632,6 @@ func (ia *IntelligenceAnalyzer) AnalyzeThreatLandscape(ctx context.Context, data
     }
 
     return landscape, nil
-}
 
 // ThreatLandscape represents the current threat landscape
 type ThreatLandscape struct {
@@ -629,6 +644,7 @@ type ThreatLandscape struct {
     Metadata      map[string]interface{} `json:"metadata"`
 }
 
+}
 // RiskLevel defines risk levels
 type RiskLevel string
 
@@ -647,8 +663,8 @@ type ThreatSummary struct {
     Severity    SeverityLevel `json:"severity"`
     Prevalence  float64       `json:"prevalence"`
     Impact      string        `json:"impact"`
-}
 
+}
 // EmergingRisk represents an emerging risk
 type EmergingRisk struct {
     ID          string          `json:"id"`
@@ -658,15 +674,16 @@ type EmergingRisk struct {
     FirstSeen   time.Time       `json:"first_seen"`
 }
 
+}
 // NewThreatCorrelator creates a new threat correlator
 func NewThreatCorrelator() *ThreatCorrelator {
     return &ThreatCorrelator{
         correlations: make(map[string]*Correlation),
         rules:        make(map[string]*CorrelationRule),
     }
-}
 
 // CorrelateIndicators correlates threat indicators
+}
 func (tc *ThreatCorrelator) CorrelateIndicators(indicators []*ThreatIndicator) {
     tc.mu.Lock()
     defer tc.mu.Unlock()
@@ -694,9 +711,9 @@ func (tc *ThreatCorrelator) CorrelateIndicators(indicators []*ThreatIndicator) {
             }
         }
     }
-}
 
 // calculateCorrelationStrength calculates correlation strength
+}
 func (tc *ThreatCorrelator) calculateCorrelationStrength(i1, i2 *ThreatIndicator) float64 {
     // Implement correlation algorithm
     score := 0.0
@@ -718,17 +735,17 @@ func (tc *ThreatCorrelator) calculateCorrelationStrength(i1, i2 *ThreatIndicator
     score += tagOverlap * 0.4
     
     return score
-}
 
 // NewThreatPredictor creates a new threat predictor
+}
 func NewThreatPredictor() *ThreatPredictor {
     return &ThreatPredictor{
         models:     make(map[string]*PredictionModel),
         historical: &HistoricalData{},
     }
-}
 
 // PredictThreats predicts future threats
+}
 func (tp *ThreatPredictor) PredictThreats(ctx context.Context, timeframe time.Duration) ([]*Prediction, error) {
     tp.mu.RLock()
     defer tp.mu.RUnlock()
@@ -744,9 +761,9 @@ func (tp *ThreatPredictor) PredictThreats(ctx context.Context, timeframe time.Du
     }
 
     return predictions, nil
-}
 
 // generatePrediction generates a prediction using a model
+}
 func (tp *ThreatPredictor) generatePrediction(model *PredictionModel, timeframe time.Duration) *Prediction {
     // Implement prediction logic
     return &Prediction{
@@ -760,17 +777,17 @@ func (tp *ThreatPredictor) generatePrediction(model *PredictionModel, timeframe 
         CreatedAt:   time.Now(),
         ValidUntil:  time.Now().Add(timeframe),
     }
-}
 
 // NewIntelRepository creates a new intelligence repository
+}
 func NewIntelRepository() *IntelRepository {
     return &IntelRepository{
         storage: make(map[string]interface{}),
         indices: make(map[string]map[string]string),
     }
-}
 
 // Store stores intelligence data
+}
 func (ir *IntelRepository) Store(dataType, id string, data interface{}) error {
     ir.mu.Lock()
     defer ir.mu.Unlock()
@@ -785,9 +802,9 @@ func (ir *IntelRepository) Store(dataType, id string, data interface{}) error {
     ir.indices[dataType][id] = key
 
     return nil
-}
 
 // Helper functions
+}
 func (tis *ThreatIntelligenceSystem) monitorFeed(ctx context.Context, feed *ThreatFeed) {
     ticker := time.NewTicker(feed.Frequency)
     defer ticker.Stop()
@@ -803,14 +820,13 @@ func (tis *ThreatIntelligenceSystem) monitorFeed(ctx context.Context, feed *Thre
             return
         }
     }
-}
 
+}
 func (tis *ThreatIntelligenceSystem) updateFeed(feed *ThreatFeed) error {
     // Implement feed update logic
     feed.LastUpdate = time.Now()
     feed.Status = FeedActive
     return nil
-}
 
 func (tis *ThreatIntelligenceSystem) validateIndicator(indicator *ThreatIndicator) error {
     if indicator.Type == "" {
@@ -820,33 +836,31 @@ func (tis *ThreatIntelligenceSystem) validateIndicator(indicator *ThreatIndicato
         return fmt.Errorf("indicator must have value or pattern")
     }
     return nil
-}
 
 func (ia *IntelligenceAnalyzer) analyzeTrends(data map[string]interface{}) []Trend {
     // Implement trend analysis
     return []Trend{}
-}
 
+}
 func (ia *IntelligenceAnalyzer) generatePredictions(data map[string]interface{}) []Prediction {
     // Implement prediction generation
     return []Prediction{}
-}
 
+}
 func calculateOverallRisk(data map[string]interface{}) RiskLevel {
     // Implement risk calculation
     return RiskMedium
-}
 
 func identifyTopThreats(data map[string]interface{}) []ThreatSummary {
     // Implement threat identification
     return []ThreatSummary{}
-}
 
+}
 func identifyEmergingRisks(data map[string]interface{}) []EmergingRisk {
     // Implement emerging risk identification
     return []EmergingRisk{}
-}
 
+}
 func calculateTagOverlap(tags1, tags2 []string) float64 {
     if len(tags1) == 0 || len(tags2) == 0 {
         return 0
@@ -865,32 +879,31 @@ func calculateTagOverlap(tags1, tags2 []string) float64 {
     }
 
     return float64(overlap) / float64(max(len(tags1), len(tags2)))
-}
 
+}
 func max(a, b int) int {
     if a > b {
         return a
     }
     return b
-}
 
 func generateFeedID() string {
     return fmt.Sprintf("feed_%d", time.Now().UnixNano())
-}
 
+}
 func generateIndicatorID() string {
     return fmt.Sprintf("indicator_%d", time.Now().UnixNano())
-}
 
+}
 func generateCorrelationID() string {
     return fmt.Sprintf("corr_%d", time.Now().UnixNano())
-}
 
+}
 func generatePredictionID() string {
     return fmt.Sprintf("pred_%d", time.Now().UnixNano())
-}
 
 // SearchIndicators searches for threat indicators
+}
 func (tis *ThreatIntelligenceSystem) SearchIndicators(ctx context.Context, query string) ([]*ThreatIndicator, error) {
     tis.mu.RLock()
     defer tis.mu.RUnlock()
@@ -904,27 +917,24 @@ func (tis *ThreatIntelligenceSystem) SearchIndicators(ctx context.Context, query
     }
 
     return results, nil
-}
 
 func matchesQuery(indicator *ThreatIndicator, query string) bool {
     // Implement query matching logic
     return contains(indicator.Description, query) || 
            contains(indicator.Value, query) ||
            contains(indicator.Pattern, query)
-}
 
+}
 func contains(s, substr string) bool {
     return len(s) >= len(substr) && s == substr || 
            len(s) > len(substr) && (s[:len(substr)] == substr || 
            s[len(s)-len(substr):] == substr || 
            findSubstring(s, substr) != -1)
-}
 
+}
 func findSubstring(s, substr string) int {
     for i := 0; i <= len(s)-len(substr); i++ {
         if s[i:i+len(substr)] == substr {
             return i
         }
     }
-    return -1
-}

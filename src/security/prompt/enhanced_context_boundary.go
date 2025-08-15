@@ -42,7 +42,6 @@ type RoleDefinition struct {
 	Capabilities    []string `json:"capabilities"`
 	Limitations     []string `json:"limitations"`
 	SecurityLevel   int      `json:"security_level"`
-}
 
 // ContextHistoryEntry represents an entry in the context history
 type ContextHistoryEntry struct {
@@ -52,7 +51,6 @@ type ContextHistoryEntry struct {
 	Detections      []*Detection `json:"detections"`
 	BoundaryViolations []string  `json:"boundary_violations"`
 	ActionTaken     ActionType `json:"action_taken"`
-}
 
 // NewEnhancedContextBoundaryEnforcer creates a new enhanced context boundary enforcer
 func NewEnhancedContextBoundaryEnforcer(config *ProtectionConfig) *EnhancedContextBoundaryEnforcer {
@@ -161,7 +159,6 @@ func NewEnhancedContextBoundaryEnforcer(config *ProtectionConfig) *EnhancedConte
 		contextVerification:     true,
 		strictModeEnabled:       false,
 	}
-}
 
 // EnforceBoundariesEnhanced enforces context boundaries with enhanced protection
 func (e *EnhancedContextBoundaryEnforcer) EnforceBoundariesEnhanced(ctx context.Context, prompt string) (string, *ProtectionResult, error) {
@@ -213,7 +210,6 @@ func (e *EnhancedContextBoundaryEnforcer) EnforceBoundariesEnhanced(ctx context.
 	result.ProcessingTime = time.Since(startTime)
 	
 	return result.ProtectedPrompt, result, nil
-}
 
 // applySanitizationRules applies sanitization rules to the prompt
 func (e *EnhancedContextBoundaryEnforcer) applySanitizationRules(prompt string) (string, []*Detection) {
@@ -254,7 +250,6 @@ func (e *EnhancedContextBoundaryEnforcer) applySanitizationRules(prompt string) 
 	}
 	
 	return sanitizedPrompt, detections
-}
 
 // checkBoundaryViolations checks for boundary violations in the prompt
 func (e *EnhancedContextBoundaryEnforcer) checkBoundaryViolations(prompt string) ([]string, []*Detection) {
@@ -389,7 +384,6 @@ func (e *EnhancedContextBoundaryEnforcer) checkBoundaryViolations(prompt string)
 	}
 	
 	return violations, detections
-}
 
 // calculateRiskScore calculates the risk score based on detections
 func (e *EnhancedContextBoundaryEnforcer) calculateRiskScore(detections []*Detection) float64 {
@@ -441,7 +435,6 @@ func (e *EnhancedContextBoundaryEnforcer) calculateRiskScore(detections []*Detec
 	}
 	
 	return riskScore
-}
 
 // createBlockedPromptMessage creates a message for blocked prompts
 func (e *EnhancedContextBoundaryEnforcer) createBlockedPromptMessage(violations []string) string {
@@ -463,7 +456,6 @@ func (e *EnhancedContextBoundaryEnforcer) createBlockedPromptMessage(violations 
 	message += "\nPlease reformulate your request without these elements."
 	
 	return message
-}
 
 // hasProperBoundaries checks if the prompt already has proper context boundaries
 func (e *EnhancedContextBoundaryEnforcer) hasProperBoundaries(prompt string) bool {
@@ -472,7 +464,6 @@ func (e *EnhancedContextBoundaryEnforcer) hasProperBoundaries(prompt string) boo
 	hasAssistantBoundary := strings.Contains(prompt, e.securityTokens["start_assistant"]) && strings.Contains(prompt, e.securityTokens["end_assistant"])
 	
 	return hasUserBoundary && hasAssistantBoundary
-}
 
 // addContextBoundaries adds context boundaries to the prompt
 func (e *EnhancedContextBoundaryEnforcer) addContextBoundaries(prompt string) string {
@@ -480,7 +471,6 @@ func (e *EnhancedContextBoundaryEnforcer) addContextBoundaries(prompt string) st
 	boundedPrompt := fmt.Sprintf("%s\n%s\n%s\n", e.securityTokens["start_user"], prompt, e.securityTokens["end_user"])
 	
 	return boundedPrompt
-}
 
 // storeContextHistory stores an entry in the context history
 func (e *EnhancedContextBoundaryEnforcer) storeContextHistory(originalPrompt string, modifiedPrompt string, detections []*Detection, boundaryViolations []string, actionTaken ActionType) {
@@ -501,22 +491,18 @@ func (e *EnhancedContextBoundaryEnforcer) storeContextHistory(originalPrompt str
 	if len(e.contextHistory) > e.maxHistoryEntries {
 		e.contextHistory = e.contextHistory[1:]
 	}
-}
 
 // GetContextHistory returns the context history
 func (e *EnhancedContextBoundaryEnforcer) GetContextHistory() []*ContextHistoryEntry {
 	return e.contextHistory
-}
 
 // GetBoundaryViolations returns the boundary violations
 func (e *EnhancedContextBoundaryEnforcer) GetBoundaryViolations() map[string]int {
 	return e.boundaryViolations
-}
 
 // EnableStrictMode enables or disables strict mode
 func (e *EnhancedContextBoundaryEnforcer) EnableStrictMode(enabled bool) {
 	e.strictModeEnabled = enabled
-}
 
 // extractContextForBoundary extracts context for a boundary violation
 func extractContextForBoundary(text string, start int, end int) string {
@@ -542,5 +528,14 @@ func extractContextForBoundary(text string, start int, end int) string {
 		context = context + "..."
 	}
 	
-	return context
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

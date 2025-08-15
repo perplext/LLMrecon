@@ -34,7 +34,6 @@ type LogEntry struct {
 	TransactionID string `json:"transaction_id,omitempty"`
 	// Details contains additional details about the log entry
 	Details map[string]interface{} `json:"details,omitempty"`
-}
 
 // UpdateLogger handles logging for update operations
 type UpdateLogger struct {
@@ -46,7 +45,6 @@ type UpdateLogger struct {
 	MinLevel LogLevel
 	// IncludeDetails determines whether to include details in log output
 	IncludeDetails bool
-}
 
 // LoggerOptions contains options for the UpdateLogger
 type LoggerOptions struct {
@@ -58,7 +56,6 @@ type LoggerOptions struct {
 	MinLevel LogLevel
 	// IncludeDetails determines whether to include details in log output
 	IncludeDetails bool
-}
 
 // NewUpdateLogger creates a new update logger
 func NewUpdateLogger(options *LoggerOptions) *UpdateLogger {
@@ -80,12 +77,11 @@ func NewUpdateLogger(options *LoggerOptions) *UpdateLogger {
 		MinLevel:       minLevel,
 		IncludeDetails: options.IncludeDetails,
 	}
-}
 
 // CreateJSONLogFile creates a JSON log file for the update
 func CreateJSONLogFile(logDir, packageID string) (*os.File, error) {
 	// Create log directory if it doesn't exist
-	if err := os.MkdirAll(logDir, 0755); err != nil {
+	if err := os.MkdirAll(logDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
 
@@ -103,7 +99,7 @@ func CreateJSONLogFile(logDir, packageID string) (*os.File, error) {
 	}
 
 	return logFile, nil
-}
+	
 
 // CloseJSONLogFile closes a JSON log file
 func CloseJSONLogFile(logFile *os.File) error {
@@ -118,7 +114,6 @@ func CloseJSONLogFile(logFile *os.File) error {
 	}
 
 	return nil
-}
 
 // shouldLog determines whether a log entry should be output based on its level
 func (l *UpdateLogger) shouldLog(level LogLevel) bool {
@@ -134,7 +129,6 @@ func (l *UpdateLogger) shouldLog(level LogLevel) bool {
 	default:
 		return true
 	}
-}
 
 // Log logs a message
 func (l *UpdateLogger) Log(level LogLevel, component, message string, transactionID string, details map[string]interface{}) {
@@ -211,27 +205,22 @@ func (l *UpdateLogger) Log(level LogLevel, component, message string, transactio
 			return
 		}
 	}
-}
 
 // Debug logs a debug message
 func (l *UpdateLogger) Debug(component, message string, transactionID string, details map[string]interface{}) {
 	l.Log(LogLevelDebug, component, message, transactionID, details)
-}
 
 // Info logs an informational message
 func (l *UpdateLogger) Info(component, message string, transactionID string, details map[string]interface{}) {
 	l.Log(LogLevelInfo, component, message, transactionID, details)
-}
 
 // Warning logs a warning message
 func (l *UpdateLogger) Warning(component, message string, transactionID string, details map[string]interface{}) {
 	l.Log(LogLevelWarning, component, message, transactionID, details)
-}
 
 // Error logs an error message
 func (l *UpdateLogger) Error(component, message string, transactionID string, details map[string]interface{}) {
 	l.Log(LogLevelError, component, message, transactionID, details)
-}
 
 // AuditEvent represents an audit event for the update process
 type AuditEvent struct {
@@ -249,21 +238,17 @@ type AuditEvent struct {
 	PackageID string `json:"package_id,omitempty"`
 	// Details contains additional details about the event
 	Details map[string]interface{} `json:"details,omitempty"`
-}
 
 // AuditLogger handles audit logging for update operations
 type AuditLogger struct {
 	// Writer is the writer for audit log output
 	Writer io.Writer
-}
 
 // NewAuditLogger creates a new audit logger
 func NewAuditLogger(writer io.Writer) *AuditLogger {
 	return &AuditLogger{
 		Writer: writer,
 	}
-}
-
 // LogEvent logs an audit event
 func (l *AuditLogger) LogEvent(eventType, component, user, transactionID, packageID string, details map[string]interface{}) {
 	// Create audit event
@@ -298,4 +283,3 @@ func (l *AuditLogger) LogEvent(eventType, component, user, transactionID, packag
 			time.Now().Format(time.RFC3339), err)
 		return
 	}
-}

@@ -12,7 +12,7 @@ import (
 func DownloadWithProgressBar(ctx context.Context, url, destPath string) error {
 	// Create the destination directory if it doesn't exist
 	destDir := filepath.Dir(destPath)
-	if err := os.MkdirAll(destDir, 0755); err != nil {
+	if err := os.MkdirAll(destDir, 0700); err != nil {
 		return fmt.Errorf("creating destination directory: %w", err)
 	}
 
@@ -30,11 +30,9 @@ func DownloadWithProgressBar(ctx context.Context, url, destPath string) error {
 	if err != nil {
 		return fmt.Errorf("downloading file: %w", err)
 	}
-	defer resp.Body.Close()
-
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Create the destination file
@@ -42,7 +40,7 @@ func DownloadWithProgressBar(ctx context.Context, url, destPath string) error {
 	if err != nil {
 		return fmt.Errorf("creating file: %w", err)
 	}
-	defer out.Close()
+	defer func() { if err := out.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Create progress bar
 	bar := progressbar.NewOptions64(
@@ -74,7 +72,6 @@ func DownloadWithProgressBar(ctx context.Context, url, destPath string) error {
 	}
 
 	return nil
-}
 
 // DownloadResult represents the result of a download operation
 type DownloadResult struct {
@@ -89,7 +86,6 @@ type DownloadResult struct {
 type BatchDownloader struct {
 	MaxConcurrent int
 	Client        *http.Client
-}
 
 // NewBatchDownloader creates a new batch downloader
 func NewBatchDownloader(maxConcurrent int) *BatchDownloader {
@@ -103,7 +99,6 @@ func NewBatchDownloader(maxConcurrent int) *BatchDownloader {
 			Timeout: 30 * time.Minute,
 		},
 	}
-}
 
 // Download downloads multiple files concurrently
 func (bd *BatchDownloader) Download(ctx context.Context, downloads map[string]string) []DownloadResult {
@@ -146,5 +141,5 @@ func (bd *BatchDownloader) Download(ctx context.Context, downloads map[string]st
 		results = append(results, <-resultChan)
 	}
 	
-	return results
+}
 }

@@ -16,16 +16,15 @@ type Manager struct {
 	moduleManifest   *ModuleManifest
 	basePath         string
 	mutex            sync.RWMutex
-}
 
 // NewManager creates a new manifest manager
+}
 func NewManager(basePath string) *Manager {
 	return &Manager{
 		templateManifest: NewTemplateManifest(),
 		moduleManifest:   NewModuleManifest(),
 		basePath:         basePath,
 	}
-}
 
 // LoadManifests loads both template and module manifests
 func (m *Manager) LoadManifests() error {
@@ -43,7 +42,6 @@ func (m *Manager) LoadManifests() error {
 	}
 	
 	return nil
-}
 
 // SaveManifests saves both template and module manifests
 func (m *Manager) SaveManifests() error {
@@ -65,7 +63,6 @@ func (m *Manager) SaveManifests() error {
 	}
 	
 	return nil
-}
 
 // GetTemplateManifest returns the template manifest
 func (m *Manager) GetTemplateManifest() *TemplateManifest {
@@ -73,7 +70,6 @@ func (m *Manager) GetTemplateManifest() *TemplateManifest {
 	defer m.mutex.RUnlock()
 	
 	return m.templateManifest
-}
 
 // GetModuleManifest returns the module manifest
 func (m *Manager) GetModuleManifest() *ModuleManifest {
@@ -81,7 +77,6 @@ func (m *Manager) GetModuleManifest() *ModuleManifest {
 	defer m.mutex.RUnlock()
 	
 	return m.moduleManifest
-}
 
 // RegisterTemplate registers a template in the manifest
 func (m *Manager) RegisterTemplate(template *format.Template) error {
@@ -140,7 +135,6 @@ func (m *Manager) RegisterTemplate(template *format.Template) error {
 	}
 	
 	return nil
-}
 
 // RegisterModule registers a module in the manifest
 func (m *Manager) RegisterModule(module *format.Module) error {
@@ -198,7 +192,6 @@ func (m *Manager) RegisterModule(module *format.Module) error {
 	}
 	
 	return nil
-}
 
 // UnregisterTemplate removes a template from the manifest
 func (m *Manager) UnregisterTemplate(id string) error {
@@ -233,7 +226,6 @@ func (m *Manager) UnregisterTemplate(id string) error {
 	}
 	
 	return nil
-}
 
 // UnregisterModule removes a module from the manifest
 func (m *Manager) UnregisterModule(id string) error {
@@ -268,7 +260,6 @@ func (m *Manager) UnregisterModule(id string) error {
 	}
 	
 	return nil
-}
 
 // ScanAndRegisterTemplates scans the templates directory and registers all templates
 func (m *Manager) ScanAndRegisterTemplates() error {
@@ -343,7 +334,6 @@ func (m *Manager) ScanAndRegisterTemplates() error {
 	}
 	
 	return nil
-}
 
 // ScanAndRegisterModules scans the modules directory and registers all modules
 func (m *Manager) ScanAndRegisterModules() error {
@@ -418,7 +408,7 @@ func (m *Manager) ScanAndRegisterModules() error {
 	}
 	
 	return nil
-}
+	
 
 // loadTemplateManifest loads the template manifest from file
 func (m *Manager) loadTemplateManifest() error {
@@ -433,7 +423,7 @@ func (m *Manager) loadTemplateManifest() error {
 	}
 	
 	// Read file
-	data, err := ioutil.ReadFile(manifestPath)
+	data, err := ioutil.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return fmt.Errorf("failed to read template manifest file: %w", err)
 	}
@@ -446,8 +436,6 @@ func (m *Manager) loadTemplateManifest() error {
 	
 	m.templateManifest = &manifest
 	return nil
-}
-
 // loadModuleManifest loads the module manifest from file
 func (m *Manager) loadModuleManifest() error {
 	// Get manifest file path
@@ -461,7 +449,7 @@ func (m *Manager) loadModuleManifest() error {
 	}
 	
 	// Read file
-	data, err := ioutil.ReadFile(manifestPath)
+	data, err := ioutil.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return fmt.Errorf("failed to read module manifest file: %w", err)
 	}
@@ -474,7 +462,6 @@ func (m *Manager) loadModuleManifest() error {
 	
 	m.moduleManifest = &manifest
 	return nil
-}
 
 // saveTemplateManifest saves the template manifest to file
 func (m *Manager) saveTemplateManifest() error {
@@ -483,7 +470,7 @@ func (m *Manager) saveTemplateManifest() error {
 	
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(manifestPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 	
@@ -494,12 +481,11 @@ func (m *Manager) saveTemplateManifest() error {
 	}
 	
 	// Write to file
-	if err := ioutil.WriteFile(manifestPath, data, 0644); err != nil {
+	if err := ioutil.WriteFile(manifestPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write template manifest file: %w", err)
 	}
 	
 	return nil
-}
 
 // saveModuleManifest saves the module manifest to file
 func (m *Manager) saveModuleManifest() error {
@@ -508,7 +494,7 @@ func (m *Manager) saveModuleManifest() error {
 	
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(manifestPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 	
@@ -519,12 +505,11 @@ func (m *Manager) saveModuleManifest() error {
 	}
 	
 	// Write to file
-	if err := ioutil.WriteFile(manifestPath, data, 0644); err != nil {
+	if err := ioutil.WriteFile(manifestPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write module manifest file: %w", err)
 	}
 	
 	return nil
-}
 
 // Helper functions
 
@@ -537,7 +522,6 @@ func getCategoryFromID(id string) string {
 		return parts[0]
 	}
 	return "unknown"
-}
 
 // getRelativePathForTemplate returns the relative path for a template
 func getRelativePathForTemplate(template *format.Template) string {
@@ -546,7 +530,6 @@ func getRelativePathForTemplate(template *format.Template) string {
 		format.SanitizeFilename(template.Info.Name), 
 		template.Info.Version)
 	return filepath.Join(category, filename)
-}
 
 // getRelativePathForModule returns the relative path for a module
 func getRelativePathForModule(module *format.Module) string {
@@ -566,7 +549,6 @@ func getRelativePathForModule(module *format.Module) string {
 		format.SanitizeFilename(module.Info.Name), 
 		module.Info.Version)
 	return filepath.Join(subdir, filename)
-}
 
 // sanitizeFilename sanitizes a string for use as a filename
 func sanitizeFilename(name string) string {
@@ -582,5 +564,21 @@ func sanitizeFilename(name string) string {
 	}
 	
 	// Convert to lowercase
-	return strings.ToLower(sanitized.String())
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

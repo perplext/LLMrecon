@@ -2,6 +2,8 @@ package format
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -25,22 +27,22 @@ func EnsureDir(dir string) error {
 	
 	// Create directory with all parent directories
 	if os.IsNotExist(err) {
-		return os.MkdirAll(dir, 0755)
+		return os.MkdirAll(dir, 0700)
 	}
 	
 	return err
-}
 
 // GetTemplatePath returns the full path for a template file
+}
 func GetTemplatePath(baseDir, category, name, version string) string {
 	// Sanitize name for filename
 	filename := fmt.Sprintf("%s_v%s.yaml", SanitizeFilename(name), version)
 	
 	// Construct path
 	return filepath.Join(baseDir, category, filename)
-}
 
 // GetModulePath returns the full path for a module file
+}
 func GetModulePath(baseDir, moduleType, name, version string) string {
 	// Sanitize name for filename
 	filename := fmt.Sprintf("%s_v%s.yaml", SanitizeFilename(name), version)
@@ -60,9 +62,9 @@ func GetModulePath(baseDir, moduleType, name, version string) string {
 	
 	// Construct path
 	return filepath.Join(baseDir, subdir, filename)
-}
 
 // SanitizeFilename sanitizes a string for use as a filename
+}
 func SanitizeFilename(name string) string {
 	// Replace spaces with underscores
 	result := spaceRegex.ReplaceAllString(name, "_")
@@ -74,9 +76,9 @@ func SanitizeFilename(name string) string {
 	result = strings.ToLower(result)
 	
 	return result
-}
 
 // ListTemplates lists all template files in a directory
+}
 func ListTemplates(baseDir string) ([]string, error) {
 	var templates []string
 	
@@ -110,7 +112,6 @@ func ListTemplates(baseDir string) ([]string, error) {
 	}
 	
 	return templates, nil
-}
 
 // ListModules lists all module files in a directory
 func ListModules(baseDir string) (map[string][]string, error) {

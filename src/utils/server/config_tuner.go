@@ -31,7 +31,6 @@ type ServerConfigTuner struct {
 	autoTuneEnabled bool
 	// stopChan is used to stop the auto-tuning goroutine
 	stopChan chan struct{}
-}
 
 // ServerConfigTunerOptions contains options for the server configuration tuner
 type ServerConfigTunerOptions struct {
@@ -41,7 +40,6 @@ type ServerConfigTunerOptions struct {
 	AutoTuneEnabled bool
 	// LogFile is the file to log tuning operations to
 	LogFile string
-}
 
 // DefaultServerConfigTunerOptions returns default options for the server configuration tuner
 func DefaultServerConfigTunerOptions() *ServerConfigTunerOptions {
@@ -50,7 +48,6 @@ func DefaultServerConfigTunerOptions() *ServerConfigTunerOptions {
 		AutoTuneEnabled: true,
 		LogFile:         "logs/server_tuner.log",
 	}
-}
 
 // NewServerConfigTuner creates a new server configuration tuner
 func NewServerConfigTuner(metricsManager *monitoring.MetricsManager, options *ServerConfigTunerOptions) (*ServerConfigTuner, error) {
@@ -63,12 +60,12 @@ func NewServerConfigTuner(metricsManager *monitoring.MetricsManager, options *Se
 	if options.LogFile != "" {
 		// Create log directory if it doesn't exist
 		logDir := "logs"
-		if err := os.MkdirAll(logDir, 0755); err != nil {
+		if err := os.MkdirAll(logDir, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create log directory: %w", err)
 		}
 
 		// Open log file
-		logFile, err := os.OpenFile(options.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		logFile, err := os.OpenFile(options.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open log file: %w", err)
 		}
@@ -101,7 +98,6 @@ func NewServerConfigTuner(metricsManager *monitoring.MetricsManager, options *Se
 	}
 
 	return tuner, nil
-}
 
 // StartAutoTuning starts automatic tuning at the configured interval
 func (t *ServerConfigTuner) StartAutoTuning() {
@@ -125,7 +121,6 @@ func (t *ServerConfigTuner) StartAutoTuning() {
 
 		t.logger.Println("Automatic server configuration tuning started")
 	}
-}
 
 // StopAutoTuning stops automatic tuning
 func (t *ServerConfigTuner) StopAutoTuning() {
@@ -137,7 +132,6 @@ func (t *ServerConfigTuner) StopAutoTuning() {
 		t.autoTuneEnabled = false
 		t.logger.Println("Automatic server configuration tuning stopped")
 	}
-}
 
 // TuneServerConfig tunes server configuration parameters based on system metrics
 func (t *ServerConfigTuner) TuneServerConfig() {
@@ -172,7 +166,6 @@ func (t *ServerConfigTuner) TuneServerConfig() {
 	t.lastTuneTime = time.Now()
 
 	t.logger.Println("Server configuration tuning completed")
-}
 
 // tuneWorkerCount tunes the number of worker processes based on concurrency metrics
 func (t *ServerConfigTuner) tuneWorkerCount(metrics map[string]*monitoring.Metric) {
@@ -241,7 +234,6 @@ func (t *ServerConfigTuner) tuneWorkerCount(metrics map[string]*monitoring.Metri
 		os.Setenv("MAX_WORKERS", strconv.Itoa(newMaxWorkers))
 		os.Setenv("MIN_WORKERS", strconv.Itoa(newMinWorkers))
 	}
-}
 
 // tuneConnectionPoolSize tunes the connection pool size based on concurrency metrics
 func (t *ServerConfigTuner) tuneConnectionPoolSize(metrics map[string]*monitoring.Metric) {
@@ -292,7 +284,6 @@ func (t *ServerConfigTuner) tuneConnectionPoolSize(metrics map[string]*monitorin
 		// Apply changes to environment variables for immediate effect
 		os.Setenv("CONNECTION_POOL_SIZE", strconv.Itoa(newPoolSize))
 	}
-}
 
 // tuneGCPercentage tunes the garbage collection percentage based on memory metrics
 func (t *ServerConfigTuner) tuneGCPercentage(memoryMetrics, gcMetrics map[string]*monitoring.Metric) {
@@ -343,7 +334,6 @@ func (t *ServerConfigTuner) tuneGCPercentage(memoryMetrics, gcMetrics map[string
 		// Apply changes to runtime for immediate effect
 		debug.SetGCPercent(newGCPercent)
 	}
-}
 
 // tuneBufferSizes tunes buffer sizes based on memory metrics
 func (t *ServerConfigTuner) tuneBufferSizes(metrics map[string]*monitoring.Metric) {
@@ -380,7 +370,6 @@ func (t *ServerConfigTuner) tuneBufferSizes(metrics map[string]*monitoring.Metri
 		// Memory usage is in a good range, no change needed
 		return
 	}
-
 	// Update configuration if changed
 	if newBufferPoolSize != currentBufferPoolSize {
 		t.logger.Printf("Tuning buffer pool size: %d→%d (memory usage: %.2f MB, %.2f%% of threshold)",
@@ -396,7 +385,6 @@ func (t *ServerConfigTuner) tuneBufferSizes(metrics map[string]*monitoring.Metri
 		// Apply changes to environment variables for immediate effect
 		os.Setenv("BUFFER_POOL_SIZE", strconv.Itoa(newBufferPoolSize))
 	}
-}
 
 // GetRecommendations returns recommendations for server configuration
 func (t *ServerConfigTuner) GetRecommendations() map[string]string {
@@ -466,12 +454,10 @@ func (t *ServerConfigTuner) GetRecommendations() map[string]string {
 	}
 
 	return recommendations
-}
 
 // ApplyRecommendations applies all current recommendations
 func (t *ServerConfigTuner) ApplyRecommendations() {
 	t.TuneServerConfig()
-}
 
 // GetCurrentConfig returns the current server configuration
 func (t *ServerConfigTuner) GetCurrentConfig() map[string]interface{} {
@@ -485,7 +471,6 @@ func (t *ServerConfigTuner) GetCurrentConfig() map[string]interface{} {
 	config["max_concurrent_requests"] = t.config.MaxConcurrentRequests
 	
 	return config
-}
 
 // SetAutoTuneEnabled enables or disables automatic tuning
 func (t *ServerConfigTuner) SetAutoTuneEnabled(enabled bool) {
@@ -500,12 +485,9 @@ func (t *ServerConfigTuner) SetAutoTuneEnabled(enabled bool) {
 		close(t.stopChan)
 		t.autoTuneEnabled = false
 	}
-}
 
 // IsAutoTuneEnabled returns true if automatic tuning is enabled
 func (t *ServerConfigTuner) IsAutoTuneEnabled() bool {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	
-	return t.autoTuneEnabled
-}

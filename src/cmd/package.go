@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/update"
 	"github.com/perplext/LLMrecon/src/version"
@@ -68,7 +69,6 @@ func init() {
 	applyPackageCmd.Flags().StringVar(&backupDir, "backup-dir", "", "Backup directory for update operations")
 	applyPackageCmd.Flags().BoolVar(&forceUpdate, "force", false, "Force update even if not compatible")
 	applyPackageCmd.Flags().BoolVar(&skipVerify, "skip-verify", false, "Skip package verification (not recommended)")
-}
 
 func runCreatePackage(cmd *cobra.Command, args []string) error {
 	manifestPath := args[0]
@@ -88,7 +88,6 @@ func runCreatePackage(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Successfully created update package: %s\n", outputPath)
 	return nil
-}
 
 func runVerifyPackage(cmd *cobra.Command, args []string) error {
 	packagePath := args[0]
@@ -97,14 +96,13 @@ func runVerifyPackage(cmd *cobra.Command, args []string) error {
 	if _, err := os.Stat(packagePath); os.IsNotExist(err) {
 		return fmt.Errorf("package file not found: %s", packagePath)
 	}
-
 	// Open package
 	fmt.Printf("Opening update package: %s\n", packagePath)
 	pkg, err := update.OpenPackage(packagePath)
 	if err != nil {
 		return fmt.Errorf("failed to open package: %w", err)
 	}
-	defer pkg.Close()
+	defer func() { if err := pkg.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Print package information
 	fmt.Println("Package Information:")
@@ -116,18 +114,19 @@ func runVerifyPackage(cmd *cobra.Command, args []string) error {
 	fmt.Printf("  Binary Version: %s\n", pkg.Manifest.Components.Binary.Version)
 	fmt.Printf("  Templates Version: %s\n", pkg.Manifest.Components.Templates.Version)
 	fmt.Printf("  Modules: %d\n", len(pkg.Manifest.Components.Modules))
-
 	// Verify package if public key is provided
 	if publicKeyPath != "" {
 		// Read public key
-		publicKeyData, err := os.ReadFile(publicKeyPath)
+		publicKeyData, err := os.ReadFile(filepath.Clean(publicKeyPath))
 		if err != nil {
 			return fmt.Errorf("failed to read public key: %w", err)
 		}
 
 		// TODO: Parse public key data
 		var publicKey []byte
-		_ = publicKeyData // Placeholder
+		if err := publicKeyData // Placeholder; err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 
 		// Verify package
 		fmt.Println("Verifying package...")
@@ -141,7 +140,6 @@ func runVerifyPackage(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
 
 func runApplyPackage(cmd *cobra.Command, args []string) error {
 	packagePath := args[0]
@@ -157,7 +155,7 @@ func runApplyPackage(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open package: %w", err)
 	}
-	defer pkg.Close()
+	defer func() { if err := pkg.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Print package information
 	fmt.Println("Package Information:")
@@ -173,15 +171,15 @@ func runApplyPackage(cmd *cobra.Command, args []string) error {
 	// Verify package if not skipped
 	if !skipVerify && publicKeyPath != "" {
 		// Read public key
-		publicKeyData, err := os.ReadFile(publicKeyPath)
+		publicKeyData, err := os.ReadFile(filepath.Clean(publicKeyPath))
 		if err != nil {
 			return fmt.Errorf("failed to read public key: %w", err)
 		}
-
 		// TODO: Parse public key data
 		var publicKey []byte
-		_ = publicKeyData // Placeholder
-
+		if err := publicKeyData // Placeholder; err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 		// Verify package
 		fmt.Println("Verifying package...")
 		err = pkg.Verify(publicKey)
@@ -194,13 +192,11 @@ func runApplyPackage(cmd *cobra.Command, args []string) error {
 	} else {
 		fmt.Println("Warning: Package verification skipped.")
 	}
-
 	// Get current versions
 	currentVersions, err := getCurrentVersions()
 	if err != nil {
 		return fmt.Errorf("failed to get current versions: %w", err)
 	}
-
 	// Check if package is compatible
 	if !forceUpdate {
 		fmt.Println("Checking compatibility...")
@@ -247,7 +243,6 @@ func runApplyPackage(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Update applied successfully.")
 	return nil
-}
 
 // getCurrentVersions gets the current versions of components
 func getCurrentVersions() (map[string]version.Version, error) {
@@ -257,4 +252,3 @@ func getCurrentVersions() (map[string]version.Version, error) {
 		"core":      {Major: 1, Minor: 0, Patch: 0},
 		"templates": {Major: 1, Minor: 0, Patch: 0},
 	}, nil
-}

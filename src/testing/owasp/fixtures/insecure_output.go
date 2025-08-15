@@ -173,4 +173,3 @@ func GetInsecureOutputFixtures() TestFixtures {
 			LLM02_InsecureOutput,
 		),
 	}
-}

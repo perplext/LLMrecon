@@ -27,7 +27,6 @@ func NewSQLSessionStore(db *sql.DB) (adapter.SessionStore, error) {
 	}
 
 	return store, nil
-}
 
 // initSchema initializes the database schema
 func (s *SQLSessionStore) initSchema() error {
@@ -67,7 +66,6 @@ func (s *SQLSessionStore) initSchema() error {
 	}
 
 	return nil
-}
 
 // CreateSession creates a new session
 func (s *SQLSessionStore) CreateSession(ctx context.Context, session *adapter.Session) error {
@@ -97,7 +95,6 @@ func (s *SQLSessionStore) CreateSession(ctx context.Context, session *adapter.Se
 	}
 
 	return nil
-}
 
 // GetSessionByID retrieves a session by ID
 func (s *SQLSessionStore) GetSessionByID(ctx context.Context, id string) (*adapter.Session, error) {
@@ -110,7 +107,6 @@ func (s *SQLSessionStore) GetSessionByID(ctx context.Context, id string) (*adapt
 
 	row := s.db.QueryRowContext(ctx, query, id)
 	return s.scanSession(row)
-}
 
 // GetSessionByToken retrieves a session by token
 func (s *SQLSessionStore) GetSessionByToken(ctx context.Context, token string) (*adapter.Session, error) {
@@ -123,7 +119,6 @@ func (s *SQLSessionStore) GetSessionByToken(ctx context.Context, token string) (
 
 	row := s.db.QueryRowContext(ctx, query, token)
 	return s.scanSession(row)
-}
 
 // GetSessionByRefreshToken retrieves a session by refresh token
 func (s *SQLSessionStore) GetSessionByRefreshToken(ctx context.Context, refreshToken string) (*adapter.Session, error) {
@@ -136,7 +131,6 @@ func (s *SQLSessionStore) GetSessionByRefreshToken(ctx context.Context, refreshT
 
 	row := s.db.QueryRowContext(ctx, query, refreshToken)
 	return s.scanSession(row)
-}
 
 // UpdateSession updates an existing session
 func (s *SQLSessionStore) UpdateSession(ctx context.Context, session *adapter.Session) error {
@@ -173,7 +167,6 @@ func (s *SQLSessionStore) UpdateSession(ctx context.Context, session *adapter.Se
 	}
 
 	return nil
-}
 
 // DeleteSession deletes a session
 func (s *SQLSessionStore) DeleteSession(ctx context.Context, id string) error {
@@ -193,7 +186,6 @@ func (s *SQLSessionStore) DeleteSession(ctx context.Context, id string) error {
 	}
 
 	return nil
-}
 
 // DeleteSessionsByUserID deletes all sessions for a user
 func (s *SQLSessionStore) DeleteSessionsByUserID(ctx context.Context, userID string) error {
@@ -204,8 +196,6 @@ func (s *SQLSessionStore) DeleteSessionsByUserID(ctx context.Context, userID str
 	}
 
 	return nil
-}
-
 // ListSessionsByUserID lists sessions for a user
 func (s *SQLSessionStore) ListSessionsByUserID(ctx context.Context, userID string) ([]*adapter.Session, error) {
 	query := `
@@ -220,8 +210,7 @@ func (s *SQLSessionStore) ListSessionsByUserID(ctx context.Context, userID strin
 	if err != nil {
 		return nil, fmt.Errorf("failed to query sessions: %w", err)
 	}
-	defer rows.Close()
-
+	defer func() { if err := rows.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	var sessions []*adapter.Session
 	for rows.Next() {
 		session, err := s.scanSessionFromRows(rows)
@@ -236,7 +225,6 @@ func (s *SQLSessionStore) ListSessionsByUserID(ctx context.Context, userID strin
 	}
 
 	return sessions, nil
-}
 
 // CleanExpiredSessions removes expired sessions
 func (s *SQLSessionStore) CleanExpiredSessions(ctx context.Context) (int, error) {
@@ -252,7 +240,6 @@ func (s *SQLSessionStore) CleanExpiredSessions(ctx context.Context) (int, error)
 	}
 
 	return int(rowsAffected), nil
-}
 
 // scanSession scans a session from a database row
 func (s *SQLSessionStore) scanSession(row *sql.Row) (*adapter.Session, error) {
@@ -278,7 +265,6 @@ func (s *SQLSessionStore) scanSession(row *sql.Row) (*adapter.Session, error) {
 		}
 		return nil, fmt.Errorf("failed to scan session: %w", err)
 	}
-
 	// Parse timestamps
 	session.ExpiresAt, _ = time.Parse(time.RFC3339, expiresAtStr)
 	session.CreatedAt, _ = time.Parse(time.RFC3339, createdAtStr)
@@ -299,7 +285,6 @@ func (s *SQLSessionStore) scanSession(row *sql.Row) (*adapter.Session, error) {
 	}
 
 	return &session, nil
-}
 
 // scanSessionFromRows scans a session from database rows
 func (s *SQLSessionStore) scanSessionFromRows(rows *sql.Rows) (*adapter.Session, error) {
@@ -343,9 +328,20 @@ func (s *SQLSessionStore) scanSessionFromRows(rows *sql.Rows) (*adapter.Session,
 	}
 
 	return &session, nil
-}
 
 // Close closes the SQL connection
 func (s *SQLSessionStore) Close() error {
 	return s.db.Close()
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -25,7 +25,6 @@ type IncidentStore interface {
 	UpdateIncident(ctx context.Context, incident *SecurityIncident) error
 	DeleteIncident(ctx context.Context, id string) error
 	ListIncidents(ctx context.Context, filter *LocalIncidentFilter) ([]*SecurityIncident, error)
-}
 
 // VulnerabilityStore defines the interface for vulnerability storage
 type VulnerabilityStore interface {
@@ -34,7 +33,6 @@ type VulnerabilityStore interface {
 	UpdateVulnerability(ctx context.Context, vulnerability *Vulnerability) error
 	DeleteVulnerability(ctx context.Context, id string) error
 	ListVulnerabilities(ctx context.Context, filter *LocalVulnerabilityFilter) ([]*Vulnerability, error)
-}
 
 // LocalIncidentFilter defines filters for querying security incidents (local version)
 type LocalIncidentFilter struct {
@@ -46,7 +44,6 @@ type LocalIncidentFilter struct {
 	EndTime    time.Time      `json:"end_time,omitempty"`
 	Limit      int            `json:"limit,omitempty"`
 	Offset     int            `json:"offset,omitempty"`
-}
 
 // LocalVulnerabilityFilter defines filters for querying vulnerabilities (local version)
 type LocalVulnerabilityFilter struct {
@@ -60,12 +57,10 @@ type LocalVulnerabilityFilter struct {
 	EndTime        time.Time           `json:"end_time,omitempty"`
 	Limit          int                 `json:"limit,omitempty"`
 	Offset         int                 `json:"offset,omitempty"`
-}
 
 // NewSecurityManager creates a new security manager
 func NewSecurityManager(config *AccessControlConfig, incidentStore IncidentStore, vulnerabilityStore VulnerabilityStore, auditLogger AuditLogger) *BasicSecurityManager {
 	return NewBasicSecurityManager(config, incidentStore, vulnerabilityStore, auditLogger)
-}
 
 // NewBasicSecurityManager creates a new basic security manager
 func NewBasicSecurityManager(config *AccessControlConfig, incidentStore IncidentStore, vulnerabilityStore VulnerabilityStore, auditLogger AuditLogger) *BasicSecurityManager {
@@ -75,7 +70,6 @@ func NewBasicSecurityManager(config *AccessControlConfig, incidentStore Incident
 		vulnerabilityStore: vulnerabilityStore,
 		auditLogger:        auditLogger,
 	}
-}
 
 // CreateIncident creates a new security incident
 func (m *BasicSecurityManager) CreateIncident(ctx context.Context, title, description string, severity AuditSeverity, reportedBy string, auditLogIDs []string, metadata map[string]interface{}) (*SecurityIncident, error) {
@@ -118,7 +112,6 @@ func (m *BasicSecurityManager) CreateIncident(ctx context.Context, title, descri
 	})
 
 	return incident, nil
-}
 
 // UpdateIncidentStatus updates the status of a security incident
 func (m *BasicSecurityManager) UpdateIncidentStatus(ctx context.Context, id string, status IncidentStatus, assignedTo, updatedBy string) error {
@@ -169,7 +162,6 @@ func (m *BasicSecurityManager) UpdateIncidentStatus(ctx context.Context, id stri
 	})
 
 	return nil
-}
 
 // GetIncident retrieves a security incident by ID
 func (m *BasicSecurityManager) GetIncident(ctx context.Context, id string) (*SecurityIncident, error) {
@@ -177,7 +169,6 @@ func (m *BasicSecurityManager) GetIncident(ctx context.Context, id string) (*Sec
 	defer m.mu.RUnlock()
 
 	return m.incidentStore.GetIncident(ctx, id)
-}
 
 // ListIncidents lists security incidents based on filters
 func (m *BasicSecurityManager) ListIncidents(ctx context.Context, filter *LocalIncidentFilter) ([]*SecurityIncident, error) {
@@ -185,7 +176,6 @@ func (m *BasicSecurityManager) ListIncidents(ctx context.Context, filter *LocalI
 	defer m.mu.RUnlock()
 
 	return m.incidentStore.ListIncidents(ctx, filter)
-}
 
 // CreateVulnerability creates a new vulnerability
 func (m *BasicSecurityManager) CreateVulnerability(ctx context.Context, title, description string, severity AuditSeverity, affectedSystem, cve, reportedBy string, metadata map[string]interface{}) (*Vulnerability, error) {
@@ -231,8 +221,6 @@ func (m *BasicSecurityManager) CreateVulnerability(ctx context.Context, title, d
 	})
 
 	return vulnerability, nil
-}
-
 // UpdateVulnerabilityStatus updates the status of a vulnerability
 func (m *BasicSecurityManager) UpdateVulnerabilityStatus(ctx context.Context, id string, status VulnerabilityStatus, assignedTo, remediationPlan, updatedBy string) error {
 	m.mu.Lock()
@@ -288,7 +276,6 @@ func (m *BasicSecurityManager) UpdateVulnerabilityStatus(ctx context.Context, id
 	})
 
 	return nil
-}
 
 // GetVulnerability retrieves a vulnerability by ID
 func (m *BasicSecurityManager) GetVulnerability(ctx context.Context, id string) (*Vulnerability, error) {
@@ -296,7 +283,6 @@ func (m *BasicSecurityManager) GetVulnerability(ctx context.Context, id string) 
 	defer m.mu.RUnlock()
 
 	return m.vulnerabilityStore.GetVulnerability(ctx, id)
-}
 
 // ListVulnerabilities lists vulnerabilities based on filters
 func (m *BasicSecurityManager) ListVulnerabilities(ctx context.Context, filter *LocalVulnerabilityFilter) ([]*Vulnerability, error) {
@@ -304,7 +290,6 @@ func (m *BasicSecurityManager) ListVulnerabilities(ctx context.Context, filter *
 	defer m.mu.RUnlock()
 
 	return m.vulnerabilityStore.ListVulnerabilities(ctx, filter)
-}
 
 // ProcessSecurityAuditLog processes an audit log for security incidents
 func (m *BasicSecurityManager) ProcessSecurityAuditLog(ctx context.Context, log *AuditLog) error {
@@ -353,20 +338,17 @@ func (m *BasicSecurityManager) ProcessSecurityAuditLog(ctx context.Context, log 
 
 	_, err := m.CreateIncident(ctx, title, description, log.Severity, "system", []string{log.ID}, metadata)
 	return err
-}
 
 // LocalInMemoryIncidentStore is a simple in-memory implementation of IncidentStore
 type LocalInMemoryIncidentStore struct {
 	incidents map[string]*SecurityIncident
 	mu        sync.RWMutex
-}
 
 // NewLocalInMemoryIncidentStore creates a new local in-memory incident store
 func NewLocalInMemoryIncidentStore() *LocalInMemoryIncidentStore {
 	return &LocalInMemoryIncidentStore{
 		incidents: make(map[string]*SecurityIncident),
 	}
-}
 
 // CreateIncident creates a new security incident
 func (s *LocalInMemoryIncidentStore) CreateIncident(ctx context.Context, incident *SecurityIncident) error {
@@ -377,7 +359,6 @@ func (s *LocalInMemoryIncidentStore) CreateIncident(ctx context.Context, inciden
 	s.incidents[incident.ID] = incident
 
 	return nil
-}
 
 // GetIncident retrieves a security incident by ID
 func (s *LocalInMemoryIncidentStore) GetIncident(ctx context.Context, id string) (*SecurityIncident, error) {
@@ -390,7 +371,6 @@ func (s *LocalInMemoryIncidentStore) GetIncident(ctx context.Context, id string)
 	}
 
 	return incident, nil
-}
 
 // UpdateIncident updates an existing security incident
 func (s *LocalInMemoryIncidentStore) UpdateIncident(ctx context.Context, incident *SecurityIncident) error {
@@ -407,7 +387,6 @@ func (s *LocalInMemoryIncidentStore) UpdateIncident(ctx context.Context, inciden
 	s.incidents[incident.ID] = incident
 
 	return nil
-}
 
 // DeleteIncident deletes a security incident by ID
 func (s *LocalInMemoryIncidentStore) DeleteIncident(ctx context.Context, id string) error {
@@ -424,7 +403,6 @@ func (s *LocalInMemoryIncidentStore) DeleteIncident(ctx context.Context, id stri
 	delete(s.incidents, id)
 
 	return nil
-}
 
 // ListIncidents lists security incidents based on filters
 func (s *LocalInMemoryIncidentStore) ListIncidents(ctx context.Context, filter *LocalIncidentFilter) ([]*SecurityIncident, error) {
@@ -483,20 +461,17 @@ func (s *LocalInMemoryIncidentStore) ListIncidents(ctx context.Context, filter *
 	}
 
 	return filtered[start:end], nil
-}
 
 // LocalInMemoryVulnerabilityStore is a simple in-memory implementation of VulnerabilityStore
 type LocalInMemoryVulnerabilityStore struct {
 	vulnerabilities map[string]*Vulnerability
 	mu              sync.RWMutex
-}
 
 // NewLocalInMemoryVulnerabilityStore creates a new local in-memory vulnerability store
 func NewLocalInMemoryVulnerabilityStore() *LocalInMemoryVulnerabilityStore {
 	return &LocalInMemoryVulnerabilityStore{
 		vulnerabilities: make(map[string]*Vulnerability),
 	}
-}
 
 // CreateVulnerability creates a new vulnerability
 func (s *LocalInMemoryVulnerabilityStore) CreateVulnerability(ctx context.Context, vulnerability *Vulnerability) error {
@@ -507,7 +482,6 @@ func (s *LocalInMemoryVulnerabilityStore) CreateVulnerability(ctx context.Contex
 	s.vulnerabilities[vulnerability.ID] = vulnerability
 
 	return nil
-}
 
 // GetVulnerability retrieves a vulnerability by ID
 func (s *LocalInMemoryVulnerabilityStore) GetVulnerability(ctx context.Context, id string) (*Vulnerability, error) {
@@ -520,7 +494,6 @@ func (s *LocalInMemoryVulnerabilityStore) GetVulnerability(ctx context.Context, 
 	}
 
 	return vulnerability, nil
-}
 
 // UpdateVulnerability updates an existing vulnerability
 func (s *LocalInMemoryVulnerabilityStore) UpdateVulnerability(ctx context.Context, vulnerability *Vulnerability) error {
@@ -537,7 +510,6 @@ func (s *LocalInMemoryVulnerabilityStore) UpdateVulnerability(ctx context.Contex
 	s.vulnerabilities[vulnerability.ID] = vulnerability
 
 	return nil
-}
 
 // DeleteVulnerability deletes a vulnerability by ID
 func (s *LocalInMemoryVulnerabilityStore) DeleteVulnerability(ctx context.Context, id string) error {
@@ -554,7 +526,6 @@ func (s *LocalInMemoryVulnerabilityStore) DeleteVulnerability(ctx context.Contex
 	delete(s.vulnerabilities, id)
 
 	return nil
-}
 
 // ListVulnerabilities lists vulnerabilities based on filters
 func (s *LocalInMemoryVulnerabilityStore) ListVulnerabilities(ctx context.Context, filter *LocalVulnerabilityFilter) ([]*Vulnerability, error) {
@@ -619,23 +590,19 @@ func (s *LocalInMemoryVulnerabilityStore) ListVulnerabilities(ctx context.Contex
 	}
 
 	return filtered[start:end], nil
-}
 
 // Close closes the security manager
 func (m *BasicSecurityManager) Close() error {
 	// Nothing to close for now
 	return nil
-}
 
 // SecurityManagerAdapter wraps BasicSecurityManager to implement the SecurityManager interface
-type SecurityManagerAdapter struct {
+ype SecurityManagerAdapter struct {
 	impl *BasicSecurityManager
-}
 
 // NewSecurityManagerAdapter creates a new security manager adapter
 func NewSecurityManagerAdapter(impl *BasicSecurityManager) *SecurityManagerAdapter {
 	return &SecurityManagerAdapter{impl: impl}
-}
 
 // ReportIncident reports a security incident
 func (a *SecurityManagerAdapter) ReportIncident(title, description string, severity models.SecurityIncidentSeverity) (*models.SecurityIncident, error) {
@@ -645,7 +612,6 @@ func (a *SecurityManagerAdapter) ReportIncident(title, description string, sever
 	if err != nil {
 		return nil, err
 	}
-
 	// Convert back to models.SecurityIncident
 	return &models.SecurityIncident{
 		ID:          incident.ID,
@@ -656,7 +622,6 @@ func (a *SecurityManagerAdapter) ReportIncident(title, description string, sever
 		ReportedAt:  incident.CreatedAt,
 		ReportedBy:  incident.ReportedBy,
 	}, nil
-}
 
 // GetIncident retrieves a security incident by ID
 func (a *SecurityManagerAdapter) GetIncident(incidentID string) (*models.SecurityIncident, error) {
@@ -675,20 +640,17 @@ func (a *SecurityManagerAdapter) GetIncident(incidentID string) (*models.Securit
 		ReportedAt:  incident.CreatedAt,
 		ReportedBy:  incident.ReportedBy,
 	}, nil
-}
 
 // UpdateIncident updates a security incident
 func (a *SecurityManagerAdapter) UpdateIncident(incident *models.SecurityIncident) error {
 	// Convert models.SecurityIncident to local type and update
 	// This is a simplified implementation
 	return nil
-}
 
 // CloseIncident closes a security incident
 func (a *SecurityManagerAdapter) CloseIncident(incidentID, resolution string) error {
 	// Update incident status to resolved
 	return a.impl.UpdateIncidentStatus(context.Background(), incidentID, IncidentStatusResolved, "", "system")
-}
 
 // ListIncidents lists security incidents
 func (a *SecurityManagerAdapter) ListIncidents(filter map[string]interface{}, offset, limit int) ([]*models.SecurityIncident, int, error) {
@@ -718,7 +680,6 @@ func (a *SecurityManagerAdapter) ListIncidents(filter map[string]interface{}, of
 	}
 
 	return result, len(result), nil
-}
 
 // ReportVulnerability reports a security vulnerability
 func (a *SecurityManagerAdapter) ReportVulnerability(title, description string, severity models.VulnerabilitySeverity) (*models.Vulnerability, error) {
@@ -739,7 +700,6 @@ func (a *SecurityManagerAdapter) ReportVulnerability(title, description string, 
 		ReportedAt:  vuln.CreatedAt,
 		ReportedBy:  vuln.ReportedBy,
 	}, nil
-}
 
 // GetVulnerability retrieves a security vulnerability by ID
 func (a *SecurityManagerAdapter) GetVulnerability(vulnerabilityID string) (*models.Vulnerability, error) {
@@ -758,23 +718,19 @@ func (a *SecurityManagerAdapter) GetVulnerability(vulnerabilityID string) (*mode
 		ReportedAt:  vuln.CreatedAt,
 		ReportedBy:  vuln.ReportedBy,
 	}, nil
-}
 
 // UpdateVulnerability updates a security vulnerability
 func (a *SecurityManagerAdapter) UpdateVulnerability(vulnerability *models.Vulnerability) error {
 	// This is a simplified implementation
 	return nil
-}
 
 // MitigateVulnerability marks a security vulnerability as mitigated
 func (a *SecurityManagerAdapter) MitigateVulnerability(vulnerabilityID, mitigation string) error {
 	return a.impl.UpdateVulnerabilityStatus(context.Background(), vulnerabilityID, VulnerabilityStatusRemediated, "", mitigation, "system")
-}
 
 // ResolveVulnerability marks a security vulnerability as resolved
 func (a *SecurityManagerAdapter) ResolveVulnerability(vulnerabilityID string) error {
 	return a.impl.UpdateVulnerabilityStatus(context.Background(), vulnerabilityID, VulnerabilityStatusVerified, "", "", "system")
-}
 
 // ListVulnerabilities lists security vulnerabilities
 func (a *SecurityManagerAdapter) ListVulnerabilities(filter map[string]interface{}, offset, limit int) ([]*models.Vulnerability, int, error) {
@@ -804,9 +760,43 @@ func (a *SecurityManagerAdapter) ListVulnerabilities(filter map[string]interface
 	}
 
 	return result, len(result), nil
-}
 
 // Close closes the security manager
 func (a *SecurityManagerAdapter) Close() error {
 	return a.impl.Close()
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

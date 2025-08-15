@@ -25,7 +25,6 @@ type RedisClusterCache struct {
 	ctx         context.Context
 	cancel      context.CancelFunc
 	wg          sync.WaitGroup
-}
 
 // RedisClusterCacheConfig defines configuration for Redis cluster caching
 type RedisClusterCacheConfig struct {
@@ -70,7 +69,6 @@ type RedisClusterCacheConfig struct {
 	EnableMetrics      bool          `json:"enable_metrics"`
 	MetricsInterval    time.Duration `json:"metrics_interval"`
 	EnableTracing      bool          `json:"enable_tracing"`
-}
 
 // PartitionStrategy defines cache partitioning strategies
 type PartitionStrategy string
@@ -114,7 +112,6 @@ type CacheEntry struct {
 	Metadata    map[string]interface{} `json:"metadata"`
 	Compressed  bool                   `json:"compressed"`
 	Size        int64                  `json:"size"`
-}
 
 // CachePartitioner handles cache partitioning across cluster nodes
 type CachePartitioner struct {
@@ -124,7 +121,6 @@ type CachePartitioner struct {
 	config      CachePartitionerConfig
 	metrics     *PartitionerMetrics
 	mutex       sync.RWMutex
-}
 
 // CachePartition represents a cache partition
 type CachePartition struct {
@@ -139,7 +135,6 @@ type CachePartition struct {
 type KeyRange struct {
 	Start uint32 `json:"start"`
 	End   uint32 `json:"end"`
-}
 
 // PartitionHealth represents partition health status
 type PartitionHealth string
@@ -156,7 +151,6 @@ type ConsistentHashRing struct {
 	sortedNodes []uint32
 	replicas    int
 	mutex       sync.RWMutex
-}
 
 // CacheWarmer handles proactive cache warming
 type CacheWarmer struct {
@@ -178,7 +172,6 @@ type WarmingStrategy interface {
 	ShouldWarm(key string, entry *CacheEntry) bool
 	GetPriority(key string, entry *CacheEntry) int
 	GetWarmingData(key string) (interface{}, error)
-}
 
 // CacheInvalidator handles cache invalidation
 type CacheInvalidator struct {
@@ -195,7 +188,6 @@ type CacheInvalidator struct {
 type InvalidationHandler interface {
 	ShouldInvalidate(entry *CacheEntry) bool
 	Invalidate(key string, entry *CacheEntry) error
-}
 
 // InvalidationCallback is called when cache entries are invalidated
 type InvalidationCallback func(key string, entry *CacheEntry, reason string)
@@ -219,7 +211,6 @@ type CacheMetrics struct {
 	TotalKeys          int64         `json:"total_keys"`
 	TotalSize          int64         `json:"total_size"`
 	PartitionMetrics   []*PartitionMetrics `json:"partition_metrics"`
-}
 
 type PartitionMetrics struct {
 	PartitionID int     `json:"partition_id"`
@@ -248,7 +239,6 @@ type InvalidatorMetrics struct {
 	TagInvalidations int64 `json:"tag_invalidations"`
 	TTLExpired       int64 `json:"ttl_expired"`
 	ManualEvictions  int64 `json:"manual_evictions"`
-}
 
 // Configuration structures
 type CachePartitionerConfig struct {
@@ -256,7 +246,6 @@ type CachePartitionerConfig struct {
 	RebalanceInterval  time.Duration `json:"rebalance_interval"`
 	MigrationBatchSize int           `json:"migration_batch_size"`
 	HealthCheckInterval time.Duration `json:"health_check_interval"`
-}
 
 type CacheWarmerConfig struct {
 	Strategies         []string      `json:"strategies"`
@@ -265,14 +254,12 @@ type CacheWarmerConfig struct {
 	BatchSize          int           `json:"batch_size"`
 	PredictionWindow   time.Duration `json:"prediction_window"`
 	MinAccessThreshold int64         `json:"min_access_threshold"`
-}
 
 type CacheInvalidatorConfig struct {
 	Strategies       []InvalidationStrategy `json:"strategies"`
 	TTLCheckInterval time.Duration          `json:"ttl_check_interval"`
 	MaxTagsPerKey    int                    `json:"max_tags_per_key"`
 	BatchSize        int                    `json:"batch_size"`
-}
 
 type WarmingScheduler struct {
 	queue    chan WarmingJob
@@ -299,7 +286,6 @@ type WarmingJob struct {
 	Priority int       `json:"priority"`
 	Strategy string    `json:"strategy"`
 	Created  time.Time `json:"created"`
-}
 
 type WarmingWorker struct {
 	id       int
@@ -366,7 +352,6 @@ func DefaultRedisClusterCacheConfig() RedisClusterCacheConfig {
 		MetricsInterval:   30 * time.Second,
 		EnableTracing:     false,
 	}
-}
 
 // NewRedisClusterCache creates a new Redis cluster cache
 func NewRedisClusterCache(config RedisClusterCacheConfig, logger Logger) (*RedisClusterCache, error) {
@@ -443,7 +428,6 @@ func NewRedisClusterCache(config RedisClusterCacheConfig, logger Logger) (*Redis
 	}, logger)
 	
 	return cache, nil
-}
 
 // Start starts the Redis cluster cache
 func (c *RedisClusterCache) Start() error {
@@ -477,7 +461,6 @@ func (c *RedisClusterCache) Start() error {
 	
 	c.logger.Info("Redis cluster cache started")
 	return nil
-}
 
 // Stop stops the Redis cluster cache
 func (c *RedisClusterCache) Stop() error {
@@ -502,7 +485,6 @@ func (c *RedisClusterCache) Stop() error {
 	
 	c.logger.Info("Redis cluster cache stopped")
 	return nil
-}
 
 // Get retrieves a value from the cache
 func (c *RedisClusterCache) Get(key string) (interface{}, error) {
@@ -544,7 +526,6 @@ func (c *RedisClusterCache) Get(key string) (interface{}, error) {
 	c.updateLatencyMetrics(time.Since(start))
 	
 	return entry.Value, nil
-}
 
 // Set stores a value in the cache
 func (c *RedisClusterCache) Set(key string, value interface{}, ttl time.Duration, tags ...string) error {
@@ -604,7 +585,7 @@ func (c *RedisClusterCache) Set(key string, value interface{}, ttl time.Duration
 	c.updateLatencyMetrics(time.Since(start))
 	
 	return nil
-}
+	
 
 // Delete removes a value from the cache
 func (c *RedisClusterCache) Delete(key string) error {
@@ -626,7 +607,6 @@ func (c *RedisClusterCache) Delete(key string) error {
 	}
 	
 	return nil
-}
 
 // InvalidateByTags invalidates all entries with the specified tags
 func (c *RedisClusterCache) InvalidateByTags(tags []string) error {
@@ -635,7 +615,6 @@ func (c *RedisClusterCache) InvalidateByTags(tags []string) error {
 	}
 	
 	return c.invalidator.InvalidateByTags(tags)
-}
 
 // GetMetrics returns cache metrics
 func (c *RedisClusterCache) GetMetrics() *CacheMetrics {
@@ -652,7 +631,6 @@ func (c *RedisClusterCache) GetMetrics() *CacheMetrics {
 	c.metrics.PartitionMetrics = c.partitioner.GetPartitionMetrics()
 	
 	return c.metrics
-}
 
 // Private methods
 
@@ -674,12 +652,10 @@ func (c *RedisClusterCache) getReadClient() redis.Cmdable {
 	default:
 		return c.primary
 	}
-}
 
 // getPartitionKey generates a partitioned key
 func (c *RedisClusterCache) getPartitionKey(key string, partitionID int) string {
 	return fmt.Sprintf("cache:p%d:%s", partitionID, key)
-}
 
 // updateLatencyMetrics updates latency metrics
 func (c *RedisClusterCache) updateLatencyMetrics(latency time.Duration) {
@@ -688,7 +664,6 @@ func (c *RedisClusterCache) updateLatencyMetrics(latency time.Duration) {
 	} else {
 		c.metrics.AverageLatency = (c.metrics.AverageLatency + latency) / 2
 	}
-}
 
 // metricsLoop periodically updates metrics
 func (c *RedisClusterCache) metricsLoop() {
@@ -703,7 +678,6 @@ func (c *RedisClusterCache) metricsLoop() {
 			return
 		}
 	}
-}
 
 // updateMetrics updates cache metrics
 func (c *RedisClusterCache) updateMetrics() {
@@ -712,7 +686,6 @@ func (c *RedisClusterCache) updateMetrics() {
 	// TODO: Parse cluster info to get key counts
 	// This is a simplified implementation
 	c.metrics.TotalKeys = totalKeys
-}
 
 // Placeholder implementations for referenced components
 
@@ -722,7 +695,6 @@ func NewCachePartitioner(config CachePartitionerConfig, strategy PartitionStrate
 		partitions: make([]CachePartition, count),
 		metrics:    &PartitionerMetrics{},
 	}
-}
 
 func (cp *CachePartitioner) Start() error { return nil }
 func (cp *CachePartitioner) Stop() error  { return nil }
@@ -731,10 +703,8 @@ func (cp *CachePartitioner) GetPartition(key string) *CachePartition {
 	hash := crc32.ChecksumIEEE([]byte(key))
 	idx := int(hash) % len(cp.partitions)
 	return &cp.partitions[idx]
-}
 func (cp *CachePartitioner) GetPartitionMetrics() []*PartitionMetrics {
 	return []*PartitionMetrics{}
-}
 
 func NewCacheWarmer(config CacheWarmerConfig, cache *RedisClusterCache, logger Logger) *CacheWarmer {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -749,14 +719,12 @@ func NewCacheWarmer(config CacheWarmerConfig, cache *RedisClusterCache, logger L
 			patterns: make(map[string]*AccessPattern),
 		},
 	}
-}
 
 func (cw *CacheWarmer) Start() error { return nil }
 func (cw *CacheWarmer) Stop() error  { 
 	cw.cancel()
 	cw.wg.Wait()
 	return nil 
-}
 
 func (ap *AccessPredictor) RecordAccess(key string) {
 	ap.mutex.Lock()
@@ -772,7 +740,6 @@ func (ap *AccessPredictor) RecordAccess(key string) {
 			LastAccess:  time.Now(),
 		}
 	}
-}
 
 func NewCacheInvalidator(config CacheInvalidatorConfig, logger Logger) *CacheInvalidator {
 	return &CacheInvalidator{
@@ -786,7 +753,6 @@ func NewCacheInvalidator(config CacheInvalidatorConfig, logger Logger) *CacheInv
 		metrics: &InvalidatorMetrics{},
 		logger: logger,
 	}
-}
 
 func (ci *CacheInvalidator) Start() error { return nil }
 func (ci *CacheInvalidator) Stop() error  { return nil }
@@ -808,7 +774,6 @@ func (ti *TagIndex) AddTags(key string, tags []string) {
 		}
 		ti.tagToKeys[tag][key] = struct{}{}
 	}
-}
 
 func (ti *TagIndex) RemoveKey(key string) {
 	ti.mutex.Lock()
@@ -825,4 +790,17 @@ func (ti *TagIndex) RemoveKey(key string) {
 		}
 		delete(ti.keyToTags, key)
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

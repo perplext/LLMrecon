@@ -15,7 +15,6 @@ func generateSecurityID() (string, error) {
 		return "", fmt.Errorf("failed to generate random bytes: %w", err)
 	}
 	return hex.EncodeToString(bytes), nil
-}
 
 // getSecurityUserIDFromContext extracts the user ID from the context for security operations
 func getSecurityUserIDFromContext(ctx context.Context) string {
@@ -26,7 +25,6 @@ func getSecurityUserIDFromContext(ctx context.Context) string {
 		return userID
 	}
 	return "unknown"
-}
 
 // SecurityIncident is already defined in config.go
 /*
@@ -45,8 +43,8 @@ type SecurityIncident struct {
 	AffectedSystems []string                   `json:"affected_systems,omitempty"`
 	RelatedLogs     []string                   `json:"related_logs,omitempty"`
 	Metadata        map[string]interface{}     `json:"metadata,omitempty"`
-}
 */
+}
 
 // Vulnerability is already defined in config.go
 /*
@@ -67,8 +65,8 @@ type Vulnerability struct {
 	AffectedSystems []string                   `json:"affected_systems,omitempty"`
 	CVE             string                     `json:"cve,omitempty"`
 	Metadata        map[string]interface{}     `json:"metadata,omitempty"`
-}
 */
+}
 
 // IncidentStatus is already defined in config.go
 // type IncidentStatus string
@@ -87,7 +85,6 @@ func generateSecurityRandomID() string {
 		return fmt.Sprintf("id-%d", time.Now().UnixNano())
 	}
 	return id
-}
 
 // All InMemoryAuditLogger functions below are duplicates from audit.go
 // TODO: Remove these duplicate implementations
@@ -97,7 +94,6 @@ func NewInMemoryAuditLogger() *InMemoryAuditLogger {
 	return &InMemoryAuditLogger{
 		logs: make(map[string]*AuditLog),
 	}
-}
 
 // LogAudit logs an audit event
 func (l *InMemoryAuditLogger) LogAudit(ctx context.Context, log *AuditLog) error {
@@ -118,7 +114,6 @@ func (l *InMemoryAuditLogger) LogAudit(ctx context.Context, log *AuditLog) error
 	l.logs[log.ID] = log
 
 	return nil
-}
 
 // GetAuditLog retrieves an audit log by ID
 func (l *InMemoryAuditLogger) GetAuditLog(ctx context.Context, id string) (*AuditLog, error) {
@@ -131,7 +126,6 @@ func (l *InMemoryAuditLogger) GetAuditLog(ctx context.Context, id string) (*Audi
 	}
 
 	return log, nil
-}
 
 // ListAuditLogs lists audit logs based on filters
 func (l *InMemoryAuditLogger) ListAuditLogs(ctx context.Context, filter *AuditLogFilter) ([]*AuditLog, error) {
@@ -191,5 +185,9 @@ func (l *InMemoryAuditLogger) ListAuditLogs(ctx context.Context, filter *AuditLo
 	}
 
 	return results, nil
-}
 */
+}
+}
+}
+}
+}

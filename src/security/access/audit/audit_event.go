@@ -66,8 +66,8 @@ type AuditEvent struct {
 	
 	// Tags for categorizing and filtering events
 	Tags []string `json:"tags,omitempty"`
-}
 
+}
 // AuditQueryFilter defines filters for querying audit logs
 type AuditQueryFilter struct {
 	// User ID to filter by
@@ -129,8 +129,8 @@ type AuditQueryFilter struct {
 	
 	// Full-text search query
 	Query string `json:"query,omitempty"`
-}
 
+}
 // NewAuditEvent creates a new audit event with default values
 func NewAuditEvent(action common.AuditAction, resource string, description string) *AuditEvent {
 	return &AuditEvent{
@@ -142,86 +142,84 @@ func NewAuditEvent(action common.AuditAction, resource string, description strin
 		Status:      "success",
 		Metadata:    make(map[string]interface{}),
 	}
-}
 
 // WithUserInfo adds user information to the audit event
+}
 func (e *AuditEvent) WithUserInfo(userID, username string) *AuditEvent {
 	e.UserID = userID
 	e.Username = username
 	return e
-}
 
 // WithResourceID adds resource ID to the audit event
+}
 func (e *AuditEvent) WithResourceID(resourceID string) *AuditEvent {
 	e.ResourceID = resourceID
 	return e
-}
 
 // WithSeverity sets the severity of the audit event
+}
 func (e *AuditEvent) WithSeverity(severity common.AuditSeverity) *AuditEvent {
 	e.Severity = severity
 	return e
-}
 
 // WithStatus sets the status of the audit event
+}
 func (e *AuditEvent) WithStatus(status string) *AuditEvent {
 	e.Status = status
 	return e
-}
 
 // WithSessionID adds session ID to the audit event
+}
 func (e *AuditEvent) WithSessionID(sessionID string) *AuditEvent {
 	e.SessionID = sessionID
 	return e
-}
 
 // WithIPAddress adds IP address to the audit event
+}
 func (e *AuditEvent) WithIPAddress(ipAddress string) *AuditEvent {
 	e.IPAddress = ipAddress
 	return e
-}
 
 // WithUserAgent adds user agent to the audit event
+}
 func (e *AuditEvent) WithUserAgent(userAgent string) *AuditEvent {
 	e.UserAgent = userAgent
 	return e
-}
 
 // WithMetadata adds metadata to the audit event
+}
 func (e *AuditEvent) WithMetadata(key string, value interface{}) *AuditEvent {
 	if e.Metadata == nil {
 		e.Metadata = make(map[string]interface{})
 	}
 	e.Metadata[key] = value
 	return e
-}
 
 // WithChanges adds changes information to the audit event
+}
 func (e *AuditEvent) WithChanges(changes map[string]interface{}) *AuditEvent {
 	e.Changes = changes
 	return e
-}
 
 // WithRequestID adds request ID to the audit event
+}
 func (e *AuditEvent) WithRequestID(requestID string) *AuditEvent {
 	e.RequestID = requestID
 	return e
-}
 
 // WithDuration adds operation duration to the audit event
+}
 func (e *AuditEvent) WithDuration(durationMs int64) *AuditEvent {
 	e.DurationMs = durationMs
 	return e
-}
 
 // AsSystemGenerated marks the event as system-generated
+}
 func (e *AuditEvent) AsSystemGenerated() *AuditEvent {
 	e.SystemGenerated = true
 	return e
-}
 
 // WithTags adds tags to the audit event
+}
 func (e *AuditEvent) WithTags(tags ...string) *AuditEvent {
 	e.Tags = append(e.Tags, tags...)
-	return e
-}

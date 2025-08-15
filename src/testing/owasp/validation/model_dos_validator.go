@@ -22,7 +22,6 @@ type ModelDOSValidator struct {
 	complexPromptPatterns []*regexp.Regexp
 	// resourceExhaustionPatterns contains patterns for detecting resource exhaustion attempts
 	resourceExhaustionPatterns []*regexp.Regexp
-}
 
 // NewModelDOSValidator creates a new model DOS validator
 func NewModelDOSValidator() *ModelDOSValidator {
@@ -70,7 +69,6 @@ func NewModelDOSValidator() *ModelDOSValidator {
 		complexPromptPatterns:      complexPromptPatterns,
 		resourceExhaustionPatterns: resourceExhaustionPatterns,
 	}
-}
 
 // ValidatePrompt validates a prompt for model denial of service vulnerabilities
 func (v *ModelDOSValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -229,7 +227,6 @@ func (v *ModelDOSValidator) ValidatePrompt(ctx context.Context, prompt string, o
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for model denial of service vulnerabilities
 func (v *ModelDOSValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -318,5 +315,3 @@ func (v *ModelDOSValidator) ValidateResponse(ctx context.Context, response strin
 		}
 	}
 
-	return results, nil
-}

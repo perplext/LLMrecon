@@ -21,7 +21,6 @@ type UpdateApplier struct {
 	CurrentVersions map[string]version.Version
 	// Logger is the logger for update operations
 	Logger io.Writer
-}
 
 // ApplierOptions contains options for the UpdateApplier
 type ApplierOptions struct {
@@ -35,7 +34,6 @@ type ApplierOptions struct {
 	CurrentVersions map[string]version.Version
 	// Logger is the logger for update operations
 	Logger io.Writer
-}
 
 // NewUpdateApplier creates a new UpdateApplier
 func NewUpdateApplier(options *ApplierOptions) (*UpdateApplier, error) {
@@ -64,7 +62,7 @@ func NewUpdateApplier(options *ApplierOptions) (*UpdateApplier, error) {
 
 	// Create directories
 	for _, dir := range []string{tempDir, backupDir} {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
@@ -76,7 +74,6 @@ func NewUpdateApplier(options *ApplierOptions) (*UpdateApplier, error) {
 		CurrentVersions: options.CurrentVersions,
 		Logger:          logger,
 	}, nil
-}
 
 // ApplyUpdate applies an update from the given package
 func (a *UpdateApplier) ApplyUpdate(ctx context.Context, pkg *UpdatePackage) error {
@@ -91,17 +88,16 @@ func (a *UpdateApplier) ApplyUpdate(ctx context.Context, pkg *UpdatePackage) err
 	if !compatible {
 		return fmt.Errorf("package is not compatible with current versions")
 	}
-
 	// Create update session directory
 	sessionDir := filepath.Join(a.TempDir, pkg.Manifest.PackageID)
-	if err := os.MkdirAll(sessionDir, 0755); err != nil {
+	if err := os.MkdirAll(sessionDir, 0700); err != nil {
 		return fmt.Errorf("failed to create session directory: %w", err)
 	}
 	defer os.RemoveAll(sessionDir)
 
 	// Create backup directory for this update
 	backupDir := filepath.Join(a.BackupDir, pkg.Manifest.PackageID)
-	if err := os.MkdirAll(backupDir, 0755); err != nil {
+	if err := os.MkdirAll(backupDir, 0700); err != nil {
 		return fmt.Errorf("failed to create backup directory: %w", err)
 	}
 
@@ -131,7 +127,6 @@ func (a *UpdateApplier) ApplyUpdate(ctx context.Context, pkg *UpdatePackage) err
 	// Log update success
 	fmt.Fprintf(a.Logger, "Successfully applied update from package %s\n", pkg.PackagePath)
 	return nil
-}
 
 // applyFullUpdate applies a full update from the package
 func (a *UpdateApplier) applyFullUpdate(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -166,7 +161,7 @@ func (a *UpdateApplier) applyFullUpdate(ctx context.Context, pkg *UpdatePackage,
 	}
 
 	return nil
-}
+	
 
 // applyDifferentialUpdate applies a differential update from the package
 func (a *UpdateApplier) applyDifferentialUpdate(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -189,13 +184,11 @@ func (a *UpdateApplier) applyDifferentialUpdate(ctx context.Context, pkg *Update
 	}
 
 	return nil
-}
 
 // updateBinary updates the binary component
 func (a *UpdateApplier) updateBinary(ctx context.Context, pkg *UpdatePackage, platform, sessionDir, backupDir string) error {
 	// Get binary path in package
 	binaryPath := pkg.GetBinaryPath(platform)
-
 	// Get binary path in installation
 	installBinaryName := "LLMrecon"
 	if platform == "windows" {
@@ -216,7 +209,7 @@ func (a *UpdateApplier) updateBinary(ctx context.Context, pkg *UpdatePackage, pl
 	}
 
 	// Make binary executable
-	if err := os.Chmod(sessionBinaryPath, 0755); err != nil {
+	if err := os.Chmod(sessionBinaryPath, 0700); err != nil {
 		return fmt.Errorf("failed to make binary executable: %w", err)
 	}
 
@@ -233,7 +226,6 @@ func (a *UpdateApplier) updateBinary(ctx context.Context, pkg *UpdatePackage, pl
 	a.CurrentVersions["core"] = binaryVersion
 
 	return nil
-}
 
 // updateTemplates updates the templates component
 func (a *UpdateApplier) updateTemplates(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -268,7 +260,6 @@ func (a *UpdateApplier) updateTemplates(ctx context.Context, pkg *UpdatePackage,
 	a.CurrentVersions["templates"] = templatesVersion
 
 	return nil
-}
 
 // updateModules updates the modules component
 func (a *UpdateApplier) updateModules(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -287,11 +278,10 @@ func (a *UpdateApplier) updateModules(ctx context.Context, pkg *UpdatePackage, s
 			if !os.IsNotExist(err) {
 				return fmt.Errorf("failed to backup module %s: %w", moduleInfo.ID, err)
 			}
-			if err := os.MkdirAll(backupModulePath, 0755); err != nil {
+			if err := os.MkdirAll(backupModulePath, 0700); err != nil {
 				return fmt.Errorf("failed to create backup directory for module %s: %w", moduleInfo.ID, err)
 			}
 		}
-
 		// Extract new module to session directory
 		sessionModulePath := filepath.Join(sessionDir, "modules", moduleInfo.ID)
 		if err := pkg.ExtractDirectory(modulePath, sessionModulePath); err != nil {
@@ -312,7 +302,6 @@ func (a *UpdateApplier) updateModules(ctx context.Context, pkg *UpdatePackage, s
 	}
 
 	return nil
-}
 
 // updateBinaryWithPatch updates the binary component using a patch
 func (a *UpdateApplier) updateBinaryWithPatch(ctx context.Context, pkg *UpdatePackage, platform, sessionDir, backupDir string) error {
@@ -386,7 +375,7 @@ func (a *UpdateApplier) updateBinaryWithPatch(ctx context.Context, pkg *UpdatePa
 	}
 
 	// Make binary executable
-	if err := os.Chmod(sessionBinaryPath, 0755); err != nil {
+	if err := os.Chmod(sessionBinaryPath, 0700); err != nil {
 		return fmt.Errorf("failed to make binary executable: %w", err)
 	}
 
@@ -403,7 +392,6 @@ func (a *UpdateApplier) updateBinaryWithPatch(ctx context.Context, pkg *UpdatePa
 	a.CurrentVersions["core"] = binaryVersion
 
 	return nil
-}
 
 // updateTemplatesWithPatch updates the templates component using a patch
 func (a *UpdateApplier) updateTemplatesWithPatch(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -473,7 +461,6 @@ func (a *UpdateApplier) updateTemplatesWithPatch(ctx context.Context, pkg *Updat
 	a.CurrentVersions["templates"] = templatesVersion
 
 	return nil
-}
 
 // updateModulesWithPatch updates the modules component using a patch
 func (a *UpdateApplier) updateModulesWithPatch(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -484,7 +471,7 @@ func (a *UpdateApplier) updateModulesWithPatch(ctx context.Context, pkg *UpdateP
 		currentVersion, ok := a.CurrentVersions[fmt.Sprintf("module.%s", moduleID)]
 		if !ok {
 			// Skip modules that are not installed
-			continue
+				continue
 		}
 
 		// Check if patch is for current version
@@ -497,7 +484,6 @@ func (a *UpdateApplier) updateModulesWithPatch(ctx context.Context, pkg *UpdateP
 		}
 
 		patchInfo := &pkg.Manifest.Components.Patches.Modules[i]
-
 		// Get patch path in package
 		patchPath := pkg.GetModulePatchPath(moduleID, patchInfo.FromVersion, patchInfo.ToVersion)
 
@@ -509,7 +495,6 @@ func (a *UpdateApplier) updateModulesWithPatch(ctx context.Context, pkg *UpdateP
 		if err := copyDir(installModulePath, backupModulePath); err != nil {
 			return fmt.Errorf("failed to backup module %s: %w", moduleID, err)
 		}
-
 		// Extract patch to session directory
 		sessionPatchPath := filepath.Join(sessionDir, filepath.Base(patchPath))
 		if err := pkg.ExtractFile(patchPath, sessionPatchPath); err != nil {
@@ -541,7 +526,7 @@ func (a *UpdateApplier) updateModulesWithPatch(ctx context.Context, pkg *UpdateP
 	}
 
 	return nil
-}
+	
 
 // restoreFromBackup restores files from backup
 func (a *UpdateApplier) restoreFromBackup(backupDir string) error {
@@ -557,7 +542,6 @@ func (a *UpdateApplier) restoreFromBackup(backupDir string) error {
 			return fmt.Errorf("failed to restore binary: %w", err)
 		}
 	}
-
 	// Restore templates
 	backupTemplatesPath := filepath.Join(backupDir, "templates")
 	installTemplatesPath := filepath.Join(a.InstallDir, "templates")
@@ -575,7 +559,6 @@ func (a *UpdateApplier) restoreFromBackup(backupDir string) error {
 		if err != nil {
 			return fmt.Errorf("failed to read backup modules directory: %w", err)
 		}
-
 		// Restore each module
 		for _, entry := range entries {
 			if !entry.IsDir() {
@@ -593,30 +576,29 @@ func (a *UpdateApplier) restoreFromBackup(backupDir string) error {
 	}
 
 	return nil
-}
 
 // Helper functions
 
 // copyFile copies a file from src to dst
 func copyFile(src, dst string) error {
 	// Create destination directory
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dst), 0700); err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
 
 	// Open source file
-	srcFile, err := os.Open(src)
+	srcFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer func() { if err := srcFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Create destination file
 	dstFile, err := os.Create(dst)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer dstFile.Close()
+	defer func() { if err := dstFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Copy file contents
 	if _, err := io.Copy(dstFile, srcFile); err != nil {
@@ -635,7 +617,6 @@ func copyFile(src, dst string) error {
 	}
 
 	return nil
-}
 
 // copyDir copies a directory from src to dst
 func copyDir(src, dst string) error {
@@ -675,7 +656,6 @@ func copyDir(src, dst string) error {
 	}
 
 	return nil
-}
 
 // replaceFile replaces dst with src
 func replaceFile(src, dst string) error {
@@ -711,7 +691,6 @@ func replaceFile(src, dst string) error {
 	}
 	
 	return nil
-}
 
 // replaceDir replaces dst with src
 func replaceDir(src, dst string) error {
@@ -723,7 +702,7 @@ func replaceDir(src, dst string) error {
 	}
 
 	// Create parent directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dst), 0700); err != nil {
 		return fmt.Errorf("failed to create parent directory: %w", err)
 	}
 
@@ -733,18 +712,14 @@ func replaceDir(src, dst string) error {
 	}
 
 	return nil
-}
 
 // applyBinaryPatch applies a binary patch to a file
 func applyBinaryPatch(patchPath, filePath string) error {
 	// In a real implementation, this would use bsdiff or a similar binary diff tool
 	// For now, we'll just return an error
 	return fmt.Errorf("binary patching not implemented")
-}
 
 // applyDirectoryPatch applies a patch to a directory
 func applyDirectoryPatch(patchPath, dirPath string) error {
 	// In a real implementation, this would apply a JSON or YAML patch
 	// For now, we'll just return an error
-	return fmt.Errorf("directory patching not implemented")
-}

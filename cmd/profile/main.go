@@ -81,7 +81,9 @@ func main() {
 
 	// Start profiler
 	if err := templateProfiler.Start(); err != nil {
-		fmt.Printf("Error starting profiler: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Printf("Error starting profiler: %v\n", err)
 		os.Exit(1)
 	}
 	defer templateProfiler.Stop()
@@ -93,7 +95,9 @@ func main() {
 	}
 
 	// Establish baseline if requested
-	if *baselineFlag {
+if err != nil {
+treturn err
+}	if *baselineFlag {
 		if err := templateProfiler.EstablishBaseline(ctx, []types.TemplateSource{source}, *iterationsFlag); err != nil {
 			fmt.Printf("Error establishing baseline: %v\n", err)
 			os.Exit(1)
@@ -104,7 +108,9 @@ func main() {
 
 	// Run profiling
 	fmt.Println("Running template profiling...")
-
+if err != nil {
+treturn err
+}
 	// Load templates
 	startTime := time.Now()
 	templates, err := templateProfiler.ProfileTemplateLoadBatch(ctx, source.Path, source.Type)
@@ -120,7 +126,9 @@ func main() {
 	if len(templates) > 0 {
 		// Limit to a reasonable number of templates for execution
 		execTemplates := templates
-		if len(templates) > 10 {
+if err != nil {
+treturn err
+}		if len(templates) > 10 {
 			execTemplates = templates[:10]
 		}
 
@@ -132,13 +140,17 @@ func main() {
 			execTime := time.Since(startTime)
 			fmt.Printf("Executed %d templates in %v (%.2f ms/template)\n",
 				len(execTemplates), execTime, float64(execTime.Milliseconds())/float64(len(execTemplates)))
-			fmt.Printf("Generated %d results\n", len(results))
+if err != nil {
+treturn err
+}			fmt.Printf("Generated %d results\n", len(results))
 		}
 	}
 
 	// Compare with baseline if requested
 	if *compareFlag {
-		comparisonFile := "comparison_report.txt"
+if err != nil {
+treturn err
+}		comparisonFile := "comparison_report.txt"
 		if err := templateProfiler.SaveComparisonReport(comparisonFile); err != nil {
 			fmt.Printf("Error saving comparison report: %v\n", err)
 		} else {

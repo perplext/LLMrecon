@@ -63,5 +63,3 @@ func (c *OfflineBundleCLI) createConvertCommand() *cobra.Command {
 	cmd.MarkFlagRequired("bundle")
 	cmd.MarkFlagRequired("output")
 
-	return cmd
-}

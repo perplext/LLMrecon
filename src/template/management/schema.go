@@ -32,7 +32,6 @@ type SchemaValidator struct {
 	yamlSchema *gojsonschema.Schema
 	// customValidators is a map of custom validation functions
 	customValidators map[string]func(interface{}) error
-}
 
 // NewSchemaValidator creates a new schema validator
 func NewSchemaValidator(jsonSchemaPath, yamlSchemaPath string) (*SchemaValidator, error) {
@@ -55,12 +54,10 @@ func NewSchemaValidator(jsonSchemaPath, yamlSchemaPath string) (*SchemaValidator
 		yamlSchema: yamlSchema,
 		customValidators: make(map[string]func(interface{}) error),
 	}, nil
-}
 
 // AddCustomValidator adds a custom validator function for a specific field
 func (v *SchemaValidator) AddCustomValidator(field string, validator func(interface{}) error) {
 	v.customValidators[field] = validator
-}
 
 // ValidateTemplate validates a template against the schema
 func (v *SchemaValidator) ValidateTemplate(template *format.Template) error {
@@ -96,7 +93,6 @@ func (v *SchemaValidator) ValidateTemplate(template *format.Template) error {
 	}
 
 	return nil
-}
 
 // ValidateTemplateFile validates a template file against the schema
 func (v *SchemaValidator) ValidateTemplateFile(filePath string) error {
@@ -112,7 +108,7 @@ func (v *SchemaValidator) ValidateTemplateFile(filePath string) error {
 	}
 
 	// Read file
-	data, err := ioutil.ReadFile(filePath)
+	data, err := ioutil.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return fmt.Errorf("failed to read template file: %w", err)
 	}
@@ -123,8 +119,6 @@ func (v *SchemaValidator) ValidateTemplateFile(filePath string) error {
 	} else {
 		return v.ValidateYAML(data)
 	}
-}
-
 // ValidateJSON validates JSON data against the JSON schema
 func (v *SchemaValidator) ValidateJSON(data []byte) error {
 	// Parse JSON
@@ -159,7 +153,6 @@ func (v *SchemaValidator) ValidateJSON(data []byte) error {
 	}
 
 	return nil
-}
 
 // ValidateYAML validates YAML data against the YAML schema
 func (v *SchemaValidator) ValidateYAML(data []byte) error {
@@ -195,7 +188,6 @@ func (v *SchemaValidator) ValidateYAML(data []byte) error {
 	}
 
 	return nil
-}
 
 // templateToMap converts a template to a map for validation
 func templateToMap(template *format.Template) (map[string]interface{}, error) {
@@ -212,7 +204,6 @@ func templateToMap(template *format.Template) (map[string]interface{}, error) {
 	}
 
 	return templateMap, nil
-}
 
 // getFieldValue gets the value of a field from a map
 // The field can be a nested field using dot notation (e.g., "info.name")
@@ -232,7 +223,6 @@ func getFieldValue(data map[string]interface{}, field string) (interface{}, bool
 		if !ok {
 			return nil, false
 		}
-
 		// Convert to map
 		nextMap, ok := next.(map[string]interface{})
 		if !ok {
@@ -243,7 +233,6 @@ func getFieldValue(data map[string]interface{}, field string) (interface{}, bool
 	}
 
 	return nil, false
-}
 
 // Standard validators for common fields
 
@@ -265,7 +254,6 @@ func ValidateID(id interface{}) error {
 	}
 
 	return nil
-}
 
 // ValidateVersion validates a version string
 func ValidateVersion(version interface{}) error {
@@ -285,7 +273,6 @@ func ValidateVersion(version interface{}) error {
 	}
 
 	return nil
-}
 
 // ValidateSeverity validates a severity level
 func ValidateSeverity(severity interface{}) error {
@@ -302,7 +289,6 @@ func ValidateSeverity(severity interface{}) error {
 	}
 
 	return fmt.Errorf("severity must be one of: %s", strings.Join(format.ValidSeverityLevels, ", "))
-}
 
 // ValidateDetectionType validates a detection type
 func ValidateDetectionType(detectionType interface{}) error {
@@ -319,7 +305,6 @@ func ValidateDetectionType(detectionType interface{}) error {
 	}
 
 	return fmt.Errorf("detection type must be one of: %s", strings.Join(format.ValidDetectionTypes, ", "))
-}
 
 // ValidateCondition validates a condition
 func ValidateCondition(condition interface{}) error {
@@ -336,7 +321,6 @@ func ValidateCondition(condition interface{}) error {
 	}
 
 	return fmt.Errorf("condition must be one of: %s", strings.Join(format.ValidConditions, ", "))
-}
 
 // DefaultSchemaValidator creates a default schema validator with standard validators
 func DefaultSchemaValidator(jsonSchemaPath, yamlSchemaPath string) (interfaces.SchemaValidator, error) {
@@ -352,5 +336,3 @@ func DefaultSchemaValidator(jsonSchemaPath, yamlSchemaPath string) (interfaces.S
 	validator.AddCustomValidator("test.detection.type", ValidateDetectionType)
 	validator.AddCustomValidator("test.detection.condition", ValidateCondition)
 
-	return validator, nil
-}

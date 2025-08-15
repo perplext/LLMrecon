@@ -35,9 +35,9 @@ func (a *InMemoryIncidentStoreAdapter) CreateIncident(ctx context.Context, incid
 	
 	a.incidents[incident.ID] = incident
 	return nil
-}
 
 // GetIncidentByID retrieves a security incident by ID
+}
 func (a *InMemoryIncidentStoreAdapter) GetIncidentByID(ctx context.Context, id string) (*models.SecurityIncident, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -47,9 +47,9 @@ func (a *InMemoryIncidentStoreAdapter) GetIncidentByID(ctx context.Context, id s
 		return nil, interfaces.ErrNotFound
 	}
 	return incident, nil
-}
 
 // UpdateIncident updates an existing security incident
+}
 func (a *InMemoryIncidentStoreAdapter) UpdateIncident(ctx context.Context, incident *models.SecurityIncident) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -60,9 +60,9 @@ func (a *InMemoryIncidentStoreAdapter) UpdateIncident(ctx context.Context, incid
 	
 	a.incidents[incident.ID] = incident
 	return nil
-}
 
 // DeleteIncident deletes a security incident
+}
 func (a *InMemoryIncidentStoreAdapter) DeleteIncident(ctx context.Context, id string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -73,9 +73,9 @@ func (a *InMemoryIncidentStoreAdapter) DeleteIncident(ctx context.Context, id st
 	
 	delete(a.incidents, id)
 	return nil
-}
 
 // ListIncidents lists security incidents with filtering
+}
 func (a *InMemoryIncidentStoreAdapter) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.SecurityIncident, int, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -101,7 +101,6 @@ func (a *InMemoryIncidentStoreAdapter) ListIncidents(ctx context.Context, filter
 	}
 	
 	return results, total, nil
-}
 
 // InMemoryVulnerabilityStoreAdapter is an in-memory implementation of VulnerabilityStore
 type InMemoryVulnerabilityStoreAdapter struct {
@@ -120,18 +119,18 @@ func NewInMemoryVulnerabilityStoreAdapter() *InMemoryVulnerabilityStoreAdapter {
 func (a *InMemoryVulnerabilityStoreAdapter) Close() error {
 	// Nothing to close for in-memory store
 	return nil
-}
 
 // CreateVulnerability creates a new vulnerability
+}
 func (a *InMemoryVulnerabilityStoreAdapter) CreateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	
 	a.vulnerabilities[vulnerability.ID] = vulnerability
 	return nil
-}
 
 // GetVulnerabilityByID retrieves a vulnerability by ID
+}
 func (a *InMemoryVulnerabilityStoreAdapter) GetVulnerabilityByID(ctx context.Context, id string) (*models.Vulnerability, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -141,9 +140,9 @@ func (a *InMemoryVulnerabilityStoreAdapter) GetVulnerabilityByID(ctx context.Con
 		return nil, interfaces.ErrNotFound
 	}
 	return vulnerability, nil
-}
 
 // UpdateVulnerability updates an existing vulnerability
+}
 func (a *InMemoryVulnerabilityStoreAdapter) UpdateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -154,9 +153,9 @@ func (a *InMemoryVulnerabilityStoreAdapter) UpdateVulnerability(ctx context.Cont
 	
 	a.vulnerabilities[vulnerability.ID] = vulnerability
 	return nil
-}
 
 // DeleteVulnerability deletes a vulnerability
+}
 func (a *InMemoryVulnerabilityStoreAdapter) DeleteVulnerability(ctx context.Context, id string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -167,9 +166,9 @@ func (a *InMemoryVulnerabilityStoreAdapter) DeleteVulnerability(ctx context.Cont
 	
 	delete(a.vulnerabilities, id)
 	return nil
-}
 
 // ListVulnerabilities lists vulnerabilities with filtering
+}
 func (a *InMemoryVulnerabilityStoreAdapter) ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Vulnerability, int, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -195,14 +194,13 @@ func (a *InMemoryVulnerabilityStoreAdapter) ListVulnerabilities(ctx context.Cont
 	}
 	
 	return results, total, nil
-}
 
 // InMemoryAuditLoggerAdapter is an in-memory implementation of AuditLogger
 type InMemoryAuditLoggerAdapter struct {
 	logs map[string]*models.AuditLog
 	mu   sync.RWMutex
-}
 
+}
 // NewInMemoryAuditLoggerAdapter creates a new in-memory audit logger adapter
 func NewInMemoryAuditLoggerAdapter() *InMemoryAuditLoggerAdapter {
 	return &InMemoryAuditLoggerAdapter{
@@ -217,9 +215,9 @@ func (a *InMemoryAuditLoggerAdapter) LogEvent(ctx context.Context, event *models
 	
 	a.logs[event.ID] = event
 	return nil
-}
 
 // GetEventByID retrieves an audit event by ID
+}
 func (a *InMemoryAuditLoggerAdapter) GetEventByID(ctx context.Context, id string) (*models.AuditLog, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -229,9 +227,9 @@ func (a *InMemoryAuditLoggerAdapter) GetEventByID(ctx context.Context, id string
 		return nil, interfaces.ErrNotFound
 	}
 	return event, nil
-}
 
 // QueryEvents queries audit events with filtering
+}
 func (a *InMemoryAuditLoggerAdapter) QueryEvents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.AuditLog, int, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -257,15 +255,16 @@ func (a *InMemoryAuditLoggerAdapter) QueryEvents(ctx context.Context, filter map
 	}
 	
 	return results, total, nil
-}
 
 // ExportEvents exports audit events to a file
+}
 func (a *InMemoryAuditLoggerAdapter) ExportEvents(ctx context.Context, filter map[string]interface{}, format string) (string, error) {
 	// In-memory implementation just returns a placeholder
 	return "audit_export_" + time.Now().Format("20060102150405") + "." + format, nil
-}
 
 // Close closes the audit logger
+}
 func (a *InMemoryAuditLoggerAdapter) Close() error {
 	return nil
+}
 }

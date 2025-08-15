@@ -18,7 +18,6 @@ type ResourcePoolManager struct {
 	stats *PoolManagerStats
 	// config contains the manager configuration
 	config *PoolManagerConfig
-}
 
 // ResourcePool represents a pool of resources
 type ResourcePool struct {
@@ -50,7 +49,6 @@ type ResourcePool struct {
 	lastUsedAt map[interface{}]time.Time
 	// stats tracks pool statistics
 	stats *PoolStats
-}
 
 // PoolManagerStats tracks statistics for the resource pool manager
 type PoolManagerStats struct {
@@ -64,7 +62,6 @@ type PoolManagerStats struct {
 	TotalInUse int
 	// PoolStats is a map of pool name to pool statistics
 	PoolStats map[string]*PoolStats
-}
 
 // PoolStats tracks statistics for a resource pool
 type PoolStats struct {
@@ -90,7 +87,6 @@ type PoolStats struct {
 	TotalWaitTime time.Duration
 	// AvgWaitTime is the average wait time for a resource
 	AvgWaitTime time.Duration
-}
 
 // PoolManagerConfig represents configuration for the resource pool manager
 type PoolManagerConfig struct {
@@ -116,7 +112,6 @@ type PoolManagerConfig struct {
 	ScaleDownThreshold float64
 	// ScaleCheckInterval is the interval for checking if pools need to be scaled
 	ScaleCheckInterval time.Duration
-}
 
 // DefaultPoolManagerConfig returns default configuration for the resource pool manager
 func DefaultPoolManagerConfig() *PoolManagerConfig {
@@ -133,9 +128,9 @@ func DefaultPoolManagerConfig() *PoolManagerConfig {
 		ScaleDownThreshold:      0.2,  // 20% utilization
 		ScaleCheckInterval:      1 * time.Minute,
 	}
-}
 
 // NewResourcePoolManager creates a new resource pool manager
+}
 func NewResourcePoolManager(config *PoolManagerConfig) *ResourcePoolManager {
 	if config == nil {
 		config = DefaultPoolManagerConfig()
@@ -153,9 +148,9 @@ func NewResourcePoolManager(config *PoolManagerConfig) *ResourcePoolManager {
 	}
 
 	return manager
-}
 
 // CreatePool creates a new resource pool
+}
 func (m *ResourcePoolManager) CreatePool(name string, size int, factory func() (interface{}, error), cleanup func(interface{})) (*ResourcePool, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -215,9 +210,9 @@ func (m *ResourcePoolManager) CreatePool(name string, size int, factory func() (
 	m.updateStats()
 
 	return pool, nil
-}
 
 // GetPool gets a resource pool by name
+}
 func (m *ResourcePoolManager) GetPool(name string) (*ResourcePool, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -229,9 +224,9 @@ func (m *ResourcePoolManager) GetPool(name string) (*ResourcePool, error) {
 	}
 
 	return pool, nil
-}
 
 // RemovePool removes a resource pool
+}
 func (m *ResourcePoolManager) RemovePool(name string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -251,9 +246,9 @@ func (m *ResourcePoolManager) RemovePool(name string) error {
 	m.updateStats()
 
 	return nil
-}
 
 // ListPools lists all resource pools
+}
 func (m *ResourcePoolManager) ListPools() []string {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -267,9 +262,9 @@ func (m *ResourcePoolManager) ListPools() []string {
 	}
 
 	return result
-}
 
 // GetStats returns statistics for the resource pool manager
+}
 func (m *ResourcePoolManager) GetStats() *PoolManagerStats {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -278,9 +273,9 @@ func (m *ResourcePoolManager) GetStats() *PoolManagerStats {
 	m.updateStats()
 
 	return m.stats
-}
 
 // updateStats updates statistics for the resource pool manager
+}
 func (m *ResourcePoolManager) updateStats() {
 	// Reset totals
 	m.stats.TotalPools = len(m.pools)
@@ -302,9 +297,9 @@ func (m *ResourcePoolManager) updateStats() {
 		m.stats.TotalAvailable += pool.stats.Available
 		m.stats.TotalInUse += pool.stats.InUse
 	}
-}
 
 // startPoolScaling starts automatic pool scaling
+}
 func (m *ResourcePoolManager) startPoolScaling() {
 	ticker := time.NewTicker(m.config.ScaleCheckInterval)
 	defer ticker.Stop()
@@ -312,9 +307,9 @@ func (m *ResourcePoolManager) startPoolScaling() {
 	for range ticker.C {
 		m.scaleAllPools()
 	}
-}
 
 // scaleAllPools scales all pools based on utilization
+}
 func (m *ResourcePoolManager) scaleAllPools() {
 	m.mutex.RLock()
 	poolNames := make([]string, 0, len(m.pools))
@@ -327,9 +322,9 @@ func (m *ResourcePoolManager) scaleAllPools() {
 	for _, name := range poolNames {
 		m.scalePool(name)
 	}
-}
 
 // scalePool scales a pool based on utilization
+}
 func (m *ResourcePoolManager) scalePool(name string) {
 	m.mutex.RLock()
 	pool, exists := m.pools[name]
@@ -356,9 +351,9 @@ func (m *ResourcePoolManager) scalePool(name string) {
 		newSize := max(currentSize/2, m.config.MinPoolSize)
 		m.resizePool(name, newSize)
 	}
-}
 
 // resizePool resizes a pool to the specified size
+}
 func (m *ResourcePoolManager) resizePool(name string, newSize int) {
 	m.mutex.RLock()
 	pool, exists := m.pools[name]
@@ -408,6 +403,7 @@ func (m *ResourcePoolManager) resizePool(name string, newSize int) {
 				delete(pool.lastUsedAt, resource)
 				atomic.AddInt32(&pool.available, -1)
 			default:
+}
 				// No more available resources to remove
 				break
 			}
@@ -417,13 +413,13 @@ func (m *ResourcePoolManager) resizePool(name string, newSize int) {
 	// Update pool size
 	pool.size = newSize
 	pool.stats.Size = newSize
-}
 
 // Acquire acquires a resource from a pool
 func (p *ResourcePool) Acquire(ctx context.Context) (interface{}, error) {
 	// Try to get a resource from the pool
 	select {
 	case resource := <-p.resources:
+}
 		// Check if resource is valid
 		if p.validate != nil && !p.validate(resource) {
 			// Resource is invalid, create a new one
@@ -475,7 +471,6 @@ func (p *ResourcePool) Acquire(ctx context.Context) (interface{}, error) {
 		atomic.AddInt64(&p.stats.Timeouts, 1)
 		return nil, ctx.Err()
 	}
-}
 
 // Release releases a resource back to the pool
 func (p *ResourcePool) Release(resource interface{}) {
@@ -498,6 +493,7 @@ func (p *ResourcePool) Release(resource interface{}) {
 		atomic.AddInt32(&p.available, 1)
 		atomic.AddInt64(&p.stats.Released, 1)
 	default:
+}
 		// Pool is full, clean up resource
 		if p.cleanup != nil {
 			p.cleanup(resource)
@@ -507,7 +503,6 @@ func (p *ResourcePool) Release(resource interface{}) {
 		delete(p.lastUsedAt, resource)
 		p.mutex.Unlock()
 	}
-}
 
 // Close closes the resource pool
 func (p *ResourcePool) Close() {
@@ -533,33 +528,33 @@ func (p *ResourcePool) Close() {
 	p.inUse = make(map[interface{}]time.Time)
 	p.createdAt = make(map[interface{}]time.Time)
 	p.lastUsedAt = make(map[interface{}]time.Time)
-}
 
 // SetValidateFunc sets the validation function for the pool
+}
 func (p *ResourcePool) SetValidateFunc(validate func(interface{}) bool) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
 	p.validate = validate
-}
 
 // SetMaxIdleTime sets the maximum idle time for resources
+}
 func (p *ResourcePool) SetMaxIdleTime(maxIdleTime time.Duration) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
 	p.maxIdleTime = maxIdleTime
-}
 
 // SetMaxLifetime sets the maximum lifetime for resources
+}
 func (p *ResourcePool) SetMaxLifetime(maxLifetime time.Duration) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
 	p.maxLifetime = maxLifetime
-}
 
 // GetStats returns statistics for the resource pool
+}
 func (p *ResourcePool) GetStats() *PoolStats {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
@@ -574,46 +569,45 @@ func (p *ResourcePool) GetStats() *PoolStats {
 	}
 
 	return p.stats
-}
 
 // GetSize returns the size of the pool
+}
 func (p *ResourcePool) GetSize() int {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 
 	return p.size
-}
 
 // GetAvailable returns the number of available resources
+}
 func (p *ResourcePool) GetAvailable() int {
 	return int(atomic.LoadInt32(&p.available))
-}
 
 // GetInUse returns the number of resources in use
+}
 func (p *ResourcePool) GetInUse() int {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 
 	return len(p.inUse)
-}
 
 // GetName returns the name of the pool
+}
 func (p *ResourcePool) GetName() string {
 	return p.name
-}
 
 // min returns the minimum of two integers
+}
 func min(a, b int) int {
 	if a < b {
 		return a
 	}
 	return b
-}
 
 // max returns the maximum of two integers
+}
 func max(a, b int) int {
 	if a > b {
 		return a
 	}
-	return b
 }

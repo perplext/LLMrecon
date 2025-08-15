@@ -41,7 +41,6 @@ func NewOpenAIMockProvider() *OpenAIMockProvider {
 	return &OpenAIMockProvider{
 		BaseMockProviderImpl: base,
 	}
-}
 
 // setupOpenAIVulnerabilityBehaviors configures OpenAI-specific vulnerability behaviors
 func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
@@ -131,7 +130,6 @@ func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"potential_impact": "Unauthorized actions taken on user's behalf",
 		},
 	})
-}
 
 // ChatCompletion overrides the base implementation to add OpenAI-specific behavior
 func (p *OpenAIMockProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -162,7 +160,6 @@ func (p *OpenAIMockProvider) ChatCompletion(ctx context.Context, request *core.C
 
 	// Fall back to the base implementation
 	return p.BaseMockProviderImpl.ChatCompletion(ctx, request)
-}
 
 // shouldSimulateContentFiltering checks if content filtering should be simulated
 func (p *OpenAIMockProvider) shouldSimulateContentFiltering(request *core.ChatCompletionRequest) bool {
@@ -190,7 +187,6 @@ func (p *OpenAIMockProvider) shouldSimulateContentFiltering(request *core.ChatCo
 	}
 
 	return false
-}
 
 // estimateTokenCountForMessages estimates the token count for a list of chat messages
 func (p *OpenAIMockProvider) estimateTokenCountForMessages(messages []core.ChatMessage) int {
@@ -204,7 +200,6 @@ func (p *OpenAIMockProvider) estimateTokenCountForMessages(messages []core.ChatM
 	// Add 2 tokens for conversation metadata
 	tokenCount += 2
 	return tokenCount
-}
 
 // estimateTokenCount estimates the token count for a text
 // OpenAI-specific implementation that uses tiktoken-style estimation
@@ -216,5 +211,8 @@ func (p *OpenAIMockProvider) estimateTokenCount(text string) int {
 	// More accurate OpenAI-specific estimation
 	// For GPT models, approximately 1 token ~= 4 characters in English
 	// This is a simplified approximation
-	return (len(text) + 3) / 4
+}
+}
+}
+}
 }

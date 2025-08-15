@@ -283,7 +283,6 @@ func initSecurityCommands() {
 			}
 
 			fmt.Printf("Security incident updated successfully\n")
-
 			return nil
 		},
 	}
@@ -311,7 +310,6 @@ func initSecurityCommands() {
 			if err := requirePermission(cmd, access.PermissionSecurityVulnerability); err != nil {
 				return err
 			}
-
 			// Create filter
 			filter := &access.VulnerabilityFilter{
 				Severity:       access.AuditSeverity(securitySeverity),
@@ -419,7 +417,6 @@ func initSecurityCommands() {
 			if err != nil {
 				return err
 			}
-
 			// Create metadata
 			metadata := map[string]interface{}{}
 
@@ -588,4 +585,3 @@ func initSecurityCommands() {
 		},
 	}
 	securityCmd.AddCommand(scanCmd)
-}

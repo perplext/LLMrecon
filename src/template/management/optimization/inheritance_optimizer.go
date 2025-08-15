@@ -21,7 +21,6 @@ type InheritanceOptimizer struct {
 	templateCache map[string]*format.Template
 	// mutex protects the template cache
 	mutex sync.RWMutex
-}
 
 // InheritanceOptimizerOptions contains options for the inheritance optimizer
 type InheritanceOptimizerOptions struct {
@@ -31,7 +30,6 @@ type InheritanceOptimizerOptions struct {
 	FlattenInheritance bool
 	// CacheOptimizedTemplates indicates if optimized templates should be cached
 	CacheOptimizedTemplates bool
-}
 
 // DefaultInheritanceOptimizerOptions returns default options for the inheritance optimizer
 func DefaultInheritanceOptimizerOptions() *InheritanceOptimizerOptions {
@@ -40,7 +38,6 @@ func DefaultInheritanceOptimizerOptions() *InheritanceOptimizerOptions {
 		FlattenInheritance:      true,
 		CacheOptimizedTemplates: true,
 	}
-}
 
 // NewInheritanceOptimizer creates a new inheritance optimizer
 func NewInheritanceOptimizer(options *InheritanceOptimizerOptions) *InheritanceOptimizer {
@@ -54,7 +51,6 @@ func NewInheritanceOptimizer(options *InheritanceOptimizerOptions) *InheritanceO
 		cacheOptimizedTemplates: options.CacheOptimizedTemplates,
 		templateCache:           make(map[string]*format.Template),
 	}
-}
 
 // loadTemplate loads a template from the cache
 func (o *InheritanceOptimizer) loadTemplate(id string) (*format.Template, error) {
@@ -67,7 +63,6 @@ func (o *InheritanceOptimizer) loadTemplate(id string) (*format.Template, error)
 	}
 	
 	return template, nil
-}
 
 // OptimizeTemplate optimizes a template by flattening inheritance chains
 // and reducing the depth of template inheritance hierarchies
@@ -104,7 +99,6 @@ func (o *InheritanceOptimizer) OptimizeTemplate(ctx context.Context, template *f
 	}
 
 	return optimizedTemplate, nil
-}
 
 // flattenTemplateInheritance flattens template inheritance by merging parent templates
 func (o *InheritanceOptimizer) flattenTemplateInheritance(ctx context.Context, template *format.Template) error {
@@ -122,7 +116,6 @@ func (o *InheritanceOptimizer) flattenTemplateInheritance(ctx context.Context, t
 	}
 
 	return nil
-}
 
 // calculateInheritanceDepth calculates the inheritance depth of a template
 func (o *InheritanceOptimizer) calculateInheritanceDepth(template *format.Template) int {
@@ -141,7 +134,6 @@ func (o *InheritanceOptimizer) calculateInheritanceDepth(template *format.Templa
 	}
 
 	return depth
-}
 
 // mergeWithParents merges a template with its parent templates
 func (o *InheritanceOptimizer) mergeWithParents(ctx context.Context, template *format.Template) error {
@@ -173,7 +165,6 @@ func (o *InheritanceOptimizer) mergeWithParents(ctx context.Context, template *f
 	template.Parent = ""
 
 	return nil
-}
 
 // mergeTemplates merges a parent template into a child template
 func (o *InheritanceOptimizer) mergeTemplates(child, parent *format.Template) {
@@ -194,14 +185,12 @@ func (o *InheritanceOptimizer) mergeTemplates(child, parent *format.Template) {
 
 	// Note: Template format doesn't have Blocks or Metadata fields
 	// If these are needed in the future, they should be added to the format.Template struct
-}
 
 // OptimizeTemplates optimizes multiple templates
 func (o *InheritanceOptimizer) OptimizeTemplates(ctx context.Context, templates []*format.Template) ([]*format.Template, error) {
 	optimizedTemplates := make([]*format.Template, len(templates))
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(templates))
-
 	for i, template := range templates {
 		wg.Add(1)
 		go func(i int, template *format.Template) {
@@ -226,7 +215,6 @@ func (o *InheritanceOptimizer) OptimizeTemplates(ctx context.Context, templates 
 	}
 
 	return optimizedTemplates, nil
-}
 
 // ClearCache clears the template cache
 func (o *InheritanceOptimizer) ClearCache() {
@@ -234,7 +222,6 @@ func (o *InheritanceOptimizer) ClearCache() {
 	defer o.mutex.Unlock()
 
 	o.templateCache = make(map[string]*format.Template)
-}
 
 // GetCacheSize returns the size of the template cache
 func (o *InheritanceOptimizer) GetCacheSize() int {
@@ -242,34 +229,27 @@ func (o *InheritanceOptimizer) GetCacheSize() int {
 	defer o.mutex.RUnlock()
 
 	return len(o.templateCache)
-}
 
 // SetMaxInheritanceDepth sets the maximum allowed inheritance depth
 func (o *InheritanceOptimizer) SetMaxInheritanceDepth(depth int) {
 	o.maxInheritanceDepth = depth
-}
 
 // GetMaxInheritanceDepth returns the maximum allowed inheritance depth
 func (o *InheritanceOptimizer) GetMaxInheritanceDepth() int {
 	return o.maxInheritanceDepth
-}
 
 // SetFlattenInheritance sets whether inheritance should be flattened
 func (o *InheritanceOptimizer) SetFlattenInheritance(flatten bool) {
 	o.flattenInheritance = flatten
-}
 
 // GetFlattenInheritance returns whether inheritance is flattened
 func (o *InheritanceOptimizer) GetFlattenInheritance() bool {
 	return o.flattenInheritance
-}
 
 // SetCacheOptimizedTemplates sets whether optimized templates should be cached
 func (o *InheritanceOptimizer) SetCacheOptimizedTemplates(cache bool) {
 	o.cacheOptimizedTemplates = cache
-}
 
 // GetCacheOptimizedTemplates returns whether optimized templates are cached
 func (o *InheritanceOptimizer) GetCacheOptimizedTemplates() bool {
 	return o.cacheOptimizedTemplates
-}

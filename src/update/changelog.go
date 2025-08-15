@@ -15,7 +15,6 @@ import (
 type ChangelogManager struct {
 	config *Config
 	logger Logger
-}
 
 // NewChangelogManager creates a new changelog manager
 func NewChangelogManager(config *Config, logger Logger) *ChangelogManager {
@@ -23,7 +22,6 @@ func NewChangelogManager(config *Config, logger Logger) *ChangelogManager {
 		config: config,
 		logger: logger,
 	}
-}
 
 // GetChangelog retrieves and parses the changelog
 func (cm *ChangelogManager) GetChangelog(version string) (*Changelog, error) {
@@ -43,7 +41,6 @@ func (cm *ChangelogManager) GetChangelog(version string) (*Changelog, error) {
 	}
 	
 	return changelog, nil
-}
 
 // GetChangesSince gets changelog entries since a specific version
 func (cm *ChangelogManager) GetChangesSince(sinceVersion string) ([]ChangelogEntry, error) {
@@ -73,7 +70,6 @@ func (cm *ChangelogManager) GetChangesSince(sinceVersion string) ([]ChangelogEnt
 	}
 	
 	return entries, nil
-}
 
 // DisplayChangelog displays changelog in a formatted way
 func (cm *ChangelogManager) DisplayChangelog(changelog *Changelog) {
@@ -97,7 +93,6 @@ func (cm *ChangelogManager) DisplayChangelog(changelog *Changelog) {
 		
 		cm.displayChangelogEntry(entry)
 	}
-}
 
 // DisplayChangesSince displays changes since a version
 func (cm *ChangelogManager) DisplayChangesSince(sinceVersion string) error {
@@ -127,7 +122,6 @@ func (cm *ChangelogManager) DisplayChangesSince(sinceVersion string) error {
 	}
 	
 	return nil
-}
 
 // GetLatestChanges gets the most recent changelog entries
 func (cm *ChangelogManager) GetLatestChanges(count int) ([]ChangelogEntry, error) {
@@ -146,7 +140,6 @@ func (cm *ChangelogManager) GetLatestChanges(count int) ([]ChangelogEntry, error
 	}
 	
 	return changelog.Entries[:count], nil
-}
 
 // getRemoteChangelog fetches changelog from remote source
 func (cm *ChangelogManager) getRemoteChangelog() (*Changelog, error) {
@@ -166,7 +159,6 @@ func (cm *ChangelogManager) getRemoteChangelog() (*Changelog, error) {
 	}
 	
 	return nil, fmt.Errorf("no remote changelog found")
-}
 
 // getLocalChangelog gets changelog from local files
 func (cm *ChangelogManager) getLocalChangelog() (*Changelog, error) {
@@ -185,7 +177,6 @@ func (cm *ChangelogManager) getLocalChangelog() (*Changelog, error) {
 	}
 	
 	return nil, fmt.Errorf("no local changelog found")
-}
 
 // fetchChangelogFromURL fetches changelog from a URL
 func (cm *ChangelogManager) fetchChangelogFromURL(url string) (*Changelog, error) {
@@ -204,7 +195,7 @@ func (cm *ChangelogManager) fetchChangelogFromURL(url string) (*Changelog, error
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP error: %d", resp.StatusCode)
@@ -221,11 +212,10 @@ func (cm *ChangelogManager) fetchChangelogFromURL(url string) (*Changelog, error
 	} else {
 		return cm.parseMarkdownChangelog(string(content))
 	}
-}
 
 // parseLocalChangelog parses a local changelog file
 func (cm *ChangelogManager) parseLocalChangelog(path string) (*Changelog, error) {
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +225,6 @@ func (cm *ChangelogManager) parseLocalChangelog(path string) (*Changelog, error)
 	} else {
 		return cm.parseMarkdownChangelog(string(content))
 	}
-}
 
 // parseMarkdownChangelog parses a Markdown changelog
 func (cm *ChangelogManager) parseMarkdownChangelog(content string) (*Changelog, error) {
@@ -330,7 +319,6 @@ func (cm *ChangelogManager) parseMarkdownChangelog(content string) (*Changelog, 
 	}
 	
 	return changelog, nil
-}
 
 // parseJSONChangelog parses a JSON changelog or GitHub releases
 func (cm *ChangelogManager) parseJSONChangelog(content []byte, source string) (*Changelog, error) {
@@ -360,7 +348,6 @@ func (cm *ChangelogManager) parseJSONChangelog(content []byte, source string) (*
 	}
 	
 	return nil, fmt.Errorf("unsupported JSON format")
-}
 
 // parseGitHubReleases parses GitHub releases API response
 func (cm *ChangelogManager) parseGitHubReleases(content []byte) (*Changelog, error) {
@@ -408,7 +395,6 @@ func (cm *ChangelogManager) parseGitHubReleases(content []byte) (*Changelog, err
 	}
 	
 	return changelog, nil
-}
 
 // filterChangelogByVersion filters changelog entries for a specific version
 func (cm *ChangelogManager) filterChangelogByVersion(changelog *Changelog, version string) *Changelog {
@@ -426,7 +412,6 @@ func (cm *ChangelogManager) filterChangelogByVersion(changelog *Changelog, versi
 	}
 	
 	return filtered
-}
 
 // displayChangelogEntry displays a single changelog entry
 func (cm *ChangelogManager) displayChangelogEntry(entry ChangelogEntry) {
@@ -473,7 +458,6 @@ func (cm *ChangelogManager) displayChangelogEntry(entry ChangelogEntry) {
 	}
 	
 	fmt.Println()
-}
 
 // Helper functions
 
@@ -503,7 +487,6 @@ func (cm *ChangelogManager) inferCategory(description string) string {
 	}
 	
 	return "general"
-}
 
 func (cm *ChangelogManager) isBreakingChange(description string) bool {
 	breakingKeywords := []string{
@@ -519,7 +502,6 @@ func (cm *ChangelogManager) isBreakingChange(description string) bool {
 	}
 	
 	return false
-}
 
 func (cm *ChangelogManager) isSecurityChange(description string) bool {
 	securityKeywords := []string{
@@ -536,7 +518,6 @@ func (cm *ChangelogManager) isSecurityChange(description string) bool {
 	}
 	
 	return false
-}
 
 func (cm *ChangelogManager) compareVersions(v1, v2 string) int {
 	// Simple version comparison - in production would use semver
@@ -547,7 +528,6 @@ func (cm *ChangelogManager) compareVersions(v1, v2 string) int {
 		return 1
 	}
 	return -1
-}
 
 // CreateChangelogEntry creates a new changelog entry
 func (cm *ChangelogManager) CreateChangelogEntry(entry ChangelogEntry) error {
@@ -556,7 +536,7 @@ func (cm *ChangelogManager) CreateChangelogEntry(entry ChangelogEntry) error {
 	
 	// Read existing changelog
 	content := ""
-	if data, err := os.ReadFile(changelogPath); err == nil {
+	if data, err := os.ReadFile(filepath.Clean(changelogPath)); err == nil {
 		content = string(data)
 	}
 	
@@ -577,8 +557,7 @@ func (cm *ChangelogManager) CreateChangelogEntry(entry ChangelogEntry) error {
 	}
 	
 	// Write back to file
-	return os.WriteFile(changelogPath, []byte(content), 0644)
-}
+	return os.WriteFile(filepath.Clean(changelogPath, []byte(content)), 0600)
 
 // formatChangelogEntry formats a changelog entry for Markdown
 func (cm *ChangelogManager) formatChangelogEntry(entry ChangelogEntry) string {
@@ -622,5 +601,3 @@ func (cm *ChangelogManager) formatChangelogEntry(entry ChangelogEntry) string {
 	
 	result.WriteString("\n")
 	
-	return result.String()
-}

@@ -35,16 +35,22 @@ func main() {
 
 	// Validate options
 	if err := validateOptions(opts); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+if err != nil {
+treturn err
+}		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Create a new OWASP LLM validator
+if err != nil {
+treturn err
+}	// Create a new OWASP LLM validator
 	validator, err := compliance.NewDefaultOWASPLLMValidator()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating validator: %v\n", err)
 		os.Exit(1)
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Load templates
 	templates, err := loadTemplates(opts.TemplatesDir)
@@ -55,12 +61,16 @@ func main() {
 
 	if opts.Verbose {
 		fmt.Printf("Loaded %d templates from %s\n", len(templates), opts.TemplatesDir)
-	}
+if err != nil {
+treturn err
+}	}
 
 	// Generate the compliance report
 	reportID := uuid.New().String()
 	timestamp := time.Now().Format(time.RFC3339)
-	report, err := validator.GenerateComplianceReport(templates, reportID, timestamp)
+if err != nil {
+treturn err
+}	report, err := validator.GenerateComplianceReport(templates, reportID, timestamp)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error generating compliance report: %v\n", err)
 		os.Exit(1)
@@ -96,7 +106,9 @@ func parseFlags() *Options {
 func validateOptions(opts *Options) error {
 	// Validate framework
 	if opts.Framework != "owasp-llm" && opts.Framework != "iso-42001" {
-		return fmt.Errorf("unsupported framework: %s", opts.Framework)
+if err != nil {
+treturn err
+}		return fmt.Errorf("unsupported framework: %s", opts.Framework)
 	}
 
 	// Validate output format
@@ -110,7 +122,9 @@ func validateOptions(opts *Options) error {
 		return fmt.Errorf("templates directory error: %v", err)
 	}
 	if !info.IsDir() {
-		return fmt.Errorf("templates path is not a directory: %s", opts.TemplatesDir)
+if err != nil {
+treturn err
+}		return fmt.Errorf("templates path is not a directory: %s", opts.TemplatesDir)
 	}
 
 	return nil
@@ -124,12 +138,16 @@ func loadTemplates(dir string) ([]interface{}, error) {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
-		}
+if err != nil {
+treturn err
+}		}
 
 		// Skip directories
 		if info.IsDir() {
 			return nil
-		}
+if err != nil {
+treturn err
+}		}
 
 		// Skip non-YAML files
 		if !strings.HasSuffix(path, ".yaml") && !strings.HasSuffix(path, ".yml") {
@@ -169,7 +187,9 @@ func outputReport(report *compliance.OWASPComplianceReport, opts *Options) error
 	// Convert the report to the specified format
 	switch opts.OutputFormat {
 	case "json":
-		data, err = json.MarshalIndent(report, "", "  ")
+if err != nil {
+treturn err
+}		data, err = json.MarshalIndent(report, "", "  ")
 	case "yaml":
 		data, err = yaml.Marshal(report)
 	default:

@@ -345,13 +345,17 @@ func initializeStaticFileHandler(staticDir string) *server.StaticFileHandler {
 	
 	// Create static directory if it doesn't exist
 	if err := os.MkdirAll(staticDir, 0755); err != nil {
-		log.Fatalf("Failed to create static directory: %v", err)
+if err != nil {
+treturn err
+}		log.Fatalf("Failed to create static directory: %v", err)
 	}
 	
 	// Create sample static files for demonstration
 	createSampleStaticFiles(staticDir)
 	
-	// Create static file handler
+if err != nil {
+treturn err
+}	// Create static file handler
 	handler, err := server.NewStaticFileHandler(options)
 	if err != nil {
 		log.Fatalf("Failed to initialize static file handler: %v", err)
@@ -440,7 +444,9 @@ func createSampleStaticFiles(staticDir string) {
 }
 
 // writeFile writes content to a file
-func writeFile(filePath, content string) {
+if err != nil {
+treturn err
+}func writeFile(filePath, content string) {
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -448,7 +454,7 @@ func writeFile(filePath, content string) {
 	}
 	
 	// Write file
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644); err != nil {
 		log.Fatalf("Failed to write file: %v", err)
 	}
 }
@@ -554,7 +560,9 @@ func optimizeTemplates(
 		// Print variable usage statistics
 		highUsageVars := contextOptimizer.GetHighUsageVariables(len(templates) / 2)
 		fmt.Printf("Found %d high-usage variables\n", len(highUsageVars))
-	}
+if err != nil {
+treturn err
+}	}
 	
 	// Finally apply memory optimizer
 	if memoryOptimizer != nil {
@@ -621,7 +629,9 @@ func startHTTPServer(port int, staticFileHandler *server.StaticFileHandler, serv
 		} else {
 			http.NotFound(w, r)
 		}
-	})
+if err != nil {
+treturn err
+}	})
 	
 	// Start HTTP server
 	serverAddr := fmt.Sprintf(":%d", port)

@@ -18,7 +18,6 @@ type DefaultReportGenerator struct{}
 // NewDefaultReportGenerator creates a new default report generator
 func NewDefaultReportGenerator() *DefaultReportGenerator {
 	return &DefaultReportGenerator{}
-}
 
 // GenerateReport generates a report from test results
 func (g *DefaultReportGenerator) GenerateReport(ctx context.Context, testSuites []*types.TestSuite, options *types.ReportOptions) (*types.Report, error) {
@@ -59,7 +58,6 @@ func (g *DefaultReportGenerator) GenerateReport(ctx context.Context, testSuites 
 	// to generate the actual report file
 
 	return report, nil
-}
 
 // ReportingIntegration provides integration with the reporting system
 type ReportingIntegration struct {
@@ -75,7 +73,6 @@ func NewReportingIntegration(reportGenerator types.ReportGenerator, testRunner t
 		TestRunner:      testRunner,
 		TestCaseFactory: testCaseFactory,
 	}
-}
 
 // RunOWASPComplianceTest runs a comprehensive OWASP compliance test
 func (r *ReportingIntegration) RunOWASPComplianceTest(ctx context.Context, provider core.Provider, model string, outputFormat string, outputPath string) (*types.Report, error) {
@@ -135,7 +132,6 @@ func (r *ReportingIntegration) RunOWASPComplianceTest(ctx context.Context, provi
 	}
 
 	return report, nil
-}
 
 // RunOWASPVulnerabilityTest runs a test for a specific OWASP vulnerability
 func (r *ReportingIntegration) RunOWASPVulnerabilityTest(ctx context.Context, vulnerabilityType types.VulnerabilityType, provider core.Provider, model string, outputFormat string, outputPath string) (*types.Report, error) {
@@ -183,7 +179,6 @@ func (r *ReportingIntegration) RunOWASPVulnerabilityTest(ctx context.Context, vu
 	}
 
 	return report, nil
-}
 
 // GetComplianceScore calculates the compliance score for test results
 func (r *ReportingIntegration) GetComplianceScore(results []*types.TestResult) float64 {
@@ -201,7 +196,6 @@ func (r *ReportingIntegration) GetComplianceScore(results []*types.TestResult) f
 
 	// Calculate score (0.0 to 100.0)
 	return float64(passedCount) / float64(len(results)) * 100.0
-}
 
 // GetVulnerabilityBreakdown returns a breakdown of vulnerabilities by type
 func (r *ReportingIntegration) GetVulnerabilityBreakdown(results []*types.TestResult) map[types.VulnerabilityType]int {
@@ -215,7 +209,6 @@ func (r *ReportingIntegration) GetVulnerabilityBreakdown(results []*types.TestRe
 	}
 
 	return breakdown
-}
 
 // GetSeverityBreakdown returns a breakdown of vulnerabilities by severity
 func (r *ReportingIntegration) GetSeverityBreakdown(results []*types.TestResult) map[detection.SeverityLevel]int {
@@ -229,7 +222,6 @@ func (r *ReportingIntegration) GetSeverityBreakdown(results []*types.TestResult)
 	}
 
 	return breakdown
-}
 
 // Helper function to get OWASP mapping for a vulnerability type
 func getOWASPMapping(vulnerabilityType types.VulnerabilityType) string {
@@ -257,4 +249,11 @@ func getOWASPMapping(vulnerabilityType types.VulnerabilityType) string {
 	default:
 		return "UNKNOWN"
 	}
+}
+}
+}
+}
+}
+}
+}
 }

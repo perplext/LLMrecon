@@ -27,10 +27,8 @@ var SeverityLevelMapping = map[string]common.SeverityLevel{
 	"medium":   common.Medium,
 	"low":      common.Low,
 	"info":     common.Info,
-}
 
 // ReportFormatter is the interface for report formatters
 type ReportFormatter = common.ReportFormatter
 
 // ReportGenerator is the interface for report generators
-type ReportGenerator = common.ReportGenerator

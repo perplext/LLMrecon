@@ -16,7 +16,6 @@ type ExportManager struct {
 	logger           Logger
 	exporters        map[string]Exporter
 	integrations     map[string]Integration
-}
 
 // Exporter interface for different export formats
 type Exporter interface {
@@ -24,7 +23,6 @@ type Exporter interface {
 	GetFormat() ExportFormat
 	GetContentType() string
 	Validate(data interface{}) error
-}
 
 // Integration interface for external system integrations
 type Integration interface {
@@ -33,7 +31,6 @@ type Integration interface {
 	GetEndpoint() string
 	IsEnabled() bool
 	Validate() error
-}
 
 // ExportFormat represents different export formats
 type ExportFormat string
@@ -59,7 +56,6 @@ type ExportRequest struct {
 	Options     ExportOptions          `json:"options"`
 	RequestedBy string                 `json:"requested_by"`
 	RequestedAt time.Time              `json:"requested_at"`
-}
 
 // ExportOptions configures export behavior
 type ExportOptions struct {
@@ -69,7 +65,6 @@ type ExportOptions struct {
 	FieldSelection   []string `json:"field_selection"`
 	CustomFormat     map[string]interface{} `json:"custom_format"`
 	Aggregation      AggregationConfig `json:"aggregation"`
-}
 
 // ExportResult contains export operation results
 type ExportResult struct {
@@ -83,7 +78,6 @@ type ExportResult struct {
 	ExpiresAt    time.Time     `json:"expires_at"`
 	Error        string        `json:"error,omitempty"`
 	CompletedAt  time.Time     `json:"completed_at"`
-}
 
 // ExportStatus represents export operation status
 type ExportStatus string
@@ -137,7 +131,6 @@ func NewExportManager(config *Config, storage DataStorage, reportGenerator *Exec
 	manager.registerDefaultIntegrations()
 	
 	return manager
-}
 
 // ExportData exports data in the specified format
 func (em *ExportManager) ExportData(ctx context.Context, request ExportRequest, writer io.Writer) (*ExportResult, error) {
@@ -181,7 +174,6 @@ func (em *ExportManager) ExportData(ctx context.Context, request ExportRequest, 
 	em.logger.Info("Data export completed", "id", request.ID, "duration", duration)
 	
 	return result, nil
-}
 
 // ExportReport exports an executive report
 func (em *ExportManager) ExportReport(ctx context.Context, reportID string, format ExportFormat, writer io.Writer) error {
@@ -198,7 +190,6 @@ func (em *ExportManager) ExportReport(ctx context.Context, reportID string, form
 	}
 	
 	return exporter.Export(ctx, report, writer)
-}
 
 // SendToIntegration sends data to an external integration
 func (em *ExportManager) SendToIntegration(ctx context.Context, integrationName string, data interface{}) error {
@@ -220,19 +211,16 @@ func (em *ExportManager) SendToIntegration(ctx context.Context, integrationName 
 	em.logger.Info("Data sent successfully to integration", "integration", integrationName)
 	
 	return nil
-}
 
 // RegisterExporter adds a custom exporter
 func (em *ExportManager) RegisterExporter(exporter Exporter) {
 	em.exporters[string(exporter.GetFormat())] = exporter
 	em.logger.Info("Registered exporter", "format", exporter.GetFormat())
-}
 
 // RegisterIntegration adds a custom integration
 func (em *ExportManager) RegisterIntegration(integration Integration) {
 	em.integrations[integration.GetName()] = integration
 	em.logger.Info("Registered integration", "name", integration.GetName())
-}
 
 // GetSupportedFormats returns list of supported export formats
 func (em *ExportManager) GetSupportedFormats() []ExportFormat {
@@ -241,7 +229,6 @@ func (em *ExportManager) GetSupportedFormats() []ExportFormat {
 		formats = append(formats, ExportFormat(format))
 	}
 	return formats
-}
 
 // GetAvailableIntegrations returns list of available integrations
 func (em *ExportManager) GetAvailableIntegrations() []string {
@@ -250,7 +237,6 @@ func (em *ExportManager) GetAvailableIntegrations() []string {
 		integrations = append(integrations, name)
 	}
 	return integrations
-}
 
 // Internal methods
 
@@ -265,14 +251,12 @@ func (em *ExportManager) fetchDataForExport(ctx context.Context, request ExportR
 	default:
 		return nil, fmt.Errorf("unsupported data type: %s", request.DataType)
 	}
-}
 
 func (em *ExportManager) registerDefaultExporters() {
 	em.exporters[string(ExportFormatJSON)] = &JSONExporter{}
 	em.exporters[string(ExportFormatCSV)] = &CSVExporter{}
 	em.exporters[string(ExportFormatPrometheus)] = &PrometheusExporter{}
 	em.exporters[string(ExportFormatSplunk)] = &SplunkExporter{}
-}
 
 func (em *ExportManager) registerDefaultIntegrations() {
 	em.integrations["splunk"] = &SplunkIntegration{
@@ -287,7 +271,6 @@ func (em *ExportManager) registerDefaultIntegrations() {
 		endpoint: "https://webhook.example.com/analytics",
 		enabled:  false,
 	}
-}
 
 // Default Exporters
 
@@ -298,7 +281,6 @@ func (je *JSONExporter) Export(ctx context.Context, data interface{}, writer io.
 	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(data)
-}
 
 func (je *JSONExporter) GetFormat() ExportFormat { return ExportFormatJSON }
 func (je *JSONExporter) GetContentType() string { return "application/json" }
@@ -345,7 +327,6 @@ func (ce *CSVExporter) Export(ctx context.Context, data interface{}, writer io.W
 	}
 	
 	return nil
-}
 
 func (ce *CSVExporter) GetFormat() ExportFormat { return ExportFormatCSV }
 func (ce *CSVExporter) GetContentType() string { return "text/csv" }
@@ -388,7 +369,6 @@ func (pe *PrometheusExporter) Export(ctx context.Context, data interface{}, writ
 	}
 	
 	return nil
-}
 
 func (pe *PrometheusExporter) GetFormat() ExportFormat { return ExportFormatPrometheus }
 func (pe *PrometheusExporter) GetContentType() string { return "text/plain" }
@@ -430,7 +410,6 @@ func (se *SplunkExporter) Export(ctx context.Context, data interface{}, writer i
 	}
 	
 	return nil
-}
 
 func (se *SplunkExporter) GetFormat() ExportFormat { return ExportFormatSplunk }
 func (se *SplunkExporter) GetContentType() string { return "application/json" }
@@ -449,7 +428,6 @@ func (si *SplunkIntegration) Send(ctx context.Context, data interface{}) error {
 	// Mock implementation - would actually send HTTP POST to Splunk
 	fmt.Printf("Sending data to Splunk: %s\n", si.endpoint)
 	return nil
-}
 
 func (si *SplunkIntegration) GetName() string { return "splunk" }
 func (si *SplunkIntegration) GetEndpoint() string { return si.endpoint }
@@ -467,7 +445,6 @@ func (ei *ElasticsearchIntegration) Send(ctx context.Context, data interface{}) 
 	// Mock implementation - would actually send to Elasticsearch
 	fmt.Printf("Sending data to Elasticsearch: %s/%s\n", ei.endpoint, ei.index)
 	return nil
-}
 
 func (ei *ElasticsearchIntegration) GetName() string { return "elasticsearch" }
 func (ei *ElasticsearchIntegration) GetEndpoint() string { return ei.endpoint }
@@ -485,9 +462,46 @@ func (wi *WebhookIntegration) Send(ctx context.Context, data interface{}) error 
 	// Mock implementation - would actually send HTTP POST
 	fmt.Printf("Sending data to webhook: %s\n", wi.endpoint)
 	return nil
-}
 
 func (wi *WebhookIntegration) GetName() string { return "webhook" }
 func (wi *WebhookIntegration) GetEndpoint() string { return wi.endpoint }
 func (wi *WebhookIntegration) IsEnabled() bool { return wi.enabled }
 func (wi *WebhookIntegration) Validate() error { return nil }
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}

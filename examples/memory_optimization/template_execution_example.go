@@ -99,7 +99,9 @@ func main() {
 
 		// Start execution optimizer
 		if err := executionOptimizer.Start(); err != nil {
-			log.Fatalf("Failed to start execution optimizer: %v", err)
+if err != nil {
+treturn err
+}			log.Fatalf("Failed to start execution optimizer: %v", err)
 		}
 		defer executionOptimizer.Stop()
 	}
@@ -135,7 +137,9 @@ func main() {
 		// Use template pool
 		templates = make([]*format.Template, numTemplates)
 		for i := 0; i < numTemplates; i++ {
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+if err != nil {
+treturn err
+}			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 			obj, err := templatePool.Acquire(ctx)
 			cancel()
 			if err != nil {
@@ -173,13 +177,17 @@ func main() {
 	startTime := time.Now()
 
 	if executionOptimizer != nil {
-		// Execute with optimizer
+if err != nil {
+treturn err
+}		// Execute with optimizer
 		if enableBatchProcessing {
 			// Execute in batches
 			results, err := executionOptimizer.ExecuteTemplates(context.Background(), templates, testData)
 			if err != nil {
 				log.Fatalf("Failed to execute templates: %v", err)
-			}
+if err != nil {
+treturn err
+}			}
 			fmt.Printf("Executed %d templates in batches\n", len(results))
 		} else {
 			// Execute individually
@@ -187,7 +195,9 @@ func main() {
 				_, err := executionOptimizer.ExecuteTemplate(context.Background(), template, testData)
 				if err != nil {
 					log.Fatalf("Failed to execute template %d: %v", i, err)
-				}
+if err != nil {
+treturn err
+}				}
 			}
 			fmt.Printf("Executed %d templates individually\n", len(templates))
 		}
@@ -332,7 +342,9 @@ func generateRandomString(length int) string {
 		result[i] = charset[i%len(charset)]
 	}
 	return string(result)
-}
+if err != nil {
+treturn err
+}}
 
 // getEnvInt gets an integer from an environment variable
 func getEnvInt(key string, defaultValue int) int {
@@ -345,7 +357,9 @@ func getEnvInt(key string, defaultValue int) int {
 	if err != nil {
 		return defaultValue
 	}
-	
+if err != nil {
+treturn err
+}	
 	return intValue
 }
 

@@ -27,7 +27,6 @@ type RateLimiter struct {
 	mu       sync.RWMutex
 	rate     int
 	burst    int
-}
 
 // NewRateLimiter creates a new rate limiter
 func NewRateLimiter(ratePerMinute int) *RateLimiter {
@@ -36,7 +35,6 @@ func NewRateLimiter(ratePerMinute int) *RateLimiter {
 		rate:     ratePerMinute,
 		burst:    ratePerMinute, // Allow burst equal to rate
 	}
-}
 
 // GetLimiter returns a rate limiter for the given key
 func (rl *RateLimiter) GetLimiter(key string) *rate.Limiter {
@@ -52,7 +50,6 @@ func (rl *RateLimiter) GetLimiter(key string) *rate.Limiter {
 	}
 	
 	return limiter
-}
 
 // Global rate limiter instance
 var globalRateLimiter *RateLimiter
@@ -91,7 +88,6 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			Dur("duration", duration).
 			Msg("API request completed")
 	})
-}
 
 // corsMiddleware handles CORS headers
 func corsMiddleware(next http.Handler) http.Handler {
@@ -110,7 +106,6 @@ func corsMiddleware(next http.Handler) http.Handler {
 		
 		next.ServeHTTP(w, r)
 	})
-}
 
 // jsonContentTypeMiddleware sets JSON content type
 func jsonContentTypeMiddleware(next http.Handler) http.Handler {
@@ -118,7 +113,6 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		next.ServeHTTP(w, r)
 	})
-}
 
 // authMiddleware handles API authentication
 func authMiddleware(config *Config) func(http.Handler) http.Handler {
@@ -149,7 +143,6 @@ func authMiddleware(config *Config) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
-}
 
 // rateLimitMiddleware implements rate limiting
 func rateLimitMiddleware(config *Config) func(http.Handler) http.Handler {
@@ -183,7 +176,6 @@ func rateLimitMiddleware(config *Config) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
-}
 
 // extractAPIKey extracts API key from request
 func extractAPIKey(r *http.Request) string {
@@ -207,7 +199,6 @@ func extractAPIKey(r *http.Request) string {
 	}
 	
 	return ""
-}
 
 // isValidAPIKey checks if the provided API key is valid
 func isValidAPIKey(key string, validKeys []string) bool {
@@ -218,7 +209,6 @@ func isValidAPIKey(key string, validKeys []string) bool {
 		}
 	}
 	return false
-}
 
 // responseWriter wraps http.ResponseWriter to capture status code
 type responseWriter struct {
@@ -233,14 +223,12 @@ func (rw *responseWriter) WriteHeader(code int) {
 		rw.ResponseWriter.WriteHeader(code)
 		rw.written = true
 	}
-}
 
 func (rw *responseWriter) Write(data []byte) (int, error) {
 	if !rw.written {
 		rw.WriteHeader(http.StatusOK)
 	}
 	return rw.ResponseWriter.Write(data)
-}
 
 // writeJSON writes JSON response
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
@@ -248,7 +236,6 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		log.Error().Err(err).Msg("Failed to encode JSON response")
 	}
-}
 
 // writeError writes error response
 func writeError(w http.ResponseWriter, status int, apiErr *APIError) {
@@ -261,7 +248,6 @@ func writeError(w http.ResponseWriter, status int, apiErr *APIError) {
 		},
 	}
 	writeJSON(w, status, response)
-}
 
 // writeSuccess writes success response
 func writeSuccess(w http.ResponseWriter, data interface{}) {
@@ -273,7 +259,6 @@ func writeSuccess(w http.ResponseWriter, data interface{}) {
 		},
 	}
 	writeJSON(w, http.StatusOK, response)
-}
 
 // writeSuccessWithMeta writes success response with metadata
 func writeSuccessWithMeta(w http.ResponseWriter, data interface{}, meta *Meta) {
@@ -288,17 +273,14 @@ func writeSuccessWithMeta(w http.ResponseWriter, data interface{}, meta *Meta) {
 		Meta:    meta,
 	}
 	writeJSON(w, http.StatusOK, response)
-}
 
 // generateRequestID generates a unique request ID
 func generateRequestID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), generateRandomInt())
-}
 
 // generateRandomInt generates a random integer
 func generateRandomInt() int {
 	return int(time.Now().UnixNano() % 1000000)
-}
 
 // Error codes are defined in types.go
 
@@ -325,7 +307,6 @@ func paginate(page, perPage, total int) (offset, limit int) {
 	}
 	
 	return offset, limit
-}
 
 // calculateTotalPages calculates total pages for pagination
 func calculateTotalPages(total, perPage int) int {
@@ -336,5 +317,21 @@ func calculateTotalPages(total, perPage int) int {
 	if total%perPage > 0 {
 		pages++
 	}
-	return pages
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

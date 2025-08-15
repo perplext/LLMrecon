@@ -23,7 +23,6 @@ type PartialExportOptions struct {
 	PendingEntities   []EntityInfo           // Entities pending addition
 	IncludedEntities  map[string]EntityInfo  // Currently included entities
 	ExcludedEntities  map[string]EntityInfo  // Explicitly excluded entities
-}
 
 // EntitySearchCriteria defines search parameters for entities
 type EntitySearchCriteria struct {
@@ -35,7 +34,6 @@ type EntitySearchCriteria struct {
 	DateRange       *DateRange        // Created/modified date range
 	VersionRange    *VersionRange     // Version constraints
 	CustomFilters   map[string]string // Additional filters
-}
 
 // RevisionControlConfig defines VCS integration settings
 type RevisionControlConfig struct {
@@ -45,7 +43,6 @@ type RevisionControlConfig struct {
 	CommitRange     string    // Commit range (e.g., HEAD~10..HEAD)
 	IncludeModified bool      // Include uncommitted changes
 	AuthConfig      *AuthInfo // Authentication details
-}
 
 // ExportScope defines what to include in partial export
 type ExportScope string
@@ -75,7 +72,6 @@ type EntityInfo struct {
 	Metadata        map[string]interface{} `json:"metadata"`
 	Selected        bool                   `json:"selected"`
 	SelectionReason string                 `json:"selectionReason"`
-}
 
 // PartialBundleExporter extends BundleExporter for selective exports
 type PartialBundleExporter struct {
@@ -83,7 +79,6 @@ type PartialBundleExporter struct {
 	partialOptions *PartialExportOptions
 	entityIndex    map[string]EntityInfo
 	dependencies   map[string][]string
-}
 
 // NewPartialBundleExporter creates a new partial bundle exporter
 func NewPartialBundleExporter(options ExportOptions, partialOptions *PartialExportOptions) *PartialBundleExporter {
@@ -93,7 +88,6 @@ func NewPartialBundleExporter(options ExportOptions, partialOptions *PartialExpo
 		entityIndex:    make(map[string]EntityInfo),
 		dependencies:   make(map[string][]string),
 	}
-}
 
 // SelectEntities performs entity selection based on criteria
 func (e *PartialBundleExporter) SelectEntities() error {
@@ -118,7 +112,6 @@ func (e *PartialBundleExporter) SelectEntities() error {
 		}
 		selectedEntities = append(selectedEntities, entities...)
 	}
-
 	// 2. CSV-based selection
 	if e.partialOptions.EntityCSV != "" {
 		entities, err := e.loadEntitiesFromCSV(e.partialOptions.EntityCSV)
@@ -173,7 +166,6 @@ func (e *PartialBundleExporter) SelectEntities() error {
 	e.updatePendingEntities()
 
 	return nil
-}
 
 // AddEntity adds a single entity to the export
 func (e *PartialBundleExporter) AddEntity(entityID string) error {
@@ -201,7 +193,6 @@ func (e *PartialBundleExporter) AddEntity(entityID string) error {
 
 	e.updatePendingEntities()
 	return nil
-}
 
 // RemoveEntity removes an entity from the export
 func (e *PartialBundleExporter) RemoveEntity(entityID string) error {
@@ -225,7 +216,6 @@ func (e *PartialBundleExporter) RemoveEntity(entityID string) error {
 	e.updatePendingEntities()
 
 	return nil
-}
 
 // GetExportPreview returns a preview of what will be exported
 func (e *PartialBundleExporter) GetExportPreview() ExportPreview {
@@ -258,7 +248,6 @@ func (e *PartialBundleExporter) GetExportPreview() ExportPreview {
 	}
 
 	return preview
-}
 
 // Export performs the partial bundle export
 func (e *PartialBundleExporter) Export() error {
@@ -271,7 +260,7 @@ func (e *PartialBundleExporter) Export() error {
 
 	// Perform standard export with filters
 	return e.BundleExporter.Export()
-}
+	
 
 // Private methods
 
@@ -295,7 +284,6 @@ func (e *PartialBundleExporter) buildEntityIndex() error {
 	}
 
 	return nil
-}
 
 func (e *PartialBundleExporter) indexDirectory(dir string, entityType string) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -329,7 +317,6 @@ func (e *PartialBundleExporter) indexDirectory(dir string, entityType string) er
 
 		return nil
 	})
-}
 
 func (e *PartialBundleExporter) searchEntities(criteria *EntitySearchCriteria) ([]EntityInfo, error) {
 	var results []EntityInfo
@@ -342,7 +329,6 @@ func (e *PartialBundleExporter) searchEntities(criteria *EntitySearchCriteria) (
 	}
 
 	return results, nil
-}
 
 func (e *PartialBundleExporter) matchesSearchCriteria(entity EntityInfo, criteria *EntitySearchCriteria) bool {
 	// Check type filter
@@ -391,14 +377,13 @@ func (e *PartialBundleExporter) matchesSearchCriteria(entity EntityInfo, criteri
 	}
 
 	return true
-}
 
 func (e *PartialBundleExporter) loadEntitiesFromCSV(csvPath string) ([]EntityInfo, error) {
-	file, err := os.Open(csvPath)
+	file, err := os.Open(filepath.Clean(csvPath))
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
@@ -423,13 +408,11 @@ func (e *PartialBundleExporter) loadEntitiesFromCSV(csvPath string) ([]EntityInf
 	}
 
 	return entities, nil
-}
 
 func (e *PartialBundleExporter) selectFromRevisionControl(config *RevisionControlConfig) ([]EntityInfo, error) {
 	// This would integrate with git/svn to find modified files
 	// For now, return a stub implementation
 	return []EntityInfo{}, nil
-}
 
 func (e *PartialBundleExporter) selectByScope(scope ExportScope) ([]EntityInfo, error) {
 	var entities []EntityInfo
@@ -461,7 +444,6 @@ func (e *PartialBundleExporter) selectByScope(scope ExportScope) ([]EntityInfo, 
 	}
 
 	return entities, nil
-}
 
 func (e *PartialBundleExporter) resolveDependencies() error {
 	// Build dependency graph
@@ -478,7 +460,6 @@ func (e *PartialBundleExporter) resolveDependencies() error {
 	}
 
 	return nil
-}
 
 func (e *PartialBundleExporter) checkOrphanedDependencies() {
 	// Remove dependencies that are no longer needed
@@ -503,7 +484,6 @@ func (e *PartialBundleExporter) checkOrphanedDependencies() {
 			}
 		}
 	}
-}
 
 func (e *PartialBundleExporter) updatePendingEntities() {
 	e.partialOptions.PendingEntities = []EntityInfo{}
@@ -519,7 +499,6 @@ func (e *PartialBundleExporter) updatePendingEntities() {
 			}
 		}
 	}
-}
 
 func (e *PartialBundleExporter) getIncludedPaths() []string {
 	var paths []string
@@ -527,7 +506,6 @@ func (e *PartialBundleExporter) getIncludedPaths() []string {
 		paths = append(paths, entity.Path)
 	}
 	return paths
-}
 
 func (e *PartialBundleExporter) getExcludedPaths() []string {
 	var paths []string
@@ -535,11 +513,10 @@ func (e *PartialBundleExporter) getExcludedPaths() []string {
 		paths = append(paths, entity.Path)
 	}
 	return paths
-}
 
 func (e *PartialBundleExporter) extractTemplateMetadata(entity *EntityInfo) {
 	// Read template file and extract metadata
-	data, err := os.ReadFile(entity.Path)
+	data, err := os.ReadFile(filepath.Clean(entity.Path))
 	if err != nil {
 		return
 	}
@@ -556,7 +533,6 @@ func (e *PartialBundleExporter) extractTemplateMetadata(entity *EntityInfo) {
 			entity.Version = strings.TrimSpace(strings.TrimPrefix(line, "version:"))
 		}
 	}
-}
 
 func (e *PartialBundleExporter) extractModuleMetadata(entity *EntityInfo) {
 	// Extract module metadata based on file location or content
@@ -565,7 +541,6 @@ func (e *PartialBundleExporter) extractModuleMetadata(entity *EntityInfo) {
 	} else if strings.Contains(entity.Path, "detectors") {
 		entity.Category = "detector"
 	}
-}
 
 // Helper types
 
@@ -586,19 +561,16 @@ type EntitySummary struct {
 	Size     int64  `json:"size"`
 	Reason   string `json:"reason"`
 	Selected bool   `json:"selected"`
-}
 
 // DateRange defines a date range
 type DateRange struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
-}
 
 // VersionRange defines a version range constraint
 type VersionRange struct {
 	Min string `json:"min"`
 	Max string `json:"max"`
-}
 
 // AuthInfo contains authentication details
 type AuthInfo struct {
@@ -606,9 +578,26 @@ type AuthInfo struct {
 	Password string `json:"password"`
 	Token    string `json:"token"`
 	KeyFile  string `json:"keyFile"`
-}
 
 func generateEntityID(entityType, path string) string {
 	// Generate a unique ID for an entity
-	return fmt.Sprintf("%s:%s", entityType, strings.ReplaceAll(path, string(os.PathSeparator), "/"))
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

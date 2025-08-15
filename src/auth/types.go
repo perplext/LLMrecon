@@ -91,7 +91,6 @@ type Credentials struct {
 	
 	// LastUsedAt is the time the credentials were last used
 	LastUsedAt time.Time `json:"last_used_at,omitempty"`
-}
 
 // Role represents a role for role-based access control
 type Role string
@@ -141,7 +140,6 @@ type User struct {
 	
 	// LastLoginAt is the time the user last logged in
 	LastLoginAt time.Time `json:"last_login_at,omitempty"`
-}
 
 // Authenticator defines the interface for authentication
 type Authenticator interface {
@@ -162,7 +160,6 @@ type Authenticator interface {
 	
 	// RefreshToken refreshes a token if it's expired
 	RefreshToken(ctx context.Context, creds *Credentials) error
-}
 
 // Authorizer defines the interface for authorization
 type Authorizer interface {
@@ -180,10 +177,8 @@ type Authorizer interface {
 	
 	// ListUsers lists all users
 	ListUsers() ([]*User, error)
-}
 
 // AuthManager combines authentication and authorization
 type AuthManager interface {
 	Authenticator
 	Authorizer
-}

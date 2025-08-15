@@ -48,7 +48,6 @@ type EnhancedInjectionReport struct {
 	LastUpdated         time.Time           `json:"last_updated"`
 	Shared              bool                `json:"shared"`
 	SharedWith          []string            `json:"shared_with,omitempty"`
-}
 
 // ReportStatus defines the status of a report
 type ReportStatus string
@@ -74,7 +73,7 @@ func NewEnhancedReportingSystem(config *ProtectionConfig, patternLibrary *Enhanc
 	baseSystem := NewReportingSystem(config)
 	
 	// Create the data directory if it doesn't exist
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	if err := os.MkdirAll(dataDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 	
@@ -102,7 +101,6 @@ func NewEnhancedReportingSystem(config *ProtectionConfig, patternLibrary *Enhanc
 		maxReports:          1000,
 		dataDir:             dataDir,
 	}, nil
-}
 
 // ReportInjectionEnhanced reports an injection technique with enhanced capabilities
 func (r *EnhancedReportingSystem) ReportInjectionEnhanced(ctx context.Context, detections []*Detection, prompt string, response string) error {
@@ -225,7 +223,6 @@ func (r *EnhancedReportingSystem) ReportInjectionEnhanced(ctx context.Context, d
 	}
 	
 	return nil
-}
 
 // determineReportCategory determines the category for a report
 func (r *EnhancedReportingSystem) determineReportCategory(detectionType DetectionType) string {
@@ -247,7 +244,6 @@ func (r *EnhancedReportingSystem) determineReportCategory(detectionType Detectio
 	default:
 		return "other"
 	}
-}
 
 // createExampleFromDetection creates an example from a detection
 func (r *EnhancedReportingSystem) createExampleFromDetection(prompt string, detection *Detection) string {
@@ -295,7 +291,6 @@ func (r *EnhancedReportingSystem) createExampleFromDetection(prompt string, dete
 	}
 	
 	return context
-}
 
 // calculateSeverity calculates the severity of detections
 func (r *EnhancedReportingSystem) calculateSeverity(detections []*Detection) float64 {
@@ -337,7 +332,6 @@ func (r *EnhancedReportingSystem) calculateSeverity(detections []*Detection) flo
 	}
 	
 	return severity
-}
 
 // createDescriptionFromDetections creates a description from detections
 func (r *EnhancedReportingSystem) createDescriptionFromDetections(detections []*Detection) string {
@@ -357,19 +351,17 @@ func (r *EnhancedReportingSystem) createDescriptionFromDetections(detections []*
 	}
 	
 	return bestDescription
-}
-
 // saveReportToDisk saves a report to disk
 func (r *EnhancedReportingSystem) saveReportToDisk(report *EnhancedInjectionReport) error {
 	// Create reports directory if it doesn't exist
 	reportsDir := filepath.Join(r.dataDir, "reports")
-	if err := os.MkdirAll(reportsDir, 0755); err != nil {
+	if err := os.MkdirAll(reportsDir, 0700); err != nil {
 		return fmt.Errorf("failed to create reports directory: %w", err)
 	}
 	
 	// Create category directory if it doesn't exist
 	categoryDir := filepath.Join(reportsDir, report.Category)
-	if err := os.MkdirAll(categoryDir, 0755); err != nil {
+	if err := os.MkdirAll(categoryDir, 0700); err != nil {
 		return fmt.Errorf("failed to create category directory: %w", err)
 	}
 	
@@ -383,12 +375,11 @@ func (r *EnhancedReportingSystem) saveReportToDisk(report *EnhancedInjectionRepo
 	}
 	
 	// Write to file
-	if err := ioutil.WriteFile(filePath, data, 0644); err != nil {
+	if err := ioutil.WriteFile(filePath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write report to file: %w", err)
 	}
 	
 	return nil
-}
 
 // AnalyzeReports analyzes all reports
 func (r *EnhancedReportingSystem) AnalyzeReports(ctx context.Context) error {
@@ -418,7 +409,6 @@ func (r *EnhancedReportingSystem) AnalyzeReports(ctx context.Context) error {
 	}
 	
 	return nil
-}
 
 // findRelatedReports finds related reports
 func (r *EnhancedReportingSystem) findRelatedReports() {
@@ -447,13 +437,11 @@ func (r *EnhancedReportingSystem) findRelatedReports() {
 			}
 		}
 	}
-}
 
 // arePatternsRelated checks if two patterns are related
 func (r *EnhancedReportingSystem) arePatternsRelated(pattern1 string, pattern2 string) bool {
 	// Simple check for now: if one pattern contains the other
 	return pattern1 != "" && pattern2 != "" && (pattern1 == pattern2 || strings.Contains(pattern1, pattern2) || strings.Contains(pattern2, pattern1))
-}
 
 // calculateFalsePositiveRates calculates false positive rates
 func (r *EnhancedReportingSystem) calculateFalsePositiveRates() {
@@ -473,7 +461,6 @@ func (r *EnhancedReportingSystem) calculateFalsePositiveRates() {
 		report.Status = ReportStatusAnalyzed
 		report.LastUpdated = time.Now()
 	}
-}
 
 // calculateEffectivenessScores calculates effectiveness scores
 func (r *EnhancedReportingSystem) calculateEffectivenessScores() {
@@ -486,7 +473,6 @@ func (r *EnhancedReportingSystem) calculateEffectivenessScores() {
 		report.Status = ReportStatusAnalyzed
 		report.LastUpdated = time.Now()
 	}
-}
 
 // ShareReport shares a report
 func (r *EnhancedReportingSystem) ShareReport(ctx context.Context, reportID string, destination string) error {
@@ -526,7 +512,6 @@ func (r *EnhancedReportingSystem) ShareReport(ctx context.Context, reportID stri
 	fmt.Printf("Report %s shared with %s (%s)\n", reportID, destination, endpoint)
 	
 	return nil
-}
 
 // VerifyReport verifies a report
 func (r *EnhancedReportingSystem) VerifyReport(ctx context.Context, reportID string, verified bool, reason string) error {
@@ -568,7 +553,6 @@ func (r *EnhancedReportingSystem) VerifyReport(ctx context.Context, reportID str
 	
 	// Save to disk
 	return r.saveReportToDisk(report)
-}
 
 // GetReports gets all reports
 func (r *EnhancedReportingSystem) GetReports() []*EnhancedInjectionReport {
@@ -582,7 +566,6 @@ func (r *EnhancedReportingSystem) GetReports() []*EnhancedInjectionReport {
 	}
 	
 	return reports
-}
 
 // GetReportsByCategory gets reports by category
 func (r *EnhancedReportingSystem) GetReportsByCategory(category string) []*EnhancedInjectionReport {
@@ -598,7 +581,6 @@ func (r *EnhancedReportingSystem) GetReportsByCategory(category string) []*Enhan
 	}
 	
 	return reports
-}
 
 // GetReportsByStatus gets reports by status
 func (r *EnhancedReportingSystem) GetReportsByStatus(status ReportStatus) []*EnhancedInjectionReport {
@@ -614,7 +596,6 @@ func (r *EnhancedReportingSystem) GetReportsByStatus(status ReportStatus) []*Enh
 	}
 	
 	return reports
-}
 
 // GetReport gets a report by ID
 func (r *EnhancedReportingSystem) GetReport(reportID string) (*EnhancedInjectionReport, error) {
@@ -631,7 +612,7 @@ func (r *EnhancedReportingSystem) GetReport(reportID string) (*EnhancedInjection
 	for _, category := range r.reportingConfig.ReportCategories {
 		filePath := filepath.Join(r.dataDir, "reports", category, fmt.Sprintf("%s.json", reportID))
 		if _, err := os.Stat(filePath); err == nil {
-			data, err := ioutil.ReadFile(filePath)
+			data, err := ioutil.ReadFile(filepath.Clean(filePath))
 			if err != nil {
 				return nil, fmt.Errorf("failed to read report file: %w", err)
 			}
@@ -646,7 +627,6 @@ func (r *EnhancedReportingSystem) GetReport(reportID string) (*EnhancedInjection
 	}
 	
 	return nil, fmt.Errorf("report not found")
-}
 
 // RegisterReportHandler registers a handler for reports
 func (r *EnhancedReportingSystem) RegisterReportHandler(name string, handler ReportHandlerFunc) {
@@ -654,7 +634,6 @@ func (r *EnhancedReportingSystem) RegisterReportHandler(name string, handler Rep
 	defer r.mu.Unlock()
 	
 	r.reportHandlers[name] = handler
-}
 
 // SetReportingThreshold sets the threshold for reporting
 func (r *EnhancedReportingSystem) SetReportingThreshold(threshold float64) {
@@ -662,7 +641,6 @@ func (r *EnhancedReportingSystem) SetReportingThreshold(threshold float64) {
 	defer r.mu.Unlock()
 	
 	r.reportingConfig.ReportingThreshold = threshold
-}
 
 // EnableAutomaticReporting enables or disables automatic reporting
 func (r *EnhancedReportingSystem) EnableAutomaticReporting(enabled bool) {
@@ -670,7 +648,6 @@ func (r *EnhancedReportingSystem) EnableAutomaticReporting(enabled bool) {
 	defer r.mu.Unlock()
 	
 	r.reportingConfig.EnableAutomaticReporting = enabled
-}
 
 // AddReportingEndpoint adds a reporting endpoint
 func (r *EnhancedReportingSystem) AddReportingEndpoint(name string, endpoint string) {
@@ -678,7 +655,6 @@ func (r *EnhancedReportingSystem) AddReportingEndpoint(name string, endpoint str
 	defer r.mu.Unlock()
 	
 	r.reportingConfig.ReportingEndpoints[name] = endpoint
-}
 
 // CreateCustomReport creates a custom report
 func (r *EnhancedReportingSystem) CreateCustomReport(ctx context.Context, detectionType DetectionType, pattern string, example string, description string, createdBy string) (*EnhancedInjectionReport, error) {
@@ -737,5 +713,24 @@ func (r *EnhancedReportingSystem) CreateCustomReport(ctx context.Context, detect
 		}
 	}
 	
-	return report, nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -17,7 +17,6 @@ type ApprovalWorkflow struct {
 	approvedRequests map[string]bool
 	deniedRequests   map[string]bool
 	mu               sync.RWMutex
-}
 
 // NewApprovalWorkflow creates a new approval workflow
 func NewApprovalWorkflow(config *ProtectionConfig) *ApprovalWorkflow {
@@ -36,7 +35,6 @@ func NewApprovalWorkflow(config *ProtectionConfig) *ApprovalWorkflow {
 		approvedRequests: make(map[string]bool),
 		deniedRequests:   make(map[string]bool),
 	}
-}
 
 // RequestApproval requests approval for a high-risk operation
 func (w *ApprovalWorkflow) RequestApproval(ctx context.Context, result *ProtectionResult) (bool, *ProtectionResult, error) {
@@ -145,7 +143,6 @@ func (w *ApprovalWorkflow) RequestApproval(ctx context.Context, result *Protecti
 		
 		return false, result, ctx.Err()
 	}
-}
 
 // checkAutoApproval checks if a request can be auto-approved based on rules
 func (w *ApprovalWorkflow) checkAutoApproval(ctx context.Context, request *ApprovalRequest) (bool, *ProtectionResult) {
@@ -205,7 +202,6 @@ func (w *ApprovalWorkflow) checkAutoApproval(ctx context.Context, request *Appro
 	
 	// No auto-approval rules matched
 	return false, result
-}
 
 // GetPendingRequests gets all pending approval requests
 func (w *ApprovalWorkflow) GetPendingRequests() []*ApprovalRequest {
@@ -218,7 +214,6 @@ func (w *ApprovalWorkflow) GetPendingRequests() []*ApprovalRequest {
 	}
 	
 	return requests
-}
 
 // GetRequestStatus gets the status of an approval request
 func (w *ApprovalWorkflow) GetRequestStatus(requestID string) (string, bool) {
@@ -238,7 +233,6 @@ func (w *ApprovalWorkflow) GetRequestStatus(requestID string) (string, bool) {
 	}
 	
 	return "", false
-}
 
 // ApproveRequest approves a pending request
 func (w *ApprovalWorkflow) ApproveRequest(requestID string) bool {
@@ -257,7 +251,6 @@ func (w *ApprovalWorkflow) ApproveRequest(requestID string) bool {
 	// This would be implemented with a proper logging system
 	
 	return true
-}
 
 // DenyRequest denies a pending request
 func (w *ApprovalWorkflow) DenyRequest(requestID string) bool {
@@ -276,7 +269,6 @@ func (w *ApprovalWorkflow) DenyRequest(requestID string) bool {
 	// This would be implemented with a proper logging system
 	
 	return true
-}
 
 // generateApprovalReason generates a reason for the approval request
 func generateApprovalReason(result *ProtectionResult) string {
@@ -293,7 +285,6 @@ func generateApprovalReason(result *ProtectionResult) string {
 	}
 	
 	return reason
-}
 
 // getTopDetections gets the top N detections by confidence
 func getTopDetections(detections []*Detection, n int) []*Detection {
@@ -315,5 +306,3 @@ func getTopDetections(detections []*Detection, n int) []*Detection {
 		return sortedDetections
 	}
 	
-	return sortedDetections[:n]
-}

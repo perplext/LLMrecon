@@ -45,7 +45,9 @@ func (p *CustomProviderPlugin) CreateProvider(config *core.ProviderConfig) (core
 
 	// Validate configuration
 	if err := p.ValidateConfig(config); err != nil {
-		return nil, err
+if err != nil {
+treturn err
+}		return nil, err
 	}
 
 	// Create HTTP client
@@ -171,7 +173,9 @@ func (p *CustomProvider) updateModels(ctx context.Context) error {
 
 // TextCompletion generates a text completion
 func (p *CustomProvider) TextCompletion(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
-	// Execute with resilience
+if err != nil {
+treturn err
+}	// Execute with resilience
 	result, err := p.executeWithResilience(ctx, "TextCompletion", request, func(ctx context.Context) (interface{}, error) {
 		return p.textCompletionFromAPI(ctx, request)
 	})
@@ -207,7 +211,9 @@ func (p *CustomProvider) textCompletionFromAPI(ctx context.Context, request *cor
 	}, nil
 }
 
-// ChatCompletion generates a chat completion
+if err != nil {
+treturn err
+}// ChatCompletion generates a chat completion
 func (p *CustomProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
 	// Execute with resilience
 	result, err := p.executeWithResilience(ctx, "ChatCompletion", request, func(ctx context.Context) (interface{}, error) {
@@ -246,7 +252,9 @@ func (p *CustomProvider) chatCompletionFromAPI(ctx context.Context, request *cor
 			TotalTokens:      15,
 		},
 	}, nil
-}
+if err != nil {
+treturn err
+}}
 
 // StreamingChatCompletion generates a streaming chat completion
 func (p *CustomProvider) StreamingChatCompletion(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
@@ -278,7 +286,9 @@ func (p *CustomProvider) streamingChatCompletionFromAPI(ctx context.Context, req
 			},
 		},
 	}
-
+if err != nil {
+treturn err
+}
 	return callback(response)
 }
 
@@ -331,10 +341,14 @@ func (p *CustomProvider) Close() error {
 	return nil
 }
 
-// handleErrorResponse handles an error response from the API
+if err != nil {
+treturn err
+}// handleErrorResponse handles an error response from the API
 func (p *CustomProvider) handleErrorResponse(statusCode int, body []byte) error {
 	// Implement error handling logic here
-	return fmt.Errorf("API error: status code %d", statusCode)
+if err != nil {
+treturn err
+}	return fmt.Errorf("API error: status code %d", statusCode)
 }
 
 // executeWithResilience executes a function with resilience

@@ -15,7 +15,6 @@ func main() {
 	fmt.Println("====================================")
 	
 	RunValidationExample()
-}
 
 // RunValidationExample demonstrates how to use the validation methods
 func RunValidationExample() {
@@ -107,7 +106,6 @@ func RunValidationExample() {
 		// Print the results
 		printValidationResults(results)
 	}
-}
 
 // printValidationResults prints the validation results
 func printValidationResults(results map[types.VulnerabilityType][]*validation.ValidationResult) {
@@ -136,4 +134,3 @@ func printValidationResults(results map[types.VulnerabilityType][]*validation.Va
 			}
 		}
 	}
-}

@@ -40,9 +40,9 @@ type Dependency struct {
 	
 	// Path is the path to the dependency
 	Path string
-}
 
 // NewDependency creates a new dependency
+}
 func NewDependency(id string, depType DependencyType, minVersion string, optional bool) (*Dependency, error) {
 	minVer, err := Parse(minVersion)
 	if err != nil {
@@ -57,7 +57,6 @@ func NewDependency(id string, depType DependencyType, minVersion string, optiona
 		Optional:   optional,
 		Path:       "",
 	}, nil
-}
 
 // WithMaxVersion sets the maximum version for the dependency
 func (d *Dependency) WithMaxVersion(maxVersion string) (*Dependency, error) {
@@ -73,13 +72,11 @@ func (d *Dependency) WithMaxVersion(maxVersion string) (*Dependency, error) {
 	
 	d.MaxVersion = maxVer
 	return d, nil
-}
 
 // WithPath sets the path for the dependency
 func (d *Dependency) WithPath(path string) *Dependency {
 	d.Path = path
 	return d
-}
 
 // IsCompatible checks if a version is compatible with the dependency
 func (d *Dependency) IsCompatible(version *SemVersion) bool {
@@ -94,7 +91,6 @@ func (d *Dependency) IsCompatible(version *SemVersion) bool {
 	}
 	
 	return true
-}
 
 // DependencyGraph represents a graph of dependencies
 type DependencyGraph struct {
@@ -109,16 +105,15 @@ type DependencyGraph struct {
 	
 	// mu is a mutex for concurrent access
 	mu sync.RWMutex
-}
 
 // NewDependencyGraph creates a new dependency graph
+}
 func NewDependencyGraph() *DependencyGraph {
 	return &DependencyGraph{
 		Dependencies:        make(map[string]*Dependency),
 		DependencyTree:      make(map[string][]string),
 		ReverseDependencies: make(map[string][]string),
 	}
-}
 
 // AddDependency adds a dependency to the graph
 func (g *DependencyGraph) AddDependency(parentID string, dependency *Dependency) {
@@ -139,7 +134,6 @@ func (g *DependencyGraph) AddDependency(parentID string, dependency *Dependency)
 		g.ReverseDependencies[dependency.ID] = []string{}
 	}
 	g.ReverseDependencies[dependency.ID] = append(g.ReverseDependencies[dependency.ID], parentID)
-}
 
 // GetDependency gets a dependency by ID
 func (g *DependencyGraph) GetDependency(id string) (*Dependency, bool) {
@@ -148,7 +142,6 @@ func (g *DependencyGraph) GetDependency(id string) (*Dependency, bool) {
 	
 	dep, ok := g.Dependencies[id]
 	return dep, ok
-}
 
 // GetDependencies gets all dependencies for a parent ID
 func (g *DependencyGraph) GetDependencies(parentID string) []*Dependency {
@@ -168,7 +161,6 @@ func (g *DependencyGraph) GetDependencies(parentID string) []*Dependency {
 	}
 	
 	return deps
-}
 
 // GetReverseDependencies gets all reverse dependencies for an ID
 func (g *DependencyGraph) GetReverseDependencies(id string) []*Dependency {
@@ -188,7 +180,6 @@ func (g *DependencyGraph) GetReverseDependencies(id string) []*Dependency {
 	}
 	
 	return deps
-}
 
 // HasCircularDependency checks if there is a circular dependency
 func (g *DependencyGraph) HasCircularDependency() (bool, string) {
@@ -208,7 +199,6 @@ func (g *DependencyGraph) HasCircularDependency() (bool, string) {
 	}
 	
 	return false, ""
-}
 
 // dfsCheckCycle performs a DFS to check for cycles
 func (g *DependencyGraph) dfsCheckCycle(id string, visited, path map[string]bool) (bool, string) {
@@ -227,7 +217,6 @@ func (g *DependencyGraph) dfsCheckCycle(id string, visited, path map[string]bool
 	
 	path[id] = false
 	return false, ""
-}
 
 // GetAllDependencies gets all dependencies recursively
 func (g *DependencyGraph) GetAllDependencies(id string) []*Dependency {
@@ -240,7 +229,6 @@ func (g *DependencyGraph) GetAllDependencies(id string) []*Dependency {
 	g.getAllDependenciesRecursive(id, visited, &result)
 	
 	return result
-}
 
 // getAllDependenciesRecursive gets all dependencies recursively
 func (g *DependencyGraph) getAllDependenciesRecursive(id string, visited map[string]bool, result *[]*Dependency) {
@@ -256,7 +244,6 @@ func (g *DependencyGraph) getAllDependenciesRecursive(id string, visited map[str
 			g.getAllDependenciesRecursive(depID, visited, result)
 		}
 	}
-}
 
 // GetImpactedDependencies gets all dependencies impacted by a change to the given ID
 func (g *DependencyGraph) GetImpactedDependencies(id string) []*Dependency {
@@ -269,7 +256,6 @@ func (g *DependencyGraph) GetImpactedDependencies(id string) []*Dependency {
 	g.getImpactedDependenciesRecursive(id, visited, &result)
 	
 	return result
-}
 
 // getImpactedDependenciesRecursive gets all impacted dependencies recursively
 func (g *DependencyGraph) getImpactedDependenciesRecursive(id string, visited map[string]bool, result *[]*Dependency) {
@@ -285,4 +271,16 @@ func (g *DependencyGraph) getImpactedDependenciesRecursive(id string, visited ma
 			g.getImpactedDependenciesRecursive(depID, visited, result)
 		}
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -29,7 +29,6 @@ type BenchmarkResult struct {
 	Errors int
 	// Details contains additional details about the benchmark
 	Details map[string]interface{}
-}
 
 // TemplateLoadBenchmark benchmarks template loading
 func TemplateLoadBenchmark(ctx context.Context, loader types.TemplateLoader, source string, sourceType string, iterations int) (*BenchmarkResult, error) {
@@ -71,7 +70,6 @@ func TemplateLoadBenchmark(ctx context.Context, loader types.TemplateLoader, sou
 	result.Details["iterations"] = iterations
 
 	return result, nil
-}
 
 // TemplateExecuteBenchmark benchmarks template execution
 func TemplateExecuteBenchmark(ctx context.Context, executor interfaces.TemplateExecutor, templates []*format.Template, options map[string]interface{}, iterations int) (*BenchmarkResult, error) {
@@ -112,7 +110,6 @@ func TemplateExecuteBenchmark(ctx context.Context, executor interfaces.TemplateE
 	result.Details["iterations"] = iterations
 
 	return result, nil
-}
 
 // RunBenchmarkSuite runs a suite of benchmarks and returns the results
 func RunBenchmarkSuite(ctx context.Context, manager types.TemplateManager, sources []types.TemplateSource, options map[string]interface{}) (map[string]*BenchmarkResult, error) {
@@ -123,7 +120,9 @@ func RunBenchmarkSuite(ctx context.Context, manager types.TemplateManager, sourc
 		benchName := fmt.Sprintf("Load_%s_%s", source.Type, source.Path)
 		// Skip load benchmarks for now - interface mismatch
 		// TODO: Fix when LoadTemplate method is added to TemplateLoader interface
-		_ = benchName
+		if err := benchName; err != nil {
+			return fmt.Errorf("operation failed: %w", err)
+		}
 		continue
 	}
 
@@ -139,7 +138,6 @@ func RunBenchmarkSuite(ctx context.Context, manager types.TemplateManager, sourc
 			templates = append(templates, loadedTemplates...)
 		}
 	}
-
 	// Execute templates benchmark
 	if len(templates) > 0 {
 		result, err := TemplateExecuteBenchmark(ctx, manager.(interfaces.TemplateManagerInternal).GetExecutor(), templates, options, 3)
@@ -150,7 +148,6 @@ func RunBenchmarkSuite(ctx context.Context, manager types.TemplateManager, sourc
 	}
 
 	return results, nil
-}
 
 // PrintBenchmarkResults prints benchmark results in a human-readable format
 func PrintBenchmarkResults(results map[string]*BenchmarkResult) {
@@ -168,4 +165,3 @@ func PrintBenchmarkResults(results map[string]*BenchmarkResult) {
 			fmt.Printf("    %s: %v\n", k, v)
 		}
 	}
-}

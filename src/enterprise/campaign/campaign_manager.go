@@ -17,8 +17,8 @@ type CampaignManager struct {
     analytics       *CampaignAnalytics
     playbooks       map[string]*Playbook
     config          ManagerConfig
-}
 
+}
 // ManagerConfig holds configuration for campaign manager
 type ManagerConfig struct {
     MaxConcurrentCampaigns int
@@ -28,6 +28,7 @@ type ManagerConfig struct {
     RetentionPeriod        time.Duration
 }
 
+}
 // AutomationLevel defines campaign automation level
 type AutomationLevel string
 
@@ -57,6 +58,7 @@ type Campaign struct {
     UpdatedAt       time.Time             `json:"updated_at"`
 }
 
+}
 // Objective represents a campaign objective
 type Objective struct {
     ID          string              `json:"id"`
@@ -65,8 +67,8 @@ type Objective struct {
     Priority    Priority            `json:"priority"`
     Criteria    []SuccessCriterion  `json:"criteria"`
     Status      ObjectiveStatus     `json:"status"`
-}
 
+}
 // Priority defines objective priority
 type Priority string
 
@@ -83,8 +85,8 @@ type SuccessCriterion struct {
     Operator  string      `json:"operator"`
     Value     interface{} `json:"value"`
     Achieved  bool        `json:"achieved"`
-}
 
+}
 // ObjectiveStatus defines objective status
 type ObjectiveStatus string
 
@@ -107,8 +109,8 @@ type Target struct {
     Constraints  []string               `json:"constraints"`
     Profile      *TargetProfile         `json:"profile"`
     Metadata     map[string]interface{} `json:"metadata"`
-}
 
+}
 // TargetType defines target types
 type TargetType string
 
@@ -129,6 +131,7 @@ type TargetProfile struct {
     LastProfiled    time.Time             `json:"last_profiled"`
 }
 
+}
 // Phase represents a campaign phase
 type Phase struct {
     ID              string          `json:"id"`
@@ -141,8 +144,8 @@ type Phase struct {
     Status          PhaseStatus     `json:"status"`
     StartedAt       *time.Time      `json:"started_at,omitempty"`
     CompletedAt     *time.Time      `json:"completed_at,omitempty"`
-}
 
+}
 // PhaseStatus defines phase status
 type PhaseStatus string
 
@@ -165,6 +168,7 @@ type AttackSequence struct {
     Timeout     time.Duration  `json:"timeout"`
 }
 
+}
 // AttackSpec specifies an attack
 type AttackSpec struct {
     ID         string                 `json:"id"`
@@ -176,6 +180,7 @@ type AttackSpec struct {
     Success    *SuccessMetrics        `json:"success,omitempty"`
 }
 
+}
 // FlowType defines attack flow types
 type FlowType string
 
@@ -192,8 +197,8 @@ type Condition struct {
     Check    string        `json:"check"`
     Value    interface{}   `json:"value"`
     Action   string        `json:"action"`
-}
 
+}
 // ConditionType defines condition types
 type ConditionType string
 
@@ -209,8 +214,8 @@ type SuccessMetrics struct {
     Score         float64                `json:"score"`
     Metrics       map[string]interface{} `json:"metrics"`
     Evidence      []string               `json:"evidence"`
-}
 
+}
 // Playbook represents an attack playbook
 type Playbook struct {
     ID          string                 `json:"id"`
@@ -223,8 +228,8 @@ type Playbook struct {
     Techniques  map[string]*Technique  `json:"techniques"`
     Procedures  map[string]*Procedure  `json:"procedures"`
     Metadata    map[string]interface{} `json:"metadata"`
-}
 
+}
 // Tactic represents an attack tactic
 type Tactic struct {
     ID          string     `json:"id"`
@@ -234,6 +239,7 @@ type Tactic struct {
     Order       int        `json:"order"`
 }
 
+}
 // Technique represents an attack technique
 type Technique struct {
     ID          string                 `json:"id"`
@@ -242,8 +248,8 @@ type Technique struct {
     Category    string                 `json:"category"`
     Procedures  []string               `json:"procedures"`
     Metadata    map[string]interface{} `json:"metadata"`
-}
 
+}
 // Procedure represents an attack procedure
 type Procedure struct {
     ID           string                 `json:"id"`
@@ -255,14 +261,15 @@ type Procedure struct {
     Metadata     map[string]interface{} `json:"metadata"`
 }
 
+}
 // Step represents a procedure step
 type Step struct {
     Order       int                    `json:"order"`
     Action      string                 `json:"action"`
     Parameters  map[string]interface{} `json:"parameters"`
     Validation  string                 `json:"validation"`
-}
 
+}
 // Schedule represents campaign schedule
 type Schedule struct {
     Type           ScheduleType   `json:"type"`
@@ -271,8 +278,8 @@ type Schedule struct {
     Intervals      []Interval     `json:"intervals,omitempty"`
     TimeZone       string         `json:"timezone"`
     Blackouts      []Blackout     `json:"blackouts,omitempty"`
-}
 
+}
 // ScheduleType defines schedule types
 type ScheduleType string
 
@@ -290,12 +297,13 @@ type Interval struct {
     Repeat   RepeatPattern `json:"repeat,omitempty"`
 }
 
+}
 // RepeatPattern defines repeat patterns
 type RepeatPattern struct {
     Frequency string `json:"frequency"`
     Count     int    `json:"count"`
-}
 
+}
 // Blackout represents a blackout period
 type Blackout struct {
     Start  time.Time `json:"start"`
@@ -303,6 +311,7 @@ type Blackout struct {
     Reason string    `json:"reason"`
 }
 
+}
 // ResourceAllocation represents resource allocation
 type ResourceAllocation struct {
     Compute      ComputeResources       `json:"compute"`
@@ -312,6 +321,7 @@ type ResourceAllocation struct {
     RateLimits   map[string]RateLimit   `json:"rate_limits"`
 }
 
+}
 // ComputeResources defines compute resources
 type ComputeResources struct {
     CPU    int `json:"cpu"`
@@ -319,6 +329,7 @@ type ComputeResources struct {
     GPU    int `json:"gpu,omitempty"`
 }
 
+}
 // NetworkResources defines network resources
 type NetworkResources struct {
     Bandwidth   int      `json:"bandwidth"`
@@ -326,6 +337,7 @@ type NetworkResources struct {
     Proxies     []string `json:"proxies,omitempty"`
 }
 
+}
 // StorageResources defines storage resources
 type StorageResources struct {
     Size      int    `json:"size"`
@@ -333,12 +345,13 @@ type StorageResources struct {
     Retention string `json:"retention"`
 }
 
+}
 // RateLimit defines rate limits
 type RateLimit struct {
     Requests int           `json:"requests"`
     Window   time.Duration `json:"window"`
-}
 
+}
 // CampaignStatus defines campaign status
 type CampaignStatus string
 
@@ -365,6 +378,7 @@ type CampaignProgress struct {
     Metrics           map[string]interface{} `json:"metrics"`
 }
 
+}
 // CampaignResults contains campaign results
 type CampaignResults struct {
     Summary         ResultSummary          `json:"summary"`
@@ -373,8 +387,8 @@ type CampaignResults struct {
     Statistics      map[string]interface{} `json:"statistics"`
     Timeline        []*TimelineEvent       `json:"timeline"`
     Artifacts       []*Artifact            `json:"artifacts"`
-}
 
+}
 // ResultSummary summarizes results
 type ResultSummary struct {
     ObjectivesAchieved int                    `json:"objectives_achieved"`
@@ -383,8 +397,8 @@ type ResultSummary struct {
     Risk               RiskLevel              `json:"risk"`
     Recommendations    []string               `json:"recommendations"`
     KeyFindings        []string               `json:"key_findings"`
-}
 
+}
 // RiskLevel defines risk levels
 type RiskLevel string
 
@@ -405,8 +419,8 @@ type Finding struct {
     Impact      string                 `json:"impact"`
     Evidence    []Evidence             `json:"evidence"`
     Metadata    map[string]interface{} `json:"metadata"`
-}
 
+}
 // Vulnerability represents a discovered vulnerability
 type Vulnerability struct {
     ID           string                 `json:"id"`
@@ -420,14 +434,15 @@ type Vulnerability struct {
     Metadata     map[string]interface{} `json:"metadata"`
 }
 
+}
 // Evidence represents attack evidence
 type Evidence struct {
     Type      string    `json:"type"`
     Content   string    `json:"content"`
     Timestamp time.Time `json:"timestamp"`
     Source    string    `json:"source"`
-}
 
+}
 // TimelineEvent represents a timeline event
 type TimelineEvent struct {
     Timestamp   time.Time              `json:"timestamp"`
@@ -437,6 +452,7 @@ type TimelineEvent struct {
     Metadata    map[string]interface{} `json:"metadata"`
 }
 
+}
 // Artifact represents a campaign artifact
 type Artifact struct {
     ID       string    `json:"id"`
@@ -448,6 +464,7 @@ type Artifact struct {
     Metadata map[string]interface{} `json:"metadata"`
 }
 
+}
 // NewCampaignManager creates a new campaign manager
 func NewCampaignManager(config ManagerConfig) *CampaignManager {
     return &CampaignManager{
@@ -459,9 +476,9 @@ func NewCampaignManager(config ManagerConfig) *CampaignManager {
         playbooks:    make(map[string]*Playbook),
         config:       config,
     }
-}
 
 // CreateCampaign creates a new campaign
+}
 func (cm *CampaignManager) CreateCampaign(ctx context.Context, campaign *Campaign) (*Campaign, error) {
     cm.mu.Lock()
     defer cm.mu.Unlock()
@@ -506,9 +523,9 @@ func (cm *CampaignManager) CreateCampaign(ctx context.Context, campaign *Campaig
     }
 
     return campaign, nil
-}
 
 // StartCampaign starts a campaign
+}
 func (cm *CampaignManager) StartCampaign(ctx context.Context, campaignID string) error {
     cm.mu.Lock()
     defer cm.mu.Unlock()
@@ -537,27 +554,25 @@ func (cm *CampaignManager) StartCampaign(ctx context.Context, campaignID string)
     go cm.orchestrator.Execute(ctx, campaign)
 
     return nil
-}
 
 // AttackOrchestrator orchestrates attack execution
 type AttackOrchestrator struct {
     executors map[string]AttackExecutor
     mu        sync.RWMutex
-}
 
+}
 // AttackExecutor interface for attack execution
 type AttackExecutor interface {
     Execute(ctx context.Context, spec *AttackSpec) (*SuccessMetrics, error)
-}
 
 // NewAttackOrchestrator creates a new attack orchestrator
+}
 func NewAttackOrchestrator() *AttackOrchestrator {
     return &AttackOrchestrator{
         executors: make(map[string]AttackExecutor),
     }
-}
-
 // Execute executes a campaign
+}
 func (ao *AttackOrchestrator) Execute(ctx context.Context, campaign *Campaign) error {
     // Execute phases in order
     for _, phase := range campaign.Phases {
@@ -569,9 +584,9 @@ func (ao *AttackOrchestrator) Execute(ctx context.Context, campaign *Campaign) e
 
     campaign.Status = CampaignCompleted
     return nil
-}
 
 // executePhase executes a campaign phase
+}
 func (ao *AttackOrchestrator) executePhase(ctx context.Context, phase *Phase, campaign *Campaign) error {
     phase.Status = PhaseActive
     startTime := time.Now()
@@ -595,9 +610,9 @@ func (ao *AttackOrchestrator) executePhase(ctx context.Context, phase *Phase, ca
     campaign.Progress.CompletedPhases = append(campaign.Progress.CompletedPhases, phase.ID)
     
     return nil
-}
 
 // executeSequence executes an attack sequence
+}
 func (ao *AttackOrchestrator) executeSequence(ctx context.Context, sequence *AttackSequence, campaign *Campaign) error {
     switch sequence.Flow {
     case FlowSequential:
@@ -611,9 +626,9 @@ func (ao *AttackOrchestrator) executeSequence(ctx context.Context, sequence *Att
     default:
         return fmt.Errorf("unknown flow type: %s", sequence.Flow)
     }
-}
 
 // executeSequential executes attacks sequentially
+}
 func (ao *AttackOrchestrator) executeSequential(ctx context.Context, sequence *AttackSequence, campaign *Campaign) error {
     for _, attack := range sequence.Attacks {
         if err := ao.executeAttack(ctx, attack, campaign); err != nil {
@@ -621,9 +636,10 @@ func (ao *AttackOrchestrator) executeSequential(ctx context.Context, sequence *A
         }
     }
     return nil
-}
+	
 
 // executeParallel executes attacks in parallel
+}
 func (ao *AttackOrchestrator) executeParallel(ctx context.Context, sequence *AttackSequence, campaign *Campaign) error {
     var wg sync.WaitGroup
     errChan := make(chan error, len(sequence.Attacks))
@@ -649,9 +665,9 @@ func (ao *AttackOrchestrator) executeParallel(ctx context.Context, sequence *Att
     }
 
     return nil
-}
 
 // executeConditional executes attacks based on conditions
+}
 func (ao *AttackOrchestrator) executeConditional(ctx context.Context, sequence *AttackSequence, campaign *Campaign) error {
     for _, attack := range sequence.Attacks {
         // Check conditions before execution
@@ -662,9 +678,9 @@ func (ao *AttackOrchestrator) executeConditional(ctx context.Context, sequence *
         }
     }
     return nil
-}
 
 // executeIterative executes attacks iteratively
+}
 func (ao *AttackOrchestrator) executeIterative(ctx context.Context, sequence *AttackSequence, campaign *Campaign) error {
     for i := 0; i < sequence.MaxRetries; i++ {
         success := true
@@ -679,9 +695,9 @@ func (ao *AttackOrchestrator) executeIterative(ctx context.Context, sequence *At
         }
     }
     return fmt.Errorf("iterative sequence failed after %d retries", sequence.MaxRetries)
-}
 
 // executeAttack executes a single attack
+}
 func (ao *AttackOrchestrator) executeAttack(ctx context.Context, attack *AttackSpec, campaign *Campaign) error {
     campaign.Progress.TotalAttacks++
     
@@ -706,14 +722,15 @@ func (ao *AttackOrchestrator) executeAttack(ctx context.Context, attack *AttackS
     campaign.Progress.Percentage = float64(campaign.Progress.ExecutedAttacks) / float64(campaign.Progress.TotalAttacks) * 100
 
     return nil
-}
 
 // checkConditions checks execution conditions
+}
 func (ao *AttackOrchestrator) checkConditions(conditions []Condition, campaign *Campaign) bool {
     for _, condition := range conditions {
         // Implement condition checking logic
         switch condition.Type {
         case ConditionSuccess:
+}
             // Check if previous attacks succeeded
         case ConditionFailure:
             // Check if previous attacks failed
@@ -724,22 +741,21 @@ func (ao *AttackOrchestrator) checkConditions(conditions []Condition, campaign *
         }
     }
     return true
-}
 
 // CampaignScheduler handles campaign scheduling
 type CampaignScheduler struct {
     schedules map[string]*Schedule
     mu        sync.RWMutex
-}
 
+}
 // NewCampaignScheduler creates a new campaign scheduler
 func NewCampaignScheduler() *CampaignScheduler {
     return &CampaignScheduler{
         schedules: make(map[string]*Schedule),
     }
-}
 
 // Schedule schedules a campaign
+}
 func (cs *CampaignScheduler) Schedule(campaign *Campaign) error {
     cs.mu.Lock()
     defer cs.mu.Unlock()
@@ -753,7 +769,6 @@ func (cs *CampaignScheduler) Schedule(campaign *Campaign) error {
 
     cs.schedules[campaign.ID] = campaign.Schedule
     return nil
-}
 
 // CampaignMonitor monitors campaign execution
 type CampaignMonitor struct {
@@ -762,15 +777,16 @@ type CampaignMonitor struct {
     mu       sync.RWMutex
 }
 
+}
 // NewCampaignMonitor creates a new campaign monitor
 func NewCampaignMonitor(interval time.Duration) *CampaignMonitor {
     return &CampaignMonitor{
         interval: interval,
         monitors: make(map[string]chan bool),
     }
-}
 
 // StartMonitoring starts monitoring a campaign
+}
 func (cm *CampaignMonitor) StartMonitoring(campaign *Campaign) {
     cm.mu.Lock()
     defer cm.mu.Unlock()
@@ -779,9 +795,9 @@ func (cm *CampaignMonitor) StartMonitoring(campaign *Campaign) {
     cm.monitors[campaign.ID] = stopChan
 
     go cm.monitorCampaign(campaign, stopChan)
-}
 
 // monitorCampaign monitors a single campaign
+}
 func (cm *CampaignMonitor) monitorCampaign(campaign *Campaign, stop chan bool) {
     ticker := time.NewTicker(cm.interval)
     defer ticker.Stop()
@@ -795,30 +811,29 @@ func (cm *CampaignMonitor) monitorCampaign(campaign *Campaign, stop chan bool) {
             return
         }
     }
-}
 
 // updateMetrics updates campaign metrics
 func (cm *CampaignMonitor) updateMetrics(campaign *Campaign) {
     // Implement metric collection
     campaign.Progress.Metrics["last_update"] = time.Now()
-}
 
 // CampaignAnalytics provides campaign analytics
 type CampaignAnalytics struct {
     mu sync.RWMutex
 }
 
+}
 // NewCampaignAnalytics creates new campaign analytics
 func NewCampaignAnalytics() *CampaignAnalytics {
     return &CampaignAnalytics{}
-}
 
 // Helper functions
+}
 func generateCampaignID() string {
     return fmt.Sprintf("campaign_%d", time.Now().UnixNano())
-}
 
 // validateCampaign validates campaign structure
+}
 func (cm *CampaignManager) validateCampaign(campaign *Campaign) error {
     if len(campaign.Objectives) == 0 {
         return fmt.Errorf("campaign must have at least one objective")
@@ -845,15 +860,15 @@ func (cm *CampaignManager) validateCampaign(campaign *Campaign) error {
     }
 
     return nil
-}
 
 // loadPlaybook loads a playbook
+}
 func (cm *CampaignManager) loadPlaybook(playbookID string) error {
     // Implement playbook loading logic
     return nil
-}
 
 // PauseCampaign pauses a running campaign
+}
 func (cm *CampaignManager) PauseCampaign(ctx context.Context, campaignID string) error {
     cm.mu.Lock()
     defer cm.mu.Unlock()
@@ -871,9 +886,9 @@ func (cm *CampaignManager) PauseCampaign(ctx context.Context, campaignID string)
     campaign.UpdatedAt = time.Now()
 
     return nil
-}
 
 // ResumeCampaign resumes a paused campaign
+}
 func (cm *CampaignManager) ResumeCampaign(ctx context.Context, campaignID string) error {
     cm.mu.Lock()
     defer cm.mu.Unlock()
@@ -894,9 +909,9 @@ func (cm *CampaignManager) ResumeCampaign(ctx context.Context, campaignID string
     go cm.orchestrator.Execute(ctx, campaign)
 
     return nil
-}
 
 // GetCampaignStatus gets campaign status and progress
+}
 func (cm *CampaignManager) GetCampaignStatus(campaignID string) (*Campaign, error) {
     cm.mu.RLock()
     defer cm.mu.RUnlock()
@@ -906,5 +921,3 @@ func (cm *CampaignManager) GetCampaignStatus(campaignID string) (*Campaign, erro
         return nil, fmt.Errorf("campaign not found")
     }
 
-    return campaign, nil
-}

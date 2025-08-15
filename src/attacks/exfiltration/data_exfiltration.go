@@ -29,6 +29,7 @@ type DataExfiltrator struct {
     config           ExfiltratorConfig
 }
 
+}
 // ExfiltratorConfig holds configuration for data exfiltration
 type ExfiltratorConfig struct {
     MaxChannels        int
@@ -37,8 +38,8 @@ type ExfiltratorConfig struct {
     CompressionEnabled bool
     FragmentSize       int
     TimingPrecision    time.Duration
-}
 
+}
 // ExfiltrationChannel represents a data exfiltration channel
 type ExfiltrationChannel struct {
     ID          string                 `json:"id"`
@@ -50,6 +51,7 @@ type ExfiltrationChannel struct {
     BytesSent   int64                 `json:"bytes_sent"`
 }
 
+}
 // ChannelType defines types of exfiltration channels
 type ChannelType string
 
@@ -87,9 +89,9 @@ func NewDataExfiltrator(config ExfiltratorConfig) *DataExfiltrator {
         modelExtractor: NewModelDataExtractor(),
         config:         config,
     }
-}
 
 // ExfiltrateData exfiltrates data using specified channel type
+}
 func (de *DataExfiltrator) ExfiltrateData(ctx context.Context, data []byte, channelType ChannelType) (*ExfiltrationChannel, error) {
     channel := &ExfiltrationChannel{
         ID:         generateChannelID(),
@@ -140,9 +142,9 @@ func (de *DataExfiltrator) ExfiltrateData(ctx context.Context, data []byte, chan
     channel.Status = StatusExfiltrating
     de.channels[channel.ID] = channel
     return channel, nil
-}
 
 // preprocessData prepares data for exfiltration
+}
 func (de *DataExfiltrator) preprocessData(data []byte) ([]byte, error) {
     var processed []byte = data
 
@@ -165,21 +167,20 @@ func (de *DataExfiltrator) preprocessData(data []byte) ([]byte, error) {
     }
 
     return processed, nil
-}
 
 // SteganographyEngine implements steganographic exfiltration
 type SteganographyEngine struct {
     techniques map[string]StegoTechnique
     mu         sync.RWMutex
-}
 
+}
 // StegoTechnique represents a steganography technique
 type StegoTechnique interface {
     Embed(carrier, data []byte) ([]byte, error)
     Extract(carrier []byte) ([]byte, error)
-}
 
 // NewSteganographyEngine creates a new steganography engine
+}
 func NewSteganographyEngine() *SteganographyEngine {
     se := &SteganographyEngine{
         techniques: make(map[string]StegoTechnique),
@@ -192,9 +193,9 @@ func NewSteganographyEngine() *SteganographyEngine {
     se.techniques["semantic"] = &SemanticSteganography{}
     
     return se
-}
 
 // ExfiltrateViaStego exfiltrates data using steganography
+}
 func (se *SteganographyEngine) ExfiltrateViaStego(channel *ExfiltrationChannel, data []byte) error {
     // Use multiple steganography techniques for resilience
     techniques := []string{"text", "unicode", "whitespace", "semantic"}
@@ -223,11 +224,11 @@ func (se *SteganographyEngine) ExfiltrateViaStego(channel *ExfiltrationChannel, 
 
     channel.BytesSent = int64(len(data))
     return nil
-}
 
 // TextSteganography implements text-based steganography
 type TextSteganography struct{}
 
+}
 func (ts *TextSteganography) Embed(carrier, data []byte) ([]byte, error) {
     // Embed data in text using synonym replacement
     result := make([]byte, 0, len(carrier)+len(data))
@@ -255,16 +256,15 @@ func (ts *TextSteganography) Embed(carrier, data []byte) ([]byte, error) {
     }
     
     return result, nil
-}
 
 func (ts *TextSteganography) Extract(carrier []byte) ([]byte, error) {
     // Extract hidden data from text
     return nil, fmt.Errorf("extraction not implemented")
-}
 
 // UnicodeSteganography uses Unicode tricks for hiding data
 type UnicodeSteganography struct{}
 
+}
 func (us *UnicodeSteganography) Embed(carrier, data []byte) ([]byte, error) {
     result := make([]byte, 0, len(carrier)*2)
     dataIndex := 0
@@ -285,15 +285,14 @@ func (us *UnicodeSteganography) Embed(carrier, data []byte) ([]byte, error) {
     }
     
     return result, nil
-}
 
 func (us *UnicodeSteganography) Extract(carrier []byte) ([]byte, error) {
     return nil, fmt.Errorf("extraction not implemented")
-}
 
 // WhitespaceSteganography uses whitespace for hiding data
 type WhitespaceSteganography struct{}
 
+}
 func (ws *WhitespaceSteganography) Embed(carrier, data []byte) ([]byte, error) {
     lines := strings.Split(string(carrier), "\n")
     result := make([]string, 0, len(lines))
@@ -311,15 +310,15 @@ func (ws *WhitespaceSteganography) Embed(carrier, data []byte) ([]byte, error) {
     }
     
     return []byte(strings.Join(result, "\n")), nil
-}
 
+}
 func (ws *WhitespaceSteganography) Extract(carrier []byte) ([]byte, error) {
     return nil, fmt.Errorf("extraction not implemented")
-}
 
 // SemanticSteganography uses semantic variations
 type SemanticSteganography struct{}
 
+}
 func (ss *SemanticSteganography) Embed(carrier, data []byte) ([]byte, error) {
     // Use sentence structure variations to encode data
     sentences := strings.Split(string(carrier), ". ")
@@ -339,18 +338,17 @@ func (ss *SemanticSteganography) Embed(carrier, data []byte) ([]byte, error) {
     }
     
     return []byte(strings.Join(result, ". ")), nil
-}
 
+}
 func (ss *SemanticSteganography) Extract(carrier []byte) ([]byte, error) {
     return nil, fmt.Errorf("extraction not implemented")
-}
 
 // LinguisticExfiltrator uses natural language for data hiding
 type LinguisticExfiltrator struct {
     templates []string
     mu        sync.RWMutex
-}
 
+}
 // NewLinguisticExfiltrator creates a new linguistic exfiltrator
 func NewLinguisticExfiltrator() *LinguisticExfiltrator {
     return &LinguisticExfiltrator{
@@ -361,9 +359,9 @@ func NewLinguisticExfiltrator() *LinguisticExfiltrator {
             "The meeting is scheduled for %s at %d o'clock.",
         },
     }
-}
 
 // ExfiltrateViaLanguage exfiltrates data through natural language
+}
 func (le *LinguisticExfiltrator) ExfiltrateViaLanguage(channel *ExfiltrationChannel, data []byte) error {
     // Convert data to linguistic encoding
     encoded := le.encodeToLanguage(data)
@@ -403,8 +401,8 @@ func (le *LinguisticExfiltrator) encodeToLanguage(data []byte) string {
     }
     
     return result.String()
-}
 
+}
 func (le *LinguisticExfiltrator) encodeAsStory(data []byte) string {
     story := "Once upon a time, "
     
@@ -416,7 +414,6 @@ func (le *LinguisticExfiltrator) encodeAsStory(data []byte) string {
     }
     
     return story
-}
 
 func (le *LinguisticExfiltrator) encodeAsDialogue(data []byte) string {
     dialogue := ""
@@ -429,7 +426,6 @@ func (le *LinguisticExfiltrator) encodeAsDialogue(data []byte) string {
     }
     
     return dialogue
-}
 
 func (le *LinguisticExfiltrator) encodeAsDescription(data []byte) string {
     description := "The scene contains "
@@ -444,7 +440,6 @@ func (le *LinguisticExfiltrator) encodeAsDescription(data []byte) string {
     }
     
     return description + "."
-}
 
 func (le *LinguisticExfiltrator) encodeAsInstructions(data []byte) string {
     instructions := "To complete the task:\n"
@@ -456,22 +451,21 @@ func (le *LinguisticExfiltrator) encodeAsInstructions(data []byte) string {
     }
     
     return instructions
-}
 
 // TimingChannel implements timing-based covert channels
 type TimingChannel struct {
     precision time.Duration
     mu        sync.RWMutex
-}
 
+}
 // NewTimingChannel creates a new timing channel
 func NewTimingChannel(precision time.Duration) *TimingChannel {
     return &TimingChannel{
         precision: precision,
     }
-}
 
 // ExfiltrateViaTiming exfiltrates data using timing patterns
+}
 func (tc *TimingChannel) ExfiltrateViaTiming(channel *ExfiltrationChannel, data []byte) error {
     // Encode data in response timing patterns
     timingPattern := tc.encodeToTiming(data)
@@ -506,14 +500,13 @@ func (tc *TimingChannel) encodeToTiming(data []byte) []time.Duration {
     }
     
     return pattern
-}
 
 // SideChannelExfiltrator implements side-channel exfiltration
 type SideChannelExfiltrator struct {
     channels map[string]func([]byte) error
     mu       sync.RWMutex
-}
 
+}
 // NewSideChannelExfiltrator creates a new side-channel exfiltrator
 func NewSideChannelExfiltrator() *SideChannelExfiltrator {
     sce := &SideChannelExfiltrator{
@@ -527,9 +520,9 @@ func NewSideChannelExfiltrator() *SideChannelExfiltrator {
     sce.channels["metadata"] = sce.viaMetadata
     
     return sce
-}
 
 // ExfiltrateViaSideChannel exfiltrates data through side channels
+}
 func (sce *SideChannelExfiltrator) ExfiltrateViaSideChannel(channel *ExfiltrationChannel, data []byte) error {
     // Use multiple side channels
     for name, method := range sce.channels {
@@ -542,32 +535,30 @@ func (sce *SideChannelExfiltrator) ExfiltrateViaSideChannel(channel *Exfiltratio
     return nil
 }
 
+}
 func (sce *SideChannelExfiltrator) viaTokenCount(data []byte) error {
     // Encode data in token count variations
     // Generate responses with specific token counts to encode bits
     return nil
-}
 
 func (sce *SideChannelExfiltrator) viaResponseLength(data []byte) error {
     // Encode data in response length patterns
     return nil
-}
 
 func (sce *SideChannelExfiltrator) viaErrorPatterns(data []byte) error {
     // Trigger specific errors to encode data
     return nil
-}
 
 func (sce *SideChannelExfiltrator) viaMetadata(data []byte) error {
     // Hide data in response metadata
     return nil
-}
 
 // CovertEncoder implements covert encoding schemes
 type CovertEncoder struct {
     encoders map[string]func([]byte) []byte
 }
 
+}
 // NewCovertEncoder creates a new covert encoder
 func NewCovertEncoder() *CovertEncoder {
     ce := &CovertEncoder{
@@ -580,7 +571,6 @@ func NewCovertEncoder() *CovertEncoder {
     ce.encoders["custom"] = ce.customEncode
     
     return ce
-}
 
 func (ce *CovertEncoder) customEncode(data []byte) []byte {
     // Custom encoding that looks like normal text
@@ -594,7 +584,6 @@ func (ce *CovertEncoder) customEncode(data []byte) []byte {
     }
     
     return encoded
-}
 
 // DataFragmenter implements data fragmentation
 type DataFragmenter struct {
@@ -603,6 +592,7 @@ type DataFragmenter struct {
     mu           sync.RWMutex
 }
 
+}
 // Fragment represents a data fragment
 type Fragment struct {
     ID       string
@@ -612,15 +602,16 @@ type Fragment struct {
     Checksum string
 }
 
+}
 // NewDataFragmenter creates a new data fragmenter
 func NewDataFragmenter(fragmentSize int) *DataFragmenter {
     return &DataFragmenter{
         fragmentSize: fragmentSize,
         fragments:    make(map[string][]*Fragment),
     }
-}
 
 // ExfiltrateFragmented exfiltrates data in fragments
+}
 func (df *DataFragmenter) ExfiltrateFragmented(channel *ExfiltrationChannel, data []byte) error {
     fragments := df.createFragments(data)
     
@@ -661,30 +652,29 @@ func (df *DataFragmenter) createFragments(data []byte) []*Fragment {
     }
     
     return fragments
-}
 
 // CovertTunneler implements covert tunneling
 type CovertTunneler struct {
     tunnels map[string]*Tunnel
     mu      sync.RWMutex
-}
 
+}
 // Tunnel represents a covert tunnel
 type Tunnel struct {
     ID       string
     Protocol string
     Endpoint string
     Active   bool
-}
 
+}
 // NewCovertTunneler creates a new covert tunneler
 func NewCovertTunneler() *CovertTunneler {
     return &CovertTunneler{
         tunnels: make(map[string]*Tunnel),
     }
-}
 
 // ExfiltrateViaCovert exfiltrates data through covert tunnel
+}
 func (ct *CovertTunneler) ExfiltrateViaCovert(channel *ExfiltrationChannel, data []byte) error {
     tunnel := &Tunnel{
         ID:       generateTunnelID(),
@@ -706,13 +696,13 @@ func (ct *CovertTunneler) ExfiltrateViaCovert(channel *ExfiltrationChannel, data
     
     channel.BytesSent = int64(len(data))
     return nil
-}
 
 // ModelDataExtractor extracts model information
 type ModelDataExtractor struct {
     extractors map[string]func() ([]byte, error)
 }
 
+}
 // NewModelDataExtractor creates a new model data extractor
 func NewModelDataExtractor() *ModelDataExtractor {
     mde := &ModelDataExtractor{
@@ -725,9 +715,9 @@ func NewModelDataExtractor() *ModelDataExtractor {
     mde.extractors["embeddings"] = mde.extractEmbeddings
     
     return mde
-}
 
 // ExfiltrateModelData exfiltrates model-specific data
+}
 func (mde *ModelDataExtractor) ExfiltrateModelData(channel *ExfiltrationChannel, data []byte) error {
     extracted := make(map[string][]byte)
     
@@ -746,6 +736,7 @@ func (mde *ModelDataExtractor) ExfiltrateModelData(channel *ExfiltrationChannel,
     return nil
 }
 
+}
 func (mde *ModelDataExtractor) extractParameters() ([]byte, error) {
     // Extract model parameters through probing
     params := map[string]interface{}{
@@ -755,8 +746,8 @@ func (mde *ModelDataExtractor) extractParameters() ([]byte, error) {
         "attention_heads": 96,
     }
     return json.Marshal(params)
-}
 
+}
 func (mde *ModelDataExtractor) extractArchitecture() ([]byte, error) {
     // Extract architecture details
     arch := map[string]interface{}{
@@ -765,19 +756,19 @@ func (mde *ModelDataExtractor) extractArchitecture() ([]byte, error) {
         "activation": "gelu",
     }
     return json.Marshal(arch)
-}
 
+}
 func (mde *ModelDataExtractor) extractTrainingData() ([]byte, error) {
     // Extract training data indicators
     return []byte("training_data_fingerprint"), nil
-}
 
+}
 func (mde *ModelDataExtractor) extractEmbeddings() ([]byte, error) {
     // Extract embedding patterns
     return []byte("embedding_signature"), nil
-}
 
 // Helper functions
+}
 func compressData(data []byte) ([]byte, error) {
     var buf bytes.Buffer
     gz := gzip.NewWriter(&buf)
@@ -788,8 +779,8 @@ func compressData(data []byte) ([]byte, error) {
         return nil, err
     }
     return buf.Bytes(), nil
-}
 
+}
 func encryptData(data []byte) ([]byte, error) {
     key := make([]byte, 32)
     if _, err := io.ReadFull(rand.Reader, key); err != nil {
@@ -812,12 +803,12 @@ func encryptData(data []byte) ([]byte, error) {
     }
     
     return gcm.Seal(nonce, nonce, data, nil), nil
-}
 
+}
 func generateChannelID() string {
     return fmt.Sprintf("chan_%d", time.Now().UnixNano())
-}
 
+}
 func generateCarrierText(size int) string {
     // Generate innocuous carrier text
     templates := []string{
@@ -834,16 +825,16 @@ func generateCarrierText(size int) string {
     }
     
     return result.String()
-}
 
+}
 func toBinary(data []byte) string {
     var result strings.Builder
     for _, b := range data {
         result.WriteString(fmt.Sprintf("%08b", b))
     }
     return result.String()
-}
 
+}
 func getSynonym(word string, bit int) string {
     synonyms := map[string][]string{
         "good": {"great", "excellent"},
@@ -856,23 +847,22 @@ func getSynonym(word string, bit int) string {
         return syns[bit%len(syns)]
     }
     return word
-}
 
 func toPassiveVoice(sentence string) string {
     // Simplified passive voice conversion
     return "It was " + strings.ToLower(sentence)
-}
 
+}
 func getAction(b byte) string {
     actions := []string{"walked", "ran", "jumped", "climbed", "swam", "flew", "crawled", "danced"}
     return actions[b%byte(len(actions))]
-}
 
+}
 func getCharacter(index int) string {
     characters := []string{"the hero", "the villain", "the sage", "the fool", "the knight", "the dragon"}
     return characters[index%len(characters)]
-}
 
+}
 func getPhrase(b byte) string {
     phrases := []string{
         "I understand",
@@ -885,18 +875,18 @@ func getPhrase(b byte) string {
         "Certainly",
     }
     return phrases[b%byte(len(phrases))]
-}
 
+}
 func getObject(b byte) string {
     objects := []string{"table", "chair", "lamp", "book", "window", "door", "clock", "mirror"}
     return objects[b%byte(len(objects))]
-}
 
+}
 func getAttribute(b byte) string {
     attributes := []string{"red", "blue", "old", "new", "large", "small", "bright", "dark"}
     return attributes[b%byte(len(attributes))]
-}
 
+}
 func getInstruction(b byte) string {
     instructions := []string{
         "Check the configuration",
@@ -909,57 +899,57 @@ func getInstruction(b byte) string {
         "Report the findings",
     }
     return instructions[b%byte(len(instructions))]
-}
 
+}
 func encodeBase64(data []byte) []byte {
     return []byte(base64.StdEncoding.EncodeToString(data))
-}
 
+}
 func encodeHex(data []byte) []byte {
     return []byte(fmt.Sprintf("%x", data))
-}
 
+}
 func encodeBinary(data []byte) []byte {
     return []byte(toBinary(data))
-}
 
+}
 func getCommonWord(value int) string {
     words := []string{
         "the", "be", "to", "of", "and", "a", "in", "that",
         "have", "I", "it", "for", "not", "on", "with", "he",
     }
     return words[value%len(words)]
-}
 
+}
 func generateReassemblyKey() string {
     return fmt.Sprintf("key_%x", time.Now().UnixNano())
-}
 
+}
 func generateFragmentID() string {
     return fmt.Sprintf("frag_%d", time.Now().UnixNano())
-}
 
+}
 func calculateChecksum(data []byte) string {
     sum := 0
     for _, b := range data {
         sum += int(b)
     }
     return fmt.Sprintf("%x", sum)
-}
 
+}
 func generateTunnelID() string {
     return fmt.Sprintf("tunnel_%d", time.Now().UnixNano())
-}
 
+}
 func calculateTotalSize(data map[string][]byte) int {
     total := 0
     for _, v := range data {
         total += len(v)
     }
     return total
-}
 
 // GetChannelStatus returns the status of an exfiltration channel
+}
 func (de *DataExfiltrator) GetChannelStatus(channelID string) (*ExfiltrationChannel, error) {
     de.mu.RLock()
     defer de.mu.RUnlock()
@@ -970,9 +960,9 @@ func (de *DataExfiltrator) GetChannelStatus(channelID string) (*ExfiltrationChan
     }
     
     return channel, nil
-}
 
 // GetActiveChannels returns all active exfiltration channels
+}
 func (de *DataExfiltrator) GetActiveChannels() []*ExfiltrationChannel {
     de.mu.RLock()
     defer de.mu.RUnlock()
@@ -983,5 +973,3 @@ func (de *DataExfiltrator) GetActiveChannels() []*ExfiltrationChannel {
             active = append(active, channel)
         }
     }
-    return active
-}

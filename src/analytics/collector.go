@@ -32,28 +32,24 @@ type MetricsCollector struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
-}
 
 // MetricProcessor interface for processing individual metrics
 type MetricProcessor interface {
 	Process(ctx context.Context, metric Metric) (Metric, error)
 	GetType() string
 	IsEnabled() bool
-}
 
 // MetricAggregator interface for aggregating metrics over time windows
 type MetricAggregator interface {
 	Aggregate(ctx context.Context, metrics []Metric, window TimeWindow) (AggregatedMetric, error)
 	GetWindowSizes() []time.Duration
 	Reset()
-}
 
 // CollectionHook allows custom logic during metric collection
 type CollectionHook interface {
 	PreCollection(ctx context.Context, scanID string) error
 	PostCollection(ctx context.Context, scanID string, metrics []Metric) error
 	OnError(ctx context.Context, err error, scanID string)
-}
 
 // ScanTracker tracks metrics for an active scan
 type ScanTracker struct {
@@ -67,7 +63,6 @@ type ScanTracker struct {
 	CurrentPhase  string
 	Metrics       []Metric
 	mu            sync.RWMutex
-}
 
 // SystemMetrics tracks system-level performance metrics
 type SystemMetrics struct {
@@ -79,7 +74,6 @@ type SystemMetrics struct {
 	ThreadCount   int
 	LastUpdated   time.Time
 	mu            sync.RWMutex
-}
 
 // NetworkStats tracks network I/O statistics
 type NetworkStats struct {
@@ -121,7 +115,6 @@ func NewMetricsCollector(config *Config, storage DataStorage, logger Logger) *Me
 	}
 	
 	return collector
-}
 
 // StartScanTracking begins tracking metrics for a new scan
 func (mc *MetricsCollector) StartScanTracking(scanID, target string, templates []string) error {
@@ -168,7 +161,6 @@ func (mc *MetricsCollector) StartScanTracking(scanID, target string, templates [
 	}
 	
 	return mc.collectMetric(metric)
-}
 
 // UpdateScanProgress updates the progress of an active scan
 func (mc *MetricsCollector) UpdateScanProgress(scanID string, phase string, testsRun, testsPassed, testsFailed int) error {
@@ -211,7 +203,6 @@ func (mc *MetricsCollector) UpdateScanProgress(scanID string, phase string, test
 	}
 	
 	return mc.collectMetric(metric)
-}
 
 // FinishScanTracking completes tracking for a scan
 func (mc *MetricsCollector) FinishScanTracking(scanID string, result *ScanResult) error {
@@ -248,7 +239,6 @@ func (mc *MetricsCollector) FinishScanTracking(scanID string, result *ScanResult
 	}
 	
 	return nil
-}
 
 // CollectCustomMetric allows collection of custom metrics
 func (mc *MetricsCollector) CollectCustomMetric(name string, value float64, labels map[string]string, metadata map[string]interface{}) error {
@@ -267,7 +257,6 @@ func (mc *MetricsCollector) CollectCustomMetric(name string, value float64, labe
 	}
 	
 	return mc.collectMetric(metric)
-}
 
 // GetActiveScans returns information about currently active scans
 func (mc *MetricsCollector) GetActiveScans() map[string]*ScanTracker {
@@ -280,7 +269,6 @@ func (mc *MetricsCollector) GetActiveScans() map[string]*ScanTracker {
 	}
 	
 	return result
-}
 
 // GetSystemMetrics returns current system metrics
 func (mc *MetricsCollector) GetSystemMetrics() *SystemMetrics {
@@ -296,7 +284,6 @@ func (mc *MetricsCollector) GetSystemMetrics() *SystemMetrics {
 		ThreadCount:  mc.systemMetrics.ThreadCount,
 		LastUpdated:  mc.systemMetrics.LastUpdated,
 	}
-}
 
 // RegisterProcessor adds a custom metric processor
 func (mc *MetricsCollector) RegisterProcessor(processor MetricProcessor) {
@@ -305,7 +292,6 @@ func (mc *MetricsCollector) RegisterProcessor(processor MetricProcessor) {
 	
 	mc.processors[processor.GetType()] = processor
 	mc.logger.Info("Registered metric processor", "type", processor.GetType())
-}
 
 // RegisterAggregator adds a custom metric aggregator
 func (mc *MetricsCollector) RegisterAggregator(name string, aggregator MetricAggregator) {
@@ -314,7 +300,6 @@ func (mc *MetricsCollector) RegisterAggregator(name string, aggregator MetricAgg
 	
 	mc.aggregators[name] = aggregator
 	mc.logger.Info("Registered metric aggregator", "name", name)
-}
 
 // RegisterHook adds a collection hook
 func (mc *MetricsCollector) RegisterHook(hook CollectionHook) {
@@ -323,7 +308,6 @@ func (mc *MetricsCollector) RegisterHook(hook CollectionHook) {
 	
 	mc.hooks = append(mc.hooks, hook)
 	mc.logger.Info("Registered collection hook")
-}
 
 // Shutdown gracefully shuts down the metrics collector
 func (mc *MetricsCollector) Shutdown(timeout time.Duration) error {
@@ -346,7 +330,6 @@ func (mc *MetricsCollector) Shutdown(timeout time.Duration) error {
 		mc.logger.Warn("Metrics collector shutdown timed out")
 		return fmt.Errorf("shutdown timed out after %v", timeout)
 	}
-}
 
 // Internal methods
 
@@ -374,7 +357,6 @@ func (mc *MetricsCollector) collectMetric(metric Metric) error {
 		mc.logger.Warn("Metrics buffer full, dropping metric", "metric", metric.Name)
 		return fmt.Errorf("metrics buffer full")
 	}
-}
 
 func (mc *MetricsCollector) startWorkers() {
 	// Start metrics processing worker
@@ -388,7 +370,6 @@ func (mc *MetricsCollector) startWorkers() {
 	// Start aggregation worker
 	mc.wg.Add(1)
 	go mc.aggregationWorker()
-}
 
 func (mc *MetricsCollector) metricsProcessingWorker() {
 	defer mc.wg.Done()
@@ -422,7 +403,6 @@ func (mc *MetricsCollector) metricsProcessingWorker() {
 			return
 		}
 	}
-}
 
 func (mc *MetricsCollector) systemMetricsWorker() {
 	defer mc.wg.Done()
@@ -438,7 +418,6 @@ func (mc *MetricsCollector) systemMetricsWorker() {
 			return
 		}
 	}
-}
 
 func (mc *MetricsCollector) aggregationWorker() {
 	defer mc.wg.Done()
@@ -454,7 +433,6 @@ func (mc *MetricsCollector) aggregationWorker() {
 			return
 		}
 	}
-}
 
 func (mc *MetricsCollector) flushBatch(batch []Metric) {
 	if err := mc.storage.StoreMetrics(mc.ctx, batch); err != nil {
@@ -465,7 +443,6 @@ func (mc *MetricsCollector) flushBatch(batch []Metric) {
 			hook.OnError(mc.ctx, err, "batch_storage")
 		}
 	}
-}
 
 func (mc *MetricsCollector) collectSystemMetrics() {
 	// This would integrate with actual system monitoring
@@ -504,7 +481,6 @@ func (mc *MetricsCollector) collectSystemMetrics() {
 	for _, metric := range systemMetrics {
 		mc.collectMetric(metric)
 	}
-}
 
 func (mc *MetricsCollector) runAggregation() {
 	now := time.Now()
@@ -539,7 +515,6 @@ func (mc *MetricsCollector) runAggregation() {
 			}
 		}
 	}
-}
 
 func (mc *MetricsCollector) generateScanCompletionMetrics(scanID string, tracker *ScanTracker, result *ScanResult, duration time.Duration) []Metric {
 	baseLabels := map[string]string{
@@ -587,26 +562,22 @@ func (mc *MetricsCollector) generateScanCompletionMetrics(scanID string, tracker
 	}
 	
 	return metrics
-}
 
 func (mc *MetricsCollector) registerDefaultProcessors() {
 	// Add default processors
 	mc.processors["validation"] = &ValidationProcessor{}
 	mc.processors["enrichment"] = &EnrichmentProcessor{}
 	mc.processors["filtering"] = &FilteringProcessor{config: mc.config}
-}
 
 func (mc *MetricsCollector) registerDefaultAggregators() {
 	// Add default aggregators
 	mc.aggregators["basic"] = &BasicAggregator{}
 	mc.aggregators["performance"] = &PerformanceAggregator{}
 	mc.aggregators["security"] = &SecurityAggregator{}
-}
 
 // Utility functions
 func generateMetricID() string {
 	return fmt.Sprintf("metric_%d_%d", time.Now().UnixNano(), time.Now().Unix())
-}
 
 func calculateSuccessRate(passed, failed int) float64 {
 	total := passed + failed
@@ -614,7 +585,6 @@ func calculateSuccessRate(passed, failed int) float64 {
 		return 0.0
 	}
 	return float64(passed) / float64(total) * 100.0
-}
 
 // System metrics functions (would be replaced with actual system calls)
 func getCurrentCPUUsage() float64     { return 45.2 } // Mock implementation
@@ -628,6 +598,34 @@ func getCurrentNetworkStats() NetworkStats {
 		PacketsReceived: 1500,
 		Connections:     25,
 	}
-}
 func getCurrentProcessCount() int { return 120 }
 func getCurrentThreadCount() int  { return 480 }
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}

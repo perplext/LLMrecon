@@ -42,7 +42,6 @@ type ServerConfig struct {
 	SecurityConfig *security.SecurityConfig
 	// PromptProtectionConfig is the configuration for prompt injection protection
 	PromptProtectionConfig *prompt.ProtectionConfig
-}
 
 // DefaultServerConfig returns the default server configuration
 func DefaultServerConfig() *ServerConfig {
@@ -52,7 +51,6 @@ func DefaultServerConfig() *ServerConfig {
 		SecurityConfig:        security.DefaultSecurityConfig(),
 		PromptProtectionConfig: prompt.DefaultProtectionConfig(),
 	}
-}
 
 // NewServer creates a new API server
 func NewServer(config *ServerConfig) (*Server, error) {
@@ -116,7 +114,6 @@ func NewServer(config *ServerConfig) (*Server, error) {
 		promptProtectionMiddleware: promptProtectionMiddleware,
 		config:                  config,
 	}, nil
-}
 
 // Start starts the server
 func (s *Server) Start() error {
@@ -162,7 +159,6 @@ func (s *Server) Start() error {
 
 	log.Println("Server exited properly")
 	return nil
-}
 
 // registerRoutes registers all API routes
 func (s *Server) registerRoutes() {
@@ -174,7 +170,6 @@ func (s *Server) registerRoutes() {
 
 	// Register security routes
 	s.registerSecurityRoutes()
-}
 
 // handleIndex handles the root path
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -186,7 +181,6 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, `{"status":"ok","message":"LLMrecon API","version":"1.0.0"}`)
-}
 
 // registerSecurityRoutes registers security-related routes
 func (s *Server) registerSecurityRoutes() {
@@ -226,7 +220,6 @@ func (s *Server) registerSecurityRoutes() {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
 	})))
-}
 
 // generateRequestID is implemented in middleware.go
 
@@ -262,7 +255,6 @@ func (s *Server) withMiddleware(next http.Handler) http.Handler {
 				// Log the panic
 				s.securityManager.Log(3, requestID, "Panic recovered", fmt.Errorf("%v", err))
 				// Return a 500 error
-				errorHandler.HandleError(w, r, fmt.Errorf("internal server error"), "An unexpected error occurred")
 			}
 		}()
 		
@@ -297,4 +289,9 @@ func (s *Server) withMiddleware(next http.Handler) http.Handler {
 		// Call the next handler
 		handler.ServeHTTP(w, r)
 	})
+}
+}
+}
+}
+}
 }

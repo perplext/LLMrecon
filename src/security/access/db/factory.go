@@ -24,7 +24,6 @@ type DBConfig struct {
 
 	// MaxIdleConns is the maximum number of idle connections in the connection pool
 	MaxIdleConns int
-}
 
 // DefaultSQLiteConfig returns a default SQLite configuration
 func DefaultSQLiteConfig(dbPath string) *DBConfig {
@@ -43,7 +42,6 @@ func DefaultSQLiteConfig(dbPath string) *DBConfig {
 		MaxOpenConns: 10,
 		MaxIdleConns: 5,
 	}
-}
 
 // Factory is a factory for creating database-backed access control components
 type Factory struct {
@@ -69,17 +67,15 @@ func NewFactory(config *DBConfig) (*Factory, error) {
 	}
 
 	return &Factory{db: db}, nil
-}
 
 // Close closes the database connection
 func (f *Factory) Close() error {
 	return f.db.Close()
-}
 
 // CreateUserStore creates a new SQL-based user store
 func (f *Factory) CreateUserStore() (interfaces.UserStore, error) {
 	return NewSQLUserStore(f.db)
-}
+	
 
 // CreateSessionStore creates a new SQL-based session store
 func (f *Factory) CreateSessionStore() (interfaces.SessionStore, error) {
@@ -91,7 +87,6 @@ func (f *Factory) CreateSessionStore() (interfaces.SessionStore, error) {
 	
 	// Wrap it with the adapter
 	return adapter.NewSessionStoreAdapter(sqlStore), nil
-}
 
 // CreateAuditStore creates a new SQL-based audit store
 func (f *Factory) CreateAuditStore() (interfaces.AuditLogger, error) {
@@ -103,7 +98,6 @@ func (f *Factory) CreateAuditStore() (interfaces.AuditLogger, error) {
 	
 	// Wrap it with the adapter
 	return adapter.NewAuditStoreAdapter(sqlStore), nil
-}
 
 // CreateIncidentStore creates a new SQL-based incident store
 func (f *Factory) CreateIncidentStore() (interfaces.IncidentStore, error) {
@@ -115,7 +109,6 @@ func (f *Factory) CreateIncidentStore() (interfaces.IncidentStore, error) {
 	
 	// Wrap it with the adapter
 	return adapter.NewIncidentStoreAdapter(sqlStore), nil
-}
 
 // CreateVulnerabilityStore creates a new SQL-based vulnerability store
 func (f *Factory) CreateVulnerabilityStore() (interfaces.VulnerabilityStore, error) {
@@ -127,8 +120,6 @@ func (f *Factory) CreateVulnerabilityStore() (interfaces.VulnerabilityStore, err
 	
 	// Wrap it with the adapter
 	return adapter.NewVulnerabilityStoreAdapter(sqlStore), nil
-}
-
 // CreateAllStores creates all stores and returns them in a map
 func (f *Factory) CreateAllStores() (map[string]interface{}, error) {
 	stores := make(map[string]interface{})
@@ -169,11 +160,17 @@ func (f *Factory) CreateAllStores() (map[string]interface{}, error) {
 	stores["vulnerabilityStore"] = vulnerabilityStore
 
 	return stores, nil
-}
 
 // ensureDir ensures that the specified directory exists
 func ensureDir(dir string) error {
 	// This is a placeholder. In a real implementation, you would use os.MkdirAll
 	// to create the directory if it doesn't exist.
-	return nil
+}
+}
+}
+}
+}
+}
+}
+}
 }

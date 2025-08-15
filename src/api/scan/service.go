@@ -15,11 +15,13 @@ type Service struct {
 	storage Storage
 }
 
+
 // NewService creates a new scan service
 func NewService(storage Storage) *Service {
 	return &Service{
 		storage: storage,
 	}
+
 }
 
 // CreateScanConfig creates a new scan configuration
@@ -45,7 +47,6 @@ func (s *Service) CreateScanConfig(ctx context.Context, req CreateScanConfigRequ
 	}
 
 	return config, nil
-}
 
 // GetScanConfig retrieves a scan configuration by ID
 func (s *Service) GetScanConfig(ctx context.Context, id string) (*ScanConfig, error) {
@@ -58,7 +59,6 @@ func (s *Service) GetScanConfig(ctx context.Context, id string) (*ScanConfig, er
 	}
 
 	return config, nil
-}
 
 // UpdateScanConfig updates an existing scan configuration
 func (s *Service) UpdateScanConfig(ctx context.Context, id string, req UpdateScanConfigRequest) (*ScanConfig, error) {
@@ -90,7 +90,6 @@ func (s *Service) UpdateScanConfig(ctx context.Context, id string, req UpdateSca
 	if req.Parameters != nil {
 		config.Parameters = req.Parameters
 	}
-
 	// Update timestamp
 	config.UpdatedAt = time.Now()
 
@@ -100,7 +99,6 @@ func (s *Service) UpdateScanConfig(ctx context.Context, id string, req UpdateSca
 	}
 
 	return config, nil
-}
 
 // DeleteScanConfig deletes a scan configuration by ID
 func (s *Service) DeleteScanConfig(ctx context.Context, id string) error {
@@ -112,7 +110,6 @@ func (s *Service) DeleteScanConfig(ctx context.Context, id string) error {
 	}
 
 	return nil
-}
 
 // ListScanConfigs lists scan configurations with pagination and filtering
 func (s *Service) ListScanConfigs(ctx context.Context, page, pageSize int, filters FilterParams) ([]*ScanConfig, *PaginationParams, error) {
@@ -125,7 +122,6 @@ func (s *Service) ListScanConfigs(ctx context.Context, page, pageSize int, filte
 	pagination := calculatePagination(page, pageSize, total)
 
 	return configs, pagination, nil
-}
 
 // CreateScan creates a new scan execution
 func (s *Service) CreateScan(ctx context.Context, req CreateScanRequest) (*Scan, error) {
@@ -137,7 +133,6 @@ func (s *Service) CreateScan(ctx context.Context, req CreateScanRequest) (*Scan,
 		}
 		return nil, fmt.Errorf("failed to get scan configuration: %w", err)
 	}
-
 	// Generate a unique ID
 	id := uuid.New().String()
 
@@ -158,8 +153,6 @@ func (s *Service) CreateScan(ctx context.Context, req CreateScanRequest) (*Scan,
 	go s.runScan(context.Background(), scan)
 
 	return scan, nil
-}
-
 // GetScan retrieves a scan by ID
 func (s *Service) GetScan(ctx context.Context, id string) (*Scan, error) {
 	scan, err := s.storage.GetScan(ctx, id)
@@ -171,7 +164,6 @@ func (s *Service) GetScan(ctx context.Context, id string) (*Scan, error) {
 	}
 
 	return scan, nil
-}
 
 // CancelScan cancels a running scan
 func (s *Service) CancelScan(ctx context.Context, id string) (*Scan, error) {
@@ -199,7 +191,6 @@ func (s *Service) CancelScan(ctx context.Context, id string) (*Scan, error) {
 	}
 
 	return scan, nil
-}
 
 // ListScans lists scans with pagination and filtering
 func (s *Service) ListScans(ctx context.Context, page, pageSize int, filters FilterParams) ([]*Scan, *PaginationParams, error) {
@@ -212,7 +203,6 @@ func (s *Service) ListScans(ctx context.Context, page, pageSize int, filters Fil
 	pagination := calculatePagination(page, pageSize, total)
 
 	return scans, pagination, nil
-}
 
 // GetScanResults retrieves the results for a scan with pagination and filtering
 func (s *Service) GetScanResults(ctx context.Context, scanID string, page, pageSize int, filters FilterParams) ([]*ScanResult, *PaginationParams, error) {
@@ -234,7 +224,6 @@ func (s *Service) GetScanResults(ctx context.Context, scanID string, page, pageS
 	pagination := calculatePagination(page, pageSize, total)
 
 	return results, pagination, nil
-}
 
 // Helper function to calculate pagination parameters
 func calculatePagination(page, pageSize, total int) *PaginationParams {
@@ -244,7 +233,6 @@ func calculatePagination(page, pageSize, total int) *PaginationParams {
 	if pageSize < 1 {
 		pageSize = 10
 	}
-
 	totalPages := (total + pageSize - 1) / pageSize
 	if totalPages < 1 {
 		totalPages = 1
@@ -256,7 +244,6 @@ func calculatePagination(page, pageSize, total int) *PaginationParams {
 		TotalItems: total,
 		TotalPages: totalPages,
 	}
-}
 
 // runScan executes a scan asynchronously
 func (s *Service) runScan(ctx context.Context, scan *Scan) {
@@ -287,6 +274,77 @@ func (s *Service) runScan(ctx context.Context, scan *Scan) {
 	// In a real implementation, this would be replaced with actual scan execution
 	// using the templates and parameters from the configuration
 	simulateScanExecution(ctx, s, scan, config)
+
+// simulateScanExecution simulates the execution of a scan
+// This is a placeholder for the actual scan execution logic
+func simulateScanExecution(ctx context.Context, s *Service, scan *Scan, config *ScanConfig) {
+	// Simulate progress updates
+	for i := 0; i <= 100; i += 10 {
+		// Check if the scan has been cancelled
+		updatedScan, err := s.storage.GetScan(ctx, scan.ID)
+		if err != nil {
+			fmt.Printf("Failed to get scan: %v\n", err)
+			return
+		}
+
+		if updatedScan.Status == ScanStatusCancelled {
+			fmt.Printf("Scan %s has been cancelled\n", scan.ID)
+			return
+		}
+
+		// Update progress
+		scan.Progress = i
+		if err := s.storage.UpdateScan(ctx, scan); err != nil {
+			fmt.Printf("Failed to update scan progress: %v\n", err)
+		}
+
+		// Simulate some work
+		time.Sleep(100 * time.Millisecond)
+
+		// Generate a sample result every 20%
+		if i > 0 && i%20 == 0 {
+			result := &ScanResult{
+				ID:          uuid.New().String(),
+				ScanID:      scan.ID,
+				TemplateID:  config.Templates[0],
+				Severity:    getSeverityForProgress(i),
+				Title:       fmt.Sprintf("Sample finding at %d%% progress", i),
+				Description: fmt.Sprintf("This is a sample finding generated at %d%% progress", i),
+				Details: map[string]interface{}{
+					"progress": i,
+					"sample":   true,
+				},
+				Timestamp: time.Now(),
+			}
+
+			if err := s.storage.CreateScanResult(ctx, result); err != nil {
+				fmt.Printf("Failed to create scan result: %v\n", err)
+			}
+		}
+	}
+
+	// Complete the scan
+	scan.Status = ScanStatusCompleted
+	scan.Progress = 100
+	scan.EndTime = time.Now()
+	if err := s.storage.UpdateScan(ctx, scan); err != nil {
+		fmt.Printf("Failed to update scan status: %v\n", err)
+	}
+
+// getSeverityForProgress returns a severity level based on the progress
+// This is just for demonstration purposes
+func getSeverityForProgress(progress int) ScanSeverity {
+	switch {
+	case progress <= 20:
+		return ScanSeverityLow
+	case progress <= 40:
+		return ScanSeverityMedium
+	case progress <= 60:
+		return ScanSeverityHigh
+	default:
+		return ScanSeverityCritical
+	}
+}
 }
 
 // simulateScanExecution simulates the execution of a scan

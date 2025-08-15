@@ -28,7 +28,6 @@ type MemoryOptimizer struct {
 	lastOptimization time.Time
 	// optimizationCount is the number of optimization operations
 	optimizationCount int64
-}
 
 // MemoryOptimizerConfig represents configuration for the memory optimizer
 type MemoryOptimizerConfig struct {
@@ -62,7 +61,6 @@ type MemoryOptimizerConfig struct {
 	BufferSize int
 	// EnableStringInterning enables string interning
 	EnableStringInterning bool
-}
 
 // MemoryOptimizerStats tracks statistics for the memory optimizer
 type MemoryOptimizerStats struct {
@@ -88,7 +86,6 @@ type MemoryOptimizerStats struct {
 	BuffersReused int64
 	// ObjectsPooled is the number of objects pooled
 	ObjectsPooled int64
-}
 
 // DefaultMemoryOptimizerConfig returns default configuration for the memory optimizer
 func DefaultMemoryOptimizerConfig() *MemoryOptimizerConfig {
@@ -109,7 +106,6 @@ func DefaultMemoryOptimizerConfig() *MemoryOptimizerConfig {
 		BufferSize:                  4096, // 4 KB
 		EnableStringInterning:       true,
 	}
-}
 
 // NewMemoryOptimizer creates a new memory optimizer
 func NewMemoryOptimizer(config *MemoryOptimizerConfig) (*MemoryOptimizer, error) {
@@ -131,7 +127,6 @@ func NewMemoryOptimizer(config *MemoryOptimizerConfig) (*MemoryOptimizer, error)
 		templateSizes:  make(map[string]int),
 		optimizedSizes: make(map[string]int),
 	}, nil
-}
 
 // OptimizeTemplate optimizes a template for memory usage
 func (o *MemoryOptimizer) OptimizeTemplate(template *format.Template) (*format.Template, error) {
@@ -216,7 +211,6 @@ func (o *MemoryOptimizer) OptimizeTemplate(template *format.Template) (*format.T
 	}
 
 	return optimized, nil
-}
 
 // OptimizeTemplates optimizes multiple templates for memory usage
 func (o *MemoryOptimizer) OptimizeTemplates(templates []*format.Template) ([]*format.Template, error) {
@@ -306,7 +300,6 @@ func (o *MemoryOptimizer) OptimizeTemplates(templates []*format.Template) ([]*fo
 	}
 
 	return result, nil
-}
 
 // deduplicateTemplate deduplicates a template
 func (o *MemoryOptimizer) deduplicateTemplate(template *format.Template) (*format.Template, error) {
@@ -314,7 +307,6 @@ func (o *MemoryOptimizer) deduplicateTemplate(template *format.Template) (*forma
 	// This is a simplified version
 	atomic.AddInt64(&o.stats.DuplicatesRemoved, 1)
 	return template, nil
-}
 
 // deduplicateSections deduplicates template sections
 func (o *MemoryOptimizer) deduplicateSections(sections []format.TemplateSection) ([]format.TemplateSection, error) {
@@ -326,7 +318,6 @@ func (o *MemoryOptimizer) deduplicateSections(sections []format.TemplateSection)
 	// This is a simplified version
 	atomic.AddInt64(&o.stats.SectionsOptimized, int64(len(sections)))
 	return sections, nil
-}
 
 // optimizeVariables optimizes template variables
 func (o *MemoryOptimizer) optimizeVariables(variables map[string]interface{}) (map[string]interface{}, error) {
@@ -338,27 +329,23 @@ func (o *MemoryOptimizer) optimizeVariables(variables map[string]interface{}) (m
 	// This is a simplified version
 	atomic.AddInt64(&o.stats.VariablesOptimized, int64(len(variables)))
 	return variables, nil
-}
 
 // flattenInheritance flattens template inheritance
 func (o *MemoryOptimizer) flattenInheritance(template *format.Template) (*format.Template, error) {
 	// Implementation would flatten inheritance
 	// This is a simplified version
 	return template, nil
-}
 
 // shouldTriggerGC checks if garbage collection should be triggered
 func (o *MemoryOptimizer) shouldTriggerGC() bool {
 	// Check memory usage
 	memoryUsage := o.profiler.GetMemoryUsage()
 	return memoryUsage > float64(o.config.MemoryThreshold)
-}
 
 // triggerGC triggers garbage collection
 func (o *MemoryOptimizer) triggerGC() {
 	runtime.GC()
 	atomic.AddInt64(&o.stats.GarbageCollections, 1)
-}
 
 // GetStats returns statistics for the memory optimizer
 func (o *MemoryOptimizer) GetStats() *MemoryOptimizerStats {
@@ -366,7 +353,6 @@ func (o *MemoryOptimizer) GetStats() *MemoryOptimizerStats {
 	defer o.mutex.RUnlock()
 
 	return o.stats
-}
 
 // GetConfig returns the configuration for the memory optimizer
 func (o *MemoryOptimizer) GetConfig() *MemoryOptimizerConfig {
@@ -374,7 +360,6 @@ func (o *MemoryOptimizer) GetConfig() *MemoryOptimizerConfig {
 	defer o.mutex.RUnlock()
 
 	return o.config
-}
 
 // SetConfig sets the configuration for the memory optimizer
 func (o *MemoryOptimizer) SetConfig(config *MemoryOptimizerConfig) {
@@ -382,17 +367,14 @@ func (o *MemoryOptimizer) SetConfig(config *MemoryOptimizerConfig) {
 	defer o.mutex.Unlock()
 
 	o.config = config
-}
 
 // GetMemoryProfiler returns the memory profiler
 func (o *MemoryOptimizer) GetMemoryProfiler() *profiling.MemoryProfiler {
 	return o.profiler
-}
 
 // GetOptimizationCount returns the number of optimization operations
 func (o *MemoryOptimizer) GetOptimizationCount() int64 {
 	return atomic.LoadInt64(&o.optimizationCount)
-}
 
 // GetLastOptimizationTime returns the time of the last optimization
 func (o *MemoryOptimizer) GetLastOptimizationTime() time.Time {
@@ -400,7 +382,6 @@ func (o *MemoryOptimizer) GetLastOptimizationTime() time.Time {
 	defer o.mutex.RUnlock()
 
 	return o.lastOptimization
-}
 
 // GetTemplateSizes returns the sizes of templates
 func (o *MemoryOptimizer) GetTemplateSizes() map[string]int {
@@ -414,7 +395,6 @@ func (o *MemoryOptimizer) GetTemplateSizes() map[string]int {
 	}
 
 	return result
-}
 
 // GetOptimizedSizes returns the sizes of optimized templates
 func (o *MemoryOptimizer) GetOptimizedSizes() map[string]int {
@@ -428,7 +408,6 @@ func (o *MemoryOptimizer) GetOptimizedSizes() map[string]int {
 	}
 
 	return result
-}
 
 // GetMemorySavings returns the memory savings for templates
 func (o *MemoryOptimizer) GetMemorySavings() map[string]float64 {
@@ -449,7 +428,6 @@ func (o *MemoryOptimizer) GetMemorySavings() map[string]float64 {
 	}
 
 	return result
-}
 
 // estimateTemplateSize estimates the size of a template in bytes
 func estimateTemplateSize(template *format.Template) int {
@@ -513,5 +491,3 @@ func estimateTemplateSize(template *format.Template) int {
 		}
 	}
 
-	return size
-}

@@ -32,7 +32,6 @@ var _ interfaces.UserStore = (*SQLUserStore)(nil)
 func (s *SQLUserStore) Close() error {
 	// Nothing to close for SQLUserStore as the DB connection is managed externally
 	return nil
-}
 
 // NewSQLUserStore creates a new SQL-based user store
 func NewSQLUserStore(db *sql.DB) (interfaces.UserStore, error) {
@@ -46,7 +45,6 @@ func NewSQLUserStore(db *sql.DB) (interfaces.UserStore, error) {
 	}
 
 	return store, nil
-}
 
 // initSchema initializes the database schema
 func (s *SQLUserStore) initSchema() error {
@@ -90,7 +88,6 @@ func (s *SQLUserStore) initSchema() error {
 	}
 
 	return nil
-}
 
 // GetUserByID retrieves a user by ID
 func (s *SQLUserStore) GetUserByID(ctx context.Context, id string) (*interfaces.User, error) {
@@ -103,7 +100,6 @@ func (s *SQLUserStore) GetUserByID(ctx context.Context, id string) (*interfaces.
 	`
 	row := s.db.QueryRowContext(ctx, query, id)
 	return s.scanUser(row)
-}
 
 // GetUserByUsername retrieves a user by username
 func (s *SQLUserStore) GetUserByUsername(ctx context.Context, username string) (*interfaces.User, error) {
@@ -117,7 +113,6 @@ func (s *SQLUserStore) GetUserByUsername(ctx context.Context, username string) (
 
 	row := s.db.QueryRowContext(ctx, query, username)
 	return s.scanUser(row)
-}
 
 // GetUserByEmail retrieves a user by email
 func (s *SQLUserStore) GetUserByEmail(ctx context.Context, email string) (*interfaces.User, error) {
@@ -131,23 +126,19 @@ func (s *SQLUserStore) GetUserByEmail(ctx context.Context, email string) (*inter
 
 	row := s.db.QueryRowContext(ctx, query, email)
 	return s.scanUser(row)
-}
 
 // Helper function to handle missing fields in interfaces.User
 func getMFASecretForDB() string {
 	// MFASecret is not part of interfaces.User
 	return ""
-}
 
 func getEmptyPasswordHistory() string {
 	// PasswordHistory is not part of interfaces.User
 	return "[]" // Empty JSON array
-}
 
 func getZeroTime() time.Time {
 	// Return zero time for missing time fields
 	return time.Time{}
-}
 
 // CreateUser creates a new user
 func (s *SQLUserStore) CreateUser(ctx context.Context, user *interfaces.User) error {
@@ -168,7 +159,6 @@ func (s *SQLUserStore) CreateUser(ctx context.Context, user *interfaces.User) er
 	if err != nil {
 		return fmt.Errorf("failed to serialize MFA methods: %w", err)
 	}
-
 	// Password history is not part of interfaces.User
 	passwordHistoryJSON := getEmptyPasswordHistory()
 
@@ -219,9 +209,7 @@ func (s *SQLUserStore) CreateUser(ctx context.Context, user *interfaces.User) er
 		}
 		return fmt.Errorf("failed to create user: %w", err)
 	}
-
 	return nil
-}
 
 // UpdateUser updates an existing user
 func (s *SQLUserStore) UpdateUser(ctx context.Context, user *interfaces.User) error {
@@ -236,7 +224,6 @@ func (s *SQLUserStore) UpdateUser(ctx context.Context, user *interfaces.User) er
 	if err != nil {
 		return fmt.Errorf("failed to serialize permissions: %w", err)
 	}
-
 	// Serialize MFA methods
 	mfaMethodsJSON, err := json.Marshal(user.MFAMethods)
 	if err != nil {
@@ -306,7 +293,6 @@ func (s *SQLUserStore) UpdateUser(ctx context.Context, user *interfaces.User) er
 		}
 		return fmt.Errorf("failed to update user: %w", err)
 	}
-
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get rows affected: %w", err)
@@ -317,7 +303,6 @@ func (s *SQLUserStore) UpdateUser(ctx context.Context, user *interfaces.User) er
 	}
 
 	return nil
-}
 
 // DeleteUser deletes a user by ID
 func (s *SQLUserStore) DeleteUser(ctx context.Context, id string) error {
@@ -338,7 +323,6 @@ func (s *SQLUserStore) DeleteUser(ctx context.Context, id string) error {
 	}
 
 	return nil
-}
 
 // ListUsers lists all users
 func (s *SQLUserStore) ListUsers(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*interfaces.User, int, error) {
@@ -378,7 +362,6 @@ func (s *SQLUserStore) ListUsers(ctx context.Context, filter map[string]interfac
 
 		whereClause += strings.Join(conditions, " AND ")
 	}
-
 	// Count total records for pagination
 	countQuery := "SELECT COUNT(*) FROM users" + whereClause
 	var total int
@@ -396,7 +379,7 @@ func (s *SQLUserStore) ListUsers(ctx context.Context, filter map[string]interfac
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to query users: %w", err)
 	}
-	defer rows.Close()
+	defer func() { if err := rows.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	var users []*interfaces.User
 	for rows.Next() {
@@ -412,7 +395,6 @@ func (s *SQLUserStore) ListUsers(ctx context.Context, filter map[string]interfac
 	}
 
 	return users, total, nil
-}
 
 // scanUser scans a user from a database row
 func (s *SQLUserStore) scanUser(row *sql.Row) (*interfaces.User, error) {
@@ -499,7 +481,6 @@ func (s *SQLUserStore) scanUser(row *sql.Row) (*interfaces.User, error) {
 	}
 
 	return &user, nil
-}
 
 // scanUserFromRows scans a user from database rows
 func (s *SQLUserStore) scanUserFromRows(rows *sql.Rows) (*interfaces.User, error) {
@@ -510,7 +491,6 @@ func (s *SQLUserStore) scanUserFromRows(rows *sql.Rows) (*interfaces.User, error
 	var mfaSecret string // Not used in interfaces.User
 	var lockExpirationStr sql.NullString // Not used in interfaces.User
 	var passwordHistoryJSON string // Not used in interfaces.User
-
 	err := rows.Scan(
 		&user.ID,
 		&user.Username,
@@ -584,7 +564,6 @@ func (s *SQLUserStore) scanUserFromRows(rows *sql.Rows) (*interfaces.User, error
 	}
 
 	return &user, nil
-}
 
 // Helper functions
 
@@ -594,9 +573,23 @@ func boolToInt(b bool) int {
 		return 1
 	}
 	return 0
-}
 
 // intToBool converts an integer to a boolean (true for non-zero, false for zero)
 func intToBool(i int) bool {
 	return i != 0
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

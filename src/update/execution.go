@@ -36,7 +36,6 @@ type UpdateExecutionOptions struct {
 	PostUpdateHooks []UpdateHook
 	// VerificationHooks are functions to run for verification
 	VerificationHooks []VerificationHook
-}
 
 // UpdateHook is a function that runs before or after an update
 type UpdateHook func(ctx context.Context, transaction *UpdateTransaction) error
@@ -72,7 +71,6 @@ type UpdateExecutor struct {
 	PostUpdateHooks []UpdateHook
 	// VerificationHooks are functions to run for verification
 	VerificationHooks []VerificationHook
-}
 
 // NewUpdateExecutor creates a new update executor
 func NewUpdateExecutor(options *UpdateExecutionOptions) (*UpdateExecutor, error) {
@@ -102,7 +100,7 @@ func NewUpdateExecutor(options *UpdateExecutionOptions) (*UpdateExecutor, error)
 	// Create directories
 	dirs := []string{tempDir, backupDir, logDir}
 	for _, dir := range dirs {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0700); err != nil {
 			return nil, fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
@@ -122,7 +120,7 @@ func NewUpdateExecutor(options *UpdateExecutionOptions) (*UpdateExecutor, error)
 
 	// Create audit logger
 	auditLogPath := filepath.Join(logDir, "audit.log")
-	auditLogFile, err := os.OpenFile(auditLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	auditLogFile, err := os.OpenFile(auditLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create audit log file: %w", err)
 	}
@@ -160,4 +158,3 @@ func NewUpdateExecutor(options *UpdateExecutionOptions) (*UpdateExecutor, error)
 		PostUpdateHooks:     options.PostUpdateHooks,
 		VerificationHooks:   options.VerificationHooks,
 	}, nil
-}

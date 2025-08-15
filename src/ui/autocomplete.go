@@ -17,6 +17,7 @@ type AutoCompleter struct {
 	suggestions  SuggestionEngine
 }
 
+}
 // CommandInfo contains command metadata
 type CommandInfo struct {
 	Name        string
@@ -28,6 +29,7 @@ type CommandInfo struct {
 	Examples    []Example
 }
 
+}
 // FlagInfo contains flag metadata
 type FlagInfo struct {
 	Name        string
@@ -39,12 +41,13 @@ type FlagInfo struct {
 	Values      []string // Possible values for enum flags
 }
 
+}
 // Example contains command example
 type Example struct {
 	Command     string
 	Description string
-}
 
+}
 // NewAutoCompleter creates a new auto-completer
 func NewAutoCompleter() *AutoCompleter {
 	ac := &AutoCompleter{
@@ -59,9 +62,9 @@ func NewAutoCompleter() *AutoCompleter {
 	ac.initializeCommands()
 	
 	return ac
-}
 
 // initializeCommands sets up command information
+}
 func (ac *AutoCompleter) initializeCommands() {
 	// Main commands
 	ac.RegisterCommand(&CommandInfo{
@@ -206,9 +209,9 @@ func (ac *AutoCompleter) initializeCommands() {
 			},
 		},
 	})
-}
 
 // RegisterCommand registers a command for auto-completion
+}
 func (ac *AutoCompleter) RegisterCommand(cmd *CommandInfo) {
 	ac.commands[cmd.Name] = cmd
 	
@@ -222,9 +225,9 @@ func (ac *AutoCompleter) RegisterCommand(cmd *CommandInfo) {
 		fullName := cmd.Name + " " + sub.Name
 		ac.commands[fullName] = sub
 	}
-}
 
 // Complete returns completions for the given input
+}
 func (ac *AutoCompleter) Complete(input string) []string {
 	parts := strings.Fields(input)
 	if len(parts) == 0 {
@@ -271,9 +274,9 @@ func (ac *AutoCompleter) Complete(input string) []string {
 
 	// Suggest common patterns
 	return ac.suggestions.GetSuggestions(cmd.Name, input)
-}
 
 // CompleteFlags returns flag completions for cobra command
+}
 func (ac *AutoCompleter) CompleteFlags(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	cmdInfo := ac.findCommandInfo(cmd.Name())
 	if cmdInfo == nil {
@@ -282,9 +285,9 @@ func (ac *AutoCompleter) CompleteFlags(cmd *cobra.Command, args []string, toComp
 
 	completions := ac.completeFlagsForCommand(cmdInfo, toComplete)
 	return completions, cobra.ShellCompDirectiveNoFileComp
-}
 
 // CompleteArgs returns argument completions
+}
 func (ac *AutoCompleter) CompleteArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	cmdName := cmd.Name()
 	
@@ -327,10 +330,10 @@ func (ac *AutoCompleter) CompleteArgs(cmd *cobra.Command, args []string, toCompl
 	}
 
 	return nil, cobra.ShellCompDirectiveDefault
-}
 
 // Helper methods
 
+}
 func (ac *AutoCompleter) getRootCommands() []string {
 	commands := make([]string, 0, len(ac.commands))
 	for name, cmd := range ac.commands {
@@ -340,7 +343,6 @@ func (ac *AutoCompleter) getRootCommands() []string {
 	}
 	sort.Strings(commands)
 	return commands
-}
 
 func (ac *AutoCompleter) findCommandMatches(prefix string) []string {
 	matches := make([]string, 0)
@@ -361,7 +363,6 @@ func (ac *AutoCompleter) findCommandMatches(prefix string) []string {
 	
 	sort.Strings(matches)
 	return matches
-}
 
 func (ac *AutoCompleter) completeSubCommand(parent *CommandInfo, input string) []string {
 	completions := make([]string, 0)
@@ -382,7 +383,6 @@ func (ac *AutoCompleter) completeSubCommand(parent *CommandInfo, input string) [
 	}
 	
 	return completions
-}
 
 func (ac *AutoCompleter) completeFlagsForCommand(cmd *CommandInfo, prefix string) []string {
 	completions := make([]string, 0)
@@ -409,7 +409,6 @@ func (ac *AutoCompleter) completeFlagsForCommand(cmd *CommandInfo, prefix string
 	
 	sort.Strings(completions)
 	return completions
-}
 
 func (ac *AutoCompleter) completeValueForFlag(cmd *CommandInfo, flagName string) []string {
 	// Remove flag prefix
@@ -436,7 +435,6 @@ func (ac *AutoCompleter) completeValueForFlag(cmd *CommandInfo, flagName string)
 	}
 	
 	return nil
-}
 
 func (ac *AutoCompleter) findCommandInfo(name string) *CommandInfo {
 	if cmd, exists := ac.commands[name]; exists {
@@ -449,17 +447,17 @@ func (ac *AutoCompleter) findCommandInfo(name string) *CommandInfo {
 	}
 	
 	return nil
-}
 
 // Completion data providers
 
+}
 func (ac *AutoCompleter) completeTargets(prefix string) []string {
 	// Common LLM API endpoints
 	targets := []string{
 		"https://api.openai.com/v1/chat/completions",
 		"https://api.anthropic.com/v1/messages",
 		"https://generativelanguage.googleapis.com/v1/models",
-		"http://localhost:8080/v1/completions",
+		"https://localhost:8443/v1/completions",
 	}
 	
 	completions := make([]string, 0)
@@ -470,7 +468,6 @@ func (ac *AutoCompleter) completeTargets(prefix string) []string {
 	}
 	
 	return completions
-}
 
 func (ac *AutoCompleter) completeTemplates(prefix string) []string {
 	// Would load actual templates from filesystem
@@ -490,7 +487,6 @@ func (ac *AutoCompleter) completeTemplates(prefix string) []string {
 	}
 	
 	return completions
-}
 
 func (ac *AutoCompleter) completeProviders(prefix string) []string {
 	// Would load from config
@@ -510,7 +506,6 @@ func (ac *AutoCompleter) completeProviders(prefix string) []string {
 	}
 	
 	return completions
-}
 
 func (ac *AutoCompleter) completeScanIDs(prefix string) []string {
 	// Would load from scan history
@@ -519,21 +514,21 @@ func (ac *AutoCompleter) completeScanIDs(prefix string) []string {
 		"scan-2024-01-20-002",
 		"scan-2024-01-19-015",
 	}
-}
 
+}
 func (ac *AutoCompleter) completeReportIDs(prefix string) []string {
 	// Would load from report history
 	return []string{
 		"report-2024-01-20-001",
 		"report-2024-01-20-002",
 	}
-}
 
 // SuggestionEngine provides intelligent command suggestions
 type SuggestionEngine struct {
 	patterns map[string][]string
 }
 
+}
 // NewSuggestionEngine creates a new suggestion engine
 func NewSuggestionEngine() SuggestionEngine {
 	se := SuggestionEngine{
@@ -564,9 +559,9 @@ func NewSuggestionEngine() SuggestionEngine {
 	}
 	
 	return se
-}
 
 // GetSuggestions returns suggestions based on context
+}
 func (se SuggestionEngine) GetSuggestions(command, input string) []string {
 	if patterns, exists := se.patterns[command]; exists {
 		suggestions := make([]string, 0)
@@ -580,9 +575,9 @@ func (se SuggestionEngine) GetSuggestions(command, input string) []string {
 	}
 	
 	return nil
-}
 
 // BashCompletionScript generates bash completion script
+}
 func GenerateBashCompletionScript(rootCmd *cobra.Command) string {
 	var b strings.Builder
 	
@@ -593,9 +588,9 @@ func GenerateBashCompletionScript(rootCmd *cobra.Command) string {
 	rootCmd.GenBashCompletion(&b)
 	
 	return b.String()
-}
 
 // ZshCompletionScript generates zsh completion script
+}
 func GenerateZshCompletionScript(rootCmd *cobra.Command) string {
 	var b strings.Builder
 	
@@ -606,11 +601,12 @@ func GenerateZshCompletionScript(rootCmd *cobra.Command) string {
 	rootCmd.GenZshCompletion(&b)
 	
 	return b.String()
-}
 
 // InstallCompletions installs shell completions
+}
 func InstallCompletions(shell string, rootCmd *cobra.Command) error {
 	var script string
+}
 	var installPath string
 	
 	switch shell {
@@ -637,17 +633,19 @@ func InstallCompletions(shell string, rootCmd *cobra.Command) error {
 	
 	// Create directory if needed
 	dir := filepath.Dir(installPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
+        		return fmt.Errorf("failed to write completion file: %w", err)
+        	}
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 	
+        		return fmt.Errorf("failed to write completion file: %w", err)
+        	}
 	// Write completion file
-	if err := os.WriteFile(installPath, []byte(script), 0644); err != nil {
+    	if err := os.WriteFile(installPath, []byte(script), 0600); err != nil {
 		return fmt.Errorf("failed to write completion file: %w", err)
 	}
 	
 	fmt.Printf("Completions installed to: %s\n", installPath)
 	fmt.Println("Restart your shell or source the completion file to enable completions.")
 	
-	return nil
-}

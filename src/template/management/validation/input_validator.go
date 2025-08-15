@@ -22,7 +22,6 @@ type InputValidator struct {
 	rules []interfaces.InputValidationRule
 	// strictMode determines if validation errors should fail execution
 	strictMode bool
-}
 
 // NewInputValidator creates a new input validator with default rules
 func NewInputValidator(strictMode bool) *InputValidator {
@@ -41,12 +40,10 @@ func NewInputValidator(strictMode bool) *InputValidator {
 	validator.AddRule(NewNoCommandInjectionRule())
 
 	return validator
-}
 
 // AddRule adds a validation rule
 func (v *InputValidator) AddRule(rule interfaces.InputValidationRule) {
 	v.rules = append(v.rules, rule)
-}
 
 // RemoveRule removes a validation rule by name
 func (v *InputValidator) RemoveRule(name string) bool {
@@ -57,12 +54,10 @@ func (v *InputValidator) RemoveRule(name string) bool {
 		}
 	}
 	return false
-}
 
 // SetStrictMode sets the strict mode
 func (v *InputValidator) SetStrictMode(strict bool) {
 	v.strictMode = strict
-}
 
 // ValidateTemplate validates a template against all rules
 func (v *InputValidator) ValidateTemplate(ctx context.Context, template *format.Template) error {
@@ -87,7 +82,6 @@ func (v *InputValidator) ValidateTemplate(ctx context.Context, template *format.
 	}
 
 	return nil
-}
 
 // SanitizePrompt sanitizes a prompt to make it safer for execution
 func (v *InputValidator) SanitizePrompt(prompt string) string {
@@ -105,7 +99,6 @@ func (v *InputValidator) SanitizePrompt(prompt string) string {
 	sanitized = regexp.MustCompile(`(?i)(;|\||\$\(|\`+"`"+`|&&|\|\|)\s*(rm|cat|chmod|chown|wget|curl|bash|sh|sudo)`).ReplaceAllString(sanitized, "[CMD_REMOVED]")
 
 	return sanitized
-}
 
 // NoJailbreakPatternRule checks for common jailbreak patterns
 type NoJailbreakPatternRule struct{}
@@ -113,17 +106,14 @@ type NoJailbreakPatternRule struct{}
 // NewNoJailbreakPatternRule creates a new jailbreak pattern rule
 func NewNoJailbreakPatternRule() interfaces.InputValidationRule {
 	return &NoJailbreakPatternRule{}
-}
 
 // GetName returns the name of the rule
 func (r *NoJailbreakPatternRule) GetName() string {
 	return "NoJailbreakPattern"
-}
 
 // GetDescription returns the description of the rule
 func (r *NoJailbreakPatternRule) GetDescription() string {
 	return "Checks for common jailbreak patterns in prompts"
-}
 
 // Validate validates a template against the rule
 func (r *NoJailbreakPatternRule) Validate(ctx context.Context, template *format.Template) error {
@@ -152,7 +142,6 @@ func (r *NoJailbreakPatternRule) Validate(ctx context.Context, template *format.
 	}
 	
 	return nil
-}
 
 // NoSensitiveDataRule checks for sensitive data patterns
 type NoSensitiveDataRule struct{}
@@ -160,17 +149,14 @@ type NoSensitiveDataRule struct{}
 // NewNoSensitiveDataRule creates a new sensitive data rule
 func NewNoSensitiveDataRule() interfaces.InputValidationRule {
 	return &NoSensitiveDataRule{}
-}
 
 // GetName returns the name of the rule
 func (r *NoSensitiveDataRule) GetName() string {
 	return "NoSensitiveData"
-}
 
 // GetDescription returns the description of the rule
 func (r *NoSensitiveDataRule) GetDescription() string {
 	return "Checks for sensitive data patterns in prompts"
-}
 
 // Validate validates a template against the rule
 func (r *NoSensitiveDataRule) Validate(ctx context.Context, template *format.Template) error {
@@ -192,7 +178,6 @@ func (r *NoSensitiveDataRule) Validate(ctx context.Context, template *format.Tem
 	}
 	
 	return nil
-}
 
 // MaxPromptLengthRule checks if the prompt exceeds the maximum length
 type MaxPromptLengthRule struct {
@@ -204,17 +189,14 @@ func NewMaxPromptLengthRule(maxLength int) interfaces.InputValidationRule {
 	return &MaxPromptLengthRule{
 		maxLength: maxLength,
 	}
-}
 
 // GetName returns the name of the rule
 func (r *MaxPromptLengthRule) GetName() string {
 	return "MaxPromptLength"
-}
 
 // GetDescription returns the description of the rule
 func (r *MaxPromptLengthRule) GetDescription() string {
 	return fmt.Sprintf("Checks if the prompt exceeds %d characters", r.maxLength)
-}
 
 // Validate validates a template against the rule
 func (r *MaxPromptLengthRule) Validate(ctx context.Context, template *format.Template) error {
@@ -222,7 +204,6 @@ func (r *MaxPromptLengthRule) Validate(ctx context.Context, template *format.Tem
 		return fmt.Errorf("prompt exceeds maximum length of %d characters", r.maxLength)
 	}
 	return nil
-}
 
 // SanitizeHTMLRule checks for and sanitizes HTML content
 type SanitizeHTMLRule struct{}
@@ -230,17 +211,14 @@ type SanitizeHTMLRule struct{}
 // NewSanitizeHTMLRule creates a new HTML sanitization rule
 func NewSanitizeHTMLRule() interfaces.InputValidationRule {
 	return &SanitizeHTMLRule{}
-}
 
 // GetName returns the name of the rule
 func (r *SanitizeHTMLRule) GetName() string {
 	return "SanitizeHTML"
-}
 
 // GetDescription returns the description of the rule
 func (r *SanitizeHTMLRule) GetDescription() string {
 	return "Checks for and warns about HTML content in prompts"
-}
 
 // Validate validates a template against the rule
 func (r *SanitizeHTMLRule) Validate(ctx context.Context, template *format.Template) error {
@@ -251,7 +229,6 @@ func (r *SanitizeHTMLRule) Validate(ctx context.Context, template *format.Templa
 	}
 	
 	return nil
-}
 
 // SanitizeScriptRule checks for script tags and JavaScript code
 type SanitizeScriptRule struct{}
@@ -259,17 +236,14 @@ type SanitizeScriptRule struct{}
 // NewSanitizeScriptRule creates a new script sanitization rule
 func NewSanitizeScriptRule() interfaces.InputValidationRule {
 	return &SanitizeScriptRule{}
-}
 
 // GetName returns the name of the rule
 func (r *SanitizeScriptRule) GetName() string {
 	return "SanitizeScript"
-}
 
 // GetDescription returns the description of the rule
 func (r *SanitizeScriptRule) GetDescription() string {
 	return "Checks for script tags and JavaScript code in prompts"
-}
 
 // Validate validates a template against the rule
 func (r *SanitizeScriptRule) Validate(ctx context.Context, template *format.Template) error {
@@ -296,7 +270,6 @@ func (r *SanitizeScriptRule) Validate(ctx context.Context, template *format.Temp
 	}
 	
 	return nil
-}
 
 // NoSQLInjectionRule checks for SQL injection patterns
 type NoSQLInjectionRule struct{}
@@ -304,17 +277,14 @@ type NoSQLInjectionRule struct{}
 // NewNoSQLInjectionRule creates a new SQL injection rule
 func NewNoSQLInjectionRule() interfaces.InputValidationRule {
 	return &NoSQLInjectionRule{}
-}
 
 // GetName returns the name of the rule
 func (r *NoSQLInjectionRule) GetName() string {
 	return "NoSQLInjection"
-}
 
 // GetDescription returns the description of the rule
 func (r *NoSQLInjectionRule) GetDescription() string {
 	return "Checks for SQL injection patterns in prompts"
-}
 
 // Validate validates a template against the rule
 func (r *NoSQLInjectionRule) Validate(ctx context.Context, template *format.Template) error {
@@ -341,7 +311,6 @@ func (r *NoSQLInjectionRule) Validate(ctx context.Context, template *format.Temp
 	}
 	
 	return nil
-}
 
 // NoCommandInjectionRule checks for command injection patterns
 type NoCommandInjectionRule struct{}
@@ -349,17 +318,14 @@ type NoCommandInjectionRule struct{}
 // NewNoCommandInjectionRule creates a new command injection rule
 func NewNoCommandInjectionRule() interfaces.InputValidationRule {
 	return &NoCommandInjectionRule{}
-}
 
 // GetName returns the name of the rule
 func (r *NoCommandInjectionRule) GetName() string {
 	return "NoCommandInjection"
-}
 
 // GetDescription returns the description of the rule
 func (r *NoCommandInjectionRule) GetDescription() string {
 	return "Checks for command injection patterns in prompts"
-}
 
 // Validate validates a template against the rule
 func (r *NoCommandInjectionRule) Validate(ctx context.Context, template *format.Template) error {
@@ -378,5 +344,35 @@ func (r *NoCommandInjectionRule) Validate(ctx context.Context, template *format.
 		}
 	}
 	
-	return nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

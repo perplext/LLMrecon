@@ -61,7 +61,6 @@ type SecurityPostureReport struct {
 	ComplianceStatus    ComplianceStatusReport     `json:"compliance_status"`
 	IncidentSummary     IncidentSummaryReport      `json:"incident_summary"`
 	Improvements        []SecurityImprovement      `json:"improvements"`
-}
 
 // PerformanceReport summarizes system performance
 type PerformanceReport struct {
@@ -69,7 +68,6 @@ type PerformanceReport struct {
 	PerformanceMetrics  []PerformanceMetric     `json:"performance_metrics"`
 	CapacityUtilization CapacityReport          `json:"capacity_utilization"`
 	SLACompliance       SLAComplianceReport     `json:"sla_compliance"`
-}
 
 // TrendsReport analyzes trends and patterns
 type TrendsReport struct {
@@ -77,7 +75,6 @@ type TrendsReport struct {
 	Forecasts         []ForecastSummary  `json:"forecasts"`
 	Anomalies         AnomalySummary     `json:"anomalies"`
 	SeasonalPatterns  []SeasonalSummary  `json:"seasonal_patterns"`
-}
 
 // NewExecutiveReportGenerator creates a new executive report generator
 func NewExecutiveReportGenerator(config *Config, storage DataStorage, trendAnalyzer *TrendAnalyzer, comparativeAnalyzer *ComparativeAnalyzer, logger Logger) *ExecutiveReportGenerator {
@@ -88,7 +85,6 @@ func NewExecutiveReportGenerator(config *Config, storage DataStorage, trendAnaly
 		comparativeAnalyzer: comparativeAnalyzer,
 		logger:              logger,
 	}
-}
 
 // GenerateWeeklyReport generates a weekly executive report
 func (erg *ExecutiveReportGenerator) GenerateWeeklyReport(ctx context.Context, generatedBy string) (*ExecutiveReport, error) {
@@ -97,7 +93,6 @@ func (erg *ExecutiveReportGenerator) GenerateWeeklyReport(ctx context.Context, g
 	period := TimeWindow{Start: startTime, End: endTime, Duration: 7 * 24 * time.Hour}
 	
 	return erg.generateReport(ctx, "Weekly Executive Report", period, generatedBy)
-}
 
 // GenerateMonthlyReport generates a monthly executive report
 func (erg *ExecutiveReportGenerator) GenerateMonthlyReport(ctx context.Context, generatedBy string) (*ExecutiveReport, error) {
@@ -106,12 +101,10 @@ func (erg *ExecutiveReportGenerator) GenerateMonthlyReport(ctx context.Context, 
 	period := TimeWindow{Start: startTime, End: endTime, Duration: 30 * 24 * time.Hour}
 	
 	return erg.generateReport(ctx, "Monthly Executive Report", period, generatedBy)
-}
 
 // GenerateCustomReport generates a report for a custom time period
 func (erg *ExecutiveReportGenerator) GenerateCustomReport(ctx context.Context, title string, period TimeWindow, generatedBy string) (*ExecutiveReport, error) {
 	return erg.generateReport(ctx, title, period, generatedBy)
-}
 
 // Internal methods
 
@@ -161,7 +154,6 @@ func (erg *ExecutiveReportGenerator) generateReport(ctx context.Context, title s
 	erg.logger.Info("Executive report generated successfully", "id", report.ID)
 	
 	return report, nil
-}
 
 func (erg *ExecutiveReportGenerator) generateExecutiveSummary(ctx context.Context, period TimeWindow) ExecutiveSummary {
 	return ExecutiveSummary{
@@ -184,7 +176,6 @@ func (erg *ExecutiveReportGenerator) generateExecutiveSummary(ctx context.Contex
 			"Optimize resource allocation for high-priority scans",
 		},
 	}
-}
 
 func (erg *ExecutiveReportGenerator) generateKeyMetrics(ctx context.Context, period TimeWindow) []ExecutiveMetric {
 	return []ExecutiveMetric{
@@ -233,7 +224,6 @@ func (erg *ExecutiveReportGenerator) generateKeyMetrics(ctx context.Context, per
 			Interpretation: "All critical vulnerabilities successfully remediated",
 		},
 	}
-}
 
 func (erg *ExecutiveReportGenerator) generateSecurityPosture(ctx context.Context, period TimeWindow) SecurityPostureReport {
 	return SecurityPostureReport{
@@ -274,7 +264,6 @@ func (erg *ExecutiveReportGenerator) generateSecurityPosture(ctx context.Context
 			},
 		},
 	}
-}
 
 func (erg *ExecutiveReportGenerator) generatePerformanceReport(ctx context.Context, period TimeWindow) PerformanceReport {
 	return PerformanceReport{
@@ -313,7 +302,6 @@ func (erg *ExecutiveReportGenerator) generatePerformanceReport(ctx context.Conte
 			AffectedServices:  []string{"Email Scanning"},
 		},
 	}
-}
 
 func (erg *ExecutiveReportGenerator) generateTrendsReport(ctx context.Context, period TimeWindow) TrendsReport {
 	return TrendsReport{
@@ -350,7 +338,6 @@ func (erg *ExecutiveReportGenerator) generateTrendsReport(ctx context.Context, p
 			},
 		},
 	}
-}
 
 func (erg *ExecutiveReportGenerator) generateRecommendations(keyMetrics []ExecutiveMetric, security SecurityPostureReport, performance PerformanceReport, trends TrendsReport) []ExecutiveRecommendation {
 	var recommendations []ExecutiveRecommendation
@@ -400,7 +387,6 @@ func (erg *ExecutiveReportGenerator) generateRecommendations(keyMetrics []Execut
 	}
 	
 	return recommendations
-}
 
 func (erg *ExecutiveReportGenerator) generateRiskAssessment(security SecurityPostureReport, performance PerformanceReport) RiskAssessment {
 	risks := []Risk{
@@ -426,7 +412,6 @@ func (erg *ExecutiveReportGenerator) generateRiskAssessment(security SecurityPos
 		KeyConcerns:     []string{"Vulnerability management", "Capacity planning"},
 		MitigationStatus: "On Track",
 	}
-}
 
 func (erg *ExecutiveReportGenerator) generateComplianceReport(ctx context.Context, period TimeWindow) ComplianceReport {
 	return ComplianceReport{
@@ -455,7 +440,6 @@ func (erg *ExecutiveReportGenerator) generateComplianceReport(ctx context.Contex
 			},
 		},
 	}
-}
 
 // Supporting types and utility functions
 
@@ -468,14 +452,12 @@ type ExecutiveRecommendation struct {
 	Effort      string `json:"effort"`
 	Timeline    string `json:"timeline"`
 	Owner       string `json:"owner"`
-}
 
 type RiskAssessment struct {
 	OverallRiskLevel string   `json:"overall_risk_level"`
 	Risks           []Risk   `json:"risks"`
 	KeyConcerns     []string `json:"key_concerns"`
 	MitigationStatus string  `json:"mitigation_status"`
-}
 
 type Risk struct {
 	Category    string `json:"category"`
@@ -496,7 +478,6 @@ type FrameworkCompliance struct {
 	Status     string `json:"status"`
 	Score      float64 `json:"score"`
 	Violations int    `json:"violations"`
-}
 
 type AuditResult struct {
 	Date            time.Time `json:"date"`
@@ -520,7 +501,6 @@ type ThreatLandscapeReport struct {
 	ActiveCampaigns  int      `json:"active_campaigns"`
 	BlockedAttempts  int      `json:"blocked_attempts"`
 	ThreatCategories []string `json:"threat_categories"`
-}
 
 type ComplianceStatusReport struct {
 	OverallCompliance float64 `json:"overall_compliance"`
@@ -553,14 +533,12 @@ type PerformanceMetric struct {
 	Trend       string  `json:"trend"`
 	TargetValue float64 `json:"target_value"`
 	Status      string  `json:"status"`
-}
 
 type CapacityReport struct {
 	CPU     float64 `json:"cpu"`
 	Memory  float64 `json:"memory"`
 	Storage float64 `json:"storage"`
 	Network float64 `json:"network"`
-}
 
 type SLAComplianceReport struct {
 	OverallCompliance float64  `json:"overall_compliance"`
@@ -589,18 +567,15 @@ type AnomalySummary struct {
 	Severity          string `json:"severity"`
 	MostCommon        string `json:"most_common"`
 	RecommendedAction string `json:"recommended_action"`
-}
 
 type SeasonalSummary struct {
 	Pattern        string `json:"pattern"`
 	Description    string `json:"description"`
 	Impact         string `json:"impact"`
 	Recommendation string `json:"recommendation"`
-}
 
 func generateReportID() string {
 	return fmt.Sprintf("exec_report_%d_%d", time.Now().UnixNano(), time.Now().Unix())
-}
 
 func determinePriority(status string) string {
 	switch status {
@@ -611,4 +586,3 @@ func determinePriority(status string) string {
 	default:
 		return "Low"
 	}
-}

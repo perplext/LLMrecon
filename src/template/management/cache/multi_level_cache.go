@@ -67,7 +67,6 @@ type CacheOptions struct {
 	MinAdaptiveTTL time.Duration
 	// MaxAdaptiveTTL is the maximum TTL for adaptive TTL
 	MaxAdaptiveTTL time.Duration
-}
 
 // DefaultCacheOptions returns default cache options
 func DefaultCacheOptions() *CacheOptions {
@@ -94,7 +93,6 @@ func DefaultCacheOptions() *CacheOptions {
 		MinAdaptiveTTL:      5 * time.Minute,
 		MaxAdaptiveTTL:      24 * time.Hour,
 	}
-}
 
 // MultiLevelCache is a hierarchical caching system with multiple levels
 type MultiLevelCache struct {
@@ -112,7 +110,6 @@ type MultiLevelCache struct {
 	stats *MultiLevelCacheStats
 	// mutex protects the cache
 	mutex sync.RWMutex
-}
 
 // MultiLevelCacheStats tracks statistics for the multi-level cache
 type MultiLevelCacheStats struct {
@@ -132,7 +129,6 @@ type MultiLevelCacheStats struct {
 	TotalLookups int64
 	// HitRatio is the overall hit ratio
 	HitRatio float64
-}
 
 // NewMultiLevelCache creates a new multi-level cache
 func NewMultiLevelCache(options *CacheOptions) *MultiLevelCache {
@@ -166,7 +162,6 @@ func NewMultiLevelCache(options *CacheOptions) *MultiLevelCache {
 	}
 
 	return cache
-}
 
 // GetTemplate gets a template from the cache
 func (c *MultiLevelCache) GetTemplate(id string) (*format.Template, bool) {
@@ -191,7 +186,6 @@ func (c *MultiLevelCache) GetTemplate(id string) (*format.Template, bool) {
 	c.updateHitRatio()
 
 	return template, found
-}
 
 // SetTemplate sets a template in the cache
 func (c *MultiLevelCache) SetTemplate(id string, template *format.Template) {
@@ -205,7 +199,6 @@ func (c *MultiLevelCache) SetTemplate(id string, template *format.Template) {
 	if c.options.EnableFragmentCache && c.fragmentCache != nil && template != nil {
 		c.cacheTemplateFragments(id, template)
 	}
-}
 
 // GetFragment gets a template fragment from the cache
 func (c *MultiLevelCache) GetFragment(id string) (*format.Template, bool) {
@@ -230,7 +223,6 @@ func (c *MultiLevelCache) GetFragment(id string) (*format.Template, bool) {
 	c.updateHitRatio()
 
 	return fragment, found
-}
 
 // SetFragment sets a template fragment in the cache
 func (c *MultiLevelCache) SetFragment(id string, fragment *format.Template) {
@@ -239,7 +231,6 @@ func (c *MultiLevelCache) SetFragment(id string, fragment *format.Template) {
 	}
 
 	c.fragmentCache.Set(id, fragment)
-}
 
 // GetQueryResult gets a query result from the cache
 func (c *MultiLevelCache) GetQueryResult(query string) (interface{}, bool) {
@@ -264,7 +255,6 @@ func (c *MultiLevelCache) GetQueryResult(query string) (interface{}, bool) {
 	c.updateHitRatio()
 
 	return result, found
-}
 
 // SetQueryResult sets a query result in the cache
 func (c *MultiLevelCache) SetQueryResult(query string, result interface{}) {
@@ -273,7 +263,6 @@ func (c *MultiLevelCache) SetQueryResult(query string, result interface{}) {
 	}
 
 	c.queryCache.Set(query, result)
-}
 
 // GetExecutionResult gets a template execution result from the cache
 func (c *MultiLevelCache) GetExecutionResult(templateID string, options string) (*interfaces.TemplateResult, bool) {
@@ -301,7 +290,6 @@ func (c *MultiLevelCache) GetExecutionResult(templateID string, options string) 
 	c.updateHitRatio()
 
 	return result, found
-}
 
 // SetExecutionResult sets a template execution result in the cache
 func (c *MultiLevelCache) SetExecutionResult(templateID string, options string, result *interfaces.TemplateResult) {
@@ -313,7 +301,6 @@ func (c *MultiLevelCache) SetExecutionResult(templateID string, options string, 
 	key := fmt.Sprintf("%s:%s", templateID, options)
 
 	c.resultCache.Set(key, result)
-}
 
 // Clear clears all caches
 func (c *MultiLevelCache) Clear() {
@@ -338,7 +325,6 @@ func (c *MultiLevelCache) Clear() {
 
 	// Reset statistics
 	c.stats = &MultiLevelCacheStats{}
-}
 
 // ClearLevel clears a specific cache level
 func (c *MultiLevelCache) ClearLevel(level CacheLevel) {
@@ -370,7 +356,6 @@ func (c *MultiLevelCache) ClearLevel(level CacheLevel) {
 
 	// Update hit ratio
 	c.updateHitRatio()
-}
 
 // GetStats returns statistics about the cache
 func (c *MultiLevelCache) GetStats() map[string]interface{} {
@@ -389,7 +374,6 @@ func (c *MultiLevelCache) GetStats() map[string]interface{} {
 	}
 
 	return stats
-}
 
 // Prune removes old entries from all caches
 func (c *MultiLevelCache) Prune(ctx context.Context) int {
@@ -415,7 +399,6 @@ func (c *MultiLevelCache) Prune(ctx context.Context) int {
 	}
 
 	return count
-}
 
 // PruneLevel prunes a specific cache level
 func (c *MultiLevelCache) PruneLevel(level CacheLevel, maxAge time.Duration) int {
@@ -444,7 +427,6 @@ func (c *MultiLevelCache) PruneLevel(level CacheLevel, maxAge time.Duration) int
 	}
 
 	return count
-}
 
 // PreloadTemplates preloads templates into the cache
 func (c *MultiLevelCache) PreloadTemplates(templates map[string]*format.Template) {
@@ -460,7 +442,6 @@ func (c *MultiLevelCache) PreloadTemplates(templates map[string]*format.Template
 			c.cacheTemplateFragments(id, template)
 		}
 	}
-}
 
 // cacheTemplateFragments caches fragments of a template
 func (c *MultiLevelCache) cacheTemplateFragments(templateID string, template *format.Template) {
@@ -473,14 +454,12 @@ func (c *MultiLevelCache) cacheTemplateFragments(templateID string, template *fo
 	// This functionality needs to be redesigned to work with the actual template structure
 	
 	// For now, just return without caching fragments
-}
 
 // updateHitRatio updates the overall hit ratio
 func (c *MultiLevelCache) updateHitRatio() {
 	if c.stats.TotalLookups > 0 {
 		c.stats.HitRatio = float64(c.stats.TotalHits) / float64(c.stats.TotalLookups)
 	}
-}
 
 // getFragmentStats returns statistics for the fragment cache
 func (c *MultiLevelCache) getFragmentStats() map[string]interface{} {
@@ -496,7 +475,6 @@ func (c *MultiLevelCache) getFragmentStats() map[string]interface{} {
 	stats["hit_ratio"] = calculateHitRatio(c.stats.FragmentStats.Hits, c.stats.FragmentStats.TotalLookups)
 
 	return stats
-}
 
 // getTemplateStats returns statistics for the template cache
 func (c *MultiLevelCache) getTemplateStats() map[string]interface{} {
@@ -512,7 +490,6 @@ func (c *MultiLevelCache) getTemplateStats() map[string]interface{} {
 	stats["hit_ratio"] = calculateHitRatio(c.stats.TemplateStats.Hits, c.stats.TemplateStats.TotalLookups)
 
 	return stats
-}
 
 // getQueryStats returns statistics for the query cache
 func (c *MultiLevelCache) getQueryStats() map[string]interface{} {
@@ -528,7 +505,6 @@ func (c *MultiLevelCache) getQueryStats() map[string]interface{} {
 	stats["hit_ratio"] = calculateHitRatio(c.stats.QueryStats.Hits, c.stats.QueryStats.TotalLookups)
 
 	return stats
-}
 
 // getResultStats returns statistics for the result cache
 func (c *MultiLevelCache) getResultStats() map[string]interface{} {
@@ -544,12 +520,9 @@ func (c *MultiLevelCache) getResultStats() map[string]interface{} {
 	stats["hit_ratio"] = calculateHitRatio(c.stats.ResultStats.Hits, c.stats.ResultStats.TotalLookups)
 
 	return stats
-}
 
 // calculateHitRatio calculates the hit ratio
 func calculateHitRatio(hits, lookups int64) float64 {
 	if lookups == 0 {
 		return 0
 	}
-	return float64(hits) / float64(lookups)
-}

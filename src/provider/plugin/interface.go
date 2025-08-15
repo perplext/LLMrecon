@@ -25,7 +25,6 @@ type PluginMetadata struct {
 	MaxFrameworkVersion string `json:"max_framework_version,omitempty"`
 	// Tags is a list of tags for the plugin
 	Tags []string `json:"tags,omitempty"`
-}
 
 // PluginInterface defines the interface that all provider plugins must implement
 type PluginInterface interface {
@@ -37,7 +36,6 @@ type PluginInterface interface {
 	
 	// ValidateConfig validates the provider configuration
 	ValidateConfig(config *core.ProviderConfig) error
-}
 
 // PluginValidator defines the interface for validating plugins
 type PluginValidator interface {
@@ -45,5 +43,3 @@ type PluginValidator interface {
 	ValidatePlugin(plugin *ProviderPlugin) error
 	
 	// ValidateCompatibility validates compatibility with the framework
-	ValidateCompatibility(metadata *PluginMetadata) error
-}

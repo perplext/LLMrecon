@@ -16,7 +16,6 @@ type UserStore struct {
 	
 	// mutex protects the users map
 	mutex sync.RWMutex
-}
 
 // NewUserStore creates a new user store
 func NewUserStore(filePath string) (*UserStore, error) {
@@ -56,12 +55,11 @@ func NewUserStore(filePath string) (*UserStore, error) {
 	}
 	
 	return store, nil
-}
 
 // load loads users from the file
 func (s *UserStore) load() error {
 	// Read file
-	data, err := os.ReadFile(s.filePath)
+	data, err := os.ReadFile(filepath.Clean(s.filePath))
 	if err != nil {
 		return err
 	}
@@ -82,7 +80,6 @@ func (s *UserStore) load() error {
 	}
 	
 	return nil
-}
 
 // save saves users to the file
 func (s *UserStore) save() error {
@@ -102,8 +99,7 @@ func (s *UserStore) save() error {
 	}
 	
 	// Write to file with secure permissions
-	return os.WriteFile(s.filePath, data, 0600)
-}
+	return os.WriteFile(filepath.Clean(s.filePath, data, 0600))
 
 // GetUser gets a user by ID
 func (s *UserStore) GetUser(id string) (*User, error) {
@@ -116,7 +112,6 @@ func (s *UserStore) GetUser(id string) (*User, error) {
 	}
 	
 	return user, nil
-}
 
 // SaveUser saves a user
 func (s *UserStore) SaveUser(user *User) error {
@@ -135,7 +130,6 @@ func (s *UserStore) SaveUser(user *User) error {
 	
 	// Save to file
 	return s.save()
-}
 
 // DeleteUser deletes a user by ID
 func (s *UserStore) DeleteUser(id string) error {
@@ -167,7 +161,6 @@ func (s *UserStore) DeleteUser(id string) error {
 	
 	// Save to file
 	return s.save()
-}
 
 // ListUsers lists all users
 func (s *UserStore) ListUsers() ([]*User, error) {
@@ -181,7 +174,6 @@ func (s *UserStore) ListUsers() ([]*User, error) {
 	}
 	
 	return users, nil
-}
 
 // UpdateLastLogin updates the last login timestamp for a user
 func (s *UserStore) UpdateLastLogin(id string) error {
@@ -199,7 +191,6 @@ func (s *UserStore) UpdateLastLogin(id string) error {
 	
 	// Save to file
 	return s.save()
-}
 
 // HasPermission checks if a user has a specific permission
 func (s *UserStore) HasPermission(user *User, permission Permission) bool {
@@ -215,5 +206,3 @@ func (s *UserStore) HasPermission(user *User, permission Permission) bool {
 		}
 	}
 	
-	return false
-}

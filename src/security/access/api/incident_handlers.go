@@ -19,7 +19,6 @@ type CreateIncidentRequest struct {
 	AffectedResources []string               `json:"affected_resources,omitempty"`
 	Tags              []string               `json:"tags,omitempty"`
 	Metadata          map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // UpdateIncidentRequest represents a request to update a security incident
 type UpdateIncidentRequest struct {
@@ -50,7 +49,6 @@ type IncidentResponse struct {
 	AffectedResources []string               `json:"affected_resources,omitempty"`
 	Tags              []string               `json:"tags,omitempty"`
 	Metadata          map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // handleListIncidents handles listing security incidents with filtering
 func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +150,6 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Security incidents retrieved successfully", resp)
-}
 
 // handleCreateIncident handles creating a new security incident
 func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
@@ -225,7 +222,6 @@ func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusCreated, "Security incident created successfully", convertIncidentToResponse(incident))
-}
 
 // handleGetIncident handles retrieving a security incident
 func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
@@ -250,7 +246,6 @@ func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 		WriteErrorResponse(w, http.StatusBadRequest, "Incident ID is required")
 		return
 	}
-
 	// Get incident
 	securityManager := s.accessManager.GetSecurityManager()
 	incident, err := securityManager.GetIncident(r.Context(), incidentID)
@@ -261,7 +256,6 @@ func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Security incident retrieved successfully", convertIncidentToResponse(incident))
-}
 
 // handleUpdateIncident handles updating a security incident
 func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
@@ -407,7 +401,6 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Security incident updated successfully", convertIncidentToResponse(incident))
-}
 
 // handleDeleteIncident handles deleting a security incident
 func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
@@ -424,7 +417,6 @@ func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
-
 	// Get incident ID from URL
 	vars := mux.Vars(r)
 	incidentID := vars["id"]
@@ -446,7 +438,6 @@ func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Security incident deleted successfully", nil)
-}
 
 // convertIncidentToResponse converts a security incident to a response format
 func convertIncidentToResponse(incident *access.SecurityIncident) IncidentResponse {
@@ -471,4 +462,8 @@ func convertIncidentToResponse(incident *access.SecurityIncident) IncidentRespon
 		Tags:              incident.Tags,
 		Metadata:          incident.Metadata,
 	}
+}
+}
+}
+}
 }

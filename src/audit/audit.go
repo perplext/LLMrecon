@@ -2,11 +2,13 @@
 package audit
 
 import (
-	"time"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"os/user"
+	"time"
 )
 
 // AuditFormat represents the format for exporting audit logs
@@ -78,7 +80,7 @@ func NewAuditLogger(writer io.Writer, user string) *AuditLogger {
 // NewFileAuditLogger creates a new audit logger that writes to a file
 func NewFileAuditLogger(filePath string) (*AuditLogger, error) {
 	// Create or open the file with append mode
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open audit log file: %w", err)
 	}

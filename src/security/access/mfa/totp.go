@@ -1,11 +1,13 @@
 package mfa
 
 import (
+	"os"
+	"time"
+	"crypto/sha1"
 	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base32"
-	"encoding/binary"
 	"fmt"
 	"net/url"
 	"strings"
@@ -33,13 +35,13 @@ func DefaultTOTPConfig() *TOTPConfig {
 		Algorithm: DefaultAlgorithm,
 		Issuer:    DefaultIssuer,
 	}
-}
 
 // GenerateSecret generates a new random secret for TOTP
 func GenerateSecret(length int) (string, error) {
 	// Generate random bytes
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
+
 		return "", err
 	}
 	
@@ -50,7 +52,6 @@ func GenerateSecret(length int) (string, error) {
 	secret = strings.TrimRight(secret, "=")
 	
 	return secret, nil
-}
 
 // GenerateQRCodeURL generates a URL for a QR code for TOTP
 func GenerateQRCodeURL(config *TOTPConfig, accountName string) string {
@@ -71,7 +72,6 @@ func GenerateQRCodeURL(config *TOTPConfig, accountName string) string {
 	u.RawQuery = q.Encode()
 	
 	return u.String()
-}
 
 // GenerateTOTPCode generates a TOTP code for the given time
 func GenerateTOTPCode(config *TOTPConfig, t time.Time) (string, error) {
@@ -80,7 +80,6 @@ func GenerateTOTPCode(config *TOTPConfig, t time.Time) (string, error) {
 	
 	// Generate HOTP code
 	return generateHOTP(config, counter)
-}
 
 // VerifyTOTPCode verifies a TOTP code
 func VerifyTOTPCode(config *TOTPConfig, code string, t time.Time, window int) bool {
@@ -100,7 +99,6 @@ func VerifyTOTPCode(config *TOTPConfig, code string, t time.Time, window int) bo
 	}
 	
 	return false
-}
 
 // generateHOTP generates an HOTP code
 func generateHOTP(config *TOTPConfig, counter uint64) (string, error) {
@@ -136,7 +134,6 @@ func generateHOTP(config *TOTPConfig, counter uint64) (string, error) {
 	otp := binary % pow10(config.Digits)
 	format := fmt.Sprintf("%%0%dd", config.Digits)
 	return fmt.Sprintf(format, otp), nil
-}
 
 // pow10 returns 10^n
 func pow10(n int) int {
@@ -144,5 +141,3 @@ func pow10(n int) int {
 	for i := 0; i < n; i++ {
 		result *= 10
 	}
-	return result
-}

@@ -84,7 +84,6 @@ type ComparisonInsight struct {
 	Description string      `json:"description"`
 	Evidence    []string    `json:"evidence"`
 	Confidence  float64     `json:"confidence"`
-}
 
 // InsightType represents different types of insights
 type InsightType string
@@ -107,7 +106,6 @@ func NewComparativeAnalyzer(config *Config, storage DataStorage, trendAnalyzer *
 		historicalData: historicalData,
 		logger:         logger,
 	}
-}
 
 // CompareTimePeriods compares metrics across different time periods
 func (ca *ComparativeAnalyzer) CompareTimePeriods(ctx context.Context, metricName string, baselineRange, comparisonRange TimeWindow) (*ComparisonResult, error) {
@@ -153,7 +151,6 @@ func (ca *ComparativeAnalyzer) CompareTimePeriods(ctx context.Context, metricNam
 		Recommendations:   recommendations,
 		GeneratedAt:       time.Now(),
 	}, nil
-}
 
 // CompareMetrics compares different metrics over the same time period
 func (ca *ComparativeAnalyzer) CompareMetrics(ctx context.Context, baselineMetric, comparisonMetric string, timeRange TimeWindow) (*ComparisonResult, error) {
@@ -195,7 +192,6 @@ func (ca *ComparativeAnalyzer) CompareMetrics(ctx context.Context, baselineMetri
 		Recommendations:   recommendations,
 		GeneratedAt:       time.Now(),
 	}, nil
-}
 
 // CompareAgainstBaseline compares current metrics against established baselines
 func (ca *ComparativeAnalyzer) CompareAgainstBaseline(ctx context.Context, metricName string, currentRange TimeWindow, baselineValue float64) (*ComparisonResult, error) {
@@ -235,7 +231,6 @@ func (ca *ComparativeAnalyzer) CompareAgainstBaseline(ctx context.Context, metri
 		Recommendations:   recommendations,
 		GeneratedAt:       time.Now(),
 	}, nil
-}
 
 // CompareAnomalyPatterns compares anomaly patterns between different time periods
 func (ca *ComparativeAnalyzer) CompareAnomalyPatterns(ctx context.Context, metricName string, baselineRange, comparisonRange TimeWindow) (*ComparisonResult, error) {
@@ -281,7 +276,6 @@ func (ca *ComparativeAnalyzer) CompareAnomalyPatterns(ctx context.Context, metri
 		Recommendations:   recommendations,
 		GeneratedAt:       time.Now(),
 	}, nil
-}
 
 // Internal methods
 
@@ -300,7 +294,6 @@ func (ca *ComparativeAnalyzer) createDataset(name, metricName string, timeRange 
 			"last_timestamp":  data[len(data)-1].Timestamp,
 		},
 	}
-}
 
 func (ca *ComparativeAnalyzer) calculateBasicStatistics(data []Metric) BasicStatistics {
 	if len(data) == 0 {
@@ -341,7 +334,6 @@ func (ca *ComparativeAnalyzer) calculateBasicStatistics(data []Metric) BasicStat
 		Skewness:          skewness,
 		Kurtosis:          kurtosis,
 	}
-}
 
 func (ca *ComparativeAnalyzer) calculateStatistics(baselineData, comparisonData []Metric) ComparisonStatistics {
 	baselineValues := ca.extractValues(baselineData)
@@ -393,7 +385,6 @@ func (ca *ComparativeAnalyzer) calculateStatistics(baselineData, comparisonData 
 		EffectSize:               effectSize,
 		EffectSizeInterpretation: effectSizeInterpretation,
 	}
-}
 
 func (ca *ComparativeAnalyzer) generateTimePeriodInsights(baseline, comparison ComparisonDataset, stats ComparisonStatistics) []ComparisonInsight {
 	var insights []ComparisonInsight
@@ -433,7 +424,6 @@ func (ca *ComparativeAnalyzer) generateTimePeriodInsights(baseline, comparison C
 	}
 	
 	return insights
-}
 
 func (ca *ComparativeAnalyzer) generateTimePeriodRecommendations(stats ComparisonStatistics, insights []ComparisonInsight) []string {
 	var recommendations []string
@@ -451,7 +441,6 @@ func (ca *ComparativeAnalyzer) generateTimePeriodRecommendations(stats Compariso
 	}
 	
 	return recommendations
-}
 
 func (ca *ComparativeAnalyzer) generateMetricsInsights(baseline, comparison ComparisonDataset, stats ComparisonStatistics) []ComparisonInsight {
 	var insights []ComparisonInsight
@@ -474,7 +463,6 @@ func (ca *ComparativeAnalyzer) generateMetricsInsights(baseline, comparison Comp
 	}
 	
 	return insights
-}
 
 func (ca *ComparativeAnalyzer) generateMetricsRecommendations(stats ComparisonStatistics, insights []ComparisonInsight) []string {
 	var recommendations []string
@@ -484,7 +472,6 @@ func (ca *ComparativeAnalyzer) generateMetricsRecommendations(stats ComparisonSt
 	}
 	
 	return recommendations
-}
 
 func (ca *ComparativeAnalyzer) generateBaselineInsights(baseline, comparison ComparisonDataset, stats ComparisonStatistics, baselineValue float64) []ComparisonInsight {
 	var insights []ComparisonInsight
@@ -507,7 +494,6 @@ func (ca *ComparativeAnalyzer) generateBaselineInsights(baseline, comparison Com
 	}
 	
 	return insights
-}
 
 func (ca *ComparativeAnalyzer) generateBaselineRecommendations(stats ComparisonStatistics, insights []ComparisonInsight, baselineValue float64) []string {
 	var recommendations []string
@@ -517,7 +503,6 @@ func (ca *ComparativeAnalyzer) generateBaselineRecommendations(stats ComparisonS
 	}
 	
 	return recommendations
-}
 
 func (ca *ComparativeAnalyzer) generateAnomalyInsights(baselineAnomalies, comparisonAnomalies []AnomalyPoint, stats ComparisonStatistics) []ComparisonInsight {
 	var insights []ComparisonInsight
@@ -547,7 +532,6 @@ func (ca *ComparativeAnalyzer) generateAnomalyInsights(baselineAnomalies, compar
 	}
 	
 	return insights
-}
 
 func (ca *ComparativeAnalyzer) generateAnomalyRecommendations(insights []ComparisonInsight) []string {
 	var recommendations []string
@@ -560,7 +544,6 @@ func (ca *ComparativeAnalyzer) generateAnomalyRecommendations(insights []Compari
 	}
 	
 	return recommendations
-}
 
 // Utility methods
 
@@ -570,7 +553,6 @@ func (ca *ComparativeAnalyzer) extractValues(data []Metric) []float64 {
 		values[i] = metric.Value
 	}
 	return values
-}
 
 func (ca *ComparativeAnalyzer) createSyntheticBaseline(baselineValue float64, count int) []Metric {
 	data := make([]Metric, count)
@@ -581,7 +563,6 @@ func (ca *ComparativeAnalyzer) createSyntheticBaseline(baselineValue float64, co
 		}
 	}
 	return data
-}
 
 func (ca *ComparativeAnalyzer) anomaliesToMetrics(anomalies []AnomalyPoint) []Metric {
 	metrics := make([]Metric, len(anomalies))
@@ -592,7 +573,6 @@ func (ca *ComparativeAnalyzer) anomaliesToMetrics(anomalies []AnomalyPoint) []Me
 		}
 	}
 	return metrics
-}
 
 func (ca *ComparativeAnalyzer) calculateMedian(values []float64) float64 {
 	sorted := make([]float64, len(values))
@@ -612,7 +592,6 @@ func (ca *ComparativeAnalyzer) calculateMedian(values []float64) float64 {
 		return (sorted[n/2-1] + sorted[n/2]) / 2
 	}
 	return sorted[n/2]
-}
 
 func (ca *ComparativeAnalyzer) calculatePercentile(values []float64, p float64) float64 {
 	sorted := make([]float64, len(values))
@@ -637,7 +616,6 @@ func (ca *ComparativeAnalyzer) calculatePercentile(values []float64, p float64) 
 	
 	weight := index - float64(lower)
 	return sorted[lower]*(1-weight) + sorted[upper]*weight
-}
 
 func (ca *ComparativeAnalyzer) calculateSkewness(values []float64, mean, stdDev float64) float64 {
 	if stdDev == 0 || len(values) < 3 {
@@ -651,7 +629,6 @@ func (ca *ComparativeAnalyzer) calculateSkewness(values []float64, mean, stdDev 
 	
 	n := float64(len(values))
 	return (n / ((n - 1) * (n - 2))) * sum
-}
 
 func (ca *ComparativeAnalyzer) calculateKurtosis(values []float64, mean, stdDev float64) float64 {
 	if stdDev == 0 || len(values) < 4 {
@@ -665,7 +642,6 @@ func (ca *ComparativeAnalyzer) calculateKurtosis(values []float64, mean, stdDev 
 	
 	n := float64(len(values))
 	return ((n*(n+1))/((n-1)*(n-2)*(n-3)))*sum - (3*(n-1)*(n-1))/((n-2)*(n-3))
-}
 
 func (ca *ComparativeAnalyzer) calculateCorrelation(x, y []float64) float64 {
 	if len(x) != len(y) || len(x) < 2 {
@@ -690,7 +666,6 @@ func (ca *ComparativeAnalyzer) calculateCorrelation(x, y []float64) float64 {
 	}
 	
 	return sumXY / math.Sqrt(sumX2*sumY2)
-}
 
 func (ca *ComparativeAnalyzer) calculateCohenD(x, y []float64) float64 {
 	if len(x) == 0 || len(y) == 0 {
@@ -710,7 +685,6 @@ func (ca *ComparativeAnalyzer) calculateCohenD(x, y []float64) float64 {
 	}
 	
 	return (meanY - meanX) / pooledStd
-}
 
 func (ca *ComparativeAnalyzer) interpretEffectSize(d float64) string {
 	absD := math.Abs(d)
@@ -724,4 +698,24 @@ func (ca *ComparativeAnalyzer) interpretEffectSize(d float64) string {
 	default:
 		return "large"
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

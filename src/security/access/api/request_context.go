@@ -11,7 +11,6 @@ type RequestContext interface {
 	GetUsername() string
 	GetIPAddress() string
 	GetUserAgent() string
-}
 
 // requestContextImpl implements the RequestContext interface
 type requestContextImpl struct {
@@ -31,24 +30,23 @@ func NewRequestContext(ctx context.Context, userID, username, ipAddress, userAge
 		ipAddress: ipAddress,
 		userAgent: userAgent,
 	}
-}
 
 // GetUserID returns the user ID from the context
 func (c *requestContextImpl) GetUserID() string {
 	return c.userID
-}
 
 // GetUsername returns the username from the context
 func (c *requestContextImpl) GetUsername() string {
 	return c.username
-}
 
 // GetIPAddress returns the IP address from the context
 func (c *requestContextImpl) GetIPAddress() string {
 	return c.ipAddress
-}
 
 // GetUserAgent returns the user agent from the context
 func (c *requestContextImpl) GetUserAgent() string {
 	return c.userAgent
+}
+}
+}
 }

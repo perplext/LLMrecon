@@ -23,7 +23,6 @@ type DBConfig struct {
 
 	// MaxIdleConns is the maximum number of idle connections in the connection pool
 	MaxIdleConns int
-}
 
 // DefaultSQLiteConfig returns a default SQLite configuration
 func DefaultSQLiteConfig(dbPath string) *DBConfig {
@@ -42,13 +41,11 @@ func DefaultSQLiteConfig(dbPath string) *DBConfig {
 		MaxOpenConns: 10,
 		MaxIdleConns: 5,
 	}
-}
 
 // Factory is a factory for creating database-backed access control components
 type Factory struct {
 	db       *sql.DB
 	dbConfig *DBConfig
-}
 
 // NewFactory creates a new database factory
 func NewFactory(config *DBConfig) (*Factory, error) {
@@ -76,12 +73,11 @@ func NewFactory(config *DBConfig) (*Factory, error) {
 		db:       db,
 		dbConfig: config,
 	}, nil
-}
 
 // Close closes the database connection
 func (f *Factory) Close() error {
 	return f.db.Close()
-}
+	
 
 // CreateUserStoreAdapter creates a new user store adapter
 func (f *Factory) CreateUserStoreAdapter() (*UserStoreAdapter, error) {
@@ -93,7 +89,6 @@ func (f *Factory) CreateUserStoreAdapter() (*UserStoreAdapter, error) {
 
 	// Create the adapter
 	return NewUserStoreAdapter(userStore), nil
-}
 
 // CreateSessionStoreAdapter creates a new session store adapter
 func (f *Factory) CreateSessionStoreAdapter() (*SessionStoreAdapter, error) {
@@ -105,23 +100,19 @@ func (f *Factory) CreateSessionStoreAdapter() (*SessionStoreAdapter, error) {
 
 	// Create the adapter
 	return NewSessionStoreAdapter(sessionStore), nil
-}
 
 // createUserStore creates a new SQL-based user store
 func (f *Factory) createUserStore() (interfaces.UserStore, error) {
 	// Import the actual implementation from the db package
 	// This is done to avoid import cycles
 	return nil, fmt.Errorf("not implemented yet")
-}
 
 // createSessionStore creates a new SQL-based session store
 func (f *Factory) createSessionStore() (SessionStore, error) {
 	// This would create an adapter.SessionStore implementation
 	// For now, return an error as this is a stub
 	return nil, fmt.Errorf("not implemented yet")
-}
 
 // ensureDir ensures that the specified directory exists
 func ensureDir(dir string) error {
-	return os.MkdirAll(dir, 0755)
-}
+	return os.MkdirAll(dir, 0700)

@@ -24,7 +24,6 @@ type DefaultTestRunner struct {
 	MaxRetries int
 	// RetryDelay is the delay between retries
 	RetryDelay time.Duration
-}
 
 // NewDefaultTestRunner creates a new default test runner
 func NewDefaultTestRunner(detectionEngine detection.DetectionEngine, reportGenerator types.ReportGenerator) *DefaultTestRunner {
@@ -35,7 +34,6 @@ func NewDefaultTestRunner(detectionEngine detection.DetectionEngine, reportGener
 		MaxRetries:       3,
 		RetryDelay:       time.Second * 2,
 	}
-}
 
 // RunTest runs a single test case
 func (r *DefaultTestRunner) RunTest(ctx context.Context, testCase *types.TestCase, provider core.Provider, model string) (*types.TestResult, error) {
@@ -109,7 +107,6 @@ func (r *DefaultTestRunner) RunTest(ctx context.Context, testCase *types.TestCas
 	}
 
 	return result, nil
-}
 
 // RunTestSuite runs a test suite
 func (r *DefaultTestRunner) RunTestSuite(ctx context.Context, testSuite *types.TestSuite, provider core.Provider, model string) error {
@@ -191,7 +188,6 @@ func (r *DefaultTestRunner) RunTestSuite(ctx context.Context, testSuite *types.T
 	}
 
 	return nil
-}
 
 // ValidateTestCase validates a test case
 func (r *DefaultTestRunner) ValidateTestCase(testCase *types.TestCase) error {
@@ -215,5 +211,3 @@ func (r *DefaultTestRunner) ValidateTestCase(testCase *types.TestCase) error {
 		return errors.New("test case must have at least one detection criteria")
 	}
 
-	return nil
-}

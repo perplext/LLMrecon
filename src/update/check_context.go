@@ -18,7 +18,6 @@ func NewVersionCheckerWithURL(updateServerURL string, currentVersions map[string
 		},
 		CurrentVersions: currentVersions,
 	}
-}
 
 // CheckForUpdatesContext checks for updates with context support
 func (vc *VersionChecker) CheckForUpdatesContext(ctx context.Context) ([]ExtendedUpdateInfo, error) {
@@ -101,7 +100,6 @@ func (vc *VersionChecker) CheckForUpdatesContext(ctx context.Context) ([]Extende
 	}
 
 	return updates, nil
-}
 
 // fetchEnhancedVersionManifest fetches the enhanced version manifest from the update server
 func (vc *VersionChecker) fetchEnhancedVersionManifest(ctx context.Context) (*EnhancedVersionManifest, error) {
@@ -114,10 +112,8 @@ func (vc *VersionChecker) fetchEnhancedVersionManifest(ctx context.Context) (*En
 	if err != nil {
 		return nil, fmt.Errorf("fetching manifest: %w", err)
 	}
-	defer resp.Body.Close()
-
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	var manifest EnhancedVersionManifest
@@ -126,7 +122,6 @@ func (vc *VersionChecker) fetchEnhancedVersionManifest(ctx context.Context) (*En
 	}
 
 	return &manifest, nil
-}
 
 // EnhancedVersionManifest extends VersionManifest with additional fields
 type EnhancedVersionManifest struct {
@@ -207,5 +202,5 @@ func MergeExtendedUpdates(updateLists ...[]ExtendedUpdateInfo) []ExtendedUpdateI
 		result = append(result, update)
 	}
 	
-	return result
+}
 }

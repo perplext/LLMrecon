@@ -86,7 +86,6 @@ type MemoryConfig struct {
 	
 	// Custom configuration by environment
 	CustomConfig           map[string]interface{} `json:"custom_config"`
-}
 
 var (
 	// instance is the singleton instance of MemoryConfig
@@ -157,7 +156,6 @@ func DefaultMemoryConfig() *MemoryConfig {
 		
 		CustomConfig:              make(map[string]interface{}),
 	}
-}
 
 // GetMemoryConfig returns the memory configuration
 func GetMemoryConfig() *MemoryConfig {
@@ -194,8 +192,8 @@ func GetMemoryConfig() *MemoryConfig {
 	
 	// Check if configuration file exists
 	if _, err := os.Stat(configPath); err == nil {
-		// Load configuration from file
-		data, err := os.ReadFile(configPath)
+	}		// Load configuration from file
+		data, err := os.ReadFile(filepath.Clean(configPath))
 		if err == nil {
 			if err := json.Unmarshal(data, instance); err != nil {
 				fmt.Printf("Failed to parse configuration file: %v\n", err)
@@ -209,12 +207,12 @@ func GetMemoryConfig() *MemoryConfig {
 	instance.loadFromEnv()
 	
 	return instance
-}
+	
 
 // SaveConfig saves the memory configuration to a file
 func (c *MemoryConfig) SaveConfig() error {
 	// Create config directory if it doesn't exist
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 	
@@ -229,12 +227,11 @@ func (c *MemoryConfig) SaveConfig() error {
 	}
 	
 	// Write configuration to file
-	if err := os.WriteFile(configPath, data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(configPath, data, 0600)); err != nil {
 		return fmt.Errorf("failed to write configuration file: %w", err)
 	}
 	
 	return nil
-}
 
 // loadFromEnv loads configuration from environment variables
 func (c *MemoryConfig) loadFromEnv() {
@@ -280,7 +277,6 @@ func (c *MemoryConfig) loadFromEnv() {
 			c.MaxPoolSize = size
 		}
 	}
-
 	// Load memory optimizer configuration
 	if val := os.Getenv("MEMORY_OPTIMIZER_ENABLED"); val != "" {
 		c.MemoryOptimizerEnabled = val == "true"
@@ -352,57 +348,47 @@ func (c *MemoryConfig) loadFromEnv() {
 			c.GCPercent = percent
 		}
 	}
-}
 
 // parseInt parses an integer from a string
 func parseInt(s string) (int, error) {
 	var i int
 	_, err := fmt.Sscanf(s, "%d", &i)
 	return i, err
-}
 
 // parseInt64 parses a 64-bit integer from a string
 func parseInt64(s string) (int64, error) {
 	var i int64
 	_, err := fmt.Sscanf(s, "%d", &i)
 	return i, err
-}
 
 // GetEnvironment returns the current environment
 func (c *MemoryConfig) GetEnvironment() Environment {
 	return c.Environment
-}
 
 // SetEnvironment sets the environment
 func (c *MemoryConfig) SetEnvironment(env Environment) {
 	c.Environment = env
-}
 
 // IsProduction returns true if the environment is production
 func (c *MemoryConfig) IsProduction() bool {
 	return c.Environment == Production
-}
 
 // IsTesting returns true if the environment is testing
 func (c *MemoryConfig) IsTesting() bool {
 	return c.Environment == Testing
-}
 
 // IsDevelopment returns true if the environment is development
 func (c *MemoryConfig) IsDevelopment() bool {
 	return c.Environment == Development
-}
 
 // GetCustomConfig gets a custom configuration value
 func (c *MemoryConfig) GetCustomConfig(key string) (interface{}, bool) {
 	value, ok := c.CustomConfig[key]
 	return value, ok
-}
 
 // SetCustomConfig sets a custom configuration value
 func (c *MemoryConfig) SetCustomConfig(key string, value interface{}) {
 	c.CustomConfig[key] = value
-}
 
 // Clone creates a deep copy of the configuration
 func (c *MemoryConfig) Clone() *MemoryConfig {
@@ -466,12 +452,9 @@ func (c *MemoryConfig) Clone() *MemoryConfig {
 	}
 
 	return clone
-}
 
 // Reset resets the configuration to default values
 func ResetConfig() {
 	mutex.Lock()
 	defer mutex.Unlock()
 	
-	instance = nil
-}

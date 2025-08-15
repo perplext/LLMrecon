@@ -47,7 +47,6 @@ type SecurityPolicy struct {
 	
 	// RequireSignatureVerification indicates whether signature verification is required
 	RequireSignatureVerification bool `json:"require_signature_verification"`
-}
 
 // DowngradeProtection provides protection against cryptographic downgrade attacks
 type DowngradeProtection struct {
@@ -62,7 +61,6 @@ type DowngradeProtection struct {
 	
 	// KeyStore is used to store and retrieve cryptographic keys
 	KeyStore *keystore.FileKeyStore
-}
 
 // NewDowngradeProtection creates a new DowngradeProtection instance
 func NewDowngradeProtection(policyPath string, keyStore *keystore.FileKeyStore) (*DowngradeProtection, error) {
@@ -102,7 +100,6 @@ func NewDowngradeProtection(policyPath string, keyStore *keystore.FileKeyStore) 
 	}
 
 	return dp, nil
-}
 
 // DefaultSecurityPolicy returns the default security policy
 func DefaultSecurityPolicy() *SecurityPolicy {
@@ -139,8 +136,6 @@ func DefaultSecurityPolicy() *SecurityPolicy {
 		PolicySignature:            "",
 		RequireSignatureVerification: true,
 	}
-}
-
 // LoadPolicy loads the security policy from disk
 func (dp *DowngradeProtection) LoadPolicy() error {
 	// Check if policy file exists
@@ -149,7 +144,7 @@ func (dp *DowngradeProtection) LoadPolicy() error {
 	}
 
 	// Read the policy file
-	policyData, err := ioutil.ReadFile(dp.PolicyPath)
+	policyData, err := ioutil.ReadFile(filepath.Clean(dp.PolicyPath))
 	if err != nil {
 		return fmt.Errorf("failed to read policy file: %w", err)
 	}
@@ -159,7 +154,6 @@ func (dp *DowngradeProtection) LoadPolicy() error {
 	if err := json.Unmarshal(policyData, &policy); err != nil {
 		return fmt.Errorf("failed to parse policy file: %w", err)
 	}
-
 	// Verify the policy signature if a verifier is available
 	if dp.Verifier != nil && policy.PolicySignature != "" {
 		// Create a temporary copy of the policy without the signature
@@ -187,7 +181,6 @@ func (dp *DowngradeProtection) LoadPolicy() error {
 
 	dp.Policy = &policy
 	return nil
-}
 
 // SavePolicy saves the security policy to disk
 func (dp *DowngradeProtection) SavePolicy() error {
@@ -212,7 +205,6 @@ func (dp *DowngradeProtection) SavePolicy() error {
 	}
 
 	return nil
-}
 
 // SignPolicy signs the security policy
 func (dp *DowngradeProtection) SignPolicy(privateKeyID string) error {
@@ -225,7 +217,6 @@ func (dp *DowngradeProtection) SignPolicy(privateKeyID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get private key: %w", err)
 	}
-
 	// Export the private key
 	privateKeyData, err := dp.KeyStore.ExportKey(privateKeyID, "PEM", true)
 	if err != nil {
@@ -266,7 +257,6 @@ func (dp *DowngradeProtection) SignPolicy(privateKeyID string) error {
 	
 	// Save the policy
 	return dp.SavePolicy()
-}
 
 // ValidateConnectionSecurity validates that the connection security options meet the policy requirements
 func (dp *DowngradeProtection) ValidateConnectionSecurity(options *ConnectionSecurityOptions) error {
@@ -307,7 +297,6 @@ func (dp *DowngradeProtection) ValidateConnectionSecurity(options *ConnectionSec
 	}
 
 	return nil
-}
 
 // ValidateSignatureAlgorithm validates that a signature algorithm meets the policy requirements
 func (dp *DowngradeProtection) ValidateSignatureAlgorithm(algorithm SignatureAlgorithm) error {
@@ -322,9 +311,7 @@ func (dp *DowngradeProtection) ValidateSignatureAlgorithm(algorithm SignatureAlg
 	if !allowed {
 		return fmt.Errorf("signature algorithm %s is not allowed by the security policy", algorithm)
 	}
-
 	return nil
-}
 
 // ValidateKeySize validates that a key size meets the policy requirements
 func (dp *DowngradeProtection) ValidateKeySize(algorithm string, keySize int) error {
@@ -341,7 +328,6 @@ func (dp *DowngradeProtection) ValidateKeySize(algorithm string, keySize int) er
 	}
 
 	return nil
-}
 
 // ValidateVersion validates that a version meets the minimum version requirement
 func (dp *DowngradeProtection) ValidateVersion(componentType, versionStr string) error {
@@ -369,7 +355,6 @@ func (dp *DowngradeProtection) ValidateVersion(componentType, versionStr string)
 	}
 
 	return nil
-}
 
 // ValidateUpdatePackage validates that an update package meets the security policy requirements
 func (dp *DowngradeProtection) ValidateUpdatePackage(pkg *UpdatePackage) error {
@@ -400,7 +385,6 @@ func (dp *DowngradeProtection) ValidateUpdatePackage(pkg *UpdatePackage) error {
 	}
 
 	return nil
-}
 
 // EnforceSecurityPolicy applies the security policy to a connection security options object
 func (dp *DowngradeProtection) EnforceSecurityPolicy(options *ConnectionSecurityOptions) {
@@ -439,7 +423,6 @@ func (dp *DowngradeProtection) EnforceSecurityPolicy(options *ConnectionSecurity
 	if dp.Policy.RequireRevocationCheck {
 		options.CheckRevocation = true
 	}
-}
 
 // UpdateMinimumVersion updates the minimum version requirement for a component type
 func (dp *DowngradeProtection) UpdateMinimumVersion(componentType, versionStr string) error {
@@ -454,7 +437,6 @@ func (dp *DowngradeProtection) UpdateMinimumVersion(componentType, versionStr st
 
 	// Save the policy
 	return dp.SavePolicy()
-}
 
 // UpdateAllowedSignatureAlgorithms updates the allowed signature algorithms
 func (dp *DowngradeProtection) UpdateAllowedSignatureAlgorithms(algorithms []SignatureAlgorithm) error {
@@ -473,7 +455,6 @@ func (dp *DowngradeProtection) UpdateAllowedSignatureAlgorithms(algorithms []Sig
 
 	// Save the policy
 	return dp.SavePolicy()
-}
 
 // UpdateMinimumKeySize updates the minimum key size for an algorithm
 func (dp *DowngradeProtection) UpdateMinimumKeySize(algorithm string, keySize int) error {
@@ -487,7 +468,6 @@ func (dp *DowngradeProtection) UpdateMinimumKeySize(algorithm string, keySize in
 
 	// Save the policy
 	return dp.SavePolicy()
-}
 
 // CreateSecureClient creates a secure HTTP client that complies with the security policy
 func (dp *DowngradeProtection) CreateSecureClient() (*SecureClient, error) {
@@ -498,5 +478,3 @@ func (dp *DowngradeProtection) CreateSecureClient() (*SecureClient, error) {
 	dp.EnforceSecurityPolicy(options)
 
 	// Create the secure client
-	return NewSecureClient(options)
-}

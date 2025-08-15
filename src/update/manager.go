@@ -17,7 +17,6 @@ type UpdateManager struct {
 	installer  *Installer
 	bundler    *BundleManager
 	logger     Logger
-}
 
 // Config holds update configuration
 type Config struct {
@@ -62,7 +61,6 @@ type RepositoryConfig struct {
 	Token    string
 	Type     RepositoryType
 	Priority int
-}
 
 // RepositoryType represents the type of repository
 type RepositoryType string
@@ -84,7 +82,6 @@ type ManagerUpdateResult struct {
 	FilesUpdated  []string
 	Error         error
 	Duration      time.Duration
-}
 
 // UpdateSummary contains summary of all updates
 type UpdateSummary struct {
@@ -92,7 +89,6 @@ type UpdateSummary struct {
 	TotalDuration time.Duration
 	Success       bool
 	RestartRequired bool
-}
 
 // Logger interface for update operations
 type Logger interface {
@@ -100,7 +96,6 @@ type Logger interface {
 	Error(msg string, err error)
 	Debug(msg string)
 	Warn(msg string)
-}
 
 // NewManager creates a new update manager
 func NewUpdateManager(config *Config, logger Logger) *UpdateManager {
@@ -122,7 +117,6 @@ func NewUpdateManager(config *Config, logger Logger) *UpdateManager {
 		bundler:     NewBundleManager(config, logger),
 		logger:      logger,
 	}
-}
 
 // DefaultConfig returns default update configuration
 func DefaultConfig() *Config {
@@ -166,7 +160,6 @@ func DefaultConfig() *Config {
 		MaxRetries: 3,
 		UserAgent:  "LLM-Red-Team-Updater/1.0",
 	}
-}
 
 // CheckForUpdates checks for available updates for all components
 func (m *UpdateManager) CheckForUpdates(ctx context.Context) (*UpdateCheck, error) {
@@ -217,7 +210,6 @@ func (m *UpdateManager) CheckForUpdates(ctx context.Context) (*UpdateCheck, erro
 	}
 	
 	return check, nil
-}
 
 // ApplyUpdates applies all available updates
 func (m *UpdateManager) ApplyUpdates(ctx context.Context, components []string) (*UpdateSummary, error) {
@@ -268,7 +260,6 @@ func (m *UpdateManager) ApplyUpdates(ctx context.Context, components []string) (
 	}
 	
 	return summary, nil
-}
 
 // updateComponent updates a specific component
 func (m *UpdateManager) updateComponent(ctx context.Context, component string) ManagerUpdateResult {
@@ -294,7 +285,6 @@ func (m *UpdateManager) updateComponent(ctx context.Context, component string) M
 		result.Error = fmt.Errorf("unknown component: %s", component)
 		return result
 	}
-}
 
 // updateBinary updates the main binary
 func (m *UpdateManager) updateBinary(ctx context.Context) ManagerUpdateResult {
@@ -371,7 +361,6 @@ func (m *UpdateManager) updateBinary(ctx context.Context) ManagerUpdateResult {
 	result.FilesUpdated = []string{os.Args[0]} // Current executable
 	
 	return result
-}
 
 // updateTemplates updates template files
 func (m *UpdateManager) updateTemplates(ctx context.Context) ManagerUpdateResult {
@@ -411,7 +400,6 @@ func (m *UpdateManager) updateTemplates(ctx context.Context) ManagerUpdateResult
 	result.Success = true
 	
 	return result
-}
 
 // updateModules updates provider modules
 func (m *UpdateManager) updateModules(ctx context.Context) ManagerUpdateResult {
@@ -451,7 +439,6 @@ func (m *UpdateManager) updateModules(ctx context.Context) ManagerUpdateResult {
 	result.Success = true
 	
 	return result
-}
 
 // updateFromRepository updates files from a specific repository
 func (m *UpdateManager) updateFromRepository(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
@@ -467,13 +454,12 @@ func (m *UpdateManager) updateFromRepository(ctx context.Context, repo Repositor
 	default:
 		return nil, fmt.Errorf("unsupported repository type: %s", repo.Type)
 	}
-}
 
 // createBackup creates a backup of current installation
 func (m *UpdateManager) createBackup() error {
 	backupDir := filepath.Join(m.config.BackupDirectory, fmt.Sprintf("backup_%d", time.Now().Unix()))
 	
-	if err := os.MkdirAll(backupDir, 0755); err != nil {
+	if err := os.MkdirAll(backupDir, 0700); err != nil {
 		return fmt.Errorf("failed to create backup directory: %w", err)
 	}
 	
@@ -494,7 +480,6 @@ func (m *UpdateManager) createBackup() error {
 	
 	m.logger.Info(fmt.Sprintf("Backup created at %s", backupDir))
 	return nil
-}
 
 // backupBinary backs up the current binary
 func (m *UpdateManager) backupBinary(backupDir string) error {
@@ -504,12 +489,11 @@ func (m *UpdateManager) backupBinary(backupDir string) error {
 	}
 	
 	backupPath := filepath.Join(backupDir, "binary", filepath.Base(execPath))
-	if err := os.MkdirAll(filepath.Dir(backupPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(backupPath), 0700); err != nil {
 		return err
 	}
 	
 	return copyFileHelper(execPath, backupPath)
-}
 
 // backupDirectory backs up a directory
 func (m *UpdateManager) backupDirectory(srcDir, destDir string) error {
@@ -522,11 +506,11 @@ func (m *UpdateManager) backupDirectory(srcDir, destDir string) error {
 			return err
 		}
 		
-		relPath, err := filepath.Rel(srcDir, path)
+			relPath, err := filepath.Rel(srcDir, path)
 		if err != nil {
 			return err
 		}
-		
+			
 		destPath := filepath.Join(destDir, relPath)
 		
 		if info.IsDir() {
@@ -535,7 +519,6 @@ func (m *UpdateManager) backupDirectory(srcDir, destDir string) error {
 		
 		return copyFileHelper(path, destPath)
 	})
-}
 
 // Helper functions
 
@@ -546,16 +529,15 @@ func contains(slice []string, item string) bool {
 		}
 	}
 	return false
-}
 
 func copyFileHelper(src, dst string) error {
-	sourceFile, err := os.Open(src)
+	sourceFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	defer func() { if err := sourceFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dst), 0700); err != nil {
 		return err
 	}
 	
@@ -563,7 +545,7 @@ func copyFileHelper(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	if _, err := io.Copy(destFile, sourceFile); err != nil {
 		return err
@@ -575,51 +557,42 @@ func copyFileHelper(src, dst string) error {
 	}
 	
 	return nil
-}
 
 // GetCurrentVersion returns the current version of the tool
 func GetCurrentVersion() (string, error) {
 	// This would be set at build time
 	// For now, return a placeholder
 	return "1.0.0", nil
-}
 
 // Placeholder implementations for methods that will be implemented in other files
 
 func (m *UpdateManager) selectBinaryAsset(assets []ReleaseAsset) *ReleaseAsset {
 	// Implementation will be in binary_updater.go
 	return nil
-}
 
 func (m *UpdateManager) getTemplateVersions() map[string]string {
 	// Implementation will be in template_updater.go
 	return make(map[string]string)
-}
 
 func (m *UpdateManager) getModuleVersions() map[string]string {
 	// Implementation will be in module_updater.go
 	return make(map[string]string)
-}
 
 func (m *UpdateManager) updateFromGitHub(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
 	// Implementation will be in repository_updater.go
 	return nil, nil
-}
 
 func (m *UpdateManager) updateFromGitLab(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
 	// Implementation will be in repository_updater.go
 	return nil, nil
-}
 
 func (m *UpdateManager) updateFromHTTP(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
 	// Implementation will be in repository_updater.go
 	return nil, nil
-}
 
 func (m *UpdateManager) updateFromLocal(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
 	// Implementation will be in repository_updater.go
 	return nil, nil
-}
 
 func formatVersionMap(versions map[string]string) string {
 	if len(versions) == 0 {
@@ -633,5 +606,25 @@ func formatVersionMap(versions map[string]string) string {
 		}
 		result += fmt.Sprintf("%s:%s", name, version)
 	}
-	return result
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

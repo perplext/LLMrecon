@@ -13,7 +13,6 @@ import (
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-}
 
 // LoginResponse represents a login response
 type LoginResponse struct {
@@ -25,7 +24,6 @@ type LoginResponse struct {
 	ExpiresAt    int64  `json:"expires_at"`
 	MFARequired  bool   `json:"mfa_required"`
 	MFAMethods   []string `json:"mfa_methods,omitempty"`
-}
 
 // RefreshTokenRequest represents a token refresh request
 type RefreshTokenRequest struct {
@@ -94,7 +92,6 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Login successful", resp)
-}
 
 // handleLogout handles user logout
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +110,6 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := parts[1]
-
 	// Logout
 	authManager := s.accessManager.GetAuthManager()
 	if err := authManager.Logout(r.Context(), token); err != nil {
@@ -123,8 +119,6 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Logout successful", nil)
-}
-
 // handleRefreshToken handles token refresh
 func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 	// Parse request
@@ -139,7 +133,6 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 		WriteErrorResponse(w, http.StatusBadRequest, "Refresh token is required")
 		return
 	}
-
 	// Get client information
 	ip := getClientIP(r)
 	userAgent := r.UserAgent()
@@ -170,7 +163,6 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Token refreshed", resp)
-}
 
 // handleAuthStatus handles authentication status check
 func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
@@ -189,7 +181,6 @@ func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := parts[1]
-
 	// Validate token
 	sessionManager := s.accessManager.GetSessionManager()
 	session, err := sessionManager.ValidateToken(r.Context(), token)
@@ -231,7 +222,6 @@ func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Authentication status", resp)
-}
 
 // handleMFAVerify handles MFA verification
 func (s *Server) handleMFAVerify(w http.ResponseWriter, r *http.Request) {
@@ -266,5 +256,6 @@ func (s *Server) handleMFAVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return success response
-	WriteSuccessResponse(w, http.StatusOK, "MFA verification successful", nil)
+}
+}
 }

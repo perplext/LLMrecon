@@ -29,7 +29,6 @@ func CreateValidator(vulnerabilityType types.VulnerabilityType) Validator {
 	default:
 		return nil
 	}
-}
 
 // CreateAllValidators creates all available validators
 func CreateAllValidators() []Validator {
@@ -45,11 +44,9 @@ func CreateAllValidators() []Validator {
 		NewOverrelianceValidator(),
 		NewModelTheftValidator(),
 	}
-}
 
 // RegisterAllValidators registers all available validators with the registry
 func RegisterAllValidators(registry *ValidatorRegistry) {
 	for _, validator := range CreateAllValidators() {
 		registry.RegisterValidator(validator)
 	}
-}

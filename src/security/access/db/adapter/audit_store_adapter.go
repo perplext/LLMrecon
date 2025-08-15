@@ -26,7 +26,6 @@ type AuditEvent struct {
 	Details     map[string]interface{}
 	Changes     map[string]interface{}
 	Metadata    map[string]interface{}
-}
 
 // AuditEventFilter represents a filter for querying audit logs
 type AuditEventFilter struct {
@@ -52,7 +51,6 @@ type ModelsAuditStore interface {
 	QueryEvents(ctx context.Context, filter *AuditEventFilter, offset, limit int) ([]*AuditEvent, int, error)
 	ExportEvents(ctx context.Context, filter *AuditEventFilter, format string) (string, error)
 	Close() error
-}
 
 // AuditStoreAdapter adapts a models.AuditEvent store to the AuditStore interface
 type AuditStoreAdapter struct {
@@ -64,7 +62,6 @@ func NewAuditStoreAdapter(store ModelsAuditStore) interfaces.AuditLogger {
 	return &AuditStoreAdapter{
 		store: store,
 	}
-}
 
 // convertModelsAuditLogToAuditEvent converts a models.AuditLog to an AuditEvent
 func convertModelsAuditLogToAuditEvent(log *models.AuditLog) *AuditEvent {
@@ -90,7 +87,6 @@ func convertModelsAuditLogToAuditEvent(log *models.AuditLog) *AuditEvent {
 		Changes:     nil,           // Not available in models.AuditLog
 		Metadata:    log.Metadata,
 	}
-}
 
 // convertAuditEventToModelsAuditLog converts an AuditEvent to a models.AuditLog
 func convertAuditEventToModelsAuditLog(event *AuditEvent) *models.AuditLog {
@@ -113,7 +109,6 @@ func convertAuditEventToModelsAuditLog(event *AuditEvent) *models.AuditLog {
 		Timestamp:    event.Timestamp,
 		Metadata:     event.Metadata,
 	}
-}
 
 // convertAuditEventsToModelsAuditLogs converts a slice of AuditEvent to a slice of models.AuditLog
 func convertAuditEventsToModelsAuditLogs(events []*AuditEvent) []*models.AuditLog {
@@ -125,7 +120,6 @@ func convertAuditEventsToModelsAuditLogs(events []*AuditEvent) []*models.AuditLo
 		result[i] = convertAuditEventToModelsAuditLog(event)
 	}
 	return result
-}
 
 // convertFilterMapToAuditEventFilter converts a map[string]interface{} filter to an AuditEventFilter
 func convertFilterMapToAuditEventFilter(filter map[string]interface{}) *AuditEventFilter {
@@ -172,12 +166,10 @@ func convertFilterMapToAuditEventFilter(filter map[string]interface{}) *AuditEve
 	}
 
 	return result
-}
 
 // LogEvent logs an audit event
 func (a *AuditStoreAdapter) LogEvent(ctx context.Context, event *models.AuditLog) error {
 	return a.store.LogEvent(ctx, convertModelsAuditLogToAuditEvent(event))
-}
 
 // GetEventByID retrieves an audit event by ID
 func (a *AuditStoreAdapter) GetEventByID(ctx context.Context, id string) (*models.AuditLog, error) {
@@ -186,7 +178,6 @@ func (a *AuditStoreAdapter) GetEventByID(ctx context.Context, id string) (*model
 		return nil, err
 	}
 	return convertAuditEventToModelsAuditLog(event), nil
-}
 
 // QueryEvents queries audit events with filtering
 func (a *AuditStoreAdapter) QueryEvents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.AuditLog, int, error) {
@@ -199,15 +190,20 @@ func (a *AuditStoreAdapter) QueryEvents(ctx context.Context, filter map[string]i
 		return nil, 0, err
 	}
 	return convertAuditEventsToModelsAuditLogs(events), count, nil
-}
 
 // ExportEvents exports audit events to a file
 func (a *AuditStoreAdapter) ExportEvents(ctx context.Context, filter map[string]interface{}, format string) (string, error) {
 	eventFilter := convertFilterMapToAuditEventFilter(filter)
 	return a.store.ExportEvents(ctx, eventFilter, format)
-}
 
 // Close closes the audit store
 func (a *AuditStoreAdapter) Close() error {
 	return a.store.Close()
+}
+}
+}
+}
+}
+}
+}
 }

@@ -19,7 +19,6 @@ type CIReporter struct {
 	baselineData map[string]interface{}
 	// currentData stores current metrics
 	currentData map[string]interface{}
-}
 
 // CIReporterConfig contains configuration for the CI reporter
 type CIReporterConfig struct {
@@ -35,7 +34,6 @@ type CIReporterConfig struct {
 	FailOnThresholdExceeded bool
 	// PerformanceThresholds defines thresholds for metrics
 	PerformanceThresholds map[string]float64
-}
 
 // NewCIReporter creates a new CI reporter
 func NewCIReporter(profiler *Profiler, templateProfiler *TemplateProfiler, config *CIReporterConfig) *CIReporter {
@@ -65,7 +63,6 @@ func NewCIReporter(profiler *Profiler, templateProfiler *TemplateProfiler, confi
 		baselineData:    make(map[string]interface{}),
 		currentData:     make(map[string]interface{}),
 	}
-}
 
 // LoadBaseline loads baseline metrics from a file
 func (r *CIReporter) LoadBaseline() error {
@@ -75,11 +72,11 @@ func (r *CIReporter) LoadBaseline() error {
 	}
 
 	// Open baseline file
-	file, err := os.Open(r.config.BaselineFile)
+	file, err := os.Open(filepath.Clean(r.config.BaselineFile))
 	if err != nil {
 		return fmt.Errorf("failed to open baseline file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Decode baseline data
 	if err := json.NewDecoder(file).Decode(&r.baselineData); err != nil {
@@ -87,7 +84,6 @@ func (r *CIReporter) LoadBaseline() error {
 	}
 
 	return nil
-}
 
 // SaveBaseline saves baseline metrics to a file
 func (r *CIReporter) SaveBaseline() error {
@@ -95,7 +91,7 @@ func (r *CIReporter) SaveBaseline() error {
 	r.baselineData = r.profiler.GetReport()
 
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(r.config.BaselineFile), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(r.config.BaselineFile), 0700); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -104,7 +100,7 @@ func (r *CIReporter) SaveBaseline() error {
 	if err != nil {
 		return fmt.Errorf("failed to create baseline file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Encode baseline data
 	encoder := json.NewEncoder(file)
@@ -114,8 +110,6 @@ func (r *CIReporter) SaveBaseline() error {
 	}
 
 	return nil
-}
-
 // LoadThresholds loads performance thresholds from a file
 func (r *CIReporter) LoadThresholds() error {
 	// Check if threshold file exists
@@ -124,28 +118,25 @@ func (r *CIReporter) LoadThresholds() error {
 	}
 
 	// Open threshold file
-	file, err := os.Open(r.config.ThresholdFile)
+	file, err := os.Open(filepath.Clean(r.config.ThresholdFile))
 	if err != nil {
 		return fmt.Errorf("failed to open threshold file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Decode threshold data
 	var thresholds map[string]float64
 	if err := json.NewDecoder(file).Decode(&thresholds); err != nil {
 		return fmt.Errorf("failed to decode threshold data: %w", err)
 	}
-
 	// Update thresholds
 	r.config.PerformanceThresholds = thresholds
-
 	return nil
-}
 
 // SaveThresholds saves performance thresholds to a file
 func (r *CIReporter) SaveThresholds() error {
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(r.config.ThresholdFile), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(r.config.ThresholdFile), 0700); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -154,8 +145,7 @@ func (r *CIReporter) SaveThresholds() error {
 	if err != nil {
 		return fmt.Errorf("failed to create threshold file: %w", err)
 	}
-	defer file.Close()
-
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	// Encode threshold data
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
@@ -164,15 +154,13 @@ func (r *CIReporter) SaveThresholds() error {
 	}
 
 	return nil
-}
 
 // GenerateReports generates performance reports
 func (r *CIReporter) GenerateReports() error {
 	// Create report directory if it doesn't exist
-	if err := os.MkdirAll(r.config.ReportDir, 0755); err != nil {
+	if err := os.MkdirAll(r.config.ReportDir, 0700); err != nil {
 		return fmt.Errorf("failed to create report directory: %w", err)
 	}
-
 	// Get current data
 	r.currentData = r.profiler.GetReport()
 
@@ -200,7 +188,6 @@ func (r *CIReporter) GenerateReports() error {
 	if err := r.generateThresholdReport(); err != nil {
 		return err
 	}
-
 	// Generate comparison report if baseline is available
 	if len(r.baselineData) > 0 {
 		if err := r.generateComparisonReport(); err != nil {
@@ -209,7 +196,6 @@ func (r *CIReporter) GenerateReports() error {
 	}
 
 	return nil
-}
 
 // generateJSONReport generates a JSON report
 func (r *CIReporter) generateJSONReport() error {
@@ -219,7 +205,7 @@ func (r *CIReporter) generateJSONReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create JSON report file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Encode report data
 	encoder := json.NewEncoder(file)
@@ -229,7 +215,6 @@ func (r *CIReporter) generateJSONReport() error {
 	}
 
 	return nil
-}
 
 // generateTextReport generates a text report
 func (r *CIReporter) generateTextReport() error {
@@ -239,7 +224,7 @@ func (r *CIReporter) generateTextReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create text report file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Write report header
 	fmt.Fprintf(file, "Performance Report - %s\n", r.currentData["timestamp"])
@@ -285,7 +270,6 @@ func (r *CIReporter) generateTextReport() error {
 	}
 
 	return nil
-}
 
 // generateHTMLReport generates an HTML report
 func (r *CIReporter) generateHTMLReport() error {
@@ -295,7 +279,7 @@ func (r *CIReporter) generateHTMLReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create HTML report file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Write HTML header
 	fmt.Fprintf(file, `<!DOCTYPE html>
@@ -442,7 +426,6 @@ func (r *CIReporter) generateHTMLReport() error {
 `)
 
 	return nil
-}
 
 // generateThresholdReport generates a threshold report
 func (r *CIReporter) generateThresholdReport() error {
@@ -452,7 +435,7 @@ func (r *CIReporter) generateThresholdReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create threshold report file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Write report header
 	fmt.Fprintf(file, "Performance Threshold Report - %s\n", time.Now().Format(time.RFC3339))
@@ -506,7 +489,6 @@ func (r *CIReporter) generateThresholdReport() error {
 	}
 
 	return nil
-}
 
 // generateComparisonReport generates a comparison report
 func (r *CIReporter) generateComparisonReport() error {
@@ -516,7 +498,7 @@ func (r *CIReporter) generateComparisonReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create comparison report file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Write report header
 	fmt.Fprintf(file, "Performance Comparison Report - %s\n", time.Now().Format(time.RFC3339))
@@ -569,7 +551,6 @@ func (r *CIReporter) generateComparisonReport() error {
 	}
 
 	return nil
-}
 
 // CheckThresholds checks if any performance thresholds are exceeded
 func (r *CIReporter) CheckThresholds() (bool, map[string]interface{}) {
@@ -613,5 +594,3 @@ func (r *CIReporter) CheckThresholds() (bool, map[string]interface{}) {
 		}
 	}
 
-	return thresholdExceeded, results
-}

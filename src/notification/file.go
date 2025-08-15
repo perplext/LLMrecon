@@ -11,12 +11,10 @@ type FileChannel struct {
 	name      string
 	filePath  string
 	formatter FileFormatter
-}
 
 // FileFormatter defines the interface for formatting notifications for file output
 type FileFormatter interface {
 	Format(notification *Notification) ([]byte, error)
-}
 
 // JSONFormatter formats notifications as JSON
 type JSONFormatter struct {
@@ -29,7 +27,6 @@ func (f *JSONFormatter) Format(notification *Notification) ([]byte, error) {
 		return json.MarshalIndent(notification, "", "  ")
 	}
 	return json.Marshal(notification)
-}
 
 // TextFormatter formats notifications as plain text
 type TextFormatter struct{}
@@ -81,7 +78,6 @@ func (f *TextFormatter) Format(notification *Notification) ([]byte, error) {
 	text += "----------------------------------------\n"
 
 	return []byte(text), nil
-}
 
 // NewFileChannel creates a new file notification channel
 func NewFileChannel(filePath string, formatter FileFormatter) (*FileChannel, error) {
@@ -95,7 +91,7 @@ func NewFileChannel(filePath string, formatter FileFormatter) (*FileChannel, err
 
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create directory for notification log: %w", err)
 	}
 
@@ -110,17 +106,14 @@ func NewFileChannel(filePath string, formatter FileFormatter) (*FileChannel, err
 		filePath:  filePath,
 		formatter: formatter,
 	}, nil
-}
 
 // ID returns the unique identifier for the channel
 func (f *FileChannel) ID() string {
 	return f.id
-}
 
 // Name returns the human-readable name of the channel
 func (f *FileChannel) Name() string {
 	return f.name
-}
 
 // Deliver delivers a notification by writing it to a file
 func (f *FileChannel) Deliver(notification *Notification) error {
@@ -135,11 +128,11 @@ func (f *FileChannel) Deliver(notification *Notification) error {
 	}
 
 	// Open the file in append mode
-	file, err := os.OpenFile(f.filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(f.filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to open notification log file: %w", err)
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Write the notification to the file
 	if _, err := file.Write(data); err != nil {
@@ -147,10 +140,13 @@ func (f *FileChannel) Deliver(notification *Notification) error {
 	}
 
 	return nil
-}
 
 // CanDeliver checks if the channel can deliver the notification
 func (f *FileChannel) CanDeliver(notification *Notification) bool {
 	// File channel can deliver all notifications
-	return true
+}
+}
+}
+}
+}
 }

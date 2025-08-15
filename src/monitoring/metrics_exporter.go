@@ -27,17 +27,17 @@ type MetricsExporter struct {
 	
 	// Start time for uptime calculation
 	startTime time.Time
-}
 
+}
 // NewMetricsExporter creates a new metrics exporter
 func NewMetricsExporter() *MetricsExporter {
 	return &MetricsExporter{
 		responseTimes: make([]float64, 0, 1000),
 		startTime:     time.Now(),
 	}
-}
 
 // RecordRequest records a request with its outcome
+}
 func (m *MetricsExporter) RecordRequest(success bool, responseTime float64) {
 	m.totalRequests.Add(1)
 	
@@ -54,19 +54,19 @@ func (m *MetricsExporter) RecordRequest(success bool, responseTime float64) {
 		m.responseTimes = m.responseTimes[len(m.responseTimes)-1000:]
 	}
 	m.mu.Unlock()
-}
 
 // SetConcurrentAttacks updates the current concurrent attacks count
+}
 func (m *MetricsExporter) SetConcurrentAttacks(count int64) {
 	m.concurrentAttacks.Store(count)
-}
 
 // SetQueueDepth updates the current queue depth
+}
 func (m *MetricsExporter) SetQueueDepth(depth int64) {
 	m.queueDepth.Store(depth)
-}
 
 // GetMetrics returns current metrics as JSON
+}
 func (m *MetricsExporter) GetMetrics() map[string]interface{} {
 	total := m.totalRequests.Load()
 	successful := m.successfulRequests.Load()
@@ -109,9 +109,9 @@ func (m *MetricsExporter) GetMetrics() map[string]interface{} {
 			"gc_runs":          memStats.NumGC,
 		},
 	}
-}
 
 // ServeHTTP implements http.Handler for metrics endpoint
+}
 func (m *MetricsExporter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/metrics":
@@ -123,9 +123,9 @@ func (m *MetricsExporter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.NotFound(w, r)
 	}
-}
 
 // servePrometheusMetrics serves metrics in Prometheus format
+}
 func (m *MetricsExporter) servePrometheusMetrics(w http.ResponseWriter, r *http.Request) {
 	metrics := m.GetMetrics()
 	
@@ -162,24 +162,24 @@ func (m *MetricsExporter) servePrometheusMetrics(w http.ResponseWriter, r *http.
 	fmt.Fprintf(w, "# HELP llmrecon_memory_usage_bytes Current memory usage\n")
 	fmt.Fprintf(w, "# TYPE llmrecon_memory_usage_bytes gauge\n")
 	fmt.Fprintf(w, "llmrecon_memory_usage_bytes %d\n", resources["memory_alloc"])
-}
 
 // serveJSONMetrics serves metrics in JSON format
+}
 func (m *MetricsExporter) serveJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(m.GetMetrics())
-}
 
 // serveStatus serves a simple health status
+}
 func (m *MetricsExporter) serveStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status": "healthy",
 		"uptime": time.Since(m.startTime).String(),
 	})
-}
 
 // calculateAverage calculates the average of a slice of floats
+}
 func (m *MetricsExporter) calculateAverage(values []float64) float64 {
 	if len(values) == 0 {
 		return 0
@@ -190,9 +190,9 @@ func (m *MetricsExporter) calculateAverage(values []float64) float64 {
 		sum += v
 	}
 	return sum / float64(len(values))
-}
 
 // calculatePercentile calculates the percentile of a slice of floats
+}
 func (m *MetricsExporter) calculatePercentile(values []float64, percentile float64) float64 {
 	if len(values) == 0 {
 		return 0
@@ -205,9 +205,9 @@ func (m *MetricsExporter) calculatePercentile(values []float64, percentile float
 	}
 	
 	return values[index]
-}
 
 // StartMetricsServer starts the metrics HTTP server
+}
 func StartMetricsServer(ctx context.Context, addr string, exporter *MetricsExporter) error {
 	mux := http.NewServeMux()
 	mux.Handle("/", exporter)
@@ -222,5 +222,3 @@ func StartMetricsServer(ctx context.Context, addr string, exporter *MetricsExpor
 		server.Shutdown(context.Background())
 	}()
 	
-	return server.ListenAndServe()
-}

@@ -1,6 +1,7 @@
 package update
 
 import (
+	"os"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -33,7 +34,6 @@ type GitHubRelease struct {
 		ContentType        string `json:"content_type"`
 	} `json:"assets"`
 	HTMLURL string `json:"html_url"`
-}
 
 // GitLabRelease represents a GitLab release response
 type GitLabRelease struct {
@@ -49,7 +49,6 @@ type GitLabRelease struct {
 		} `json:"links"`
 	} `json:"assets"`
 	WebURL string `json:"web_url"`
-}
 
 // TemplateManifest represents a template repository manifest
 type TemplateManifest struct {
@@ -59,7 +58,6 @@ type TemplateManifest struct {
 	Categories  map[string][]string       `json:"categories"`
 	Statistics  map[string]interface{}    `json:"statistics"`
 	Repository  RepositoryInfo            `json:"repository"`
-}
 
 // ModuleManifest represents a module repository manifest
 type ModuleManifest struct {
@@ -69,7 +67,6 @@ type ModuleManifest struct {
 	Providers   map[string][]string     `json:"providers"`
 	Statistics  map[string]interface{}  `json:"statistics"`
 	Repository  RepositoryMetadata          `json:"repository"`
-}
 
 
 // RepositoryMetadata contains metadata about a repository
@@ -80,7 +77,6 @@ type RepositoryMetadata struct {
 	LastUpdated time.Time `json:"last_updated"`
 	Size        int64     `json:"size"`
 	FileCount   int       `json:"file_count"`
-}
 
 // NewComponentVersionChecker creates a new component version checker
 func NewComponentVersionChecker(config *Config, logger Logger) *ComponentVersionChecker {
@@ -93,7 +89,6 @@ func NewComponentVersionChecker(config *Config, logger Logger) *ComponentVersion
 		client: client,
 		logger: logger,
 	}
-}
 
 // CheckBinaryUpdate checks for binary updates
 func (vc *ComponentVersionChecker) CheckBinaryUpdate(ctx context.Context) (*ComponentUpdate, error) {
@@ -144,7 +139,6 @@ func (vc *ComponentVersionChecker) CheckBinaryUpdate(ctx context.Context) (*Comp
 	}
 	
 	return update, nil
-}
 
 // CheckTemplateUpdates checks for template updates
 func (vc *ComponentVersionChecker) CheckTemplateUpdates(ctx context.Context) (*ComponentUpdate, error) {
@@ -190,7 +184,6 @@ func (vc *ComponentVersionChecker) CheckTemplateUpdates(ctx context.Context) (*C
 	}
 	
 	return update, nil
-}
 
 // CheckModuleUpdates checks for module updates
 func (vc *ComponentVersionChecker) CheckModuleUpdates(ctx context.Context) (*ComponentUpdate, error) {
@@ -236,7 +229,6 @@ func (vc *ComponentVersionChecker) CheckModuleUpdates(ctx context.Context) (*Com
 	}
 	
 	return update, nil
-}
 
 // GetLatestBinaryRelease gets the latest binary release
 func (vc *ComponentVersionChecker) GetLatestBinaryRelease(ctx context.Context) (*Release, error) {
@@ -248,7 +240,6 @@ func (vc *ComponentVersionChecker) GetLatestBinaryRelease(ctx context.Context) (
 	}
 	
 	return nil, fmt.Errorf("unsupported repository provider")
-}
 
 // getLatestGitHubRelease gets the latest release from GitHub
 func (vc *ComponentVersionChecker) getLatestGitHubRelease(ctx context.Context) (*Release, error) {
@@ -279,7 +270,7 @@ func (vc *ComponentVersionChecker) getLatestGitHubRelease(ctx context.Context) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch release: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -323,13 +314,11 @@ func (vc *ComponentVersionChecker) getLatestGitHubRelease(ctx context.Context) (
 	}
 	
 	return release, nil
-}
 
 // getLatestGitLabRelease gets the latest release from GitLab
 func (vc *ComponentVersionChecker) getLatestGitLabRelease(ctx context.Context) (*Release, error) {
 	// Similar implementation for GitLab API
 	return nil, fmt.Errorf("GitLab releases not yet implemented")
-}
 
 // checkRepositoryUpdates checks updates for a repository
 func (vc *ComponentVersionChecker) checkRepositoryUpdates(ctx context.Context, repo RepositoryConfig, component string) (map[string]string, int64, error) {
@@ -343,7 +332,6 @@ func (vc *ComponentVersionChecker) checkRepositoryUpdates(ctx context.Context, r
 	default:
 		return nil, 0, fmt.Errorf("unsupported repository type: %s", repo.Type)
 	}
-}
 
 // checkGitHubRepository checks a GitHub repository for updates
 func (vc *ComponentVersionChecker) checkGitHubRepository(ctx context.Context, repo RepositoryConfig, component string) (map[string]string, int64, error) {
@@ -368,7 +356,7 @@ func (vc *ComponentVersionChecker) checkGitHubRepository(ctx context.Context, re
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to fetch manifest: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	if resp.StatusCode != http.StatusOK {
 		return nil, 0, fmt.Errorf("manifest not found: %d", resp.StatusCode)
@@ -401,19 +389,16 @@ func (vc *ComponentVersionChecker) checkGitHubRepository(ctx context.Context, re
 	}
 	
 	return versions, totalSize, nil
-}
 
 // checkGitLabRepository checks a GitLab repository for updates
 func (vc *ComponentVersionChecker) checkGitLabRepository(ctx context.Context, repo RepositoryConfig, component string) (map[string]string, int64, error) {
 	// Similar implementation for GitLab
 	return nil, 0, fmt.Errorf("GitLab repositories not yet implemented")
-}
 
 // checkHTTPRepository checks an HTTP repository for updates
 func (vc *ComponentVersionChecker) checkHTTPRepository(ctx context.Context, repo RepositoryConfig, component string) (map[string]string, int64, error) {
 	// Implementation for HTTP-based repositories
 	return nil, 0, fmt.Errorf("HTTP repositories not yet implemented")
-}
 
 // getCurrentTemplateVersions gets current template versions
 func (vc *ComponentVersionChecker) getCurrentTemplateVersions() map[string]string {
@@ -442,7 +427,6 @@ func (vc *ComponentVersionChecker) getCurrentTemplateVersions() map[string]strin
 	})
 	
 	return versions
-}
 
 // getCurrentModuleVersions gets current module versions
 func (vc *ComponentVersionChecker) getCurrentModuleVersions() map[string]string {
@@ -471,12 +455,11 @@ func (vc *ComponentVersionChecker) getCurrentModuleVersions() map[string]string 
 	})
 	
 	return versions
-}
 
 // extractTemplateVersion extracts version from a template file
 func (vc *ComponentVersionChecker) extractTemplateVersion(filePath string) string {
 	// Simple implementation - read file and look for version field
-	content, err := os.ReadFile(filePath)
+	content, err := os.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return ""
 	}
@@ -494,13 +477,11 @@ func (vc *ComponentVersionChecker) extractTemplateVersion(filePath string) strin
 	}
 	
 	return "unknown"
-}
 
 // extractModuleVersion extracts version from a module file
 func (vc *ComponentVersionChecker) extractModuleVersion(filePath string) string {
 	// Similar to template version extraction
 	return vc.extractTemplateVersion(filePath)
-}
 
 // hasUpdates checks if there are any updates available
 func (vc *ComponentVersionChecker) hasUpdates(current, latest map[string]string) bool {
@@ -516,7 +497,6 @@ func (vc *ComponentVersionChecker) hasUpdates(current, latest map[string]string)
 	}
 	
 	return false
-}
 
 // selectBestAsset selects the best asset for the current platform
 func (vc *ComponentVersionChecker) selectBestAsset(assets []ReleaseAsset) *ReleaseAsset {
@@ -539,7 +519,6 @@ func (vc *ComponentVersionChecker) selectBestAsset(assets []ReleaseAsset) *Relea
 	}
 	
 	return nil
-}
 
 // extractPlatform extracts platform from asset name
 func (vc *ComponentVersionChecker) extractPlatform(name string) string {
@@ -559,7 +538,6 @@ func (vc *ComponentVersionChecker) extractPlatform(name string) string {
 	}
 	
 	return ""
-}
 
 // extractArchitecture extracts architecture from asset name
 func (vc *ComponentVersionChecker) extractArchitecture(name string) string {
@@ -579,7 +557,6 @@ func (vc *ComponentVersionChecker) extractArchitecture(name string) string {
 	}
 	
 	return ""
-}
 
 // isSecurityUpdate checks if a release is a security update
 func (vc *ComponentVersionChecker) isSecurityUpdate(description string) bool {
@@ -596,7 +573,6 @@ func (vc *ComponentVersionChecker) isSecurityUpdate(description string) bool {
 	}
 	
 	return false
-}
 
 // isCriticalUpdate checks if a release is critical
 func (vc *ComponentVersionChecker) isCriticalUpdate(description string) bool {
@@ -612,5 +588,23 @@ func (vc *ComponentVersionChecker) isCriticalUpdate(description string) bool {
 		}
 	}
 	
-	return false
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

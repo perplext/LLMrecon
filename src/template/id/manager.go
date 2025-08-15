@@ -17,6 +17,7 @@ type TemplateInfo struct {
 	Tags        []string `json:"tags,omitempty"`
 }
 
+}
 // Manager handles the management of template and module IDs
 type Manager struct {
 	generator      *Generator
@@ -27,8 +28,8 @@ type Manager struct {
 	providerIDs    map[string]bool
 	utilityIDs     map[string]bool
 	detectorIDs    map[string]bool
-}
 
+}
 // NewManager creates a new ID manager
 func NewManager(templatesDir, modulesDir string) *Manager {
 	return &Manager{
@@ -41,9 +42,9 @@ func NewManager(templatesDir, modulesDir string) *Manager {
 		utilityIDs:   make(map[string]bool),
 		detectorIDs:  make(map[string]bool),
 	}
-}
 
 // LoadExistingIDs loads existing IDs from the manifest files
+}
 func (m *Manager) LoadExistingIDs() error {
 	// Load template IDs
 	if err := m.loadTemplateIDs(); err != nil {
@@ -56,9 +57,9 @@ func (m *Manager) LoadExistingIDs() error {
 	}
 	
 	return nil
-}
 
 // loadTemplateIDs loads template and category IDs from the template manifest
+}
 func (m *Manager) loadTemplateIDs() error {
 	manifestPath := filepath.Join(m.templatesDir, "manifest.json")
 	
@@ -69,7 +70,7 @@ func (m *Manager) loadTemplateIDs() error {
 	}
 	
 	// Read and parse manifest
-	data, err := ioutil.ReadFile(manifestPath)
+	data, err := ioutil.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return fmt.Errorf("failed to read template manifest: %w", err)
 	}
@@ -98,9 +99,9 @@ func (m *Manager) loadTemplateIDs() error {
 	}
 	
 	return nil
-}
 
 // loadModuleIDs loads module IDs from the module manifest
+}
 func (m *Manager) loadModuleIDs() error {
 	manifestPath := filepath.Join(m.modulesDir, "manifest.json")
 	
@@ -111,7 +112,7 @@ func (m *Manager) loadModuleIDs() error {
 	}
 	
 	// Read and parse manifest
-	data, err := ioutil.ReadFile(manifestPath)
+	data, err := ioutil.ReadFile(filepath.Clean(manifestPath))
 	if err != nil {
 		return fmt.Errorf("failed to read module manifest: %w", err)
 	}
@@ -151,9 +152,9 @@ func (m *Manager) loadModuleIDs() error {
 	}
 	
 	return nil
-}
 
 // GenerateTemplateID generates a unique ID for a template
+}
 func (m *Manager) GenerateTemplateID(category, name, version string) (string, error) {
 	// Validate category
 	if !m.categoryIDs[category] {
@@ -167,9 +168,9 @@ func (m *Manager) GenerateTemplateID(category, name, version string) (string, er
 	}
 	
 	return id, nil
-}
 
 // GenerateCategoryID generates a unique ID for a category
+}
 func (m *Manager) GenerateCategoryID(name string) (string, error) {
 	// Generate ID
 	id, err := m.generator.GenerateID(CategoryID, "", name, "")
@@ -178,9 +179,9 @@ func (m *Manager) GenerateCategoryID(name string) (string, error) {
 	}
 	
 	return id, nil
-}
 
 // GenerateProviderID generates a unique ID for a provider
+}
 func (m *Manager) GenerateProviderID(name string) (string, error) {
 	// Generate ID
 	id, err := m.generator.GenerateID(ProviderID, "", name, "")
@@ -189,9 +190,9 @@ func (m *Manager) GenerateProviderID(name string) (string, error) {
 	}
 	
 	return id, nil
-}
 
 // GenerateUtilityID generates a unique ID for a utility
+}
 func (m *Manager) GenerateUtilityID(name string) (string, error) {
 	// Generate ID
 	id, err := m.generator.GenerateID(UtilityID, "", name, "")
@@ -200,9 +201,9 @@ func (m *Manager) GenerateUtilityID(name string) (string, error) {
 	}
 	
 	return id, nil
-}
 
 // GenerateDetectorID generates a unique ID for a detector
+}
 func (m *Manager) GenerateDetectorID(name string) (string, error) {
 	// Generate ID
 	id, err := m.generator.GenerateID(DetectorID, "", name, "")
@@ -211,41 +212,41 @@ func (m *Manager) GenerateDetectorID(name string) (string, error) {
 	}
 	
 	return id, nil
-}
 
 // IsTemplateIDTaken checks if a template ID is already in use
+}
 func (m *Manager) IsTemplateIDTaken(id string) bool {
 	_, exists := m.templateIDs[id]
 	return exists
-}
 
 // IsCategoryIDTaken checks if a category ID is already in use
+}
 func (m *Manager) IsCategoryIDTaken(id string) bool {
 	return m.categoryIDs[id]
-}
 
 // IsProviderIDTaken checks if a provider ID is already in use
+}
 func (m *Manager) IsProviderIDTaken(id string) bool {
 	return m.providerIDs[id]
-}
 
 // IsUtilityIDTaken checks if a utility ID is already in use
+}
 func (m *Manager) IsUtilityIDTaken(id string) bool {
 	return m.utilityIDs[id]
-}
 
 // IsDetectorIDTaken checks if a detector ID is already in use
+}
 func (m *Manager) IsDetectorIDTaken(id string) bool {
 	return m.detectorIDs[id]
-}
 
 // GetTemplateInfo gets information about a template by ID
+}
 func (m *Manager) GetTemplateInfo(id string) (TemplateInfo, bool) {
 	info, exists := m.templateIDs[id]
 	return info, exists
-}
 
 // GetTemplatesByCategory gets all templates in a category
+}
 func (m *Manager) GetTemplatesByCategory(category string) []TemplateInfo {
 	var templates []TemplateInfo
 	
@@ -256,9 +257,10 @@ func (m *Manager) GetTemplatesByCategory(category string) []TemplateInfo {
 	}
 	
 	return templates
-}
+	
 
 // GetTemplatesByTag gets all templates with a specific tag
+}
 func (m *Manager) GetTemplatesByTag(tag string) []TemplateInfo {
 	var templates []TemplateInfo
 	
@@ -272,9 +274,8 @@ func (m *Manager) GetTemplatesByTag(tag string) []TemplateInfo {
 	}
 	
 	return templates
-}
-
 // RegisterTemplate registers a new template
+}
 func (m *Manager) RegisterTemplate(info TemplateInfo) error {
 	// Validate template ID
 	if err := m.generator.ValidateID(TemplateID, info.ID); err != nil {
@@ -291,9 +292,9 @@ func (m *Manager) RegisterTemplate(info TemplateInfo) error {
 	m.generator.RegisterExistingID(info.ID)
 	
 	return nil
-}
 
 // RegisterCategory registers a new category
+}
 func (m *Manager) RegisterCategory(id string) error {
 	// Validate category ID
 	if err := m.generator.ValidateID(CategoryID, id); err != nil {
@@ -310,9 +311,9 @@ func (m *Manager) RegisterCategory(id string) error {
 	m.generator.RegisterExistingID(id)
 	
 	return nil
-}
 
 // RegisterProvider registers a new provider
+}
 func (m *Manager) RegisterProvider(id string) error {
 	// Validate provider ID
 	if err := m.generator.ValidateID(ProviderID, id); err != nil {
@@ -329,9 +330,9 @@ func (m *Manager) RegisterProvider(id string) error {
 	m.generator.RegisterExistingID(id)
 	
 	return nil
-}
 
 // RegisterUtility registers a new utility
+}
 func (m *Manager) RegisterUtility(id string) error {
 	// Validate utility ID
 	if err := m.generator.ValidateID(UtilityID, id); err != nil {
@@ -348,9 +349,9 @@ func (m *Manager) RegisterUtility(id string) error {
 	m.generator.RegisterExistingID(id)
 	
 	return nil
-}
 
 // RegisterDetector registers a new detector
+}
 func (m *Manager) RegisterDetector(id string) error {
 	// Validate detector ID
 	if err := m.generator.ValidateID(DetectorID, id); err != nil {
@@ -367,9 +368,9 @@ func (m *Manager) RegisterDetector(id string) error {
 	m.generator.RegisterExistingID(id)
 	
 	return nil
-}
 
 // GetTemplateFilename generates a filename for a template
+}
 func (m *Manager) GetTemplateFilename(name, version string) string {
 	// Convert name to snake_case
 	filename := sanitizeForID(name)
@@ -378,9 +379,9 @@ func (m *Manager) GetTemplateFilename(name, version string) string {
 	filename = fmt.Sprintf("%s_v%s.yaml", filename, version)
 	
 	return filename
-}
 
 // GetModuleFilename generates a filename for a module
+}
 func (m *Manager) GetModuleFilename(name, version string) string {
 	// Convert name to snake_case
 	filename := sanitizeForID(name)
@@ -388,5 +389,3 @@ func (m *Manager) GetModuleFilename(name, version string) string {
 	// Add version
 	filename = fmt.Sprintf("%s_v%s.go", filename, version)
 	
-	return filename
-}

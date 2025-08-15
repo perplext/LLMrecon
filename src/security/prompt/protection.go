@@ -56,7 +56,6 @@ type ProtectionConfig struct {
 	ReportingCallback func(context.Context, *InjectionReport) error
 	// MonitoringInterval is the interval for real-time monitoring checks
 	MonitoringInterval time.Duration
-}
 
 // DefaultProtectionConfig returns the default protection configuration
 func DefaultProtectionConfig() *ProtectionConfig {
@@ -73,7 +72,6 @@ func DefaultProtectionConfig() *ProtectionConfig {
 		ApprovalThreshold:        0.8,   // 80% risk score threshold for approval
 		MonitoringInterval:       time.Minute * 5,
 	}
-}
 
 // HighSecurityProtectionConfig returns a high-security protection configuration
 func HighSecurityProtectionConfig() *ProtectionConfig {
@@ -84,7 +82,6 @@ func HighSecurityProtectionConfig() *ProtectionConfig {
 	config.MonitoringInterval = time.Minute
 	config.EnableApprovalWorkflow = true
 	return config
-}
 
 // ProtectionManager manages the prompt injection protection system
 type ProtectionManager struct {
@@ -152,7 +149,6 @@ func NewProtectionManager(config *ProtectionConfig) (*ProtectionManager, error) 
 		approvalWorkflow:  approvalWorkflow,
 		reportingSystem:   reportingSystem,
 	}, nil
-}
 
 // ProtectPrompt protects against prompt injection in user inputs
 func (pm *ProtectionManager) ProtectPrompt(ctx context.Context, prompt string) (string, *ProtectionResult, error) {
@@ -229,7 +225,6 @@ func (pm *ProtectionManager) ProtectPrompt(ctx context.Context, prompt string) (
 	}
 
 	return result.ProtectedPrompt, result, nil
-}
 
 // ProtectResponse protects against prompt injection in LLM responses
 func (pm *ProtectionManager) ProtectResponse(ctx context.Context, response string, originalPrompt string) (string, *ProtectionResult, error) {
@@ -276,7 +271,6 @@ func (pm *ProtectionManager) ProtectResponse(ctx context.Context, response strin
 	}
 
 	return result.ProtectedResponse, result, nil
-}
 
 // Close closes the protection manager and releases resources
 func (pm *ProtectionManager) Close() error {
@@ -289,12 +283,15 @@ func (pm *ProtectionManager) Close() error {
 	}
 	
 	return nil
-}
 
 // Helper function to get the maximum of two float64 values
 func max(a, b float64) float64 {
 	if a > b {
 		return a
 	}
-	return b
+}
+}
+}
+}
+}
 }

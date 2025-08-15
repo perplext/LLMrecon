@@ -14,13 +14,11 @@ func NewMetricsManagerAdapter(manager *MetricsManager) *MetricsManagerAdapter {
 	return &MetricsManagerAdapter{
 		manager: manager,
 	}
-}
 
 // RecordCounter records a counter metric
 func (a *MetricsManagerAdapter) RecordCounter(name string, value int64, tags map[string]string) error {
 	// Convert int64 to float64 for the underlying implementation
 	return a.manager.IncrementCounter(name, float64(value))
-}
 
 // RecordGauge records a gauge metric
 func (a *MetricsManagerAdapter) RecordGauge(name string, value interface{}, tags map[string]string) error {
@@ -43,11 +41,12 @@ func (a *MetricsManagerAdapter) RecordGauge(name string, value interface{}, tags
 	}
 	
 	return a.manager.SetGauge(name, floatValue)
-}
 
 // RegisterGauge registers a gauge metric
 func (a *MetricsManagerAdapter) RegisterGauge(name string, description string, tags map[string]string) error {
 	// The original implementation returns *Metric, but our interface requires error
 	a.manager.RegisterGauge(name, description, tags)
 	return nil
+}
+}
 }

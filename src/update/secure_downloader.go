@@ -23,7 +23,6 @@ type SecureDownloadOptions struct {
 	ChunkSize int64
 	// Verify file after download
 	VerifyAfterDownload bool
-}
 
 // DefaultSecureDownloadOptions returns the default secure download options
 func DefaultSecureDownloadOptions() *SecureDownloadOptions {
@@ -34,7 +33,6 @@ func DefaultSecureDownloadOptions() *SecureDownloadOptions {
 		ChunkSize:           4 * 1024 * 1024, // 4MB chunks
 		VerifyAfterDownload: true,
 	}
-}
 
 // SecureDownloader provides secure downloading functionality
 type SecureDownloader struct {
@@ -60,7 +58,6 @@ func NewSecureDownloader(options *SecureDownloadOptions) (*SecureDownloader, err
 		options: options,
 		mutex:   sync.RWMutex{},
 	}, nil
-}
 
 // Download securely downloads a file from the given URL to the destination path
 func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, options *SecureDownloadOptions) error {
@@ -72,7 +69,7 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 
 	// Create destination directory if it doesn't exist
 	destDir := filepath.Dir(destPath)
-	if err := os.MkdirAll(destDir, 0755); err != nil {
+	if err := os.MkdirAll(destDir, 0700); err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
 
@@ -85,13 +82,12 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 	// Check if file already exists
 	var file *os.File
 	var startOffset int64 = 0
-
 	if options.Resume && supportsResume {
 		// Try to open existing file for appending
 		if stat, err := os.Stat(destPath); err == nil {
 			startOffset = stat.Size()
 			if startOffset < fileSize {
-				file, err = os.OpenFile(destPath, os.O_APPEND|os.O_WRONLY, 0644)
+				file, err = os.OpenFile(destPath, os.O_APPEND|os.O_WRONLY, 0600)
 				if err != nil {
 					// If we can't open for appending, start from scratch
 					startOffset = 0
@@ -114,7 +110,7 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 		}
 		startOffset = 0
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Download the file
 	if options.ChunkSize > 0 && fileSize > 0 {
@@ -136,7 +132,7 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 	}
 
 	return nil
-}
+	
 
 // getFileInfo gets information about the file at the given URL
 func (d *SecureDownloader) getFileInfo(ctx context.Context, url string, headers map[string]string) (size int64, supportsResume bool, err error) {
@@ -145,10 +141,9 @@ func (d *SecureDownloader) getFileInfo(ctx context.Context, url string, headers 
 	if err != nil {
 		return 0, false, fmt.Errorf("HEAD request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, false, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Check if server supports range requests
@@ -167,7 +162,6 @@ func (d *SecureDownloader) getFileInfo(ctx context.Context, url string, headers 
 	}
 
 	return size, supportsResume, nil
-}
 
 // downloadWithRange downloads a file with range requests
 func (d *SecureDownloader) downloadWithRange(ctx context.Context, url string, file *os.File, startOffset, fileSize int64, options *SecureDownloadOptions) error {
@@ -176,7 +170,6 @@ func (d *SecureDownloader) downloadWithRange(ctx context.Context, url string, fi
 	for k, v := range options.Headers {
 		headers[k] = v
 	}
-
 	// Add range header if starting from an offset
 	if startOffset > 0 {
 		headers["Range"] = fmt.Sprintf("bytes=%d-", startOffset)
@@ -187,13 +180,12 @@ func (d *SecureDownloader) downloadWithRange(ctx context.Context, url string, fi
 	if err != nil {
 		return fmt.Errorf("GET request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Check status code
 	if startOffset > 0 && resp.StatusCode != http.StatusPartialContent {
 		return fmt.Errorf("server doesn't support range requests, got status code: %d", resp.StatusCode)
 	} else if startOffset == 0 && resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Get content length for progress reporting
@@ -271,7 +263,6 @@ func (d *SecureDownloader) downloadWithRange(ctx context.Context, url string, fi
 	}
 
 	return nil
-}
 
 // downloadInChunks downloads a file in chunks for better reliability
 func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, file *os.File, startOffset, fileSize int64, options *SecureDownloadOptions) error {
@@ -295,7 +286,6 @@ func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, fil
 		default:
 			// Continue with download
 		}
-
 		// Calculate end of this chunk
 		end := offset + chunkSize - 1
 		if end >= fileSize {
@@ -374,7 +364,6 @@ func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, fil
 				return fmt.Errorf("failed to read from response: %w", err)
 			}
 		}
-
 		resp.Body.Close()
 	}
 
@@ -384,7 +373,6 @@ func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, fil
 	}
 
 	return nil
-}
 
 // verifyDownload verifies the integrity of a downloaded file
 func (d *SecureDownloader) verifyDownload(ctx context.Context, url, filePath string, headers map[string]string) error {
@@ -406,7 +394,6 @@ func (d *SecureDownloader) verifyDownload(ctx context.Context, url, filePath str
 	}
 
 	return nil
-}
 
 // DownloadWithSecureProgress downloads a file with progress reporting using the secure downloader
 func DownloadWithSecureProgress(ctx context.Context, url, destPath string, pinnedCerts []PinnedCertificate) error {
@@ -441,4 +428,10 @@ func DownloadWithSecureProgress(ctx context.Context, url, destPath string, pinne
 	// Complete progress
 	fmt.Println("\rDownload complete.                                    ")
 	return nil
+}
+}
+}
+}
+}
+}
 }

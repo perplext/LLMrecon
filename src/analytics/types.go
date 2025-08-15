@@ -8,7 +8,6 @@ import (
 type TimeRange struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
-}
 
 // ScanResult represents a scan result for analytics processing
 type ScanResult struct {
@@ -24,7 +23,6 @@ type ScanResult struct {
 	Metadata         map[string]string `json:"metadata"`
 	Success          bool              `json:"success"`
 	ErrorMessage     string            `json:"error_message,omitempty"`
-}
 
 // Vulnerability represents a discovered vulnerability
 type Vulnerability struct {
@@ -40,7 +38,6 @@ type Vulnerability struct {
 	OWASP       string            `json:"owasp,omitempty"`
 	Evidence    map[string]string `json:"evidence"`
 	Remediation string            `json:"remediation,omitempty"`
-}
 
 // Metric represents a custom metric data point
 type Metric struct {
@@ -50,7 +47,6 @@ type Metric struct {
 	Tags      map[string]string `json:"tags"`
 	Timestamp time.Time         `json:"timestamp"`
 	Source    string            `json:"source"`
-}
 
 // MetricsQuery represents a query for metrics data
 type MetricsQuery struct {
@@ -62,7 +58,6 @@ type MetricsQuery struct {
 	Interval   string            `json:"interval"`    // 1h, 1d, 1w, 1m
 	Limit      int               `json:"limit"`
 	Offset     int               `json:"offset"`
-}
 
 // MetricsResult represents query results
 type MetricsResult struct {
@@ -97,7 +92,6 @@ type Widget struct {
 	Data     interface{} `json:"data"`
 	Position Position    `json:"position"`
 	Config   WidgetConfig `json:"config"`
-}
 
 // Position represents widget position on dashboard
 type Position struct {
@@ -105,7 +99,6 @@ type Position struct {
 	Y      int `json:"y"`
 	Width  int `json:"width"`
 	Height int `json:"height"`
-}
 
 // WidgetConfig represents widget configuration
 type WidgetConfig struct {
@@ -128,7 +121,6 @@ type DashboardSummary struct {
 	HighVulns            int     `json:"high_vulns"`
 	TrendDirection       string  `json:"trend_direction"` // up, down, stable
 	TrendPercentage      float64 `json:"trend_percentage"`
-}
 
 // Alert represents a dashboard alert
 type Alert struct {
@@ -167,7 +159,6 @@ type TrendAnalysis struct {
 	Forecast    []ForecastPoint `json:"forecast,omitempty"`
 	Anomalies   []Anomaly      `json:"anomalies"`
 	GeneratedAt time.Time      `json:"generated_at"`
-}
 
 // Trend represents a single metric trend
 type Trend struct {
@@ -179,7 +170,6 @@ type Trend struct {
 	RSquared    float64     `json:"r_squared"` // correlation coefficient
 	Slope       float64     `json:"slope"`
 	Confidence  float64     `json:"confidence"`
-}
 
 // TrendSummary represents overall trend summary
 type TrendSummary struct {
@@ -222,7 +212,6 @@ type ReportParams struct {
 	Template    string            `json:"template_name,omitempty"`
 	Recipients  []string          `json:"recipients,omitempty"`
 	Schedule    string            `json:"schedule,omitempty"` // for recurring reports
-}
 
 // Report represents a generated analytics report
 type Report struct {
@@ -247,7 +236,6 @@ type ReportSection struct {
 	Content  interface{} `json:"content"`
 	Order    int         `json:"order"`
 	PageBreak bool       `json:"page_break"`
-}
 
 // ComparisonParams represents parameters for comparative analysis
 type ComparisonParams struct {
@@ -257,7 +245,6 @@ type ComparisonParams struct {
 	Templates   []string       `json:"templates,omitempty"`
 	Metrics     []string       `json:"metrics"`
 	Filters     map[string]string `json:"filters"`
-}
 
 // ComparisonType represents the type of comparison
 type ComparisonType string
@@ -274,7 +261,6 @@ type ComparisonResult struct {
 	Comparisons    []Comparison   `json:"comparisons"`
 	Summary        ComparisonSummary `json:"summary"`
 	GeneratedAt    time.Time      `json:"generated_at"`
-}
 
 // Comparison represents a single comparison
 type Comparison struct {
@@ -282,7 +268,6 @@ type Comparison struct {
 	Metrics map[string]float64 `json:"metrics"`
 	Deltas  map[string]float64 `json:"deltas,omitempty"` // percentage changes
 	Rank    int                `json:"rank,omitempty"`
-}
 
 // ComparisonSummary represents overall comparison summary
 type ComparisonSummary struct {
@@ -301,7 +286,6 @@ type ExportParams struct {
 	Metrics   []string          `json:"metrics"`
 	Filters   map[string]string `json:"filters"`
 	Filename  string            `json:"filename,omitempty"`
-}
 
 // AnalyticsSummary represents a high-level analytics summary
 type AnalyticsSummary struct {
@@ -324,7 +308,6 @@ type StorageStats struct {
 	TotalRecords int64 `json:"total_records"`
 	CompressedSize int64 `json:"compressed_size,omitempty"`
 	IndexSize    int64 `json:"index_size,omitempty"`
-}
 
 // VulnSummary represents a vulnerability summary
 type VulnSummary struct {
@@ -375,7 +358,6 @@ type DataStorage interface {
 	// Advanced queries
 	GetAggregatedData(query *MetricsQuery) (*MetricsResult, error)
 	GetTimeSeriesData(metric string, timeRange TimeRange) ([]DataPoint, error)
-}
 
 // Constants for metric names
 const (
@@ -439,17 +421,14 @@ func (tr TimeRange) Validate() error {
 		return fmt.Errorf("start time must be before end time")
 	}
 	return nil
-}
 
 // Duration returns the duration of the time range
 func (tr TimeRange) Duration() time.Duration {
 	return tr.End.Sub(tr.Start)
-}
 
 // Contains checks if a time is within the range
 func (tr TimeRange) Contains(t time.Time) bool {
 	return !t.Before(tr.Start) && !t.After(tr.End)
-}
 
 // Validate validates MetricsQuery
 func (mq *MetricsQuery) Validate() error {
@@ -480,6 +459,4 @@ func (mq *MetricsQuery) Validate() error {
 	}
 	
 	return nil
-}
 
-import "fmt"

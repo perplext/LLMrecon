@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"os"
 	"fmt"
 	"regexp"
 	"strings"
@@ -32,7 +33,6 @@ type Configuration struct {
 	
 	// Advanced settings
 	Advanced AdvancedConfig `yaml:"advanced"`
-}
 
 // ProviderConfig represents LLM provider configuration
 type ProviderConfig struct {
@@ -64,7 +64,6 @@ type OutputConfig struct {
 	Verbose      bool     `yaml:"verbose"`
 	ColorOutput  bool     `yaml:"color_output"`
 	ShowProgress bool     `yaml:"show_progress"`
-}
 
 // SecurityConfig represents security settings
 type SecurityConfig struct {
@@ -83,7 +82,6 @@ type AdvancedConfig struct {
 	EnableTelemetry  bool     `yaml:"enable_telemetry"`
 	AutoUpdate       bool     `yaml:"auto_update"`
 	Experimental     map[string]interface{} `yaml:"experimental,omitempty"`
-}
 
 // WizardStep represents a configuration step
 type WizardStep struct {
@@ -91,7 +89,6 @@ type WizardStep struct {
 	Description string
 	Configure   func() error
 	Skip        func() bool
-}
 
 // NewConfigWizard creates a new configuration wizard
 func NewConfigWizard(terminal *Terminal) *ConfigWizard {
@@ -173,7 +170,6 @@ func NewConfigWizard(terminal *Terminal) *ConfigWizard {
 	}
 
 	return wizard
-}
 
 // Run executes the configuration wizard
 func (w *ConfigWizard) Run() error {
@@ -222,7 +218,6 @@ func (w *ConfigWizard) Run() error {
 
 	w.terminal.Success("Configuration wizard completed successfully!")
 	return nil
-}
 
 // Step implementations
 
@@ -246,7 +241,6 @@ func (w *ConfigWizard) showWelcome() error {
 	}
 	
 	return nil
-}
 
 func (w *ConfigWizard) configureProviders() error {
 	w.terminal.Info("Let's configure your LLM providers.")
@@ -264,7 +258,7 @@ func (w *ConfigWizard) configureProviders() error {
 		{"Google PaLM", "google", true, "https://generativelanguage.googleapis.com/v1"},
 		{"Cohere", "cohere", true, "https://api.cohere.ai/v1"},
 		{"Hugging Face", "huggingface", true, "https://api-inference.huggingface.co"},
-		{"Local Model", "local", false, "http://localhost:8080"},
+		{"Local Model", "local", false, "https://localhost:8080"},
 		{"Custom API", "custom", false, ""},
 	}
 
@@ -338,7 +332,6 @@ func (w *ConfigWizard) configureProviders() error {
 	}
 
 	return nil
-}
 
 func (w *ConfigWizard) configureTestSettings() error {
 	w.terminal.Info("Now let's configure test execution settings.")
@@ -397,7 +390,6 @@ func (w *ConfigWizard) configureTestSettings() error {
 	}
 
 	return nil
-}
 
 func (w *ConfigWizard) configureOutput() error {
 	w.terminal.Info("Configure output settings for test results.")
@@ -442,10 +434,9 @@ func (w *ConfigWizard) configureOutput() error {
 	}
 
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll(w.config.Output.Directory, 0755); err != nil {
+	if err := os.MkdirAll(w.config.Output.Directory, 0700); err != nil {
 		w.terminal.Warning("Failed to create output directory: %v", err)
 	}
-
 	// Filename pattern
 	w.terminal.Info("\nFilename pattern can use variables: {{.timestamp}}, {{.scan_id}}, {{.date}}")
 	pattern, _ := w.terminal.Prompt(fmt.Sprintf("Filename pattern (default: %s): ", w.config.Output.Filename))
@@ -454,12 +445,11 @@ func (w *ConfigWizard) configureOutput() error {
 	}
 
 	// Display options
-	w.config.Output.Verbose, _ = w.terminal.Confirm("Enable verbose output?", false)
-	w.config.Output.ColorOutput, _ = w.terminal.Confirm("Enable colored terminal output?", true)
-	w.config.Output.ShowProgress, _ = w.terminal.Confirm("Show progress indicators?", true)
+	w.config.Output.Verbose, if err := w.terminal.Confirm("Enable verbose output?", false); err != nil { return err }
+	w.config.Output.ColorOutput, if err := w.terminal.Confirm("Enable colored terminal output?", true); err != nil { return err }
+	w.config.Output.ShowProgress, if err := w.terminal.Confirm("Show progress indicators?", true); err != nil { return err }
 
 	return nil
-}
 
 func (w *ConfigWizard) configureSecurity() error {
 	w.terminal.Info("Configure security settings.")
@@ -491,7 +481,7 @@ func (w *ConfigWizard) configureSecurity() error {
 	}
 
 	// TLS verification
-	w.config.Security.TLSVerify, _ = w.terminal.Confirm("Verify TLS certificates?", true)
+	w.config.Security.TLSVerify, if err := w.terminal.Confirm("Verify TLS certificates?", true); err != nil { return err }
 
 	// Domain restrictions
 	restrictDomains, _ := w.terminal.Confirm("Restrict API calls to specific domains?", false)
@@ -508,12 +498,11 @@ func (w *ConfigWizard) configureSecurity() error {
 	// Proxy settings
 	useProxy, _ := w.terminal.Confirm("Use HTTP proxy?", false)
 	if useProxy {
-		proxyURL, _ := w.terminal.Prompt("Proxy URL (e.g., http://proxy.company.com:8080): ")
+		proxyURL, _ := w.terminal.Prompt("Proxy URL (e.g., https://proxy.company.com:8080): ")
 		w.config.Security.ProxyURL = proxyURL
 	}
 
 	return nil
-}
 
 func (w *ConfigWizard) configureAdvanced() error {
 	w.terminal.Info("Configure advanced options.")
@@ -523,7 +512,6 @@ func (w *ConfigWizard) configureAdvanced() error {
 	if templateDir != "" {
 		w.config.Advanced.TemplateDir = templateDir
 	}
-
 	// Cache directory
 	cacheDir, _ := w.terminal.Prompt(fmt.Sprintf("Cache directory (default: %s): ", w.config.Advanced.CacheDir))
 	if cacheDir != "" {
@@ -536,13 +524,13 @@ func (w *ConfigWizard) configureAdvanced() error {
 	w.config.Advanced.LogLevel = logLevels[levelChoice]
 
 	// Telemetry
-	w.config.Advanced.EnableTelemetry, _ = w.terminal.Confirm("Enable anonymous usage telemetry?", false)
+	w.config.Advanced.EnableTelemetry, if err := w.terminal.Confirm("Enable anonymous usage telemetry?", false); err != nil { return err }
 	if w.config.Advanced.EnableTelemetry {
 		w.terminal.Info("Telemetry helps improve the tool. No sensitive data is collected.")
 	}
 
 	// Auto-update
-	w.config.Advanced.AutoUpdate, _ = w.terminal.Confirm("Enable automatic updates?", true)
+	w.config.Advanced.AutoUpdate, if err := w.terminal.Confirm("Enable automatic updates?", true); err != nil { return err }
 
 	// Experimental features
 	enableExperimental, _ := w.terminal.Confirm("Enable experimental features?", false)
@@ -556,7 +544,6 @@ func (w *ConfigWizard) configureAdvanced() error {
 	}
 
 	return nil
-}
 
 func (w *ConfigWizard) reviewAndSave() error {
 	w.terminal.Info("Configuration Review")
@@ -607,12 +594,12 @@ func (w *ConfigWizard) reviewAndSave() error {
 	case 0:
 		homeDir, _ := os.UserHomeDir()
 		configDir := filepath.Join(homeDir, ".LLMrecon")
-		os.MkdirAll(configDir, 0755)
+		os.MkdirAll(configDir, 0700)
 		configPath = filepath.Join(configDir, "config.yaml")
 	case 1:
 		configPath = "./config.yaml"
 	case 2:
-		configPath, _ = w.terminal.Prompt("Enter path: ")
+		configPath, if err := w.terminal.Prompt("Enter path: "); err != nil { return err }
 	}
 
 	// Save configuration
@@ -629,7 +616,6 @@ func (w *ConfigWizard) reviewAndSave() error {
 	}
 
 	return nil
-}
 
 // Helper methods
 
@@ -647,7 +633,6 @@ func (w *ConfigWizard) checkExistingConfig() bool {
 			filepath.Join(homeDir, ".config", "LLMrecon", "config.yaml"),
 		)
 	}
-
 	for _, loc := range locations {
 		if _, err := os.Stat(loc); err == nil {
 			return true
@@ -655,13 +640,11 @@ func (w *ConfigWizard) checkExistingConfig() bool {
 	}
 
 	return false
-}
 
 func (w *ConfigWizard) loadExistingConfig() error {
 	// Implementation would load existing configuration
 	w.terminal.Info("Loading existing configuration...")
 	return nil
-}
 
 func (w *ConfigWizard) promptAPIKey(provider string) (string, error) {
 	// Check environment variable first
@@ -689,7 +672,6 @@ func (w *ConfigWizard) promptAPIKey(provider string) (string, error) {
 	}
 
 	return apiKey, nil
-}
 
 func (w *ConfigWizard) validateAPIKey(provider, key string) bool {
 	if key == "" {
@@ -711,7 +693,6 @@ func (w *ConfigWizard) validateAPIKey(provider, key string) bool {
 
 	// Default: just check length
 	return len(key) >= 20
-}
 
 func (w *ConfigWizard) getAvailableModels(providerType string) []string {
 	models := map[string][]string{
@@ -745,7 +726,6 @@ func (w *ConfigWizard) getAvailableModels(providerType string) []string {
 	}
 
 	return []string{}
-}
 
 func (w *ConfigWizard) getProviderSettings(providerType string) map[string]interface{} {
 	settings := make(map[string]interface{})
@@ -764,7 +744,6 @@ func (w *ConfigWizard) getProviderSettings(providerType string) map[string]inter
 		fmt.Sscanf(maxTokens, "%d", &tokens)
 		settings["max_tokens"] = tokens
 	}
-
 	// Provider-specific settings
 	switch providerType {
 	case "openai":
@@ -788,12 +767,11 @@ func (w *ConfigWizard) getProviderSettings(providerType string) map[string]inter
 	}
 
 	return settings
-}
 
 func (w *ConfigWizard) saveConfig(path string) error {
 	// Create directory if needed
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
 
@@ -804,8 +782,7 @@ func (w *ConfigWizard) saveConfig(path string) error {
 	}
 
 	// Write file
-	return os.WriteFile(path, data, 0600)
-}
+	return os.WriteFile(filepath.Clean(path, data, 0600))
 
 // QuickSetup provides a streamlined setup for common scenarios
 type QuickSetup struct {
@@ -815,7 +792,6 @@ type QuickSetup struct {
 // NewQuickSetup creates a quick setup helper
 func NewQuickSetup(wizard *ConfigWizard) *QuickSetup {
 	return &QuickSetup{wizard: wizard}
-}
 
 // Run executes quick setup
 func (qs *QuickSetup) Run() error {
@@ -845,5 +821,16 @@ func (qs *QuickSetup) Run() error {
 		return qs.cicdSetup()
 	}
 
-	return nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

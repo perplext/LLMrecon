@@ -12,7 +12,6 @@ import (
 type DefaultPluginValidator struct {
 	// currentVersion is the current framework version
 	currentVersion *semver.Version
-}
 
 // NewDefaultPluginValidator creates a new default plugin validator
 func NewDefaultPluginValidator() *DefaultPluginValidator {
@@ -29,7 +28,6 @@ func NewDefaultPluginValidator() *DefaultPluginValidator {
 	return &DefaultPluginValidator{
 		currentVersion: currentVersion,
 	}
-}
 
 // ValidatePlugin validates a plugin
 func (v *DefaultPluginValidator) ValidatePlugin(plugin *ProviderPlugin) error {
@@ -48,7 +46,6 @@ func (v *DefaultPluginValidator) ValidatePlugin(plugin *ProviderPlugin) error {
 	}
 	
 	return nil
-}
 
 // ValidateCompatibility validates compatibility with the framework
 func (v *DefaultPluginValidator) ValidateCompatibility(metadata *PluginMetadata) error {
@@ -88,5 +85,3 @@ func (v *DefaultPluginValidator) ValidateCompatibility(metadata *PluginMetadata)
 		}
 	}
 	
-	return nil
-}

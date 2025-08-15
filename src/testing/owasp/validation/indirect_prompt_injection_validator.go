@@ -22,7 +22,6 @@ type IndirectPromptInjectionValidator struct {
 	suspiciousURLPatterns []*regexp.Regexp
 	// suspiciousKeywords contains keywords that might indicate indirect prompt injection attempts
 	suspiciousKeywords []string
-}
 
 // NewIndirectPromptInjectionValidator creates a new indirect prompt injection validator
 func NewIndirectPromptInjectionValidator() *IndirectPromptInjectionValidator {
@@ -96,7 +95,6 @@ func NewIndirectPromptInjectionValidator() *IndirectPromptInjectionValidator {
 		suspiciousURLPatterns:     suspiciousURLPatterns,
 		suspiciousKeywords:        suspiciousKeywords,
 	}
-}
 
 // ValidatePrompt validates a prompt for indirect prompt injection vulnerabilities
 func (v *IndirectPromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -242,7 +240,6 @@ func (v *IndirectPromptInjectionValidator) ValidatePrompt(ctx context.Context, p
 	}
 
 	return results, nil
-}
 
 // ValidateResponse validates a response for indirect prompt injection vulnerabilities
 func (v *IndirectPromptInjectionValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -347,5 +344,3 @@ func (v *IndirectPromptInjectionValidator) ValidateResponse(ctx context.Context,
 		}
 	}
 
-	return results, nil
-}

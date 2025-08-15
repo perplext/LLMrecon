@@ -47,7 +47,6 @@ type FileKeyStore struct {
 	
 	// alertCallback is called when keys need rotation
 	alertCallback func(key *KeyMetadata, daysUntilExpiration int)
-}
 
 // NewFileKeyStore creates a new file-based key store
 func NewFileKeyStore(options KeyStoreOptions) (*FileKeyStore, error) {
@@ -104,14 +103,12 @@ func NewFileKeyStore(options KeyStoreOptions) (*FileKeyStore, error) {
 	if options.RotationCheckInterval > 0 {
 		keyStore.startRotationChecker()
 	}
-
 	return keyStore, nil
-}
 
 // load loads keys from the file
 func (ks *FileKeyStore) load() error {
 	// Read file
-	data, err := ioutil.ReadFile(ks.storagePath)
+	data, err := ioutil.ReadFile(filepath.Clean(ks.storagePath))
 	if err != nil {
 		return fmt.Errorf("failed to read key store file: %w", err)
 	}
@@ -156,7 +153,6 @@ func (ks *FileKeyStore) load() error {
 	}
 
 	return nil
-}
 
 // save saves keys to the file
 func (ks *FileKeyStore) save() error {
@@ -181,7 +177,6 @@ func (ks *FileKeyStore) save() error {
 	}
 
 	return nil
-}
 
 // startRotationChecker starts the rotation checker
 func (ks *FileKeyStore) startRotationChecker() {
@@ -191,7 +186,6 @@ func (ks *FileKeyStore) startRotationChecker() {
 			ks.checkKeyRotation()
 		}
 	}()
-}
 
 // checkKeyRotation checks for keys that need rotation
 func (ks *FileKeyStore) checkKeyRotation() {
@@ -233,7 +227,6 @@ func (ks *FileKeyStore) checkKeyRotation() {
 			}
 		}
 	}
-}
 
 // StoreKey stores a key in the key store
 func (ks *FileKeyStore) StoreKey(key *Key) error {
@@ -271,7 +264,6 @@ func (ks *FileKeyStore) StoreKey(key *Key) error {
 		if err := ks.hsmManager.StoreKey(key); err != nil {
 			return fmt.Errorf("failed to store key in HSM: %w", err)
 		}
-
 		// Store metadata only in memory
 		ks.mutex.Lock()
 		ks.keys[key.Metadata.ID] = &Key{
@@ -314,7 +306,6 @@ func (ks *FileKeyStore) StoreKey(key *Key) error {
 	}
 
 	return nil
-}
 
 // GetKey retrieves a key by ID
 func (ks *FileKeyStore) GetKey(id string) (*Key, error) {
@@ -339,13 +330,11 @@ func (ks *FileKeyStore) GetKey(id string) (*Key, error) {
 	// Return a copy of the key to prevent modification
 	keyCopy := *key
 	return &keyCopy, nil
-}
 
 // GetKeyMetadata retrieves key metadata by ID
 func (ks *FileKeyStore) GetKeyMetadata(id string) (*KeyMetadata, error) {
 	ks.mutex.RLock()
 	defer ks.mutex.RUnlock()
-
 	key, exists := ks.keys[id]
 	if !exists {
 		return nil, fmt.Errorf("key not found: %s", id)
@@ -354,8 +343,6 @@ func (ks *FileKeyStore) GetKeyMetadata(id string) (*KeyMetadata, error) {
 	// Return a copy of the metadata to prevent modification
 	metadataCopy := key.Metadata
 	return &metadataCopy, nil
-}
-
 // DeleteKey deletes a key by ID
 func (ks *FileKeyStore) DeleteKey(id string) error {
 	ks.mutex.Lock()
@@ -392,7 +379,6 @@ func (ks *FileKeyStore) DeleteKey(id string) error {
 	}
 
 	return nil
-}
 
 // ListKeys lists all keys in the key store
 func (ks *FileKeyStore) ListKeys() ([]*KeyMetadata, error) {
@@ -407,7 +393,6 @@ func (ks *FileKeyStore) ListKeys() ([]*KeyMetadata, error) {
 	}
 
 	return keys, nil
-}
 
 // ListKeysByType lists keys of a specific type
 func (ks *FileKeyStore) ListKeysByType(keyType KeyType) ([]*KeyMetadata, error) {
@@ -424,7 +409,6 @@ func (ks *FileKeyStore) ListKeysByType(keyType KeyType) ([]*KeyMetadata, error) 
 	}
 
 	return keys, nil
-}
 
 // ListKeysByUsage lists keys with a specific usage
 func (ks *FileKeyStore) ListKeysByUsage(usage KeyUsage) ([]*KeyMetadata, error) {
@@ -439,9 +423,7 @@ func (ks *FileKeyStore) ListKeysByUsage(usage KeyUsage) ([]*KeyMetadata, error) 
 			keys = append(keys, &metadataCopy)
 		}
 	}
-
 	return keys, nil
-}
 
 // ListKeysByTag lists keys with a specific tag
 func (ks *FileKeyStore) ListKeysByTag(tag string) ([]*KeyMetadata, error) {
@@ -461,7 +443,6 @@ func (ks *FileKeyStore) ListKeysByTag(tag string) ([]*KeyMetadata, error) {
 	}
 
 	return keys, nil
-}
 
 // Close closes the key store
 func (ks *FileKeyStore) Close() error {
@@ -488,7 +469,6 @@ func (ks *FileKeyStore) Close() error {
 	}
 
 	return nil
-}
 
 // generateKeyID generates a unique ID for a key
 func generateKeyID(name string, keyType KeyType) string {
@@ -513,7 +493,6 @@ func generateKeyID(name string, keyType KeyType) string {
 
 	// Return prefix + first 8 characters of UUID
 	return prefix + id[:8]
-}
 
 // calculateKeyFingerprint calculates a fingerprint for a key
 func calculateKeyFingerprint(keyData []byte) (string, error) {
@@ -521,5 +500,3 @@ func calculateKeyFingerprint(keyData []byte) (string, error) {
 	hash := sha256.Sum256(keyData)
 
 	// Return base64-encoded hash
-	return base64.StdEncoding.EncodeToString(hash[:]), nil
-}

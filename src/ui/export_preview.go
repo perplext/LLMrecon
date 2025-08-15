@@ -12,7 +12,6 @@ import (
 type ExportPreview struct {
 	terminal *Terminal
 	style    *DashboardStyle
-}
 
 // NewExportPreview creates a new export preview handler
 func NewExportPreview(terminal *Terminal) *ExportPreview {
@@ -20,7 +19,6 @@ func NewExportPreview(terminal *Terminal) *ExportPreview {
 		terminal: terminal,
 		style:    newDashboardStyle(),
 	}
-}
 
 // ShowFormatSelection displays available export formats with previews
 func (ep *ExportPreview) ShowFormatSelection(data interface{}) (string, error) {
@@ -120,7 +118,6 @@ func (ep *ExportPreview) ShowFormatSelection(data interface{}) (string, error) {
 	}
 	
 	return selectedFormat.ID, nil
-}
 
 // ShowPreview displays a preview of the selected format
 func (ep *ExportPreview) ShowPreview(formatID string, data interface{}) error {
@@ -143,7 +140,6 @@ func (ep *ExportPreview) ShowPreview(formatID string, data interface{}) error {
 	ep.showExportOptions(format)
 	
 	return nil
-}
 
 // generatePreview creates a preview for the specified format
 func (ep *ExportPreview) generatePreview(format *ExportFormat, data interface{}) string {
@@ -170,7 +166,6 @@ func (ep *ExportPreview) generatePreview(format *ExportFormat, data interface{})
 	default:
 		return "Preview not available for this format"
 	}
-}
 
 // Format-specific preview generators
 
@@ -206,7 +201,6 @@ func (ep *ExportPreview) generateJSONPreview(data *SampleReportData) string {
 	
 	jsonBytes, _ := json.MarshalIndent(preview, "", "  ")
 	return string(jsonBytes)
-}
 
 func (ep *ExportPreview) generateYAMLPreview(data *SampleReportData) string {
 	preview := map[string]interface{}{
@@ -237,7 +231,6 @@ func (ep *ExportPreview) generateYAMLPreview(data *SampleReportData) string {
 	
 	yamlBytes, _ := yaml.Marshal(preview)
 	return string(yamlBytes)
-}
 
 func (ep *ExportPreview) generateMarkdownPreview(data *SampleReportData) string {
 	return fmt.Sprintf(`# Security Scan Report
@@ -302,7 +295,6 @@ Compliance status: **%s**
 		data.RiskScore,
 		data.ComplianceStatus,
 	)
-}
 
 func (ep *ExportPreview) generateHTMLPreview(data *SampleReportData) string {
 	return fmt.Sprintf(`<!DOCTYPE html>
@@ -369,7 +361,6 @@ func (ep *ExportPreview) generateHTMLPreview(data *SampleReportData) string {
 		data.VulnerabilityCount,
 		data.RiskScore,
 	)
-}
 
 func (ep *ExportPreview) generatePDFPreview(data *SampleReportData) string {
 	return fmt.Sprintf(`PDF Document Preview
@@ -422,7 +413,6 @@ DETAILED FINDINGS
 		data.VulnerabilityCount,
 		data.RiskScore,
 	)
-}
 
 func (ep *ExportPreview) generateCSVPreview(data *SampleReportData) string {
 	return `"ID","Severity","Category","Description","CVSS Score","Status","Remediation"
@@ -433,7 +423,6 @@ func (ep *ExportPreview) generateCSVPreview(data *SampleReportData) string {
 "VULN-005","Medium","Logging","Sensitive data in logs","5.3","Open","Redact sensitive information"
 
 [Showing first 5 of 15 rows]`
-}
 
 func (ep *ExportPreview) generateSARIFPreview(data *SampleReportData) string {
 	return `{
@@ -486,8 +475,7 @@ func (ep *ExportPreview) generateSARIFPreview(data *SampleReportData) string {
       ]
     }
   ]
-}`
-}
+`
 
 func (ep *ExportPreview) generateJIRAPreview(data *SampleReportData) string {
 	return fmt.Sprintf(`JIRA Issue Preview
@@ -535,7 +523,6 @@ Attachments:
 		data.ID,
 		data.Timestamp,
 	)
-}
 
 // Display helpers
 
@@ -557,7 +544,6 @@ func (ep *ExportPreview) displayPreview(preview string, format *ExportFormat) {
 			fmt.Println(ep.formatPreviewLine(line, format))
 		}
 	}
-}
 
 func (ep *ExportPreview) formatPreviewLine(line string, format *ExportFormat) string {
 	// Apply syntax highlighting based on format
@@ -575,7 +561,6 @@ func (ep *ExportPreview) formatPreviewLine(line string, format *ExportFormat) st
 	default:
 		return line
 	}
-}
 
 // Syntax highlighting helpers
 
@@ -597,7 +582,6 @@ func (ep *ExportPreview) highlightJSON(line string) string {
 	}
 	
 	return line
-}
 
 func (ep *ExportPreview) highlightYAML(line string) string {
 	// YAML key highlighting
@@ -608,7 +592,6 @@ func (ep *ExportPreview) highlightYAML(line string) string {
 		}
 	}
 	return line
-}
 
 func (ep *ExportPreview) highlightMarkdown(line string) string {
 	// Headers
@@ -632,7 +615,6 @@ func (ep *ExportPreview) highlightMarkdown(line string) string {
 	}
 	
 	return line
-}
 
 func (ep *ExportPreview) highlightHTML(line string) string {
 	// HTML tag highlighting
@@ -642,7 +624,6 @@ func (ep *ExportPreview) highlightHTML(line string) string {
 		line = strings.ReplaceAll(line, ">", ep.style.Info.Render(">"))
 	}
 	return line
-}
 
 func (ep *ExportPreview) highlightCSV(line string) string {
 	// CSV header row
@@ -659,7 +640,6 @@ func (ep *ExportPreview) highlightCSV(line string) string {
 	}
 	
 	return line
-}
 
 // Export options
 
@@ -684,7 +664,6 @@ func (ep *ExportPreview) showExportOptions(format *ExportFormat) {
 		ep.terminal.Subsection("Compatible With")
 		ep.terminal.Info(strings.Join(format.Compatible, ", "))
 	}
-}
 
 func (ep *ExportPreview) getFormatOptions(format *ExportFormat) []ExportOption {
 	switch format.ID {
@@ -709,7 +688,6 @@ func (ep *ExportPreview) getFormatOptions(format *ExportFormat) []ExportOption {
 	default:
 		return []ExportOption{}
 	}
-}
 
 func (ep *ExportPreview) estimateFileSize(format *ExportFormat) string {
 	// Rough estimates based on format
@@ -728,7 +706,6 @@ func (ep *ExportPreview) estimateFileSize(format *ExportFormat) string {
 		return size
 	}
 	return "Unknown"
-}
 
 // Helper methods
 
@@ -738,7 +715,6 @@ func (ep *ExportPreview) getFormatNames(formats []ExportFormat) []string {
 		names[i] = f.Name
 	}
 	return names
-}
 
 func (ep *ExportPreview) getFormatByID(id string) *ExportFormat {
 	formats := []ExportFormat{
@@ -758,7 +734,6 @@ func (ep *ExportPreview) getFormatByID(id string) *ExportFormat {
 		}
 	}
 	return nil
-}
 
 func (ep *ExportPreview) getSampleData(data interface{}) *SampleReportData {
 	// If real data provided, extract sample
@@ -771,7 +746,6 @@ func (ep *ExportPreview) getSampleData(data interface{}) *SampleReportData {
 		RiskScore:          7.8,
 		ComplianceStatus:   "Partial",
 	}
-}
 
 // ShowComparisonPreview shows a side-by-side format comparison
 func (ep *ExportPreview) ShowComparisonPreview(formats []string, data interface{}) error {
@@ -807,7 +781,6 @@ func (ep *ExportPreview) ShowComparisonPreview(formats []string, data interface{
 	}
 	
 	return nil
-}
 
 func (ep *ExportPreview) showSideBySide(format1, format2 string, previews map[string]string) {
 	f1 := ep.getFormatByID(format1)
@@ -847,14 +820,12 @@ func (ep *ExportPreview) showSideBySide(format1, format2 string, previews map[st
 			ep.style.Info.Render("... (truncated)"),
 			ep.style.Info.Render("... (truncated)"))
 	}
-}
 
 func max(a, b int) int {
 	if a > b {
 		return a
 	}
 	return b
-}
 
 // Data structures
 
@@ -865,7 +836,6 @@ type ExportFormat struct {
 	Extensions  []string
 	Features    []string
 	Compatible  []string
-}
 
 type ExportOption struct {
 	Name        string
@@ -879,5 +849,30 @@ type SampleReportData struct {
 	TotalTests         int
 	VulnerabilityCount int
 	RiskScore          float64
-	ComplianceStatus   string
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

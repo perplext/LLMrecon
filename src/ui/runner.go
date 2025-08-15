@@ -23,7 +23,6 @@ type RunnerTask struct {
 	Execute     func(ctx context.Context, progress ProgressReporter) error
 	Retryable   bool
 	Required    bool
-}
 
 // RunnerOptions configures the runner
 type RunnerOptions struct {
@@ -47,7 +46,6 @@ func DefaultRunnerOptions() RunnerOptions {
 		ShowTaskDetails:  true,
 		SummaryReport:    true,
 	}
-}
 
 // ProgressReporter provides progress reporting interface
 type ProgressReporter interface {
@@ -58,7 +56,6 @@ type ProgressReporter interface {
 	SetDetails(details string)
 	AddSubTask(name string)
 	CompleteSubTask(name string)
-}
 
 // NewRunner creates a new interactive runner
 func NewRunner(terminal *Terminal, options RunnerOptions) *Runner {
@@ -67,12 +64,10 @@ func NewRunner(terminal *Terminal, options RunnerOptions) *Runner {
 		tasks:    make([]RunnerTask, 0),
 		options:  options,
 	}
-}
 
 // AddTask adds a task to the runner
 func (r *Runner) AddTask(task RunnerTask) {
 	r.tasks = append(r.tasks, task)
-}
 
 // Run executes all tasks with progress tracking
 func (r *Runner) Run(ctx context.Context) error {
@@ -105,7 +100,6 @@ func (r *Runner) Run(ctx context.Context) error {
 	}
 
 	return nil
-}
 
 // TaskResult represents the result of a task execution
 type TaskResult struct {
@@ -137,7 +131,6 @@ func (r *Runner) runSequential(ctx context.Context) []TaskResult {
 	}
 
 	return results
-}
 
 // runConcurrent runs tasks concurrently
 func (r *Runner) runConcurrent(ctx context.Context) []TaskResult {
@@ -167,7 +160,6 @@ func (r *Runner) runConcurrent(ctx context.Context) []TaskResult {
 
 	wg.Wait()
 	return results
-}
 
 // runTask runs a single task with retry logic
 func (r *Runner) runTask(ctx context.Context, index int, task RunnerTask) TaskResult {
@@ -234,7 +226,6 @@ func (r *Runner) runTask(ctx context.Context, index int, task RunnerTask) TaskRe
 		Duration:  duration,
 		Retries:   attempts - 1,
 	}
-}
 
 // showSummary shows execution summary
 func (r *Runner) showSummary(results []TaskResult, totalDuration time.Duration) {
@@ -301,7 +292,6 @@ func (r *Runner) showSummary(results []TaskResult, totalDuration time.Duration) 
 			}
 		}
 	}
-}
 
 // progressReporter implements ProgressReporter
 type progressReporter struct {
@@ -311,7 +301,6 @@ type progressReporter struct {
 	total     int64
 	current   int64
 	mu        sync.Mutex
-}
 
 func (pr *progressReporter) SetTotal(total int64) {
 	pr.mu.Lock()
@@ -321,7 +310,6 @@ func (pr *progressReporter) SetTotal(total int64) {
 	if pr.terminal.progressMgr != nil {
 		pr.terminal.StartProgress(pr.taskID, pr.taskName, total)
 	}
-}
 
 func (pr *progressReporter) SetCurrent(current int64) {
 	pr.mu.Lock()
@@ -331,7 +319,6 @@ func (pr *progressReporter) SetCurrent(current int64) {
 	if pr.terminal.progressMgr != nil {
 		pr.terminal.UpdateProgress(pr.taskID, current)
 	}
-}
 
 func (pr *progressReporter) Increment() {
 	pr.mu.Lock()
@@ -341,41 +328,34 @@ func (pr *progressReporter) Increment() {
 	if pr.terminal.progressMgr != nil {
 		pr.terminal.UpdateProgress(pr.taskID, pr.current)
 	}
-}
 
 func (pr *progressReporter) SetStatus(status string) {
 	pr.terminal.Info("  %s: %s", pr.taskName, status)
-}
 
 func (pr *progressReporter) SetDetails(details string) {
 	if pr.terminal.multiProg != nil {
 		pr.terminal.multiProg.UpdateTask(pr.taskID, TaskRunning, float64(pr.current)/float64(pr.total), details)
 	}
-}
 
 func (pr *progressReporter) AddSubTask(name string) {
 	if pr.terminal.multiProg != nil {
 		pr.terminal.multiProg.AddSubTask(pr.taskID, name)
 	}
-}
 
 func (pr *progressReporter) CompleteSubTask(name string) {
 	// Implementation would update subtask status
 	log.Debug().Str("task", pr.taskID).Str("subtask", name).Msg("Subtask completed")
-}
 
 // InteractiveRunner provides interactive task execution
 type InteractiveRunner struct {
 	*Runner
 	selectedTasks []int
-}
 
 // NewInteractiveRunner creates a new interactive runner
 func NewInteractiveRunner(terminal *Terminal, options RunnerOptions) *InteractiveRunner {
 	return &InteractiveRunner{
 		Runner: NewRunner(terminal, options),
 	}
-}
 
 // SelectTasks allows user to interactively select tasks
 func (ir *InteractiveRunner) SelectTasks() error {
@@ -427,7 +407,6 @@ func (ir *InteractiveRunner) SelectTasks() error {
 	}
 
 	return nil
-}
 
 // Run executes selected tasks
 func (ir *InteractiveRunner) Run(ctx context.Context) error {
@@ -449,7 +428,6 @@ func (ir *InteractiveRunner) Run(ctx context.Context) error {
 	ir.tasks = originalTasks // Restore original tasks
 	
 	return err
-}
 
 // ExampleUsage shows how to use the runner
 func ExampleUsage() {
@@ -521,4 +499,19 @@ func ExampleUsage() {
 	if err := runner.Run(ctx); err != nil {
 		terminal.Error("Execution failed: %v", err)
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

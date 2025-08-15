@@ -13,11 +13,9 @@ import (
 type ChartWidget struct {
 	storage DataStorage
 	logger  Logger
-}
 
 func (cw *ChartWidget) GetType() WidgetType {
 	return WidgetTypeChart
-}
 
 func (cw *ChartWidget) GetData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	switch config.Type {
@@ -28,7 +26,6 @@ func (cw *ChartWidget) GetData(ctx context.Context, config DataSourceConfig) (in
 	default:
 		return nil, fmt.Errorf("unsupported data source type: %s", config.Type)
 	}
-}
 
 func (cw *ChartWidget) getMetricsData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	metrics, err := cw.storage.GetMetricsByNameAndTimeRange(ctx, config.MetricName, config.TimeRange.Start, config.TimeRange.End)
@@ -55,7 +52,6 @@ func (cw *ChartWidget) getMetricsData(ctx context.Context, config DataSourceConf
 	}
 	
 	return chartData, nil
-}
 
 func (cw *ChartWidget) getTrendsData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	// This would integrate with TrendAnalyzer
@@ -65,7 +61,6 @@ func (cw *ChartWidget) getTrendsData(ctx context.Context, config DataSourceConfi
 		"slope": 0.5,
 		"confidence": 0.85,
 	}, nil
-}
 
 func (cw *ChartWidget) Render(data interface{}, style WidgetStyle) (string, error) {
 	chartData, ok := data.(ChartData)
@@ -111,14 +106,12 @@ func (cw *ChartWidget) Render(data interface{}, style WidgetStyle) (string, erro
 	)
 	
 	return chartHTML, nil
-}
 
 func (cw *ChartWidget) Validate(config map[string]interface{}) error {
 	if _, ok := config["chart_type"]; !ok {
 		return fmt.Errorf("chart_type is required")
 	}
 	return nil
-}
 
 func (cw *ChartWidget) GetMetadata() WidgetMetadata {
 	return WidgetMetadata{
@@ -130,22 +123,18 @@ func (cw *ChartWidget) GetMetadata() WidgetMetadata {
 		MinSize:     WidgetSize{Width: 2, Height: 2},
 		MaxSize:     WidgetSize{Width: 12, Height: 8},
 	}
-}
 
 func (cw *ChartWidget) serializeChartData(data ChartData) string {
 	jsonData, _ := json.Marshal(data)
 	return string(jsonData)
-}
 
 // TableWidget displays data in tabular format
 type TableWidget struct {
 	storage DataStorage
 	logger  Logger
-}
 
 func (tw *TableWidget) GetType() WidgetType {
 	return WidgetTypeTable
-}
 
 func (tw *TableWidget) GetData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	metrics, err := tw.storage.GetMetricsByNameAndTimeRange(ctx, config.MetricName, config.TimeRange.Start, config.TimeRange.End)
@@ -173,7 +162,6 @@ func (tw *TableWidget) GetData(ctx context.Context, config DataSourceConfig) (in
 	}
 	
 	return tableData, nil
-}
 
 func (tw *TableWidget) Render(data interface{}, style WidgetStyle) (string, error) {
 	tableData, ok := data.(TableData)
@@ -218,11 +206,9 @@ func (tw *TableWidget) Render(data interface{}, style WidgetStyle) (string, erro
 	html += `</tbody></table></div>`
 	
 	return html, nil
-}
 
 func (tw *TableWidget) Validate(config map[string]interface{}) error {
 	return nil // Table widget has no required config
-}
 
 func (tw *TableWidget) GetMetadata() WidgetMetadata {
 	return WidgetMetadata{
@@ -234,17 +220,14 @@ func (tw *TableWidget) GetMetadata() WidgetMetadata {
 		MinSize:     WidgetSize{Width: 2, Height: 2},
 		MaxSize:     WidgetSize{Width: 12, Height: 8},
 	}
-}
 
 // MetricWidget displays a single metric value
 type MetricWidget struct {
 	storage DataStorage
 	logger  Logger
-}
 
 func (mw *MetricWidget) GetType() WidgetType {
 	return WidgetTypeMetric
-}
 
 func (mw *MetricWidget) GetData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	metrics, err := mw.storage.GetMetricsByNameAndTimeRange(ctx, config.MetricName, config.TimeRange.Start, config.TimeRange.End)
@@ -277,7 +260,6 @@ func (mw *MetricWidget) GetData(ctx context.Context, config DataSourceConfig) (i
 		ChangePercent: changePercent,
 		Timestamp:     latest.Timestamp,
 	}, nil
-}
 
 func (mw *MetricWidget) Render(data interface{}, style WidgetStyle) (string, error) {
 	metricData, ok := data.(MetricData)
@@ -323,11 +305,9 @@ func (mw *MetricWidget) Render(data interface{}, style WidgetStyle) (string, err
 	)
 	
 	return html, nil
-}
 
 func (mw *MetricWidget) Validate(config map[string]interface{}) error {
 	return nil
-}
 
 func (mw *MetricWidget) GetMetadata() WidgetMetadata {
 	return WidgetMetadata{
@@ -339,17 +319,14 @@ func (mw *MetricWidget) GetMetadata() WidgetMetadata {
 		MinSize:     WidgetSize{Width: 1, Height: 1},
 		MaxSize:     WidgetSize{Width: 3, Height: 2},
 	}
-}
 
 // GaugeWidget displays metrics as a gauge/dial
 type GaugeWidget struct {
 	storage DataStorage
 	logger  Logger
-}
 
 func (gw *GaugeWidget) GetType() WidgetType {
 	return WidgetTypeGauge
-}
 
 func (gw *GaugeWidget) GetData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	metrics, err := gw.storage.GetMetricsByNameAndTimeRange(ctx, config.MetricName, config.TimeRange.Start, config.TimeRange.End)
@@ -387,7 +364,6 @@ func (gw *GaugeWidget) GetData(ctx context.Context, config DataSourceConfig) (in
 		Label: config.MetricName,
 		Unit:  "units",
 	}, nil
-}
 
 func (gw *GaugeWidget) Render(data interface{}, style WidgetStyle) (string, error) {
 	gaugeData, ok := data.(GaugeData)
@@ -452,11 +428,9 @@ func (gw *GaugeWidget) Render(data interface{}, style WidgetStyle) (string, erro
 	)
 	
 	return html, nil
-}
 
 func (gw *GaugeWidget) Validate(config map[string]interface{}) error {
 	return nil
-}
 
 func (gw *GaugeWidget) GetMetadata() WidgetMetadata {
 	return WidgetMetadata{
@@ -468,7 +442,6 @@ func (gw *GaugeWidget) GetMetadata() WidgetMetadata {
 		MinSize:     WidgetSize{Width: 2, Height: 2},
 		MaxSize:     WidgetSize{Width: 4, Height: 4},
 	}
-}
 
 // HeatmapWidget displays data as a heatmap
 type HeatmapWidget struct {
@@ -479,7 +452,6 @@ type HeatmapWidget struct {
 
 func (hw *HeatmapWidget) GetType() WidgetType {
 	return WidgetTypeHeatmap
-}
 
 func (hw *HeatmapWidget) GetData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	metrics, err := hw.storage.GetMetricsByNameAndTimeRange(ctx, config.MetricName, config.TimeRange.Start, config.TimeRange.End)
@@ -507,7 +479,6 @@ func (hw *HeatmapWidget) GetData(ctx context.Context, config DataSourceConfig) (
 	}
 	
 	return heatmapData, nil
-}
 
 func (hw *HeatmapWidget) Render(data interface{}, style WidgetStyle) (string, error) {
 	heatmapData, ok := data.(map[string]map[int]float64)
@@ -584,7 +555,6 @@ func (hw *HeatmapWidget) Render(data interface{}, style WidgetStyle) (string, er
 	html += `</div></div>`
 	
 	return html, nil
-}
 
 func (hw *HeatmapWidget) getHeatmapColor(intensity float64, baseColor string) string {
 	// Convert intensity to RGB
@@ -603,11 +573,9 @@ func (hw *HeatmapWidget) getHeatmapColor(intensity float64, baseColor string) st
 	}
 	
 	return fmt.Sprintf("rgb(%d, %d, %d)", red, green, blue)
-}
 
 func (hw *HeatmapWidget) Validate(config map[string]interface{}) error {
 	return nil
-}
 
 func (hw *HeatmapWidget) GetMetadata() WidgetMetadata {
 	return WidgetMetadata{
@@ -619,7 +587,6 @@ func (hw *HeatmapWidget) GetMetadata() WidgetMetadata {
 		MinSize:     WidgetSize{Width: 4, Height: 3},
 		MaxSize:     WidgetSize{Width: 12, Height: 6},
 	}
-}
 
 // Additional widget types with basic implementations
 
@@ -627,55 +594,43 @@ func (hw *HeatmapWidget) GetMetadata() WidgetMetadata {
 type TimelineWidget struct {
 	storage DataStorage
 	logger  Logger
-}
 
 func (tw *TimelineWidget) GetType() WidgetType          { return WidgetTypeTimeline }
 func (tw *TimelineWidget) GetData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	return []interface{}{}, nil // Mock implementation
-}
 func (tw *TimelineWidget) Render(data interface{}, style WidgetStyle) (string, error) {
 	return `<div class="timeline-widget">Timeline Widget</div>`, nil
-}
 func (tw *TimelineWidget) Validate(config map[string]interface{}) error { return nil }
 func (tw *TimelineWidget) GetMetadata() WidgetMetadata {
 	return WidgetMetadata{Name: "Timeline Widget", Version: "1.0.0"}
-}
 
 // AlertWidget displays alerts and notifications
 type AlertWidget struct {
 	storage DataStorage
 	logger  Logger
-}
 
 func (aw *AlertWidget) GetType() WidgetType          { return WidgetTypeAlert }
 func (aw *AlertWidget) GetData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	return []interface{}{}, nil
-}
 func (aw *AlertWidget) Render(data interface{}, style WidgetStyle) (string, error) {
 	return `<div class="alert-widget">Alert Widget</div>`, nil
-}
 func (aw *AlertWidget) Validate(config map[string]interface{}) error { return nil }
 func (aw *AlertWidget) GetMetadata() WidgetMetadata {
 	return WidgetMetadata{Name: "Alert Widget", Version: "1.0.0"}
-}
 
 // ProgressWidget displays progress bars
 type ProgressWidget struct {
 	storage DataStorage
 	logger  Logger
-}
 
 func (pw *ProgressWidget) GetType() WidgetType          { return WidgetTypeProgress }
 func (pw *ProgressWidget) GetData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	return map[string]interface{}{"progress": 75}, nil
-}
 func (pw *ProgressWidget) Render(data interface{}, style WidgetStyle) (string, error) {
 	return `<div class="progress-widget">Progress Widget</div>`, nil
-}
 func (pw *ProgressWidget) Validate(config map[string]interface{}) error { return nil }
 func (pw *ProgressWidget) GetMetadata() WidgetMetadata {
 	return WidgetMetadata{Name: "Progress Widget", Version: "1.0.0"}
-}
 
 // TextWidget displays static text content
 type TextWidget struct {
@@ -685,33 +640,27 @@ type TextWidget struct {
 func (tw *TextWidget) GetType() WidgetType          { return WidgetTypeText }
 func (tw *TextWidget) GetData(ctx context.Context, config DataSourceConfig) (interface{}, error) {
 	return map[string]interface{}{"content": "Static text content"}, nil
-}
 func (tw *TextWidget) Render(data interface{}, style WidgetStyle) (string, error) {
 	return `<div class="text-widget">Text Widget</div>`, nil
-}
 func (tw *TextWidget) Validate(config map[string]interface{}) error { return nil }
 func (tw *TextWidget) GetMetadata() WidgetMetadata {
 	return WidgetMetadata{Name: "Text Widget", Version: "1.0.0"}
-}
 
 // Data structures for widgets
 
 type ChartData struct {
 	Labels   []string       `json:"labels"`
 	Datasets []ChartDataset `json:"datasets"`
-}
 
 type ChartDataset struct {
 	Label           string    `json:"label"`
 	Data            []float64 `json:"data"`
 	BorderColor     string    `json:"borderColor"`
 	BackgroundColor string    `json:"backgroundColor"`
-}
 
 type TableData struct {
 	Headers []string        `json:"headers"`
 	Rows    [][]interface{} `json:"rows"`
-}
 
 type MetricData struct {
 	Value         float64   `json:"value"`
@@ -727,4 +676,49 @@ type GaugeData struct {
 	Max   float64 `json:"max"`
 	Label string  `json:"label"`
 	Unit  string  `json:"unit"`
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

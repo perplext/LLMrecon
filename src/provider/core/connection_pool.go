@@ -51,7 +51,6 @@ type ConnectionPoolManager struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	wg        sync.WaitGroup
-}
 
 // ProviderConnectionPool manages connections for a specific provider
 type ProviderConnectionPool struct {
@@ -65,7 +64,6 @@ type ProviderConnectionPool struct {
 	ctx          context.Context
 	cancel       context.CancelFunc
 	wg           sync.WaitGroup
-}
 
 // ConnectionPoolMetrics tracks connection pool performance
 type ConnectionPoolMetrics struct {
@@ -80,7 +78,6 @@ type ConnectionPoolMetrics struct {
 	
 	// Per-provider metrics
 	ProviderMetrics map[ProviderType]*ProviderPoolMetrics `json:"provider_metrics"`
-}
 
 // ProviderPoolMetrics tracks metrics for a specific provider pool
 type ProviderPoolMetrics struct {
@@ -107,7 +104,6 @@ type HealthChecker struct {
 	cancel   context.CancelFunc
 	ticker   *time.Ticker
 	wg       sync.WaitGroup
-}
 
 // DefaultConnectionPoolConfig returns default configuration
 func DefaultConnectionPoolConfig() ConnectionPoolConfig {
@@ -126,7 +122,6 @@ func DefaultConnectionPoolConfig() ConnectionPoolConfig {
 		HealthCheckInterval:   30 * time.Second,
 		HealthCheckTimeout:    5 * time.Second,
 	}
-}
 
 // NewConnectionPoolManager creates a new connection pool manager
 func NewConnectionPoolManager(config ConnectionPoolConfig, logger Logger) *ConnectionPoolManager {
@@ -142,7 +137,6 @@ func NewConnectionPoolManager(config ConnectionPoolConfig, logger Logger) *Conne
 	}
 	
 	return manager
-}
 
 // CreatePool creates a connection pool for a specific provider
 func (m *ConnectionPoolManager) CreatePool(providerType ProviderType, config ConnectionPoolConfig) (*ProviderConnectionPool, error) {
@@ -164,7 +158,6 @@ func (m *ConnectionPoolManager) CreatePool(providerType ProviderType, config Con
 	
 	m.logger.Info("Created connection pool", "provider", providerType, "max_idle", config.MaxIdleConns)
 	return pool, nil
-}
 
 // GetPool returns the connection pool for a provider
 func (m *ConnectionPoolManager) GetPool(providerType ProviderType) (*ProviderConnectionPool, error) {
@@ -177,7 +170,6 @@ func (m *ConnectionPoolManager) GetPool(providerType ProviderType) (*ProviderCon
 	}
 	
 	return pool, nil
-}
 
 // GetClient returns an HTTP client for a provider with connection pooling
 func (m *ConnectionPoolManager) GetClient(providerType ProviderType) (*http.Client, error) {
@@ -187,7 +179,6 @@ func (m *ConnectionPoolManager) GetClient(providerType ProviderType) (*http.Clie
 	}
 	
 	return pool.client, nil
-}
 
 // Start starts the connection pool manager and health checkers
 func (m *ConnectionPoolManager) Start() error {
@@ -208,7 +199,6 @@ func (m *ConnectionPoolManager) Start() error {
 	
 	m.logger.Info("Connection pool manager started")
 	return nil
-}
 
 // Stop stops the connection pool manager
 func (m *ConnectionPoolManager) Stop() error {
@@ -224,7 +214,6 @@ func (m *ConnectionPoolManager) Stop() error {
 	
 	m.logger.Info("Connection pool manager stopped")
 	return nil
-}
 
 // GetMetrics returns current connection pool metrics
 func (m *ConnectionPoolManager) GetMetrics() *ConnectionPoolMetrics {
@@ -242,7 +231,6 @@ func (m *ConnectionPoolManager) GetMetrics() *ConnectionPoolMetrics {
 	m.metrics.IdleConnections = totalIdle
 	
 	return m.metrics
-}
 
 // createProviderPool creates a connection pool for a specific provider
 func (m *ConnectionPoolManager) createProviderPool(providerType ProviderType, config ConnectionPoolConfig) (*ProviderConnectionPool, error) {
@@ -269,7 +257,7 @@ func (m *ConnectionPoolManager) createProviderPool(providerType ProviderType, co
 	// Configure TLS if needed
 	if config.InsecureSkipVerify {
 		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: false // Fixed: Enable cert validation,
 		}
 	}
 	
@@ -304,7 +292,6 @@ func (m *ConnectionPoolManager) createProviderPool(providerType ProviderType, co
 	healthChecker.metrics = pool.metrics
 	
 	return pool, nil
-}
 
 // metricsLoop periodically updates connection pool metrics
 func (m *ConnectionPoolManager) metricsLoop() {
@@ -319,7 +306,6 @@ func (m *ConnectionPoolManager) metricsLoop() {
 			return
 		}
 	}
-}
 
 // updateMetrics updates connection pool metrics
 func (m *ConnectionPoolManager) updateMetrics() {
@@ -329,7 +315,6 @@ func (m *ConnectionPoolManager) updateMetrics() {
 	for _, pool := range m.pools {
 		pool.updateMetrics()
 	}
-}
 
 // ProviderConnectionPool methods
 
@@ -345,7 +330,6 @@ func (p *ProviderConnectionPool) Start() error {
 	}
 	
 	return nil
-}
 
 // Stop stops the provider connection pool
 func (p *ProviderConnectionPool) Stop() {
@@ -355,27 +339,23 @@ func (p *ProviderConnectionPool) Stop() {
 	
 	// Close idle connections
 	p.transport.CloseIdleConnections()
-}
 
 // GetClient returns the HTTP client for this pool
 func (p *ProviderConnectionPool) GetClient() *http.Client {
 	p.metrics.ConnectionsReused++
 	return p.client
-}
 
 // updateMetrics updates provider pool metrics
 func (p *ProviderConnectionPool) updateMetrics() {
 	// Note: Go's http.Transport doesn't expose connection count directly
 	// These would need to be tracked through custom transport or monitoring
 	p.metrics.LastHealthCheck = time.Now()
-}
 
 // GetMetrics returns provider pool metrics
 func (p *ProviderConnectionPool) GetMetrics() *ProviderPoolMetrics {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	return p.metrics
-}
 
 // HealthChecker methods
 
@@ -389,14 +369,12 @@ func (h *HealthChecker) start() {
 			return
 		}
 	}
-}
 
 // stop stops the health checker
 func (h *HealthChecker) stop() {
 	h.cancel()
 	h.ticker.Stop()
 	h.wg.Wait()
-}
 
 // performHealthCheck performs a health check on the connection pool
 func (h *HealthChecker) performHealthCheck() {
@@ -416,14 +394,13 @@ func (h *HealthChecker) performHealthCheck() {
 		h.handleHealthCheckFailure(err, time.Since(start))
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		h.handleHealthCheckSuccess(time.Since(start))
 	} else {
 		h.handleHealthCheckFailure(fmt.Errorf("health check returned status %d", resp.StatusCode), time.Since(start))
 	}
-}
 
 // handleHealthCheckSuccess handles successful health checks
 func (h *HealthChecker) handleHealthCheckSuccess(latency time.Duration) {
@@ -436,7 +413,6 @@ func (h *HealthChecker) handleHealthCheckSuccess(latency time.Duration) {
 	h.metrics.ConnectionsReused++
 	
 	h.logger.Debug("Health check passed", "provider", h.metrics.ProviderType, "latency", latency)
-}
 
 // handleHealthCheckFailure handles failed health checks
 func (h *HealthChecker) handleHealthCheckFailure(err error, latency time.Duration) {
@@ -448,7 +424,6 @@ func (h *HealthChecker) handleHealthCheckFailure(err error, latency time.Duratio
 	h.metrics.ConnectionErrors++
 	
 	h.logger.Warn("Health check failed", "provider", h.metrics.ProviderType, "error", err, "latency", latency)
-}
 
 // Utility functions
 
@@ -457,7 +432,6 @@ func NewConnectionPoolMetrics() *ConnectionPoolMetrics {
 	return &ConnectionPoolMetrics{
 		ProviderMetrics: make(map[ProviderType]*ProviderPoolMetrics),
 	}
-}
 
 // NewProviderPoolMetrics creates new provider pool metrics
 func NewProviderPoolMetrics(providerType ProviderType) *ProviderPoolMetrics {
@@ -465,4 +439,24 @@ func NewProviderPoolMetrics(providerType ProviderType) *ProviderPoolMetrics {
 		ProviderType: providerType,
 		HealthStatus: "unknown",
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

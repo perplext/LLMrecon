@@ -24,7 +24,6 @@ func NewBinaryUpdater(config *Config, verifier *Verifier, logger Logger) *Binary
 		verifier: verifier,
 		logger:   logger,
 	}
-}
 
 // UpdateBinary performs a self-update of the binary
 func (bu *BinaryUpdater) UpdateBinary(ctx context.Context, release *Release) error {
@@ -82,7 +81,6 @@ func (bu *BinaryUpdater) UpdateBinary(ctx context.Context, release *Release) err
 	bu.logger.Info("Please restart the application to use the new version")
 	
 	return nil
-}
 
 // isUpdateNeeded checks if an update is needed
 func (bu *BinaryUpdater) isUpdateNeeded(current, latest string) bool {
@@ -99,7 +97,6 @@ func (bu *BinaryUpdater) isUpdateNeeded(current, latest string) bool {
 	}
 	
 	return latestVer.GreaterThan(currentVer)
-}
 
 // selectBinaryAsset selects the appropriate binary asset for the current platform
 func (bu *BinaryUpdater) selectBinaryAsset(assets []ReleaseAsset) *ReleaseAsset {
@@ -166,19 +163,17 @@ func (bu *BinaryUpdater) selectBinaryAsset(assets []ReleaseAsset) *ReleaseAsset 
 	
 	bu.logger.Error(fmt.Sprintf("No compatible binary found for %s/%s", platform, arch), nil)
 	return nil
-}
 
 // createUpdateWorkspace creates a temporary workspace for the update
 func (bu *BinaryUpdater) createUpdateWorkspace() (string, error) {
 	tempDir := filepath.Join(os.TempDir(), fmt.Sprintf("LLMrecon-update-%d", time.Now().Unix()))
 	
-	if err := os.MkdirAll(tempDir, 0755); err != nil {
+	if err := os.MkdirAll(tempDir, 0700); err != nil {
 		return "", fmt.Errorf("failed to create update workspace: %w", err)
 	}
 	
 	bu.logger.Debug(fmt.Sprintf("Created update workspace: %s", tempDir))
 	return tempDir, nil
-}
 
 // downloadBinary downloads the new binary to the workspace
 func (bu *BinaryUpdater) downloadBinary(ctx context.Context, asset *ReleaseAsset, workspace string) (string, error) {
@@ -208,8 +203,6 @@ func (bu *BinaryUpdater) downloadBinary(ctx context.Context, asset *ReleaseAsset
 	}
 	
 	return workspacePath, nil
-}
-
 // verifyBinary verifies the downloaded binary
 func (bu *BinaryUpdater) verifyBinary(binaryPath string, asset *ReleaseAsset) error {
 	bu.logger.Info("Verifying downloaded binary...")
@@ -233,7 +226,7 @@ func (bu *BinaryUpdater) verifyBinary(binaryPath string, asset *ReleaseAsset) er
 	
 	// Make binary executable on Unix systems
 	if runtime.GOOS != "windows" {
-		if err := os.Chmod(binaryPath, 0755); err != nil {
+		if err := os.Chmod(binaryPath, 0700); err != nil {
 			return fmt.Errorf("failed to make binary executable: %w", err)
 		}
 	}
@@ -245,7 +238,6 @@ func (bu *BinaryUpdater) verifyBinary(binaryPath string, asset *ReleaseAsset) er
 	
 	bu.logger.Info("Binary verification completed successfully")
 	return nil
-}
 
 // testBinary performs a basic functionality test on the new binary
 func (bu *BinaryUpdater) testBinary(binaryPath string) error {
@@ -264,7 +256,7 @@ func (bu *BinaryUpdater) testBinary(binaryPath string) error {
 	
 	bu.logger.Debug(fmt.Sprintf("Binary test output: %s", strings.TrimSpace(string(output))))
 	return nil
-}
+	
 
 // createBinaryBackup creates a backup of the current binary
 func (bu *BinaryUpdater) createBinaryBackup() (string, error) {
@@ -279,7 +271,7 @@ func (bu *BinaryUpdater) createBinaryBackup() (string, error) {
 		backupDir = filepath.Join(filepath.Dir(execPath), "backups")
 	}
 	
-	if err := os.MkdirAll(backupDir, 0755); err != nil {
+	if err := os.MkdirAll(backupDir, 0700); err != nil {
 		return "", fmt.Errorf("failed to create backup directory: %w", err)
 	}
 	
@@ -299,7 +291,6 @@ func (bu *BinaryUpdater) createBinaryBackup() (string, error) {
 	
 	bu.logger.Info(fmt.Sprintf("Created backup: %s", backupPath))
 	return backupPath, nil
-}
 
 // applyBinaryUpdate applies the binary update
 func (bu *BinaryUpdater) applyBinaryUpdate(newBinaryPath, backupPath string) error {
@@ -317,7 +308,7 @@ func (bu *BinaryUpdater) applyBinaryUpdate(newBinaryPath, backupPath string) err
 	
 	// Unix systems: replace the binary directly
 	return bu.applyUnixUpdate(newBinaryPath, execPath, backupPath)
-}
+	
 
 // applyWindowsUpdate applies update on Windows (handles file locking)
 func (bu *BinaryUpdater) applyWindowsUpdate(newBinaryPath, execPath, backupPath string) error {
@@ -343,7 +334,6 @@ func (bu *BinaryUpdater) applyWindowsUpdate(newBinaryPath, execPath, backupPath 
 	bu.scheduleCleanup(oldPath)
 	
 	return nil
-}
 
 // applyUnixUpdate applies update on Unix systems
 func (bu *BinaryUpdater) applyUnixUpdate(newBinaryPath, execPath, backupPath string) error {
@@ -362,15 +352,15 @@ func (bu *BinaryUpdater) applyUnixUpdate(newBinaryPath, execPath, backupPath str
 	}
 	
 	return nil
-}
+	
 
 // copyFile copies a file from src to dst
 func (bu *BinaryUpdater) copyFile(src, dst string) error {
-	sourceFile, err := os.Open(src)
+	sourceFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	defer func() { if err := sourceFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Get source file info for permissions
 	sourceInfo, err := sourceFile.Stat()
@@ -382,7 +372,7 @@ func (bu *BinaryUpdater) copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Copy content
 	if _, err := io.Copy(destFile, sourceFile); err != nil {
@@ -391,25 +381,23 @@ func (bu *BinaryUpdater) copyFile(src, dst string) error {
 	
 	// Set permissions
 	return os.Chmod(dst, sourceInfo.Mode())
-}
 
 // scheduleCleanup schedules cleanup of old files
 func (bu *BinaryUpdater) scheduleCleanup(filePath string) {
 	// On Windows, create a batch script to delete the old file
 	if runtime.GOOS == "windows" {
 		batchContent := fmt.Sprintf(`@echo off
-timeout /t 2 /nobreak >nul
+imeout /t 2 /nobreak >nul
 del "%s" >nul 2>&1
 del "%%~f0" >nul 2>&1`, filePath)
 		
 		batchPath := filePath + "_cleanup.bat"
-		if err := os.WriteFile(batchPath, []byte(batchContent), 0644); err == nil {
+		if err := os.WriteFile(filepath.Clean(batchPath, []byte(batchContent)), 0600); err == nil {
 			go func() {
 				exec.Command("cmd", "/C", batchPath).Start()
 			}()
 		}
 	}
-}
 
 // cleanupWorkspace removes the update workspace
 func (bu *BinaryUpdater) cleanupWorkspace(workspace string) {
@@ -418,8 +406,6 @@ func (bu *BinaryUpdater) cleanupWorkspace(workspace string) {
 	} else {
 		bu.logger.Debug("Cleaned up update workspace")
 	}
-}
-
 // RestartApplication restarts the application with the new binary
 func (bu *BinaryUpdater) RestartApplication() error {
 	execPath, err := os.Executable()
@@ -445,7 +431,6 @@ func (bu *BinaryUpdater) RestartApplication() error {
 	// Exit current process
 	os.Exit(0)
 	return nil
-}
 
 // RollbackUpdate rolls back to the previous version
 func (bu *BinaryUpdater) RollbackUpdate(backupPath string) error {
@@ -471,7 +456,6 @@ func (bu *BinaryUpdater) RollbackUpdate(backupPath string) error {
 	
 	bu.logger.Info("Rollback completed successfully")
 	return nil
-}
 
 // CanSelfUpdate checks if self-update is possible
 func (bu *BinaryUpdater) CanSelfUpdate() error {
@@ -484,13 +468,12 @@ func (bu *BinaryUpdater) CanSelfUpdate() error {
 	execDir := filepath.Dir(execPath)
 	testFile := filepath.Join(execDir, ".update_test")
 	
-	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(testFile, []byte("test")), 0600); err != nil {
 		return fmt.Errorf("insufficient permissions to update binary: %w", err)
 	}
 	
 	os.Remove(testFile)
 	return nil
-}
 
 // GetUpdatePermissions checks what permissions are needed for update
 func (bu *BinaryUpdater) GetUpdatePermissions() *UpdatePermissions {
@@ -506,7 +489,7 @@ func (bu *BinaryUpdater) GetUpdatePermissions() *UpdatePermissions {
 	
 	// Test write permissions
 	testFile := filepath.Join(execDir, ".perm_test")
-	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(testFile, []byte("test")), 0600); err != nil {
 		permissions.CanWriteDirectory = false
 		permissions.RequiresElevation = true
 	} else {
@@ -521,7 +504,6 @@ func (bu *BinaryUpdater) GetUpdatePermissions() *UpdatePermissions {
 	}
 	
 	return permissions
-}
 
 // UpdatePermissions represents the permissions available for updating
 type UpdatePermissions struct {
@@ -544,7 +526,6 @@ func (bu *BinaryUpdater) ElevatePermissions(args []string) error {
 	default:
 		return fmt.Errorf("permission elevation not supported on %s", runtime.GOOS)
 	}
-}
 
 // elevateWindows elevates permissions on Windows using UAC
 func (bu *BinaryUpdater) elevateWindows(args []string) error {
@@ -559,7 +540,6 @@ func (bu *BinaryUpdater) elevateWindows(args []string) error {
 	
 	cmd := exec.Command("powershell", "-Command", psScript)
 	return cmd.Run()
-}
 
 // elevateDarwin elevates permissions on macOS using osascript
 func (bu *BinaryUpdater) elevateDarwin(args []string) error {
@@ -573,7 +553,6 @@ func (bu *BinaryUpdater) elevateDarwin(args []string) error {
 	
 	cmd := exec.Command("osascript", "-e", script)
 	return cmd.Run()
-}
 
 // elevateLinux elevates permissions on Linux using sudo
 func (bu *BinaryUpdater) elevateLinux(args []string) error {
@@ -589,7 +568,6 @@ func (bu *BinaryUpdater) elevateLinux(args []string) error {
 	cmd.Stdin = os.Stdin
 	
 	return cmd.Run()
-}
 
 // ValidateUpdate validates that an update was successful
 func (bu *BinaryUpdater) ValidateUpdate(expectedVersion string) error {
@@ -614,7 +592,6 @@ func (bu *BinaryUpdater) ValidateUpdate(expectedVersion string) error {
 	}
 	
 	return nil
-}
 
 // Helper function to check if running with elevated privileges
 func isElevated() bool {
@@ -628,7 +605,6 @@ func isElevated() bool {
 		// Check if running as root
 		return os.Geteuid() == 0
 	}
-}
 
 // Helper function to request elevation
 func requestElevation() error {
@@ -639,5 +615,27 @@ func requestElevation() error {
 	fmt.Println("This operation requires elevated privileges.")
 	fmt.Println("Please run with administrator/root privileges or use sudo.")
 	
-	return fmt.Errorf("insufficient privileges")
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

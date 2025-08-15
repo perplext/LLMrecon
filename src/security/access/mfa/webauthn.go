@@ -32,7 +32,6 @@ type WebAuthnConfig struct {
 	
 	// ChallengeLength is the length of the challenge in bytes
 	ChallengeLength int
-}
 
 // WebAuthnCredential represents a WebAuthn credential
 type WebAuthnCredential struct {
@@ -59,7 +58,6 @@ type WebAuthnCredential struct {
 	
 	// DeviceName is a user-friendly name for the device
 	DeviceName string
-}
 
 // DefaultWebAuthnConfig returns the default WebAuthn configuration
 func DefaultWebAuthnConfig() *WebAuthnConfig {
@@ -72,7 +70,6 @@ func DefaultWebAuthnConfig() *WebAuthnConfig {
 		Timeout:               60000,
 		ChallengeLength:       32,
 	}
-}
 
 // GenerateChallenge generates a random challenge for WebAuthn
 func GenerateChallenge(length int) (string, error) {
@@ -82,7 +79,6 @@ func GenerateChallenge(length int) (string, error) {
 	}
 	
 	return base64.RawURLEncoding.EncodeToString(bytes), nil
-}
 
 // RegistrationOptions generates the options for WebAuthn registration
 func RegistrationOptions(config *WebAuthnConfig, userID, username, displayName string) (map[string]interface{}, string, error) {
@@ -126,7 +122,6 @@ func RegistrationOptions(config *WebAuthnConfig, userID, username, displayName s
 	}
 	
 	return options, challenge, nil
-}
 
 // AuthenticationOptions generates the options for WebAuthn authentication
 func AuthenticationOptions(config *WebAuthnConfig, credentials []WebAuthnCredential) (map[string]interface{}, string, error) {
@@ -159,7 +154,6 @@ func AuthenticationOptions(config *WebAuthnConfig, credentials []WebAuthnCredent
 	}
 	
 	return options, challenge, nil
-}
 
 // This is a placeholder for a real WebAuthn verification implementation
 // In a real implementation, you would use a WebAuthn library to verify the attestation
@@ -197,7 +191,6 @@ func VerifyWebAuthnRegistration(config *WebAuthnConfig, challenge string, attest
 	}
 	
 	return credential, nil
-}
 
 // This is a placeholder for a real WebAuthn verification implementation
 // In a real implementation, you would use a WebAuthn library to verify the assertion
@@ -224,5 +217,3 @@ func VerifyWebAuthnAuthentication(config *WebAuthnConfig, challenge string, asse
 	// Update last used time
 	credential.LastUsedAt = time.Now()
 	
-	return nil
-}

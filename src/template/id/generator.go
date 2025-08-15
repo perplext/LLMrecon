@@ -39,19 +39,20 @@ type Generator struct {
 	existingIDs map[string]bool
 }
 
+}
 // NewGenerator creates a new ID generator
 func NewGenerator() *Generator {
 	return &Generator{
 		existingIDs: make(map[string]bool),
 	}
-}
 
 // RegisterExistingID registers an existing ID to avoid duplicates
+}
 func (g *Generator) RegisterExistingID(id string) {
 	g.existingIDs[id] = true
-}
 
 // GenerateID generates a unique ID based on the provided parameters
+}
 func (g *Generator) GenerateID(idType IDType, category, name, version string) (string, error) {
 	var id string
 	
@@ -90,9 +91,9 @@ func (g *Generator) GenerateID(idType IDType, category, name, version string) (s
 	}
 	
 	return id, nil
-}
 
 // ValidateID validates an ID against the appropriate pattern
+}
 func (g *Generator) ValidateID(idType IDType, id string) error {
 	if len(id) > MaxIDLength {
 		return fmt.Errorf("ID exceeds maximum length of %d characters", MaxIDLength)
@@ -121,9 +122,9 @@ func (g *Generator) ValidateID(idType IDType, id string) error {
 	}
 	
 	return nil
-}
 
 // ValidateVersion validates a version string against the appropriate pattern
+}
 func (g *Generator) ValidateVersion(version string, isTool bool) error {
 	pattern := VersionPattern
 	if isTool {
@@ -140,9 +141,9 @@ func (g *Generator) ValidateVersion(version string, isTool bool) error {
 	}
 	
 	return nil
-}
 
 // sanitizeForID converts a string to a format suitable for an ID
+}
 func sanitizeForID(input string) string {
 	// Convert to lowercase
 	result := strings.ToLower(input)
@@ -161,13 +162,12 @@ func sanitizeForID(input string) string {
 	}
 	
 	return result
-}
 
 // generateTimeHash generates a hash based on the current time
+}
 func generateTimeHash() string {
 	timestamp := time.Now().UnixNano()
 	data := fmt.Sprintf("%d", timestamp)
 	
 	hash := sha256.Sum256([]byte(data))
 	return hex.EncodeToString(hash[:])
-}

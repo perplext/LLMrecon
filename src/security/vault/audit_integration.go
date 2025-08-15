@@ -40,7 +40,6 @@ func NewAuditIntegration(manager *CredentialManager, auditLogger *audit.Credenti
 	integration.originalMethods.setAPIKey = manager.SetAPIKey
 	
 	return integration
-}
 
 // WrapManager creates a proxy manager with audit logging
 func (a *AuditIntegration) WrapManager() {
@@ -50,7 +49,6 @@ func (a *AuditIntegration) WrapManager() {
 	
 	// The proxy methods will be called from the manager's methods
 	// when they are accessed through the DefaultManager or other instances
-}
 
 // GetCredential wraps the original GetCredential method with audit logging
 func (a *AuditIntegration) GetCredential(id string) (*Credential, error) {
@@ -61,7 +59,6 @@ func (a *AuditIntegration) GetCredential(id string) (*Credential, error) {
 	}
 	a.auditLogger.LogCredentialAccess(id, cred.Service, "get")
 	return cred, nil
-}
 
 // StoreCredential wraps the original StoreCredential method with audit logging
 func (a *AuditIntegration) StoreCredential(cred *Credential) error {
@@ -72,7 +69,6 @@ func (a *AuditIntegration) StoreCredential(cred *Credential) error {
 	}
 	a.auditLogger.LogCredentialAccess(cred.ID, cred.Service, "store")
 	return nil
-}
 
 // DeleteCredential wraps the original DeleteCredential method with audit logging
 func (a *AuditIntegration) DeleteCredential(id string) error {
@@ -90,7 +86,6 @@ func (a *AuditIntegration) DeleteCredential(id string) error {
 	}
 	a.auditLogger.LogCredentialAccess(id, cred.Service, "delete")
 	return nil
-}
 
 // RotateCredential wraps the original RotateCredential method with audit logging
 func (a *AuditIntegration) RotateCredential(id string, newValue string) error {
@@ -108,7 +103,6 @@ func (a *AuditIntegration) RotateCredential(id string, newValue string) error {
 	}
 	a.auditLogger.LogCredentialAccess(id, cred.Service, "rotate")
 	return nil
-}
 
 // GetAPIKey wraps the original GetAPIKey method with audit logging
 func (a *AuditIntegration) GetAPIKey(provider core.ProviderType) (string, error) {
@@ -127,7 +121,6 @@ func (a *AuditIntegration) GetAPIKey(provider core.ProviderType) (string, error)
 	
 	a.auditLogger.LogCredentialAccess(credID, string(provider), "get_api_key")
 	return apiKey, nil
-}
 
 // SetAPIKey wraps the original SetAPIKey method with audit logging
 func (a *AuditIntegration) SetAPIKey(provider core.ProviderType, apiKey string, description string) error {
@@ -146,7 +139,6 @@ func (a *AuditIntegration) SetAPIKey(provider core.ProviderType, apiKey string, 
 	
 	a.auditLogger.LogCredentialAccess(credID, string(provider), "set_api_key")
 	return nil
-}
 
 // DefaultAuditIntegration is the default audit integration
 var DefaultAuditIntegration *AuditIntegration
@@ -172,7 +164,6 @@ func InitDefaultAuditIntegration(configDir string, userIDProvider func() string)
 	DefaultAuditIntegration.WrapManager()
 
 	return nil
-}
 
 // GetCredentialsWithAnomalousAccess returns credentials with anomalous access patterns
 func (a *AuditIntegration) GetCredentialsWithAnomalousAccess(threshold int) ([]*Credential, error) {
@@ -268,7 +259,7 @@ func (a *AuditIntegration) GetCredentialsWithAnomalousAccess(threshold int) ([]*
 	}
 
 	return anomalous, nil
-}
+	
 
 // GetUnusedCredentials returns credentials that haven't been accessed in the specified duration
 func (a *AuditIntegration) GetUnusedCredentials(days int) ([]*Credential, error) {
@@ -320,5 +311,13 @@ func (a *AuditIntegration) GetUnusedCredentials(days int) ([]*Credential, error)
 		}
 	}
 	
-	return unusedCreds, nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

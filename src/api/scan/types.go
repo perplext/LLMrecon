@@ -56,7 +56,6 @@ type ScanConfig struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	// CreatedBy is the user who created the scan configuration
 	CreatedBy string `json:"created_by"`
-}
 
 // Scan represents a scan execution
 type Scan struct {
@@ -76,7 +75,6 @@ type Scan struct {
 	Error string `json:"error,omitempty"`
 	// Results is the results of the scan
 	Results []ScanResult `json:"results,omitempty"`
-}
 
 // ScanResult represents a result from a scan
 type ScanResult struct {
@@ -96,7 +94,6 @@ type ScanResult struct {
 	Details map[string]interface{} `json:"details"`
 	// Timestamp is the time the result was generated
 	Timestamp time.Time `json:"timestamp"`
-}
 
 // PaginationParams represents pagination parameters for list endpoints
 type PaginationParams struct {
@@ -108,7 +105,6 @@ type PaginationParams struct {
 	TotalItems int `json:"total_items"`
 	// TotalPages is the total number of pages
 	TotalPages int `json:"total_pages"`
-}
 
 // ListResponse represents a paginated list response
 type ListResponse struct {
@@ -116,7 +112,6 @@ type ListResponse struct {
 	Pagination PaginationParams `json:"pagination"`
 	// Data contains the response data
 	Data interface{} `json:"data"`
-}
 
 // ErrorResponse represents an error response
 type ErrorResponse struct {
@@ -124,7 +119,6 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 	// Code is the error code
 	Code int `json:"code"`
-}
 
 // CreateScanConfigRequest represents a request to create a scan configuration
 type CreateScanConfigRequest struct {
@@ -140,7 +134,6 @@ type CreateScanConfigRequest struct {
 	Templates []string `json:"templates" validate:"required,min=1"`
 	// Parameters is a map of parameters for the scan
 	Parameters map[string]interface{} `json:"parameters"`
-}
 
 // UpdateScanConfigRequest represents a request to update a scan configuration
 type UpdateScanConfigRequest struct {
@@ -156,13 +149,11 @@ type UpdateScanConfigRequest struct {
 	Templates []string `json:"templates"`
 	// Parameters is a map of parameters for the scan
 	Parameters map[string]interface{} `json:"parameters"`
-}
 
 // CreateScanRequest represents a request to create a scan
 type CreateScanRequest struct {
 	// ConfigID is the ID of the scan configuration
 	ConfigID string `json:"config_id" validate:"required"`
-}
 
 // FilterParams represents filter parameters for list endpoints
 type FilterParams struct {
@@ -175,5 +166,3 @@ type FilterParams struct {
 	// EndDate filters results by end date
 	EndDate string `json:"end_date"`
 	// Search is a search term to filter results
-	Search string `json:"search"`
-}

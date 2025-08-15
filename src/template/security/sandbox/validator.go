@@ -50,7 +50,6 @@ type ValidationOptions struct {
 	RequireValidation bool
 	// SecurityOptions are the security verification options
 	SecurityOptions *security.VerificationOptions
-}
 
 // DefaultValidationOptions returns the default validation options
 func DefaultValidationOptions() *ValidationOptions {
@@ -77,13 +76,11 @@ func DefaultValidationOptions() *ValidationOptions {
 		RequireValidation: true,
 		SecurityOptions:   security.DefaultVerificationOptions(),
 	}
-}
 
 // TemplateValidator is responsible for validating templates
 type TemplateValidator struct {
 	verifier security.TemplateVerifier
 	options  *ValidationOptions
-}
 
 // NewTemplateValidator creates a new template validator
 func NewTemplateValidator(verifier security.TemplateVerifier, options *ValidationOptions) *TemplateValidator {
@@ -95,7 +92,6 @@ func NewTemplateValidator(verifier security.TemplateVerifier, options *Validatio
 		verifier: verifier,
 		options:  options,
 	}
-}
 
 // Validate validates a template
 func (v *TemplateValidator) Validate(ctx context.Context, template *format.Template) ([]*security.SecurityIssue, error) {
@@ -132,12 +128,11 @@ func (v *TemplateValidator) Validate(ctx context.Context, template *format.Templ
 	}
 	
 	return allIssues, nil
-}
 
 // ValidateFile validates a template file
 func (v *TemplateValidator) ValidateFile(ctx context.Context, templatePath string) ([]*security.SecurityIssue, error) {
 	// Read the template file
-	content, err := ioutil.ReadFile(templatePath)
+	content, err := ioutil.ReadFile(filepath.Clean(templatePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read template file: %w", err)
 	}
@@ -153,13 +148,11 @@ func (v *TemplateValidator) ValidateFile(ctx context.Context, templatePath strin
 	
 	// Validate the template
 	return v.Validate(ctx, template)
-}
 
 // validateSyntax validates the syntax of a template
 func (v *TemplateValidator) validateSyntax(template *format.Template) ([]*security.SecurityIssue, error) {
 	var issues []*security.SecurityIssue
 	
-	// Check for syntax errors in the template
 	if template.Content == "" {
 		issues = append(issues, &security.SecurityIssue{
 			Type:        security.TemplateFormatError,
@@ -196,7 +189,6 @@ func (v *TemplateValidator) validateSyntax(template *format.Template) ([]*securi
 	}
 	
 	return issues, nil
-}
 
 // validateSemantics validates the semantics of a template
 func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*security.SecurityIssue, error) {
@@ -300,7 +292,6 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 	}
 	
 	return issues, nil
-}
 
 // hasBalancedDelimiters checks if a string has balanced delimiters
 func hasBalancedDelimiters(s string) bool {
@@ -328,5 +319,3 @@ func hasBalancedDelimiters(s string) bool {
 		}
 	}
 	
-	return len(stack) == 0
-}

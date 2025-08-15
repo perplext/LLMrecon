@@ -21,23 +21,22 @@ type InstallationAnalyticsImpl struct {
 	ctx        context.Context
 	cancel     context.CancelFunc
 	wg         sync.WaitGroup
-}
 
+}
 // AnalyticsStorage interface for storing analytics data
 type AnalyticsStorage interface {
 	StoreEvent(ctx context.Context, event AnalyticsEvent) error
 	GetEvents(ctx context.Context, filters AnalyticsFilters) ([]AnalyticsEvent, error)
 	GetStats(ctx context.Context, filters AnalyticsFilters) (*StatsResult, error)
 	Cleanup(ctx context.Context, olderThan time.Time) error
-}
 
 // AnalyticsEvent represents any analytics event
+}
 type AnalyticsEvent struct {
 	ID        string                 `json:"id"`
 	Type      EventType              `json:"type"`
 	Timestamp time.Time              `json:"timestamp"`
 	Data      map[string]interface{} `json:"data"`
-}
 
 type EventType string
 
@@ -47,6 +46,7 @@ const (
 	EventTypeUsage        EventType = "usage"
 	EventTypeError        EventType = "error"
 )
+}
 
 type StatsResult struct {
 	InstallationStats *InstallationStats `json:"installation_stats,omitempty"`
@@ -79,7 +79,6 @@ func NewInstallationAnalytics(config AnalyticsConfig, logger Logger) Installatio
 	}
 	
 	return analytics
-}
 
 func (ia *InstallationAnalyticsImpl) TrackInstallation(ctx context.Context, event *InstallationEvent) error {
 	if !ia.enabled {
@@ -112,8 +111,8 @@ func (ia *InstallationAnalyticsImpl) TrackInstallation(ctx context.Context, even
 	default:
 		return fmt.Errorf("analytics event queue full")
 	}
-}
 
+}
 func (ia *InstallationAnalyticsImpl) TrackUpdate(ctx context.Context, event *UpdateEvent) error {
 	if !ia.enabled {
 		return nil
@@ -145,8 +144,8 @@ func (ia *InstallationAnalyticsImpl) TrackUpdate(ctx context.Context, event *Upd
 	default:
 		return fmt.Errorf("analytics event queue full")
 	}
-}
 
+}
 func (ia *InstallationAnalyticsImpl) TrackUsage(ctx context.Context, event *UsageEvent) error {
 	if !ia.enabled || !ia.config.CollectUsage {
 		return nil
@@ -178,8 +177,8 @@ func (ia *InstallationAnalyticsImpl) TrackUsage(ctx context.Context, event *Usag
 	default:
 		return fmt.Errorf("analytics event queue full")
 	}
-}
 
+}
 func (ia *InstallationAnalyticsImpl) TrackError(ctx context.Context, event *ErrorEvent) error {
 	if !ia.enabled || !ia.config.CollectErrors {
 		return nil
@@ -210,8 +209,8 @@ func (ia *InstallationAnalyticsImpl) TrackError(ctx context.Context, event *Erro
 	default:
 		return fmt.Errorf("analytics event queue full")
 	}
-}
 
+}
 func (ia *InstallationAnalyticsImpl) GetInstallationStats(ctx context.Context, filters AnalyticsFilters) (*InstallationStats, error) {
 	if !ia.enabled {
 		return &InstallationStats{}, nil
@@ -226,7 +225,6 @@ func (ia *InstallationAnalyticsImpl) GetInstallationStats(ctx context.Context, f
 	}
 	
 	return result.InstallationStats, nil
-}
 
 func (ia *InstallationAnalyticsImpl) GetUsageStats(ctx context.Context, filters AnalyticsFilters) (*UsageStats, error) {
 	if !ia.enabled {
@@ -241,7 +239,6 @@ func (ia *InstallationAnalyticsImpl) GetUsageStats(ctx context.Context, filters 
 	}
 	
 	return result.UsageStats, nil
-}
 
 func (ia *InstallationAnalyticsImpl) GetErrorStats(ctx context.Context, filters AnalyticsFilters) (*ErrorStats, error) {
 	if !ia.enabled {
@@ -256,7 +253,6 @@ func (ia *InstallationAnalyticsImpl) GetErrorStats(ctx context.Context, filters 
 	}
 	
 	return result.ErrorStats, nil
-}
 
 func (ia *InstallationAnalyticsImpl) GenerateReport(ctx context.Context, reportType ReportType, period TimePeriod) (*AnalyticsReport, error) {
 	if !ia.enabled {
@@ -314,7 +310,6 @@ func (ia *InstallationAnalyticsImpl) GenerateReport(ctx context.Context, reportT
 	report.Recommendations = ia.generateRecommendations(report)
 	
 	return report, nil
-}
 
 func (ia *InstallationAnalyticsImpl) ExportData(ctx context.Context, format ExportFormat, filters AnalyticsFilters, writer io.Writer) error {
 	if !ia.enabled {
@@ -334,18 +329,18 @@ func (ia *InstallationAnalyticsImpl) ExportData(ctx context.Context, format Expo
 	default:
 		return fmt.Errorf("unsupported export format: %s", format)
 	}
-}
 
+}
 func (ia *InstallationAnalyticsImpl) IsEnabled() bool {
 	return ia.enabled
 }
 
 func (ia *InstallationAnalyticsImpl) GetRetentionPeriod() time.Duration {
 	return ia.retention
-}
 
 // Internal methods
 
+}
 func (ia *InstallationAnalyticsImpl) eventProcessor() {
 	defer ia.wg.Done()
 	
@@ -368,8 +363,8 @@ func (ia *InstallationAnalyticsImpl) eventProcessor() {
 			}
 		}
 	}
-}
 
+}
 func (ia *InstallationAnalyticsImpl) cleanupWorker() {
 	defer ia.wg.Done()
 	
@@ -390,8 +385,8 @@ func (ia *InstallationAnalyticsImpl) cleanupWorker() {
 			return
 		}
 	}
-}
 
+}
 func (ia *InstallationAnalyticsImpl) anonymizeIP(ip string) string {
 	if !ia.config.AnonymizeIPs {
 		return ip
@@ -405,30 +400,28 @@ func (ia *InstallationAnalyticsImpl) anonymizeIP(ip string) string {
 	}
 	
 	return "anonymized"
-}
 
 func (ia *InstallationAnalyticsImpl) addEventTypeFilter(filters AnalyticsFilters, eventType EventType) AnalyticsFilters {
 	// This would add event type filtering to the filters
 	// Implementation depends on the storage backend
 	return filters
-}
 
 func (ia *InstallationAnalyticsImpl) generateInstallationSummary(stats *InstallationStats) string {
 	return fmt.Sprintf("Total installations: %d, Growth rate: %.2f%%", stats.TotalInstalls, stats.GrowthRate)
-}
 
+}
 func (ia *InstallationAnalyticsImpl) generateUsageSummary(stats *UsageStats) string {
 	return fmt.Sprintf("Active users: %d, Success rate: %.2f%%", stats.ActiveUsers, stats.SuccessRate)
-}
 
+}
 func (ia *InstallationAnalyticsImpl) generateErrorSummary(stats *ErrorStats) string {
 	return fmt.Sprintf("Total errors: %d, Error rate: %.2f%%", stats.TotalErrors, stats.ErrorRate)
-}
 
+}
 func (ia *InstallationAnalyticsImpl) generateComprehensiveSummary(install *InstallationStats, usage *UsageStats, errors *ErrorStats) string {
 	return fmt.Sprintf("Installs: %d, Active users: %d, Errors: %d", install.TotalInstalls, usage.ActiveUsers, errors.TotalErrors)
-}
 
+}
 func (ia *InstallationAnalyticsImpl) generateRecommendations(report *AnalyticsReport) []string {
 	var recommendations []string
 	
@@ -445,17 +438,14 @@ func (ia *InstallationAnalyticsImpl) generateRecommendations(report *AnalyticsRe
 	}
 	
 	return recommendations
-}
 
 func (ia *InstallationAnalyticsImpl) exportJSON(events []AnalyticsEvent, writer io.Writer) error {
 	// JSON export implementation
 	return nil
-}
 
 func (ia *InstallationAnalyticsImpl) exportCSV(events []AnalyticsEvent, writer io.Writer) error {
 	// CSV export implementation
 	return nil
-}
 
 // Mock analytics storage
 type MockAnalyticsStorage struct {
@@ -463,7 +453,6 @@ type MockAnalyticsStorage struct {
 	logger Logger
 	events []AnalyticsEvent
 	mutex  sync.RWMutex
-}
 
 func NewAnalyticsStorage(config AnalyticsConfig, logger Logger) AnalyticsStorage {
 	return &MockAnalyticsStorage{
@@ -471,8 +460,8 @@ func NewAnalyticsStorage(config AnalyticsConfig, logger Logger) AnalyticsStorage
 		logger: logger,
 		events: make([]AnalyticsEvent, 0),
 	}
-}
 
+}
 func (mas *MockAnalyticsStorage) StoreEvent(ctx context.Context, event AnalyticsEvent) error {
 	mas.mutex.Lock()
 	defer mas.mutex.Unlock()
@@ -481,7 +470,6 @@ func (mas *MockAnalyticsStorage) StoreEvent(ctx context.Context, event Analytics
 	mas.logger.Debug("Stored analytics event", "eventID", event.ID, "type", event.Type)
 	
 	return nil
-}
 
 func (mas *MockAnalyticsStorage) GetEvents(ctx context.Context, filters AnalyticsFilters) ([]AnalyticsEvent, error) {
 	mas.mutex.RLock()
@@ -496,8 +484,9 @@ func (mas *MockAnalyticsStorage) GetEvents(ctx context.Context, filters Analytic
 	}
 	
 	return filtered, nil
-}
+	
 
+}
 func (mas *MockAnalyticsStorage) GetStats(ctx context.Context, filters AnalyticsFilters) (*StatsResult, error) {
 	events, err := mas.GetEvents(ctx, filters)
 	if err != nil {
@@ -540,7 +529,6 @@ func (mas *MockAnalyticsStorage) GetStats(ctx context.Context, filters Analytics
 	}
 	
 	return result, nil
-}
 
 func (mas *MockAnalyticsStorage) Cleanup(ctx context.Context, olderThan time.Time) error {
 	mas.mutex.Lock()
@@ -559,7 +547,6 @@ func (mas *MockAnalyticsStorage) Cleanup(ctx context.Context, olderThan time.Tim
 	mas.logger.Info("Cleaned up analytics events", "removed", removed, "kept", len(kept))
 	
 	return nil
-}
 
 func (mas *MockAnalyticsStorage) matchesFilters(event AnalyticsEvent, filters AnalyticsFilters) bool {
 	if filters.StartDate != nil && event.Timestamp.Before(*filters.StartDate) {
@@ -571,13 +558,22 @@ func (mas *MockAnalyticsStorage) matchesFilters(event AnalyticsEvent, filters An
 	}
 	
 	return true
-}
 
 // Utility functions
+}
 func generateEventID() string {
 	return fmt.Sprintf("event_%d_%d", time.Now().UnixNano(), time.Now().Unix())
-}
 
+}
 func generateReportID() string {
 	return fmt.Sprintf("report_%d_%d", time.Now().UnixNano(), time.Now().Unix())
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

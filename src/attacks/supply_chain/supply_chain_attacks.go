@@ -22,6 +22,7 @@ type SupplyChainAttack struct {
     CreatedAt   time.Time             `json:"created_at"`
 }
 
+}
 // AttackType defines types of supply chain attacks
 type AttackType string
 
@@ -59,6 +60,7 @@ type AttackVector struct {
     Metadata    map[string]interface{} `json:"metadata"`
 }
 
+}
 // ImpactLevel represents the severity of impact
 type ImpactLevel string
 
@@ -105,14 +107,15 @@ type SupplyChainAttacker struct {
     config            AttackerConfig
 }
 
+}
 // AttackerConfig holds configuration for supply chain attacker
 type AttackerConfig struct {
     MaxConcurrentAttacks int
     StealthMode          bool
     PersistenceEnabled   bool
     VerificationBypass   bool
-}
 
+}
 // NewSupplyChainAttacker creates a new supply chain attacker
 func NewSupplyChainAttacker(config AttackerConfig) *SupplyChainAttacker {
     return &SupplyChainAttacker{
@@ -127,9 +130,9 @@ func NewSupplyChainAttacker(config AttackerConfig) *SupplyChainAttacker {
         configTamperer:     NewConfigTamperer(),
         config:             config,
     }
-}
 
 // LaunchAttack launches a supply chain attack
+}
 func (sca *SupplyChainAttacker) LaunchAttack(ctx context.Context, attackType AttackType, target TargetComponent, payload string) (*SupplyChainAttack, error) {
     attack := &SupplyChainAttack{
         ID:        generateAttackID(),
@@ -174,30 +177,29 @@ func (sca *SupplyChainAttacker) LaunchAttack(ctx context.Context, attackType Att
     attack.Status = StatusDeployed
     sca.attacks[attack.ID] = attack
     return attack, nil
-}
 
 // ModelPoisoner implements model poisoning attacks
 type ModelPoisoner struct {
     poisonedModels map[string]*PoisonedModel
     mu             sync.RWMutex
-}
 
+}
 // PoisonedModel represents a poisoned model
 type PoisonedModel struct {
     OriginalHash    string
     PoisonedHash    string
     BackdoorTrigger string
     PoisonType      string
-}
 
+}
 // NewModelPoisoner creates a new model poisoner
 func NewModelPoisoner() *ModelPoisoner {
     return &ModelPoisoner{
         poisonedModels: make(map[string]*PoisonedModel),
     }
-}
 
 // PoisonModel poisons a model in the supply chain
+}
 func (mp *ModelPoisoner) PoisonModel(attack *SupplyChainAttack) error {
     mp.mu.Lock()
     defer mp.mu.Unlock()
@@ -237,6 +239,7 @@ func (mp *ModelPoisoner) PoisonModel(attack *SupplyChainAttack) error {
     return nil
 }
 
+}
 func (mp *ModelPoisoner) injectBackdoor(attack *SupplyChainAttack) error {
     // Inject backdoor trigger into model
     backdoorCode := fmt.Sprintf(`
@@ -272,7 +275,6 @@ func (mp *ModelPoisoner) manipulateWeights(attack *SupplyChainAttack) error {
         "stealth_factor": 0.01, // Small changes to avoid detection
     }
     return nil
-}
 
 func (mp *ModelPoisoner) modifyArchitecture(attack *SupplyChainAttack) error {
     // Add hidden layers or modify architecture
@@ -282,7 +284,6 @@ func (mp *ModelPoisoner) modifyArchitecture(attack *SupplyChainAttack) error {
         "activation_pattern": "specific_trigger_based",
     }
     return nil
-}
 
 func (mp *ModelPoisoner) tamperCheckpoint(attack *SupplyChainAttack) error {
     // Tamper with saved checkpoints
@@ -292,30 +293,29 @@ func (mp *ModelPoisoner) tamperCheckpoint(attack *SupplyChainAttack) error {
         "verification_bypass": true,
     }
     return nil
-}
 
 // DatasetContaminator implements dataset contamination attacks
 type DatasetContaminator struct {
     contaminatedSets map[string]*ContaminatedDataset
     mu               sync.RWMutex
-}
 
+}
 // ContaminatedDataset represents a contaminated dataset
 type ContaminatedDataset struct {
     OriginalSize      int
     ContaminatedSize  int
     PoisonRate        float64
     ContaminationType string
-}
 
+}
 // NewDatasetContaminator creates a new dataset contaminator
 func NewDatasetContaminator() *DatasetContaminator {
     return &DatasetContaminator{
         contaminatedSets: make(map[string]*ContaminatedDataset),
     }
-}
 
 // ContaminateDataset contaminates training datasets
+}
 func (dc *DatasetContaminator) ContaminateDataset(attack *SupplyChainAttack) error {
     dc.mu.Lock()
     defer dc.mu.Unlock()
@@ -356,30 +356,29 @@ func (dc *DatasetContaminator) ContaminateDataset(attack *SupplyChainAttack) err
 
     dc.contaminatedSets[attack.ID] = contaminated
     return nil
-}
 
 // DependencyInjector implements dependency injection attacks
 type DependencyInjector struct {
     injectedDeps map[string]*InjectedDependency
     mu           sync.RWMutex
-}
 
+}
 // InjectedDependency represents an injected dependency
 type InjectedDependency struct {
     PackageName    string
     MaliciousCode  string
     OriginalVersion string
     InjectedVersion string
-}
 
+}
 // NewDependencyInjector creates a new dependency injector
 func NewDependencyInjector() *DependencyInjector {
     return &DependencyInjector{
         injectedDeps: make(map[string]*InjectedDependency),
     }
-}
 
 // InjectDependency injects malicious dependencies
+}
 func (di *DependencyInjector) InjectDependency(attack *SupplyChainAttack) error {
     di.mu.Lock()
     defer di.mu.Unlock()
@@ -435,30 +434,29 @@ sys.modules[__name__] = MaliciousWrapper()
 
     di.injectedDeps[attack.ID] = injected
     return nil
-}
 
 // PluginCompromiser implements plugin compromise attacks
 type PluginCompromiser struct {
     compromisedPlugins map[string]*CompromisedPlugin
     mu                 sync.RWMutex
-}
 
+}
 // CompromisedPlugin represents a compromised plugin
 type CompromisedPlugin struct {
     PluginName      string
     OriginalHash    string
     CompromisedHash string
     BackdoorCode    string
-}
 
+}
 // NewPluginCompromiser creates a new plugin compromiser
 func NewPluginCompromiser() *PluginCompromiser {
     return &PluginCompromiser{
         compromisedPlugins: make(map[string]*CompromisedPlugin),
     }
-}
 
 // CompromisePlugin compromises LLM plugins
+}
 func (pc *PluginCompromiser) CompromisePlugin(attack *SupplyChainAttack) error {
     pc.mu.Lock()
     defer pc.mu.Unlock()
@@ -523,30 +521,29 @@ class CompromisedPlugin(OriginalPlugin):
 
     pc.compromisedPlugins[attack.ID] = compromised
     return nil
-}
 
 // APIManipulator implements API manipulation attacks
 type APIManipulator struct {
     manipulatedAPIs map[string]*ManipulatedAPI
     mu              sync.RWMutex
-}
 
+}
 // ManipulatedAPI represents a manipulated API
 type ManipulatedAPI struct {
     Endpoint       string
     OriginalBehavior string
     ModifiedBehavior string
     InterceptionCode string
-}
 
+}
 // NewAPIManipulator creates a new API manipulator
 func NewAPIManipulator() *APIManipulator {
     return &APIManipulator{
         manipulatedAPIs: make(map[string]*ManipulatedAPI),
     }
-}
 
 // ManipulateAPI manipulates API endpoints
+}
 func (am *APIManipulator) ManipulateAPI(attack *SupplyChainAttack) error {
     am.mu.Lock()
     defer am.mu.Unlock()
@@ -618,14 +615,13 @@ def manipulate_output(text):
 
     am.manipulatedAPIs[attack.ID] = manipulated
     return nil
-}
 
 // PipelineAttacker implements training pipeline attacks
 type PipelineAttacker struct {
     attackedPipelines map[string]*AttackedPipeline
     mu                sync.RWMutex
-}
 
+}
 // AttackedPipeline represents an attacked training pipeline
 type AttackedPipeline struct {
     PipelineName     string
@@ -633,14 +629,15 @@ type AttackedPipeline struct {
     ModificationCode string
 }
 
+}
 // NewPipelineAttacker creates a new pipeline attacker
 func NewPipelineAttacker() *PipelineAttacker {
     return &PipelineAttacker{
         attackedPipelines: make(map[string]*AttackedPipeline),
     }
-}
 
 // AttackPipeline attacks the training pipeline
+}
 func (pa *PipelineAttacker) AttackPipeline(attack *SupplyChainAttack) error {
     pa.mu.Lock()
     defer pa.mu.Unlock()
@@ -713,30 +710,29 @@ class PipelineHijacker:
 
     pa.attackedPipelines[attack.ID] = attacked
     return nil
-}
 
 // ModelSwapper implements model swapping attacks
 type ModelSwapper struct {
     swappedModels map[string]*SwappedModel
     mu            sync.RWMutex
-}
 
+}
 // SwappedModel represents a swapped model
 type SwappedModel struct {
     OriginalModel   string
     MaliciousModel  string
     SwapConditions  []string
     FallbackEnabled bool
-}
 
+}
 // NewModelSwapper creates a new model swapper
 func NewModelSwapper() *ModelSwapper {
     return &ModelSwapper{
         swappedModels: make(map[string]*SwappedModel),
     }
-}
 
 // SwapModel performs model swapping attack
+}
 func (ms *ModelSwapper) SwapModel(attack *SupplyChainAttack) error {
     ms.mu.Lock()
     defer ms.mu.Unlock()
@@ -770,14 +766,13 @@ func (ms *ModelSwapper) SwapModel(attack *SupplyChainAttack) error {
 
     ms.swappedModels[attack.ID] = swapped
     return nil
-}
 
 // ConfigTamperer implements configuration tampering attacks
 type ConfigTamperer struct {
     tamperedConfigs map[string]*TamperedConfig
     mu              sync.RWMutex
-}
 
+}
 // TamperedConfig represents a tampered configuration
 type TamperedConfig struct {
     ConfigFile       string
@@ -785,14 +780,15 @@ type TamperedConfig struct {
     ModifiedSettings map[string]interface{}
 }
 
+}
 // NewConfigTamperer creates a new config tamperer
 func NewConfigTamperer() *ConfigTamperer {
     return &ConfigTamperer{
         tamperedConfigs: make(map[string]*TamperedConfig),
     }
-}
 
 // TamperConfig tampers with configuration files
+}
 func (ct *ConfigTamperer) TamperConfig(attack *SupplyChainAttack) error {
     ct.mu.Lock()
     defer ct.mu.Unlock()
@@ -832,22 +828,22 @@ func (ct *ConfigTamperer) TamperConfig(attack *SupplyChainAttack) error {
 
     ct.tamperedConfigs[attack.ID] = tampered
     return nil
-}
 
 // Helper functions
+}
 func generateAttackID() string {
     return fmt.Sprintf("sca-%d-%s", time.Now().Unix(), generateRandomString(8))
-}
 
+}
 func generateHash(data string) string {
     hash := sha256.Sum256([]byte(data))
     return hex.EncodeToString(hash[:])
-}
 
+}
 func generateBackdoorTrigger() string {
     return fmt.Sprintf("TRIGGER_%s", generateRandomString(12))
-}
 
+}
 func generateRandomString(length int) string {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     b := make([]byte, length)
@@ -855,9 +851,9 @@ func generateRandomString(length int) string {
         b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
     }
     return string(b)
-}
 
 // GetAttackStatus returns the status of an attack
+}
 func (sca *SupplyChainAttacker) GetAttackStatus(attackID string) (*SupplyChainAttack, error) {
     sca.mu.RLock()
     defer sca.mu.RUnlock()
@@ -868,9 +864,9 @@ func (sca *SupplyChainAttacker) GetAttackStatus(attackID string) (*SupplyChainAt
     }
 
     return attack, nil
-}
 
 // GetActiveAttacks returns all active attacks
+}
 func (sca *SupplyChainAttacker) GetActiveAttacks() []*SupplyChainAttack {
     sca.mu.RLock()
     defer sca.mu.RUnlock()
@@ -881,5 +877,3 @@ func (sca *SupplyChainAttacker) GetActiveAttacks() []*SupplyChainAttack {
             active = append(active, attack)
         }
     }
-    return active
-}

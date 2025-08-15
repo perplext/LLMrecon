@@ -15,7 +15,6 @@ type Template interface {
 	GetReferences() []string
 	GetMetadata() map[string]interface{}
 	Validate() error
-}
 
 // TemplateManager manages templates
 type TemplateManager interface {
@@ -24,11 +23,9 @@ type TemplateManager interface {
 	GetCategories() ([]string, error)
 	LoadTemplate(path string) (Template, error)
 	ValidateTemplate(template Template) error
-}
 
 // Engine represents a template execution engine
 type Engine interface {
 	Execute(ctx context.Context, template Template, target interface{}) (interface{}, error)
 	Validate(template Template) error
 	GetSupportedFormats() []string
-}

@@ -20,7 +20,6 @@ type GitLabRepository struct {
 	
 	// projectID is the GitLab project ID or path
 	projectID string
-}
 
 // NewGitLabRepository creates a new GitLab repository
 func NewGitLabRepository(config *Config) (Repository, error) {
@@ -37,7 +36,6 @@ func NewGitLabRepository(config *Config) (Repository, error) {
 		BaseRepository: base,
 		projectID:      projectID,
 	}, nil
-}
 
 // parseGitLabURL parses a GitLab URL to extract project ID or path
 func parseGitLabURL(urlStr string) (string, error) {
@@ -60,7 +58,6 @@ func parseGitLabURL(urlStr string) (string, error) {
 	projectID := url.PathEscape(path)
 	
 	return projectID, nil
-}
 
 // Connect establishes a connection to the GitLab repository
 func (r *GitLabRepository) Connect(ctx context.Context) error {
@@ -105,7 +102,6 @@ func (r *GitLabRepository) Connect(ctx context.Context) error {
 	r.setConnected(true)
 	
 	return nil
-}
 
 // getGitLabBaseURL extracts the base URL from a GitLab repository URL
 func getGitLabBaseURL(repoURL string) string {
@@ -129,7 +125,6 @@ func getGitLabBaseURL(repoURL string) string {
 	}
 	
 	return baseURL
-}
 
 // Disconnect closes the connection to the GitLab repository
 func (r *GitLabRepository) Disconnect() error {
@@ -140,7 +135,6 @@ func (r *GitLabRepository) Disconnect() error {
 	r.client = nil
 	
 	return nil
-}
 
 // ListFiles lists files in the GitLab repository matching the pattern
 func (r *GitLabRepository) ListFiles(ctx context.Context, pattern string) ([]FileInfo, error) {
@@ -156,7 +150,7 @@ func (r *GitLabRepository) ListFiles(ctx context.Context, pattern string) ([]Fil
 	defer r.ReleaseConnection()
 	
 	// Create result slice
-	var result []FileInfo
+		var result []FileInfo
 	
 	// Use WithRetry for the operation
 	err := r.WithRetry(ctx, func() error {
@@ -212,7 +206,6 @@ func (r *GitLabRepository) ListFiles(ctx context.Context, pattern string) ([]Fil
 	}
 	
 	return result, nil
-}
 
 // GetFile retrieves a file from the GitLab repository
 func (r *GitLabRepository) GetFile(ctx context.Context, path string) (io.ReadCloser, error) {
@@ -260,13 +253,12 @@ func (r *GitLabRepository) GetFile(ctx context.Context, path string) (io.ReadClo
 		// Close pipe with error if any
 		if fetchErr != nil {
 			pw.CloseWithError(fetchErr)
-		} else {
+			} else {
 			pw.Close()
 		}
 	}()
 	
 	return pr, nil
-}
 
 // FileExists checks if a file exists in the GitLab repository
 func (r *GitLabRepository) FileExists(ctx context.Context, path string) (bool, error) {
@@ -307,13 +299,10 @@ func (r *GitLabRepository) FileExists(ctx context.Context, path string) (bool, e
 	}
 	
 	return exists, nil
-}
 
 // GetBranch returns the branch of the repository
 func (r *GitLabRepository) GetBranch() string {
 	return r.config.Branch
-}
-
 // GetLastModified gets the last modified time of a file in the GitLab repository
 func (r *GitLabRepository) GetLastModified(ctx context.Context, path string) (time.Time, error) {
 	// Ensure connected
@@ -328,7 +317,6 @@ func (r *GitLabRepository) GetLastModified(ctx context.Context, path string) (ti
 	defer r.ReleaseConnection()
 	
 	return r.getFileLastModified(ctx, path)
-}
 
 // getFileLastModified gets the last modified time of a file (internal implementation)
 func (r *GitLabRepository) getFileLastModified(ctx context.Context, path string) (time.Time, error) {
@@ -363,5 +351,3 @@ func (r *GitLabRepository) getFileLastModified(ctx context.Context, path string)
 		return time.Time{}, err
 	}
 	
-	return lastModified, nil
-}

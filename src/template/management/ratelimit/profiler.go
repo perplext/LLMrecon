@@ -45,7 +45,6 @@ type ProfileResult struct {
 	
 	// Raw profiling data for further analysis
 	ProfileData map[string]interface{}
-}
 
 // PriorityStats contains statistics for a specific priority level
 type PriorityStats struct {
@@ -63,7 +62,6 @@ type PriorityStats struct {
 	
 	// Maximum response time for this priority
 	MaxResponseTime time.Duration
-}
 
 // Profiler provides tools for profiling the rate limiting system
 type Profiler struct {
@@ -81,13 +79,12 @@ type Profiler struct {
 	
 	// Whether to enable trace profiling
 	traceProfiling bool
-}
 
 // NewProfiler creates a new profiler for the given limiter
 func NewProfiler(limiter *AdaptiveLimiter, outputDir string) *Profiler {
 	// Create output directory if it doesn't exist
 	if outputDir != "" {
-		if err := os.MkdirAll(outputDir, 0755); err != nil {
+		if err := os.MkdirAll(outputDir, 0700); err != nil {
 			log.Printf("Failed to create output directory: %v", err)
 		}
 	}
@@ -99,22 +96,18 @@ func NewProfiler(limiter *AdaptiveLimiter, outputDir string) *Profiler {
 		memoryProfiling: true,
 		traceProfiling:  false,
 	}
-}
 
 // SetCPUProfiling enables or disables CPU profiling
 func (p *Profiler) SetCPUProfiling(enabled bool) {
 	p.cpuProfiling = enabled
-}
 
 // SetMemoryProfiling enables or disables memory profiling
 func (p *Profiler) SetMemoryProfiling(enabled bool) {
 	p.memoryProfiling = enabled
-}
 
 // SetTraceProfiling enables or disables trace profiling
 func (p *Profiler) SetTraceProfiling(enabled bool) {
 	p.traceProfiling = enabled
-}
 
 // RunLoadTest runs a load test with the specified parameters
 func (p *Profiler) RunLoadTest(
@@ -134,7 +127,7 @@ func (p *Profiler) RunLoadTest(
 		if err != nil {
 			return nil, fmt.Errorf("could not create CPU profile: %v", err)
 		}
-		defer cpuFile.Close()
+		defer func() { if err := cpuFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 		
 		if err := pprof.StartCPUProfile(cpuFile); err != nil {
 			return nil, fmt.Errorf("could not start CPU profile: %v", err)
@@ -331,7 +324,7 @@ func (p *Profiler) RunLoadTest(
 		if err != nil {
 			log.Printf("Could not create memory profile: %v", err)
 		} else {
-			defer memFile.Close()
+			defer func() { if err := memFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 			if err := pprof.WriteHeapProfile(memFile); err != nil {
 				log.Printf("Could not write memory profile: %v", err)
 			}
@@ -379,7 +372,6 @@ func (p *Profiler) RunLoadTest(
 	}
 	
 	return result, nil
-}
 
 // GenerateReport generates a human-readable report from profiling results
 func (p *Profiler) GenerateReport(result *ProfileResult) string {
@@ -477,10 +469,7 @@ func (p *Profiler) GenerateReport(result *ProfileResult) string {
 	}
 	
 	return report
-}
 
 // SaveReportToFile saves the profiling report to a file
 func (p *Profiler) SaveReportToFile(report string, filename string) error {
 	path := filepath.Join(p.outputDir, filename)
-	return os.WriteFile(path, []byte(report), 0644)
-}

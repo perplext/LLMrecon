@@ -215,5 +215,4 @@ type AuditLog struct {
 	IP          string                 `json:"ip"`
 	UserAgent   string                 `json:"user_agent"`
 	SessionID   string                 `json:"session_id"`
-	Error       string                 `json:"error,omitempty"`
 }

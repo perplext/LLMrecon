@@ -48,7 +48,6 @@ type PipelineExecutor struct {
 	isShutdown bool
 	// shutdownMutex protects isShutdown
 	shutdownMutex sync.RWMutex
-}
 
 // pipelineTask represents a task in the execution pipeline
 type pipelineTask struct {
@@ -74,7 +73,6 @@ type pipelineTask struct {
 	stageStartTimes map[PipelineStage]time.Time
 	// stageDurations tracks durations for each stage
 	stageDurations map[PipelineStage]time.Duration
-}
 
 // stageWorkerPool is a pool of workers for a pipeline stage
 type stageWorkerPool struct {
@@ -90,25 +88,21 @@ type stageWorkerPool struct {
 	wg sync.WaitGroup
 	// shutdownCh is used to signal shutdown
 	shutdownCh chan struct{}
-}
 
 // stageProcessor is a processor for a pipeline stage
 type stageProcessor interface {
 	// Process processes a task
 	Process(task *pipelineTask) error
-}
 
 // TemplatePreprocessor is a preprocessor for templates
 type TemplatePreprocessor interface {
 	// Preprocess preprocesses a template
 	Preprocess(ctx context.Context, template *format.Template, options map[string]interface{}) (*format.Template, error)
-}
 
 // ResultPostprocessor is a postprocessor for results
 type ResultPostprocessor interface {
 	// Postprocess postprocesses a result
 	Postprocess(ctx context.Context, result *interfaces.TemplateResult) (*interfaces.TemplateResult, error)
-}
 
 // pipelineStats tracks pipeline statistics
 type pipelineStats struct {
@@ -126,31 +120,26 @@ type pipelineStats struct {
 	StageDurations map[PipelineStage]time.Duration
 	// TotalDuration is the total pipeline duration
 	TotalDuration time.Duration
-}
 
 // preprocessingProcessor is a processor for the preprocessing stage
 type preprocessingProcessor struct {
 	// preprocessors is a list of template preprocessors
 	preprocessors []TemplatePreprocessor
-}
 
 // executionProcessor is a processor for the execution stage
 type executionProcessor struct {
 	// executor is the template executor
 	executor interfaces.TemplateExecutor
-}
 
 // detectionProcessor is a processor for the detection stage
 type detectionProcessor struct {
 	// detectionEngine is the detection engine
 	detectionEngine DetectionEngine
-}
 
 // postprocessingProcessor is a processor for the postprocessing stage
 type postprocessingProcessor struct {
 	// postprocessors is a list of result postprocessors
 	postprocessors []ResultPostprocessor
-}
 
 // NewPipelineExecutor creates a new pipeline executor
 func NewPipelineExecutor(baseExecutor interfaces.TemplateExecutor, bufferSize int) *PipelineExecutor {
@@ -190,7 +179,6 @@ func NewPipelineExecutor(baseExecutor interfaces.TemplateExecutor, bufferSize in
 	pipeline.startPipeline()
 
 	return pipeline
-}
 
 // newStageWorkerPool creates a new stage worker pool
 func newStageWorkerPool(workers int, inputCh, outputCh chan *pipelineTask, processor stageProcessor) *stageWorkerPool {
@@ -209,7 +197,6 @@ func newStageWorkerPool(workers int, inputCh, outputCh chan *pipelineTask, proce
 	}
 
 	return pool
-}
 
 // worker is a worker goroutine for a pipeline stage
 func (p *stageWorkerPool) worker() {
@@ -252,13 +239,11 @@ func (p *stageWorkerPool) worker() {
 			return
 		}
 	}
-}
 
 // startPipeline starts the pipeline
 func (p *PipelineExecutor) startPipeline() {
 	// Start result collector
 	go p.collectResults()
-}
 
 // collectResults collects results from the final stage
 func (p *PipelineExecutor) collectResults() {
@@ -284,7 +269,6 @@ func (p *PipelineExecutor) collectResults() {
 			return
 		}
 	}
-}
 
 // Process processes a task in the preprocessing stage
 func (p *preprocessingProcessor) Process(task *pipelineTask) error {
@@ -324,7 +308,6 @@ func (p *preprocessingProcessor) Process(task *pipelineTask) error {
 	task.stageDurations[StagePreprocessing] = time.Since(task.stageStartTimes[StagePreprocessing])
 
 	return nil
-}
 
 // Process processes a task in the execution stage
 func (p *executionProcessor) Process(task *pipelineTask) error {
@@ -351,7 +334,6 @@ func (p *executionProcessor) Process(task *pipelineTask) error {
 	task.stageDurations[StageExecution] = time.Since(task.stageStartTimes[StageExecution])
 
 	return nil
-}
 
 // Process processes a task in the detection stage
 func (p *detectionProcessor) Process(task *pipelineTask) error {
@@ -387,7 +369,6 @@ func (p *detectionProcessor) Process(task *pipelineTask) error {
 	task.stageDurations[StageDetection] = time.Since(task.stageStartTimes[StageDetection])
 
 	return nil
-}
 
 // Process processes a task in the postprocessing stage
 func (p *postprocessingProcessor) Process(task *pipelineTask) error {
@@ -416,7 +397,6 @@ func (p *postprocessingProcessor) Process(task *pipelineTask) error {
 	task.result.Duration = task.result.EndTime.Sub(task.result.StartTime)
 
 	return nil
-}
 
 // Execute executes a template through the pipeline
 func (p *PipelineExecutor) Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*interfaces.TemplateResult, error) {
@@ -476,7 +456,6 @@ func (p *PipelineExecutor) Execute(ctx context.Context, template *format.Templat
 		p.statsMutex.Unlock()
 		return nil, ctx.Err()
 	}
-}
 
 // ExecuteBatch executes multiple templates through the pipeline
 func (p *PipelineExecutor) ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
@@ -525,7 +504,6 @@ func (p *PipelineExecutor) ExecuteBatch(ctx context.Context, templates []*format
 	// Wait for all executions to complete
 	wg.Wait()
 	close(errorCh)
-
 	// Check for errors
 	var lastError error
 	for err := range errorCh {
@@ -533,34 +511,29 @@ func (p *PipelineExecutor) ExecuteBatch(ctx context.Context, templates []*format
 	}
 
 	return results, lastError
-}
 
 // AddPreprocessor adds a preprocessor to the pipeline
 func (p *PipelineExecutor) AddPreprocessor(preprocessor TemplatePreprocessor) {
 	p.preprocessors = append(p.preprocessors, preprocessor)
 	// Update preprocessor in the preprocessing stage
 	p.stages[StagePreprocessing].processor = &preprocessingProcessor{p.preprocessors}
-}
 
 // AddPostprocessor adds a postprocessor to the pipeline
 func (p *PipelineExecutor) AddPostprocessor(postprocessor ResultPostprocessor) {
 	p.postprocessors = append(p.postprocessors, postprocessor)
 	// Update postprocessor in the postprocessing stage
 	p.stages[StagePostprocessing].processor = &postprocessingProcessor{p.postprocessors}
-}
 
 // SetDetectionEngine sets the detection engine for the pipeline
 func (p *PipelineExecutor) SetDetectionEngine(detectionEngine DetectionEngine) {
 	// Update detection engine in the detection stage
 	p.stages[StageDetection].processor = &detectionProcessor{detectionEngine}
-}
 
 // isShuttingDown checks if the pipeline is shutting down
 func (p *PipelineExecutor) isShuttingDown() bool {
 	p.shutdownMutex.RLock()
 	defer p.shutdownMutex.RUnlock()
 	return p.isShutdown
-}
 
 // Shutdown shuts down the pipeline
 func (p *PipelineExecutor) Shutdown() {
@@ -585,7 +558,6 @@ func (p *PipelineExecutor) Shutdown() {
 	for _, pool := range p.stages {
 		pool.wg.Wait()
 	}
-}
 
 // GetPipelineStats returns statistics about the pipeline
 func (p *PipelineExecutor) GetPipelineStats() map[string]interface{} {
@@ -615,4 +587,3 @@ func (p *PipelineExecutor) GetPipelineStats() map[string]interface{} {
 		"avg_duration":     avgDuration,
 		"avg_stage_durations": avgStageDurations,
 	}
-}

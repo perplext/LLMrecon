@@ -39,7 +39,6 @@ type IncidentFilter struct {
 	SortOrder     string `json:"sort_order,omitempty"`
 	Offset        int    `json:"offset,omitempty"`
 	Limit         int    `json:"limit,omitempty"`
-}
 
 // VulnerabilityFilter defines filters for querying vulnerabilities
 type VulnerabilityFilter struct {
@@ -67,5 +66,3 @@ type AuditEventFilter struct {
 	SortBy        string `json:"sort_by,omitempty"`
 	SortOrder     string `json:"sort_order,omitempty"`
 	Offset        int    `json:"offset,omitempty"`
-	Limit         int    `json:"limit,omitempty"`
-}

@@ -27,7 +27,6 @@ type ProgressBar struct {
 	current     int64
 	startTime   time.Time
 	lastUpdate  time.Time
-}
 
 // ProgressOptions configures progress display
 type ProgressOptions struct {
@@ -37,7 +36,6 @@ type ProgressOptions struct {
 	Width        int
 	RefreshRate  time.Duration
 	SpinnerStyle []string
-}
 
 // DefaultProgressOptions returns default progress options
 func DefaultProgressOptions() ProgressOptions {
@@ -51,7 +49,6 @@ func DefaultProgressOptions() ProgressOptions {
 			"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏",
 		},
 	}
-}
 
 // NewProgressManager creates a new progress manager
 func NewProgressManager(output io.Writer, opts ProgressOptions) *ProgressManager {
@@ -63,7 +60,6 @@ func NewProgressManager(output io.Writer, opts ProgressOptions) *ProgressManager
 		showBytes: opts.ShowBytes,
 		width:     opts.Width,
 	}
-}
 
 // CreateProgressBar creates a new progress bar
 func (pm *ProgressManager) CreateProgressBar(id, description string, total int64) *ProgressBar {
@@ -112,7 +108,6 @@ func (pm *ProgressManager) CreateProgressBar(id, description string, total int64
 
 	pm.bars[id] = pb
 	return pb
-}
 
 // Update updates progress for a specific bar
 func (pm *ProgressManager) Update(id string, current int64) error {
@@ -132,7 +127,6 @@ func (pm *ProgressManager) Update(id string, current int64) error {
 	}
 
 	return nil
-}
 
 // Increment increments progress by 1
 func (pm *ProgressManager) Increment(id string) error {
@@ -149,7 +143,6 @@ func (pm *ProgressManager) Increment(id string) error {
 	bar.lastUpdate = time.Now()
 
 	return nil
-}
 
 // Finish marks a progress bar as complete
 func (pm *ProgressManager) Finish(id string) error {
@@ -165,7 +158,6 @@ func (pm *ProgressManager) Finish(id string) error {
 	delete(pm.bars, id)
 
 	return nil
-}
 
 // Clear removes all progress bars
 func (pm *ProgressManager) Clear() {
@@ -176,7 +168,6 @@ func (pm *ProgressManager) Clear() {
 		bar.bar.Clear()
 	}
 	pm.bars = make(map[string]*ProgressBar)
-}
 
 // MultiProgress manages multiple concurrent progress indicators
 type MultiProgress struct {
@@ -234,7 +225,6 @@ func (ts TaskStatus) String() string {
 	default:
 		return "Unknown"
 	}
-}
 
 // Symbol returns symbol for task status
 func (ts TaskStatus) Symbol() string {
@@ -252,7 +242,6 @@ func (ts TaskStatus) Symbol() string {
 	default:
 		return "?"
 	}
-}
 
 // NewMultiProgress creates a new multi-progress tracker
 func NewMultiProgress(output io.Writer, maxTasks int, showDetail bool) *MultiProgress {
@@ -262,7 +251,6 @@ func NewMultiProgress(output io.Writer, maxTasks int, showDetail bool) *MultiPro
 		maxTasks:   maxTasks,
 		showDetail: showDetail,
 	}
-}
 
 // AddTask adds a new task to track
 func (mp *MultiProgress) AddTask(id, name string) *Task {
@@ -286,7 +274,6 @@ func (mp *MultiProgress) AddTask(id, name string) *Task {
 	}
 
 	return task
-}
 
 // UpdateTask updates task status
 func (mp *MultiProgress) UpdateTask(id string, status TaskStatus, progress float64, details string) error {
@@ -309,7 +296,6 @@ func (mp *MultiProgress) UpdateTask(id string, status TaskStatus, progress float
 	}
 
 	return fmt.Errorf("task '%s' not found", id)
-}
 
 // AddSubTask adds a sub-task to a task
 func (mp *MultiProgress) AddSubTask(taskID, name string) error {
@@ -329,7 +315,6 @@ func (mp *MultiProgress) AddSubTask(taskID, name string) error {
 	}
 
 	return fmt.Errorf("task '%s' not found", taskID)
-}
 
 // Render renders the current progress state
 func (mp *MultiProgress) Render() string {
@@ -381,7 +366,6 @@ func (mp *MultiProgress) Render() string {
 	}
 
 	return output.String()
-}
 
 // renderProgressBar renders a simple progress bar
 func (mp *MultiProgress) renderProgressBar(progress float64) string {
@@ -401,7 +385,6 @@ func (mp *MultiProgress) renderProgressBar(progress float64) string {
 	bar += "]"
 	
 	return bar
-}
 
 // formatDuration formats a duration in human-readable format
 func formatDuration(d time.Duration) string {
@@ -418,7 +401,6 @@ func formatDuration(d time.Duration) string {
 	hours := int(d.Hours())
 	mins := int(d.Minutes()) % 60
 	return fmt.Sprintf("%dh%dm", hours, mins)
-}
 
 // Spinner provides animated spinner for indeterminate progress
 type Spinner struct {
@@ -437,7 +419,6 @@ func NewSpinner(style []string) *Spinner {
 		frames:  style,
 		current: 0,
 	}
-}
 
 // Next returns the next frame
 func (s *Spinner) Next() string {
@@ -447,11 +428,23 @@ func (s *Spinner) Next() string {
 	frame := s.frames[s.current]
 	s.current = (s.current + 1) % len(s.frames)
 	return frame
-}
 
 // Reset resets the spinner
 func (s *Spinner) Reset() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.current = 0
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

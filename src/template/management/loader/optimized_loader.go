@@ -31,7 +31,6 @@ type OptimizedTemplateLoader struct {
 	stats LoaderStats
 	// statsMutex protects the stats
 	statsMutex sync.RWMutex
-}
 
 // SourceIndex contains metadata about a template source
 type SourceIndex struct {
@@ -47,7 +46,6 @@ type SourceIndex struct {
 	FileMap map[string]string
 	// Metadata contains additional metadata about the source
 	Metadata map[string]interface{}
-}
 
 // LoaderStats tracks loader statistics
 type LoaderStats struct {
@@ -61,7 +59,6 @@ type LoaderStats struct {
 	LoadErrors int64
 	// TotalLoadTime is the total time spent loading templates
 	TotalLoadTime time.Duration
-}
 
 // NewOptimizedTemplateLoader creates a new optimized template loader
 func NewOptimizedTemplateLoader(cacheTTL time.Duration, maxCacheSize int, repoManager *repository.Manager, concurrencyLimit int) *OptimizedTemplateLoader {
@@ -77,7 +74,6 @@ func NewOptimizedTemplateLoader(cacheTTL time.Duration, maxCacheSize int, repoMa
 		concurrencyLimit: concurrencyLimit,
 		loadSemaphore:    make(chan struct{}, concurrencyLimit),
 	}
-}
 
 // LoadTemplateWithTimeout loads a template with a timeout
 func (l *OptimizedTemplateLoader) LoadTemplateWithTimeout(ctx context.Context, source string, sourceType string, timeout time.Duration) (*format.Template, error) {
@@ -87,7 +83,6 @@ func (l *OptimizedTemplateLoader) LoadTemplateWithTimeout(ctx context.Context, s
 	
 	// Call the regular LoadTemplate with the timeout context
 	return l.LoadTemplate(ctxWithTimeout, source, sourceType)
-}
 
 // LoadTemplatesWithTimeout loads multiple templates with a timeout
 func (l *OptimizedTemplateLoader) LoadTemplatesWithTimeout(ctx context.Context, source string, sourceType string, timeout time.Duration) ([]*format.Template, error) {
@@ -97,7 +92,6 @@ func (l *OptimizedTemplateLoader) LoadTemplatesWithTimeout(ctx context.Context, 
 	
 	// Call the regular LoadTemplates with the timeout context
 	return l.LoadTemplates(ctxWithTimeout, source, sourceType)
-}
 
 // LoadTemplate loads a template from a source
 func (l *OptimizedTemplateLoader) LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error) {
@@ -148,7 +142,6 @@ func (l *OptimizedTemplateLoader) LoadTemplate(ctx context.Context, source strin
 	l.statsMutex.Unlock()
 	
 	return template, err
-}
 
 // LoadTemplates loads multiple templates from a source
 func (l *OptimizedTemplateLoader) LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error) {
@@ -159,7 +152,6 @@ func (l *OptimizedTemplateLoader) LoadTemplates(ctx context.Context, source stri
 	l.indexMutex.RLock()
 	sourceIndex, indexed := l.indexedSources[sourceKey]
 	l.indexMutex.RUnlock()
-
 	// If source is not indexed, index it first
 	if !indexed {
 		if err := l.indexSource(ctx, source, sourceType); err != nil {
@@ -204,7 +196,6 @@ func (l *OptimizedTemplateLoader) LoadTemplates(ctx context.Context, source stri
 			mu.Unlock()
 		}(id)
 	}
-
 	// Wait for all goroutines to finish
 	wg.Wait()
 	close(errorsChan)
@@ -228,7 +219,6 @@ func (l *OptimizedTemplateLoader) LoadTemplates(ctx context.Context, source stri
 	}
 
 	return templates, nil
-}
 
 // indexSource indexes a template source
 func (l *OptimizedTemplateLoader) indexSource(ctx context.Context, source string, sourceType string) error {
@@ -271,7 +261,6 @@ func (l *OptimizedTemplateLoader) indexSource(ctx context.Context, source string
 	l.indexMutex.Unlock()
 
 	return nil
-}
 
 // indexLocalPath indexes a local path
 func (l *OptimizedTemplateLoader) indexLocalPath(ctx context.Context, path string, index *SourceIndex) error {
@@ -288,7 +277,6 @@ func (l *OptimizedTemplateLoader) indexLocalPath(ctx context.Context, path strin
 
 	// Index single file
 	return l.indexFile(ctx, path, index)
-}
 
 // indexDirectory indexes a directory
 func (l *OptimizedTemplateLoader) indexDirectory(ctx context.Context, dirPath string, index *SourceIndex) error {
@@ -313,12 +301,11 @@ func (l *OptimizedTemplateLoader) indexDirectory(ctx context.Context, dirPath st
 	})
 
 	return err
-}
 
 // indexFile indexes a file
 func (l *OptimizedTemplateLoader) indexFile(ctx context.Context, filePath string, index *SourceIndex) error {
 	// Read file content
-	content, err := ioutil.ReadFile(filePath)
+	content, err := ioutil.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return nil // Skip files that can't be read
 	}
@@ -334,7 +321,6 @@ func (l *OptimizedTemplateLoader) indexFile(ctx context.Context, filePath string
 	index.FileMap[template.ID] = filePath
 
 	return nil
-}
 
 // indexRepository indexes a repository
 func (l *OptimizedTemplateLoader) indexRepository(ctx context.Context, repoURL string, repoType string, index *SourceIndex) error {
@@ -363,7 +349,6 @@ func (l *OptimizedTemplateLoader) indexRepository(ctx context.Context, repoURL s
 	if err != nil {
 		return fmt.Errorf("failed to create repository: %w", err)
 	}
-
 	// Connect to repository
 	if err := repo.Connect(ctx); err != nil {
 		return fmt.Errorf("failed to connect to repository: %w", err)
@@ -410,7 +395,6 @@ func (l *OptimizedTemplateLoader) indexRepository(ctx context.Context, repoURL s
 	index.Metadata["repository"] = repo.GetName()
 
 	return nil
-}
 
 // loadTemplateByID loads a template by ID from a source index
 func (l *OptimizedTemplateLoader) loadTemplateByID(ctx context.Context, id string, index *SourceIndex) (*format.Template, error) {
@@ -439,7 +423,7 @@ func (l *OptimizedTemplateLoader) loadTemplateByID(ctx context.Context, id strin
 	switch interfaces.TemplateSource(index.Type) {
 	case interfaces.FileSource:
 		// Read file content from local file system
-		content, err = ioutil.ReadFile(filePath)
+		content, err = ioutil.ReadFile(filepath.Clean(filePath))
 		if err != nil {
 			return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
 		}
@@ -484,12 +468,10 @@ func (l *OptimizedTemplateLoader) loadTemplateByID(ctx context.Context, id strin
 	l.cache.Set(id, template)
 
 	return template, nil
-}
 
 // GetCacheStats returns statistics about the cache
 func (l *OptimizedTemplateLoader) GetCacheStats() map[string]interface{} {
 	return l.cache.GetStats()
-}
 
 // GetLoaderStats returns statistics about the loader
 func (l *OptimizedTemplateLoader) GetLoaderStats() map[string]interface{} {
@@ -516,12 +498,10 @@ func (l *OptimizedTemplateLoader) GetLoaderStats() map[string]interface{} {
 		"avg_load_time":   avgLoadTime,
 		"cache_hit_rate":  cacheHitRate,
 	}
-}
 
 // ClearCache clears the template cache
 func (l *OptimizedTemplateLoader) ClearCache() {
 	l.cache.Clear()
-}
 
 // ClearSourceIndex clears the source index for a specific source
 func (l *OptimizedTemplateLoader) ClearSourceIndex(source string, sourceType string) {
@@ -530,14 +510,12 @@ func (l *OptimizedTemplateLoader) ClearSourceIndex(source string, sourceType str
 	l.indexMutex.Lock()
 	delete(l.indexedSources, sourceKey)
 	l.indexMutex.Unlock()
-}
 
 // ClearAllSourceIndices clears all source indices
 func (l *OptimizedTemplateLoader) ClearAllSourceIndices() {
 	l.indexMutex.Lock()
 	l.indexedSources = make(map[string]*SourceIndex)
 	l.indexMutex.Unlock()
-}
 
 // SetConcurrencyLimit sets the concurrency limit for loading operations
 func (l *OptimizedTemplateLoader) SetConcurrencyLimit(limit int) {
@@ -547,5 +525,4 @@ func (l *OptimizedTemplateLoader) SetConcurrencyLimit(limit int) {
 
 	l.concurrencyLimit = limit
 	l.loadSemaphore = make(chan struct{}, limit)
-}
 

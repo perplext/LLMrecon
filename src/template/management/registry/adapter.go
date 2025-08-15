@@ -1,77 +1,81 @@
-// Package registry provides functionality for registering and managing templates.
 package registry
 
 import (
+	"context"
 	"fmt"
-
-	"github.com/perplext/LLMrecon/src/template/format"
+	
+	"github.com/perplext/LLMrecon/src/template/management/interfaces"
 )
 
-// TemplateRegistryAdapter adapts the TemplateRegistry to implement the interfaces.TemplateRegistry interface
-type TemplateRegistryAdapter struct {
-	registry *TemplateRegistry
+// RegistryAdapter adapts the registry to the template manager interface
+type RegistryAdapter struct {
+	registry interfaces.TemplateRegistry
 }
 
-// NewTemplateRegistryAdapter creates a new template registry adapter
-func NewTemplateRegistryAdapter(registry *TemplateRegistry) *TemplateRegistryAdapter {
-	return &TemplateRegistryAdapter{
+// NewRegistryAdapter creates a new registry adapter
+func NewRegistryAdapter(registry interfaces.TemplateRegistry) *RegistryAdapter {
+	return &RegistryAdapter{
 		registry: registry,
 	}
 }
 
 // Register registers a template
-func (a *TemplateRegistryAdapter) Register(template *format.Template) error {
+func (a *RegistryAdapter) Register(template interfaces.Template) error {
 	return a.registry.Register(template)
 }
 
 // Unregister unregisters a template
-func (a *TemplateRegistryAdapter) Unregister(id string) error {
+func (a *RegistryAdapter) Unregister(id string) error {
 	return a.registry.Unregister(id)
 }
 
-// Get gets a template
-func (a *TemplateRegistryAdapter) Get(id string) (*format.Template, error) {
+// Get gets a registered template
+func (a *RegistryAdapter) Get(id string) (interfaces.Template, bool) {
 	return a.registry.Get(id)
 }
 
-// List lists all templates
-func (a *TemplateRegistryAdapter) List() []*format.Template {
+// List lists all registered templates
+func (a *RegistryAdapter) List() []interfaces.Template {
 	return a.registry.List()
 }
 
-// FindByTag finds templates by tag
-func (a *TemplateRegistryAdapter) FindByTag(tag string) []*format.Template {
-	return a.registry.FindByTag(tag)
+// Clear clears the registry
+func (a *RegistryAdapter) Clear() {
+	a.registry.Clear()
 }
 
-// FindByTags finds templates by tags
-func (a *TemplateRegistryAdapter) FindByTags(tags []string) []*format.Template {
-	return a.registry.FindByTags(tags)
+// ListTemplates lists all templates
+func (a *RegistryAdapter) ListTemplates(ctx context.Context) ([]interfaces.Template, error) {
+	return a.registry.List(), nil
 }
 
-// GetMetadata gets metadata for a template
-func (a *TemplateRegistryAdapter) GetMetadata(id string) (map[string]interface{}, error) {
-	return a.registry.GetMetadata(id)
-}
-
-// SetMetadata sets metadata for a template
-func (a *TemplateRegistryAdapter) SetMetadata(id string, metadata map[string]interface{}) error {
-	return a.registry.SetMetadata(id, metadata)
-}
-
-// Count returns the number of templates
-func (a *TemplateRegistryAdapter) Count() int {
-	return a.registry.Count()
-}
-
-// Update updates a template in the registry
-func (a *TemplateRegistryAdapter) Update(template *format.Template) error {
-	// First unregister the template
-	err := a.registry.Unregister(template.ID)
-	if err != nil {
-		return fmt.Errorf("failed to unregister template before update: %w", err)
+// GetTemplate gets a template by ID
+func (a *RegistryAdapter) GetTemplate(ctx context.Context, id string) (interfaces.Template, error) {
+	template, ok := a.registry.Get(id)
+	if !ok {
+		return nil, fmt.Errorf("template not found: %s", id)
 	}
-	
-	// Then register it again with the updated data
+	return template, nil
+
+// CreateTemplate creates a new template
+func (a *RegistryAdapter) CreateTemplate(ctx context.Context, template interfaces.Template) error {
 	return a.registry.Register(template)
+}
+
+// UpdateTemplate updates an existing template
+func (a *RegistryAdapter) UpdateTemplate(ctx context.Context, id string, template interfaces.Template) error {
+	if err := a.registry.Unregister(id); err != nil {
+		return err
+	}
+	return a.registry.Register(template)
+
+// DeleteTemplate deletes a template
+func (a *RegistryAdapter) DeleteTemplate(ctx context.Context, id string) error {
+	return a.registry.Unregister(id)
+}
+
+// ValidateTemplate validates a template
+func (a *RegistryAdapter) ValidateTemplate(ctx context.Context, template interfaces.Template) error {
+	return template.Validate()
+}
 }

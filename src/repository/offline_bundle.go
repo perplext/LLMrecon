@@ -4,7 +4,11 @@ package repository
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/perplext/LLMrecon/src/bundle"
@@ -25,7 +29,6 @@ type OfflineBundleRepository struct {
 	offlineBundle *bundle.OfflineBundle
 	// isConnected indicates whether the repository is connected
 	isConnected bool
-}
 
 // NewOfflineBundleRepository creates a new offline bundle repository
 func NewOfflineBundleRepository(basePath string, auditTrail *trail.AuditTrailManager) *OfflineBundleRepository {
@@ -36,7 +39,6 @@ func NewOfflineBundleRepository(basePath string, auditTrail *trail.AuditTrailMan
 		validationLevel: bundle.StandardValidation,
 		isConnected:     false,
 	}
-}
 
 // Connect connects to the repository
 func (r *OfflineBundleRepository) Connect(ctx context.Context) error {
@@ -91,19 +93,16 @@ func (r *OfflineBundleRepository) Connect(ctx context.Context) error {
 	}
 
 	return nil
-}
 
 // Disconnect disconnects from the repository
 func (r *OfflineBundleRepository) Disconnect(ctx context.Context) error {
 	r.offlineBundle = nil
 	r.isConnected = false
 	return nil
-}
 
 // IsConnected checks if the repository is connected
 func (r *OfflineBundleRepository) IsConnected() bool {
 	return r.isConnected
-}
 
 // ListFiles lists files in the repository
 func (r *OfflineBundleRepository) ListFiles(ctx context.Context, path string) ([]FileInfo, error) {
@@ -131,7 +130,6 @@ func (r *OfflineBundleRepository) ListFiles(ctx context.Context, path string) ([
 	}
 
 	return files, nil
-}
 
 // GetFile gets a file from the repository
 func (r *OfflineBundleRepository) GetFile(ctx context.Context, path string) ([]byte, error) {
@@ -147,14 +145,13 @@ func (r *OfflineBundleRepository) GetFile(ctx context.Context, path string) ([]b
 			break
 		}
 	}
-
 	if contentItem == nil {
 		return nil, fmt.Errorf("file not found: %s", path)
 	}
 
 	// Read the file from the offline bundle
 	filePath := filepath.Join(r.basePath, path)
-	content, err := os.ReadFile(filePath)
+	content, err := os.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
@@ -184,7 +181,6 @@ func (r *OfflineBundleRepository) GetFile(ctx context.Context, path string) ([]b
 	}
 
 	return content, nil
-}
 
 // GetFileInfo gets information about a file in the repository
 func (r *OfflineBundleRepository) GetFileInfo(ctx context.Context, path string) (FileInfo, error) {
@@ -217,7 +213,6 @@ func (r *OfflineBundleRepository) GetFileInfo(ctx context.Context, path string) 
 	// Compliance mappings are not included in basic FileInfo structure
 
 	return fileInfo, nil
-}
 
 // GetRepositoryInfo gets information about the repository
 func (r *OfflineBundleRepository) GetRepositoryInfo(ctx context.Context) (RepositoryInfo, error) {
@@ -238,19 +233,15 @@ func (r *OfflineBundleRepository) GetRepositoryInfo(ctx context.Context) (Reposi
 	}
 
 	return repoInfo, nil
-}
 
 // SetValidationLevel sets the validation level for offline bundles
 func (r *OfflineBundleRepository) SetValidationLevel(level bundle.ValidationLevel) {
 	r.validationLevel = level
-}
 
 // GetValidationLevel gets the current validation level
 func (r *OfflineBundleRepository) GetValidationLevel() bundle.ValidationLevel {
 	return r.validationLevel
-}
 
 // GetOfflineBundle gets the loaded offline bundle
 func (r *OfflineBundleRepository) GetOfflineBundle() *bundle.OfflineBundle {
 	return r.offlineBundle
-}

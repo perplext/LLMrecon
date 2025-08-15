@@ -59,7 +59,6 @@ type InjectionPattern struct {
 	Enabled bool `json:"enabled"`
 	// CompiledPattern is the compiled regular expression
 	CompiledPattern *regexp.Regexp `json:"-"`
-}
 
 // InjectionPatternLibrary manages a library of prompt injection patterns
 type InjectionPatternLibrary struct {
@@ -67,7 +66,6 @@ type InjectionPatternLibrary struct {
 	patternsByCategory map[PatternCategory][]*InjectionPattern
 	mu          sync.RWMutex
 	initialized bool
-}
 
 // NewInjectionPatternLibrary creates a new injection pattern library
 func NewInjectionPatternLibrary() *InjectionPatternLibrary {
@@ -80,7 +78,6 @@ func NewInjectionPatternLibrary() *InjectionPatternLibrary {
 	library.initializeDefaultPatterns()
 	
 	return library
-}
 
 // initializeDefaultPatterns initializes the library with default patterns
 func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
@@ -292,7 +289,6 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 	})
 	
 	l.initialized = true
-}
 
 // addPatternInternal adds a pattern to the library without locking (internal use)
 func (l *InjectionPatternLibrary) addPatternInternal(pattern *InjectionPattern) error {
@@ -309,7 +305,6 @@ func (l *InjectionPatternLibrary) addPatternInternal(pattern *InjectionPattern) 
 	l.patternsByCategory[pattern.Category] = append(l.patternsByCategory[pattern.Category], pattern)
 	
 	return nil
-}
 
 // AddPattern adds a pattern to the library
 func (l *InjectionPatternLibrary) AddPattern(pattern *InjectionPattern) error {
@@ -317,7 +312,6 @@ func (l *InjectionPatternLibrary) AddPattern(pattern *InjectionPattern) error {
 	defer l.mu.Unlock()
 	
 	return l.addPatternInternal(pattern)
-}
 
 // GetPattern gets a pattern by ID
 func (l *InjectionPatternLibrary) GetPattern(id string) *InjectionPattern {
@@ -325,7 +319,6 @@ func (l *InjectionPatternLibrary) GetPattern(id string) *InjectionPattern {
 	defer l.mu.RUnlock()
 	
 	return l.patterns[id]
-}
 
 // GetPatternsByCategory gets patterns by category
 func (l *InjectionPatternLibrary) GetPatternsByCategory(category PatternCategory) []*InjectionPattern {
@@ -333,7 +326,6 @@ func (l *InjectionPatternLibrary) GetPatternsByCategory(category PatternCategory
 	defer l.mu.RUnlock()
 	
 	return l.patternsByCategory[category]
-}
 
 // GetAllPatterns gets all patterns
 func (l *InjectionPatternLibrary) GetAllPatterns() []*InjectionPattern {
@@ -346,7 +338,6 @@ func (l *InjectionPatternLibrary) GetAllPatterns() []*InjectionPattern {
 	}
 	
 	return patterns
-}
 
 // RemovePattern removes a pattern from the library
 func (l *InjectionPatternLibrary) RemovePattern(id string) {
@@ -369,7 +360,6 @@ func (l *InjectionPatternLibrary) RemovePattern(id string) {
 			break
 		}
 	}
-}
 
 // EnablePattern enables a pattern
 func (l *InjectionPatternLibrary) EnablePattern(id string) {
@@ -380,7 +370,6 @@ func (l *InjectionPatternLibrary) EnablePattern(id string) {
 		pattern.Enabled = true
 		pattern.UpdatedAt = time.Now()
 	}
-}
 
 // DisablePattern disables a pattern
 func (l *InjectionPatternLibrary) DisablePattern(id string) {
@@ -391,7 +380,6 @@ func (l *InjectionPatternLibrary) DisablePattern(id string) {
 		pattern.Enabled = false
 		pattern.UpdatedAt = time.Now()
 	}
-}
 
 // LoadPatternsFromFile loads patterns from a JSON file
 func (l *InjectionPatternLibrary) LoadPatternsFromFile(filePath string) error {
@@ -399,7 +387,7 @@ func (l *InjectionPatternLibrary) LoadPatternsFromFile(filePath string) error {
 	defer l.mu.Unlock()
 	
 	// Read the file
-	data, err := os.ReadFile(filePath)
+	data, err := os.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return err
 	}
@@ -418,7 +406,6 @@ func (l *InjectionPatternLibrary) LoadPatternsFromFile(filePath string) error {
 	}
 	
 	return nil
-}
 
 // SavePatternsToFile saves patterns to a JSON file
 func (l *InjectionPatternLibrary) SavePatternsToFile(filePath string) error {
@@ -442,13 +429,12 @@ func (l *InjectionPatternLibrary) SavePatternsToFile(filePath string) error {
 	
 	// Ensure directory exists
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
 	
 	// Write to file
-	return os.WriteFile(filePath, data, 0644)
-}
+	return os.WriteFile(filepath.Clean(filePath, data, 0600))
 
 // DetectPatterns detects patterns in a prompt
 func (l *InjectionPatternLibrary) DetectPatterns(prompt string, result *ProtectionResult) {
@@ -507,4 +493,3 @@ func (l *InjectionPatternLibrary) DetectPatterns(prompt string, result *Protecti
 			result.RiskScore = max(result.RiskScore, pattern.Confidence * pattern.Severity)
 		}
 	}
-}

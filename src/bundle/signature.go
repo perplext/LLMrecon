@@ -32,7 +32,6 @@ type SignatureManager struct {
 	Generator *update.SignatureGenerator
 	// PublicKey is the public key used for verification
 	PublicKey ed25519.PublicKey
-}
 
 // NewSignatureManager creates a new SignatureManager with the specified algorithm
 func NewSignatureManager(algorithm SignatureAlgorithm, privateKey []byte, publicKey []byte) (*SignatureManager, error) {
@@ -61,7 +60,6 @@ func NewSignatureManager(algorithm SignatureAlgorithm, privateKey []byte, public
 		Generator: generator,
 		PublicKey: pubKey,
 	}, nil
-}
 
 // GenerateKeyPair generates a new key pair for signing and verification
 func GenerateKeyPair() ([]byte, []byte, error) {
@@ -72,7 +70,6 @@ func GenerateKeyPair() ([]byte, []byte, error) {
 	}
 
 	return privateKey, publicKey, nil
-}
 
 // CalculateManifestSignature calculates a signature for a bundle manifest
 func (sm *SignatureManager) CalculateManifestSignature(manifest *BundleManifest) (string, error) {
@@ -97,7 +94,6 @@ func (sm *SignatureManager) CalculateManifestSignature(manifest *BundleManifest)
 	}
 
 	return signature, nil
-}
 
 // VerifyManifestSignature verifies the signature of a bundle manifest
 func (sm *SignatureManager) VerifyManifestSignature(manifest *BundleManifest) (bool, error) {
@@ -130,17 +126,15 @@ func (sm *SignatureManager) VerifyManifestSignature(manifest *BundleManifest) (b
 	// Verify the signature
 	valid := ed25519.Verify(sm.PublicKey, jsonData, signatureBytes)
 	return valid, nil
-}
 
 // CalculateFileChecksum calculates the SHA-256 checksum of a file
 func CalculateFileChecksum(filePath string) (string, error) {
 	// Open the file
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
-
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	// Calculate checksum
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
@@ -149,7 +143,6 @@ func CalculateFileChecksum(filePath string) (string, error) {
 
 	// Return the checksum as a hex string with algorithm prefix
 	return fmt.Sprintf("sha256:%x", hash.Sum(nil)), nil
-}
 
 // UpdateBundleChecksums updates all checksums in a bundle
 func UpdateBundleChecksums(bundle *Bundle) error {
@@ -193,7 +186,6 @@ func UpdateBundleChecksums(bundle *Bundle) error {
 	bundle.Manifest.Checksums.Manifest = fmt.Sprintf("sha256:%x", hash.Sum(nil))
 
 	return nil
-}
 
 // VerifyBundleChecksums verifies all checksums in a bundle
 func VerifyBundleChecksums(bundle *Bundle) (*ValidationResult, error) {
@@ -206,7 +198,6 @@ func VerifyBundleChecksums(bundle *Bundle) (*ValidationResult, error) {
 		Warnings:  []string{},
 		Details:   make(map[string]interface{}),
 	}
-
 	// Verify checksums for all content items
 	for _, item := range bundle.Manifest.Content {
 		// Get the full path to the content item
@@ -274,10 +265,7 @@ func VerifyBundleChecksums(bundle *Bundle) (*ValidationResult, error) {
 		result.Message = "Checksum validation failed"
 		result.Error = fmt.Errorf("one or more checksums are invalid")
 	}
-
 	return result, nil
-}
-
 // SignBundle signs a bundle using the provided private key
 func SignBundle(bundle *Bundle, privateKey []byte) error {
 	// Create signature manager
@@ -301,7 +289,6 @@ func SignBundle(bundle *Bundle, privateKey []byte) error {
 	bundle.Manifest.Signature = signature
 
 	return nil
-}
 
 // VerifyBundle verifies a bundle's signature and checksums
 func VerifyBundle(bundle *Bundle, publicKey []byte) (*ValidationResult, error) {
@@ -361,5 +348,3 @@ func VerifyBundle(bundle *Bundle, publicKey []byte) (*ValidationResult, error) {
 		result.Error = checksumResult.Error
 	}
 
-	return result, nil
-}

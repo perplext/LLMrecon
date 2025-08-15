@@ -16,13 +16,11 @@ type CreateRoleRequest struct {
 	Description string   `json:"description"`
 	Permissions []string `json:"permissions"`
 	ParentRoles []string `json:"parent_roles,omitempty"`
-}
 
 // UpdateRoleRequest represents a request to update a role
 type UpdateRoleRequest struct {
 	Description string   `json:"description,omitempty"`
 	ParentRoles []string `json:"parent_roles,omitempty"`
-}
 
 // AddPermissionRequest represents a request to add a permission to a role
 type AddPermissionRequest struct {
@@ -69,7 +67,6 @@ func (s *Server) handleListRoles(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Roles retrieved successfully", roleResponses)
-}
 
 // handleCreateRole handles creating a new role
 func (s *Server) handleCreateRole(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +130,6 @@ func (s *Server) handleCreateRole(w http.ResponseWriter, r *http.Request) {
 		ParentRoles: req.ParentRoles,
 		IsBuiltIn:   false,
 	}
-
 	if err := rbacManager.CreateRole(r.Context(), role); err != nil {
 		// Handle specific error types
 		switch {
@@ -147,7 +143,6 @@ func (s *Server) handleCreateRole(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusCreated, "Role created successfully", convertRoleToResponse(role))
-}
 
 // handleGetRole handles retrieving a role
 func (s *Server) handleGetRole(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +177,6 @@ func (s *Server) handleGetRole(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Role retrieved successfully", convertRoleToResponse(role))
-}
 
 // handleUpdateRole handles updating a role
 func (s *Server) handleUpdateRole(w http.ResponseWriter, r *http.Request) {
@@ -245,7 +239,6 @@ func (s *Server) handleUpdateRole(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Role updated successfully", convertRoleToResponse(role))
-}
 
 // handleDeleteRole handles deleting a role
 func (s *Server) handleDeleteRole(w http.ResponseWriter, r *http.Request) {
@@ -292,7 +285,6 @@ func (s *Server) handleDeleteRole(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Role deleted successfully", nil)
-}
 
 // handleAddPermission handles adding a permission to a role
 func (s *Server) handleAddPermission(w http.ResponseWriter, r *http.Request) {
@@ -371,7 +363,6 @@ func (s *Server) handleAddPermission(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Permission added to role successfully", convertRoleToResponse(updatedRole))
-}
 
 // handleRemovePermission handles removing a permission from a role
 func (s *Server) handleRemovePermission(w http.ResponseWriter, r *http.Request) {
@@ -397,7 +388,6 @@ func (s *Server) handleRemovePermission(w http.ResponseWriter, r *http.Request) 
 		WriteErrorResponse(w, http.StatusBadRequest, "Role name and permission are required")
 		return
 	}
-
 	// Get role
 	role, err := rbacManager.GetRole(r.Context(), roleName)
 	if err != nil {
@@ -432,7 +422,6 @@ func (s *Server) handleRemovePermission(w http.ResponseWriter, r *http.Request) 
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Permission removed from role successfully", convertRoleToResponse(updatedRole))
-}
 
 // convertRoleToResponse converts a role to a response format
 func convertRoleToResponse(role *access.Role) RoleResponse {
@@ -443,4 +432,9 @@ func convertRoleToResponse(role *access.Role) RoleResponse {
 		ParentRoles: role.ParentRoles,
 		IsBuiltIn:   role.IsBuiltIn,
 	}
+}
+}
+}
+}
+}
 }

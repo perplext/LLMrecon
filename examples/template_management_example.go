@@ -77,7 +77,9 @@ func main() {
 	// Execute a template
 	fmt.Println("Executing prompt-injection-basic template...")
 	result, err := management.RunTemplate(ctx, manager, "prompt-injection-basic", map[string]interface{}{
-		"provider": "mock-provider",
+if err != nil {
+treturn err
+}		"provider": "mock-provider",
 	})
 	if err != nil {
 		fmt.Printf("Error executing template: %v\n", err)
@@ -93,7 +95,9 @@ func main() {
 
 	// Execute multiple templates
 	fmt.Println("Executing multiple templates...")
-	templateIDs := []string{"prompt-injection-basic", "data-leakage-test"}
+if err != nil {
+treturn err
+}	templateIDs := []string{"prompt-injection-basic", "data-leakage-test"}
 	results, err := management.RunTemplates(ctx, manager, templateIDs, map[string]interface{}{
 		"provider": "mock-provider",
 	})
@@ -103,7 +107,9 @@ func main() {
 		fmt.Printf("Executed %d templates\n", len(results))
 	}
 	fmt.Println()
-
+if err != nil {
+treturn err
+}
 	// Generate report
 	fmt.Println("Generating HTML report...")
 	reportData, err := management.GenerateTemplateReport(manager, results, "html")
@@ -114,7 +120,7 @@ func main() {
 		fmt.Printf("Generated HTML report (%d bytes)\n", len(reportData))
 		
 		// Save report to file for demonstration
-		err = os.WriteFile("template_execution_report.html", reportData, 0644)
+		err = os.WriteFile(filepath.Clean("template_execution_report.html", reportData, 0644))
 		if err != nil {
 			fmt.Printf("Error saving report: %v\n", err)
 		} else {

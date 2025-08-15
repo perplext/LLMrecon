@@ -28,7 +28,6 @@ type CircuitBreakerConfig struct {
 	ResetTimeout time.Duration
 	// HalfOpenSuccessThreshold is the number of consecutive successes that will close the circuit
 	HalfOpenSuccessThreshold int
-}
 
 // CircuitBreakerMiddleware provides circuit breaking functionality
 type CircuitBreakerMiddleware struct {
@@ -64,7 +63,6 @@ func NewCircuitBreakerMiddleware(config CircuitBreakerConfig) *CircuitBreakerMid
 		lastStateChange:      time.Now(),
 		mutex:                sync.RWMutex{},
 	}
-}
 
 // Execute executes a function with circuit breaking
 func (cb *CircuitBreakerMiddleware) Execute(ctx context.Context, fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
@@ -75,12 +73,10 @@ func (cb *CircuitBreakerMiddleware) Execute(ctx context.Context, fn func(ctx con
 
 	// Execute the function
 	result, err := fn(ctx)
-
 	// Update the circuit breaker state based on the result
 	cb.updateState(err == nil)
 
 	return result, err
-}
 
 // allowRequest checks if a request is allowed based on the circuit breaker state
 func (cb *CircuitBreakerMiddleware) allowRequest() bool {
@@ -111,7 +107,6 @@ func (cb *CircuitBreakerMiddleware) allowRequest() bool {
 	default:
 		return false
 	}
-}
 
 // updateState updates the circuit breaker state based on the result of a request
 func (cb *CircuitBreakerMiddleware) updateState(success bool) {
@@ -146,14 +141,12 @@ func (cb *CircuitBreakerMiddleware) updateState(success bool) {
 			cb.lastStateChange = time.Now()
 		}
 	}
-}
 
 // GetState returns the current state of the circuit breaker
 func (cb *CircuitBreakerMiddleware) GetState() CircuitBreakerState {
 	cb.mutex.RLock()
 	defer cb.mutex.RUnlock()
 	return cb.state
-}
 
 // Reset resets the circuit breaker to its initial state
 func (cb *CircuitBreakerMiddleware) Reset() {
@@ -163,16 +156,20 @@ func (cb *CircuitBreakerMiddleware) Reset() {
 	cb.consecutiveFailures = 0
 	cb.consecutiveSuccesses = 0
 	cb.lastStateChange = time.Now()
-}
 
 // UpdateConfig updates the circuit breaker configuration
 func (cb *CircuitBreakerMiddleware) UpdateConfig(config CircuitBreakerConfig) {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
 	cb.config = config
-}
 
 // NewCircuitBreaker is an alias for NewCircuitBreakerMiddleware for backward compatibility
 func NewCircuitBreaker(config CircuitBreakerConfig) *CircuitBreakerMiddleware {
 	return NewCircuitBreakerMiddleware(config)
+}
+}
+}
+}
+}
+}
 }

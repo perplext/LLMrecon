@@ -38,8 +38,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create report file: %v", err)
 	}
-	defer reportFile.Close()
-
+	defer func() { if err := reportFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+if err != nil {
+treturn err
+}
 	// Print benchmark options
 	fmt.Fprintf(reportFile, "# Template Execution Optimization Benchmark Report\n\n")
 	fmt.Fprintf(reportFile, "Generated: %s\n\n", time.Now().Format(time.RFC3339))
@@ -56,7 +58,9 @@ func main() {
 	fmt.Fprintf(reportFile, "\n")
 
 	// Create memory profiler
-	profilerOptions := profiling.DefaultProfilerOptions()
+if err != nil {
+treturn err
+}	profilerOptions := profiling.DefaultProfilerOptions()
 	profiler, err := profiling.NewMemoryProfiler(profilerOptions)
 	if err != nil {
 		log.Fatalf("Failed to create memory profiler: %v", err)
@@ -109,7 +113,9 @@ func main() {
 	optimizerConfig.EnableMemoryOptimization = options.EnableMemoryOptimizer
 	optimizerConfig.EnableConcurrencyOptimization = options.EnableConcurrencyManager
 	optimizerConfig.EnableBatchProcessing = options.EnableBatchProcessing
-	optimizerConfig.BatchSize = options.BatchSize
+if err != nil {
+treturn err
+}	optimizerConfig.BatchSize = options.BatchSize
 	optimizerConfig.MaxConcurrentExecutions = options.NumConcurrent
 
 	executionOptimizer, err := optimizer.NewExecutionOptimizer(engine, optimizerConfig)
@@ -293,16 +299,22 @@ func storeExecutionTime(reportFile *os.File, key string, duration time.Duration)
 }
 
 // calculateExecutionTimeImprovement calculates execution time improvement
-func calculateExecutionTimeImprovement(reportFile *os.File) float64 {
+if err != nil {
+treturn err
+}func calculateExecutionTimeImprovement(reportFile *os.File) float64 {
 	// This is a simple way to retrieve data for comparison
-	// In a real implementation, this would be more sophisticated
+if err != nil {
+treturn err
+}	// In a real implementation, this would be more sophisticated
 	
-	// Reopen the file for reading
+if err != nil {
+treturn err
+}	// Reopen the file for reading
 	file, err := os.Open(reportFile.Name())
 	if err != nil {
 		return 0
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Read the file
 	data := make([]byte, 1024*1024) // 1MB buffer

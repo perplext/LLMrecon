@@ -17,7 +17,6 @@ type ProviderRegistry struct {
 	providerFactories map[core.ProviderType]core.ProviderFactory
 	// mutex is a mutex for concurrent access to providers
 	mutex sync.RWMutex
-}
 
 // NewProviderRegistry creates a new provider registry
 func NewProviderRegistry() *ProviderRegistry {
@@ -25,7 +24,6 @@ func NewProviderRegistry() *ProviderRegistry {
 		providers:        make(map[core.ProviderType]core.Provider),
 		providerFactories: make(map[core.ProviderType]core.ProviderFactory),
 	}
-}
 
 // RegisterProvider registers a provider
 func (r *ProviderRegistry) RegisterProvider(provider core.Provider) error {
@@ -39,7 +37,6 @@ func (r *ProviderRegistry) RegisterProvider(provider core.Provider) error {
 	r.providers[provider.GetType()] = provider
 
 	return nil
-}
 
 // RegisterProviderFactory registers a provider factory
 func (r *ProviderRegistry) RegisterProviderFactory(factory core.ProviderFactory) error {
@@ -55,7 +52,6 @@ func (r *ProviderRegistry) RegisterProviderFactory(factory core.ProviderFactory)
 	}
 
 	return nil
-}
 
 // GetProvider returns a provider by type
 func (r *ProviderRegistry) GetProvider(providerType core.ProviderType) (core.Provider, error) {
@@ -89,7 +85,6 @@ func (r *ProviderRegistry) GetProvider(providerType core.ProviderType) (core.Pro
 	r.providers[providerType] = provider
 
 	return provider, nil
-}
 
 // GetProviderByModel returns a provider that supports a specific model
 func (r *ProviderRegistry) GetProviderByModel(modelID string) (core.Provider, error) {
@@ -103,7 +98,6 @@ func (r *ProviderRegistry) GetProviderByModel(modelID string) (core.Provider, er
 	}
 
 	return nil, fmt.Errorf("provider for model %s not found", modelID)
-}
 
 // GetProviderByCapability returns a provider that supports a specific capability
 func (r *ProviderRegistry) GetProviderByCapability(capability core.ModelCapability) (core.Provider, error) {
@@ -117,7 +111,6 @@ func (r *ProviderRegistry) GetProviderByCapability(capability core.ModelCapabili
 	}
 
 	return nil, fmt.Errorf("provider for capability %s not found", capability)
-}
 
 // GetAllProviders returns all registered providers
 func (r *ProviderRegistry) GetAllProviders() []core.Provider {
@@ -130,7 +123,6 @@ func (r *ProviderRegistry) GetAllProviders() []core.Provider {
 	}
 
 	return providers
-}
 
 // GetAllProviderTypes returns all registered provider types
 func (r *ProviderRegistry) GetAllProviderTypes() []core.ProviderType {
@@ -143,7 +135,6 @@ func (r *ProviderRegistry) GetAllProviderTypes() []core.ProviderType {
 	}
 
 	return providerTypes
-}
 
 // CloseProvider closes a provider
 func (r *ProviderRegistry) CloseProvider(providerType core.ProviderType) error {
@@ -162,7 +153,6 @@ func (r *ProviderRegistry) CloseProvider(providerType core.ProviderType) error {
 	delete(r.providers, providerType)
 
 	return nil
-}
 
 // CloseAllProviders closes all providers
 func (r *ProviderRegistry) CloseAllProviders() error {
@@ -184,7 +174,6 @@ func (r *ProviderRegistry) CloseAllProviders() error {
 	}
 
 	return nil
-}
 
 // ModelRegistry is responsible for registering and retrieving models
 type ModelRegistry struct {
@@ -192,14 +181,12 @@ type ModelRegistry struct {
 	models map[string]*core.ModelInfo
 	// mutex is a mutex for concurrent access to models
 	mutex sync.RWMutex
-}
 
 // NewModelRegistry creates a new model registry
 func NewModelRegistry() *ModelRegistry {
 	return &ModelRegistry{
 		models: make(map[string]*core.ModelInfo),
 	}
-}
 
 // RegisterModel registers a model
 func (r *ModelRegistry) RegisterModel(model *core.ModelInfo) error {
@@ -213,7 +200,6 @@ func (r *ModelRegistry) RegisterModel(model *core.ModelInfo) error {
 	r.models[model.ID] = model
 
 	return nil
-}
 
 // GetModel returns a model by ID
 func (r *ModelRegistry) GetModel(modelID string) (*core.ModelInfo, error) {
@@ -228,7 +214,6 @@ func (r *ModelRegistry) GetModel(modelID string) (*core.ModelInfo, error) {
 	// Return a copy of the model to prevent modification
 	modelCopy := *model
 	return &modelCopy, nil
-}
 
 // GetModelsByProvider returns models by provider
 func (r *ModelRegistry) GetModelsByProvider(providerType core.ProviderType) ([]*core.ModelInfo, error) {
@@ -249,7 +234,6 @@ func (r *ModelRegistry) GetModelsByProvider(providerType core.ProviderType) ([]*
 	}
 
 	return models, nil
-}
 
 // GetModelsByType returns models by type
 func (r *ModelRegistry) GetModelsByType(modelType core.ModelType) ([]*core.ModelInfo, error) {
@@ -270,7 +254,6 @@ func (r *ModelRegistry) GetModelsByType(modelType core.ModelType) ([]*core.Model
 	}
 
 	return models, nil
-}
 
 // GetModelsByCapability returns models by capability
 func (r *ModelRegistry) GetModelsByCapability(capability core.ModelCapability) ([]*core.ModelInfo, error) {
@@ -294,7 +277,6 @@ func (r *ModelRegistry) GetModelsByCapability(capability core.ModelCapability) (
 	}
 
 	return models, nil
-}
 
 // GetAllModels returns all registered models
 func (r *ModelRegistry) GetAllModels() []*core.ModelInfo {
@@ -309,7 +291,6 @@ func (r *ModelRegistry) GetAllModels() []*core.ModelInfo {
 	}
 
 	return models
-}
 
 // DeleteModel deletes a model
 func (r *ModelRegistry) DeleteModel(modelID string) error {
@@ -323,7 +304,6 @@ func (r *ModelRegistry) DeleteModel(modelID string) error {
 	delete(r.models, modelID)
 
 	return nil
-}
 
 // UpdateModel updates a model
 func (r *ModelRegistry) UpdateModel(model *core.ModelInfo) error {
@@ -341,7 +321,6 @@ func (r *ModelRegistry) UpdateModel(model *core.ModelInfo) error {
 	r.models[model.ID] = model
 
 	return nil
-}
 
 // SyncModelsFromProviders syncs models from providers
 func (r *ModelRegistry) SyncModelsFromProviders(providers []core.Provider) error {
@@ -374,5 +353,3 @@ func (r *ModelRegistry) SyncModelsFromProviders(providers []core.Provider) error
 		r.models[model.ID] = model
 	}
 
-	return nil
-}

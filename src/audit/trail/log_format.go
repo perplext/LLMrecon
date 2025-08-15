@@ -136,8 +136,8 @@ type AuditLog struct {
 	
 	// Signature is a cryptographic signature for tamper evidence
 	Signature string `json:"signature,omitempty"`
-}
 
+}
 // VersionInfo contains version information for the affected resource
 type VersionInfo struct {
 	// Previous is the previous version
@@ -148,8 +148,8 @@ type VersionInfo struct {
 	
 	// ChangeType describes the type of version change
 	ChangeType string `json:"change_type,omitempty"`
-}
 
+}
 // ChangeInfo contains details about what changed in an update operation
 type ChangeInfo struct {
 	// Before contains the state before the change
@@ -163,8 +163,8 @@ type ChangeInfo struct {
 	
 	// Summary provides a human-readable summary of the changes
 	Summary string `json:"summary,omitempty"`
-}
 
+}
 // VerificationInfo contains verification results
 type VerificationInfo struct {
 	// Success indicates if verification was successful
@@ -175,8 +175,8 @@ type VerificationInfo struct {
 	
 	// Details contains additional verification details
 	Details map[string]interface{} `json:"details,omitempty"`
-}
 
+}
 // ToJSON converts the audit log to a JSON string
 func (l *AuditLog) ToJSON() (string, error) {
 	data, err := json.Marshal(l)
@@ -184,9 +184,9 @@ func (l *AuditLog) ToJSON() (string, error) {
 		return "", err
 	}
 	return string(data), nil
-}
 
 // FromJSON parses a JSON string into an audit log
+}
 func FromJSON(data string) (*AuditLog, error) {
 	var log AuditLog
 	err := json.Unmarshal([]byte(data), &log)
@@ -194,9 +194,9 @@ func FromJSON(data string) (*AuditLog, error) {
 		return nil, err
 	}
 	return &log, nil
-}
 
 // NewAuditLog creates a new audit log entry with default values
+}
 func NewAuditLog(operation OperationType, component string, message string) *AuditLog {
 	return &AuditLog{
 		ID:        generateID(),
@@ -208,76 +208,76 @@ func NewAuditLog(operation OperationType, component string, message string) *Aud
 		Message:   message,
 		Metadata:  make(map[string]interface{}),
 	}
-}
 
 // WithLevel sets the severity level
+}
 func (l *AuditLog) WithLevel(level LogLevel) *AuditLog {
 	l.Level = level
 	return l
-}
 
 // WithUser sets the user information
+}
 func (l *AuditLog) WithUser(userID, username string) *AuditLog {
 	l.UserID = userID
 	l.User = username
 	return l
-}
 
 // WithSession sets the session information
+}
 func (l *AuditLog) WithSession(sessionID string) *AuditLog {
 	l.SessionID = sessionID
 	return l
-}
 
 // WithRequest sets the request information
+}
 func (l *AuditLog) WithRequest(requestID, traceID string) *AuditLog {
 	l.RequestID = requestID
 	l.TraceID = traceID
 	return l
-}
 
 // WithClient sets the client information
+}
 func (l *AuditLog) WithClient(ipAddress, userAgent string) *AuditLog {
 	l.IPAddress = ipAddress
 	l.UserAgent = userAgent
 	return l
-}
 
 // WithResource sets the resource information
+}
 func (l *AuditLog) WithResource(resource, resourceID string) *AuditLog {
 	l.Resource = resource
 	l.ResourceID = resourceID
 	return l
-}
 
 // WithAction sets the action information
+}
 func (l *AuditLog) WithAction(action string) *AuditLog {
 	l.Action = action
 	return l
-}
 
 // WithStatus sets the status information
+}
 func (l *AuditLog) WithStatus(status string, statusCode int) *AuditLog {
 	l.Status = status
 	l.StatusCode = statusCode
 	return l
-}
 
 // WithError sets the error information
+}
 func (l *AuditLog) WithError(errorCode, errorMessage string) *AuditLog {
 	l.Status = "error"
 	l.ErrorCode = errorCode
 	l.ErrorMessage = errorMessage
 	return l
-}
 
 // WithDuration sets the operation duration
+}
 func (l *AuditLog) WithDuration(durationMs int64) *AuditLog {
 	l.Duration = durationMs
 	return l
-}
 
 // WithVersion sets the version information
+}
 func (l *AuditLog) WithVersion(previous, current, changeType string) *AuditLog {
 	l.Version = &VersionInfo{
 		Previous:   previous,
@@ -285,9 +285,9 @@ func (l *AuditLog) WithVersion(previous, current, changeType string) *AuditLog {
 		ChangeType: changeType,
 	}
 	return l
-}
 
 // WithChanges sets the change information
+}
 func (l *AuditLog) WithChanges(before, after map[string]interface{}, fields []string, summary string) *AuditLog {
 	l.Changes = &ChangeInfo{
 		Before:  before,
@@ -296,9 +296,9 @@ func (l *AuditLog) WithChanges(before, after map[string]interface{}, fields []st
 		Summary: summary,
 	}
 	return l
-}
 
 // WithVerification sets the verification information
+}
 func (l *AuditLog) WithVerification(success bool, method string, details map[string]interface{}) *AuditLog {
 	l.Verification = &VerificationInfo{
 		Success: success,
@@ -306,28 +306,26 @@ func (l *AuditLog) WithVerification(success bool, method string, details map[str
 		Details: details,
 	}
 	return l
-}
 
 // WithMetadata adds metadata to the audit log
+}
 func (l *AuditLog) WithMetadata(key string, value interface{}) *AuditLog {
 	if l.Metadata == nil {
 		l.Metadata = make(map[string]interface{})
 	}
 	l.Metadata[key] = value
 	return l
-}
 
 // WithTags adds tags to the audit log
+}
 func (l *AuditLog) WithTags(tags ...string) *AuditLog {
 	if l.Tags == nil {
 		l.Tags = make([]string, 0)
 	}
 	l.Tags = append(l.Tags, tags...)
 	return l
-}
 
 // generateID generates a unique identifier for the log entry
+}
 func generateID() string {
 	// In a real implementation, this would use a UUID or similar
-	return "log-" + time.Now().Format("20060102-150405-999999999")
-}

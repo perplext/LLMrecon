@@ -45,7 +45,6 @@ type FilterStats struct {
 	LastSeen          time.Time `json:"last_seen"`
 	AverageConfidence float64   `json:"average_confidence"`
 	Examples          []string  `json:"examples,omitempty"`
-}
 
 // NewEnhancedContentFilter creates a new enhanced content filter
 func NewEnhancedContentFilter(config *ProtectionConfig) *EnhancedContentFilter {
@@ -239,7 +238,6 @@ func NewEnhancedContentFilter(config *ProtectionConfig) *EnhancedContentFilter {
 		replacementStrategies: replacementStrategies,
 		filterStats:           make(map[string]*FilterStats),
 	}
-}
 
 // FilterContentEnhanced filters content with enhanced filtering
 func (f *EnhancedContentFilter) FilterContentEnhanced(ctx context.Context, content string) (string, *ProtectionResult, error) {
@@ -297,7 +295,6 @@ func (f *EnhancedContentFilter) FilterContentEnhanced(ctx context.Context, conte
 	result.ProcessingTime = time.Since(startTime)
 	
 	return filteredContent, result, nil
-}
 
 // shouldApplyFilter determines if a filter should be applied
 func (f *EnhancedContentFilter) shouldApplyFilter(category string) bool {
@@ -317,7 +314,6 @@ func (f *EnhancedContentFilter) shouldApplyFilter(category string) bool {
 	default:
 		return false
 	}
-}
 
 // applyFilterForCategory applies filtering for a specific category
 func (f *EnhancedContentFilter) applyFilterForCategory(content string, category string) string {
@@ -361,12 +357,10 @@ func (f *EnhancedContentFilter) applyFilterForCategory(content string, category 
 	default:
 		return content
 	}
-}
 
 // createBlockedContentMessage creates a message for blocked content
 func (f *EnhancedContentFilter) createBlockedContentMessage(category string, message string) string {
 	return fmt.Sprintf("I'm unable to provide the requested content due to content filtering: %s", message)
-}
 
 // updateFilterStats updates the filter statistics
 func (f *EnhancedContentFilter) updateFilterStats(category string, confidence float64, example string) {
@@ -399,7 +393,6 @@ func (f *EnhancedContentFilter) updateFilterStats(category string, confidence fl
 		}
 		stats.Examples = append(stats.Examples, example)
 	}
-}
 
 // GetFilterStats gets the filter statistics
 func (f *EnhancedContentFilter) GetFilterStats() map[string]*FilterStats {
@@ -407,7 +400,6 @@ func (f *EnhancedContentFilter) GetFilterStats() map[string]*FilterStats {
 	defer f.mu.RUnlock()
 	
 	return f.filterStats
-}
 
 // SetFilterThreshold sets the threshold for a category
 func (f *EnhancedContentFilter) SetFilterThreshold(category string, threshold float64) {
@@ -415,7 +407,6 @@ func (f *EnhancedContentFilter) SetFilterThreshold(category string, threshold fl
 	defer f.mu.Unlock()
 	
 	f.filterConfig.CategoryThresholds[category] = threshold
-}
 
 // SetFilterAction sets the action for a category
 func (f *EnhancedContentFilter) SetFilterAction(category string, action ActionType) {
@@ -423,7 +414,6 @@ func (f *EnhancedContentFilter) SetFilterAction(category string, action ActionTy
 	defer f.mu.Unlock()
 	
 	f.filterConfig.FilterActions[category] = action
-}
 
 // EnableFilter enables or disables a filter
 func (f *EnhancedContentFilter) EnableFilter(category string, enabled bool) {
@@ -444,7 +434,6 @@ func (f *EnhancedContentFilter) EnableFilter(category string, enabled bool) {
 	case "sensitive_info":
 		f.filterConfig.EnableSensitiveInfoFilter = enabled
 	}
-}
 
 // AddCustomFilter adds a custom filter
 func (f *EnhancedContentFilter) AddCustomFilter(name string, pattern string, threshold float64, action ActionType) error {
@@ -473,5 +462,12 @@ func (f *EnhancedContentFilter) AddCustomFilter(name string, pattern string, thr
 		return false, 0.0, ""
 	}
 	
-	return nil
+}
+}
+}
+}
+}
+}
+}
+}
 }

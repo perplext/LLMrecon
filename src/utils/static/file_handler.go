@@ -32,7 +32,6 @@ type FileHandlerOptions struct {
 	CacheExpiration time.Duration
 	// File extensions to compress
 	CompressExtensions []string
-}
 
 // DefaultFileHandlerOptions returns default options for the file handler
 func DefaultFileHandlerOptions() *FileHandlerOptions {
@@ -45,7 +44,6 @@ func DefaultFileHandlerOptions() *FileHandlerOptions {
 		CacheExpiration:    1 * time.Hour,
 		CompressExtensions: []string{".html", ".css", ".js", ".json", ".xml", ".txt", ".md"},
 	}
-}
 
 // CachedFile represents a cached static file
 type CachedFile struct {
@@ -55,7 +53,6 @@ type CachedFile struct {
 	LastModified  time.Time
 	ETag          string
 	Expiration    time.Time
-}
 
 // FileHandler handles static file serving with memory optimization
 type FileHandler struct {
@@ -63,7 +60,6 @@ type FileHandler struct {
 	cache   map[string]*CachedFile
 	mutex   sync.RWMutex
 	cacheSize int64
-}
 
 // NewFileHandler creates a new static file handler
 func NewFileHandler(options *FileHandlerOptions) *FileHandler {
@@ -77,7 +73,6 @@ func NewFileHandler(options *FileHandlerOptions) *FileHandler {
 		mutex:     sync.RWMutex{},
 		cacheSize: 0,
 	}
-}
 
 // ServeHTTP implements the http.Handler interface
 func (h *FileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +108,6 @@ func (h *FileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// File not in cache, serve directly from disk
 	h.serveFromDisk(w, r, filePath)
-}
 
 // getFromCache retrieves a file from the cache
 func (h *FileHandler) getFromCache(filePath string) *CachedFile {
@@ -131,7 +125,6 @@ func (h *FileHandler) getFromCache(filePath string) *CachedFile {
 	}
 
 	return cachedFile
-}
 
 // checkClientCache checks if the client has a valid cached version
 func (h *FileHandler) checkClientCache(w http.ResponseWriter, r *http.Request, cachedFile *CachedFile) bool {
@@ -157,7 +150,6 @@ func (h *FileHandler) checkClientCache(w http.ResponseWriter, r *http.Request, c
 	}
 
 	return false
-}
 
 // serveContent serves uncompressed content
 func (h *FileHandler) serveContent(w http.ResponseWriter, r *http.Request, cachedFile *CachedFile) {
@@ -165,7 +157,6 @@ func (h *FileHandler) serveContent(w http.ResponseWriter, r *http.Request, cache
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(cachedFile.Content)))
 	w.WriteHeader(http.StatusOK)
 	w.Write(cachedFile.Content)
-}
 
 // serveCompressedContent serves gzip compressed content
 func (h *FileHandler) serveCompressedContent(w http.ResponseWriter, r *http.Request, cachedFile *CachedFile) {
@@ -174,22 +165,20 @@ func (h *FileHandler) serveCompressedContent(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(cachedFile.CompressedContent)))
 	w.WriteHeader(http.StatusOK)
 	w.Write(cachedFile.CompressedContent)
-}
 
 // acceptsGzip checks if the client accepts gzip encoding
 func (h *FileHandler) acceptsGzip(r *http.Request) bool {
 	return strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
-}
 
 // serveFromDisk serves a file directly from disk
 func (h *FileHandler) serveFromDisk(w http.ResponseWriter, r *http.Request, filePath string) {
 	// Open the file
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		http.Error(w, "File not found", http.StatusNotFound)
 		return
 	}
-	defer file.Close()
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Get file info
 	info, err := file.Stat()
@@ -230,7 +219,6 @@ func (h *FileHandler) serveFromDisk(w http.ResponseWriter, r *http.Request, file
 
 	// If we get here, serve the file directly
 	http.ServeFile(w, r, filePath)
-}
 
 // cacheFile caches a file
 func (h *FileHandler) cacheFile(filePath string, file *os.File, info os.FileInfo, contentType string) {
@@ -278,7 +266,6 @@ func (h *FileHandler) cacheFile(filePath string, file *os.File, info os.FileInfo
 
 	h.cache[filePath] = cachedFile
 	h.cacheSize += info.Size()
-}
 
 // evictCache evicts files from the cache to free up space
 func (h *FileHandler) evictCache(bytesToFree int64) {
@@ -314,7 +301,6 @@ func (h *FileHandler) evictCache(bytesToFree int64) {
 		freedBytes += entry.size
 		h.cacheSize -= entry.size
 	}
-}
 
 // getContentType determines the content type of a file
 func getContentType(filePath string) string {
@@ -347,7 +333,6 @@ func getContentType(filePath string) string {
 	default:
 		return "application/octet-stream"
 	}
-}
 
 // shouldCompress checks if a file should be compressed
 func shouldCompress(filePath string, compressExtensions []string) bool {
@@ -358,7 +343,6 @@ func shouldCompress(filePath string, compressExtensions []string) bool {
 		}
 	}
 	return false
-}
 
 // compressContent compresses content using gzip
 func compressContent(content []byte) []byte {
@@ -367,7 +351,6 @@ func compressContent(content []byte) []byte {
 	gz.Write(content)
 	gz.Close()
 	return b.Bytes()
-}
 
 // ClearCache clears the file cache
 func (h *FileHandler) ClearCache() {
@@ -376,7 +359,6 @@ func (h *FileHandler) ClearCache() {
 
 	h.cache = make(map[string]*CachedFile)
 	h.cacheSize = 0
-}
 
 // GetCacheSize returns the current cache size in bytes
 func (h *FileHandler) GetCacheSize() int64 {
@@ -384,7 +366,6 @@ func (h *FileHandler) GetCacheSize() int64 {
 	defer h.mutex.RUnlock()
 
 	return h.cacheSize
-}
 
 // GetCacheItemCount returns the number of items in the cache
 func (h *FileHandler) GetCacheItemCount() int64 {
@@ -392,7 +373,6 @@ func (h *FileHandler) GetCacheItemCount() int64 {
 	defer h.mutex.RUnlock()
 
 	return int64(len(h.cache))
-}
 
 // LoadFromConfig loads file handler options from configuration
 func LoadFromConfig(cfg *config.MemoryConfig) *FileHandlerOptions {
@@ -429,7 +409,6 @@ func LoadFromConfig(cfg *config.MemoryConfig) *FileHandlerOptions {
 	}
 	
 	return options
-}
 
 // FileResponse represents a response from the file handler
 type FileResponse struct {
@@ -441,7 +420,6 @@ type FileResponse struct {
 	LastModified   time.Time
 	Compressed     bool
 	FromCache      bool
-}
 
 // HandlerStats contains statistics for the file handler
 type HandlerStats struct {
@@ -538,7 +516,6 @@ func (h *FileHandler) ServeFile(fileName string, content []byte) *FileResponse {
 	statsMutex.Unlock()
 	
 	return response
-}
 
 // cacheFileContent caches file content
 func (h *FileHandler) cacheFileContent(fileName string, content []byte, contentType string) {
@@ -578,7 +555,6 @@ func (h *FileHandler) cacheFileContent(fileName string, content []byte, contentT
 	
 	h.cache[fileName] = cachedFile
 	h.cacheSize += int64(len(content))
-}
 
 // GetStats returns statistics for the file handler
 func (h *FileHandler) GetStats() *monitoring.Stats {
@@ -602,4 +578,23 @@ func (h *FileHandler) GetStats() *monitoring.Stats {
 		CompressionRatio: compressionRatio,
 		AverageServeTime: stats.AverageServeTime,
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

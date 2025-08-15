@@ -26,14 +26,12 @@ type UsageMetrics struct {
 	RequestsPerMinute float64 `json:"requests_per_minute"`
 	// ModelID is the ID of the model
 	ModelID string `json:"model_id"`
-}
 
 // NewUsageMetrics creates a new usage metrics instance
 func NewUsageMetrics(modelID string) *UsageMetrics {
 	return &UsageMetrics{
 		ModelID: modelID,
 	}
-}
 
 // AddRequest adds a request to the usage metrics
 func (m *UsageMetrics) AddRequest(tokens int64, duration time.Duration, err error) {
@@ -61,7 +59,6 @@ func (m *UsageMetrics) AddRequest(tokens int64, duration time.Duration, err erro
 			m.RequestsPerMinute = float64(m.Requests) / elapsedMinutes
 		}
 	}
-}
 
 // Reset resets the usage metrics
 func (m *UsageMetrics) Reset() {
@@ -72,7 +69,6 @@ func (m *UsageMetrics) Reset() {
 	m.AverageResponseTime = 0
 	m.TokensPerMinute = 0
 	m.RequestsPerMinute = 0
-}
 
 // Merge merges another usage metrics into this one
 func (m *UsageMetrics) Merge(other *UsageMetrics) {
@@ -100,4 +96,3 @@ func (m *UsageMetrics) Merge(other *UsageMetrics) {
 			m.RequestsPerMinute = float64(m.Requests) / elapsedMinutes
 		}
 	}
-}

@@ -13,20 +13,17 @@ type ScanStore interface {
 	Delete(id string) error
 	List(filter ScanFilter) ([]Scan, error)
 	CleanupOldScans(olderThan time.Duration) error
-}
 
 // InMemoryScanStore implements ScanStore using in-memory storage
 type InMemoryScanStore struct {
 	mu    sync.RWMutex
 	scans map[string]*Scan
-}
 
 // NewInMemoryScanStore creates a new in-memory scan store
 func NewInMemoryScanStore() *InMemoryScanStore {
 	return &InMemoryScanStore{
 		scans: make(map[string]*Scan),
 	}
-}
 
 // Create creates a new scan
 func (s *InMemoryScanStore) Create(scan *Scan) error {
@@ -39,7 +36,6 @@ func (s *InMemoryScanStore) Create(scan *Scan) error {
 	
 	s.scans[scan.ID] = scan
 	return nil
-}
 
 // Get retrieves a scan by ID
 func (s *InMemoryScanStore) Get(id string) (*Scan, error) {
@@ -54,7 +50,6 @@ func (s *InMemoryScanStore) Get(id string) (*Scan, error) {
 	// Return a copy to prevent external modifications
 	scanCopy := *scan
 	return &scanCopy, nil
-}
 
 // Update updates an existing scan
 func (s *InMemoryScanStore) Update(scan *Scan) error {
@@ -68,7 +63,6 @@ func (s *InMemoryScanStore) Update(scan *Scan) error {
 	scan.UpdatedAt = time.Now()
 	s.scans[scan.ID] = scan
 	return nil
-}
 
 // Delete removes a scan
 func (s *InMemoryScanStore) Delete(id string) error {
@@ -81,7 +75,6 @@ func (s *InMemoryScanStore) Delete(id string) error {
 	
 	delete(s.scans, id)
 	return nil
-}
 
 // List returns scans matching the filter
 func (s *InMemoryScanStore) List(filter ScanFilter) ([]Scan, error) {
@@ -115,7 +108,6 @@ func (s *InMemoryScanStore) List(filter ScanFilter) ([]Scan, error) {
 	}
 	
 	return results, nil
-}
 
 // CleanupOldScans removes scans older than the specified duration
 func (s *InMemoryScanStore) CleanupOldScans(olderThan time.Duration) error {
@@ -136,7 +128,6 @@ func (s *InMemoryScanStore) CleanupOldScans(olderThan time.Duration) error {
 	}
 	
 	return nil
-}
 
 // MockScanService implements a mock scan service for testing
 type MockScanService struct {
@@ -148,7 +139,6 @@ func NewMockScanService() *MockScanService {
 	return &MockScanService{
 		store: NewInMemoryScanStore(),
 	}
-}
 
 // CreateScan creates a new scan
 func (m *MockScanService) CreateScan(request CreateScanRequest) (*Scan, error) {
@@ -171,17 +161,14 @@ func (m *MockScanService) CreateScan(request CreateScanRequest) (*Scan, error) {
 	go m.executeScan(scan.ID)
 	
 	return scan, nil
-}
 
 // GetScan retrieves a scan by ID
 func (m *MockScanService) GetScan(id string) (*Scan, error) {
 	return m.store.Get(id)
-}
 
 // ListScans lists all scans
 func (m *MockScanService) ListScans(filter ScanFilter) ([]Scan, error) {
 	return m.store.List(filter)
-}
 
 // CancelScan cancels a running scan
 func (m *MockScanService) CancelScan(id string) error {
@@ -196,8 +183,6 @@ func (m *MockScanService) CancelScan(id string) error {
 	
 	scan.Status = ScanStatusCancelled
 	return m.store.Update(scan)
-}
-
 // GetScanResults retrieves scan results
 func (m *MockScanService) GetScanResults(id string) (*ScanResults, error) {
 	scan, err := m.store.Get(id)
@@ -210,7 +195,6 @@ func (m *MockScanService) GetScanResults(id string) (*ScanResults, error) {
 	}
 	
 	return scan.Results, nil
-}
 
 // executeScan simulates scan execution
 func (m *MockScanService) executeScan(id string) {
@@ -273,4 +257,16 @@ func (m *MockScanService) executeScan(id string) {
 	scan.CompletedAt = &completedAt
 	scan.Duration = completedAt.Sub(*scan.StartedAt).String()
 	m.store.Update(scan)
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

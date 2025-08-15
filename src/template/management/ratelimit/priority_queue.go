@@ -16,7 +16,6 @@ type priorityItem struct {
 	added    time.Time
 	ctx      context.Context
 	done     chan struct{}
-}
 
 // priorityQueue implements a priority queue for rate limiting
 type priorityQueue struct {
@@ -38,12 +37,10 @@ type priorityQueue struct {
 	totalProcessed int64
 	totalWaitTime  int64 // nanoseconds
 	lastAdaptation time.Time
-}
 
 // Len returns the length of the queue
 func (pq *priorityQueue) Len() int {
 	return len(pq.items)
-}
 
 // Less compares two items in the queue
 // Higher priority comes first, and for equal priorities, earlier arrival time comes first
@@ -56,14 +53,12 @@ func (pq *priorityQueue) Less(i, j int) bool {
 	// For equal priorities, earlier arrival time comes first (FIFO)
 	// This ensures that items with the same priority are processed in the order they were added
 	return pq.items[i].added.Before(pq.items[j].added)
-}
 
 // Swap swaps two items in the queue
 func (pq *priorityQueue) Swap(i, j int) {
 	pq.items[i], pq.items[j] = pq.items[j], pq.items[i]
 	pq.items[i].index = i
 	pq.items[j].index = j
-}
 
 // Push adds an item to the queue
 func (pq *priorityQueue) Push(x interface{}) {
@@ -71,7 +66,6 @@ func (pq *priorityQueue) Push(x interface{}) {
 	item := x.(*priorityItem)
 	item.index = n
 	pq.items = append(pq.items, item)
-}
 
 // Pop removes and returns the highest priority item from the queue
 func (pq *priorityQueue) Pop() interface{} {
@@ -82,7 +76,6 @@ func (pq *priorityQueue) Pop() interface{} {
 	item.index = -1 // for safety
 	pq.items = old[0 : n-1]
 	return item
-}
 
 // newPriorityQueue creates a new priority queue
 func newPriorityQueue() *priorityQueue {
@@ -99,7 +92,6 @@ func newPriorityQueue() *priorityQueue {
 	heap.Init(pq)
 	pq.startProcessor()
 	return pq
-}
 
 // add adds a request to the priority queue
 func (pq *priorityQueue) add(userID string, priority int, ctx context.Context) chan struct{} {
@@ -147,7 +139,6 @@ func (pq *priorityQueue) add(userID string, priority int, ctx context.Context) c
 	}
 	
 	return done
-}
 
 // nextBatch returns a batch of items from the queue
 // It returns the items and a boolean indicating if any items were returned
@@ -188,7 +179,6 @@ func (pq *priorityQueue) nextBatch() ([]*priorityItem, bool) {
 	}
 	
 	return batch, true
-}
 
 // processBatch processes a batch of items from the queue
 func (pq *priorityQueue) processBatch() int {
@@ -209,7 +199,6 @@ func (pq *priorityQueue) processBatch() int {
 	}
 	
 	return len(batch)
-}
 
 // startProcessor starts background goroutines to process items in the queue
 func (pq *priorityQueue) startProcessor() {
@@ -292,7 +281,6 @@ func (pq *priorityQueue) startProcessor() {
 			}
 		}
 	}()
-}
 
 // stop stops the background processor
 func (pq *priorityQueue) stop() {
@@ -302,7 +290,6 @@ func (pq *priorityQueue) stop() {
 	}
 	
 	close(pq.shutdown)
-}
 
 // waitForTurn waits for this user's turn in the priority queue
 // Returns true if it's this user's turn, false if the context was canceled
@@ -317,7 +304,6 @@ func (pq *priorityQueue) waitForTurn(userID string, priority int, ctx context.Co
 	case <-ctx.Done():
 		return false
 	}
-}
 
 // adaptQueueParameters dynamically adjusts queue parameters based on load
 func (pq *priorityQueue) adaptQueueParameters() {
@@ -363,7 +349,6 @@ func (pq *priorityQueue) adaptQueueParameters() {
 		atomic.StoreInt64(&pq.totalWaitTime, 0)
 		pq.lastAdaptation = time.Now()
 	}
-}
 
 // GetQueueStats returns statistics about the priority queue
 func (pq *priorityQueue) GetQueueStats() map[string]interface{} {
@@ -385,4 +370,3 @@ func (pq *priorityQueue) GetQueueStats() map[string]interface{} {
 		"total_processed":    processed,
 		"avg_wait_time_ns":   avgWaitTime,
 	}
-}

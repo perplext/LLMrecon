@@ -157,7 +157,9 @@ func main() {
 				
 				startTime := time.Now()
 				result, err := executor.ExecuteForUser(ctx, userTemplate, userID, nil)
-				duration := time.Since(startTime)
+if err != nil {
+treturn err
+}				duration := time.Since(startTime)
 				
 				if err != nil {
 					fmt.Printf("[%s] Error executing request %d: %v (took %v)\n", userID, i, err, duration)
@@ -255,7 +257,9 @@ func main() {
 			},
 		}
 		
-		startTime := time.Now()
+if err != nil {
+treturn err
+}		startTime := time.Now()
 		result, err := adaptiveExecutor.ExecuteForUser(ctx, userTemplate, userID, nil)
 		duration := time.Since(startTime)
 		
@@ -291,7 +295,9 @@ func main() {
 					Match: "rate",
 				},
 			},
-		}
+if err != nil {
+treturn err
+}		}
 		
 		startTime := time.Now()
 		result, err := adaptiveExecutor.ExecuteForUser(ctx, userTemplate, userID, nil)

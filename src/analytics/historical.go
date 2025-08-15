@@ -29,7 +29,6 @@ type RetentionPolicy struct {
 	ColdRetention   time.Duration `json:"cold_retention"`   // Keep in archive storage
 	CompressionAge  time.Duration `json:"compression_age"`  // When to compress
 	DeletionAge     time.Duration `json:"deletion_age"`     // When to delete permanently
-}
 
 // DataArchiver interface for archival operations
 type DataArchiver interface {
@@ -37,14 +36,12 @@ type DataArchiver interface {
 	Retrieve(ctx context.Context, archivePath string, timeRange TimeWindow) ([]Metric, error)
 	List(ctx context.Context, pattern string) ([]ArchiveInfo, error)
 	Delete(ctx context.Context, archivePath string) error
-}
 
 // DataCompressor interface for data compression
 type DataCompressor interface {
 	Compress(ctx context.Context, data []byte) ([]byte, error)
 	Decompress(ctx context.Context, compressedData []byte) ([]byte, error)
 	GetCompressionRatio() float64
-}
 
 // ArchiveInfo contains information about archived data
 type ArchiveInfo struct {
@@ -72,7 +69,6 @@ func NewHistoricalDataManager(config *Config, storage DataStorage, logger Logger
 	manager.setupDefaultPolicies()
 	
 	return manager
-}
 
 // Archive moves old data to archive storage
 func (hdm *HistoricalDataManager) Archive(ctx context.Context) error {
@@ -96,7 +92,6 @@ func (hdm *HistoricalDataManager) Archive(ctx context.Context) error {
 	hdm.logger.Info("Data archival process completed")
 	
 	return nil
-}
 
 // GetHistoricalData retrieves historical data across storage tiers
 func (hdm *HistoricalDataManager) GetHistoricalData(ctx context.Context, metricName string, timeRange TimeWindow) ([]Metric, error) {
@@ -122,7 +117,6 @@ func (hdm *HistoricalDataManager) GetHistoricalData(ctx context.Context, metricN
 	hdm.sortMetricsByTime(allMetrics)
 	
 	return allMetrics, nil
-}
 
 // GetRetentionStatus returns current retention status
 func (hdm *HistoricalDataManager) GetRetentionStatus(ctx context.Context) (map[string]RetentionStatus, error) {
@@ -138,13 +132,12 @@ func (hdm *HistoricalDataManager) GetRetentionStatus(ctx context.Context) (map[s
 	}
 	
 	return status, nil
-}
 
 // SetRetentionPolicy sets a custom retention policy
 func (hdm *HistoricalDataManager) SetRetentionPolicy(dataType string, policy RetentionPolicy) {
 	hdm.policies[dataType] = policy
 	hdm.logger.Info("Set retention policy", "dataType", dataType, "policy", policy)
-}
+	
 
 // Cleanup removes expired data according to retention policies
 func (hdm *HistoricalDataManager) Cleanup(ctx context.Context) error {
@@ -159,7 +152,6 @@ func (hdm *HistoricalDataManager) Cleanup(ctx context.Context) error {
 	
 	hdm.logger.Info("Data cleanup process completed")
 	return nil
-}
 
 // Internal methods
 
@@ -193,7 +185,6 @@ func (hdm *HistoricalDataManager) setupDefaultPolicies() {
 		CompressionAge: 3 * 24 * time.Hour,     // 3 days
 		DeletionAge:    3 * 365 * 24 * time.Hour, // 3 years
 	}
-}
 
 func (hdm *HistoricalDataManager) archiveDataType(ctx context.Context, dataType string, policy RetentionPolicy) error {
 	cutoffTime := time.Now().Add(-policy.HotRetention)
@@ -227,7 +218,6 @@ func (hdm *HistoricalDataManager) archiveDataType(ctx context.Context, dataType 
 	hdm.logger.Info("Archived data", "dataType", dataType, "count", len(oldMetrics), "path", archivePath)
 	
 	return nil
-}
 
 func (hdm *HistoricalDataManager) getArchivedData(ctx context.Context, metricName string, timeRange TimeWindow) ([]Metric, error) {
 	// List relevant archives
@@ -253,7 +243,6 @@ func (hdm *HistoricalDataManager) getArchivedData(ctx context.Context, metricNam
 	}
 	
 	return allMetrics, nil
-}
 
 func (hdm *HistoricalDataManager) calculateRetentionStatus(ctx context.Context, dataType string, policy RetentionPolicy) (RetentionStatus, error) {
 	now := time.Now()
@@ -275,7 +264,6 @@ func (hdm *HistoricalDataManager) calculateRetentionStatus(ctx context.Context, 
 		LastArchival: hdm.lastArchival,
 		NextArchival: hdm.lastArchival.Add(24 * time.Hour), // Daily archival
 	}, nil
-}
 
 func (hdm *HistoricalDataManager) cleanupDataType(ctx context.Context, dataType string, policy RetentionPolicy) error {
 	deletionCutoff := time.Now().Add(-policy.DeletionAge)
@@ -302,11 +290,9 @@ func (hdm *HistoricalDataManager) cleanupDataType(ctx context.Context, dataType 
 	}
 	
 	return nil
-}
 
 func (hdm *HistoricalDataManager) overlapsTimeRange(archive ArchiveInfo, timeRange TimeWindow) bool {
 	return archive.StartTime.Before(timeRange.End) && archive.EndTime.After(timeRange.Start)
-}
 
 func (hdm *HistoricalDataManager) sortMetricsByTime(metrics []Metric) {
 	// Simple bubble sort for demonstration
@@ -317,7 +303,6 @@ func (hdm *HistoricalDataManager) sortMetricsByTime(metrics []Metric) {
 			}
 		}
 	}
-}
 
 // RetentionStatus represents current retention status
 type RetentionStatus struct {
@@ -327,36 +312,30 @@ type RetentionStatus struct {
 	ColdCount    int       `json:"cold_count"`
 	LastArchival time.Time `json:"last_archival"`
 	NextArchival time.Time `json:"next_archival"`
-}
 
 // FileSystemArchiver implements DataArchiver for filesystem storage
 type FileSystemArchiver struct {
 	basePath string
 	logger   Logger
-}
 
 func (fsa *FileSystemArchiver) Archive(ctx context.Context, data []Metric, archivePath string) error {
 	// Mock implementation - would actually write to filesystem
 	fsa.logger.Info("Archiving data to filesystem", "path", archivePath, "count", len(data))
 	return nil
-}
 
 func (fsa *FileSystemArchiver) Retrieve(ctx context.Context, archivePath string, timeRange TimeWindow) ([]Metric, error) {
 	// Mock implementation - would actually read from filesystem
 	fsa.logger.Info("Retrieving data from archive", "path", archivePath)
 	return []Metric{}, nil
-}
 
 func (fsa *FileSystemArchiver) List(ctx context.Context, pattern string) ([]ArchiveInfo, error) {
 	// Mock implementation - would actually list files
 	return []ArchiveInfo{}, nil
-}
 
 func (fsa *FileSystemArchiver) Delete(ctx context.Context, archivePath string) error {
 	// Mock implementation - would actually delete file
 	fsa.logger.Info("Deleting archive", "path", archivePath)
 	return nil
-}
 
 // GzipCompressor implements DataCompressor using gzip
 type GzipCompressor struct{}
@@ -364,13 +343,28 @@ type GzipCompressor struct{}
 func (gc *GzipCompressor) Compress(ctx context.Context, data []byte) ([]byte, error) {
 	// Mock implementation - would actually compress data
 	return data, nil
-}
 
 func (gc *GzipCompressor) Decompress(ctx context.Context, compressedData []byte) ([]byte, error) {
 	// Mock implementation - would actually decompress data
 	return compressedData, nil
-}
 
 func (gc *GzipCompressor) GetCompressionRatio() float64 {
 	return 0.3 // Mock 70% compression ratio
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

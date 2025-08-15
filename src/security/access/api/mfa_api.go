@@ -18,7 +18,6 @@ func NewMFAHandler(authManager *access.AuthManager) *MFAHandler {
 	return &MFAHandler{
 		authManager: authManager,
 	}
-}
 
 // MFAStatusResponse represents the response for MFA status
 type MFAStatusResponse struct {
@@ -26,19 +25,16 @@ type MFAStatusResponse struct {
 	Methods      []common.AuthMethod  `json:"methods"`
 	DefaultMethod common.AuthMethod   `json:"default_method"`
 	LastUpdated  time.Time            `json:"last_updated,omitempty"`
-}
 
 // TOTPSetupResponse represents the response for TOTP setup
 type TOTPSetupResponse struct {
 	Secret    string `json:"secret"`
 	QRCodeURL string `json:"qr_code_url"`
-}
 
 // MFAVerifyRequest represents a request to verify an MFA code
 type MFAVerifyRequest struct {
 	Method common.AuthMethod `json:"method"`
 	Code   string            `json:"code"`
-}
 
 // MFASetupRequest represents a request to set up MFA
 type MFASetupRequest struct {
@@ -49,7 +45,6 @@ type MFASetupRequest struct {
 type BackupCodesResponse struct {
 	Codes     []string `json:"codes"`
 	Generated time.Time `json:"generated"`
-}
 
 // SMSSetupRequest represents a request to set up SMS verification
 type SMSSetupRequest struct {
@@ -79,7 +74,6 @@ func (h *MFAHandler) RegisterRoutes(router *http.ServeMux) {
 	// SMS endpoints
 	router.HandleFunc("/api/mfa/sms/setup", h.handleSMSSetup)
 	router.HandleFunc("/api/mfa/sms/verify", h.handleSMSVerify)
-}
 
 // handleMFAStatus handles the MFA status endpoint
 func (h *MFAHandler) handleMFAStatus(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +110,6 @@ func (h *MFAHandler) handleMFAStatus(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
-}
 
 // handleEnableMFA handles the enable MFA endpoint
 func (h *MFAHandler) handleEnableMFA(w http.ResponseWriter, r *http.Request) {
@@ -177,7 +170,6 @@ func (h *MFAHandler) handleEnableMFA(w http.ResponseWriter, r *http.Request) {
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
-}
 
 // handleDisableMFA handles the disable MFA endpoint
 func (h *MFAHandler) handleDisableMFA(w http.ResponseWriter, r *http.Request) {
@@ -212,8 +204,6 @@ func (h *MFAHandler) handleDisableMFA(w http.ResponseWriter, r *http.Request) {
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
-}
-
 // handleVerifyMFA handles the verify MFA endpoint
 func (h *MFAHandler) handleVerifyMFA(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -258,7 +248,6 @@ func (h *MFAHandler) handleVerifyMFA(w http.ResponseWriter, r *http.Request) {
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
-}
 
 // handleTOTPSetup handles the TOTP setup endpoint
 func (h *MFAHandler) handleTOTPSetup(w http.ResponseWriter, r *http.Request) {
@@ -308,8 +297,6 @@ func (h *MFAHandler) handleTOTPSetup(w http.ResponseWriter, r *http.Request) {
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
-}
-
 // handleTOTPVerify handles the TOTP verification endpoint
 func (h *MFAHandler) handleTOTPVerify(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -370,7 +357,6 @@ func (h *MFAHandler) handleTOTPVerify(w http.ResponseWriter, r *http.Request) {
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
-}
 
 // handleGenerateBackupCodes handles the generate backup codes endpoint
 func (h *MFAHandler) handleGenerateBackupCodes(w http.ResponseWriter, r *http.Request) {
@@ -436,7 +422,6 @@ func (h *MFAHandler) handleGenerateBackupCodes(w http.ResponseWriter, r *http.Re
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
-}
 
 // handleWebAuthnRegisterBegin handles the WebAuthn registration begin endpoint
 func (h *MFAHandler) handleWebAuthnRegisterBegin(w http.ResponseWriter, r *http.Request) {
@@ -469,7 +454,6 @@ func (h *MFAHandler) handleWebAuthnRegisterBegin(w http.ResponseWriter, r *http.
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(options)
-}
 
 // handleWebAuthnRegisterComplete handles the WebAuthn registration complete endpoint
 func (h *MFAHandler) handleWebAuthnRegisterComplete(w http.ResponseWriter, r *http.Request) {
@@ -531,7 +515,6 @@ func (h *MFAHandler) handleWebAuthnRegisterComplete(w http.ResponseWriter, r *ht
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
-}
 
 // handleWebAuthnAuthenticateBegin handles the WebAuthn authentication begin endpoint
 func (h *MFAHandler) handleWebAuthnAuthenticateBegin(w http.ResponseWriter, r *http.Request) {
@@ -564,7 +547,6 @@ func (h *MFAHandler) handleWebAuthnAuthenticateBegin(w http.ResponseWriter, r *h
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(options)
-}
 
 // handleWebAuthnAuthenticateComplete handles the WebAuthn authentication complete endpoint
 func (h *MFAHandler) handleWebAuthnAuthenticateComplete(w http.ResponseWriter, r *http.Request) {
@@ -612,7 +594,7 @@ func (h *MFAHandler) handleWebAuthnAuthenticateComplete(w http.ResponseWriter, r
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
-}
+	
 
 // handleSMSSetup handles the SMS setup endpoint
 func (h *MFAHandler) handleSMSSetup(w http.ResponseWriter, r *http.Request) {
@@ -679,7 +661,7 @@ func (h *MFAHandler) handleSMSSetup(w http.ResponseWriter, r *http.Request) {
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true, "message": "Verification code sent"}`))
-}
+	
 
 // handleSMSVerify handles the SMS verification endpoint
 func (h *MFAHandler) handleSMSVerify(w http.ResponseWriter, r *http.Request) {
@@ -753,7 +735,6 @@ func (h *MFAHandler) handleSMSVerify(w http.ResponseWriter, r *http.Request) {
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
-}
 
 // Helper functions
 
@@ -772,7 +753,6 @@ func (h *MFAHandler) getSessionFromRequest(r *http.Request) (*access.Session, er
 	}
 	
 	return session, nil
-}
 
 // isValidMFAMethod checks if the given method is a valid MFA method
 func isValidMFAMethod(method common.AuthMethod) bool {
@@ -789,5 +769,17 @@ func isValidMFAMethod(method common.AuthMethod) bool {
 		}
 	}
 	
-	return false
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

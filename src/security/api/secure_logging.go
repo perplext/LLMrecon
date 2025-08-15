@@ -54,7 +54,6 @@ type SecureLoggerConfig struct {
 	RedactionString string
 	// OutputWriter is the writer to use for log output
 	OutputWriter io.Writer
-}
 
 // DefaultSecureLoggerConfig returns the default secure logger configuration
 func DefaultSecureLoggerConfig() *SecureLoggerConfig {
@@ -98,13 +97,11 @@ func DefaultSecureLoggerConfig() *SecureLoggerConfig {
 		},
 		RedactionString: "[REDACTED]",
 	}
-}
 
 // SecureLogger implements secure logging for API requests and responses
 type SecureLogger struct {
 	config            *SecureLoggerConfig
 	sensitivePatterns []*regexp.Regexp
-}
 
 // NewSecureLogger creates a new secure logger
 func NewSecureLogger(config *SecureLoggerConfig) (*SecureLogger, error) {
@@ -126,7 +123,6 @@ func NewSecureLogger(config *SecureLoggerConfig) (*SecureLogger, error) {
 		config:            config,
 		sensitivePatterns: sensitivePatterns,
 	}, nil
-}
 
 // LogEntry represents a log entry
 type LogEntry struct {
@@ -154,7 +150,6 @@ type LogEntry struct {
 	Error string `json:"error,omitempty"`
 	// Message is a log message
 	Message string `json:"message,omitempty"`
-}
 
 // Middleware returns a middleware function for secure logging
 func (sl *SecureLogger) Middleware(next http.Handler) http.Handler {
@@ -258,7 +253,6 @@ func (sl *SecureLogger) Middleware(next http.Handler) http.Handler {
 			sl.logEntry(responseEntry)
 		}
 	})
-}
 
 // redactHeaders redacts sensitive information from headers
 func (sl *SecureLogger) redactHeaders(headers http.Header) map[string]string {
@@ -283,7 +277,6 @@ func (sl *SecureLogger) redactHeaders(headers http.Header) map[string]string {
 	}
 
 	return result
-}
 
 // redactBody redacts sensitive information from a body
 func (sl *SecureLogger) redactBody(body string) string {
@@ -304,7 +297,6 @@ func (sl *SecureLogger) redactBody(body string) string {
 	}
 
 	return body
-}
 
 // redactJSON redacts sensitive information from a JSON object
 func (sl *SecureLogger) redactJSON(obj interface{}) interface{} {
@@ -338,7 +330,6 @@ func (sl *SecureLogger) redactJSON(obj interface{}) interface{} {
 	default:
 		return v
 	}
-}
 
 // logEntry logs a log entry
 func (sl *SecureLogger) logEntry(entry LogEntry) {
@@ -353,7 +344,6 @@ func (sl *SecureLogger) logEntry(entry LogEntry) {
 		sl.config.OutputWriter.Write(data)
 		sl.config.OutputWriter.Write([]byte("\n"))
 	}
-}
 
 // Log logs a message
 func (sl *SecureLogger) Log(level LogLevel, requestID string, message string, err error) {
@@ -377,7 +367,6 @@ func (sl *SecureLogger) Log(level LogLevel, requestID string, message string, er
 
 	// Log the entry
 	sl.logEntry(entry)
-}
 
 // responseWrapper wraps an http.ResponseWriter to capture the response
 type responseWrapper struct {
@@ -393,23 +382,30 @@ func newResponseWrapper(w http.ResponseWriter) *responseWrapper {
 		statusCode:     http.StatusOK,
 		body:           bytes.NewBuffer(nil),
 	}
-}
 
 // WriteHeader captures the status code
 func (rw *responseWrapper) WriteHeader(statusCode int) {
 	rw.statusCode = statusCode
 	rw.ResponseWriter.WriteHeader(statusCode)
-}
 
 // Write captures the response body
 func (rw *responseWrapper) Write(b []byte) (int, error) {
 	rw.body.Write(b)
 	return rw.ResponseWriter.Write(b)
-}
 
 // Flush implements the http.Flusher interface
 func (rw *responseWrapper) Flush() {
 	if f, ok := rw.ResponseWriter.(http.Flusher); ok {
 		f.Flush()
 	}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

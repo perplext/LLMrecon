@@ -20,7 +20,6 @@ type StreamProcessor struct {
 	stats StreamStats
 	// statsMutex protects the stats
 	statsMutex sync.RWMutex
-}
 
 // StreamConfig contains configuration for the stream processor
 type StreamConfig struct {
@@ -32,7 +31,6 @@ type StreamConfig struct {
 	MaxConcurrent int
 	// TemporaryDir is the directory for temporary files
 	TemporaryDir string
-}
 
 // StreamStats tracks processor statistics
 type StreamStats struct {
@@ -44,7 +42,6 @@ type StreamStats struct {
 	ProcessingTime time.Duration
 	// PeakMemoryUsage is the peak memory usage in bytes
 	PeakMemoryUsage int64
-}
 
 // NewStreamProcessor creates a new stream processor
 func NewStreamProcessor(config *StreamConfig) *StreamProcessor {
@@ -61,19 +58,17 @@ func NewStreamProcessor(config *StreamConfig) *StreamProcessor {
 	return &StreamProcessor{
 		config: config,
 	}
-}
 
 // ProcessTemplateFile processes a template file in a streaming fashion
 func (p *StreamProcessor) ProcessTemplateFile(ctx context.Context, filePath string, processor func(*format.Template) error) error {
 	startTime := time.Now()
 
 	// Open file
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
-
+	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	// Create buffered reader
 	reader := bufio.NewReaderSize(file, p.config.BufferSize)
 
@@ -144,7 +139,6 @@ func (p *StreamProcessor) ProcessTemplateFile(ctx context.Context, filePath stri
 	p.statsMutex.Unlock()
 
 	return nil
-}
 
 // ProcessTemplateStream processes a template stream
 func (p *StreamProcessor) ProcessTemplateStream(ctx context.Context, reader io.Reader, processor func(*format.Template) error) error {
@@ -218,20 +212,18 @@ func (p *StreamProcessor) ProcessTemplateStream(ctx context.Context, reader io.R
 	p.statsMutex.Lock()
 	p.stats.ProcessingTime += time.Since(startTime)
 	p.statsMutex.Unlock()
-
 	return nil
-}
 
 // ProcessTemplateDirectory processes all template files in a directory
 func (p *StreamProcessor) ProcessTemplateDirectory(ctx context.Context, dirPath string, processor func(*format.Template) error) error {
 	startTime := time.Now()
 
 	// Open directory
-	dir, err := os.Open(dirPath)
+	dir, err := os.Open(filepath.Clean(dirPath))
 	if err != nil {
 		return fmt.Errorf("failed to open directory: %w", err)
 	}
-	defer dir.Close()
+	defer func() { if err := dir.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Read directory entries
 	entries, err := dir.Readdir(-1)
@@ -286,7 +278,6 @@ func (p *StreamProcessor) ProcessTemplateDirectory(ctx context.Context, dirPath 
 	p.statsMutex.Unlock()
 
 	return lastError
-}
 
 // StreamExecute executes a template in a streaming fashion
 func (p *StreamProcessor) StreamExecute(ctx context.Context, template *format.Template, executor interfaces.TemplateExecutor, options map[string]interface{}, resultWriter io.Writer) error {
@@ -310,7 +301,6 @@ func (p *StreamProcessor) StreamExecute(ctx context.Context, template *format.Te
 	p.statsMutex.Unlock()
 
 	return nil
-}
 
 // StreamExecuteBatch executes multiple templates in a streaming fashion
 func (p *StreamProcessor) StreamExecuteBatch(ctx context.Context, templates []*format.Template, executor interfaces.TemplateExecutor, options map[string]interface{}, resultWriter io.Writer) error {
@@ -322,7 +312,7 @@ func (p *StreamProcessor) StreamExecuteBatch(ctx context.Context, templates []*f
 		return fmt.Errorf("failed to create temporary file: %w", err)
 	}
 	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
+	defer func() { if err := tempFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 
 	// Execute templates in batches
 	batchSize := 10
@@ -377,7 +367,6 @@ func (p *StreamProcessor) StreamExecuteBatch(ctx context.Context, templates []*f
 	p.statsMutex.Unlock()
 
 	return nil
-}
 
 // GetStats gets the processor statistics
 func (p *StreamProcessor) GetStats() StreamStats {
@@ -385,7 +374,6 @@ func (p *StreamProcessor) GetStats() StreamStats {
 	defer p.statsMutex.RUnlock()
 
 	return p.stats
-}
 
 // ResetStats resets the processor statistics
 func (p *StreamProcessor) ResetStats() {
@@ -393,7 +381,6 @@ func (p *StreamProcessor) ResetStats() {
 	defer p.statsMutex.Unlock()
 
 	p.stats = StreamStats{}
-}
 
 // isTemplateFile checks if a file is a template file
 func isTemplateFile(fileName string) bool {
@@ -402,5 +389,3 @@ func isTemplateFile(fileName string) bool {
 		ext = string(fileName[i]) + ext
 	}
 	
-	return ext == "yaml" || ext == "yml" || ext == "json"
-}

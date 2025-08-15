@@ -20,4 +20,3 @@ func FormatVersionChangeType(changeType version.VersionChangeType) string {
 	default:
 		return "Unknown"
 	}
-}

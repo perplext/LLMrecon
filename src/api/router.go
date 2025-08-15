@@ -120,7 +120,6 @@ func NewRouter(config *Config) *mux.Router {
 	}
 	
 	return r
-}
 
 // Route represents an API route definition
 type Route struct {
@@ -157,7 +156,6 @@ type Config struct {
 	EnableCompression     bool
 	EnableAuditLogging    bool
 	EnableMetrics         bool   // enable metrics collection
-}
 
 // DefaultConfig returns default API configuration
 func DefaultConfig() *Config {
@@ -183,7 +181,6 @@ func DefaultConfig() *Config {
 		EnableCompression:     true,
 		EnableAuditLogging:    true,
 	}
-}
 
 // ValidateConfig validates API configuration
 func ValidateConfig(config *Config) error {
@@ -216,7 +213,6 @@ func ValidateConfig(config *Config) error {
 	}
 	
 	return nil
-}
 
 // APIError represents an API error
 type APIError struct {
@@ -227,7 +223,6 @@ type APIError struct {
 
 func (e *APIError) Error() string {
 	return e.Message
-}
 
 // NewAPIError creates a new API error
 func NewAPIError(code, message string) *APIError {
@@ -235,7 +230,6 @@ func NewAPIError(code, message string) *APIError {
 		Code:    code,
 		Message: message,
 	}
-}
 
 // NewAPIErrorWithDetails creates a new API error with details
 func NewAPIErrorWithDetails(code, message, details string) *APIError {
@@ -244,7 +238,6 @@ func NewAPIErrorWithDetails(code, message, details string) *APIError {
 		Message: message,
 		Details: details,
 	}
-}
 
 // Error codes are defined in types.go
 
@@ -303,6 +296,10 @@ func GetRoutes() []Route {
 		// Documentation
 		{Name: "OpenAPISpec", Method: "GET", Pattern: "/api/v1/openapi.json", RequireAuth: false},
 	}
-}
 
 // normalizeAPIKey is implemented in auth_service.go
+}
+}
+}
+}
+}

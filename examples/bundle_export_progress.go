@@ -12,23 +12,31 @@ func main() {
 	// Create output directory
 	outputDir := "./export_demo"
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		log.Fatal(err)
+if err != nil {
+treturn err
+}		log.Fatal(err)
 	}
 	
 	// Create progress tracker
 	ctx := context.Background()
-	tracker := bundle.NewProgressTracker(ctx)
-	defer tracker.Close()
+if err != nil {
+treturn err
+}	tracker := bundle.NewProgressTracker(ctx)
+	defer func() { if err := tracker.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Add console progress handler
-	tracker.AddHandler(bundle.ConsoleProgressHandler())
+if err != nil {
+treturn err
+}	tracker.AddHandler(bundle.ConsoleProgressHandler())
 	
-	// Add JSON progress handler for logging
+if err != nil {
+treturn err
+}	// Add JSON progress handler for logging
 	logFile, err := os.Create(filepath.Join(outputDir, "progress.log"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer logFile.Close()
+	defer func() { if err := logFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	tracker.AddHandler(bundle.JSONProgressHandler(logFile))
 	
@@ -149,14 +157,16 @@ func main() {
 	tracker.Complete()
 	
 	fmt.Println("\n\nBundle export completed successfully!")
-	fmt.Printf("Output: %s\n", exportOpts.OutputPath)
+if err != nil {
+treturn err
+}	fmt.Printf("Output: %s\n", exportOpts.OutputPath)
 	fmt.Printf("Progress log: %s\n", filepath.Join(outputDir, "progress.log"))
 	
 	// Demonstrate error handling
 	fmt.Println("\nDemonstrating error handling...")
 	
 	errorTracker := bundle.NewProgressTracker(ctx)
-	defer errorTracker.Close()
+	defer func() { if err := errorTracker.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	errorTracker.AddHandler(bundle.ConsoleProgressHandler())
 	

@@ -69,7 +69,6 @@ type Notification struct {
 	RequiresAction  bool            `json:"requiresAction"`
 	ActionURL       string          `json:"actionUrl,omitempty"`
 	ActionLabel     string          `json:"actionLabel,omitempty"`
-}
 
 // NotificationChannel represents a channel for delivering notifications
 type NotificationChannel interface {
@@ -84,7 +83,6 @@ type NotificationChannel interface {
 	
 	// CanDeliver checks if the channel can deliver the notification
 	CanDeliver(notification *Notification) bool
-}
 
 // NotificationManager manages notifications and their delivery
 type NotificationManager struct {
@@ -108,7 +106,7 @@ func NewNotificationManager(storageDir string) (*NotificationManager, error) {
 	}
 	
 	// Create storage directory if it doesn't exist
-	if err := os.MkdirAll(storageDir, 0755); err != nil {
+	if err := os.MkdirAll(storageDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create storage directory: %w", err)
 	}
 	
@@ -128,7 +126,6 @@ func NewNotificationManager(storageDir string) (*NotificationManager, error) {
 	}
 	
 	return manager, nil
-}
 
 // RegisterChannel registers a notification channel
 func (m *NotificationManager) RegisterChannel(channel NotificationChannel) {
@@ -136,7 +133,6 @@ func (m *NotificationManager) RegisterChannel(channel NotificationChannel) {
 	defer m.mutex.Unlock()
 	
 	m.channels[channel.ID()] = channel
-}
 
 // UnregisterChannel unregisters a notification channel
 func (m *NotificationManager) UnregisterChannel(channelID string) {
@@ -144,7 +140,6 @@ func (m *NotificationManager) UnregisterChannel(channelID string) {
 	defer m.mutex.Unlock()
 	
 	delete(m.channels, channelID)
-}
 
 // CreateNotification creates a new notification
 func (m *NotificationManager) CreateNotification(
@@ -185,7 +180,6 @@ func (m *NotificationManager) CreateNotification(
 	}
 	
 	return notification, nil
-}
 
 // ScheduleNotification schedules a notification for delivery at a specific time
 func (m *NotificationManager) ScheduleNotification(notification *Notification, scheduledTime time.Time) error {
@@ -205,7 +199,6 @@ func (m *NotificationManager) ScheduleNotification(notification *Notification, s
 	}
 	
 	return nil
-}
 
 // DeliverNotification delivers a notification through all registered channels
 func (m *NotificationManager) DeliverNotification(notificationID string) error {
@@ -283,7 +276,6 @@ func (m *NotificationManager) DeliverNotification(notificationID string) error {
 	}
 	
 	return nil
-}
 
 // AcknowledgeNotification marks a notification as acknowledged by the user
 func (m *NotificationManager) AcknowledgeNotification(notificationID string) error {
@@ -305,7 +297,6 @@ func (m *NotificationManager) AcknowledgeNotification(notificationID string) err
 	}
 	
 	return nil
-}
 
 // DismissNotification marks a notification as dismissed by the user
 func (m *NotificationManager) DismissNotification(notificationID string) error {
@@ -326,7 +317,6 @@ func (m *NotificationManager) DismissNotification(notificationID string) error {
 	}
 	
 	return nil
-}
 
 // GetNotification returns a notification by ID
 func (m *NotificationManager) GetNotification(notificationID string) (*Notification, error) {
@@ -339,7 +329,6 @@ func (m *NotificationManager) GetNotification(notificationID string) (*Notificat
 	}
 	
 	return notification, nil
-}
 
 // GetPendingNotifications returns all pending notifications
 func (m *NotificationManager) GetPendingNotifications() []*Notification {
@@ -354,7 +343,6 @@ func (m *NotificationManager) GetPendingNotifications() []*Notification {
 	}
 	
 	return pending
-}
 
 // GetUnacknowledgedNotifications returns all unacknowledged notifications
 func (m *NotificationManager) GetUnacknowledgedNotifications() []*Notification {
@@ -369,7 +357,6 @@ func (m *NotificationManager) GetUnacknowledgedNotifications() []*Notification {
 	}
 	
 	return unacknowledged
-}
 
 // GetNotificationHistory returns the notification history
 func (m *NotificationManager) GetNotificationHistory() []*Notification {
@@ -381,7 +368,6 @@ func (m *NotificationManager) GetNotificationHistory() []*Notification {
 	copy(history, m.history)
 	
 	return history
-}
 
 // ClearNotificationHistory clears the notification history
 func (m *NotificationManager) ClearNotificationHistory() error {
@@ -396,7 +382,6 @@ func (m *NotificationManager) ClearNotificationHistory() error {
 	}
 	
 	return nil
-}
 
 // addToHistory adds a notification to the history
 func (m *NotificationManager) addToHistory(notification *Notification) {
@@ -407,7 +392,7 @@ func (m *NotificationManager) addToHistory(notification *Notification) {
 	if len(m.history) > m.historyLimit {
 		m.history = m.history[:m.historyLimit]
 	}
-}
+	
 
 // loadFromStorage loads notifications from storage
 func (m *NotificationManager) loadFromStorage() error {
@@ -417,7 +402,7 @@ func (m *NotificationManager) loadFromStorage() error {
 	}
 	
 	// Read the storage file
-	data, err := os.ReadFile(m.storageFile)
+	data, err := os.ReadFile(filepath.Clean(m.storageFile))
 	if err != nil {
 		return fmt.Errorf("failed to read storage file: %w", err)
 	}
@@ -437,7 +422,6 @@ func (m *NotificationManager) loadFromStorage() error {
 	m.history = storage.History
 	
 	return nil
-}
 
 // saveToStorage saves notifications to storage
 func (m *NotificationManager) saveToStorage() error {
@@ -457,12 +441,11 @@ func (m *NotificationManager) saveToStorage() error {
 	}
 	
 	// Write to the storage file
-	if err := os.WriteFile(m.storageFile, data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(m.storageFile, data, 0600)); err != nil {
 		return fmt.Errorf("failed to write storage file: %w", err)
 	}
 	
 	return nil
-}
 
 // ProcessScheduledNotifications processes all scheduled notifications
 func (m *NotificationManager) ProcessScheduledNotifications() error {
@@ -490,7 +473,6 @@ func (m *NotificationManager) ProcessScheduledNotifications() error {
 	}
 	
 	return nil
-}
 
 // PurgeExpiredNotifications removes expired notifications
 func (m *NotificationManager) PurgeExpiredNotifications() error {
@@ -519,5 +501,20 @@ func (m *NotificationManager) PurgeExpiredNotifications() error {
 		}
 	}
 	
-	return nil
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 }

@@ -78,7 +78,6 @@ type Message struct {
 	ToolCalls []*ToolCall `json:"tool_calls,omitempty"`
 	// Timestamp is the timestamp of the message
 	Timestamp time.Time `json:"timestamp,omitempty"`
-}
 
 // FunctionCall represents a function call
 type FunctionCall struct {
@@ -86,7 +85,6 @@ type FunctionCall struct {
 	Name string `json:"name"`
 	// Arguments is a JSON string of arguments
 	Arguments string `json:"arguments"`
-}
 
 // ToolCall represents a tool call
 type ToolCall struct {
@@ -96,7 +94,6 @@ type ToolCall struct {
 	Type string `json:"type"`
 	// Function is the function call
 	Function *FunctionCall `json:"function"`
-}
 
 // Function represents a function definition
 type Function struct {
@@ -106,7 +103,6 @@ type Function struct {
 	Description string `json:"description"`
 	// Parameters is a JSON schema of parameters
 	Parameters map[string]interface{} `json:"parameters"`
-}
 
 // Tool represents a tool definition
 type Tool struct {
@@ -114,7 +110,6 @@ type Tool struct {
 	Type string `json:"type"`
 	// Function is the function definition
 	Function *Function `json:"function"`
-}
 
 // TextCompletionRequest represents a request for text completion
 type TextCompletionRequest struct {
@@ -144,7 +139,6 @@ type TextCompletionRequest struct {
 	User string `json:"user,omitempty"`
 	// Model is the model to use
 	Model string `json:"model,omitempty"`
-}
 
 // TextCompletionResponse represents a response from text completion
 type TextCompletionResponse struct {
@@ -160,7 +154,6 @@ type TextCompletionResponse struct {
 	Choices []TextCompletionChoice `json:"choices"`
 	// Usage is the token usage information
 	Usage *TokenUsage `json:"usage,omitempty"`
-}
 
 // TextCompletionChoice represents a choice in a text completion response
 type TextCompletionChoice struct {
@@ -172,7 +165,6 @@ type TextCompletionChoice struct {
 	LogProbs *LogProbs `json:"logprobs,omitempty"`
 	// FinishReason is the reason the completion finished
 	FinishReason string `json:"finish_reason"`
-}
 
 // LogProbs represents log probabilities
 type LogProbs struct {
@@ -184,7 +176,6 @@ type LogProbs struct {
 	TopLogProbs []map[string]float64 `json:"top_logprobs"`
 	// TextOffset is a list of offsets in the text
 	TextOffset []int `json:"text_offset"`
-}
 
 // ChatCompletionRequest represents a request for chat completion
 type ChatCompletionRequest struct {
@@ -224,7 +215,6 @@ type ChatCompletionRequest struct {
 	Model string `json:"model,omitempty"`
 	// Metadata is optional metadata for the request
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // ChatCompletionResponse represents a response from chat completion
 type ChatCompletionResponse struct {
@@ -240,7 +230,6 @@ type ChatCompletionResponse struct {
 	Choices []ChatCompletionChoice `json:"choices"`
 	// Usage is the token usage information
 	Usage *TokenUsage `json:"usage,omitempty"`
-}
 
 // ChatCompletionChoice represents a choice in a chat completion response
 type ChatCompletionChoice struct {
@@ -250,7 +239,6 @@ type ChatCompletionChoice struct {
 	Message Message `json:"message"`
 	// FinishReason is the reason the completion finished
 	FinishReason string `json:"finish_reason"`
-}
 
 // EmbeddingRequest represents a request for embeddings
 type EmbeddingRequest struct {
@@ -264,7 +252,6 @@ type EmbeddingRequest struct {
 	User string `json:"user,omitempty"`
 	// Dimensions is the number of dimensions for the embeddings
 	Dimensions int `json:"dimensions,omitempty"`
-}
 
 // EmbeddingResponse represents a response from embedding
 type EmbeddingResponse struct {
@@ -276,7 +263,6 @@ type EmbeddingResponse struct {
 	Model string `json:"model"`
 	// Usage is the token usage information
 	Usage *TokenUsage `json:"usage,omitempty"`
-}
 
 // Embedding represents an embedding
 type Embedding struct {
@@ -286,7 +272,6 @@ type Embedding struct {
 	Embedding []float64 `json:"embedding"`
 	// Index is the index of the embedding
 	Index int `json:"index"`
-}
 
 // TokenUsage represents token usage information
 type TokenUsage struct {
@@ -296,7 +281,6 @@ type TokenUsage struct {
 	CompletionTokens int `json:"completion_tokens"`
 	// TotalTokens is the total number of tokens
 	TotalTokens int `json:"total_tokens"`
-}
 
 // ProviderConfig represents the configuration for a provider
 type ProviderConfig struct {
@@ -320,7 +304,6 @@ type ProviderConfig struct {
 	AdditionalHeaders map[string]string `json:"additional_headers,omitempty"`
 	// AdditionalParams is a map of additional parameters to include in requests
 	AdditionalParams map[string]interface{} `json:"additional_params,omitempty"`
-}
 
 // RetryConfig represents the configuration for retries
 type RetryConfig struct {
@@ -334,7 +317,6 @@ type RetryConfig struct {
 	BackoffMultiplier float64 `json:"backoff_multiplier"`
 	// RetryableStatusCodes is a list of HTTP status codes that should be retried
 	RetryableStatusCodes []int `json:"retryable_status_codes"`
-}
 
 // RateLimitConfig represents the configuration for rate limiting
 type RateLimitConfig struct {
@@ -346,7 +328,6 @@ type RateLimitConfig struct {
 	MaxConcurrentRequests int `json:"max_concurrent_requests"`
 	// BurstSize is the maximum burst size
 	BurstSize int `json:"burst_size"`
-}
 
 // ModelInfo represents information about a model
 type ModelInfo struct {
@@ -368,7 +349,6 @@ type ModelInfo struct {
 	Description string `json:"description,omitempty"`
 	// PricingInfo is information about pricing for the model
 	PricingInfo *ModelPricingInfo `json:"pricing_info,omitempty"`
-}
 
 // ModelPricingInfo represents pricing information for a model
 type ModelPricingInfo struct {
@@ -378,7 +358,6 @@ type ModelPricingInfo struct {
 	OutputPricePerToken float64 `json:"output_price_per_token"`
 	// Currency is the currency of the prices
 	Currency string `json:"currency"`
-}
 
 // ProviderError represents an error from a provider
 type ProviderError struct {
@@ -394,12 +373,10 @@ type ProviderError struct {
 	Code string `json:"code,omitempty"`
 	// RawResponse is the raw response from the provider
 	RawResponse string `json:"-"`
-}
 
 // Error returns the error message
 func (e *ProviderError) Error() string {
 	return e.Message
-}
 
 // Provider is the interface that all LLM providers must implement
 type Provider interface {
@@ -444,7 +421,6 @@ type Provider interface {
 	GetAllUsageMetrics() (map[string]*UsageMetrics, error)
 	// ResetUsageMetrics resets the usage metrics
 	ResetUsageMetrics() error
-}
 
 // ProviderFactory is the interface for creating providers
 type ProviderFactory interface {
@@ -452,7 +428,6 @@ type ProviderFactory interface {
 	CreateProvider(config *ProviderConfig) (Provider, error)
 	// GetSupportedProviderTypes returns the provider types supported by this factory
 	GetSupportedProviderTypes() []ProviderType
-}
 
 // ProviderRegistry is the interface for registering and retrieving providers
 type ProviderRegistry interface {
@@ -476,7 +451,6 @@ type ProviderRegistry interface {
 	
 	// GetAllProviderTypes returns all registered provider types
 	GetAllProviderTypes() []ProviderType
-}
 
 // ModelRegistry is the interface for registering and retrieving models
 type ModelRegistry interface {
@@ -496,5 +470,3 @@ type ModelRegistry interface {
 	GetModelsByCapability(capability ModelCapability) ([]*ModelInfo, error)
 	
 	// GetAllModels returns all registered models
-	GetAllModels() []*ModelInfo
-}

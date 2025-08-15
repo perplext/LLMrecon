@@ -66,7 +66,6 @@ type DetectionLocation struct {
 	End int `json:"end"`
 	// Context is the surrounding context of the detection
 	Context string `json:"context,omitempty"`
-}
 
 // Detection defines a detection of a potential security issue
 type Detection struct {
@@ -84,7 +83,6 @@ type Detection struct {
 	Remediation string `json:"remediation,omitempty"`
 	// Metadata contains additional metadata about the detection
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // ProtectionResult defines the result of a protection operation
 type ProtectionResult struct {
@@ -106,7 +104,6 @@ type ProtectionResult struct {
 	Timestamp time.Time `json:"timestamp"`
 	// ProcessingTime is the time taken to process the protection operation
 	ProcessingTime time.Duration `json:"processing_time,omitempty"`
-}
 
 // ApprovalRequest defines a request for approval
 type ApprovalRequest struct {
@@ -128,7 +125,6 @@ type ApprovalRequest struct {
 	Reason string `json:"reason"`
 	// Metadata contains additional metadata about the request
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // InjectionReport defines a report of a new injection technique
 type InjectionReport struct {
@@ -152,7 +148,6 @@ type InjectionReport struct {
 	Source string `json:"source,omitempty"`
 	// Metadata contains additional metadata about the report
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // TemplatePatternStats defines statistics for a template pattern
 type TemplatePatternStats struct {
@@ -172,7 +167,6 @@ type TemplatePatternStats struct {
 	Examples []string `json:"examples,omitempty"`
 	// Metadata contains additional metadata about the pattern
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // ContentFilterConfig defines the configuration for content filtering
 type ContentFilterConfig struct {
@@ -190,7 +184,6 @@ type ContentFilterConfig struct {
 	ReplacementChar rune `json:"replacement_char"`
 	// FilterThreshold is the threshold for filtering (0.0-1.0)
 	FilterThreshold float64 `json:"filter_threshold"`
-}
 
 // JailbreakDetectionConfig defines the configuration for jailbreak detection
 type JailbreakDetectionConfig struct {
@@ -204,7 +197,6 @@ type JailbreakDetectionConfig struct {
 	EnableInstructionOverrideDetection bool `json:"enable_instruction_override_detection"`
 	// DetectionThreshold is the threshold for detection (0.0-1.0)
 	DetectionThreshold float64 `json:"detection_threshold"`
-}
 
 // ContextBoundaryConfig defines the configuration for context boundary enforcement
 type ContextBoundaryConfig struct {
@@ -218,7 +210,6 @@ type ContextBoundaryConfig struct {
 	MaxPromptLength int `json:"max_prompt_length"`
 	// SanitizationLevel defines how aggressively to sanitize inputs (1-3)
 	SanitizationLevel int `json:"sanitization_level"`
-}
 
 // MonitoringConfig defines the configuration for real-time monitoring
 type MonitoringConfig struct {
@@ -230,7 +221,6 @@ type MonitoringConfig struct {
 	AnomalyThreshold float64 `json:"anomaly_threshold"`
 	// EnableAnomalyDetection enables anomaly detection
 	EnableAnomalyDetection bool `json:"enable_anomaly_detection"`
-}
 
 // ReportingConfig defines the configuration for the reporting system
 type ReportingConfig struct {
@@ -244,7 +234,6 @@ type ReportingConfig struct {
 	EnableLocalStorage bool `json:"enable_local_storage"`
 	// LocalStoragePath is the path for local storage
 	LocalStoragePath string `json:"local_storage_path,omitempty"`
-}
 
 // ApprovalWorkflowConfig defines the configuration for the approval workflow
 type ApprovalWorkflowConfig struct {
@@ -255,5 +244,3 @@ type ApprovalWorkflowConfig struct {
 	// EnableAutoApproval enables automatic approval based on rules
 	EnableAutoApproval bool `json:"enable_auto_approval"`
 	// AutoApprovalRules defines rules for automatic approval
-	AutoApprovalRules map[string]interface{} `json:"auto_approval_rules,omitempty"`
-}

@@ -242,7 +242,11 @@ func processTemplates(
 			template := template // Create local copy for closure
 			
 			err := concurrencyManager.Submit(func(ctx context.Context) error {
-				// Process template
+if err != nil {
+treturn err
+if err != nil {
+treturn err
+}}				// Process template
 				_, err := processTemplate(template)
 				return err
 			})
@@ -250,14 +254,18 @@ func processTemplates(
 			if err != nil {
 				log.Printf("Error submitting template %s: %v\n", template.ID, err)
 			}
-		}
+if err != nil {
+treturn err
+}		}
 		
 		// Wait for all tasks to complete
 		if err := concurrencyManager.Wait(context.Background()); err != nil {
 			log.Printf("Error waiting for tasks to complete: %v\n", err)
 		}
 		
-		processedCount = len(templates)
+if err != nil {
+treturn err
+}		processedCount = len(templates)
 	} else {
 		// Process templates sequentially
 		for _, template := range templates {

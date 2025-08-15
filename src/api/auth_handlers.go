@@ -50,7 +50,6 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		"user":  user,
 	}
 	writeSuccess(w, response)
-}
 
 // handleRefreshToken handles token refresh
 func handleRefreshToken(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +84,6 @@ func handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 		"token": newToken,
 	}
 	writeSuccess(w, response)
-}
 
 // handleCreateUser handles user creation
 func handleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +109,7 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, user)
-}
+	
 
 // handleUpdatePassword handles password update
 func handleUpdatePassword(w http.ResponseWriter, r *http.Request) {
@@ -145,7 +143,6 @@ func handleUpdatePassword(w http.ResponseWriter, r *http.Request) {
 		"message": "Password updated successfully",
 	}
 	writeSuccess(w, response)
-}
 
 // API Key handlers
 
@@ -169,7 +166,6 @@ func handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, apiKey)
-}
 
 // handleListAPIKeys handles API key listing
 func handleListAPIKeys(w http.ResponseWriter, r *http.Request) {
@@ -200,7 +196,6 @@ func handleListAPIKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, apiKeys)
-}
 
 // handleGetAPIKey handles getting a specific API key
 func handleGetAPIKey(w http.ResponseWriter, r *http.Request) {
@@ -222,7 +217,6 @@ func handleGetAPIKey(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	writeSuccess(w, apiKey)
-}
 
 // handleRevokeAPIKey handles API key revocation
 func handleRevokeAPIKey(w http.ResponseWriter, r *http.Request) {
@@ -246,7 +240,6 @@ func handleRevokeAPIKey(w http.ResponseWriter, r *http.Request) {
 		"message": "API key revoked successfully",
 	}
 	writeSuccess(w, response)
-}
 
 // jwtMiddleware validates JWT tokens
 func jwtMiddleware(authService AuthService) func(http.Handler) http.Handler {
@@ -281,7 +274,6 @@ func jwtMiddleware(authService AuthService) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
-}
 
 // handleGetProfile returns the current user's profile
 func handleGetProfile(w http.ResponseWriter, r *http.Request) {
@@ -304,5 +296,3 @@ func handleGetProfile(w http.ResponseWriter, r *http.Request) {
 		"extra":    claims.Extra,
 	}
 	
-	writeSuccess(w, profile)
-}

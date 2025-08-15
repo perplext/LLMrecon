@@ -12,7 +12,6 @@ type Role struct {
 	IsBuiltIn   bool      `json:"is_built_in"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
-}
 
 // RBACConfig represents the configuration for role-based access control
 type RBACConfig struct {
@@ -20,7 +19,6 @@ type RBACConfig struct {
 	RolePermissions map[string][]string `json:"role_permissions"`
 	RoleHierarchy   map[string][]string `json:"role_hierarchy"`
 	CustomRoles     []Role              `json:"custom_roles"`
-}
 
 // NewRBACConfig creates a new RBAC configuration with default values
 func NewRBACConfig() *RBACConfig {
@@ -47,4 +45,3 @@ func NewRBACConfig() *RBACConfig {
 		},
 		CustomRoles: []Role{},
 	}
-}

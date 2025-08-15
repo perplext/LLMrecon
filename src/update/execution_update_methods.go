@@ -28,7 +28,6 @@ func (e *UpdateExecutor) executeFullUpdate(ctx context.Context, pkg *UpdatePacka
 			return fmt.Errorf("failed to update templates: %w", err)
 		}
 	}
-
 	// Update modules if included
 	if len(pkg.Manifest.Components.Modules) > 0 {
 		if err := e.executeModulesUpdate(ctx, pkg, transaction); err != nil {
@@ -37,7 +36,6 @@ func (e *UpdateExecutor) executeFullUpdate(ctx context.Context, pkg *UpdatePacka
 	}
 
 	return nil
-}
 
 // executeDifferentialUpdate executes a differential update from the package
 func (e *UpdateExecutor) executeDifferentialUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -68,7 +66,6 @@ func (e *UpdateExecutor) executeDifferentialUpdate(ctx context.Context, pkg *Upd
 	}
 
 	return nil
-}
 
 // executeBinaryUpdate executes a binary update
 func (e *UpdateExecutor) executeBinaryUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -117,7 +114,6 @@ func (e *UpdateExecutor) executeBinaryUpdate(ctx context.Context, pkg *UpdatePac
 	e.CurrentVersions["binary"] = binaryVersion
 
 	return nil
-}
 
 // executeTemplatesUpdate executes a templates update
 func (e *UpdateExecutor) executeTemplatesUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -129,7 +125,6 @@ func (e *UpdateExecutor) executeTemplatesUpdate(ctx context.Context, pkg *Update
 
 	// Get backup path
 	backupTemplatesPath := filepath.Join(transaction.BackupDir, "templates")
-
 	// Add operation to transaction
 	operation := transaction.AddOperation(
 		TemplatesUpdateComponent,
@@ -143,7 +138,6 @@ func (e *UpdateExecutor) executeTemplatesUpdate(ctx context.Context, pkg *Update
 	if err := transaction.ExecuteOperation(ctx, operation); err != nil {
 		return fmt.Errorf("failed to execute templates update operation: %w", err)
 	}
-
 	// Notify component updated
 	e.NotificationManager.NotifyComponentUpdated(
 		transaction.ID,
@@ -163,7 +157,6 @@ func (e *UpdateExecutor) executeTemplatesUpdate(ctx context.Context, pkg *Update
 	e.CurrentVersions["templates"] = templatesVersion
 
 	return nil
-}
 
 // executeModulesUpdate executes a modules update
 func (e *UpdateExecutor) executeModulesUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -211,5 +204,3 @@ func (e *UpdateExecutor) executeModulesUpdate(ctx context.Context, pkg *UpdatePa
 		e.CurrentVersions[fmt.Sprintf("module.%s", moduleInfo.ID)] = moduleVersion
 	}
 
-	return nil
-}

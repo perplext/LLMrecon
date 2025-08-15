@@ -27,7 +27,6 @@ type RateLimitEvent struct {
 	
 	// LoadFactor at the time of the event
 	LoadFactor float64
-}
 
 // EventType constants for rate limit events
 const (
@@ -79,7 +78,6 @@ type StatsCollector struct {
 	
 	// Mutex for thread safety
 	mu sync.RWMutex
-}
 
 // NewStatsCollector creates a new stats collector
 func NewStatsCollector(maxRecentEvents int) *StatsCollector {
@@ -91,7 +89,6 @@ func NewStatsCollector(maxRecentEvents int) *StatsCollector {
 		maxRecentEvents:    maxRecentEvents,
 		LastResetTime:      time.Now(),
 	}
-}
 
 // RecordEvent records a rate limiting event
 func (s *StatsCollector) RecordEvent(event RateLimitEvent) {
@@ -124,7 +121,6 @@ func (s *StatsCollector) RecordEvent(event RateLimitEvent) {
 		s.RejectionsByType[event.Type]++
 		s.RejectionsByUser[event.UserID]++
 	}
-}
 
 // GetStats returns a copy of the current statistics
 func (s *StatsCollector) GetStats() map[string]interface{} {
@@ -146,7 +142,6 @@ func (s *StatsCollector) GetStats() map[string]interface{} {
 	}
 	
 	return stats
-}
 
 // GetRecentEvents returns a copy of recent events
 func (s *StatsCollector) GetRecentEvents() []RateLimitEvent {
@@ -158,7 +153,6 @@ func (s *StatsCollector) GetRecentEvents() []RateLimitEvent {
 	copy(events, s.RecentEvents)
 	
 	return events
-}
 
 // Reset resets all statistics
 func (s *StatsCollector) Reset() {
@@ -175,7 +169,6 @@ func (s *StatsCollector) Reset() {
 	s.totalWaitTime = 0
 	s.PeakLoadFactor = s.CurrentLoadFactor
 	s.LastResetTime = time.Now()
-}
 
 // Helper function to copy a map
 func copyMap[K comparable, V any](m map[K]V) map[K]V {
@@ -183,5 +176,3 @@ func copyMap[K comparable, V any](m map[K]V) map[K]V {
 	for k, v := range m {
 		result[k] = v
 	}
-	return result
-}
