@@ -239,7 +239,7 @@ func (h *MFAHandler) GetMFASettingsHandler(w http.ResponseWriter, r *http.Reques
 
 	// Return MFA settings
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(settings)
+	_ = json.NewEncoder(w).Encode(settings) // Best effort, headers already sent
 
 // Helper function to get session from request
 }

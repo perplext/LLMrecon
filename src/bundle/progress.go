@@ -359,7 +359,7 @@ func JSONProgressHandler(writer io.Writer) ProgressHandler {
 			jsonEvent["error"] = event.Error.Error()
 		}
 		
-		encoder.Encode(jsonEvent)
+		_ = encoder.Encode(jsonEvent) // Best effort logging, ignore errors
 	}
 
 // Helper functions

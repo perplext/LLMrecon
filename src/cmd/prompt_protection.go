@@ -28,7 +28,7 @@ injection protection system, including:
 - Monitoring template usage
 - Managing approval workflows`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 
 // configureCmd represents the prompt-protection configure command

@@ -167,7 +167,7 @@ func (m *MetricsExporter) servePrometheusMetrics(w http.ResponseWriter, r *http.
 }
 func (m *MetricsExporter) serveJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(m.GetMetrics())
+	_ = json.NewEncoder(w).Encode(m.GetMetrics()) // Best effort, headers already sent
 
 // serveStatus serves a simple health status
 }
@@ -219,6 +219,6 @@ func StartMetricsServer(ctx context.Context, addr string, exporter *MetricsExpor
 	
 	go func() {
 		<-ctx.Done()
-		server.Shutdown(context.Background())
+		_ = server.Shutdown(context.Background()) // Best effort shutdown
 	}()
 	

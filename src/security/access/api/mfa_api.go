@@ -109,7 +109,7 @@ func (h *MFAHandler) handleMFAStatus(w http.ResponseWriter, r *http.Request) {
 	
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response) // Best effort, headers already sent
 
 // handleEnableMFA handles the enable MFA endpoint
 func (h *MFAHandler) handleEnableMFA(w http.ResponseWriter, r *http.Request) {
@@ -296,7 +296,7 @@ func (h *MFAHandler) handleTOTPSetup(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response) // Best effort, headers already sent
 // handleTOTPVerify handles the TOTP verification endpoint
 func (h *MFAHandler) handleTOTPVerify(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -421,7 +421,7 @@ func (h *MFAHandler) handleGenerateBackupCodes(w http.ResponseWriter, r *http.Re
 	}
 	
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response) // Best effort, headers already sent
 
 // handleWebAuthnRegisterBegin handles the WebAuthn registration begin endpoint
 func (h *MFAHandler) handleWebAuthnRegisterBegin(w http.ResponseWriter, r *http.Request) {
@@ -453,7 +453,7 @@ func (h *MFAHandler) handleWebAuthnRegisterBegin(w http.ResponseWriter, r *http.
 	
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(options)
+	_ = json.NewEncoder(w).Encode(options) // Best effort, headers already sent
 
 // handleWebAuthnRegisterComplete handles the WebAuthn registration complete endpoint
 func (h *MFAHandler) handleWebAuthnRegisterComplete(w http.ResponseWriter, r *http.Request) {
@@ -546,7 +546,7 @@ func (h *MFAHandler) handleWebAuthnAuthenticateBegin(w http.ResponseWriter, r *h
 	
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(options)
+	_ = json.NewEncoder(w).Encode(options) // Best effort, headers already sent
 
 // handleWebAuthnAuthenticateComplete handles the WebAuthn authentication complete endpoint
 func (h *MFAHandler) handleWebAuthnAuthenticateComplete(w http.ResponseWriter, r *http.Request) {

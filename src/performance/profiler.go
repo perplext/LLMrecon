@@ -831,7 +831,7 @@ func (p *PerformanceProfiler) collectProfiles() {
 func (p *PerformanceProfiler) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	metrics := p.CollectMetrics()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(metrics)
+	_ = json.NewEncoder(w).Encode(metrics) // Best effort, headers already sent
 
 func (p *PerformanceProfiler) handleReport(w http.ResponseWriter, r *http.Request) {
 	period := ReportPeriod{
@@ -846,26 +846,26 @@ func (p *PerformanceProfiler) handleReport(w http.ResponseWriter, r *http.Reques
 	}
 	
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(report)
+	_ = json.NewEncoder(w).Encode(report) // Best effort, headers already sent
 
 func (p *PerformanceProfiler) handleHotspots(w http.ResponseWriter, r *http.Request) {
 	hotspots := p.analyzer.GetHotspots()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(hotspots)
+	_ = json.NewEncoder(w).Encode(hotspots) // Best effort, headers already sent
 
 func (p *PerformanceProfiler) handleIssues(w http.ResponseWriter, r *http.Request) {
 	issues := p.analyzer.GetIssues()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(issues)
+	_ = json.NewEncoder(w).Encode(issues) // Best effort, headers already sent
 
 func (p *PerformanceProfiler) handleAlerts(w http.ResponseWriter, r *http.Request) {
 	alerts := p.alerts.GetActiveAlerts()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(alerts)
+	_ = json.NewEncoder(w).Encode(alerts) // Best effort, headers already sent
 
 func (p *PerformanceProfiler) handleBenchmarks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(p.benchmarks)
+	_ = json.NewEncoder(w).Encode(p.benchmarks) // Best effort, headers already sent
 
 // getCPUUsage returns current CPU usage (simplified implementation)
 func getProfilerCPUUsage() float64 {

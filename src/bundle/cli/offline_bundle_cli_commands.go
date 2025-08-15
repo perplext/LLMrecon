@@ -78,7 +78,7 @@ func (c *OfflineBundleCLI) createValidateCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&level, "level", "l", "standard", "Validation level (basic, standard, or strict)")
 
 	// Mark required flags
-	cmd.MarkFlagRequired("bundle")
+	_ = cmd.MarkFlagRequired("bundle")
 
 	return cmd
 
@@ -119,8 +119,8 @@ func (c *OfflineBundleCLI) createExportCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Output path for the exported bundle (required)")
 
 	// Mark required flags
-	cmd.MarkFlagRequired("bundle")
-	cmd.MarkFlagRequired("output")
+	_ = cmd.MarkFlagRequired("bundle")
+	_ = cmd.MarkFlagRequired("output")
 
 	return cmd
 
@@ -185,9 +185,9 @@ func (c *OfflineBundleCLI) createIncrementalCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&changesFile, "changes", "c", "", "Path to a file containing changes (one per line)")
 
 	// Mark required flags
-	cmd.MarkFlagRequired("base")
-	cmd.MarkFlagRequired("output")
-	cmd.MarkFlagRequired("version")
+	_ = cmd.MarkFlagRequired("base")
+	_ = cmd.MarkFlagRequired("output")
+	_ = cmd.MarkFlagRequired("version")
 
 	return cmd
 
