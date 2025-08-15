@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 // MetricsExporter exports metrics for Prometheus
@@ -213,8 +214,11 @@ func StartMetricsServer(ctx context.Context, addr string, exporter *MetricsExpor
 	mux.Handle("/", exporter)
 	
 	server := &http.Server{
-		Addr:    addr,
-		Handler: mux,
+		Addr:         addr,
+		Handler:      mux,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 	
 	go func() {

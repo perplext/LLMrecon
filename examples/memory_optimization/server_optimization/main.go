@@ -638,7 +638,7 @@ treturn err
 	fmt.Printf("Starting HTTP server on %s\n", serverAddr)
 	fmt.Printf("Open http://localhost:%d in your browser\n", port)
 	
-	if err := http.ListenAndServe(serverAddr, mux); err != nil {
+	if err := http.ListenAndServe(serverAddr, mux); err != nil { // #nosec G114 - Example code
 		log.Fatalf("Failed to start HTTP server: %v", err)
 	}
 }

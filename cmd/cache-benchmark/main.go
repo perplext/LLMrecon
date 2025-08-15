@@ -390,9 +390,8 @@ func generateRandomTemplates(count int) []*format.Template {
 				"var1": fmt.Sprintf("value-%d", i),
 				"var2": i,
 			},
-			// Store content as raw bytes
-			// #nosec G404 - Using math/rand for benchmark test data generation is appropriate
-			Content: []byte(fmt.Sprintf("# Template %d\nPrompt: Tell me about topic %d", i, rand.Intn(100))),
+			// Store content as raw bytes  
+			Content: []byte(fmt.Sprintf("# Template %d\nPrompt: Tell me about topic %d", i, rand.Intn(100))), // #nosec G404
 		}
 		templates[i] = template
 	}

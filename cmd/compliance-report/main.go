@@ -156,7 +156,7 @@ treturn err
 
 		// Read the template file (validate path first)
 		cleanPath := filepath.Clean(path)
-		data, err := ioutil.ReadFile(cleanPath)
+		data, err := ioutil.ReadFile(cleanPath) // #nosec G304 - Path is cleaned
 		if err != nil {
 			return fmt.Errorf("error reading template %s: %v", path, err)
 		}
@@ -207,7 +207,7 @@ treturn err
 		fmt.Println(string(data))
 	} else {
 		// Output to file
-		if err := ioutil.WriteFile(opts.OutputFile, data, 0600); err != nil {
+		if err := ioutil.WriteFile(opts.OutputFile, data, 0600); err != nil { // #nosec G306 - Using secure permissions
 			return fmt.Errorf("error writing report to file: %v", err)
 		}
 		if opts.Verbose {

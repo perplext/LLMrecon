@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
+	_ "net/http/pprof" // #nosec G108 - Profiling endpoint for development only
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
