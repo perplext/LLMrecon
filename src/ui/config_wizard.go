@@ -22,28 +22,28 @@ type ConfigWizard struct {
 type Configuration struct {
 	// Provider settings
 	Providers []ProviderConfig `yaml:"providers"`
-	
+
 	// Test settings
 	Test TestConfig `yaml:"test"`
-	
+
 	// Output settings
 	Output OutputConfig `yaml:"output"`
-	
+
 	// Security settings
 	Security SecurityConfig `yaml:"security"`
-	
+
 	// Advanced settings
 	Advanced AdvancedConfig `yaml:"advanced"`
 }
 
 // ProviderConfig represents LLM provider configuration
 type ProviderConfig struct {
-	Name     string            `yaml:"name"`
-	Type     string            `yaml:"type"`
-	Enabled  bool              `yaml:"enabled"`
-	APIKey   string            `yaml:"api_key,omitempty"`
-	Endpoint string            `yaml:"endpoint,omitempty"`
-	Model    string            `yaml:"model,omitempty"`
+	Name     string                 `yaml:"name"`
+	Type     string                 `yaml:"type"`
+	Enabled  bool                   `yaml:"enabled"`
+	APIKey   string                 `yaml:"api_key,omitempty"`
+	Endpoint string                 `yaml:"endpoint,omitempty"`
+	Model    string                 `yaml:"model,omitempty"`
 	Settings map[string]interface{} `yaml:"settings,omitempty"`
 }
 
@@ -70,21 +70,21 @@ type OutputConfig struct {
 
 // SecurityConfig represents security settings
 type SecurityConfig struct {
-	APIKeyStorage    string   `yaml:"api_key_storage"`
-	EncryptKeys      bool     `yaml:"encrypt_keys"`
-	TLSVerify        bool     `yaml:"tls_verify"`
-	AllowedDomains   []string `yaml:"allowed_domains,omitempty"`
-	ProxyURL         string   `yaml:"proxy_url,omitempty"`
+	APIKeyStorage  string   `yaml:"api_key_storage"`
+	EncryptKeys    bool     `yaml:"encrypt_keys"`
+	TLSVerify      bool     `yaml:"tls_verify"`
+	AllowedDomains []string `yaml:"allowed_domains,omitempty"`
+	ProxyURL       string   `yaml:"proxy_url,omitempty"`
 }
 
 // AdvancedConfig represents advanced settings
 type AdvancedConfig struct {
-	TemplateDir      string   `yaml:"template_dir"`
-	CacheDir         string   `yaml:"cache_dir"`
-	LogLevel         string   `yaml:"log_level"`
-	EnableTelemetry  bool     `yaml:"enable_telemetry"`
-	AutoUpdate       bool     `yaml:"auto_update"`
-	Experimental     map[string]interface{} `yaml:"experimental,omitempty"`
+	TemplateDir     string                 `yaml:"template_dir"`
+	CacheDir        string                 `yaml:"cache_dir"`
+	LogLevel        string                 `yaml:"log_level"`
+	EnableTelemetry bool                   `yaml:"enable_telemetry"`
+	AutoUpdate      bool                   `yaml:"auto_update"`
+	Experimental    map[string]interface{} `yaml:"experimental,omitempty"`
 }
 
 // WizardStep represents a configuration step
@@ -103,10 +103,10 @@ func NewConfigWizard(terminal *Terminal) *ConfigWizard {
 			Providers: []ProviderConfig{},
 			Test: TestConfig{
 				ConcurrentTests: 5,
-				Timeout:        30,
-				MaxRetries:     3,
-				RetryDelay:     1,
-				RateLimit:      60,
+				Timeout:         30,
+				MaxRetries:      3,
+				RetryDelay:      1,
+				RateLimit:       60,
 			},
 			Output: OutputConfig{
 				Formats:      []string{"json", "markdown"},
@@ -194,7 +194,7 @@ func (w *ConfigWizard) Run() error {
 	for i, step := range w.steps {
 		// Show progress
 		w.terminal.Header(fmt.Sprintf("Configuration Wizard - Step %d/%d: %s", i+1, totalSteps, step.Name))
-		
+
 		if step.Description != "" {
 			w.terminal.Info(step.Description)
 			fmt.Println()
@@ -209,13 +209,13 @@ func (w *ConfigWizard) Run() error {
 		// Execute step
 		if err := step.Configure(); err != nil {
 			w.terminal.Error("Error in %s: %v", step.Name, err)
-			
+
 			retry, _ := w.terminal.Confirm("Would you like to retry this step?", true)
 			if retry {
 				i-- // Retry current step
 				continue
 			}
-			
+
 			return err
 		}
 
@@ -240,13 +240,13 @@ func (w *ConfigWizard) showWelcome() error {
 		"Configuring security settings",
 		"Advanced options (optional)",
 	}, false)
-	
+
 	w.terminal.Print("")
 	ready, _ := w.terminal.Confirm("Ready to begin?", true)
 	if !ready {
 		return fmt.Errorf("wizard cancelled by user")
 	}
-	
+
 	return nil
 }
 
@@ -392,7 +392,7 @@ func (w *ConfigWizard) configureTestSettings() error {
 
 	w.terminal.Info("\nSelect default test categories to run:")
 	selected, _ := w.terminal.MultiSelect("Categories:", categories)
-	
+
 	w.config.Test.Categories = make([]string, len(selected))
 	for i, idx := range selected {
 		w.config.Test.Categories[i] = categories[idx]
@@ -416,7 +416,7 @@ func (w *ConfigWizard) configureOutput() error {
 	}
 
 	selected, _ := w.terminal.MultiSelect("Select output formats:", formats)
-	
+
 	w.config.Output.Formats = make([]string, 0)
 	for _, idx := range selected {
 		switch idx {
@@ -460,13 +460,13 @@ func (w *ConfigWizard) configureOutput() error {
 		return err
 	}
 	w.config.Output.Verbose = verbose
-	
+
 	colorOutput, err := w.terminal.Confirm("Enable colored terminal output?", true)
 	if err != nil {
 		return err
 	}
 	w.config.Output.ColorOutput = colorOutput
-	
+
 	showProgress, err := w.terminal.Confirm("Show progress indicators?", true)
 	if err != nil {
 		return err
@@ -488,7 +488,7 @@ func (w *ConfigWizard) configureSecurity() error {
 	}
 
 	choice, _ := w.terminal.Select("How should API keys be stored?", storageOptions)
-	
+
 	switch choice {
 	case 0:
 		w.config.Security.APIKeyStorage = "encrypted_file"
@@ -586,7 +586,7 @@ func (w *ConfigWizard) configureAdvanced() error {
 
 func (w *ConfigWizard) reviewAndSave() error {
 	w.terminal.Info("Configuration Review")
-	
+
 	// Show configuration summary
 	w.terminal.Section("Providers")
 	for _, provider := range w.config.Providers {
@@ -627,7 +627,7 @@ func (w *ConfigWizard) reviewAndSave() error {
 	}
 
 	choice, _ := w.terminal.Select("Where to save configuration?", locations)
-	
+
 	var configPath string
 	switch choice {
 	case 0:
@@ -651,7 +651,7 @@ func (w *ConfigWizard) reviewAndSave() error {
 	}
 
 	w.terminal.Success("Configuration saved to: %s", configPath)
-	
+
 	// Set as default
 	setDefault, _ := w.terminal.Confirm("Set this as the default configuration?", true)
 	if setDefault {
@@ -669,7 +669,7 @@ func (w *ConfigWizard) checkExistingConfig() bool {
 		"./config.yaml",
 		"./.LLMrecon.yaml",
 	}
-	
+
 	homeDir, _ := os.UserHomeDir()
 	if homeDir != "" {
 		locations = append(locations,
@@ -727,9 +727,9 @@ func (w *ConfigWizard) validateAPIKey(provider, key string) bool {
 
 	// Basic format validation
 	patterns := map[string]string{
-		"openai":     `^sk-[a-zA-Z0-9]{48}$`,
-		"anthropic":  `^sk-ant-[a-zA-Z0-9-]{40,}$`,
-		"cohere":     `^[a-zA-Z0-9]{40}$`,
+		"openai":      `^sk-[a-zA-Z0-9]{48}$`,
+		"anthropic":   `^sk-ant-[a-zA-Z0-9-]{40,}$`,
+		"cohere":      `^[a-zA-Z0-9]{40}$`,
 		"huggingface": `^hf_[a-zA-Z0-9]{30,}$`,
 	}
 
@@ -802,10 +802,10 @@ func (w *ConfigWizard) getProviderSettings(providerType string) map[string]inter
 			fmt.Sscanf(topP, "%f", &p)
 			settings["top_p"] = p
 		}
-		
+
 		settings["presence_penalty"] = 0.0
 		settings["frequency_penalty"] = 0.0
-		
+
 	case "anthropic":
 		topK, _ := w.terminal.Prompt("Top K (default: 40): ")
 		if topK != "" {
@@ -875,25 +875,3 @@ func (qs *QuickSetup) Run() error {
 
 	return nil
 }
-
-// Placeholder methods for quick setup scenarios
-func (qs *QuickSetup) basicSetup() error {
-	return nil
-}
-
-func (qs *QuickSetup) professionalSetup() error {
-	return nil
-}
-
-func (qs *QuickSetup) enterpriseSetup() error {
-	return nil
-}
-
-func (qs *QuickSetup) developmentSetup() error {
-	return nil
-}
-
-func (qs *QuickSetup) cicdSetup() error {
-	return nil
-}
-

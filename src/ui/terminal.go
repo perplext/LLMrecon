@@ -21,12 +21,12 @@ type Terminal struct {
 	isTerminal  bool
 	colorOutput bool
 	mu          sync.Mutex
-	
+
 	// Progress tracking
 	progressMgr *ProgressManager
 	multiProg   *MultiProgress
 	spinner     *Spinner
-	
+
 	// Current state
 	lastLines   int
 	clearScreen bool
@@ -53,7 +53,7 @@ func NewTerminal(opts TerminalOptions) *Terminal {
 	// Check if output is a terminal
 	isTerminal := false
 	width, height := 80, 24 // Default dimensions
-	
+
 	if f, ok := opts.Output.(*os.File); ok {
 		if term.IsTerminal(int(f.Fd())) {
 			isTerminal = true
@@ -121,7 +121,7 @@ func (t *Terminal) ClearPreviousLines(n int) {
 	if t.isTerminal && n > 0 {
 		// Move up n lines
 		t.MoveCursorUp(n)
-		
+
 		// Clear each line
 		for i := 0; i < n; i++ {
 			t.ClearLine()
@@ -129,7 +129,7 @@ func (t *Terminal) ClearPreviousLines(n int) {
 				fmt.Fprint(t.output, "\n")
 			}
 		}
-		
+
 		// Move back to start
 		t.MoveCursorUp(n - 1)
 	}
@@ -166,7 +166,7 @@ func (t *Terminal) Debug(format string, args ...interface{}) {
 func (t *Terminal) Print(format string, args ...interface{}) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	
+
 	message := fmt.Sprintf(format, args...)
 	fmt.Fprintln(t.output, message)
 	t.lastLines = strings.Count(message, "\n") + 1
@@ -178,7 +178,7 @@ func (t *Terminal) printWithColor(c color.Attribute, icon, format string, args .
 	defer t.mu.Unlock()
 
 	message := fmt.Sprintf(format, args...)
-	
+
 	if t.colorOutput {
 		colorFunc := color.New(c).SprintFunc()
 		iconColored := colorFunc(icon)
@@ -186,7 +186,7 @@ func (t *Terminal) printWithColor(c color.Attribute, icon, format string, args .
 	} else {
 		fmt.Fprintf(t.output, "%s %s\n", icon, message)
 	}
-	
+
 	t.lastLines = strings.Count(message, "\n") + 1
 }
 
@@ -202,7 +202,7 @@ func (t *Terminal) Header(title string) {
 
 	// Create border
 	border := strings.Repeat("─", width-4)
-	
+
 	if t.colorOutput {
 		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
 		fmt.Fprintf(t.output, "\n%s\n", headerColor(fmt.Sprintf("┌─%s─┐", border)))
@@ -213,7 +213,7 @@ func (t *Terminal) Header(title string) {
 		fmt.Fprintf(t.output, "│ %-*s │\n", width-4, title)
 		fmt.Fprintf(t.output, "└─%s─┘\n\n", border)
 	}
-	
+
 	t.lastLines = 5
 }
 
@@ -231,7 +231,7 @@ func (t *Terminal) Table(headers []string, rows [][]string) {
 	for i, header := range headers {
 		colWidths[i] = len(header)
 	}
-	
+
 	for _, row := range rows {
 		for i, cell := range row {
 			if i < len(colWidths) && len(cell) > colWidths[i] {
@@ -243,7 +243,7 @@ func (t *Terminal) Table(headers []string, rows [][]string) {
 	// Print header
 	headerLine := ""
 	separatorLine := ""
-	
+
 	for i, header := range headers {
 		if i > 0 {
 			headerLine += " │ "
@@ -277,7 +277,7 @@ func (t *Terminal) Table(headers []string, rows [][]string) {
 		}
 		fmt.Fprintln(t.output, rowLine)
 	}
-	
+
 	t.lastLines = len(rows) + 2
 }
 
@@ -293,7 +293,7 @@ func (t *Terminal) List(items []string, numbered bool) {
 			fmt.Fprintf(t.output, "  • %s\n", item)
 		}
 	}
-	
+
 	t.lastLines = len(items)
 }
 
@@ -360,7 +360,7 @@ func (t *Terminal) Prompt(prompt string) (string, error) {
 	defer t.mu.Unlock()
 
 	fmt.Fprint(t.output, prompt)
-	
+
 	var response string
 	_, err := fmt.Fscanln(t.input, &response)
 	return response, err
@@ -372,7 +372,7 @@ func (t *Terminal) Confirm(prompt string, defaultYes bool) (bool, error) {
 	if defaultYes {
 		defaultStr = "Y/n"
 	}
-	
+
 	response, err := t.Prompt(fmt.Sprintf("%s [%s]: ", prompt, defaultStr))
 	if err != nil {
 		if response == "" {
@@ -381,7 +381,7 @@ func (t *Terminal) Confirm(prompt string, defaultYes bool) (bool, error) {
 		}
 		return false, err
 	}
-	
+
 	response = strings.ToLower(strings.TrimSpace(response))
 	return response == "y" || response == "yes", nil
 }
@@ -390,20 +390,20 @@ func (t *Terminal) Confirm(prompt string, defaultYes bool) (bool, error) {
 func (t *Terminal) Select(prompt string, options []string) (int, error) {
 	t.Print("%s", prompt)
 	t.List(options, true)
-	
+
 	for {
 		response, err := t.Prompt("Select option: ")
 		if err != nil {
 			return -1, err
 		}
-		
+
 		var index int
 		if _, err := fmt.Sscanf(response, "%d", &index); err == nil {
 			if index >= 1 && index <= len(options) {
 				return index - 1, nil
 			}
 		}
-		
+
 		t.Warning("Invalid selection. Please enter a number between 1 and %d.", len(options))
 	}
 }
@@ -412,12 +412,12 @@ func (t *Terminal) Select(prompt string, options []string) (int, error) {
 func (t *Terminal) MultiSelect(prompt string, options []string) ([]int, error) {
 	t.Print("%s (comma-separated numbers or 'all'):", prompt)
 	t.List(options, true)
-	
+
 	response, err := t.Prompt("Select options: ")
 	if err != nil {
 		return nil, err
 	}
-	
+
 	response = strings.TrimSpace(response)
 	if strings.ToLower(response) == "all" {
 		indices := make([]int, len(options))
@@ -426,10 +426,10 @@ func (t *Terminal) MultiSelect(prompt string, options []string) ([]int, error) {
 		}
 		return indices, nil
 	}
-	
+
 	var indices []int
 	parts := strings.Split(response, ",")
-	
+
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		var index int
@@ -439,20 +439,20 @@ func (t *Terminal) MultiSelect(prompt string, options []string) ([]int, error) {
 			}
 		}
 	}
-	
+
 	return indices, nil
 }
 
 // ProgressDemo demonstrates progress indicators
 func (t *Terminal) ProgressDemo() {
 	t.Header("Progress Indicator Demo")
-	
+
 	// Simple progress bar
 	t.Info("Downloading templates...")
 	stop := t.StartSpinner("Connecting to repository")
 	time.Sleep(2 * time.Second)
 	stop()
-	
+
 	t.StartProgress("download", "Downloading templates", 100)
 	for i := 0; i <= 100; i += 5 {
 		t.UpdateProgress("download", int64(i))
@@ -460,32 +460,32 @@ func (t *Terminal) ProgressDemo() {
 	}
 	t.FinishProgress("download")
 	t.Success("Templates downloaded successfully")
-	
+
 	// Multi-task progress
 	t.Info("\nRunning security scans...")
-	
+
 	if t.multiProg != nil {
 		// Add tasks
 		task1 := t.multiProg.AddTask("scan1", "Prompt Injection Tests")
 		task2 := t.multiProg.AddTask("scan2", "Data Leakage Tests")
 		task3 := t.multiProg.AddTask("scan3", "Model Manipulation Tests")
-		
+
 		// Update task states
 		t.multiProg.UpdateTask(task1.ID, TaskRunning, 0.0, "Initializing...")
 		time.Sleep(500 * time.Millisecond)
-		
+
 		t.multiProg.UpdateTask(task1.ID, TaskRunning, 0.5, "Running test suite...")
 		t.multiProg.UpdateTask(task2.ID, TaskRunning, 0.0, "Preparing payloads...")
 		time.Sleep(1 * time.Second)
-		
+
 		t.multiProg.UpdateTask(task1.ID, TaskCompleted, 1.0, "15 tests passed")
 		t.multiProg.UpdateTask(task2.ID, TaskRunning, 0.7, "Analyzing responses...")
 		t.multiProg.UpdateTask(task3.ID, TaskRunning, 0.2, "Testing boundaries...")
 		time.Sleep(1 * time.Second)
-		
+
 		t.multiProg.UpdateTask(task2.ID, TaskCompleted, 1.0, "8 tests passed")
 		t.multiProg.UpdateTask(task3.ID, TaskFailed, 0.8, "Connection timeout")
-		
+
 		// Render final state
 		t.Print("\n%s", t.multiProg.Render())
 	}
@@ -499,4 +499,57 @@ func (t *Terminal) Dimensions() (width, height int) {
 // IsTerminal returns true if output is a terminal
 func (t *Terminal) IsTerminal() bool {
 	return t.isTerminal
+}
+
+// Section prints a section header
+func (t *Terminal) Section(title string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.colorOutput {
+		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
+		fmt.Fprintf(t.output, "\n%s %s\n%s\n",
+			headerColor("▶"),
+			headerColor(title),
+			strings.Repeat("─", len(title)+2),
+		)
+	} else {
+		fmt.Fprintf(t.output, "\n▶ %s\n%s\n",
+			title,
+			strings.Repeat("─", len(title)+2),
+		)
+	}
+
+	t.lastLines = 3
+}
+
+// KeyValue prints a key-value pair
+func (t *Terminal) KeyValue(key string, value interface{}) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.colorOutput {
+		keyColor := color.New(color.FgCyan).SprintFunc()
+		valueColor := color.New(color.FgWhite).SprintFunc()
+		fmt.Fprintf(t.output, "%s: %s\n", keyColor(key), valueColor(fmt.Sprintf("%v", value)))
+	} else {
+		fmt.Fprintf(t.output, "%s: %v\n", key, value)
+	}
+
+	t.lastLines = 1
+}
+
+// Subheader prints a subheader
+func (t *Terminal) Subheader(text string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.colorOutput {
+		subheaderColor := color.New(color.FgCyan, color.Bold).SprintFunc()
+		fmt.Fprintln(t.output, subheaderColor(text))
+	} else {
+		fmt.Fprintln(t.output, text)
+	}
+
+	t.lastLines = 1
 }
