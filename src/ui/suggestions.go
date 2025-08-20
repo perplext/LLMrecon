@@ -252,13 +252,10 @@ func (cs *CommandSuggester) ShowSuggestions() {
 		command := cs.highlightPlaceholders(suggestion.Command)
 		
 		cs.terminal.Print("%d. %s", i+1, command)
-		cs.terminal.Print("   %s", cs.terminal.formatter.Muted(suggestion.Description))
+		cs.terminal.Muted("   %s", suggestion.Description)
 		
 		if suggestion.Reason != "" {
-			cs.terminal.Print("   %s %s", 
-				cs.terminal.formatter.Info("→"),
-				cs.terminal.formatter.Muted(suggestion.Reason),
-			)
+			cs.terminal.Info("   → %s", suggestion.Reason)
 		}
 		
 		fmt.Println()
@@ -367,7 +364,8 @@ func (cs *CommandSuggester) highlightPlaceholders(command string) string {
 	result := command
 	for _, placeholder := range placeholders {
 		if strings.Contains(result, placeholder) {
-			highlighted := cs.terminal.formatter.Highlight(placeholder)
+			// Simple highlight replacement (no color formatting for now)
+			highlighted := fmt.Sprintf("[%s]", placeholder)
 			result = strings.ReplaceAll(result, placeholder, highlighted)
 		}
 	}

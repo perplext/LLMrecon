@@ -294,7 +294,7 @@ Data Redaction: %s`,
 // Helper methods
 
 func (ec *ExportConfigurator) askYesNo(question string, defaultYes bool) bool {
-	result, _ := ec.terminal.Confirm(question)
+	result, _ := ec.terminal.Confirm(question, defaultYes)
 	return result
 }
 
@@ -344,6 +344,9 @@ func (ec *ExportConfigurator) saveConfigTemplate(config *ExportConfig) error {
 	
 	// Save template (in real implementation)
 	ec.terminal.Success(fmt.Sprintf("Template '%s' saved successfully!", name))
+	if description != "" {
+		ec.terminal.Info("Description: " + description)
+	}
 	ec.terminal.Info("Use --export-template " + name + " to reuse this configuration")
 	
 	return nil
@@ -437,7 +440,7 @@ func (ec *ExportConfigurator) QuickExport(preset string, data interface{}) (*Exp
 		ec.preview.ShowPreview(config.Format, data)
 		
 		// Confirm
-		if confirmed, _ := ec.terminal.Confirm("Use this preset?"); confirmed {
+		if confirmed, _ := ec.terminal.Confirm("Use this preset?", true); confirmed {
 			return config, nil
 		}
 	}

@@ -274,7 +274,7 @@ func (r *Runner) showSummary(results []TaskResult, totalDuration time.Duration) 
 		headers := []string{"Task", "Status", "Duration", "Retries"}
 		rows := make([][]string, 0, len(results))
 
-		for i, result := range results {
+		for _, result := range results {
 			task := r.tasks[result.TaskIndex]
 			status := "✓ Success"
 			if !result.Success {
@@ -296,7 +296,7 @@ func (r *Runner) showSummary(results []TaskResult, totalDuration time.Duration) 
 	// Failed task details
 	if failed > 0 && r.options.ShowTaskDetails {
 		r.terminal.Print("\nFailed Tasks:")
-		for i, result := range results {
+		for _, result := range results {
 			if !result.Success && result.Error != nil {
 				task := r.tasks[result.TaskIndex]
 				r.terminal.Print("  • %s: %v", task.Name, result.Error)

@@ -217,8 +217,30 @@ func (t *Terminal) Header(title string) {
 	t.lastLines = 5
 }
 
-// Table prints a formatted table
-func (t *Terminal) Table(headers []string, rows [][]string) {
+// Table prints a formatted table with variadic arguments
+// Can be called as:
+// - Table(headers, rows) - separate headers and rows
+// - Table(table) - table where first row contains headers
+func (t *Terminal) Table(args ...interface{}) {
+	if len(args) == 1 {
+		// Single argument - table with headers as first row
+		if table, ok := args[0].([][]string); ok && len(table) > 0 {
+			headers := table[0]
+			rows := table[1:]
+			t.tableImpl(headers, rows)
+		}
+	} else if len(args) == 2 {
+		// Two arguments - separate headers and rows
+		if headers, ok := args[0].([]string); ok {
+			if rows, ok := args[1].([][]string); ok {
+				t.tableImpl(headers, rows)
+			}
+		}
+	}
+}
+
+// tableImpl is the actual table implementation
+func (t *Terminal) tableImpl(headers []string, rows [][]string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -552,4 +574,242 @@ func (t *Terminal) Subheader(text string) {
 	}
 
 	t.lastLines = 1
+}
+
+// HasInput checks if there is input available
+func (t *Terminal) HasInput() bool {
+	if f, ok := t.input.(*os.File); ok {
+		// Use term package to check for input availability
+		// This is a simplified implementation
+		return term.IsTerminal(int(f.Fd()))
+	}
+	return false
+}
+
+// ReadKey reads a single key from input
+func (t *Terminal) ReadKey() string {
+	if f, ok := t.input.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
+		// Set terminal to raw mode for single character reading
+		oldState, err := term.MakeRaw(int(f.Fd()))
+		if err != nil {
+			return ""
+		}
+		defer term.Restore(int(f.Fd()), oldState)
+
+		// Read a single byte
+		var b [1]byte
+		_, err = f.Read(b[:])
+		if err != nil {
+			return ""
+		}
+		return string(rune(b[0]))
+	}
+	
+	// Fallback for non-terminal input
+	var input string
+	_, err := fmt.Fscanln(t.input, &input)
+	if err != nil {
+		return ""
+	}
+	if len(input) > 0 {
+		return string(rune(input[0]))
+	}
+	return ""
+}
+
+// Box prints content in a bordered box
+func (t *Terminal) Box(title, content string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	lines := strings.Split(content, "\n")
+	maxWidth := len(title)
+	
+	// Find the maximum line width
+	for _, line := range lines {
+		if len(line) > maxWidth {
+			maxWidth = len(line)
+		}
+	}
+	
+	// Ensure minimum width and add padding
+	maxWidth += 4
+	if maxWidth < 20 {
+		maxWidth = 20
+	}
+	
+	border := strings.Repeat("─", maxWidth-2)
+	
+	if t.colorOutput {
+		boxColor := color.New(color.FgCyan).SprintFunc()
+		titleColor := color.New(color.FgCyan, color.Bold).SprintFunc()
+		
+		// Top border with title
+		fmt.Fprintf(t.output, "%s\n", boxColor("┌─"+border+"─┐"))
+		fmt.Fprintf(t.output, "%s %s %s\n", boxColor("│"), titleColor(fmt.Sprintf("%-*s", maxWidth-4, title)), boxColor("│"))
+		fmt.Fprintf(t.output, "%s\n", boxColor("├─"+border+"─┤"))
+		
+		// Content lines
+		for _, line := range lines {
+			fmt.Fprintf(t.output, "%s %-*s %s\n", boxColor("│"), maxWidth-4, line, boxColor("│"))
+		}
+		
+		// Bottom border
+		fmt.Fprintf(t.output, "%s\n", boxColor("└─"+border+"─┘"))
+	} else {
+		// Top border with title
+		fmt.Fprintf(t.output, "┌─%s─┐\n", border)
+		fmt.Fprintf(t.output, "│ %-*s │\n", maxWidth-4, title)
+		fmt.Fprintf(t.output, "├─%s─┤\n", border)
+		
+		// Content lines
+		for _, line := range lines {
+			fmt.Fprintf(t.output, "│ %-*s │\n", maxWidth-4, line)
+		}
+		
+		// Bottom border
+		fmt.Fprintf(t.output, "└─%s─┘\n", border)
+	}
+	
+	t.lastLines = len(lines) + 4
+}
+
+// HeaderBox prints a header in a box format
+func (t *Terminal) HeaderBox(title string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	width := len(title) + 4
+	if width < 20 {
+		width = 20
+	}
+	
+	border := strings.Repeat("─", width-2)
+	
+	if t.colorOutput {
+		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
+		fmt.Fprintf(t.output, "\n%s\n", headerColor("┌─"+border+"─┐"))
+		fmt.Fprintf(t.output, "%s\n", headerColor(fmt.Sprintf("│ %-*s │", width-4, title)))
+		fmt.Fprintf(t.output, "%s\n\n", headerColor("└─"+border+"─┘"))
+	} else {
+		fmt.Fprintf(t.output, "\n┌─%s─┐\n", border)
+		fmt.Fprintf(t.output, "│ %-*s │\n", width-4, title)
+		fmt.Fprintf(t.output, "└─%s─┘\n\n", border)
+	}
+	
+	t.lastLines = 5
+}
+
+// Printf prints formatted text
+func (t *Terminal) Printf(format string, args ...interface{}) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	message := fmt.Sprintf(format, args...)
+	fmt.Fprint(t.output, message)
+	t.lastLines = strings.Count(message, "\n")
+	if !strings.HasSuffix(message, "\n") {
+		t.lastLines++
+	}
+}
+
+// Input prompts for user input with an optional default value
+func (t *Terminal) Input(prompt string, defaultValue string) (string, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	// Display prompt with default value if provided
+	if defaultValue != "" {
+		fmt.Fprintf(t.output, "%s [%s]: ", prompt, defaultValue)
+	} else {
+		fmt.Fprintf(t.output, "%s: ", prompt)
+	}
+
+	var response string
+	_, err := fmt.Fscanln(t.input, &response)
+	if err != nil {
+		// If there was an error reading (e.g., just pressing Enter), return default
+		if defaultValue != "" {
+			return defaultValue, nil
+		}
+		return "", err
+	}
+
+	// If user entered nothing and we have a default, use it
+	if strings.TrimSpace(response) == "" && defaultValue != "" {
+		return defaultValue, nil
+	}
+
+	return response, nil
+}
+
+// Subsection prints a subsection header (smaller than Section)
+func (t *Terminal) Subsection(title string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.colorOutput {
+		subheaderColor := color.New(color.FgCyan).SprintFunc()
+		fmt.Fprintf(t.output, "\n%s %s\n%s\n",
+			subheaderColor("▸"),
+			subheaderColor(title),
+			strings.Repeat("─", len(title)+2),
+		)
+	} else {
+		fmt.Fprintf(t.output, "\n▸ %s\n%s\n",
+			title,
+			strings.Repeat("─", len(title)+2),
+		)
+	}
+
+	t.lastLines = 3
+}
+
+// Muted prints text in a muted/gray color
+func (t *Terminal) Muted(format string, args ...interface{}) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	message := fmt.Sprintf(format, args...)
+
+	if t.colorOutput {
+		mutedColor := color.New(color.FgHiBlack).SprintFunc()
+		fmt.Fprintln(t.output, mutedColor(message))
+	} else {
+		fmt.Fprintln(t.output, message)
+	}
+
+	t.lastLines = strings.Count(message, "\n") + 1
+}
+
+// Code prints formatted code with syntax highlighting
+func (t *Terminal) Code(code string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.colorOutput {
+		codeColor := color.New(color.FgGreen).SprintFunc()
+		fmt.Fprintf(t.output, "  %s\n", codeColor(code))
+	} else {
+		fmt.Fprintf(t.output, "  %s\n", code)
+	}
+
+	t.lastLines = strings.Count(code, "\n") + 1
+}
+
+// Bold prints text in bold
+func (t *Terminal) Bold(format string, args ...interface{}) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	message := fmt.Sprintf(format, args...)
+
+	if t.colorOutput {
+		boldColor := color.New(color.Bold).SprintFunc()
+		fmt.Fprintln(t.output, boldColor(message))
+	} else {
+		fmt.Fprintln(t.output, message)
+	}
+
+	t.lastLines = strings.Count(message, "\n") + 1
 }

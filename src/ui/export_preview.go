@@ -108,10 +108,10 @@ func (ep *ExportPreview) ShowFormatSelection(data interface{}) (string, error) {
 	selectedFormat := formats[choice]
 	
 	// Show preview
-	ep.showPreview(selectedFormat, data)
+	ep.ShowPreview(selectedFormat.Name, data)
 	
 	// Confirm selection
-	confirm, err := ep.terminal.Confirm("Export in " + selectedFormat.Name + " format?")
+	confirm, err := ep.terminal.Confirm("Export in " + selectedFormat.Name + " format?", true)
 	if err != nil {
 		return "", err
 	}
@@ -797,7 +797,7 @@ func (ep *ExportPreview) ShowComparisonPreview(formats []string, data interface{
 			format := ep.getFormatByID(formatID)
 			ep.terminal.Section(format.Name + " Preview")
 			lines := strings.Split(previews[formatID], "\n")
-			for i, line := range lines[:min(10, len(lines))] {
+			for _, line := range lines[:min(10, len(lines))] {
 				fmt.Println(ep.formatPreviewLine(line, format))
 			}
 			if len(lines) > 10 {

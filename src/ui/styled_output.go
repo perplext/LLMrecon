@@ -401,7 +401,7 @@ func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][
 	fmt.Fprintln(so.writer, so.formatter.Muted(separatorLine.String()))
 
 	// Print rows with alternating colors
-	for i, row := range rows {
+	for _, row := range rows {
 		var rowLine strings.Builder
 		
 		for j, cell := range row {

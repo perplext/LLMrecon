@@ -58,14 +58,10 @@ func (hs *HelpSystem) initializeContent() {
 		{
 			Command:     "LLMrecon scan --template prompt-injection --target api.example.com",
 			Description: "Run a prompt injection scan against an API",
-			Output:      "Scanning api.example.com with prompt-injection template...\n✓ 15 test cases executed\n⚠ 3 vulnerabilities found",
-			Tags:        []string{"security", "api", "prompt-injection"},
 		},
 		{
 			Command:     "LLMrecon scan --owasp-category LLM01 --severity high",
 			Description: "Scan for high-severity OWASP LLM01 vulnerabilities",
-			Output:      "Loading templates for OWASP LLM01 (high severity)...\n✓ 8 templates loaded\n✓ Starting scan...",
-			Tags:        []string{"owasp", "compliance", "severity"},
 		},
 	}
 	
@@ -73,14 +69,10 @@ func (hs *HelpSystem) initializeContent() {
 		{
 			Command:     "LLMrecon template list --category prompt-injection",
 			Description: "List all prompt injection templates",
-			Output:      "Available prompt-injection templates:\n- basic-injection-v1.0\n- indirect-injection-v2.0\n- jailbreak-attempts-v1.5",
-			Tags:        []string{"template", "list", "discovery"},
 		},
 		{
 			Command:     "LLMrecon template validate my-template.yaml",
 			Description: "Validate a custom template",
-			Output:      "Validating my-template.yaml...\n✓ Schema validation passed\n✓ Syntax check passed\n✓ Template is valid",
-			Tags:        []string{"template", "validation", "development"},
 		},
 	}
 	
@@ -284,12 +276,6 @@ func (hs *HelpSystem) viewExamples() {
 	for i, ex := range examples {
 		hs.terminal.Subsection(fmt.Sprintf("Example %d: %s", i+1, ex.Description))
 		hs.terminal.Code(ex.Command)
-		if ex.Output != "" {
-			hs.terminal.Box("Expected Output", ex.Output)
-		}
-		if len(ex.Tags) > 0 {
-			hs.terminal.Muted("Tags: " + strings.Join(ex.Tags, ", "))
-		}
 		fmt.Println()
 	}
 	
@@ -429,7 +415,7 @@ func (hs *HelpSystem) showErrorHelp() {
 	hs.terminal.Error("Last error: " + hs.context.ErrorContext)
 	
 	// Provide context-specific error help
-	suggestions := hs.suggester.GetErrorSuggestions(hs.context.ErrorContext)
+	suggestions := hs.suggester.GetSuggestions()
 	if len(suggestions) > 0 {
 		hs.terminal.Subsection("Suggested Solutions")
 		for _, sug := range suggestions {
