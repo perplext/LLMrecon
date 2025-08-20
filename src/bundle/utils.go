@@ -3,6 +3,8 @@ package bundle
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 )
 
 // clearDirectory removes all files and directories in a directory
@@ -31,6 +33,7 @@ func clearDirectory(dir string) error {
 	}
 
 	return nil
+}
 
 // copyDirUtil copies a directory and its contents to another directory (utility version)
 func copyDirUtil(src, dst string) error {
@@ -73,6 +76,7 @@ func copyDirUtil(src, dst string) error {
 	}
 
 	return nil
+}
 
 // copyFileUtil copies a file from src to dst (utility version)
 func copyFileUtil(src, dst string) error {
@@ -101,3 +105,5 @@ func copyFileUtil(src, dst string) error {
 		return fmt.Errorf("failed to copy file contents: %w", err)
 	}
 
+	return nil
+}

@@ -17,3 +17,4 @@ func RegisterProviders(providerFactory *factory.ProviderFactory) {
 	providerFactory.RegisterProvider(core.AnthropicProvider, anthropic.NewAnthropicProvider)
 
 	// Additional providers can be registered here
+}

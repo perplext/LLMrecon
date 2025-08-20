@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"sync"
+	"time"
 	
 	"github.com/go-redis/redis/v8"
 )
@@ -16,6 +19,7 @@ import (
 type PolicySource interface {
 	// GetPolicies returns the current set of rate limit policies
 	GetPolicies(ctx context.Context) ([]*UserRateLimitPolicy, error)
+}
 
 // FilePolicySource implements PolicySource using a JSON file
 type FilePolicySource struct {
@@ -24,12 +28,14 @@ type FilePolicySource struct {
 	
 	// Last modified time of the file
 	lastModified time.Time
+}
 
 // NewFilePolicySource creates a new file-based policy source
 func NewFilePolicySource(filePath string) *FilePolicySource {
 	return &FilePolicySource{
 		filePath: filePath,
 	}
+}
 
 // GetPolicies reads policies from the JSON file
 func (s *FilePolicySource) GetPolicies(ctx context.Context) ([]*UserRateLimitPolicy, error) {
@@ -60,6 +66,7 @@ func (s *FilePolicySource) GetPolicies(ctx context.Context) ([]*UserRateLimitPol
 	s.lastModified = info.ModTime()
 	
 	return policies, nil
+}
 
 // RedisChannelPolicySource implements PolicySource using Redis pub/sub
 type RedisChannelPolicySource struct {
@@ -77,6 +84,7 @@ type RedisChannelPolicySource struct {
 	
 	// Whether new policies have been received
 	hasNewPolicies bool
+}
 
 // NewRedisChannelPolicySource creates a new Redis-based policy source
 func NewRedisChannelPolicySource(client redis.UniversalClient, channel string) *RedisChannelPolicySource {
@@ -89,6 +97,7 @@ func NewRedisChannelPolicySource(client redis.UniversalClient, channel string) *
 	go source.subscribe()
 	
 	return source
+}
 
 // subscribe subscribes to the Redis channel for policy updates
 func (s *RedisChannelPolicySource) subscribe() {
@@ -118,6 +127,7 @@ func (s *RedisChannelPolicySource) subscribe() {
 		s.hasNewPolicies = true
 		s.mu.Unlock()
 	}
+}
 
 // GetPolicies returns the latest policies received from Redis
 func (s *RedisChannelPolicySource) GetPolicies(ctx context.Context) ([]*UserRateLimitPolicy, error) {
@@ -132,6 +142,7 @@ func (s *RedisChannelPolicySource) GetPolicies(ctx context.Context) ([]*UserRate
 	// Reset flag and return policies
 	s.hasNewPolicies = false
 	return s.latestPolicies, nil
+}
 
 // PolicyUpdater manages dynamic updates to rate limit policies
 type PolicyUpdater struct {
@@ -162,12 +173,13 @@ type PolicyUpdater struct {
 	
 	// Callback for policy updates
 	onUpdate func([]*UserRateLimitPolicy)
+}
 
 // NewPolicyUpdater creates a new policy updater
 func NewPolicyUpdater(limiter interface {
 	SetUserPolicy(*UserRateLimitPolicy)
 	GetUserPolicy(string) *UserRateLimitPolicy
-) *PolicyUpdater {
+}) *PolicyUpdater {
 	ctx, cancel := context.WithCancel(context.Background())
 	
 	return &PolicyUpdater{
@@ -177,6 +189,7 @@ func NewPolicyUpdater(limiter interface {
 		ctx:            ctx,
 		cancel:         cancel,
 	}
+}
 
 // AddSource adds a policy source
 func (u *PolicyUpdater) AddSource(source PolicySource) {
@@ -184,6 +197,7 @@ func (u *PolicyUpdater) AddSource(source PolicySource) {
 	defer u.mu.Unlock()
 	
 	u.sources = append(u.sources, source)
+}
 
 // SetUpdateInterval sets the update interval
 func (u *PolicyUpdater) SetUpdateInterval(interval time.Duration) {
@@ -191,6 +205,7 @@ func (u *PolicyUpdater) SetUpdateInterval(interval time.Duration) {
 	defer u.mu.Unlock()
 	
 	u.updateInterval = interval
+}
 
 // SetUpdateCallback sets a callback function to be called when policies are updated
 func (u *PolicyUpdater) SetUpdateCallback(callback func([]*UserRateLimitPolicy)) {
@@ -198,6 +213,7 @@ func (u *PolicyUpdater) SetUpdateCallback(callback func([]*UserRateLimitPolicy))
 	defer u.mu.Unlock()
 	
 	u.onUpdate = callback
+}
 
 // Start starts the policy updater
 func (u *PolicyUpdater) Start() {
@@ -212,6 +228,7 @@ func (u *PolicyUpdater) Start() {
 	u.wg.Add(1)
 	
 	go u.run()
+}
 
 // Stop stops the policy updater
 func (u *PolicyUpdater) Stop() {
@@ -225,6 +242,7 @@ func (u *PolicyUpdater) Stop() {
 	
 	u.cancel()
 	u.wg.Wait()
+}
 
 // run runs the policy updater loop
 func (u *PolicyUpdater) run() {
@@ -244,6 +262,7 @@ func (u *PolicyUpdater) run() {
 			return
 		}
 	}
+}
 
 // updatePolicies updates policies from all sources
 func (u *PolicyUpdater) updatePolicies() {
@@ -283,6 +302,7 @@ func (u *PolicyUpdater) updatePolicies() {
 	if len(updatedPolicies) > 0 && callback != nil {
 		callback(updatedPolicies)
 	}
+}
 // CreateDefaultPolicyFile creates a default policy file if it doesn't exist
 func CreateDefaultPolicyFile(filePath string) error {
 	// Check if file already exists
@@ -336,3 +356,5 @@ func CreateDefaultPolicyFile(filePath string) error {
 		return fmt.Errorf("failed to write default policies: %w", err)
 	}
 	
+	return nil
+}

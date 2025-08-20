@@ -6,6 +6,8 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/x509"
+	"sync"
+	"time"
 )
 
 // KeyType represents the type of cryptographic key
@@ -22,6 +24,10 @@ const (
 	SymmetricKey KeyType = "symmetric"
 	// CertificateKey represents a certificate with private key
 	CertificateKey KeyType = "certificate"
+	
+	// Alternative constants used in other files
+	KeyTypeRSA KeyType = "rsa"
+	KeyTypeAES KeyType = "aes"
 )
 
 // KeyUsage represents the intended usage of a key
@@ -88,6 +94,7 @@ type KeyMetadata struct {
 	RotationPeriod int `json:"rotation_period,omitempty"`
 	// Fingerprint is a unique fingerprint of the key
 	Fingerprint string `json:"fingerprint,omitempty"`
+}
 
 // KeyMaterial contains the actual key material
 type KeyMaterial struct {
@@ -99,6 +106,7 @@ type KeyMaterial struct {
 	Certificate []byte `json:"certificate,omitempty"`
 	// Format is the format of the key data (e.g., "PEM", "DER")
 	Format string `json:"format"`
+}
 
 // Key represents a cryptographic key with its metadata
 type Key struct {
@@ -106,6 +114,7 @@ type Key struct {
 	Metadata KeyMetadata `json:"metadata"`
 	// Material contains the actual key material
 	Material KeyMaterial `json:"material,omitempty"`
+}
 
 // KeyStore defines the interface for key storage operations
 type KeyStore interface {
@@ -168,6 +177,7 @@ type KeyStore interface {
 	
 	// Close closes the key store
 	Close() error
+}
 
 // KeyStoreOptions contains options for creating a key store
 type KeyStoreOptions struct {
@@ -188,6 +198,7 @@ type KeyStoreOptions struct {
 	
 	// AlertCallback is called when a key needs rotation
 	AlertCallback func(key *KeyMetadata, daysUntilExpiration int)
+}
 
 // HSMConfig contains configuration for HSM integration
 type HSMConfig struct {
@@ -211,6 +222,7 @@ type HSMConfig struct {
 	
 	// KeyLabel is the prefix for key labels in the HSM
 	KeyLabel string
+}
 
 // KeyRotationPolicy defines when keys should be rotated
 type KeyRotationPolicy struct {
@@ -224,3 +236,31 @@ type KeyRotationPolicy struct {
 	LastRotation time.Time
 	
 	// WarningDays is the number of days before expiration to start showing warnings
+	WarningDays int
+}
+
+// KeyEntry represents a key entry in the keystore
+type KeyEntry struct {
+	// ID is a unique identifier for the key
+	ID string `json:"id"`
+	// Type is the type of key
+	Type KeyType `json:"type"`
+	// Algorithm is the algorithm used by the key
+	Algorithm string `json:"algorithm"`
+	// Key is the actual key material
+	Key interface{} `json:"key"`
+	// Metadata contains additional key metadata
+	Metadata map[string]string `json:"metadata"`
+	// CreatedAt is when the key was created
+	CreatedAt time.Time `json:"created_at"`
+	// UpdatedAt is when the key was last updated
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// Keystore represents a keystore implementation
+type Keystore struct {
+	// keys is a map of key ID to KeyEntry
+	keys map[string]*KeyEntry
+	// mu protects the keys map
+	mu sync.RWMutex
+}

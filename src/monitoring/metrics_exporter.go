@@ -226,3 +226,5 @@ func StartMetricsServer(ctx context.Context, addr string, exporter *MetricsExpor
 		_ = server.Shutdown(context.Background()) // Best effort shutdown
 	}()
 	
+	return server.ListenAndServe()
+}

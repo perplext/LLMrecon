@@ -16,14 +16,17 @@ type InjectionPatternCheck struct{}
 // NewInjectionPatternCheck creates a new injection pattern check
 func NewInjectionPatternCheck() *InjectionPatternCheck {
 	return &InjectionPatternCheck{}
+}
 
 // Name returns the name of the check
 func (c *InjectionPatternCheck) Name() string {
 	return "Injection Pattern Check"
+}
 
 // Description returns a description of the check
 func (c *InjectionPatternCheck) Description() string {
 	return "Checks for potential injection vulnerabilities in templates"
+}
 
 // Check checks a template for injection vulnerabilities
 func (c *InjectionPatternCheck) Check(template *format.Template, options *VerificationOptions) []*SecurityIssue {
@@ -209,6 +212,7 @@ func (c *InjectionPatternCheck) Check(template *format.Template, options *Verifi
 	}
 
 	return issues
+}
 
 // RegexSafetyCheck checks for potentially dangerous regex patterns in templates
 type RegexSafetyCheck struct{}
@@ -216,14 +220,17 @@ type RegexSafetyCheck struct{}
 // NewRegexSafetyCheck creates a new regex safety check
 func NewRegexSafetyCheck() *RegexSafetyCheck {
 	return &RegexSafetyCheck{}
+}
 
 // Name returns the name of the check
 func (c *RegexSafetyCheck) Name() string {
 	return "Regex Safety Check"
+}
 
 // Description returns a description of the check
 func (c *RegexSafetyCheck) Description() string {
 	return "Checks for potentially dangerous regex patterns in templates"
+}
 
 // Check checks a template for dangerous regex patterns
 func (c *RegexSafetyCheck) Check(template *format.Template, options *VerificationOptions) []*SecurityIssue {
@@ -310,6 +317,7 @@ func (c *RegexSafetyCheck) Check(template *format.Template, options *Verificatio
 	}
 
 	return issues
+}
 
 // InputValidationCheck checks for missing input validation in templates
 type InputValidationCheck struct{}
@@ -317,14 +325,17 @@ type InputValidationCheck struct{}
 // NewInputValidationCheck creates a new input validation check
 func NewInputValidationCheck() *InputValidationCheck {
 	return &InputValidationCheck{}
+}
 
 // Name returns the name of the check
 func (c *InputValidationCheck) Name() string {
 	return "Input Validation Check"
+}
 
 // Description returns a description of the check
 func (c *InputValidationCheck) Description() string {
 	return "Checks for missing input validation in templates"
+}
 
 // Check checks a template for missing input validation
 func (c *InputValidationCheck) Check(template *format.Template, options *VerificationOptions) []*SecurityIssue {
@@ -422,6 +433,7 @@ func (c *InputValidationCheck) Check(template *format.Template, options *Verific
 	}
 
 	return issues
+}
 
 // TemplateFormatCheck checks for template format issues
 type TemplateFormatCheck struct{}
@@ -429,14 +441,17 @@ type TemplateFormatCheck struct{}
 // NewTemplateFormatCheck creates a new template format check
 func NewTemplateFormatCheck() *TemplateFormatCheck {
 	return &TemplateFormatCheck{}
+}
 
 // Name returns the name of the check
 func (c *TemplateFormatCheck) Name() string {
 	return "Template Format Check"
+}
 
 // Description returns a description of the check
 func (c *TemplateFormatCheck) Description() string {
 	return "Checks for template format issues"
+}
 
 // Check checks a template for format issues
 func (c *TemplateFormatCheck) Check(template *format.Template, options *VerificationOptions) []*SecurityIssue {
@@ -457,6 +472,7 @@ func (c *TemplateFormatCheck) Check(template *format.Template, options *Verifica
 	}
 
 	return issues
+}
 
 // DataLeakageCheck checks for potential data leakage in templates
 type DataLeakageCheck struct{}
@@ -464,14 +480,17 @@ type DataLeakageCheck struct{}
 // NewDataLeakageCheck creates a new data leakage check
 func NewDataLeakageCheck() *DataLeakageCheck {
 	return &DataLeakageCheck{}
+}
 
 // Name returns the name of the check
 func (c *DataLeakageCheck) Name() string {
 	return "Data Leakage Check"
+}
 
 // Description returns a description of the check
 func (c *DataLeakageCheck) Description() string {
 	return "Checks for potential data leakage in templates"
+}
 
 // Check checks a template for potential data leakage
 func (c *DataLeakageCheck) Check(template *format.Template, options *VerificationOptions) []*SecurityIssue {
@@ -545,3 +564,6 @@ func (c *DataLeakageCheck) Check(template *format.Template, options *Verificatio
 		}
 	}
 
+
+	return issues
+}

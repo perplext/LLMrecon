@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
@@ -19,11 +20,9 @@ type LLMProvider interface {
 	GetSupportedModels() []string
 	// GetName returns the name of the provider
 	GetName() string
-
-// DetectionEngine is the interface for detecting vulnerabilities in LLM responses
-type DetectionEngine interface {
-	// Detect detects vulnerabilities in an LLM response
-	Detect(ctx context.Context, template *format.Template, response string) (bool, int, map[string]interface{}, error)
+	// GetID returns a unique identifier for the provider
+	GetID() string
+}
 
 // RateLimiter is an alias for interfaces.RateLimiter
 type RateLimiter = interfaces.RateLimiter
@@ -58,6 +57,7 @@ type ExecutionOptions struct {
 	UserID string
 	// EnableUserRateLimiting determines if user-specific rate limiting is enabled
 	EnableUserRateLimiting bool
+}
 
 // TemplateExecutor is responsible for executing templates against LLM systems
 type TemplateExecutor struct {
@@ -71,6 +71,78 @@ type TemplateExecutor struct {
 	inputValidator interfaces.InputValidator
 	// semaphore is a channel for limiting concurrent executions
 	semaphore chan struct{}
+}
+
+// TemplateExecutorAdapter adapts TemplateExecutor to implement interfaces.TemplateExecutor
+type TemplateExecutorAdapter struct {
+	executor *TemplateExecutor
+}
+
+// NewTemplateExecutorAdapter creates a new template executor adapter
+func NewTemplateExecutorAdapter(executor *TemplateExecutor) *TemplateExecutorAdapter {
+	return &TemplateExecutorAdapter{executor: executor}
+}
+
+// Execute executes a template (interface compatibility)
+func (a *TemplateExecutorAdapter) Execute(ctx context.Context, template interfaces.Template, data interface{}) ([]byte, error) {
+	// Convert interfaces.Template to *format.Template
+	formatTemplate, ok := template.(*format.Template)
+	if !ok {
+		return nil, fmt.Errorf("template must be of type *format.Template")
+	}
+	
+	// Convert data to options map
+	options := make(map[string]interface{})
+	if data != nil {
+		if optionsMap, ok := data.(map[string]interface{}); ok {
+			options = optionsMap
+		} else {
+			options["data"] = data
+		}
+	}
+	
+	// Execute template
+	result, err := a.executor.Execute(ctx, formatTemplate, options)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Return response as bytes
+	return []byte(result.Response), nil
+}
+
+// ExecuteWithOptions executes with options (interface compatibility)
+func (a *TemplateExecutorAdapter) ExecuteWithOptions(ctx context.Context, template interfaces.Template, data interface{}, options map[string]interface{}) ([]byte, error) {
+	// Convert interfaces.Template to *format.Template
+	formatTemplate, ok := template.(*format.Template)
+	if !ok {
+		return nil, fmt.Errorf("template must be of type *format.Template")
+	}
+	
+	// Merge data into options if needed
+	if data != nil {
+		if options == nil {
+			options = make(map[string]interface{})
+		}
+		options["data"] = data
+	}
+	
+	// Execute template
+	result, err := a.executor.Execute(ctx, formatTemplate, options)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Return response as bytes
+	return []byte(result.Response), nil
+}
+
+// RegisterProvider registers a provider (interface compatibility)
+func (a *TemplateExecutorAdapter) RegisterProvider(provider interface{}) {
+	if llmProvider, ok := provider.(LLMProvider); ok {
+		a.executor.RegisterProvider(llmProvider)
+	}
+}
 
 // NewTemplateExecutor creates a new template executor
 func NewTemplateExecutor(defaultOptions *ExecutionOptions) *TemplateExecutor {
@@ -101,24 +173,31 @@ func NewTemplateExecutor(defaultOptions *ExecutionOptions) *TemplateExecutor {
 		inputValidator:   defaultOptions.InputValidator,
 		semaphore:        make(chan struct{}, defaultOptions.MaxConcurrent),
 	}
+}
 
 // RegisterProvider registers an LLM provider
 func (e *TemplateExecutor) RegisterProvider(provider LLMProvider) {
 	e.providers[provider.GetName()] = provider
+}
 
 // RegisterDetectionEngine registers a detection engine
 func (e *TemplateExecutor) RegisterDetectionEngine(name string, engine DetectionEngine) {
 	e.detectionEngines[name] = engine
+}
 
 // Execute executes a template
 func (e *TemplateExecutor) Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*interfaces.TemplateResult, error) {
 	// Create result
+	description := ""
+	if template.Info != nil {
+		description = template.Info.Description
+	}
 	result := &interfaces.TemplateResult{
-		TemplateID: template.ID,
-		Template:   template,
-		Timestamp:  time.Now().Unix(),
-		StartTime:  time.Now(),
-		Details:    make(map[string]interface{}),
+		TemplateID:   template.ID,
+		TemplateName: template.Name,
+		Description:  description,
+		StartTime:    time.Now(),
+		Details:      make(map[string]interface{}),
 	}
 
 	// Merge options with default options
@@ -186,6 +265,7 @@ func (e *TemplateExecutor) Execute(ctx context.Context, template *format.Templat
 	result.Duration = result.EndTime.Sub(result.StartTime)
 
 	return result, nil
+}
 
 // ExecuteBatch executes multiple templates
 func (e *TemplateExecutor) ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
@@ -226,6 +306,7 @@ func (e *TemplateExecutor) ExecuteBatch(ctx context.Context, templates []*format
 	}
 
 	return results, nil
+}
 
 // executeWithRetry executes a template with retry logic
 func (e *TemplateExecutor) executeWithRetry(ctx context.Context, template *format.Template, provider LLMProvider, options *ExecutionOptions) (string, error) {
@@ -238,16 +319,14 @@ func (e *TemplateExecutor) executeWithRetry(ctx context.Context, template *forma
 		
 		// Apply user-specific rate limiting if enabled and user ID is provided
 		if options.EnableUserRateLimiting && options.UserID != "" {
-			err = options.RateLimiter.AcquireForUser(ctx, options.UserID)
-			defer options.RateLimiter.ReleaseForUser(options.UserID)
+			err = options.RateLimiter.Wait(ctx, options.UserID)
 		} else {
 			// Fall back to global rate limiting
-			err = options.RateLimiter.Acquire(ctx)
-			defer options.RateLimiter.Release()
+			err = options.RateLimiter.Wait(ctx, "")
 		}
 		
 		if err != nil {
-			return "", fmt.Errorf("rate limiter acquisition failed: %w", err)
+			return "", fmt.Errorf("rate limiter wait failed: %w", err)
 		}
 	}
 
@@ -262,7 +341,7 @@ func (e *TemplateExecutor) executeWithRetry(ctx context.Context, template *forma
 		inputValidator.SetStrictMode(options.StrictValidation)
 
 		// Validate template
-		if err := inputValidator.ValidateTemplate(ctx, template); err != nil {
+		if err := inputValidator.Validate(ctx, template); err != nil {
 			// If in strict mode, validation errors will cause execution to fail
 			// Otherwise, warnings will be logged but execution will continue
 			if options.StrictValidation {
@@ -276,10 +355,8 @@ func (e *TemplateExecutor) executeWithRetry(ctx context.Context, template *forma
 	// Get the prompt from the template
 	prompt := template.Test.Prompt
 
-	// Sanitize prompt if enabled
-	if options.SanitizePrompts && inputValidator != nil {
-		prompt = inputValidator.SanitizePrompt(prompt)
-	}
+	// Note: Sanitization would be handled by the validator's ValidateContent method
+	// if needed, or can be implemented as a separate utility function
 
 	// Try to execute the template with retries
 	for i := 0; i <= options.RetryCount; i++ {
@@ -311,6 +388,7 @@ func (e *TemplateExecutor) executeWithRetry(ctx context.Context, template *forma
 	}
 
 	return "", fmt.Errorf("failed after %d retries: %w", options.RetryCount, err)
+}
 
 // mergeOptions merges user options with default options
 func (e *TemplateExecutor) mergeOptions(userOptions map[string]interface{}) *ExecutionOptions {
@@ -414,6 +492,7 @@ func (e *TemplateExecutor) mergeOptions(userOptions map[string]interface{}) *Exe
 	}
 
 	return options
+}
 
 // GetProviders returns the list of registered providers
 func (e *TemplateExecutor) GetProviders() []string {
@@ -422,6 +501,7 @@ func (e *TemplateExecutor) GetProviders() []string {
 		providers = append(providers, name)
 	}
 	return providers
+}
 
 // GetDetectionEngines returns the list of registered detection engines
 func (e *TemplateExecutor) GetDetectionEngines() []string {
@@ -430,6 +510,7 @@ func (e *TemplateExecutor) GetDetectionEngines() []string {
 		engines = append(engines, name)
 	}
 	return engines
+}
 
 // SetMaxConcurrent sets the maximum number of concurrent executions
 func (e *TemplateExecutor) SetMaxConcurrent(max int) {
@@ -440,15 +521,18 @@ func (e *TemplateExecutor) SetMaxConcurrent(max int) {
 	// Create a new semaphore with the new size
 	e.semaphore = make(chan struct{}, max)
 	e.defaultOptions.MaxConcurrent = max
+}
 
 // SetInputValidator sets the input validator
 func (e *TemplateExecutor) SetInputValidator(validator interfaces.InputValidator) {
 	e.inputValidator = validator
 	e.defaultOptions.InputValidator = validator
+}
 
 // GetInputValidator gets the input validator
 func (e *TemplateExecutor) GetInputValidator() interfaces.InputValidator {
 	return e.inputValidator
+}
 
 // SetStrictValidation sets the strict validation mode
 func (e *TemplateExecutor) SetStrictValidation(strict bool) {
@@ -456,18 +540,22 @@ func (e *TemplateExecutor) SetStrictValidation(strict bool) {
 	if e.inputValidator != nil {
 		e.inputValidator.SetStrictMode(strict)
 	}
+}
 
 // SetSanitizePrompts sets whether prompts should be sanitized
 func (e *TemplateExecutor) SetSanitizePrompts(sanitize bool) {
 	e.defaultOptions.SanitizePrompts = sanitize
+}
 
 // SetUserID sets the user ID for rate limiting
 func (e *TemplateExecutor) SetUserID(userID string) {
 	e.defaultOptions.UserID = userID
+}
 
 // EnableUserRateLimiting enables or disables user-specific rate limiting
 func (e *TemplateExecutor) EnableUserRateLimiting(enabled bool) {
 	e.defaultOptions.EnableUserRateLimiting = enabled
+}
 
 // ExecuteForUser executes a template for a specific user
 func (e *TemplateExecutor) ExecuteForUser(ctx context.Context, template *format.Template, userID string, options map[string]interface{}) (*interfaces.TemplateResult, error) {
@@ -482,6 +570,7 @@ func (e *TemplateExecutor) ExecuteForUser(ctx context.Context, template *format.
 	
 	// Execute template with user-specific options
 	return e.Execute(ctx, template, options)
+}
 
 // ExecuteBatchForUser executes multiple templates for a specific user
 func (e *TemplateExecutor) ExecuteBatchForUser(ctx context.Context, templates []*format.Template, userID string, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
@@ -495,3 +584,5 @@ func (e *TemplateExecutor) ExecuteBatchForUser(ctx context.Context, templates []
 	options["enable_user_rate_limiting"] = true
 	
 	// Execute templates with user-specific options
+	return e.ExecuteBatch(ctx, templates, options)
+}

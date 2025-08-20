@@ -4,7 +4,11 @@ package bundle
 import (
 	"crypto/ed25519"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
@@ -15,6 +19,7 @@ type OfflineBundleValidator struct {
 	BaseValidator BundleValidator
 	// Logger is the logger for validation operations
 	Logger io.Writer
+}
 
 // NewOfflineBundleValidator creates a new offline bundle validator
 func NewOfflineBundleValidator(logger io.Writer) *OfflineBundleValidator {
@@ -25,10 +30,12 @@ func NewOfflineBundleValidator(logger io.Writer) *OfflineBundleValidator {
 		BaseValidator: NewBundleValidator(logger),
 		Logger:        logger,
 	}
+}
 
 // Validate validates an offline bundle
 func (v *OfflineBundleValidator) Validate(bundle *OfflineBundle, level ValidationLevel) (*ValidationResult, error) {
 	return v.ValidateOfflineBundle(bundle, level)
+}
 
 // ValidateOfflineBundle validates an offline bundle
 func (v *OfflineBundleValidator) ValidateOfflineBundle(bundle *OfflineBundle, level ValidationLevel) (*ValidationResult, error) {
@@ -155,6 +162,7 @@ func (v *OfflineBundleValidator) ValidateOfflineBundle(bundle *OfflineBundle, le
 		Warnings:  []string{},
 		Details:   make(map[string]interface{}),
 	}, nil
+}
 
 // ValidateEnhancedManifest validates an enhanced bundle manifest
 func (v *OfflineBundleValidator) ValidateEnhancedManifest(manifest *EnhancedBundleManifest, level ValidationLevel) (*ValidationResult, error) {
@@ -268,6 +276,7 @@ func (v *OfflineBundleValidator) ValidateEnhancedManifest(manifest *EnhancedBund
 	}
 
 	return result, nil
+}
 
 // ValidateDirectoryStructure validates the directory structure of an offline bundle
 func (v *OfflineBundleValidator) ValidateDirectoryStructure(bundle *OfflineBundle) (*ValidationResult, error) {
@@ -333,6 +342,7 @@ func (v *OfflineBundleValidator) ValidateDirectoryStructure(bundle *OfflineBundl
 	}
 
 	return result, nil
+}
 
 // ValidateComplianceMappings validates the compliance mappings of an offline bundle
 func (v *OfflineBundleValidator) ValidateComplianceMappings(bundle *OfflineBundle) (*ValidationResult, error) {
@@ -399,6 +409,7 @@ func (v *OfflineBundleValidator) ValidateComplianceMappings(bundle *OfflineBundl
 	}
 
 	return result, nil
+}
 
 // ValidateIncrementalBundle validates an incremental bundle
 func (v *OfflineBundleValidator) ValidateIncrementalBundle(bundle *OfflineBundle) (*ValidationResult, error) {
@@ -448,32 +459,28 @@ func (v *OfflineBundleValidator) ValidateIncrementalBundle(bundle *OfflineBundle
 	}
 
 	return result, nil
+}
 
 // ValidateSignature validates the signature of an offline bundle
 func (v *OfflineBundleValidator) ValidateSignature(bundle *OfflineBundle, publicKey ed25519.PublicKey) (*ValidationResult, error) {
 	return v.BaseValidator.ValidateSignature(&bundle.Bundle, publicKey)
+}
 
 // ValidateChecksums validates the checksums of an offline bundle
 func (v *OfflineBundleValidator) ValidateChecksums(bundle *OfflineBundle) (*ValidationResult, error) {
 	return v.BaseValidator.ValidateChecksums(&bundle.Bundle)
+}
 
 // ValidateCompatibility validates the compatibility of an offline bundle
-func (v *OfflineBundleValidator) ValidateCompatibility(bundle *OfflineBundle, currentVersions map[string]version.Version) (*ValidationResult, error) {
-	// Convert version.Version map to *version.SemVersion map
-	semVersions := make(map[string]*version.SemVersion)
-	for key, ver := range currentVersions {
-		semVersions[key] = &version.SemVersion{
-			Major: ver.Major,
-			Minor: ver.Minor,
-			Patch: ver.Patch,
-		}
-	}
-	return v.BaseValidator.ValidateCompatibility(&bundle.Bundle, semVersions)
+func (v *OfflineBundleValidator) ValidateCompatibility(bundle *OfflineBundle, currentVersions map[string]*version.SemVersion) (*ValidationResult, error) {
+	return v.BaseValidator.ValidateCompatibility(&bundle.Bundle, currentVersions)
+}
 
 // StandardBundleValidator is a standard implementation of BundleValidator
 type StandardBundleValidator struct {
 	// Logger is the logger for validation operations
 	Logger io.Writer
+}
 
 // NewStandardBundleValidator creates a new standard bundle validator
 func NewStandardBundleValidator(logger io.Writer) *StandardBundleValidator {
@@ -483,6 +490,7 @@ func NewStandardBundleValidator(logger io.Writer) *StandardBundleValidator {
 	return &StandardBundleValidator{
 		Logger: logger,
 	}
+}
 
 // Validate validates a bundle with the specified validation level
 func (v *StandardBundleValidator) Validate(bundle *Bundle, level ValidationLevel) (*ValidationResult, error) {
@@ -491,6 +499,7 @@ func (v *StandardBundleValidator) Validate(bundle *Bundle, level ValidationLevel
 		Logger: v.Logger,
 	}
 	return defaultValidator.Validate(bundle, level)
+}
 
 // ValidateManifest validates a bundle manifest
 func (v *StandardBundleValidator) ValidateManifest(manifest *BundleManifest) (*ValidationResult, error) {
@@ -499,6 +508,7 @@ func (v *StandardBundleValidator) ValidateManifest(manifest *BundleManifest) (*V
 		Logger: v.Logger,
 	}
 	return defaultValidator.ValidateManifest(manifest)
+}
 
 // ValidateSignature validates a bundle signature
 func (v *StandardBundleValidator) ValidateSignature(bundle *Bundle, publicKey ed25519.PublicKey) (*ValidationResult, error) {
@@ -507,6 +517,7 @@ func (v *StandardBundleValidator) ValidateSignature(bundle *Bundle, publicKey ed
 		Logger: v.Logger,
 	}
 	return defaultValidator.ValidateSignature(bundle, publicKey)
+}
 
 // ValidateChecksums validates bundle checksums
 func (v *StandardBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationResult, error) {
@@ -515,19 +526,13 @@ func (v *StandardBundleValidator) ValidateChecksums(bundle *Bundle) (*Validation
 		Logger: v.Logger,
 	}
 	return defaultValidator.ValidateChecksums(bundle)
+}
 
 // ValidateCompatibility validates bundle compatibility with current versions
-func (v *StandardBundleValidator) ValidateCompatibility(bundle *Bundle, currentVersions map[string]version.Version) (*ValidationResult, error) {
+func (v *StandardBundleValidator) ValidateCompatibility(bundle *Bundle, currentVersions map[string]*version.SemVersion) (*ValidationResult, error) {
 	// Create default validator
 	defaultValidator := &DefaultBundleValidator{
 		Logger: v.Logger,
 	}
-	// Convert version.Version map to *version.SemVersion map
-	semVersions := make(map[string]*version.SemVersion)
-	for key, ver := range currentVersions {
-		semVersions[key] = &version.SemVersion{
-			Major: ver.Major,
-			Minor: ver.Minor,
-			Patch: ver.Patch,
-		}
-	}
+	return defaultValidator.ValidateCompatibility(bundle, currentVersions)
+}

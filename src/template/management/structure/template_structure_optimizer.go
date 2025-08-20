@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/perplext/LLMrecon/src/template/compatibility"
 	"github.com/perplext/LLMrecon/src/template/format"
 )
 
@@ -19,6 +18,7 @@ type TemplateStructureOptimizer struct {
 	optimizationStats OptimizationStats
 	// optimizationRules contains the rules for optimizing templates
 	optimizationRules []OptimizationRule
+}
 
 // OptimizationStats tracks optimization statistics
 type OptimizationStats struct {
@@ -26,6 +26,7 @@ type OptimizationStats struct {
 	TotalOptimizations int64
 	// OptimizationsByRule tracks optimizations by rule
 	OptimizationsByRule map[string]int64
+}
 
 // OptimizationRule represents a rule for optimizing templates
 type OptimizationRule struct {
@@ -35,6 +36,7 @@ type OptimizationRule struct {
 	Description string
 	// ApplyFunc is the function to apply the rule
 	ApplyFunc func(*format.Template) (bool, error)
+}
 
 // NewTemplateStructureOptimizer creates a new template structure optimizer
 func NewTemplateStructureOptimizer() *TemplateStructureOptimizer {
@@ -48,6 +50,7 @@ func NewTemplateStructureOptimizer() *TemplateStructureOptimizer {
 	optimizer.initializeRules()
 
 	return optimizer
+}
 
 // initializeRules initializes the optimization rules
 func (o *TemplateStructureOptimizer) initializeRules() {
@@ -78,6 +81,7 @@ func (o *TemplateStructureOptimizer) initializeRules() {
 			ApplyFunc:   o.normalizeTemplateStructure,
 		},
 	}
+}
 
 // OptimizeTemplate optimizes a template by applying various structural optimizations
 func (o *TemplateStructureOptimizer) OptimizeTemplate(template *format.Template) (*format.Template, error) {
@@ -108,6 +112,7 @@ func (o *TemplateStructureOptimizer) OptimizeTemplate(template *format.Template)
 	o.mutex.Unlock()
 
 	return optimizedTemplate, nil
+}
 
 // OptimizeTemplates optimizes multiple templates
 func (o *TemplateStructureOptimizer) OptimizeTemplates(templates []*format.Template) ([]*format.Template, error) {
@@ -146,6 +151,7 @@ func (o *TemplateStructureOptimizer) OptimizeTemplates(templates []*format.Templ
 	}
 
 	return optimizedTemplates, nil
+}
 
 // removeRedundantWhitespace removes redundant whitespace from template content
 func (o *TemplateStructureOptimizer) removeRedundantWhitespace(template *format.Template) (bool, error) {
@@ -161,10 +167,10 @@ func (o *TemplateStructureOptimizer) removeRedundantWhitespace(template *format.
 	}
 	
 	// Optimize expected behavior
-	if template.Test.ExpectedBehavior != "" {
-		originalBehavior := template.Test.ExpectedBehavior
-		template.Test.ExpectedBehavior = o.optimizeWhitespace(template.Test.ExpectedBehavior)
-		if originalBehavior != template.Test.ExpectedBehavior {
+	if template.Test.Expected != "" {
+		originalExpected := template.Test.Expected
+		template.Test.Expected = o.optimizeWhitespace(template.Test.Expected)
+		if originalExpected != template.Test.Expected {
 			modified = true
 		}
 	}
@@ -181,6 +187,7 @@ func (o *TemplateStructureOptimizer) removeRedundantWhitespace(template *format.
 	}
 	
 	return modified, nil
+}
 
 // optimizeWhitespace optimizes whitespace in a string while preserving code blocks
 func (o *TemplateStructureOptimizer) optimizeWhitespace(content string) string {
@@ -221,6 +228,7 @@ func (o *TemplateStructureOptimizer) optimizeWhitespace(content string) string {
 	}
 
 	return strings.TrimSpace(result.String())
+}
 
 // optimizeRegexPatterns optimizes regex patterns in detection criteria
 func (o *TemplateStructureOptimizer) optimizeRegexPatterns(template *format.Template) (bool, error) {
@@ -258,6 +266,7 @@ func (o *TemplateStructureOptimizer) optimizeRegexPatterns(template *format.Temp
 	}
 	
 	return modified, nil
+}
 
 // optimizeRegex optimizes a regex pattern for better performance
 func (o *TemplateStructureOptimizer) optimizeRegex(pattern string) (string, error) {
@@ -291,6 +300,7 @@ func (o *TemplateStructureOptimizer) optimizeRegex(pattern string) (string, erro
 	}
 	
 	return optimized, nil
+}
 
 // consolidateVariations consolidates similar test variations
 func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Template) (bool, error) {
@@ -324,7 +334,7 @@ func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Temp
 	}
 	
 	// Perform consolidation
-	newVariations := make([]format.TestVariation, 0)
+	newVariations := make([]*format.TemplateVariation, 0)
 	for _, indices := range variationMap {
 		if len(indices) == 1 {
 			// Single variation, keep as is
@@ -341,8 +351,19 @@ func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Temp
 			}
 			
 			// Create consolidated variation
-			consolidated := template.Test.Variations[indices[0]]
-			consolidated.Prompt = combinedPrompt
+			original := template.Test.Variations[indices[0]]
+			consolidated := &format.TemplateVariation{
+				Prompt:   combinedPrompt,
+				Expected: original.Expected,
+			}
+			if original.Detection != nil {
+				consolidated.Detection = &format.TemplateDetection{
+					Type:     original.Detection.Type,
+					Pattern:  original.Detection.Pattern,
+					Match:    original.Detection.Match,
+					Criteria: original.Detection.Criteria,
+				}
+			}
 			newVariations = append(newVariations, consolidated)
 		}
 	}
@@ -354,6 +375,7 @@ func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Temp
 	}
 	
 	return false, nil
+}
 
 // optimizeDetectionCriteria optimizes detection criteria for faster matching
 func (o *TemplateStructureOptimizer) optimizeDetectionCriteria(template *format.Template) (bool, error) {
@@ -385,11 +407,13 @@ func (o *TemplateStructureOptimizer) optimizeDetectionCriteria(template *format.
 	}
 	
 	return modified, nil
+}
 
 // optimizeStringMatch optimizes a string match pattern
 func (o *TemplateStructureOptimizer) optimizeStringMatch(match string) string {
 	// Trim whitespace
 	return strings.TrimSpace(match)
+}
 
 // normalizeTemplateStructure normalizes template structure for consistent processing
 func (o *TemplateStructureOptimizer) normalizeTemplateStructure(template *format.Template) (bool, error) {
@@ -405,8 +429,9 @@ func (o *TemplateStructureOptimizer) normalizeTemplateStructure(template *format
 	// Ensure template has compatibility information
 	if template.Compatibility == nil {
 		// Create default compatibility section
-		template.Compatibility = &compatibility.CompatibilityMetadata{
-			Providers: []string{"default"},
+		template.Compatibility = &format.TemplateCompatibility{
+			MinToolVersion: "1.0.0",
+			MaxToolVersion: "",
 		}
 		modified = true
 	}
@@ -418,67 +443,104 @@ func (o *TemplateStructureOptimizer) normalizeTemplateStructure(template *format
 	}
 	
 	return modified, nil
+}
 
 // cloneTemplate creates a deep copy of a template
 func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *format.Template {
 	clone := &format.Template{
-		ID: template.ID,
-		Info: format.TemplateInfo{
-			Name:        template.Info.Name,
-			Description: template.Info.Description,
-			Version:     template.Info.Version,
-			Author:      template.Info.Author,
-			Severity:    template.Info.Severity,
-			Tags:        make([]string, len(template.Info.Tags)),
-			References:  make([]string, len(template.Info.References)),
-		},
-		Test: format.TestDefinition{
-			Prompt:           template.Test.Prompt,
-			ExpectedBehavior: template.Test.ExpectedBehavior,
-			Detection: format.DetectionCriteria{
-				Type:      template.Test.Detection.Type,
-				Match:     template.Test.Detection.Match,
-				Pattern:   template.Test.Detection.Pattern,
-				Criteria:  template.Test.Detection.Criteria,
-				Condition: template.Test.Detection.Condition,
-			},
-			Variations: make([]format.TestVariation, len(template.Test.Variations)),
-		},
+		ID:      template.ID,
+		Name:    template.Name,
+		Version: template.Version,
+		Path:    template.Path,
 	}
 	
-	// Copy tags
-	copy(clone.Info.Tags, template.Info.Tags)
+	// Copy content
+	if template.Content != nil {
+		clone.Content = make([]byte, len(template.Content))
+		copy(clone.Content, template.Content)
+	}
 	
-	// Copy references
-	copy(clone.Info.References, template.Info.References)
-	
-	// Copy compliance
-	clone.Info.Compliance.OWASP = template.Info.Compliance.OWASP
-	clone.Info.Compliance.ISO = template.Info.Compliance.ISO
-	
-	// Copy compatibility if it exists
-	if template.Compatibility != nil {
-		clone.Compatibility = &compatibility.CompatibilityMetadata{
-			Providers: make([]string, len(template.Compatibility.Providers)),
+	// Copy metadata
+	if template.Metadata != nil {
+		clone.Metadata = make(map[string]interface{})
+		for k, v := range template.Metadata {
+			clone.Metadata[k] = v
 		}
-		copy(clone.Compatibility.Providers, template.Compatibility.Providers)
 	}
 	
-	// Copy variations
-	for i, variation := range template.Test.Variations {
-		clone.Test.Variations[i] = format.TestVariation{
-			Prompt: variation.Prompt,
-			Detection: format.DetectionCriteria{
-				Type:      variation.Detection.Type,
-				Match:     variation.Detection.Match,
-				Pattern:   variation.Detection.Pattern,
-				Criteria:  variation.Detection.Criteria,
-				Condition: variation.Detection.Condition,
-			},
+	// Copy variables
+	if template.Variables != nil {
+		clone.Variables = make(map[string]interface{})
+		for k, v := range template.Variables {
+			clone.Variables[k] = v
+		}
+	}
+	
+	// Copy info
+	if template.Info != nil {
+		clone.Info = &format.TemplateInfo{
+			Name:        template.Info.Name,
+			Version:     template.Info.Version,
+			Description: template.Info.Description,
+			Author:      template.Info.Author,
+		}
+		if template.Info.Tags != nil {
+			clone.Info.Tags = make([]string, len(template.Info.Tags))
+			copy(clone.Info.Tags, template.Info.Tags)
+		}
+	}
+	
+	// Copy test
+	if template.Test != nil {
+		clone.Test = &format.TemplateTest{
+			Prompt:   template.Test.Prompt,
+			Expected: template.Test.Expected,
+		}
+		
+		// Copy detection
+		if template.Test.Detection != nil {
+			clone.Test.Detection = &format.TemplateDetection{
+				Type:     template.Test.Detection.Type,
+				Pattern:  template.Test.Detection.Pattern,
+				Match:    template.Test.Detection.Match,
+				Criteria: template.Test.Detection.Criteria,
+			}
+		}
+		
+		// Copy variations
+		if template.Test.Variations != nil {
+			clone.Test.Variations = make([]*format.TemplateVariation, len(template.Test.Variations))
+			for i, variation := range template.Test.Variations {
+				cloneVariation := &format.TemplateVariation{
+					Prompt:   variation.Prompt,
+					Expected: variation.Expected,
+				}
+				
+				// Copy variation detection
+				if variation.Detection != nil {
+					cloneVariation.Detection = &format.TemplateDetection{
+						Type:     variation.Detection.Type,
+						Pattern:  variation.Detection.Pattern,
+						Match:    variation.Detection.Match,
+						Criteria: variation.Detection.Criteria,
+					}
+				}
+				
+				clone.Test.Variations[i] = cloneVariation
+			}
+		}
+	}
+	
+	// Copy compatibility
+	if template.Compatibility != nil {
+		clone.Compatibility = &format.TemplateCompatibility{
+			MinToolVersion: template.Compatibility.MinToolVersion,
+			MaxToolVersion: template.Compatibility.MaxToolVersion,
 		}
 	}
 	
 	return clone
+}
 
 // GetOptimizationStats returns statistics about the optimizer
 func (o *TemplateStructureOptimizer) GetOptimizationStats() map[string]interface{} {
@@ -495,3 +557,4 @@ func (o *TemplateStructureOptimizer) GetOptimizationStats() map[string]interface
 		"total_optimizations": o.optimizationStats.TotalOptimizations,
 		"optimizations_by_rule": ruleStats,
 	}
+}

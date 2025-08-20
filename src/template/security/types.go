@@ -2,6 +2,8 @@
 package security
 
 import (
+	"context"
+
 	"github.com/perplext/LLMrecon/src/reporting/common"
 )
 
@@ -42,6 +44,7 @@ type VerificationResult struct {
 	Score        float64         `json:"score"`
 	MaxScore     float64         `json:"max_score"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // VerificationOptions represents options for template security verification
 type VerificationOptions struct {
@@ -54,6 +57,12 @@ type VerificationOptions struct {
 	Metadata           map[string]interface{} `json:"metadata,omitempty"`
 }
 
+// TemplateVerifier interface defines methods for template security verification
+type TemplateVerifier interface {
+	// VerifyTemplateFile verifies a template file and returns the verification result
+	VerifyTemplateFile(ctx context.Context, templatePath string, options *VerificationOptions) (*VerificationResult, error)
+}
+
 // DefaultVerificationOptions returns the default verification options
 func DefaultVerificationOptions() *VerificationOptions {
 	return &VerificationOptions{
@@ -64,6 +73,7 @@ func DefaultVerificationOptions() *VerificationOptions {
 		IncludeInfo:       true,
 		Metadata:          make(map[string]interface{}),
 	}
+}
 
 // VerificationResultToTestResult converts a verification result to a test result
 func VerificationResultToTestResult(result *VerificationResult) *common.TestResult {
@@ -106,6 +116,7 @@ func VerificationResultToTestResult(result *VerificationResult) *common.TestResu
 		RawData:     result,
 		Metadata:    result.Metadata,
 	}
+}
 
 // isSeverityHigher returns true if severity1 is higher than severity2
 func isSeverityHigher(severity1, severity2 common.SeverityLevel) bool {
@@ -116,5 +127,6 @@ func isSeverityHigher(severity1, severity2 common.SeverityLevel) bool {
 		common.Low:      2,
 		common.Info:     1,
 	}
-
+	
+	return severityMap[severity1] > severityMap[severity2]
 }

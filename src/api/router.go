@@ -3,9 +3,188 @@ package api
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 )
+
+// Standalone middleware functions for router
+func securityHeadersMiddleware(headers SecurityHeaders) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Add security headers
+			if headers.ContentSecurityPolicy != "" {
+				w.Header().Set("Content-Security-Policy", headers.ContentSecurityPolicy)
+			}
+			if headers.XContentTypeOptions != "" {
+				w.Header().Set("X-Content-Type-Options", headers.XContentTypeOptions)
+			}
+			if headers.XFrameOptions != "" {
+				w.Header().Set("X-Frame-Options", headers.XFrameOptions)
+			}
+			if headers.XSSProtection != "" {
+				w.Header().Set("X-XSS-Protection", headers.XSSProtection)
+			}
+			if headers.StrictTransportSecurity != "" && r.TLS != nil {
+				w.Header().Set("Strict-Transport-Security", headers.StrictTransportSecurity)
+			}
+			if headers.ReferrerPolicy != "" {
+				w.Header().Set("Referrer-Policy", headers.ReferrerPolicy)
+			}
+			if headers.PermissionsPolicy != "" {
+				w.Header().Set("Permissions-Policy", headers.PermissionsPolicy)
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func ipWhitelistMiddleware(whitelist *IPWhitelist) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if whitelist != nil {
+				clientIP := getClientIP(r)
+				if !whitelist.IsAllowed(clientIP) {
+					writeError(w, http.StatusForbidden, NewAPIError(ErrCodeForbidden, "Access denied from this IP"))
+					return
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Configure based on config
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
+		w.Header().Set("Access-Control-Max-Age", "3600")
+		
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		
+		next.ServeHTTP(w, r)
+	})
+}
+
+func jsonContentTypeMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func requestSizeLimitMiddleware(maxSize int64) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.Body = http.MaxBytesReader(w, r.Body, maxSize)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func authMiddleware(config *Config) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !config.EnableAuth {
+				next.ServeHTTP(w, r)
+				return
+			}
+			
+			// Extract API key from header or query parameter
+			apiKey := extractAPIKey(r)
+			if apiKey == "" {
+				writeError(w, http.StatusUnauthorized, NewAPIError(ErrCodeUnauthorized, "Missing API key"))
+				return
+			}
+			
+			// Validate API key
+			if !isValidAPIKey(apiKey, config.APIKeys) {
+				writeError(w, http.StatusUnauthorized, NewAPIError(ErrCodeUnauthorized, "Invalid API key"))
+				return
+			}
+			
+			// Add API key to context
+			ctx := context.WithValue(r.Context(), contextKeyAPIKey, apiKey)
+			r = r.WithContext(ctx)
+			
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func rateLimitMiddleware(config *Config) func(http.Handler) http.Handler {
+	// Initialize global rate limiter
+	if globalRateLimiter == nil {
+		globalRateLimiter = NewRateLimiter(config.RateLimit)
+	}
+	
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !config.EnableRateLimit {
+				next.ServeHTTP(w, r)
+				return
+			}
+			
+			// Get API key from context
+			apiKey, ok := r.Context().Value(contextKeyAPIKey).(string)
+			if !ok {
+				apiKey = "anonymous"
+			}
+			
+			// Get limiter for this API key
+			limiter := globalRateLimiter.GetLimiter(apiKey)
+			
+			// Check rate limit
+			if !limiter.Allow() {
+				writeError(w, http.StatusTooManyRequests, NewAPIError(ErrCodeRateLimited, "Rate limit exceeded"))
+				return
+			}
+			
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func jwtMiddleware(authService AuthService) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Extract JWT token from Authorization header
+			token := extractJWTToken(r)
+			if token == "" {
+				writeError(w, http.StatusUnauthorized, NewAPIError(ErrCodeUnauthorized, "Missing JWT token"))
+				return
+			}
+			
+			// Validate JWT token
+			user, err := authService.ValidateToken(token)
+			if err != nil {
+				writeError(w, http.StatusUnauthorized, NewAPIError(ErrCodeUnauthorized, "Invalid JWT token"))
+				return
+			}
+			
+			// Add user to context
+			ctx := context.WithValue(r.Context(), contextKeyUser, user)
+			r = r.WithContext(ctx)
+			
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// Helper functions
+func extractJWTToken(r *http.Request) string {
+	auth := r.Header.Get("Authorization")
+	if auth != "" && len(auth) > 7 && auth[:7] == "Bearer " {
+		return auth[7:]
+	}
+	return ""
+}
 
 // Router creates and configures the API router
 func NewRouter(config *Config) *mux.Router {
@@ -120,6 +299,7 @@ func NewRouter(config *Config) *mux.Router {
 	}
 	
 	return r
+}
 
 // Route represents an API route definition
 type Route struct {
@@ -156,6 +336,7 @@ type Config struct {
 	EnableCompression     bool
 	EnableAuditLogging    bool
 	EnableMetrics         bool   // enable metrics collection
+}
 
 // DefaultConfig returns default API configuration
 func DefaultConfig() *Config {
@@ -181,6 +362,7 @@ func DefaultConfig() *Config {
 		EnableCompression:     true,
 		EnableAuditLogging:    true,
 	}
+}
 
 // ValidateConfig validates API configuration
 func ValidateConfig(config *Config) error {
@@ -213,6 +395,7 @@ func ValidateConfig(config *Config) error {
 	}
 	
 	return nil
+}
 
 // APIError represents an API error
 type APIError struct {
@@ -223,6 +406,7 @@ type APIError struct {
 
 func (e *APIError) Error() string {
 	return e.Message
+}
 
 // NewAPIError creates a new API error
 func NewAPIError(code, message string) *APIError {
@@ -230,6 +414,7 @@ func NewAPIError(code, message string) *APIError {
 		Code:    code,
 		Message: message,
 	}
+}
 
 // NewAPIErrorWithDetails creates a new API error with details
 func NewAPIErrorWithDetails(code, message, details string) *APIError {
@@ -238,6 +423,7 @@ func NewAPIErrorWithDetails(code, message, details string) *APIError {
 		Message: message,
 		Details: details,
 	}
+}
 
 // Error codes are defined in types.go
 
@@ -296,10 +482,17 @@ func GetRoutes() []Route {
 		// Documentation
 		{Name: "OpenAPISpec", Method: "GET", Pattern: "/api/v1/openapi.json", RequireAuth: false},
 	}
+}
+
+// handleVersion provides version information
+func handleVersion(w http.ResponseWriter, r *http.Request) {
+	versionInfo := map[string]interface{}{
+		"version": APIVersion,
+		"api_version": APIVersion,
+		"timestamp": time.Now().UTC(),
+		"status": "healthy",
+	}
+	writeSuccess(w, versionInfo)
+}
 
 // normalizeAPIKey is implemented in auth_service.go
-}
-}
-}
-}
-}

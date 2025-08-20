@@ -4,7 +4,9 @@ package loaders
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
@@ -20,17 +22,19 @@ type OfflineBundleLoader struct {
 	// validator is the offline bundle validator
 	validator *bundle.OfflineBundleValidator
 	// auditTrail is the audit trail manager
-	auditTrail *trail.AuditTrailManager
+	auditTrail *trail.Manager
 	// validationLevel is the level of validation to perform
 	validationLevel bundle.ValidationLevel
+}
 
 // NewOfflineBundleLoader creates a new offline bundle loader
-func NewOfflineBundleLoader(auditTrail *trail.AuditTrailManager) *OfflineBundleLoader {
+func NewOfflineBundleLoader(auditTrail *trail.Manager) *OfflineBundleLoader {
 	return &OfflineBundleLoader{
 		validator:       bundle.NewOfflineBundleValidator(nil),
 		auditTrail:      auditTrail,
 		validationLevel: bundle.StandardValidation,
 	}
+}
 
 // LoadFromSource loads templates from a specific source
 func (l *OfflineBundleLoader) LoadFromSource(ctx context.Context, source types.TemplateSource, options map[string]interface{}) ([]*format.Template, error) {
@@ -46,6 +50,7 @@ func (l *OfflineBundleLoader) LoadFromSource(ctx context.Context, source types.T
 
 	// Load templates from the offline bundle
 	return l.LoadFromPath(ctx, bundlePath, false)
+}
 
 // LoadFromPath loads templates from a specific path
 func (l *OfflineBundleLoader) LoadFromPath(ctx context.Context, path string, recursive bool) ([]*format.Template, error) {
@@ -109,11 +114,21 @@ func (l *OfflineBundleLoader) LoadFromPath(ctx context.Context, path string, rec
 
 	// Log audit event
 	if l.auditTrail != nil {
-		auditLog := trail.NewAuditLog(
-			"load_templates_from_offline_bundle",
-			"offline_bundle",
-			fmt.Sprintf("Loaded %d templates from offline bundle %s", len(templates), offlineBundle.EnhancedManifest.Name),
-		).WithResource(offlineBundle.EnhancedManifest.BundleID).WithStatus("success").WithDetail("bundle_path", path).WithDetail("recursive", recursive).WithDetail("template_count", len(templates)).WithDetail("bundle_version", offlineBundle.EnhancedManifest.Version).WithDetail("validation_level", string(l.validationLevel))
+		auditLog := &trail.AuditLog{
+			Operation:    "load_templates_from_offline_bundle",
+			ResourceType: "offline_bundle",
+			ResourceID:   offlineBundle.EnhancedManifest.BundleID,
+			Description:  fmt.Sprintf("Loaded %d templates from offline bundle %s", len(templates), offlineBundle.EnhancedManifest.Name),
+			Status:       "success",
+			Timestamp:    time.Now(),
+			Details: map[string]interface{}{
+				"bundle_path":     path,
+				"recursive":       recursive,
+				"template_count":  len(templates),
+				"bundle_version":  offlineBundle.EnhancedManifest.Version,
+				"validation_level": string(l.validationLevel),
+			},
+		}
 		
 		if err := l.auditTrail.LogOperation(context.Background(), auditLog); err != nil {
 			// Log error but continue
@@ -122,19 +137,23 @@ func (l *OfflineBundleLoader) LoadFromPath(ctx context.Context, path string, rec
 	}
 
 	return templates, nil
+}
 
 // LoadFromRepository loads templates from a remote repository
 func (l *OfflineBundleLoader) LoadFromRepository(ctx context.Context, repoURL string, options map[string]interface{}) ([]*format.Template, error) {
 	// Not implemented for offline bundles
 	return nil, fmt.Errorf("loading from repository not supported for offline bundles")
+}
 
 // SetValidationLevel sets the validation level for offline bundles
 func (l *OfflineBundleLoader) SetValidationLevel(level bundle.ValidationLevel) {
 	l.validationLevel = level
+}
 
 // GetValidationLevel gets the current validation level
 func (l *OfflineBundleLoader) GetValidationLevel() bundle.ValidationLevel {
 	return l.validationLevel
+}
 
 // LoadTemplate loads a single template from a source
 func (l *OfflineBundleLoader) LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error) {
@@ -151,6 +170,7 @@ func (l *OfflineBundleLoader) LoadTemplate(ctx context.Context, source string, s
 	}
 
 	return templates[0], nil
+}
 
 // LoadTemplates loads multiple templates from a source
 func (l *OfflineBundleLoader) LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error) {
@@ -158,3 +178,5 @@ func (l *OfflineBundleLoader) LoadTemplates(ctx context.Context, source string, 
 		return nil, fmt.Errorf("unsupported source type: %s", sourceType)
 	}
 
+	return l.LoadFromPath(ctx, source, false)
+}

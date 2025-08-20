@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 )
 
 // MFAMethod represents the type of MFA method
@@ -66,6 +67,7 @@ type MFASettings struct {
 	
 	// LastUpdated is the time when the settings were last updated
 	LastUpdated time.Time
+}
 
 // MFAVerification represents an MFA verification
 type MFAVerification struct {
@@ -86,6 +88,7 @@ type MFAVerification struct {
 	
 	// ExpiresAt is the time when the verification expires
 	ExpiresAt time.Time
+}
 
 // MFAStore defines the interface for storing MFA settings
 type MFAStore interface {
@@ -106,6 +109,7 @@ type MFAStore interface {
 	
 	// DeleteVerification deletes an MFA verification
 	DeleteVerification(ctx context.Context, userID string) error
+}
 
 // InMemoryMFAStore is an in-memory implementation of MFAStore
 type InMemoryMFAStore struct {
@@ -120,6 +124,7 @@ func NewInMemoryMFAStore() *InMemoryMFAStore {
 		settings:      make(map[string]*MFASettings),
 		verifications: make(map[string]*MFAVerification),
 	}
+}
 
 // GetMFASettings gets the MFA settings for a user
 func (s *InMemoryMFAStore) GetMFASettings(ctx context.Context, userID string) (*MFASettings, error) {
@@ -132,6 +137,7 @@ func (s *InMemoryMFAStore) GetMFASettings(ctx context.Context, userID string) (*
 	}
 	
 	return settings, nil
+}
 
 // SaveMFASettings saves the MFA settings for a user
 func (s *InMemoryMFAStore) SaveMFASettings(ctx context.Context, settings *MFASettings) error {
@@ -146,6 +152,7 @@ func (s *InMemoryMFAStore) SaveMFASettings(ctx context.Context, settings *MFASet
 	s.settings[settings.UserID] = settings
 	
 	return nil
+}
 
 // DeleteMFASettings deletes the MFA settings for a user
 func (s *InMemoryMFAStore) DeleteMFASettings(ctx context.Context, userID string) error {
@@ -155,6 +162,7 @@ func (s *InMemoryMFAStore) DeleteMFASettings(ctx context.Context, userID string)
 	delete(s.settings, userID)
 	
 	return nil
+}
 
 // CreateVerification creates a new MFA verification
 func (s *InMemoryMFAStore) CreateVerification(ctx context.Context, verification *MFAVerification) error {
@@ -168,6 +176,7 @@ func (s *InMemoryMFAStore) CreateVerification(ctx context.Context, verification 
 	s.verifications[verification.UserID] = verification
 	
 	return nil
+}
 
 // GetVerification gets an MFA verification
 func (s *InMemoryMFAStore) GetVerification(ctx context.Context, userID string) (*MFAVerification, error) {
@@ -185,6 +194,7 @@ func (s *InMemoryMFAStore) GetVerification(ctx context.Context, userID string) (
 	}
 	
 	return verification, nil
+}
 
 // DeleteVerification deletes an MFA verification
 func (s *InMemoryMFAStore) DeleteVerification(ctx context.Context, userID string) error {
@@ -194,6 +204,7 @@ func (s *InMemoryMFAStore) DeleteVerification(ctx context.Context, userID string
 	delete(s.verifications, userID)
 	
 	return nil
+}
 
 // MFAManager interface is defined in interface.go
 
@@ -216,6 +227,7 @@ type DefaultMFAManager struct {
 	
 	// verificationExpiration is the expiration time for verifications in minutes
 	verificationExpiration int
+}
 
 // MFAManagerConfig represents the configuration for MFAManager
 type MFAManagerConfig struct {
@@ -233,6 +245,7 @@ type MFAManagerConfig struct {
 	
 	// VerificationExpiration is the expiration time for verifications in minutes
 	VerificationExpiration int
+}
 
 // DefaultMFAManagerConfig returns the default MFA manager configuration
 func DefaultMFAManagerConfig() *MFAManagerConfig {
@@ -243,6 +256,7 @@ func DefaultMFAManagerConfig() *MFAManagerConfig {
 		SMSConfig:              DefaultSMSConfig(),
 		VerificationExpiration: 10,
 	}
+}
 
 // NewDefaultMFAManager creates a new MFA manager
 func NewDefaultMFAManager(store MFAStore, config *MFAManagerConfig) *DefaultMFAManager {
@@ -258,10 +272,12 @@ func NewDefaultMFAManager(store MFAStore, config *MFAManagerConfig) *DefaultMFAM
 		smsConfig:              config.SMSConfig,
 		verificationExpiration: config.VerificationExpiration,
 	}
+}
 
 // GetMFASettings gets the MFA settings for a user
 func (m *DefaultMFAManager) GetMFASettings(ctx context.Context, userID string) (*MFASettings, error) {
 	return m.store.GetMFASettings(ctx, userID)
+}
 
 // EnableMFA enables MFA for a user
 func (m *DefaultMFAManager) EnableMFA(ctx context.Context, userID string, method MFAMethod) (*MFASettings, error) {
@@ -286,6 +302,7 @@ func (m *DefaultMFAManager) EnableMFA(ctx context.Context, userID string, method
 	}
 	
 	return settings, nil
+}
 
 // DisableMFA disables MFA for a user
 func (m *DefaultMFAManager) DisableMFA(ctx context.Context, userID string) error {
@@ -300,6 +317,7 @@ func (m *DefaultMFAManager) DisableMFA(ctx context.Context, userID string) error
 	
 	// Save settings
 	return m.store.SaveMFASettings(ctx, settings)
+}
 
 // SetupTOTP sets up TOTP for a user
 func (m *DefaultMFAManager) SetupTOTP(ctx context.Context, userID string, username string) (*TOTPConfig, error) {
@@ -338,6 +356,7 @@ func (m *DefaultMFAManager) SetupTOTP(ctx context.Context, userID string, userna
 	}
 	
 	return totpConfig, nil
+}
 
 // VerifyTOTPSetup verifies TOTP setup
 func (m *DefaultMFAManager) VerifyTOTPSetup(ctx context.Context, userID string, code string) error {
@@ -363,6 +382,7 @@ func (m *DefaultMFAManager) VerifyTOTPSetup(ctx context.Context, userID string, 
 	
 	// Save settings
 	return m.store.SaveMFASettings(ctx, settings)
+}
 
 // GenerateBackupCodes generates backup codes for a user
 func (m *DefaultMFAManager) GenerateBackupCodes(ctx context.Context, userID string) ([]MFABackupCode, error) {
@@ -388,6 +408,7 @@ func (m *DefaultMFAManager) GenerateBackupCodes(ctx context.Context, userID stri
 	}
 	
 	return codes, nil
+}
 
 // SetupWebAuthn initiates WebAuthn setup
 func (m *DefaultMFAManager) SetupWebAuthn(ctx context.Context, userID string, username string, displayName string) (map[string]interface{}, error) {
@@ -426,6 +447,7 @@ func (m *DefaultMFAManager) SetupWebAuthn(ctx context.Context, userID string, us
 	}
 	
 	return options, nil
+}
 
 // VerifyWebAuthnSetup verifies WebAuthn setup
 func (m *DefaultMFAManager) VerifyWebAuthnSetup(ctx context.Context, userID string, attestationResponse string) error {
@@ -469,7 +491,7 @@ func (m *DefaultMFAManager) VerifyWebAuthnSetup(ctx context.Context, userID stri
 	
 	// Delete verification
 	return m.store.DeleteVerification(ctx, userID)
-	
+}
 
 // SetupSMS initiates SMS setup
 func (m *DefaultMFAManager) SetupSMS(ctx context.Context, userID string, phoneNumber string) error {
@@ -510,6 +532,7 @@ func (m *DefaultMFAManager) SetupSMS(ctx context.Context, userID string, phoneNu
 	
 	// Send SMS code
 	return SendSMSCode(m.smsConfig, smsVerification)
+}
 
 // VerifySMSSetup verifies SMS setup
 func (m *DefaultMFAManager) VerifySMSSetup(ctx context.Context, userID string, code string) error {
@@ -551,6 +574,7 @@ func (m *DefaultMFAManager) VerifySMSSetup(ctx context.Context, userID string, c
 	
 	// Delete verification
 	return m.store.DeleteVerification(ctx, userID)
+}
 
 // VerifyMFA verifies an MFA code
 func (m *DefaultMFAManager) VerifyMFA(ctx context.Context, userID string, method MFAMethod, code string) (bool, error) {
@@ -600,6 +624,7 @@ func (m *DefaultMFAManager) VerifyMFA(ctx context.Context, userID string, method
 	default:
 		return false, fmt.Errorf("unsupported MFA method: %s", method)
 	}
+}
 
 // InitiateSMSVerification initiates SMS verification
 func (m *DefaultMFAManager) InitiateSMSVerification(ctx context.Context, userID string) error {
@@ -636,6 +661,8 @@ func (m *DefaultMFAManager) InitiateSMSVerification(ctx context.Context, userID 
 	
 	// Send SMS code
 	return SendSMSCode(m.smsConfig, smsVerification)
+}
+
 // VerifySMSCode verifies an SMS code
 func (m *DefaultMFAManager) VerifySMSCode(ctx context.Context, userID string, code string) (bool, error) {
 	// Get verification
@@ -661,6 +688,7 @@ func (m *DefaultMFAManager) VerifySMSCode(ctx context.Context, userID string, co
 	}
 	
 	return verified, nil
+}
 
 // InitiateWebAuthnVerification initiates WebAuthn verification
 func (m *DefaultMFAManager) InitiateWebAuthnVerification(ctx context.Context, userID string) (map[string]interface{}, error) {
@@ -696,6 +724,7 @@ func (m *DefaultMFAManager) InitiateWebAuthnVerification(ctx context.Context, us
 	}
 	
 	return options, nil
+}
 
 // VerifyWebAuthnAssertion verifies a WebAuthn assertion
 func (m *DefaultMFAManager) VerifyWebAuthnAssertion(ctx context.Context, userID string, assertionResponse string) (bool, error) {
@@ -740,6 +769,7 @@ func (m *DefaultMFAManager) VerifyWebAuthnAssertion(ctx context.Context, userID 
 	}
 	
 	return true, nil
+}
 
 // ValidateMFASettings validates MFA settings
 func (m *DefaultMFAManager) ValidateMFASettings(ctx context.Context, userID string) (bool, []string, error) {
@@ -817,27 +847,16 @@ func (m *DefaultMFAManager) ValidateMFASettings(ctx context.Context, userID stri
 		}
 	}
 	
+	return valid, issues, nil
 }
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+
+// Helper functions - these would need proper implementation
+
+
+
+
+
+
+
+
+

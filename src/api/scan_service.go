@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -20,6 +21,7 @@ type ScanServiceImpl struct {
 	detectionEngine detection.Engine
 	executors       map[string]*scanExecutor
 	mu              sync.RWMutex
+}
 
 // scanExecutor manages the execution of a single scan
 type scanExecutor struct {
@@ -53,6 +55,7 @@ func NewScanService(
 		detectionEngine: detectionEngine,
 		executors:       make(map[string]*scanExecutor),
 	}
+}
 
 // CreateScan creates and starts a new scan
 func (s *ScanServiceImpl) CreateScan(request CreateScanRequest) (*Scan, error) {
@@ -87,6 +90,7 @@ func (s *ScanServiceImpl) CreateScan(request CreateScanRequest) (*Scan, error) {
 	}
 	
 	return scan, nil
+}
 
 // GetScan retrieves a scan by ID
 func (s *ScanServiceImpl) GetScan(id string) (*Scan, error) {
@@ -97,18 +101,19 @@ func (s *ScanServiceImpl) GetScan(id string) (*Scan, error) {
 	
 	// Check if scan is running and update progress
 	s.mu.RLock()
-	if executor, exists := s.executors[id]; exists && scan.Status == ScanStatusRunning {
+	if _, exists := s.executors[id]; exists && scan.Status == ScanStatusRunning {
 		// Could add real-time progress info here
-		if err := executor; err != nil {
-			return fmt.Errorf("operation failed: %w", err)
-		}
+		// The scan is still running, return current status
 	}
 	s.mu.RUnlock()
 	
 	return scan, nil
+}
+
 // ListScans lists scans matching the filter
 func (s *ScanServiceImpl) ListScans(filter ScanFilter) ([]Scan, error) {
 	return s.store.List(filter)
+}
 
 // CancelScan cancels a running scan
 func (s *ScanServiceImpl) CancelScan(id string) error {
@@ -136,6 +141,7 @@ func (s *ScanServiceImpl) CancelScan(id string) error {
 	scan.UpdatedAt = time.Now()
 	
 	return s.store.Update(scan)
+}
 
 // GetScanResults retrieves results for a completed scan
 func (s *ScanServiceImpl) GetScanResults(id string) (*ScanResults, error) {
@@ -153,6 +159,7 @@ func (s *ScanServiceImpl) GetScanResults(id string) (*ScanResults, error) {
 	}
 	
 	return scan.Results, nil
+}
 
 // validateScanRequest validates a scan creation request
 func (s *ScanServiceImpl) validateScanRequest(request CreateScanRequest) error {
@@ -184,6 +191,7 @@ func (s *ScanServiceImpl) validateScanRequest(request CreateScanRequest) error {
 	}
 	
 	return nil
+}
 
 // startScanExecution starts the asynchronous execution of a scan
 func (s *ScanServiceImpl) startScanExecution(scan *Scan) error {
@@ -208,6 +216,7 @@ func (s *ScanServiceImpl) startScanExecution(scan *Scan) error {
 	go s.executeScan(executor)
 	
 	return nil
+}
 
 // executeScan executes a scan
 func (s *ScanServiceImpl) executeScan(executor *scanExecutor) {
@@ -382,6 +391,7 @@ func (s *ScanServiceImpl) executeScan(executor *scanExecutor) {
 		Int("errors", results.Summary.Errors).
 		Float64("compliance_score", results.Summary.ComplianceScore).
 		Msg("Scan completed")
+}
 
 // getTemplatesForScan retrieves templates based on scan configuration
 func (s *ScanServiceImpl) getTemplatesForScan(scan *Scan) ([]management.Template, error) {
@@ -426,6 +436,7 @@ func (s *ScanServiceImpl) getTemplatesForScan(scan *Scan) ([]management.Template
 	
 	// Default: use all templates
 	return s.templateManager.ListTemplates()
+}
 
 // createProviderForTarget creates a provider instance for the scan target
 func (s *ScanServiceImpl) createProviderForTarget(target ScanTarget) (provider.Provider, error) {
@@ -449,6 +460,7 @@ func (s *ScanServiceImpl) createProviderForTarget(target ScanTarget) (provider.P
 	
 	// Create provider
 	return s.providerFactory.CreateProvider(target.Provider, config)
+}
 
 // executeTemplate executes a single template against the target
 func (s *ScanServiceImpl) executeTemplate(
@@ -518,13 +530,5 @@ func (s *ScanServiceImpl) executeTemplate(
 		return nil, fmt.Errorf("template execution failed after %d attempts: %w", maxRetries, lastErr)
 	}
 	
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return nil, fmt.Errorf("unexpected execution flow")
 }

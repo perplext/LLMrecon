@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -16,6 +17,7 @@ type SQLiteStorage struct {
 	db     *sql.DB
 	logger Logger
 	mu     sync.RWMutex
+}
 
 // MemoryStorage implements DataStorage interface using in-memory storage
 type MemoryStorage struct {
@@ -42,6 +44,7 @@ func NewDataStorage(config *Config, logger Logger) (DataStorage, error) {
 	default:
 		return nil, fmt.Errorf("unsupported storage type: %s", config.StorageType)
 	}
+}
 
 // SQLite Storage Implementation
 
@@ -59,6 +62,7 @@ func NewSQLiteStorage(config *Config, logger Logger) (*SQLiteStorage, error) {
 	}
 	
 	return storage, nil
+}
 
 // Initialize initializes the SQLite storage
 func (s *SQLiteStorage) Initialize() error {
@@ -77,6 +81,7 @@ func (s *SQLiteStorage) Initialize() error {
 	
 	s.logger.Info("SQLite storage initialized")
 	return nil
+}
 
 // Close closes the SQLite database connection
 func (s *SQLiteStorage) Close() error {
@@ -89,6 +94,7 @@ func (s *SQLiteStorage) Close() error {
 		return err
 	}
 	return nil
+}
 
 // createTables creates the necessary database tables
 func (s *SQLiteStorage) createTables() error {
@@ -154,6 +160,7 @@ func (s *SQLiteStorage) createTables() error {
 	}
 	
 	return nil
+}
 
 // createIndexes creates database indexes for performance
 func (s *SQLiteStorage) createIndexes() error {
@@ -176,6 +183,7 @@ func (s *SQLiteStorage) createIndexes() error {
 	}
 	
 	return nil
+}
 
 // StoreMetric stores a metric in the database
 func (s *SQLiteStorage) StoreMetric(metric *Metric) error {
@@ -197,6 +205,7 @@ func (s *SQLiteStorage) StoreMetric(metric *Metric) error {
 	}
 	
 	return nil
+}
 
 // StoreScanResult stores a scan result in the database
 func (s *SQLiteStorage) StoreScanResult(result *ScanResult) error {
@@ -256,6 +265,8 @@ func (s *SQLiteStorage) StoreScanResult(result *ScanResult) error {
 	}
 	
 	return tx.Commit()
+}
+
 // QueryMetrics queries metrics from the database
 func (s *SQLiteStorage) QueryMetrics(query *MetricsQuery) (*MetricsResult, error) {
 	s.mu.RLock()
@@ -321,6 +332,7 @@ func (s *SQLiteStorage) QueryMetrics(query *MetricsQuery) (*MetricsResult, error
 	}
 	
 	return result, nil
+}
 
 // buildMetricsQuery builds SQL query from MetricsQuery
 func (s *SQLiteStorage) buildMetricsQuery(query *MetricsQuery) (string, []interface{}) {
@@ -365,6 +377,7 @@ func (s *SQLiteStorage) buildMetricsQuery(query *MetricsQuery) (string, []interf
 	}
 	
 	return sql.String(), args
+}
 
 // DeleteRawData deletes raw data older than the specified time
 func (s *SQLiteStorage) DeleteRawData(before time.Time) error {
@@ -391,11 +404,13 @@ func (s *SQLiteStorage) DeleteRawData(before time.Time) error {
 	}
 	
 	return nil
+}
 
 // ArchiveData archives data older than the specified time
 func (s *SQLiteStorage) ArchiveData(before time.Time) error {
 	// For SQLite, we'll just compress old data by creating aggregated metrics
 	return s.createAggregatedMetrics(before)
+}
 
 // GetStorageSize returns the storage size in bytes
 func (s *SQLiteStorage) GetStorageSize() (int64, error) {
@@ -405,6 +420,8 @@ func (s *SQLiteStorage) GetStorageSize() (int64, error) {
 	var size int64
 	err := s.db.QueryRow("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()").Scan(&size)
 	return size, err
+}
+
 // GetRecordCount returns the total number of records
 func (s *SQLiteStorage) GetRecordCount() (int64, error) {
 	s.mu.RLock()
@@ -418,11 +435,13 @@ func (s *SQLiteStorage) GetRecordCount() (int64, error) {
 			(SELECT COUNT(*) FROM vulnerabilities)
 	`).Scan(&count)
 	return count, err
+}
 
 // GetAggregatedData returns aggregated metrics data
 func (s *SQLiteStorage) GetAggregatedData(query *MetricsQuery) (*MetricsResult, error) {
 	// Implementation for aggregated queries
 	return s.QueryMetrics(query)
+}
 
 // GetTimeSeriesData returns time series data for a specific metric
 func (s *SQLiteStorage) GetTimeSeriesData(metric string, timeRange TimeRange) ([]DataPoint, error) {
@@ -437,6 +456,7 @@ func (s *SQLiteStorage) GetTimeSeriesData(metric string, timeRange TimeRange) ([
 	}
 	
 	return result.Data, nil
+}
 
 // Helper methods
 
@@ -501,6 +521,7 @@ func (s *SQLiteStorage) extractMetricsFromScanResult(result *ScanResult) []Metri
 	}
 	
 	return metrics
+}
 
 func (s *SQLiteStorage) storeMetricInTx(tx *sql.Tx, metric *Metric) error {
 	tagsJSON, _ := json.Marshal(metric.Tags)
@@ -511,6 +532,7 @@ func (s *SQLiteStorage) storeMetricInTx(tx *sql.Tx, metric *Metric) error {
 	_, err := tx.Exec(query, metric.Name, metric.Value, metric.Unit, 
 		string(tagsJSON), metric.Timestamp, metric.Source)
 	return err
+}
 
 func (s *SQLiteStorage) createAggregatedMetrics(before time.Time) error {
 	// Create hourly aggregates for data older than the specified time
@@ -530,6 +552,7 @@ func (s *SQLiteStorage) createAggregatedMetrics(before time.Time) error {
 	
 	_, err := s.db.Exec(query, before)
 	return err
+}
 
 // Helper functions
 
@@ -538,12 +561,14 @@ func nullableFloat64(f float64) interface{} {
 		return nil
 	}
 	return f
+}
 
 func nullableString(s string) interface{} {
 	if s == "" {
 		return nil
 	}
 	return s
+}
 
 // Memory Storage Implementation
 
@@ -555,11 +580,13 @@ func NewMemoryStorage(config *Config, logger Logger) *MemoryStorage {
 		scanResults: make([]ScanResult, 0),
 		logger:      logger,
 	}
+}
 
 // Initialize initializes the memory storage
 func (m *MemoryStorage) Initialize() error {
 	m.logger.Info("Memory storage initialized")
 	return nil
+}
 
 // Close closes the memory storage (no-op for memory)
 func (m *MemoryStorage) Close() error {
@@ -569,6 +596,7 @@ func (m *MemoryStorage) Close() error {
 	m.metrics = nil
 	m.scanResults = nil
 	return nil
+}
 
 // StoreMetric stores a metric in memory
 func (m *MemoryStorage) StoreMetric(metric *Metric) error {
@@ -584,6 +612,7 @@ func (m *MemoryStorage) StoreMetric(metric *Metric) error {
 	}
 	
 	return nil
+}
 
 // StoreScanResult stores a scan result in memory
 func (m *MemoryStorage) StoreScanResult(result *ScanResult) error {
@@ -599,6 +628,7 @@ func (m *MemoryStorage) StoreScanResult(result *ScanResult) error {
 	}
 	
 	return nil
+}
 
 // QueryMetrics queries metrics from memory
 func (m *MemoryStorage) QueryMetrics(query *MetricsQuery) (*MetricsResult, error) {
@@ -660,6 +690,7 @@ func (m *MemoryStorage) QueryMetrics(query *MetricsQuery) (*MetricsResult, error
 		Total:     len(dataPoints),
 		QueryTime: time.Since(startTime),
 	}, nil
+}
 
 // DeleteRawData deletes old metrics from memory
 func (m *MemoryStorage) DeleteRawData(before time.Time) error {
@@ -670,10 +701,12 @@ func (m *MemoryStorage) DeleteRawData(before time.Time) error {
 	m.cleanupScanResults(before)
 	
 	return nil
+}
 
 // ArchiveData is a no-op for memory storage
 func (m *MemoryStorage) ArchiveData(before time.Time) error {
 	return nil
+}
 
 // GetStorageSize returns approximate memory usage
 func (m *MemoryStorage) GetStorageSize() (int64, error) {
@@ -683,6 +716,7 @@ func (m *MemoryStorage) GetStorageSize() (int64, error) {
 	// Rough estimate of memory usage
 	size := int64(len(m.metrics)*100 + len(m.scanResults)*1000)
 	return size, nil
+}
 
 // GetRecordCount returns the total number of records in memory
 func (m *MemoryStorage) GetRecordCount() (int64, error) {
@@ -690,10 +724,12 @@ func (m *MemoryStorage) GetRecordCount() (int64, error) {
 	defer m.mu.RUnlock()
 	
 	return int64(len(m.metrics) + len(m.scanResults)), nil
+}
 
 // GetAggregatedData returns aggregated data from memory
 func (m *MemoryStorage) GetAggregatedData(query *MetricsQuery) (*MetricsResult, error) {
 	return m.QueryMetrics(query)
+}
 
 // GetTimeSeriesData returns time series data from memory
 func (m *MemoryStorage) GetTimeSeriesData(metric string, timeRange TimeRange) ([]DataPoint, error) {
@@ -708,6 +744,7 @@ func (m *MemoryStorage) GetTimeSeriesData(metric string, timeRange TimeRange) ([
 	}
 	
 	return result.Data, nil
+}
 
 // Helper methods for memory storage
 
@@ -719,6 +756,7 @@ func (m *MemoryStorage) cleanupMetrics(before time.Time) {
 		}
 	}
 	m.metrics = filtered
+}
 
 func (m *MemoryStorage) cleanupScanResults(before time.Time) {
 	filtered := make([]ScanResult, 0)
@@ -728,6 +766,7 @@ func (m *MemoryStorage) cleanupScanResults(before time.Time) {
 		}
 	}
 	m.scanResults = filtered
+}
 
 func (m *MemoryStorage) matchesFilters(metric Metric, filters map[string]string) bool {
 	for key, value := range filters {
@@ -736,6 +775,7 @@ func (m *MemoryStorage) matchesFilters(metric Metric, filters map[string]string)
 		}
 	}
 	return true
+}
 
 func (m *MemoryStorage) metricsToDataPoints(metrics []Metric) []DataPoint {
 	pointMap := make(map[time.Time]*DataPoint)
@@ -761,6 +801,7 @@ func (m *MemoryStorage) metricsToDataPoints(metrics []Metric) []DataPoint {
 	}
 	
 	return dataPoints
+}
 
 func (m *MemoryStorage) extractMetricsFromScanResult(result *ScanResult) []Metric {
 	// Same implementation as SQLite storage
@@ -790,54 +831,18 @@ func (m *MemoryStorage) extractMetricsFromScanResult(result *ScanResult) []Metri
 	}
 	
 	return metrics
+}
 
 // Placeholder implementations for other storage types
 
 func NewPostgreSQLStorage(config *Config, logger Logger) (DataStorage, error) {
 	return nil, fmt.Errorf("PostgreSQL storage not yet implemented")
+}
 
 func NewMySQLStorage(config *Config, logger Logger) (DataStorage, error) {
 	return nil, fmt.Errorf("MySQL storage not yet implemented")
+}
 
 func NewInfluxDBStorage(config *Config, logger Logger) (DataStorage, error) {
 	return nil, fmt.Errorf("InfluxDB storage not yet implemented")
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

@@ -1,9 +1,9 @@
 package distribution
 
 import (
-	"context"
 	"fmt"
 	"runtime"
+	"time"
 )
 
 // DistributionManager orchestrates cross-platform CLI distribution
@@ -16,6 +16,7 @@ type DistributionManager struct {
 	analytics        InstallationAnalytics
 	releaseManager   ReleaseManager
 	logger           Logger
+}
 
 // Config defines distribution configuration
 type Config struct {
@@ -52,6 +53,7 @@ type BuildTarget struct {
 	OutputName   string       `json:"output_name"`
 	Compress     bool         `json:"compress"`
 	Notarize     bool         `json:"notarize"`     // For macOS
+}
 
 // Platform represents target platforms
 type Platform string
@@ -101,6 +103,7 @@ type SigningConfig struct {
 	Algorithm    string            `json:"algorithm"`
 	Timestamping bool              `json:"timestamping"`
 	Platforms    map[Platform]PlatformSigningConfig `json:"platforms"`
+}
 
 // PlatformSigningConfig defines platform-specific signing
 type PlatformSigningConfig struct {
@@ -191,6 +194,7 @@ type Dependency struct {
 	Version     string `json:"version"`
 	Optional    bool   `json:"optional"`
 	Platform    string `json:"platform,omitempty"`
+}
 
 // UpdateServerConfig defines update server configuration
 type UpdateServerConfig struct {
@@ -211,6 +215,7 @@ type VerificationConfig struct {
 	TrustedKeys    []string `json:"trusted_keys"`
 	CertPinning    bool     `json:"cert_pinning"`
 	PinnedCerts    []string `json:"pinned_certs"`
+}
 
 // AnalyticsConfig defines installation analytics configuration
 type AnalyticsConfig struct {
@@ -231,6 +236,7 @@ type ReleaseStrategy struct {
 	CanaryDuration time.Duration   `json:"canary_duration"`
 	AutoPromote    bool            `json:"auto_promote"`
 	HealthChecks   []HealthCheck   `json:"health_checks"`
+}
 
 // ReleaseType represents different release strategies
 type ReleaseType string
@@ -303,6 +309,7 @@ func NewDistributionManager(config *Config, logger Logger) *DistributionManager 
 	manager.registerDistributionChannels()
 	
 	return manager
+}
 
 // GetSupportedPlatforms returns list of supported platforms
 func (dm *DistributionManager) GetSupportedPlatforms() []PlatformInfo {
@@ -319,6 +326,7 @@ func (dm *DistributionManager) GetSupportedPlatforms() []PlatformInfo {
 	}
 	
 	return platforms
+}
 
 // GetCurrentPlatform returns information about the current platform
 func (dm *DistributionManager) GetCurrentPlatform() PlatformInfo {
@@ -329,6 +337,7 @@ func (dm *DistributionManager) GetCurrentPlatform() PlatformInfo {
 		GoArch:       runtime.GOARCH,
 		Available:    true,
 	}
+}
 
 // GetAvailableChannels returns list of available distribution channels
 func (dm *DistributionManager) GetAvailableChannels() []ChannelInfo {
@@ -347,6 +356,7 @@ func (dm *DistributionManager) GetAvailableChannels() []ChannelInfo {
 	}
 	
 	return channels
+}
 
 // GetPackageManagers returns list of supported package managers
 func (dm *DistributionManager) GetPackageManagers() []PackageManagerInfo {
@@ -364,6 +374,7 @@ func (dm *DistributionManager) GetPackageManagers() []PackageManagerInfo {
 	}
 	
 	return managers
+}
 
 // ValidateDistributionConfig validates the distribution configuration
 func (dm *DistributionManager) ValidateDistributionConfig() []ValidationError {
@@ -422,6 +433,7 @@ func (dm *DistributionManager) ValidateDistributionConfig() []ValidationError {
 	}
 	
 	return errors
+}
 
 // GetDistributionMatrix returns the distribution matrix
 func (dm *DistributionManager) GetDistributionMatrix() DistributionMatrix {
@@ -455,6 +467,7 @@ func (dm *DistributionManager) GetDistributionMatrix() DistributionMatrix {
 	}
 	
 	return matrix
+}
 
 // Internal methods
 
@@ -488,6 +501,7 @@ func (dm *DistributionManager) registerPackageManagers() {
 		dm.packageManagers[config.Name] = pm
 		dm.logger.Info("Registered package manager", "name", config.Name, "type", config.Type)
 	}
+}
 
 func (dm *DistributionManager) registerDistributionChannels() {
 	for _, config := range dm.config.Channels {
@@ -511,6 +525,7 @@ func (dm *DistributionManager) registerDistributionChannels() {
 		dm.channels[config.Name] = channel
 		dm.logger.Info("Registered distribution channel", "name", config.Name, "type", config.Type)
 	}
+}
 
 func (dm *DistributionManager) getPackageManagerPlatforms(pmType PackageManagerType) []Platform {
 	switch pmType {
@@ -523,6 +538,7 @@ func (dm *DistributionManager) getPackageManagerPlatforms(pmType PackageManagerT
 	default:
 		return []Platform{PlatformLinux, PlatformMacOS, PlatformWindows}
 	}
+}
 
 // Supporting types
 
@@ -547,10 +563,12 @@ type PackageManagerInfo struct {
 	Type       PackageManagerType `json:"type"`
 	Repository string             `json:"repository"`
 	AutoUpdate bool               `json:"auto_update"`
+}
 
 type ValidationError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
+}
 
 type DistributionMatrix struct {
 	Platforms map[Platform][]Architecture          `json:"platforms"`
@@ -572,6 +590,8 @@ type GCSConfig struct {
 	ProjectID   string `json:"project_id"`
 	Credentials string `json:"credentials"`
 	Prefix      string `json:"prefix"`
+}
 
 type LocalConfig struct {
 	Path string `json:"path"`
+}

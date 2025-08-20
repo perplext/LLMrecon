@@ -4,12 +4,87 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/security"
 )
+
+// templateVerifierAdapter adapts the security.Verifier to match the TemplateVerifier interface
+type templateVerifierAdapter struct {
+	verifier *security.Verifier
+}
+
+// VerifyTemplate verifies a template
+func (t *templateVerifierAdapter) VerifyTemplate(ctx context.Context, template *format.Template, options *security.VerificationOptions) (*security.VerificationResult, error) {
+	// Convert the template to TemplateInfo
+	templateInfo := &security.TemplateInfo{
+		Name:        template.Name,
+		Content:     template.Content,
+		Size:        int64(len(template.Content)),
+		Extension:   filepath.Ext(template.Path),
+		Metadata:    template.Metadata,
+		SubmittedAt: time.Now(),
+	}
+
+	// Verify using the underlying verifier
+	result, err := t.verifier.VerifyTemplate(ctx, templateInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert result to VerificationResult
+	verificationResult := &security.VerificationResult{
+		TemplatePath: template.Path,
+		TemplateID:   template.ID,
+		TemplateName: template.Name,
+		Passed:       result.Valid,
+		Score:        result.Score,
+		MaxScore:     1.0,
+		Metadata:     make(map[string]interface{}),
+	}
+
+	// Convert VerifierIssues to SecurityIssues
+	for _, issue := range result.Issues {
+		securityIssue := &security.SecurityIssue{
+			ID:          fmt.Sprintf("issue-%d", len(verificationResult.Issues)),
+			Type:        security.SecurityIssueType(issue.Type),
+			Description: issue.Description,
+			Location:    issue.Location,
+			Severity:    common.SeverityLevel(issue.Severity),
+			Remediation: issue.Suggestion,
+			Context:     "",
+		}
+		verificationResult.Issues = append(verificationResult.Issues, securityIssue)
+	}
+
+	return verificationResult, nil
+}
+
+// VerifyTemplateFile verifies a template file
+func (t *templateVerifierAdapter) VerifyTemplateFile(ctx context.Context, templatePath string, options *security.VerificationOptions) (*security.VerificationResult, error) {
+	// Read the template file
+	content, err := ioutil.ReadFile(filepath.Clean(templatePath))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read template file: %w", err)
+	}
+
+	// Parse the template
+	template, err := format.ParseTemplate(content)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	// Set template path
+	template.Path = templatePath
+
+	// Verify the template
+	return t.VerifyTemplate(ctx, template, options)
+}
 
 // SecurityFramework provides a comprehensive security framework for templates
 type SecurityFramework struct {
@@ -27,6 +102,7 @@ type SecurityFramework struct {
 	metrics *MetricsCollector
 	// mutex is used for thread safety
 	mutex sync.RWMutex
+}
 
 // FrameworkOptions contains options for the security framework
 type FrameworkOptions struct {
@@ -46,6 +122,7 @@ type FrameworkOptions struct {
 	LogDirectory string
 	// EnableMetrics enables metrics collection
 	EnableMetrics bool
+}
 
 // DefaultFrameworkOptions returns the default framework options
 func DefaultFrameworkOptions() *FrameworkOptions {
@@ -59,6 +136,7 @@ func DefaultFrameworkOptions() *FrameworkOptions {
 		LogDirectory:           "",
 		EnableMetrics:          true,
 	}
+}
 
 // NewSecurityFramework creates a new security framework
 func NewSecurityFramework(options *FrameworkOptions) (*SecurityFramework, error) {
@@ -67,7 +145,17 @@ func NewSecurityFramework(options *FrameworkOptions) (*SecurityFramework, error)
 	}
 	
 	// Create the verifier
-	verifier := security.NewTemplateVerifier()
+	verifierConfig := security.VerificationConfig{
+		EnableCache:       true,
+		CacheTimeout:     30 * time.Minute,
+		MaxTemplateSize:   1024 * 1024, // 1MB
+		AllowedExtensions: []string{".yml", ".yaml", ".json"},
+		BlockedPatterns:   []string{"exec", "eval", "system"},
+		StrictMode:        false,
+		ValidationTimeout: 30 * time.Second,
+	}
+	baseVerifier := security.NewVerifier(verifierConfig)
+	verifier := &templateVerifierAdapter{verifier: baseVerifier}
 	
 	// Create the validator
 	validator := NewTemplateValidator(verifier, options.ValidationOptions)
@@ -115,6 +203,7 @@ func NewSecurityFramework(options *FrameworkOptions) (*SecurityFramework, error)
 		metrics:   metrics,
 		mutex:     sync.RWMutex{},
 	}, nil
+}
 
 // ValidateTemplate validates a template
 func (f *SecurityFramework) ValidateTemplate(ctx context.Context, template *format.Template) (*ValidationResult, error) {
@@ -152,6 +241,7 @@ func (f *SecurityFramework) ValidateTemplate(ctx context.Context, template *form
 	}
 	
 	return result, nil
+}
 
 // ValidateTemplateFile validates a template file
 func (f *SecurityFramework) ValidateTemplateFile(ctx context.Context, templatePath string) (*ValidationResult, error) {
@@ -162,7 +252,7 @@ func (f *SecurityFramework) ValidateTemplateFile(ctx context.Context, templatePa
 	}
 	
 	// Parse the template
-	template, err := format.ParseTemplate(string(content), filepath.Base(templatePath))
+	template, err := format.ParseTemplate(content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
@@ -172,6 +262,7 @@ func (f *SecurityFramework) ValidateTemplateFile(ctx context.Context, templatePa
 	
 	// Validate the template
 	return f.ValidateTemplate(ctx, template)
+}
 
 // ExecuteTemplate executes a template in the sandbox
 func (f *SecurityFramework) ExecuteTemplate(ctx context.Context, template *format.Template) (*ExecutionResult, error) {
@@ -195,6 +286,7 @@ func (f *SecurityFramework) ExecuteTemplate(ctx context.Context, template *forma
 	}
 	
 	return result, nil
+}
 
 // ExecuteTemplateFile executes a template file in the sandbox
 func (f *SecurityFramework) ExecuteTemplateFile(ctx context.Context, templatePath string) (*ExecutionResult, error) {
@@ -205,7 +297,7 @@ func (f *SecurityFramework) ExecuteTemplateFile(ctx context.Context, templatePat
 	}
 	
 	// Parse the template
-	template, err := format.ParseTemplate(string(content), filepath.Base(templatePath))
+	template, err := format.ParseTemplate(content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
@@ -215,6 +307,7 @@ func (f *SecurityFramework) ExecuteTemplateFile(ctx context.Context, templatePat
 	
 	// Execute the template
 	return f.ExecuteTemplate(ctx, template)
+}
 
 // CreateTemplateVersion creates a new version of a template
 func (f *SecurityFramework) CreateTemplateVersion(ctx context.Context, template *format.Template, user string) (*TemplateVersion, error) {
@@ -233,6 +326,7 @@ func (f *SecurityFramework) CreateTemplateVersion(ctx context.Context, template 
 	}
 	
 	return version, nil
+}
 
 // GetTemplateVersion gets a template version
 func (f *SecurityFramework) GetTemplateVersion(templateID, versionID string) (*TemplateVersion, error) {
@@ -240,6 +334,7 @@ func (f *SecurityFramework) GetTemplateVersion(templateID, versionID string) (*T
 	defer f.mutex.RUnlock()
 	
 	return f.workflow.GetVersion(templateID, versionID)
+}
 
 // GetLatestTemplateVersion gets the latest version of a template
 func (f *SecurityFramework) GetLatestTemplateVersion(templateID string) (*TemplateVersion, error) {
@@ -247,6 +342,7 @@ func (f *SecurityFramework) GetLatestTemplateVersion(templateID string) (*Templa
 	defer f.mutex.RUnlock()
 	
 	return f.workflow.GetLatestVersion(templateID)
+}
 
 // GetLatestApprovedTemplateVersion gets the latest approved version of a template
 func (f *SecurityFramework) GetLatestApprovedTemplateVersion(templateID string) (*TemplateVersion, error) {
@@ -254,6 +350,7 @@ func (f *SecurityFramework) GetLatestApprovedTemplateVersion(templateID string) 
 	defer f.mutex.RUnlock()
 	
 	return f.workflow.GetLatestApprovedVersion(templateID)
+}
 
 // SubmitTemplateForReview submits a template version for review
 func (f *SecurityFramework) SubmitTemplateForReview(templateID, versionID, user string) error {
@@ -274,6 +371,7 @@ func (f *SecurityFramework) SubmitTemplateForReview(templateID, versionID, user 
 	}
 	
 	return nil
+}
 
 // ApproveTemplate approves a template version
 func (f *SecurityFramework) ApproveTemplate(templateID, versionID, user string) error {
@@ -294,6 +392,7 @@ func (f *SecurityFramework) ApproveTemplate(templateID, versionID, user string) 
 	}
 	
 	return nil
+}
 
 // RejectTemplate rejects a template version
 func (f *SecurityFramework) RejectTemplate(templateID, versionID, user, reason string) error {
@@ -314,6 +413,7 @@ func (f *SecurityFramework) RejectTemplate(templateID, versionID, user, reason s
 	}
 	
 	return nil
+}
 
 // AddApprover adds an approver to the workflow
 func (f *SecurityFramework) AddApprover(approver string) {
@@ -321,6 +421,7 @@ func (f *SecurityFramework) AddApprover(approver string) {
 	defer f.mutex.Unlock()
 	
 	f.workflow.AddApprover(approver)
+}
 
 // IsApprover checks if a user is an approver
 func (f *SecurityFramework) IsApprover(user string) bool {
@@ -328,6 +429,7 @@ func (f *SecurityFramework) IsApprover(user string) bool {
 	defer f.mutex.RUnlock()
 	
 	return f.workflow.IsApprover(user)
+}
 
 // logValidationResult logs a validation result
 func (f *SecurityFramework) logValidationResult(result *ValidationResult) {
@@ -353,6 +455,7 @@ func (f *SecurityFramework) logValidationResult(result *ValidationResult) {
 	// Write to log file
 	logFile := filepath.Join(f.options.LogDirectory, "validation.log")
 	f.appendToLogFile(logFile, logEntry)
+}
 
 // logExecutionResult logs an execution result
 func (f *SecurityFramework) logExecutionResult(result *ExecutionResult, template *format.Template) {
@@ -380,6 +483,7 @@ func (f *SecurityFramework) logExecutionResult(result *ExecutionResult, template
 	// Write to log file
 	logFile := filepath.Join(f.options.LogDirectory, "execution.log")
 	f.appendToLogFile(logFile, logEntry)
+}
 
 // appendToLogFile appends a log entry to a file
 func (f *SecurityFramework) appendToLogFile(logFile, logEntry string) {
@@ -392,6 +496,7 @@ func (f *SecurityFramework) appendToLogFile(logFile, logEntry string) {
 	
 	// Write the log entry
 	file.WriteString(logEntry)
+}
 
 // GetMetrics returns the metrics from the metrics collector
 func (f *SecurityFramework) GetMetrics() map[string]interface{} {
@@ -409,6 +514,7 @@ func (f *SecurityFramework) GetMetrics() map[string]interface{} {
 		"execution":  f.metrics.GetExecutionMetrics(),
 		"workflow":   f.metrics.GetWorkflowMetrics(),
 	}
+}
 
 // GetAlerts returns the alerts from the metrics collector
 func (f *SecurityFramework) GetAlerts() []Alert {
@@ -420,6 +526,7 @@ func (f *SecurityFramework) GetAlerts() []Alert {
 	}
 	
 	return f.metrics.GetAlerts()
+}
 
 // GetAlertsByLevel returns alerts by level from the metrics collector
 func (f *SecurityFramework) GetAlertsByLevel(level AlertLevel) []Alert {
@@ -431,6 +538,7 @@ func (f *SecurityFramework) GetAlertsByLevel(level AlertLevel) []Alert {
 	}
 	
 	return f.metrics.GetAlertsByLevel(level)
+}
 
 // ClearAlerts clears all alerts from the metrics collector
 func (f *SecurityFramework) ClearAlerts() {
@@ -442,6 +550,7 @@ func (f *SecurityFramework) ClearAlerts() {
 	}
 	
 	f.metrics.ClearAlerts()
+}
 
 // ResetMetrics resets all metrics in the metrics collector
 func (f *SecurityFramework) ResetMetrics() {
@@ -453,6 +562,7 @@ func (f *SecurityFramework) ResetMetrics() {
 	}
 	
 	f.metrics.ResetMetrics()
+}
 
 // ValidationResult represents the result of template validation
 type ValidationResult struct {
@@ -466,24 +576,27 @@ type ValidationResult struct {
 	ValidationTime time.Duration
 	// Timestamp is the time of validation
 	Timestamp time.Time
+}
 
 // HasCriticalIssues checks if the validation result has critical issues
 func (r *ValidationResult) HasCriticalIssues() bool {
 	for _, issue := range r.Issues {
-		if issue.Severity == common.SeverityCritical {
+		if issue.Severity == common.Critical {
 			return true
 		}
 	}
 	return false
+}
 
 // HasHighIssues checks if the validation result has high severity issues
 func (r *ValidationResult) HasHighIssues() bool {
 	for _, issue := range r.Issues {
-		if issue.Severity == common.SeverityHigh {
+		if issue.Severity == common.High {
 			return true
 		}
 	}
 	return false
+}
 
 // GetIssuesBySeverity gets issues by severity
 func (r *ValidationResult) GetIssuesBySeverity(severity common.SeverityLevel) []*security.SecurityIssue {
@@ -493,3 +606,5 @@ func (r *ValidationResult) GetIssuesBySeverity(severity common.SeverityLevel) []
 			issues = append(issues, issue)
 		}
 	}
+	return issues
+}

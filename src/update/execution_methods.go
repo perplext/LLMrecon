@@ -3,6 +3,9 @@ package update
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 // ExecuteUpdate executes an update from the given package
@@ -157,3 +160,5 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 	// Log update success
 	e.Logger.Info("UpdateExecutor", "Update execution completed successfully", transaction.ID, transaction.GetSummary())
 
+	return nil
+}

@@ -25,6 +25,7 @@ type RateLimiterConfig struct {
 	ExemptIPs []string
 	// ExemptPaths is a list of paths exempt from rate limiting
 	ExemptPaths []string
+}
 
 // DefaultRateLimiterConfig returns the default rate limiter configuration
 func DefaultRateLimiterConfig() *RateLimiterConfig {
@@ -35,6 +36,7 @@ func DefaultRateLimiterConfig() *RateLimiterConfig {
 		TrustedProxies:    []string{"127.0.0.1", "::1"},
 		ExemptPaths:       []string{"/health", "/metrics"},
 	}
+}
 
 // RateLimiter implements rate limiting for API requests
 type RateLimiter struct {
@@ -68,6 +70,7 @@ func NewRateLimiter(config *RateLimiterConfig) *RateLimiter {
 		exemptIPs:  exemptIPs,
 		exemptCIDR: exemptCIDR,
 	}
+}
 
 // GetLimiter gets a rate limiter for a client
 func (rl *RateLimiter) GetLimiter(clientIP string) *rate.Limiter {
@@ -89,6 +92,7 @@ func (rl *RateLimiter) GetLimiter(clientIP string) *rate.Limiter {
 	}
 
 	return limiter
+}
 
 // CleanupLimiters removes expired limiters
 func (rl *RateLimiter) CleanupLimiters(maxAge time.Duration) {
@@ -98,6 +102,7 @@ func (rl *RateLimiter) CleanupLimiters(maxAge time.Duration) {
 	// This is a simple implementation that removes all limiters
 	// In a production environment, you would track the last access time
 	rl.limiters = make(map[string]*rate.Limiter)
+}
 
 // IsExempt checks if a client is exempt from rate limiting
 func (rl *RateLimiter) IsExempt(clientIP string, path string) bool {
@@ -124,6 +129,7 @@ func (rl *RateLimiter) IsExempt(clientIP string, path string) bool {
 	}
 
 	return false
+}
 
 // GetClientIP gets the client IP from a request
 func (rl *RateLimiter) GetClientIP(r *http.Request) string {
@@ -149,6 +155,7 @@ func (rl *RateLimiter) GetClientIP(r *http.Request) string {
 		return r.RemoteAddr
 	}
 	return ip
+}
 
 // isTrustedProxy checks if an IP is a trusted proxy
 func (rl *RateLimiter) isTrustedProxy(ip string) bool {
@@ -158,6 +165,7 @@ func (rl *RateLimiter) isTrustedProxy(ip string) bool {
 		}
 	}
 	return false
+}
 
 // splitIP splits a comma-separated list of IPs
 func splitIP(ip string) []string {
@@ -166,6 +174,7 @@ func splitIP(ip string) []string {
 		ips = append(ips, s)
 	}
 	return ips
+}
 
 // split splits a string by a separator and trims spaces
 func split(s string, sep rune) []string {
@@ -185,6 +194,7 @@ func split(s string, sep rune) []string {
 		result = append(result, string(builder))
 	}
 	return result
+}
 
 // RateLimiterStats represents statistics about the rate limiter
 type RateLimiterStats struct {
@@ -198,6 +208,7 @@ type RateLimiterStats struct {
 	ExemptPathsCount int `json:"exempt_paths_count"`
 	// ExemptIPsCount is the number of exempt IPs
 	ExemptIPsCount int `json:"exempt_ips_count"`
+}
 
 // GetStatistics returns statistics about the rate limiter
 func (rl *RateLimiter) GetStatistics() *RateLimiterStats {
@@ -212,6 +223,7 @@ func (rl *RateLimiter) GetStatistics() *RateLimiterStats {
 		ExemptPathsCount: len(rl.config.ExemptPaths),
 		ExemptIPsCount:   len(rl.exemptIPs) + len(rl.exemptCIDR),
 	}
+}
 
 // Middleware returns a middleware function for rate limiting
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
@@ -241,13 +253,4 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 		// Call the next handler
 		next.ServeHTTP(w, r)
 	})
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

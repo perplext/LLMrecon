@@ -3,6 +3,7 @@ package adapter
 
 import (
 	"context"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/access/interfaces"
 	"github.com/perplext/LLMrecon/src/security/access/models"
@@ -42,6 +43,7 @@ type IncidentStore interface {
 	
 	// Close closes the incident store
 	Close() error
+}
 
 // IncidentStoreAdapter adapts between the IncidentStore and domain types
 type IncidentStoreAdapter struct {
@@ -53,6 +55,7 @@ func NewIncidentStoreAdapter(store IncidentStore) interfaces.IncidentStore {
 	return &IncidentStoreAdapter{
 		store: store,
 	}
+}
 
 // convertInterfacesIncidentToModelIncident converts an interfaces.SecurityIncident to an IncidentEvent
 func convertInterfacesIncidentToModelIncident(incident *interfaces.SecurityIncident) *IncidentEvent {
@@ -78,6 +81,7 @@ func convertInterfacesIncidentToModelIncident(incident *interfaces.SecurityIncid
 		ResolvedAt:  resolvedAt,
 		Metadata:    incident.Metadata,
 	}
+}
 
 // convertModelIncidentToInterfacesIncident converts an IncidentEvent to an interfaces.SecurityIncident
 func convertModelIncidentToInterfacesIncident(incident *IncidentEvent) *interfaces.SecurityIncident {
@@ -105,6 +109,7 @@ func convertModelIncidentToInterfacesIncident(incident *IncidentEvent) *interfac
 	}
 
 	return interfacesIncident
+}
 
 // convertModelIncidentsToInterfacesIncidents converts a slice of IncidentEvent to a slice of interfaces.SecurityIncident
 func convertModelIncidentsToInterfacesIncidents(incidents []*IncidentEvent) []*interfaces.SecurityIncident {
@@ -116,10 +121,12 @@ func convertModelIncidentsToInterfacesIncidents(incidents []*IncidentEvent) []*i
 		result[i] = convertModelIncidentToInterfacesIncident(incident)
 	}
 	return result
+}
 
 // CreateIncident creates a new security incident
 func (a *IncidentStoreAdapter) CreateIncident(ctx context.Context, incident *interfaces.SecurityIncident) error {
 	return a.store.CreateIncident(ctx, convertInterfacesIncidentToModelIncident(incident))
+}
 
 // GetIncidentByID retrieves a security incident by ID
 func (a *IncidentStoreAdapter) GetIncidentByID(ctx context.Context, id string) (*interfaces.SecurityIncident, error) {
@@ -128,14 +135,17 @@ func (a *IncidentStoreAdapter) GetIncidentByID(ctx context.Context, id string) (
 		return nil, err
 	}
 	return convertModelIncidentToInterfacesIncident(incident), nil
+}
 
 // UpdateIncident updates an existing security incident
 func (a *IncidentStoreAdapter) UpdateIncident(ctx context.Context, incident *interfaces.SecurityIncident) error {
 	return a.store.UpdateIncident(ctx, convertInterfacesIncidentToModelIncident(incident))
+}
 
 // DeleteIncident deletes a security incident
 func (a *IncidentStoreAdapter) DeleteIncident(ctx context.Context, id string) error {
 	return a.store.DeleteIncident(ctx, id)
+}
 
 // ListIncidents lists security incidents with optional filtering
 func (a *IncidentStoreAdapter) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*interfaces.SecurityIncident, int, error) {
@@ -144,15 +154,9 @@ func (a *IncidentStoreAdapter) ListIncidents(ctx context.Context, filter map[str
 		return nil, 0, err
 	}
 	return convertModelIncidentsToInterfacesIncidents(incidents), count, nil
+}
 
 // Close closes the incident store
 func (a *IncidentStoreAdapter) Close() error {
 	return a.store.Close()
-}
-}
-}
-}
-}
-}
-}
 }

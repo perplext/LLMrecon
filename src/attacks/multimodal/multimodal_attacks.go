@@ -1,20 +1,21 @@
 package multimodal
 
 import (
-	"math/big"
-	cryptorand "crypto/rand"
-	
-		"bytes"
+	"bytes"
 	"context"
+	"crypto/rand"
+	cryptorand "crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/png"
-	"crypto/rand"
+	"math"
+	"math/big"
 	"strings"
 	"sync"
+	"time"
 )
 
 // MultiModalAttacker performs attacks using multiple input modalities
@@ -27,18 +28,18 @@ type MultiModalAttacker struct {
 	config           MultiModalConfig
 	activeAttacks    map[string]*MultiModalAttack
 	mu               sync.RWMutex
-
 }
+
 // MultiModalConfig configures multi-modal attacks
 type MultiModalConfig struct {
-	MaxImageSize      int64
-	MaxAudioDuration  time.Duration
-	MaxDocumentSize   int64
+	MaxImageSize        int64
+	MaxAudioDuration    time.Duration
+	MaxDocumentSize     int64
 	EnableSteganography bool
 	EnableAdvancedOCR   bool
 	PayloadComplexity   ComplexityLevel
-
 }
+
 // ComplexityLevel defines attack complexity
 type ComplexityLevel int
 
@@ -51,26 +52,26 @@ const (
 
 // MultiModalAttack represents an active multi-modal attack
 type MultiModalAttack struct {
-	ID              string
-	Type            AttackType
-	Modalities      []Modality
-	Payload         interface{}
-	Status          AttackStatus
-	StartTime       time.Time
-	Results         []AttackResult
-	mu              sync.RWMutex
-
+	ID         string
+	Type       AttackType
+	Modalities []Modality
+	Payload    interface{}
+	Status     AttackStatus
+	StartTime  time.Time
+	Results    []AttackResult
+	mu         sync.RWMutex
 }
+
 // AttackType categorizes multi-modal attacks
 type AttackType string
 
 const (
-	AttackImageInjection     AttackType = "image_injection"
-	AttackAudioManipulation  AttackType = "audio_manipulation"
-	AttackDocumentExploit    AttackType = "document_exploit"
-	AttackVideoPayload       AttackType = "video_payload"
-	AttackHybridAttack       AttackType = "hybrid_attack"
-	AttackSteganographic     AttackType = "steganographic"
+	AttackImageInjection    AttackType = "image_injection"
+	AttackAudioManipulation AttackType = "audio_manipulation"
+	AttackDocumentExploit   AttackType = "document_exploit"
+	AttackVideoPayload      AttackType = "video_payload"
+	AttackHybridAttack      AttackType = "hybrid_attack"
+	AttackSteganographic    AttackType = "steganographic"
 )
 
 // Modality represents input type
@@ -96,14 +97,215 @@ const (
 
 // AttackResult contains attack outcome
 type AttackResult struct {
-	Modality    Modality
-	Success     bool
-	Response    string
-	Extracted   interface{}
-	Timestamp   time.Time
+	Modality  Modality
+	Success   bool
+	Response  string
+	Extracted interface{}
+	Timestamp time.Time
 }
 
+// AttackRequest defines attack parameters
+type AttackRequest struct {
+	Type       AttackType
+	Modalities []Modality
+	Target     interface{}
+	Objective  string
+	Parameters map[string]interface{}
 }
+
+// AttackResponse contains attack results
+type AttackResponse struct {
+	AttackID string
+	Success  bool
+	Results  []AttackResult
+	Payload  interface{}
+}
+
+// ImageAttacker performs image-based attacks
+type ImageAttacker struct {
+	config         MultiModalConfig
+	payloadEncoder *ImagePayloadEncoder
+	adversarial    *AdversarialGenerator
+	ocr            *OCRManipulator
+	mu             sync.RWMutex
+}
+
+// ImagePayload represents an image attack payload
+type ImagePayload struct {
+	Image           image.Image
+	EncodedPayload  string
+	Metadata        map[string]string
+	HiddenText      string
+	AdversarialData []byte
+}
+
+// OCRManipulator manipulates OCR text in images
+type OCRManipulator struct {
+	fonts       map[string]Font
+	obfuscators []TextObfuscator
+	mu          sync.RWMutex
+}
+
+// Font represents a font for text rendering
+type Font struct {
+	Name       string
+	Size       int
+	Color      color.Color
+	Background color.Color
+}
+
+// TextObfuscator obfuscates text
+type TextObfuscator interface {
+	Obfuscate(text string) string
+}
+
+// AdversarialGenerator creates adversarial examples
+type AdversarialGenerator struct {
+	perturbations map[string]PerturbationMethod
+	models        map[string]ModelProfile
+	mu            sync.RWMutex
+}
+
+// PerturbationMethod generates adversarial perturbations
+type PerturbationMethod interface {
+	Generate(img image.Image, epsilon float64) []byte
+}
+
+// ModelProfile contains model-specific information
+type ModelProfile struct {
+	Name            string
+	Architecture    string
+	InputSize       image.Point
+	Vulnerabilities []string
+}
+
+// AudioAttacker performs audio-based attacks
+type AudioAttacker struct {
+	config      MultiModalConfig
+	encoder     *AudioEncoder
+	manipulator *AudioManipulator
+	synthesizer *VoiceSynthesizer
+	mu          sync.RWMutex
+}
+
+// AudioPayload represents audio attack payload
+type AudioPayload struct {
+	Audio          []byte
+	SampleRate     int
+	Channels       int
+	Duration       time.Duration
+	EmbeddedPrompt string
+	Subliminal     []byte
+}
+
+// DocumentAttacker performs document-based attacks
+type DocumentAttacker struct {
+	config          MultiModalConfig
+	formatExploiter *FormatExploiter
+	macroGenerator  *MacroGenerator
+	embedder        *PayloadEmbedder
+	mu              sync.RWMutex
+}
+
+// DocumentPayload represents document attack payload
+type DocumentPayload struct {
+	Format         DocumentFormat
+	Content        []byte
+	EmbeddedFiles  []EmbeddedFile
+	Macros         []Macro
+	ExploitVectors []ExploitVector
+}
+
+// DocumentFormat represents document type
+type DocumentFormat string
+
+const (
+	FormatPDF  DocumentFormat = "pdf"
+	FormatDOCX DocumentFormat = "docx"
+	FormatXLSX DocumentFormat = "xlsx"
+	FormatHTML DocumentFormat = "html"
+	FormatXML  DocumentFormat = "xml"
+	FormatJSON DocumentFormat = "json"
+)
+
+// VideoAttacker performs video-based attacks
+type VideoAttacker struct {
+	config           MultiModalConfig
+	frameManipulator *FrameManipulator
+	audioInjector    *AudioInjector
+	metadataEncoder  *MetadataEncoder
+	mu               sync.RWMutex
+}
+
+// VideoPayload represents video attack payload
+type VideoPayload struct {
+	Frames         []VideoFrame
+	Audio          []byte
+	Duration       time.Duration
+	FrameRate      int
+	Resolution     image.Point
+	HiddenChannels []HiddenChannel
+}
+
+// VideoFrame represents a video frame
+type VideoFrame struct {
+	Index     int
+	Image     image.Image
+	Timestamp time.Duration
+	Payload   []byte
+}
+
+// HybridPayloadGenerator creates multi-modal hybrid attacks
+type HybridPayloadGenerator struct {
+	config      MultiModalConfig
+	combinators []PayloadCombinator
+	mu          sync.RWMutex
+}
+
+// PayloadCombinator combines multiple modalities
+type PayloadCombinator interface {
+	Combine(payloads map[Modality]interface{}) (interface{}, error)
+}
+
+// HybridPayload represents combined multi-modal payload
+type HybridPayload struct {
+	ID         string
+	Components map[Modality]interface{}
+	Sequence   []ModalitySequence
+	Triggers   []CrossModalTrigger
+}
+
+// ModalitySequence defines execution order
+type ModalitySequence struct {
+	Modality Modality
+	Delay    time.Duration
+	Payload  interface{}
+}
+
+// CrossModalTrigger triggers across modalities
+type CrossModalTrigger struct {
+	Source    Modality
+	Target    Modality
+	Condition string
+	Action    string
+}
+
+// Placeholder types
+type ImagePayloadEncoder struct{}
+type AudioEncoder struct{}
+type AudioManipulator struct{}
+type VoiceSynthesizer struct{}
+type FormatExploiter struct{}
+type MacroGenerator struct{}
+type PayloadEmbedder struct{}
+type EmbeddedFile struct{}
+type Macro struct{}
+type ExploitVector struct{}
+type FrameManipulator struct{}
+type AudioInjector struct{}
+type MetadataEncoder struct{}
+type HiddenChannel struct{}
+
 // NewMultiModalAttacker creates a multi-modal attacker
 func NewMultiModalAttacker(config MultiModalConfig) *MultiModalAttacker {
 	return &MultiModalAttacker{
@@ -115,9 +317,9 @@ func NewMultiModalAttacker(config MultiModalConfig) *MultiModalAttacker {
 		hybridGenerator:  NewHybridPayloadGenerator(config),
 		activeAttacks:    make(map[string]*MultiModalAttack),
 	}
+}
 
 // ExecuteAttack performs a multi-modal attack
-}
 func (mma *MultiModalAttacker) ExecuteAttack(ctx context.Context, request AttackRequest) (*AttackResponse, error) {
 	attack := &MultiModalAttack{
 		ID:         generateAttackID(),
@@ -157,25 +359,8 @@ func (mma *MultiModalAttacker) ExecuteAttack(ctx context.Context, request Attack
 		Results:  results,
 		Payload:  payload,
 	}, nil
-
-// AttackRequest defines attack parameters
-type AttackRequest struct {
-	Type       AttackType
-	Modalities []Modality
-	Target     interface{}
-	Objective  string
-	Parameters map[string]interface{}
 }
 
-}
-// AttackResponse contains attack results
-type AttackResponse struct {
-	AttackID string
-	Success  bool
-	Results  []AttackResult
-	Payload  interface{}
-
-}
 // generatePayload creates attack payload
 func (mma *MultiModalAttacker) generatePayload(request AttackRequest) (interface{}, error) {
 	switch request.Type {
@@ -194,27 +379,8 @@ func (mma *MultiModalAttacker) generatePayload(request AttackRequest) (interface
 	default:
 		return nil, fmt.Errorf("unknown attack type: %s", request.Type)
 	}
-
-// ImageAttacker performs image-based attacks
-type ImageAttacker struct {
-	config          MultiModalConfig
-	payloadEncoder  *ImagePayloadEncoder
-	adversarial     *AdversarialGenerator
-	ocr             *OCRManipulator
-	mu              sync.RWMutex
 }
 
-}
-// ImagePayload represents an image attack payload
-type ImagePayload struct {
-	Image           image.Image
-	EncodedPayload  string
-	Metadata        map[string]string
-	HiddenText      string
-	AdversarialData []byte
-}
-
-}
 // NewImageAttacker creates an image attacker
 func NewImageAttacker(config MultiModalConfig) *ImageAttacker {
 	return &ImageAttacker{
@@ -223,9 +389,9 @@ func NewImageAttacker(config MultiModalConfig) *ImageAttacker {
 		adversarial:    NewAdversarialGenerator(),
 		ocr:            NewOCRManipulator(),
 	}
+}
 
 // GeneratePayload creates image-based attack payload
-}
 func (ia *ImageAttacker) GeneratePayload(request AttackRequest) (*ImagePayload, error) {
 	// Create base image
 	img := ia.createBaseImage(request)
@@ -248,9 +414,9 @@ func (ia *ImageAttacker) GeneratePayload(request AttackRequest) (*ImagePayload, 
 	}
 
 	return payload, nil
+}
 
 // createBaseImage generates base image for payload
-}
 func (ia *ImageAttacker) createBaseImage(request AttackRequest) image.Image {
 	width := 800
 	height := 600
@@ -264,21 +430,21 @@ func (ia *ImageAttacker) createBaseImage(request AttackRequest) image.Image {
 	ia.addVisualElements(img, request)
 
 	return img
+}
 
 // addBasicPayload adds simple image-based attacks
-}
 func (ia *ImageAttacker) addBasicPayload(payload *ImagePayload, request AttackRequest) {
 	// Embed text in image metadata
 	payload.Metadata["prompt"] = request.Objective
-	
+
 	// Add OCR-readable malicious text
 	if ia.config.EnableAdvancedOCR {
 		payload.HiddenText = ia.ocr.GenerateHiddenText(request.Objective)
 		ia.ocr.EmbedInImage(payload.Image, payload.HiddenText)
 	}
+}
 
 // addMediumPayload adds intermediate complexity attacks
-}
 func (ia *ImageAttacker) addMediumPayload(payload *ImagePayload, request AttackRequest) {
 	ia.addBasicPayload(payload, request)
 
@@ -290,9 +456,9 @@ func (ia *ImageAttacker) addMediumPayload(payload *ImagePayload, request AttackR
 
 	// Add adversarial perturbations
 	payload.AdversarialData = ia.adversarial.GeneratePerturbation(payload.Image)
+}
 
 // addAdvancedPayload adds complex attack vectors
-}
 func (ia *ImageAttacker) addAdvancedPayload(payload *ImagePayload, request AttackRequest) {
 	ia.addMediumPayload(payload, request)
 
@@ -302,9 +468,9 @@ func (ia *ImageAttacker) addAdvancedPayload(payload *ImagePayload, request Attac
 
 	// Add visual prompt injection
 	ia.addVisualPromptInjection(payload.Image, request)
+}
 
 // addExtremePayload adds most sophisticated attacks
-}
 func (ia *ImageAttacker) addExtremePayload(payload *ImagePayload, request AttackRequest) {
 	ia.addAdvancedPayload(payload, request)
 
@@ -314,69 +480,49 @@ func (ia *ImageAttacker) addExtremePayload(payload *ImagePayload, request Attack
 
 	// Add multiple encoding layers
 	ia.addMultiLayerEncoding(payload, request)
-
-// OCRManipulator manipulates OCR text in images
-type OCRManipulator struct {
-	fonts          map[string]Font
-	obfuscators    []TextObfuscator
-	mu             sync.RWMutex
 }
-
-}
-// Font represents a font for text rendering
-type Font struct {
-	Name       string
-	Size       int
-	Color      color.Color
-	Background color.Color
-
-}
-// TextObfuscator obfuscates text
-type TextObfuscator interface {
-	Obfuscate(text string) string
 
 // NewOCRManipulator creates OCR manipulator
-}
 func NewOCRManipulator() *OCRManipulator {
 	return &OCRManipulator{
 		fonts:       loadFonts(),
 		obfuscators: loadObfuscators(),
 	}
+}
 
 // GenerateHiddenText creates OCR-exploitable text
-}
 func (om *OCRManipulator) GenerateHiddenText(objective string) string {
 	// Create text that OCR will read differently than humans
 	hidden := ""
-	
+
 	// Use homoglyphs
 	hidden += om.homoglyphSubstitution(objective)
-	
+
 	// Add zero-width characters
 	hidden += om.addZeroWidthChars(objective)
-	
+
 	// Use confusable characters
 	hidden += om.useConfusables(objective)
 
 	return hidden
+}
 
 // EmbedInImage embeds hidden text in image
-}
 func (om *OCRManipulator) EmbedInImage(img image.Image, text string) {
 	// Embed text using various techniques
 	bounds := img.Bounds()
-	
+
 	// Technique 1: Near-invisible text
 	om.embedNearInvisible(img, text, bounds)
-	
+
 	// Technique 2: Scattered characters
 	om.embedScattered(img, text, bounds)
-	
+
 	// Technique 3: Color channel encoding
 	om.embedInColorChannels(img, text, bounds)
+}
 
 // homoglyphSubstitution replaces characters with lookalikes
-}
 func (om *OCRManipulator) homoglyphSubstitution(text string) string {
 	homoglyphs := map[rune][]rune{
 		'a': {'а', 'ａ', 'ᴀ'},
@@ -397,46 +543,47 @@ func (om *OCRManipulator) homoglyphSubstitution(text string) string {
 	}
 
 	return string(result)
-
-// AdversarialGenerator creates adversarial examples
-type AdversarialGenerator struct {
-	perturbations map[string]PerturbationMethod
-	models        map[string]ModelProfile
-	mu            sync.RWMutex
 }
 
-}
-// PerturbationMethod generates adversarial perturbations
-type PerturbationMethod interface {
-	Generate(img image.Image, epsilon float64) []byte
+// addZeroWidthChars adds zero-width characters
+func (om *OCRManipulator) addZeroWidthChars(text string) string {
+	zeroWidth := []rune{'\u200B', '\u200C', '\u200D', '\uFEFF'}
+	result := []rune{}
 
-// ModelProfile contains model-specific information
-}
-type ModelProfile struct {
-	Name           string
-	Architecture   string
-	InputSize      image.Point
-	Vulnerabilities []string
+	for i, char := range text {
+		result = append(result, char)
+		if i < len(text)-1 && randFloat64() < 0.3 {
+			result = append(result, zeroWidth[randInt(len(zeroWidth))])
+		}
+	}
 
+	return string(result)
 }
+
+// useConfusables uses confusable Unicode characters
+func (om *OCRManipulator) useConfusables(text string) string {
+	// Use confusable Unicode characters
+	return text
+}
+
 // NewAdversarialGenerator creates adversarial generator
 func NewAdversarialGenerator() *AdversarialGenerator {
 	return &AdversarialGenerator{
 		perturbations: loadPerturbationMethods(),
 		models:        loadModelProfiles(),
 	}
+}
 
 // GeneratePerturbation creates general adversarial perturbation
-}
 func (ag *AdversarialGenerator) GeneratePerturbation(img image.Image) []byte {
 	// Fast Gradient Sign Method (FGSM)
 	epsilon := 0.01
 	perturbation := ag.fgsm(img, epsilon)
-	
+
 	return perturbation
+}
 
 // GenerateModelSpecific creates model-specific adversarial examples
-}
 func (ag *AdversarialGenerator) GenerateModelSpecific(img image.Image, request AttackRequest) []byte {
 	// Identify target model
 	modelName := request.Parameters["model"].(string)
@@ -448,9 +595,9 @@ func (ag *AdversarialGenerator) GenerateModelSpecific(img image.Image, request A
 
 	// Apply model-specific vulnerabilities
 	return ag.exploitModelVulnerabilities(img, profile)
+}
 
 // fgsm implements Fast Gradient Sign Method
-}
 func (ag *AdversarialGenerator) fgsm(img image.Image, epsilon float64) []byte {
 	bounds := img.Bounds()
 	perturbation := make([]byte, bounds.Dx()*bounds.Dy()*4)
@@ -462,27 +609,8 @@ func (ag *AdversarialGenerator) fgsm(img image.Image, epsilon float64) []byte {
 	}
 
 	return perturbation
-
-// AudioAttacker performs audio-based attacks
-type AudioAttacker struct {
-	config         MultiModalConfig
-	encoder        *AudioEncoder
-	manipulator    *AudioManipulator
-	synthesizer    *VoiceSynthesizer
-	mu             sync.RWMutex
 }
 
-}
-// AudioPayload represents audio attack payload
-type AudioPayload struct {
-	Audio          []byte
-	SampleRate     int
-	Channels       int
-	Duration       time.Duration
-	EmbeddedPrompt string
-	Subliminal     []byte
-
-}
 // NewAudioAttacker creates audio attacker
 func NewAudioAttacker(config MultiModalConfig) *AudioAttacker {
 	return &AudioAttacker{
@@ -491,9 +619,9 @@ func NewAudioAttacker(config MultiModalConfig) *AudioAttacker {
 		manipulator: NewAudioManipulator(),
 		synthesizer: NewVoiceSynthesizer(),
 	}
+}
 
 // GeneratePayload creates audio attack payload
-}
 func (aa *AudioAttacker) GeneratePayload(request AttackRequest) (*AudioPayload, error) {
 	payload := &AudioPayload{
 		SampleRate: 44100,
@@ -517,9 +645,9 @@ func (aa *AudioAttacker) GeneratePayload(request AttackRequest) (*AudioPayload, 
 	}
 
 	return payload, nil
+}
 
 // generateBaseAudio creates innocent-sounding audio
-}
 func (aa *AudioAttacker) generateBaseAudio(request AttackRequest) []byte {
 	// Generate simple sine wave or white noise
 	duration := 5 * time.Second
@@ -533,7 +661,7 @@ func (aa *AudioAttacker) generateBaseAudio(request AttackRequest) []byte {
 	// Generate audio data
 	for i := 0; i < samples; i++ {
 		// Simple tone generation
-		value := int16(32767 * 0.1 * math.Sin(2*math.PI*440*float64(i)/44100))
+		value := int16(32767 * 0.1 * math.Sin(2*3.14159*440*float64(i)/44100))
 		audio[i*4] = byte(value)
 		audio[i*4+1] = byte(value >> 8)
 		audio[i*4+2] = byte(value)
@@ -541,9 +669,9 @@ func (aa *AudioAttacker) generateBaseAudio(request AttackRequest) []byte {
 	}
 
 	return audio
+}
 
 // addBasicAudioAttack adds simple audio attacks
-}
 func (aa *AudioAttacker) addBasicAudioAttack(payload *AudioPayload, request AttackRequest) {
 	// Embed prompt in audio metadata
 	payload.EmbeddedPrompt = request.Objective
@@ -551,38 +679,7 @@ func (aa *AudioAttacker) addBasicAudioAttack(payload *AudioPayload, request Atta
 	// Add ultrasonic frequencies
 	ultrasonic := aa.encoder.GenerateUltrasonic(request.Objective)
 	payload.Audio = aa.mixAudio(payload.Audio, ultrasonic)
-
-// DocumentAttacker performs document-based attacks
-type DocumentAttacker struct {
-	config          MultiModalConfig
-	formatExploiter *FormatExploiter
-	macroGenerator  *MacroGenerator
-	embedder        *PayloadEmbedder
-	mu              sync.RWMutex
 }
-
-}
-// DocumentPayload represents document attack payload
-type DocumentPayload struct {
-	Format         DocumentFormat
-	Content        []byte
-	EmbeddedFiles  []EmbeddedFile
-	Macros         []Macro
-	ExploitVectors []ExploitVector
-}
-
-}
-// DocumentFormat represents document type
-type DocumentFormat string
-
-const (
-	FormatPDF   DocumentFormat = "pdf"
-	FormatDOCX  DocumentFormat = "docx"
-	FormatXLSX  DocumentFormat = "xlsx"
-	FormatHTML  DocumentFormat = "html"
-	FormatXML   DocumentFormat = "xml"
-	FormatJSON  DocumentFormat = "json"
-)
 
 // NewDocumentAttacker creates document attacker
 func NewDocumentAttacker(config MultiModalConfig) *DocumentAttacker {
@@ -592,9 +689,9 @@ func NewDocumentAttacker(config MultiModalConfig) *DocumentAttacker {
 		macroGenerator:  NewMacroGenerator(),
 		embedder:        NewPayloadEmbedder(),
 	}
+}
 
 // GeneratePayload creates document attack payload
-}
 func (da *DocumentAttacker) GeneratePayload(request AttackRequest) (*DocumentPayload, error) {
 	// Determine best format for attack
 	format := da.selectOptimalFormat(request)
@@ -617,35 +714,8 @@ func (da *DocumentAttacker) GeneratePayload(request AttackRequest) (*DocumentPay
 	da.addAttackVectors(payload, request)
 
 	return payload, nil
-
-// VideoAttacker performs video-based attacks
-type VideoAttacker struct {
-	config        MultiModalConfig
-	frameManipulator *FrameManipulator
-	audioInjector    *AudioInjector
-	metadataEncoder  *MetadataEncoder
-	mu               sync.RWMutex
 }
 
-}
-// VideoPayload represents video attack payload
-type VideoPayload struct {
-	Frames         []VideoFrame
-	Audio          []byte
-	Duration       time.Duration
-	FrameRate      int
-	Resolution     image.Point
-	HiddenChannels []HiddenChannel
-
-}
-// VideoFrame represents a video frame
-type VideoFrame struct {
-	Index     int
-	Image     image.Image
-	Timestamp time.Duration
-	Payload   []byte
-
-}
 // NewVideoAttacker creates video attacker
 func NewVideoAttacker(config MultiModalConfig) *VideoAttacker {
 	return &VideoAttacker{
@@ -654,9 +724,9 @@ func NewVideoAttacker(config MultiModalConfig) *VideoAttacker {
 		audioInjector:    NewAudioInjector(),
 		metadataEncoder:  NewMetadataEncoder(),
 	}
+}
 
 // GeneratePayload creates video attack payload
-}
 func (va *VideoAttacker) GeneratePayload(request AttackRequest) (*VideoPayload, error) {
 	payload := &VideoPayload{
 		FrameRate:  30,
@@ -676,53 +746,17 @@ func (va *VideoAttacker) GeneratePayload(request AttackRequest) (*VideoPayload, 
 	va.addVideoAttacks(payload, request)
 
 	return payload, nil
-
-// HybridPayloadGenerator creates multi-modal hybrid attacks
-type HybridPayloadGenerator struct {
-	config      MultiModalConfig
-	combinators []PayloadCombinator
-	mu          sync.RWMutex
 }
 
-}
-// PayloadCombinator combines multiple modalities
-type PayloadCombinator interface {
-	Combine(payloads map[Modality]interface{}) (interface{}, error)
-
-// HybridPayload represents combined multi-modal payload
-}
-type HybridPayload struct {
-	ID         string
-	Components map[Modality]interface{}
-	Sequence   []ModalitySequence
-	Triggers   []CrossModalTrigger
-
-}
-// ModalitySequence defines execution order
-type ModalitySequence struct {
-	Modality Modality
-	Delay    time.Duration
-	Payload  interface{}
-}
-
-}
-// CrossModalTrigger triggers across modalities
-type CrossModalTrigger struct {
-	Source      Modality
-	Target      Modality
-	Condition   string
-	Action      string
-
-}
 // NewHybridPayloadGenerator creates hybrid generator
 func NewHybridPayloadGenerator(config MultiModalConfig) *HybridPayloadGenerator {
 	return &HybridPayloadGenerator{
 		config:      config,
 		combinators: loadCombinators(),
 	}
+}
 
 // GeneratePayload creates hybrid attack payload
-}
 func (hpg *HybridPayloadGenerator) GeneratePayload(request AttackRequest) (*HybridPayload, error) {
 	payload := &HybridPayload{
 		ID:         generatePayloadID(),
@@ -747,9 +781,9 @@ func (hpg *HybridPayloadGenerator) GeneratePayload(request AttackRequest) (*Hybr
 	payload.Triggers = hpg.generateTriggers(request)
 
 	return payload, nil
+}
 
 // generateSteganographicPayload creates steganographic attacks
-}
 func (mma *MultiModalAttacker) generateSteganographicPayload(request AttackRequest) (interface{}, error) {
 	// Select carrier modality
 	carrier := mma.selectCarrierModality(request)
@@ -764,9 +798,9 @@ func (mma *MultiModalAttacker) generateSteganographicPayload(request AttackReque
 	default:
 		return nil, fmt.Errorf("unsupported carrier modality: %s", carrier)
 	}
+}
 
 // generateImageStego creates steganographic image payload
-}
 func (mma *MultiModalAttacker) generateImageStego(request AttackRequest) (*ImagePayload, error) {
 	// Create innocent-looking image
 	img := mma.imageAttacker.createBaseImage(request)
@@ -785,9 +819,9 @@ func (mma *MultiModalAttacker) generateImageStego(request AttackRequest) (*Image
 	mma.addDecoyContent(img)
 
 	return payload, nil
+}
 
 // embedLSB embeds data using least significant bit
-}
 func (mma *MultiModalAttacker) embedLSB(img image.Image, data []byte) {
 	bounds := img.Bounds()
 	rgba, ok := img.(*image.RGBA)
@@ -816,9 +850,9 @@ func (mma *MultiModalAttacker) embedLSB(img image.Image, data []byte) {
 			rgba.SetRGBA(x, y, pixel)
 		}
 	}
+}
 
 // executePayload executes the generated payload
-}
 func (mma *MultiModalAttacker) executePayload(ctx context.Context, payload interface{}, request AttackRequest) ([]AttackResult, error) {
 	results := []AttackResult{}
 
@@ -841,9 +875,9 @@ func (mma *MultiModalAttacker) executePayload(ctx context.Context, payload inter
 	}
 
 	return results, nil
+}
 
 // executeImagePayload executes image-based attack
-}
 func (mma *MultiModalAttacker) executeImagePayload(ctx context.Context, payload *ImagePayload, request AttackRequest) AttackResult {
 	// Convert image to base64
 	var buf bytes.Buffer
@@ -865,58 +899,63 @@ func (mma *MultiModalAttacker) executeImagePayload(ctx context.Context, payload 
 		Response:  response,
 		Timestamp: time.Now(),
 	}
-
-// Helper functions
 }
+
+// Helper functions and placeholder implementations
 func (mma *MultiModalAttacker) selectCarrierModality(request AttackRequest) Modality {
 	// Select best modality for steganographic attack
 	if len(request.Modalities) > 0 {
 		return request.Modalities[0]
 	}
 	return ModalityImage
+}
 
 func (mma *MultiModalAttacker) addDecoyContent(img image.Image) {
 	// Add innocent-looking content to distract from hidden payload
-	// Implementation would add text, shapes, etc.
-
 }
+
+func (mma *MultiModalAttacker) generateAudioStego(request AttackRequest) (interface{}, error) {
+	return &AudioPayload{}, nil
+}
+
+func (mma *MultiModalAttacker) generateVideoStego(request AttackRequest) (interface{}, error) {
+	return &VideoPayload{}, nil
+}
+
 func (mma *MultiModalAttacker) executeAudioPayload(ctx context.Context, payload *AudioPayload, request AttackRequest) AttackResult {
-	// Execute audio attack
 	return AttackResult{
 		Modality:  ModalityAudio,
 		Success:   false,
 		Response:  "Audio attack execution placeholder",
 		Timestamp: time.Now(),
 	}
-
 }
+
 func (mma *MultiModalAttacker) executeDocumentPayload(ctx context.Context, payload *DocumentPayload, request AttackRequest) AttackResult {
-	// Execute document attack
 	return AttackResult{
 		Modality:  ModalityDocument,
 		Success:   false,
 		Response:  "Document attack execution placeholder",
 		Timestamp: time.Now(),
 	}
-
 }
+
 func (mma *MultiModalAttacker) executeVideoPayload(ctx context.Context, payload *VideoPayload, request AttackRequest) AttackResult {
-	// Execute video attack
 	return AttackResult{
 		Modality:  ModalityVideo,
 		Success:   false,
 		Response:  "Video attack execution placeholder",
 		Timestamp: time.Now(),
 	}
-
 }
+
 func (mma *MultiModalAttacker) executeHybridPayload(ctx context.Context, payload *HybridPayload, request AttackRequest) []AttackResult {
 	results := []AttackResult{}
 
 	// Execute each component in sequence
 	for _, seq := range payload.Sequence {
 		time.Sleep(seq.Delay)
-		
+
 		result := AttackResult{
 			Modality:  seq.Modality,
 			Success:   false,
@@ -927,222 +966,188 @@ func (mma *MultiModalAttacker) executeHybridPayload(ctx context.Context, payload
 	}
 
 	return results
+}
 
 func (mma *MultiModalAttacker) executeAgainstTarget(target interface{}, prompt string) string {
 	// Execute prompt against target LLM
 	return fmt.Sprintf("Response to: %s", prompt)
-
 }
+
 func (mma *MultiModalAttacker) checkSuccess(response, objective string) bool {
 	// Check if attack succeeded
 	return strings.Contains(strings.ToLower(response), strings.ToLower(objective))
-
-// Placeholder implementations
 }
+
+// Placeholder implementations for helper methods
 func (ia *ImageAttacker) addVisualElements(img image.Image, request AttackRequest) {
 	// Add visual elements to image
-
 }
+
 func (ia *ImageAttacker) createPolyglotPayload(request AttackRequest) string {
 	return "polyglot_payload"
 }
 
 func (ia *ImageAttacker) addVisualPromptInjection(img image.Image, request AttackRequest) {
 	// Add visual prompt injection
-
 }
+
 func (ia *ImageAttacker) addMultiLayerEncoding(payload *ImagePayload, request AttackRequest) {
 	// Add multiple encoding layers
-
 }
-func (om *OCRManipulator) addZeroWidthChars(text string) string {
-	// Add zero-width characters
-	zeroWidth := []rune{'\u200B', '\u200C', '\u200D', '\uFEFF'}
-	result := []rune{}
-	
-	for i, char := range text {
-		result = append(result, char)
-		if i < len(text)-1 && randFloat64() < 0.3 {
-			result = append(result, zeroWidth[randInt(len(zeroWidth))])
-		}
-	}
-	
-	return string(result)
-
-}
-func (om *OCRManipulator) useConfusables(text string) string {
-	// Use confusable Unicode characters
-	return text
 
 func (om *OCRManipulator) embedNearInvisible(img image.Image, text string, bounds image.Rectangle) {
 	// Embed nearly invisible text
-
 }
+
 func (om *OCRManipulator) embedScattered(img image.Image, text string, bounds image.Rectangle) {
 	// Embed scattered characters
-
 }
+
 func (om *OCRManipulator) embedInColorChannels(img image.Image, text string, bounds image.Rectangle) {
 	// Embed in color channels
-
 }
+
 func (ag *AdversarialGenerator) exploitModelVulnerabilities(img image.Image, profile ModelProfile) []byte {
 	// Exploit model-specific vulnerabilities
 	return []byte{}
-
 }
+
 func (aa *AudioAttacker) addMediumAudioAttack(payload *AudioPayload, request AttackRequest) {
 	// Add medium complexity audio attack
-
 }
+
 func (aa *AudioAttacker) addAdvancedAudioAttack(payload *AudioPayload, request AttackRequest) {
 	// Add advanced audio attack
-
 }
+
 func (aa *AudioAttacker) addExtremeAudioAttack(payload *AudioPayload, request AttackRequest) {
 	// Add extreme audio attack
-
 }
+
 func (aa *AudioAttacker) mixAudio(original, additional []byte) []byte {
 	// Mix audio streams
 	return original
+}
 
 func (da *DocumentAttacker) selectOptimalFormat(request AttackRequest) DocumentFormat {
 	// Select best document format for attack
 	return FormatPDF
+}
 
 func (da *DocumentAttacker) generateDocumentContent(format DocumentFormat, request AttackRequest) ([]byte, error) {
 	// Generate document content
 	return []byte("document_content"), nil
-
 }
+
 func (da *DocumentAttacker) addAttackVectors(payload *DocumentPayload, request AttackRequest) {
 	// Add attack vectors to document
-
 }
+
 func (va *VideoAttacker) generateFrame(index int, request AttackRequest) VideoFrame {
 	// Generate video frame
 	return VideoFrame{
 		Index:     index,
 		Timestamp: time.Duration(index) * time.Second / 30,
 	}
-
 }
+
 func (va *VideoAttacker) addVideoAttacks(payload *VideoPayload, request AttackRequest) {
 	// Add video-specific attacks
-
 }
+
 func (hpg *HybridPayloadGenerator) generateComponent(modality Modality, request AttackRequest) (interface{}, error) {
 	// Generate component for modality
 	return nil, nil
+}
 
 func (hpg *HybridPayloadGenerator) generateSequence(request AttackRequest) []ModalitySequence {
 	// Generate execution sequence
 	return []ModalitySequence{}
-
 }
+
 func (hpg *HybridPayloadGenerator) generateTriggers(request AttackRequest) []CrossModalTrigger {
 	// Generate cross-modal triggers
 	return []CrossModalTrigger{}
+}
 
 // Loader functions
-}
 func loadFonts() map[string]Font {
 	return map[string]Font{
 		"default": {Name: "Arial", Size: 12, Color: color.Black},
 	}
-
 }
+
 func loadObfuscators() []TextObfuscator {
 	return []TextObfuscator{}
-
 }
+
 func loadPerturbationMethods() map[string]PerturbationMethod {
 	return map[string]PerturbationMethod{}
-
 }
+
 func loadModelProfiles() map[string]ModelProfile {
 	return map[string]ModelProfile{
 		"gpt-4": {Name: "GPT-4", Architecture: "transformer"},
 	}
-
 }
+
 func loadCombinators() []PayloadCombinator {
 	return []PayloadCombinator{}
-
 }
+
 func generateAttackID() string {
 	return fmt.Sprintf("attack_%d", time.Now().UnixNano())
-
 }
+
 func generatePayloadID() string {
 	return fmt.Sprintf("payload_%d", time.Now().UnixNano())
+}
 
 // Placeholder constructors
-}
 func NewImagePayloadEncoder() *ImagePayloadEncoder { return &ImagePayloadEncoder{} }
-func NewAudioEncoder() *AudioEncoder { return &AudioEncoder{} }
-func NewAudioManipulator() *AudioManipulator { return &AudioManipulator{} }
-func NewVoiceSynthesizer() *VoiceSynthesizer { return &VoiceSynthesizer{} }
-func NewFormatExploiter() *FormatExploiter { return &FormatExploiter{} }
-func NewMacroGenerator() *MacroGenerator { return &MacroGenerator{} }
-func NewPayloadEmbedder() *PayloadEmbedder { return &PayloadEmbedder{} }
-func NewFrameManipulator() *FrameManipulator { return &FrameManipulator{} }
-func NewAudioInjector() *AudioInjector { return &AudioInjector{} }
-func NewMetadataEncoder() *MetadataEncoder { return &MetadataEncoder{} }
+func NewAudioEncoder() *AudioEncoder               { return &AudioEncoder{} }
+func NewAudioManipulator() *AudioManipulator       { return &AudioManipulator{} }
+func NewVoiceSynthesizer() *VoiceSynthesizer       { return &VoiceSynthesizer{} }
+func NewFormatExploiter() *FormatExploiter         { return &FormatExploiter{} }
+func NewMacroGenerator() *MacroGenerator           { return &MacroGenerator{} }
+func NewPayloadEmbedder() *PayloadEmbedder         { return &PayloadEmbedder{} }
+func NewFrameManipulator() *FrameManipulator       { return &FrameManipulator{} }
+func NewAudioInjector() *AudioInjector             { return &AudioInjector{} }
+func NewMetadataEncoder() *MetadataEncoder         { return &MetadataEncoder{} }
 
-// Placeholder types
-type ImagePayloadEncoder struct{}
+// Method implementations for placeholder types
 func (i *ImagePayloadEncoder) EncodeInImage(img image.Image, payload string) string { return "" }
+func (a *AudioEncoder) GenerateUltrasonic(payload string) []byte                   { return []byte{} }
 
-type AudioEncoder struct{}
-func (a *AudioEncoder) GenerateUltrasonic(payload string) []byte { return []byte{} }
-
-type AudioManipulator struct{}
-type VoiceSynthesizer struct{}
-
-}
-type FormatExploiter struct{}
-type MacroGenerator struct{}
-type PayloadEmbedder struct{}
-type EmbeddedFile struct{}
-type Macro struct{}
-type ExploitVector struct{}
-
-}
-type FrameManipulator struct{}
-type AudioInjector struct{}
-type MetadataEncoder struct{}
-type HiddenChannel struct{}
-
-
-}
 // secureRandomInt generates a cryptographically secure random integer
 func secureRandomInt(max int) (int, error) {
-    nBig, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
-    if err != nil {
-        return 0, err
-    }
-    return int(nBig.Int64()), nil
+	nBig, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		return 0, err
+	}
+	return int(nBig.Int64()), nil
+}
 
 // Secure random number generation helpers
-}
 func randInt(max int) int {
-    n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
-    if err != nil {
-        panic(err)
-    }
-    return int(n.Int64())
-
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		panic(err)
+	}
+	return int(n.Int64())
 }
+
 func randInt64(max int64) int64 {
-    n, err := rand.Int(rand.Reader, big.NewInt(max))
-    if err != nil {
-        panic(err)
-    }
-    return n.Int64()
-
+	n, err := rand.Int(rand.Reader, big.NewInt(max))
+	if err != nil {
+		panic(err)
+	}
+	return n.Int64()
 }
+
 func randFloat64() float64 {
-    bytes := make([]byte, 8)
-    rand.Read(bytes)
+	bytes := make([]byte, 8)
+	rand.Read(bytes)
+	// Convert to float64
+	return float64(bytes[0]) / 255.0
+}

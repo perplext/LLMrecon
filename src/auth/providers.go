@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // GitHubAuthProvider implements authentication for GitHub
@@ -15,6 +16,7 @@ type GitHubAuthProvider struct{}
 // NewGitHubAuthProvider creates a new GitHub authentication provider
 func NewGitHubAuthProvider() *GitHubAuthProvider {
 	return &GitHubAuthProvider{}
+}
 
 // Authenticate authenticates with GitHub
 func (p *GitHubAuthProvider) Authenticate(ctx context.Context, creds *Credentials) (bool, error) {
@@ -28,6 +30,7 @@ func (p *GitHubAuthProvider) Authenticate(ctx context.Context, creds *Credential
 	default:
 		return false, fmt.Errorf("unsupported authentication type for GitHub: %s", creds.Type)
 	}
+}
 
 // authenticateBasic authenticates with GitHub using basic authentication
 func (p *GitHubAuthProvider) authenticateBasic(ctx context.Context, creds *Credentials) (bool, error) {
@@ -38,6 +41,7 @@ func (p *GitHubAuthProvider) authenticateBasic(ctx context.Context, creds *Crede
 	}
 	
 	return false, fmt.Errorf("GitHub no longer supports basic authentication for API access")
+}
 
 // authenticateToken authenticates with GitHub using a token
 func (p *GitHubAuthProvider) authenticateToken(ctx context.Context, creds *Credentials) (bool, error) {
@@ -65,6 +69,7 @@ func (p *GitHubAuthProvider) authenticateToken(ctx context.Context, creds *Crede
 	}
 	
 	return true, nil
+}
 
 // authenticateOAuth authenticates with GitHub using OAuth
 func (p *GitHubAuthProvider) authenticateOAuth(ctx context.Context, creds *Credentials) (bool, error) {
@@ -76,6 +81,7 @@ func (p *GitHubAuthProvider) authenticateOAuth(ctx context.Context, creds *Crede
 	// If no token, need to get one using the authorization code flow
 	// This would typically be handled by a web application
 	return false, fmt.Errorf("OAuth authentication requires a token")
+}
 
 // RefreshToken refreshes a GitHub token
 func (p *GitHubAuthProvider) RefreshToken(ctx context.Context, creds *Credentials) error {
@@ -147,6 +153,7 @@ func (p *GitHubAuthProvider) RefreshToken(ctx context.Context, creds *Credential
 	}
 	
 	return nil
+}
 
 // GitLabAuthProvider implements authentication for GitLab
 type GitLabAuthProvider struct{}
@@ -154,6 +161,7 @@ type GitLabAuthProvider struct{}
 // NewGitLabAuthProvider creates a new GitLab authentication provider
 func NewGitLabAuthProvider() *GitLabAuthProvider {
 	return &GitLabAuthProvider{}
+}
 
 // Authenticate authenticates with GitLab
 func (p *GitLabAuthProvider) Authenticate(ctx context.Context, creds *Credentials) (bool, error) {
@@ -167,6 +175,7 @@ func (p *GitLabAuthProvider) Authenticate(ctx context.Context, creds *Credential
 	default:
 		return false, fmt.Errorf("unsupported authentication type for GitLab: %s", creds.Type)
 	}
+}
 
 // authenticateBasic authenticates with GitLab using basic authentication
 func (p *GitLabAuthProvider) authenticateBasic(ctx context.Context, creds *Credentials) (bool, error) {
@@ -193,6 +202,7 @@ func (p *GitLabAuthProvider) authenticateBasic(ctx context.Context, creds *Crede
 	}
 	
 	return true, nil
+}
 
 // authenticateToken authenticates with GitLab using a token
 func (p *GitLabAuthProvider) authenticateToken(ctx context.Context, creds *Credentials) (bool, error) {
@@ -219,6 +229,7 @@ func (p *GitLabAuthProvider) authenticateToken(ctx context.Context, creds *Crede
 	}
 	
 	return true, nil
+}
 
 // authenticateOAuth authenticates with GitLab using OAuth
 func (p *GitLabAuthProvider) authenticateOAuth(ctx context.Context, creds *Credentials) (bool, error) {
@@ -230,6 +241,7 @@ func (p *GitLabAuthProvider) authenticateOAuth(ctx context.Context, creds *Crede
 	// If no token, need to get one using the authorization code flow
 	// This would typically be handled by a web application
 	return false, fmt.Errorf("OAuth authentication requires a token")
+}
 
 // RefreshToken refreshes a GitLab token
 func (p *GitLabAuthProvider) RefreshToken(ctx context.Context, creds *Credentials) error {
@@ -300,6 +312,7 @@ func (p *GitLabAuthProvider) RefreshToken(ctx context.Context, creds *Credential
 	}
 	
 	return nil
+}
 
 // GenericAuthProvider implements authentication for generic repositories
 type GenericAuthProvider struct{}
@@ -307,13 +320,17 @@ type GenericAuthProvider struct{}
 // NewGenericAuthProvider creates a new generic authentication provider
 func NewGenericAuthProvider() *GenericAuthProvider {
 	return &GenericAuthProvider{}
+}
 
 // Authenticate authenticates with a generic repository
 func (p *GenericAuthProvider) Authenticate(ctx context.Context, creds *Credentials) (bool, error) {
 	// For generic repositories, we just assume the credentials are valid
 	// as there's no standard way to validate them
 	return true, nil
+}
 
 // RefreshToken refreshes a token for a generic repository
 func (p *GenericAuthProvider) RefreshToken(ctx context.Context, creds *Credentials) error {
 	// Generic repositories don't support token refresh
+	return fmt.Errorf("token refresh not supported for generic repositories")
+}

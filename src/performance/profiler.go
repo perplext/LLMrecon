@@ -3,14 +3,17 @@ package performance
 import (
 	"context"
 	"encoding/json"
+	"path/filepath"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof" // #nosec G108 - Profiling endpoint for development only
+	"os"
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -33,6 +36,7 @@ type PerformanceProfiler struct {
 	ctx             context.Context
 	cancel          context.CancelFunc
 	wg              sync.WaitGroup
+}
 
 // ProfilerConfig defines configuration for performance profiling
 type ProfilerConfig struct {
@@ -84,6 +88,7 @@ type PerformanceThresholds struct {
 	MaxLatency        time.Duration `json:"max_latency"`
 	MaxErrorRate      float64       `json:"max_error_rate"`
 	MinThroughput     float64       `json:"min_throughput"`
+}
 
 // Profiler interface for different types of profilers
 type Profiler interface {
@@ -92,6 +97,7 @@ type Profiler interface {
 	Collect() (*ProfileData, error)
 	GetName() string
 	IsEnabled() bool
+}
 
 // ProfileData represents collected profiling data
 type ProfileData struct {
@@ -114,6 +120,7 @@ type PerformanceOptimizer struct {
 	metrics      *OptimizerMetrics
 	logger       Logger
 	mutex        sync.RWMutex
+}
 
 // OptimizationStrategy defines optimization strategies
 type OptimizationStrategy interface {
@@ -121,6 +128,7 @@ type OptimizationStrategy interface {
 	Optimize(metrics *PerformanceMetrics) (*OptimizationResult, error)
 	GetName() string
 	GetPriority() int
+}
 
 // OptimizationResult represents the result of an optimization
 type OptimizationResult struct {
@@ -145,6 +153,7 @@ type PerformanceAnalyzer struct {
 	metrics     *AnalyzerMetrics
 	logger      Logger
 	mutex       sync.RWMutex
+}
 
 // Hotspot represents a performance hotspot
 type Hotspot struct {
@@ -210,6 +219,7 @@ type Trend struct {
 	Magnitude   float64        `json:"magnitude"`
 	Confidence  float64        `json:"confidence"`
 	DataPoints  []DataPoint    `json:"data_points"`
+}
 
 // TrendDirection defines trend directions
 type TrendDirection string
@@ -219,11 +229,6 @@ const (
 	TrendStable     TrendDirection = "stable"
 	TrendDegrading  TrendDirection = "degrading"
 )
-
-// DataPoint represents a single data point in a trend
-type DataPoint struct {
-	Timestamp time.Time `json:"timestamp"`
-	Value     float64   `json:"value"`
 
 // PerformanceReporter generates performance reports
 type PerformanceReporter struct {
@@ -239,11 +244,13 @@ type ReportTemplate interface {
 	Generate(data *PerformanceReport) ([]byte, error)
 	GetFormat() string
 	GetName() string
+}
 
 // ReportExporter exports reports to different destinations
 type ReportExporter interface {
 	Export(report []byte, format string, destination string) error
 	GetName() string
+}
 
 // PerformanceReport represents a comprehensive performance report
 type PerformanceReport struct {
@@ -262,6 +269,7 @@ type PerformanceReport struct {
 type ReportPeriod struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
+}
 
 // PerformanceSummary provides a high-level performance summary
 type PerformanceSummary struct {
@@ -273,6 +281,7 @@ type PerformanceSummary struct {
 	TotalIssues     int           `json:"total_issues"`
 	CriticalIssues  int           `json:"critical_issues"`
 	Uptime          time.Duration `json:"uptime"`
+}
 
 // PerformanceMetrics comprehensive performance metrics
 type PerformanceMetrics struct {
@@ -284,6 +293,7 @@ type PerformanceMetrics struct {
 	Network         NetworkMetrics    `json:"network"`
 	Disk            DiskMetrics       `json:"disk"`
 	Application     ApplicationMetrics `json:"application"`
+}
 
 // Various metrics structures
 type CPUMetrics struct {
@@ -317,6 +327,7 @@ type MemoryMetrics struct {
 	GCSys          uint64 `json:"gc_sys"`
 	OtherSys       uint64 `json:"other_sys"`
 	NextGC         uint64 `json:"next_gc"`
+}
 
 type GoroutineMetrics struct {
 	Count        int           `json:"count"`
@@ -325,6 +336,7 @@ type GoroutineMetrics struct {
 	Blocked      int           `json:"blocked"`
 	Running      int           `json:"running"`
 	Waiting      int           `json:"waiting"`
+}
 
 type GCMetrics struct {
 	NumGC          uint32        `json:"num_gc"`
@@ -333,6 +345,7 @@ type GCMetrics struct {
 	PauseNs        []uint64      `json:"pause_ns"`
 	LastGC         time.Time     `json:"last_gc"`
 	GCCPUFraction  float64       `json:"gc_cpu_fraction"`
+}
 
 type NetworkMetrics struct {
 	BytesSent     int64 `json:"bytes_sent"`
@@ -393,6 +406,7 @@ const (
 type AlertChannel interface {
 	Send(alert *Alert) error
 	GetName() string
+}
 
 type Alert struct {
 	ID          string                 `json:"id"`
@@ -416,6 +430,7 @@ type Benchmark struct {
 	Results     []*BenchmarkResult     `json:"results"`
 	Config      BenchmarkConfig        `json:"config"`
 	Enabled     bool                   `json:"enabled"`
+}
 
 type BenchmarkFunction func() BenchmarkResult
 
@@ -436,6 +451,7 @@ type BenchmarkConfig struct {
 	Duration      time.Duration `json:"duration"`
 	Parallel      bool          `json:"parallel"`
 	WarmupRounds  int           `json:"warmup_rounds"`
+}
 
 // Configuration structures
 type OptimizerConfig struct {
@@ -443,24 +459,28 @@ type OptimizerConfig struct {
 	OptimizationInterval time.Duration `json:"optimization_interval"`
 	MaxOptimizations int           `json:"max_optimizations"`
 	SafetyMode       bool          `json:"safety_mode"`
+}
 
 type AnalyzerConfig struct {
 	HotspotThreshold    float64       `json:"hotspot_threshold"`
 	IssueDetectionDepth int           `json:"issue_detection_depth"`
 	TrendWindowSize     int           `json:"trend_window_size"`
 	AnalysisInterval    time.Duration `json:"analysis_interval"`
+}
 
 type ReporterConfig struct {
 	ReportInterval   time.Duration `json:"report_interval"`
 	ReportFormats    []string      `json:"report_formats"`
 	ExportDestinations []string    `json:"export_destinations"`
 	HistoryRetention time.Duration `json:"history_retention"`
+}
 
 type AlertConfig struct {
 	CheckInterval   time.Duration `json:"check_interval"`
 	MaxAlerts       int           `json:"max_alerts"`
 	AlertRetention  time.Duration `json:"alert_retention"`
 	DefaultChannels []string      `json:"default_channels"`
+}
 
 // Metrics structures
 type ProfilerMetrics struct {
@@ -470,18 +490,21 @@ type ProfilerMetrics struct {
 	IssuesDetected     int64         `json:"issues_detected"`
 	AlertsTriggered    int64         `json:"alerts_triggered"`
 	AverageAnalysisTime time.Duration `json:"average_analysis_time"`
+}
 
 type OptimizerMetrics struct {
 	OptimizationsAttempted int64   `json:"optimizations_attempted"`
 	OptimizationsSuccessful int64  `json:"optimizations_successful"`
 	PerformanceImprovement float64 `json:"performance_improvement"`
 	LastOptimization       time.Time `json:"last_optimization"`
+}
 
 type AnalyzerMetrics struct {
 	HotspotsDetected   int64 `json:"hotspots_detected"`
 	IssuesFound        int64 `json:"issues_found"`
 	TrendsAnalyzed     int64 `json:"trends_analyzed"`
 	AnalysisAccuracy   float64 `json:"analysis_accuracy"`
+}
 
 type ReporterMetrics struct {
 	ReportsGenerated int64 `json:"reports_generated"`
@@ -494,6 +517,7 @@ type AlertMetrics struct {
 	AlertsResolved  int64 `json:"alerts_resolved"`
 	FalsePositives  int64 `json:"false_positives"`
 	ResponseTime    time.Duration `json:"response_time"`
+}
 
 // Default configuration
 func DefaultProfilerConfig() ProfilerConfig {
@@ -531,6 +555,7 @@ func DefaultProfilerConfig() ProfilerConfig {
 			MinThroughput:  100.0,
 		},
 	}
+}
 
 // NewPerformanceProfiler creates a new performance profiler
 func NewPerformanceProfiler(config ProfilerConfig, logger Logger) (*PerformanceProfiler, error) {
@@ -594,6 +619,7 @@ func NewPerformanceProfiler(config ProfilerConfig, logger Logger) (*PerformanceP
 	}
 	
 	return profiler, nil
+}
 
 // Start starts the performance profiler
 func (p *PerformanceProfiler) Start() error {
@@ -652,6 +678,7 @@ func (p *PerformanceProfiler) Start() error {
 	
 	p.logger.Info("Performance profiler started")
 	return nil
+}
 
 // Stop stops the performance profiler
 func (p *PerformanceProfiler) Stop() error {
@@ -681,6 +708,7 @@ func (p *PerformanceProfiler) Stop() error {
 	
 	p.logger.Info("Performance profiler stopped")
 	return nil
+}
 
 // CollectMetrics collects current performance metrics
 func (p *PerformanceProfiler) CollectMetrics() *PerformanceMetrics {
@@ -727,16 +755,19 @@ func (p *PerformanceProfiler) CollectMetrics() *PerformanceMetrics {
 			GCCPUFraction: m.GCCPUFraction,
 		},
 	}
+}
 
 // GenerateReport generates a comprehensive performance report
 func (p *PerformanceProfiler) GenerateReport(period ReportPeriod) (*PerformanceReport, error) {
 	return p.reporter.GenerateReport(period)
+}
 
 // GetMetrics returns profiler metrics
 func (p *PerformanceProfiler) GetMetrics() *ProfilerMetrics {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	return p.metrics
+}
 
 // Private methods
 
@@ -760,6 +791,7 @@ func (p *PerformanceProfiler) initializeProfilers() {
 	if p.config.EnableTraceProfiling {
 		p.profilers["trace"] = NewTraceProfiler(p.config.ProfilesDir, p.logger)
 	}
+}
 
 // setupServer sets up the HTTP server for profiling endpoints
 func (p *PerformanceProfiler) setupServer() {
@@ -781,6 +813,7 @@ func (p *PerformanceProfiler) setupServer() {
 		Addr:    addr,
 		Handler: p.router,
 	}
+}
 
 // profilingLoop performs periodic profiling
 func (p *PerformanceProfiler) profilingLoop() {
@@ -795,6 +828,7 @@ func (p *PerformanceProfiler) profilingLoop() {
 			return
 		}
 	}
+}
 
 // metricsLoop performs periodic metrics collection and analysis
 func (p *PerformanceProfiler) metricsLoop() {
@@ -811,6 +845,7 @@ func (p *PerformanceProfiler) metricsLoop() {
 			return
 		}
 	}
+}
 
 // collectProfiles collects profiles from all enabled profilers
 func (p *PerformanceProfiler) collectProfiles() {
@@ -826,12 +861,15 @@ func (p *PerformanceProfiler) collectProfiles() {
 			p.logger.Debug("Profile collected", "profiler", name, "size", profile.Size)
 		}
 	}
+}
+
 // HTTP handlers
 
 func (p *PerformanceProfiler) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	metrics := p.CollectMetrics()
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(metrics) // Best effort, headers already sent
+}
 
 func (p *PerformanceProfiler) handleReport(w http.ResponseWriter, r *http.Request) {
 	period := ReportPeriod{
@@ -847,31 +885,37 @@ func (p *PerformanceProfiler) handleReport(w http.ResponseWriter, r *http.Reques
 	
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(report) // Best effort, headers already sent
+}
 
 func (p *PerformanceProfiler) handleHotspots(w http.ResponseWriter, r *http.Request) {
 	hotspots := p.analyzer.GetHotspots()
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(hotspots) // Best effort, headers already sent
+}
 
 func (p *PerformanceProfiler) handleIssues(w http.ResponseWriter, r *http.Request) {
 	issues := p.analyzer.GetIssues()
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(issues) // Best effort, headers already sent
+}
 
 func (p *PerformanceProfiler) handleAlerts(w http.ResponseWriter, r *http.Request) {
 	alerts := p.alerts.GetActiveAlerts()
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(alerts) // Best effort, headers already sent
+}
 
 func (p *PerformanceProfiler) handleBenchmarks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(p.benchmarks) // Best effort, headers already sent
+}
 
 // getCPUUsage returns current CPU usage (simplified implementation)
 func getProfilerCPUUsage() float64 {
 	// This is a simplified implementation
 	// In production, use a proper CPU monitoring library
 	return float64(runtime.NumGoroutine()) / float64(runtime.NumCPU() * 1000) * 100
+}
 
 // Placeholder implementations for referenced components
 func NewPerformanceOptimizer(config OptimizerConfig, logger Logger) *PerformanceOptimizer {
@@ -882,6 +926,7 @@ func NewPerformanceOptimizer(config OptimizerConfig, logger Logger) *Performance
 		metrics:    &OptimizerMetrics{},
 		logger:     logger,
 	}
+}
 
 func (po *PerformanceOptimizer) Start() error { return nil }
 func (po *PerformanceOptimizer) Stop() error  { return nil }
@@ -895,6 +940,7 @@ func NewPerformanceAnalyzer(config AnalyzerConfig, logger Logger) *PerformanceAn
 		metrics:  &AnalyzerMetrics{},
 		logger:   logger,
 	}
+}
 
 func (pa *PerformanceAnalyzer) Start() error { return nil }
 func (pa *PerformanceAnalyzer) Stop() error  { return nil }
@@ -910,6 +956,7 @@ func NewPerformanceReporter(config ReporterConfig, logger Logger) *PerformanceRe
 		metrics:   &ReporterMetrics{},
 		logger:    logger,
 	}
+}
 
 func (pr *PerformanceReporter) Start() error { return nil }
 func (pr *PerformanceReporter) Stop() error  { return nil }
@@ -925,6 +972,7 @@ func (pr *PerformanceReporter) GenerateReport(period ReportPeriod) (*Performance
 		Trends:      &TrendAnalysis{},
 		Recommendations: []string{},
 	}, nil
+}
 
 func NewAlertManager(config AlertConfig, logger Logger) *AlertManager {
 	return &AlertManager{
@@ -935,6 +983,7 @@ func NewAlertManager(config AlertConfig, logger Logger) *AlertManager {
 		metrics:  &AlertMetrics{},
 		logger:   logger,
 	}
+}
 
 func (am *AlertManager) Start() error { return nil }
 func (am *AlertManager) Stop() error  { return nil }
@@ -944,21 +993,27 @@ func (am *AlertManager) GetActiveAlerts() []*Alert { return am.history }
 // Individual profiler implementations
 func NewCPUProfiler(dir string, logger Logger) Profiler {
 	return &CPUProfiler{dir: dir, logger: logger, enabled: true}
+}
 
 func NewMemoryProfiler(dir string, logger Logger) Profiler {
 	return &MemoryProfiler{dir: dir, logger: logger, enabled: true}
+}
 
 func NewGoroutineProfiler(dir string, logger Logger) Profiler {
 	return &GoroutineProfiler{dir: dir, logger: logger, enabled: true}
+}
 
 func NewBlockProfiler(dir string, logger Logger) Profiler {
 	return &BlockProfiler{dir: dir, logger: logger, enabled: true}
+}
 
 func NewMutexProfiler(dir string, logger Logger) Profiler {
 	return &MutexProfiler{dir: dir, logger: logger, enabled: true}
+}
 
 func NewTraceProfiler(dir string, logger Logger) Profiler {
 	return &TraceProfiler{dir: dir, logger: logger, enabled: true}
+}
 
 // Individual profiler structs
 type CPUProfiler struct {
@@ -966,6 +1021,7 @@ type CPUProfiler struct {
 	logger  Logger
 	enabled bool
 	file    *os.File
+}
 
 func (cp *CPUProfiler) Start() error {
 	filename := filepath.Join(cp.dir, fmt.Sprintf("cpu_profile_%d.prof", time.Now().Unix()))
@@ -975,6 +1031,7 @@ func (cp *CPUProfiler) Start() error {
 	}
 	cp.file = file
 	return pprof.StartCPUProfile(file)
+}
 
 func (cp *CPUProfiler) Stop() error {
 	pprof.StopCPUProfile()
@@ -982,12 +1039,14 @@ func (cp *CPUProfiler) Stop() error {
 		return cp.file.Close()
 	}
 	return nil
+}
 
 func (cp *CPUProfiler) Collect() (*ProfileData, error) {
 	return &ProfileData{
 		Type:      "cpu",
 		Timestamp: time.Now(),
 	}, nil
+}
 
 func (cp *CPUProfiler) GetName() string  { return "cpu" }
 func (cp *CPUProfiler) IsEnabled() bool { return cp.enabled }
@@ -1020,6 +1079,7 @@ func (mp *MemoryProfiler) Collect() (*ProfileData, error) {
 		Timestamp: time.Now(),
 		FilePath:  filename,
 	}, nil
+}
 
 func (mp *MemoryProfiler) GetName() string  { return "memory" }
 func (mp *MemoryProfiler) IsEnabled() bool { return mp.enabled }
@@ -1052,6 +1112,7 @@ func (gp *GoroutineProfiler) Collect() (*ProfileData, error) {
 		Timestamp: time.Now(),
 		FilePath:  filename,
 	}, nil
+}
 
 func (gp *GoroutineProfiler) GetName() string  { return "goroutine" }
 func (gp *GoroutineProfiler) IsEnabled() bool { return gp.enabled }
@@ -1065,10 +1126,12 @@ type BlockProfiler struct {
 func (bp *BlockProfiler) Start() error {
 	runtime.SetBlockProfileRate(1)
 	return nil
+}
 
 func (bp *BlockProfiler) Stop() error {
 	runtime.SetBlockProfileRate(0)
 	return nil
+}
 
 func (bp *BlockProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(bp.dir, fmt.Sprintf("block_profile_%d.prof", time.Now().Unix()))
@@ -1089,6 +1152,7 @@ func (bp *BlockProfiler) Collect() (*ProfileData, error) {
 		Timestamp: time.Now(),
 		FilePath:  filename,
 	}, nil
+}
 
 func (bp *BlockProfiler) GetName() string  { return "block" }
 func (bp *BlockProfiler) IsEnabled() bool { return bp.enabled }
@@ -1102,11 +1166,12 @@ type MutexProfiler struct {
 func (mp *MutexProfiler) Start() error {
 	runtime.SetMutexProfileFraction(1)
 	return nil
+}
 
 func (mp *MutexProfiler) Stop() error {
 	runtime.SetMutexProfileFraction(0)
 	return nil
-	
+}
 
 func (mp *MutexProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(mp.dir, fmt.Sprintf("mutex_profile_%d.prof", time.Now().Unix()))
@@ -1127,6 +1192,7 @@ func (mp *MutexProfiler) Collect() (*ProfileData, error) {
 		Timestamp: time.Now(),
 		FilePath:  filename,
 	}, nil
+}
 
 func (mp *MutexProfiler) GetName() string  { return "mutex" }
 func (mp *MutexProfiler) IsEnabled() bool { return mp.enabled }
@@ -1136,6 +1202,7 @@ type TraceProfiler struct {
 	logger  Logger
 	enabled bool
 	file    *os.File
+}
 
 func (tp *TraceProfiler) Start() error {
 	filename := filepath.Join(tp.dir, fmt.Sprintf("trace_profile_%d.trace", time.Now().Unix()))
@@ -1145,6 +1212,7 @@ func (tp *TraceProfiler) Start() error {
 	}
 	tp.file = file
 	return trace.Start(file)
+}
 
 func (tp *TraceProfiler) Stop() error {
 	trace.Stop()
@@ -1152,64 +1220,14 @@ func (tp *TraceProfiler) Stop() error {
 		return tp.file.Close()
 	}
 	return nil
+}
 
 func (tp *TraceProfiler) Collect() (*ProfileData, error) {
 	return &ProfileData{
 		Type:      "trace",
 		Timestamp: time.Now(),
 	}, nil
+}
 
 func (tp *TraceProfiler) GetName() string  { return "trace" }
 func (tp *TraceProfiler) IsEnabled() bool { return tp.enabled }
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}

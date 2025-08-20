@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"time"
 )
 
 // TrendAnalyzer analyzes patterns and trends in metrics data
@@ -30,13 +31,9 @@ type TrendDetector interface {
 	DetectTrend(ctx context.Context, data []DataPoint) (*TrendResult, error)
 	GetType() string
 	GetConfidenceLevel() float64
+}
 
-// DataPoint represents a single data point in time series
-type DataPoint struct {
-	Timestamp time.Time `json:"timestamp"`
-	Value     float64   `json:"value"`
-	Labels    map[string]string `json:"labels"`
-	Metadata  map[string]interface{} `json:"metadata"`
+// Note: DataPoint is defined in types.go
 
 // TrendResult contains the result of trend analysis
 type TrendResult struct {
@@ -52,6 +49,7 @@ type TrendResult struct {
 	Predictions   []PredictionPoint      `json:"predictions"`
 	Anomalies     []AnomalyPoint         `json:"anomalies"`
 	Metadata      map[string]interface{} `json:"metadata"`
+}
 
 // TrendType represents different types of trends
 type TrendType string
@@ -125,6 +123,7 @@ type SeasonalPattern struct {
 	Phase       float64   `json:"phase"`
 	Confidence  float64   `json:"confidence"`
 	Examples    []time.Time `json:"examples"`
+}
 
 // CorrelationResult represents correlation between metrics
 type CorrelationResult struct {
@@ -134,6 +133,7 @@ type CorrelationResult struct {
 	PValue            float64 `json:"p_value"`
 	Significance      string  `json:"significance"`
 	RelationshipType  string  `json:"relationship_type"`
+}
 
 // ForecastResult represents forecast predictions
 type ForecastResult struct {
@@ -151,14 +151,7 @@ type ForecastAccuracy struct {
 	MAPE  float64 `json:"mape"`  // Mean Absolute Percentage Error
 }
 
-// TrendSummary provides a high-level summary
-type TrendSummary struct {
-	PrimaryTrend       string    `json:"primary_trend"`
-	TrendStrength      string    `json:"trend_strength"`
-	Volatility         string    `json:"volatility"`
-	AnomalyCount       int       `json:"anomaly_count"`
-	LastSignificantChange time.Time `json:"last_significant_change"`
-	RecommendedActions []string  `json:"recommended_actions"`
+// Note: TrendSummary is defined in types.go
 
 // NewTrendAnalyzer creates a new trend analyzer
 func NewTrendAnalyzer(config *Config, storage DataStorage, logger Logger) *TrendAnalyzer {
@@ -178,6 +171,7 @@ func NewTrendAnalyzer(config *Config, storage DataStorage, logger Logger) *Trend
 	analyzer.registerDefaultDetectors()
 	
 	return analyzer
+}
 
 // AnalyzeTrends performs comprehensive trend analysis for a metric
 func (ta *TrendAnalyzer) AnalyzeTrends(ctx context.Context, metricName string, timeRange TimeWindow) (*TrendAnalysisResult, error) {
@@ -236,6 +230,7 @@ func (ta *TrendAnalyzer) AnalyzeTrends(ctx context.Context, metricName string, t
 	ta.cacheAnalysis(metricName, result)
 	
 	return result, nil
+}
 
 // GetTrendSummary returns a summary of trends for multiple metrics
 func (ta *TrendAnalyzer) GetTrendSummary(ctx context.Context, metricNames []string, timeRange TimeWindow) (map[string]*TrendSummary, error) {
@@ -252,6 +247,7 @@ func (ta *TrendAnalyzer) GetTrendSummary(ctx context.Context, metricNames []stri
 	}
 	
 	return summaries, nil
+}
 
 // DetectAnomalies identifies anomalous patterns in metrics
 func (ta *TrendAnalyzer) DetectAnomalies(ctx context.Context, metricName string, timeRange TimeWindow) ([]AnomalyPoint, error) {
@@ -276,6 +272,7 @@ func (ta *TrendAnalyzer) DetectAnomalies(ctx context.Context, metricName string,
 	anomalies = ta.deduplicateAnomalies(anomalies)
 	
 	return anomalies, nil
+}
 
 // PredictFuture generates predictions for future values
 func (ta *TrendAnalyzer) PredictFuture(ctx context.Context, metricName string, hoursAhead int) ([]PredictionPoint, error) {
@@ -294,11 +291,13 @@ func (ta *TrendAnalyzer) PredictFuture(ctx context.Context, metricName string, h
 	predictions := ta.generateLinearPredictions(dataPoints, hoursAhead)
 	
 	return predictions, nil
+}
 
 // RegisterDetector adds a custom trend detector
 func (ta *TrendAnalyzer) RegisterDetector(name string, detector TrendDetector) {
 	ta.detectors[name] = detector
 	ta.logger.Info("Registered trend detector", "name", name, "type", detector.GetType())
+}
 
 // Internal methods
 
@@ -310,11 +309,12 @@ func (ta *TrendAnalyzer) getDataPoints(ctx context.Context, metricName string, t
 	
 	dataPoints := make([]DataPoint, len(metrics))
 	for i, metric := range metrics {
+		values := make(map[string]float64)
+		values[metricName] = metric.Value
 		dataPoints[i] = DataPoint{
 			Timestamp: metric.Timestamp,
-			Value:     metric.Value,
-			Labels:    metric.Labels,
-			Metadata:  metric.Metadata,
+			Values:    values,
+			Tags:      metric.Tags,
 		}
 	}
 	
@@ -324,6 +324,7 @@ func (ta *TrendAnalyzer) getDataPoints(ctx context.Context, metricName string, t
 	})
 	
 	return dataPoints, nil
+}
 
 func (ta *TrendAnalyzer) analyzeOverallTrend(ctx context.Context, dataPoints []DataPoint) (*TrendResult, error) {
 	// Use linear regression detector as primary
@@ -333,6 +334,7 @@ func (ta *TrendAnalyzer) analyzeOverallTrend(ctx context.Context, dataPoints []D
 	
 	// Fallback to basic trend analysis
 	return ta.basicTrendAnalysis(dataPoints), nil
+}
 
 func (ta *TrendAnalyzer) analyzeSegmentTrends(ctx context.Context, dataPoints []DataPoint) []*TrendResult {
 	var trends []*TrendResult
@@ -357,6 +359,7 @@ func (ta *TrendAnalyzer) analyzeSegmentTrends(ctx context.Context, dataPoints []
 	}
 	
 	return trends
+}
 
 func (ta *TrendAnalyzer) detectSeasonalPatterns(ctx context.Context, dataPoints []DataPoint) []SeasonalPattern {
 	var patterns []SeasonalPattern
@@ -372,6 +375,7 @@ func (ta *TrendAnalyzer) detectSeasonalPatterns(ctx context.Context, dataPoints 
 	}
 	
 	return patterns
+}
 
 func (ta *TrendAnalyzer) generateForecasts(ctx context.Context, dataPoints []DataPoint) []ForecastResult {
 	var forecasts []ForecastResult
@@ -385,6 +389,7 @@ func (ta *TrendAnalyzer) generateForecasts(ctx context.Context, dataPoints []Dat
 	forecasts = append(forecasts, maForecast)
 	
 	return forecasts
+}
 
 func (ta *TrendAnalyzer) calculateCorrelations(ctx context.Context, metricName string, timeRange TimeWindow) []CorrelationResult {
 	var correlations []CorrelationResult
@@ -393,6 +398,7 @@ func (ta *TrendAnalyzer) calculateCorrelations(ctx context.Context, metricName s
 	// For now, return empty slice
 	
 	return correlations
+}
 
 func (ta *TrendAnalyzer) generateSummary(overallTrend *TrendResult, segmentTrends []*TrendResult, seasonalPatterns []SeasonalPattern, dataPointCount int) TrendSummary {
 	summary := TrendSummary{
@@ -410,6 +416,7 @@ func (ta *TrendAnalyzer) generateSummary(overallTrend *TrendResult, segmentTrend
 	summary.RecommendedActions = ta.generateRecommendations(overallTrend, segmentTrends, seasonalPatterns)
 	
 	return summary
+}
 
 func (ta *TrendAnalyzer) basicTrendAnalysis(dataPoints []DataPoint) *TrendResult {
 	if len(dataPoints) < 2 {
@@ -422,7 +429,7 @@ func (ta *TrendAnalyzer) basicTrendAnalysis(dataPoints []DataPoint) *TrendResult
 	
 	for i, point := range dataPoints {
 		x := float64(i)
-		y := point.Value
+		y := getValueFromDataPoint(point, "metric") // Use generic key since we don't have metric name here
 		sumX += x
 		sumY += y
 		sumXY += x * y
@@ -439,8 +446,9 @@ func (ta *TrendAnalyzer) basicTrendAnalysis(dataPoints []DataPoint) *TrendResult
 	
 	for i, point := range dataPoints {
 		predicted := slope*float64(i) + intercept
-		ssRes += math.Pow(point.Value-predicted, 2)
-		ssTot += math.Pow(point.Value-meanY, 2)
+		y := getValueFromDataPoint(point, "metric")
+		ssRes += math.Pow(y-predicted, 2)
+		ssTot += math.Pow(y-meanY, 2)
 	}
 	
 	rSquared := 1 - (ssRes / ssTot)
@@ -476,6 +484,7 @@ func (ta *TrendAnalyzer) basicTrendAnalysis(dataPoints []DataPoint) *TrendResult
 			"method":    "linear_regression",
 		},
 	}
+}
 
 func (ta *TrendAnalyzer) detectDailyPattern(dataPoints []DataPoint) *SeasonalPattern {
 	// Group by hour of day
@@ -483,7 +492,8 @@ func (ta *TrendAnalyzer) detectDailyPattern(dataPoints []DataPoint) *SeasonalPat
 	
 	for _, point := range dataPoints {
 		hour := point.Timestamp.Hour()
-		hourlyValues[hour] = append(hourlyValues[hour], point.Value)
+		value := getValueFromDataPoint(point, "metric")
+		hourlyValues[hour] = append(hourlyValues[hour], value)
 	}
 	
 	// Calculate variance across hours
@@ -508,6 +518,7 @@ func (ta *TrendAnalyzer) detectDailyPattern(dataPoints []DataPoint) *SeasonalPat
 	}
 	
 	return nil
+}
 
 func (ta *TrendAnalyzer) detectWeeklyPattern(dataPoints []DataPoint) *SeasonalPattern {
 	// Group by day of week
@@ -515,7 +526,8 @@ func (ta *TrendAnalyzer) detectWeeklyPattern(dataPoints []DataPoint) *SeasonalPa
 	
 	for _, point := range dataPoints {
 		weekday := point.Timestamp.Weekday()
-		weekdayValues[weekday] = append(weekdayValues[weekday], point.Value)
+		value := getValueFromDataPoint(point, "metric")
+		weekdayValues[weekday] = append(weekdayValues[weekday], value)
 	}
 	
 	// Calculate variance across weekdays
@@ -540,6 +552,7 @@ func (ta *TrendAnalyzer) detectWeeklyPattern(dataPoints []DataPoint) *SeasonalPa
 	}
 	
 	return nil
+}
 
 func (ta *TrendAnalyzer) generateLinearForecast(dataPoints []DataPoint, hoursAhead int) ForecastResult {
 	trend := ta.basicTrendAnalysis(dataPoints)
@@ -560,6 +573,7 @@ func (ta *TrendAnalyzer) generateLinearForecast(dataPoints []DataPoint, hoursAhe
 			MAPE: 5.0,
 		},
 	}
+}
 
 func (ta *TrendAnalyzer) generateMovingAverageForecast(dataPoints []DataPoint, hoursAhead int) ForecastResult {
 	window := 5 // 5-point moving average
@@ -570,7 +584,8 @@ func (ta *TrendAnalyzer) generateMovingAverageForecast(dataPoints []DataPoint, h
 	// Calculate moving average for the last window points
 	sum := 0.0
 	for i := len(dataPoints) - window; i < len(dataPoints); i++ {
-		sum += dataPoints[i].Value
+		value := getValueFromDataPoint(dataPoints[i], "metric")
+		sum += value
 	}
 	avgValue := sum / float64(window)
 	
@@ -604,6 +619,7 @@ func (ta *TrendAnalyzer) generateMovingAverageForecast(dataPoints []DataPoint, h
 			MAPE: 6.0,
 		},
 	}
+}
 
 func (ta *TrendAnalyzer) generateLinearPredictions(dataPoints []DataPoint, hoursAhead int) []PredictionPoint {
 	trend := ta.basicTrendAnalysis(dataPoints)
@@ -638,6 +654,7 @@ func (ta *TrendAnalyzer) generateLinearPredictions(dataPoints []DataPoint, hours
 	}
 	
 	return predictions
+}
 
 func (ta *TrendAnalyzer) classifyTrendStrength(strength float64) string {
 	switch {
@@ -652,6 +669,7 @@ func (ta *TrendAnalyzer) classifyTrendStrength(strength float64) string {
 	default:
 		return "very_strong"
 	}
+}
 
 func (ta *TrendAnalyzer) classifyVolatility(rSquared float64) string {
 	switch {
@@ -666,6 +684,7 @@ func (ta *TrendAnalyzer) classifyVolatility(rSquared float64) string {
 	default:
 		return "very_high"
 	}
+}
 
 func (ta *TrendAnalyzer) generateRecommendations(overallTrend *TrendResult, segmentTrends []*TrendResult, seasonalPatterns []SeasonalPattern) []string {
 	var recommendations []string
@@ -692,6 +711,7 @@ func (ta *TrendAnalyzer) generateRecommendations(overallTrend *TrendResult, segm
 	}
 	
 	return recommendations
+}
 
 func (ta *TrendAnalyzer) deduplicateAnomalies(anomalies []AnomalyPoint) []AnomalyPoint {
 	seen := make(map[string]bool)
@@ -711,6 +731,7 @@ func (ta *TrendAnalyzer) deduplicateAnomalies(anomalies []AnomalyPoint) []Anomal
 	})
 	
 	return unique
+}
 
 func (ta *TrendAnalyzer) getCachedAnalysis(metricName string) *CachedAnalysis {
 	if cached, exists := ta.analysisCache[metricName]; exists {
@@ -721,6 +742,7 @@ func (ta *TrendAnalyzer) getCachedAnalysis(metricName string) *CachedAnalysis {
 		delete(ta.analysisCache, metricName)
 	}
 	return nil
+}
 
 func (ta *TrendAnalyzer) cacheAnalysis(metricName string, analysis *TrendAnalysisResult) {
 	cached := &CachedAnalysis{
@@ -731,11 +753,13 @@ func (ta *TrendAnalyzer) cacheAnalysis(metricName string, analysis *TrendAnalysi
 	}
 	
 	ta.analysisCache[metricName] = cached
+}
 
 func (ta *TrendAnalyzer) registerDefaultDetectors() {
 	ta.detectors["linear"] = &LinearTrendDetector{confidenceLevel: ta.confidenceLevel}
 	ta.detectors["seasonal"] = &SeasonalTrendDetector{confidenceLevel: ta.confidenceLevel}
 	ta.detectors["anomaly"] = &AnomalyDetector{confidenceLevel: ta.confidenceLevel}
+}
 
 // Default trend detectors
 
@@ -762,12 +786,15 @@ func (ltd *LinearTrendDetector) DetectTrend(ctx context.Context, data []DataPoin
 		Predictions: []PredictionPoint{},
 		Anomalies:   []AnomalyPoint{},
 	}, nil
+}
 
 func (ltd *LinearTrendDetector) GetType() string {
 	return "linear"
+}
 
 func (ltd *LinearTrendDetector) GetConfidenceLevel() float64 {
 	return ltd.confidenceLevel
+}
 
 // SeasonalTrendDetector detects seasonal patterns
 type SeasonalTrendDetector struct {
@@ -786,12 +813,15 @@ func (std *SeasonalTrendDetector) DetectTrend(ctx context.Context, data []DataPo
 		Predictions: []PredictionPoint{},
 		Anomalies:   []AnomalyPoint{},
 	}, nil
+}
 
 func (std *SeasonalTrendDetector) GetType() string {
 	return "seasonal"
+}
 
 func (std *SeasonalTrendDetector) GetConfidenceLevel() float64 {
 	return std.confidenceLevel
+}
 
 // AnomalyDetector detects anomalies in data
 type AnomalyDetector struct {
@@ -812,7 +842,7 @@ func (ad *AnomalyDetector) DetectTrend(ctx context.Context, data []DataPoint) (*
 	// Simple anomaly detection using standard deviation
 	values := make([]float64, len(data))
 	for i, point := range data {
-		values[i] = point.Value
+		values[i] = getValueFromDataPoint(point, "metric")
 	}
 	
 	mean := average(values)
@@ -820,7 +850,8 @@ func (ad *AnomalyDetector) DetectTrend(ctx context.Context, data []DataPoint) (*
 	threshold := 2.0 * stdDev // 2-sigma rule
 	
 	for _, point := range data {
-		deviation := math.Abs(point.Value - mean)
+		value := getValueFromDataPoint(point, "metric")
+		deviation := math.Abs(value - mean)
 		if deviation > threshold {
 			severity := "medium"
 			if deviation > 3*stdDev {
@@ -829,7 +860,7 @@ func (ad *AnomalyDetector) DetectTrend(ctx context.Context, data []DataPoint) (*
 			
 			anomalies = append(anomalies, AnomalyPoint{
 				Timestamp:     point.Timestamp,
-				ActualValue:   point.Value,
+				ActualValue:   value,
 				ExpectedValue: mean,
 				Deviation:     deviation,
 				Severity:      severity,
@@ -845,34 +876,27 @@ func (ad *AnomalyDetector) DetectTrend(ctx context.Context, data []DataPoint) (*
 		EndTime:    data[len(data)-1].Timestamp,
 		Anomalies:  anomalies,
 	}, nil
+}
 
 func (ad *AnomalyDetector) GetType() string {
 	return "anomaly"
+}
 
 func (ad *AnomalyDetector) GetConfidenceLevel() float64 {
 	return ad.confidenceLevel
 }
+
+// Helper function to extract value from DataPoint for a specific metric
+func getValueFromDataPoint(point DataPoint, metricName string) float64 {
+	if value, exists := point.Values[metricName]; exists {
+		return value
+	}
+	// Fallback: use the first value if specific metric not found
+	for _, value := range point.Values {
+		return value
+	}
+	return 0.0
 }
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+
+// Note: Helper functions like average() and standardDeviation() are defined in processors.go
+

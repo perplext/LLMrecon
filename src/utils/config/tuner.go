@@ -2,8 +2,10 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/utils/profiling"
 )
@@ -28,6 +30,7 @@ type ConfigTuner struct {
 	recommendations []string
 	// onConfigChange is called when configuration changes
 	onConfigChange func(*TunerConfig)
+}
 
 // TunerConfig represents configuration for the tuner
 type TunerConfig struct {
@@ -65,6 +68,7 @@ type TunerConfig struct {
 	GCPercent int
 	// MaxMemory is the maximum memory usage (in MB)
 	MaxMemory int64
+}
 
 // DefaultTunerConfig returns default configuration for the tuner
 func DefaultTunerConfig() *TunerConfig {
@@ -89,6 +93,7 @@ func DefaultTunerConfig() *TunerConfig {
 		GCPercent:            100,
 		MaxMemory:            0, // No limit
 	}
+}
 
 // NewConfigTuner creates a new configuration tuner
 func NewConfigTuner(config *TunerConfig, onConfigChange func(*TunerConfig)) (*ConfigTuner, error) {
@@ -109,6 +114,7 @@ func NewConfigTuner(config *TunerConfig, onConfigChange func(*TunerConfig)) (*Co
 		stopChan:      make(chan struct{}),
 		onConfigChange: onConfigChange,
 	}, nil
+}
 
 // StartAutomaticTuning starts automatic configuration tuning
 func (t *ConfigTuner) StartAutomaticTuning(interval time.Duration) error {
@@ -143,6 +149,7 @@ func (t *ConfigTuner) StartAutomaticTuning(interval time.Duration) error {
 	}()
 
 	return nil
+}
 
 // StopAutomaticTuning stops automatic configuration tuning
 func (t *ConfigTuner) StopAutomaticTuning() {
@@ -158,6 +165,7 @@ func (t *ConfigTuner) StopAutomaticTuning() {
 
 	// Stop memory profiling
 	t.profiler.StopAutomaticProfiling()
+}
 
 // TuneConfiguration tunes the configuration based on system metrics
 func (t *ConfigTuner) TuneConfiguration() {
@@ -252,6 +260,7 @@ func (t *ConfigTuner) TuneConfiguration() {
 	if len(t.recommendations) > 0 && t.onConfigChange != nil {
 		t.onConfigChange(t.config)
 	}
+}
 
 // GetConfig returns the current configuration
 func (t *ConfigTuner) GetConfig() *TunerConfig {
@@ -259,6 +268,7 @@ func (t *ConfigTuner) GetConfig() *TunerConfig {
 	defer t.mutex.RUnlock()
 
 	return t.config
+}
 
 // SetConfig sets the configuration
 func (t *ConfigTuner) SetConfig(config *TunerConfig) {
@@ -271,6 +281,7 @@ func (t *ConfigTuner) SetConfig(config *TunerConfig) {
 	if t.onConfigChange != nil {
 		t.onConfigChange(t.config)
 	}
+}
 
 // GetRecommendations returns tuning recommendations
 func (t *ConfigTuner) GetRecommendations() []string {
@@ -278,6 +289,7 @@ func (t *ConfigTuner) GetRecommendations() []string {
 	defer t.mutex.RUnlock()
 
 	return append([]string{}, t.recommendations...)
+}
 
 // GetTuneCount returns the number of tuning operations
 func (t *ConfigTuner) GetTuneCount() int {
@@ -285,6 +297,7 @@ func (t *ConfigTuner) GetTuneCount() int {
 	defer t.mutex.RUnlock()
 
 	return t.tuneCount
+}
 
 // GetLastTuneTime returns the time of the last tuning
 func (t *ConfigTuner) GetLastTuneTime() time.Time {
@@ -292,6 +305,7 @@ func (t *ConfigTuner) GetLastTuneTime() time.Time {
 	defer t.mutex.RUnlock()
 
 	return t.lastTuneTime
+}
 
 // IsRunning returns if automatic tuning is running
 func (t *ConfigTuner) IsRunning() bool {
@@ -299,10 +313,12 @@ func (t *ConfigTuner) IsRunning() bool {
 	defer t.mutex.RUnlock()
 
 	return t.running
+}
 
 // GetMemoryProfiler returns the memory profiler
 func (t *ConfigTuner) GetMemoryProfiler() *profiling.MemoryProfiler {
 	return t.profiler
+}
 
 // SaveConfigToFile saves the configuration to a file
 func (t *ConfigTuner) SaveConfigToFile(filename string) error {
@@ -337,11 +353,13 @@ func (t *ConfigTuner) SaveConfigToFile(filename string) error {
 	fmt.Fprintf(f, "max_memory = %d\n", t.config.MaxMemory)
 
 	return nil
+}
 
 // LoadConfigFromFile loads the configuration from a file
 func (t *ConfigTuner) LoadConfigFromFile(filename string) error {
 	// Not implemented - would parse the file format above
 	return fmt.Errorf("not implemented")
+}
 
 // min returns the minimum of two integers
 func min(a, b int) int {
@@ -349,9 +367,12 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
 
 // max returns the maximum of two integers
 func max(a, b int) int {
 	if a > b {
 		return a
 	}
+	return b
+}

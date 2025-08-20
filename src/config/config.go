@@ -78,9 +78,9 @@ func DefaultConfig() *Config {
 	cfg.Security.PublicKey = ""
 
 	return cfg
+}
 
 // LoadConfig loads the configuration from file and environment variables
-}
 func LoadConfig() (*Config, error) {
 	// Start with default configuration
 	cfg := DefaultConfig()
@@ -123,9 +123,9 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return cfg, nil
+}
 
 // SaveConfig saves the configuration to file
-}
 func SaveConfig(cfg *Config) error {
 	v := viper.New()
 	v.SetConfigName(".LLMrecon")

@@ -2,11 +2,12 @@ package distribution
 
 import (
 	"crypto/sha256"
-	"crypto/sha256"
-	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
 	"hash"
+	"io"
+	"os"
+	"path/filepath"
 )
 
 // calculateFileChecksum calculates the checksum of a file using the specified algorithm
@@ -37,6 +38,7 @@ func calculateFileChecksum(filePath, algorithm string) (string, error) {
 	}
 	
 	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
+}
 
 // validateChecksums validates that the artifact's checksums match the calculated values
 func validateChecksums(filePath string, expectedChecksums map[string]string) error {
@@ -52,6 +54,7 @@ func validateChecksums(filePath string, expectedChecksums map[string]string) err
 	}
 	
 	return nil
+}
 
 // formatBytes formats byte count as human-readable string
 func formatBytes(bytes int64) string {
@@ -67,6 +70,7 @@ func formatBytes(bytes int64) string {
 	}
 	
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
 
 // sanitizeFileName sanitizes a filename to be safe for filesystem usage
 func sanitizeFileName(filename string) string {
@@ -84,13 +88,15 @@ func sanitizeFileName(filename string) string {
 	}
 	
 	return string(result)
+}
 
 // ensureDirectory creates a directory if it doesn't exist
 func ensureDirectory(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return os.MkdirAll(path, 0700)
 	}
-		return nil
+	return nil
+}
 // copyFile copies a file from src to dst
 func copyFile(src, dst string) error {
 	sourceFile, err := os.Open(filepath.Clean(src))
@@ -107,11 +113,13 @@ func copyFile(src, dst string) error {
 	
 	_, err = io.Copy(destFile, sourceFile)
 	return err
+}
 
 // fileExists checks if a file exists
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
+}
 
 // getFileSize returns the size of a file
 func getFileSize(path string) (int64, error) {
@@ -119,3 +127,5 @@ func getFileSize(path string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	return info.Size(), nil
+}

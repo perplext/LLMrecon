@@ -3,6 +3,7 @@ package types
 
 import (
 	"context"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
@@ -14,14 +15,17 @@ type TemplateSource struct {
 	Path string
 	// Type is the type of the source
 	Type string
+}
 
 // TemplateLoader defines the interface for loading templates
+
 type TemplateLoader interface {
 	// LoadTemplate loads a template from a source
 	LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error)
 	
 	// LoadTemplates loads multiple templates from a source
 	LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error)
+}
 
 // OptimizedTemplateLoader extends TemplateLoader with additional optimized methods
 type OptimizedTemplateLoader interface {
@@ -44,6 +48,7 @@ type OptimizedTemplateLoader interface {
 	
 	// SetConcurrencyLimit sets the concurrency limit
 	SetConcurrencyLimit(limit int)
+}
 
 // TemplateManager defines the interface for managing templates
 type TemplateManager interface {
@@ -54,16 +59,17 @@ type TemplateManager interface {
 	LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error)
 	
 	// Execute executes a template
-	Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*interfaces.TemplateResult, error)
+	Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*TemplateResult, error)
 	
 	// ExecuteBatch executes multiple templates
-	ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*interfaces.TemplateResult, error)
+	ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*TemplateResult, error)
 	
 	// GetLoader returns the template loader
 	GetLoader() TemplateLoader
 	
 	// GetExecutor returns the template executor
 	GetExecutor() interfaces.TemplateExecutor
+}
 
 // OptimizedTemplateManager extends TemplateManager with additional optimized methods
 type OptimizedTemplateManager interface {
@@ -97,3 +103,5 @@ type OptimizedTemplateManager interface {
 	SetLoadTimeout(timeout time.Duration)
 	
 	// SetDebug sets the debug flag
+	SetDebug(debug bool)
+}

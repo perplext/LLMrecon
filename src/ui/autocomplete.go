@@ -2,6 +2,8 @@ package ui
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -10,14 +12,13 @@ import (
 
 // AutoCompleter provides command auto-completion and suggestions
 type AutoCompleter struct {
-	commands     map[string]*CommandInfo
-	aliases      map[string]string
-	history      []string
-	maxHistory   int
-	suggestions  SuggestionEngine
+	commands    map[string]*CommandInfo
+	aliases     map[string]string
+	history     []string
+	maxHistory  int
+	suggestions SuggestionEngine
 }
 
-}
 // CommandInfo contains command metadata
 type CommandInfo struct {
 	Name        string
@@ -29,7 +30,6 @@ type CommandInfo struct {
 	Examples    []Example
 }
 
-}
 // FlagInfo contains flag metadata
 type FlagInfo struct {
 	Name        string
@@ -41,13 +41,12 @@ type FlagInfo struct {
 	Values      []string // Possible values for enum flags
 }
 
-}
 // Example contains command example
 type Example struct {
 	Command     string
 	Description string
-
 }
+
 // NewAutoCompleter creates a new auto-completer
 func NewAutoCompleter() *AutoCompleter {
 	ac := &AutoCompleter{
@@ -57,14 +56,14 @@ func NewAutoCompleter() *AutoCompleter {
 		maxHistory:  1000,
 		suggestions: NewSuggestionEngine(),
 	}
-	
+
 	// Initialize with default commands
 	ac.initializeCommands()
-	
+
 	return ac
+}
 
 // initializeCommands sets up command information
-}
 func (ac *AutoCompleter) initializeCommands() {
 	// Main commands
 	ac.RegisterCommand(&CommandInfo{
@@ -209,25 +208,25 @@ func (ac *AutoCompleter) initializeCommands() {
 			},
 		},
 	})
+}
 
 // RegisterCommand registers a command for auto-completion
-}
 func (ac *AutoCompleter) RegisterCommand(cmd *CommandInfo) {
 	ac.commands[cmd.Name] = cmd
-	
+
 	// Register aliases
 	for _, alias := range cmd.Aliases {
 		ac.aliases[alias] = cmd.Name
 	}
-	
+
 	// Register sub-commands recursively
 	for _, sub := range cmd.SubCommands {
 		fullName := cmd.Name + " " + sub.Name
 		ac.commands[fullName] = sub
 	}
+}
 
 // Complete returns completions for the given input
-}
 func (ac *AutoCompleter) Complete(input string) []string {
 	parts := strings.Fields(input)
 	if len(parts) == 0 {
@@ -274,9 +273,9 @@ func (ac *AutoCompleter) Complete(input string) []string {
 
 	// Suggest common patterns
 	return ac.suggestions.GetSuggestions(cmd.Name, input)
+}
 
 // CompleteFlags returns flag completions for cobra command
-}
 func (ac *AutoCompleter) CompleteFlags(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	cmdInfo := ac.findCommandInfo(cmd.Name())
 	if cmdInfo == nil {
@@ -285,19 +284,19 @@ func (ac *AutoCompleter) CompleteFlags(cmd *cobra.Command, args []string, toComp
 
 	completions := ac.completeFlagsForCommand(cmdInfo, toComplete)
 	return completions, cobra.ShellCompDirectiveNoFileComp
+}
 
 // CompleteArgs returns argument completions
-}
 func (ac *AutoCompleter) CompleteArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	cmdName := cmd.Name()
-	
+
 	switch cmdName {
 	case "scan":
 		if len(args) == 0 {
 			// Complete target URLs
 			return ac.completeTargets(toComplete), cobra.ShellCompDirectiveNoFileComp
 		}
-		
+
 	case "template":
 		if len(args) > 0 {
 			switch args[0] {
@@ -305,7 +304,7 @@ func (ac *AutoCompleter) CompleteArgs(cmd *cobra.Command, args []string, toCompl
 				return ac.completeTemplates(toComplete), cobra.ShellCompDirectiveNoFileComp
 			}
 		}
-		
+
 	case "provider":
 		if len(args) > 0 {
 			switch args[0] {
@@ -313,7 +312,7 @@ func (ac *AutoCompleter) CompleteArgs(cmd *cobra.Command, args []string, toCompl
 				return ac.completeProviders(toComplete), cobra.ShellCompDirectiveNoFileComp
 			}
 		}
-		
+
 	case "report":
 		if len(args) > 0 {
 			switch args[0] {
@@ -330,43 +329,45 @@ func (ac *AutoCompleter) CompleteArgs(cmd *cobra.Command, args []string, toCompl
 	}
 
 	return nil, cobra.ShellCompDirectiveDefault
+}
 
 // Helper methods
 
-}
 func (ac *AutoCompleter) getRootCommands() []string {
 	commands := make([]string, 0, len(ac.commands))
-	for name, cmd := range ac.commands {
+	for name := range ac.commands {
 		if !strings.Contains(name, " ") { // Root commands only
 			commands = append(commands, name)
 		}
 	}
 	sort.Strings(commands)
 	return commands
+}
 
 func (ac *AutoCompleter) findCommandMatches(prefix string) []string {
 	matches := make([]string, 0)
-	
+
 	// Check exact commands
 	for name := range ac.commands {
 		if strings.HasPrefix(name, prefix) && !strings.Contains(name, " ") {
 			matches = append(matches, name)
 		}
 	}
-	
+
 	// Check aliases
-	for alias, cmdName := range ac.aliases {
+	for alias := range ac.aliases {
 		if strings.HasPrefix(alias, prefix) {
 			matches = append(matches, alias)
 		}
 	}
-	
+
 	sort.Strings(matches)
 	return matches
+}
 
 func (ac *AutoCompleter) completeSubCommand(parent *CommandInfo, input string) []string {
 	completions := make([]string, 0)
-	
+
 	parts := strings.Fields(input)
 	if len(parts) == 0 || (len(parts) == 1 && !strings.HasSuffix(input, " ")) {
 		// Complete sub-command names
@@ -374,19 +375,20 @@ func (ac *AutoCompleter) completeSubCommand(parent *CommandInfo, input string) [
 		if len(parts) == 1 {
 			prefix = parts[0]
 		}
-		
+
 		for _, sub := range parent.SubCommands {
 			if strings.HasPrefix(sub.Name, prefix) {
 				completions = append(completions, parent.Name+" "+sub.Name)
 			}
 		}
 	}
-	
+
 	return completions
+}
 
 func (ac *AutoCompleter) completeFlagsForCommand(cmd *CommandInfo, prefix string) []string {
 	completions := make([]string, 0)
-	
+
 	for _, flag := range cmd.Flags {
 		// Long form
 		longFlag := "--" + flag.Name
@@ -397,7 +399,7 @@ func (ac *AutoCompleter) completeFlagsForCommand(cmd *CommandInfo, prefix string
 			}
 			completions = append(completions, completion)
 		}
-		
+
 		// Short form
 		if flag.Shorthand != "" {
 			shortFlag := "-" + flag.Shorthand
@@ -406,21 +408,22 @@ func (ac *AutoCompleter) completeFlagsForCommand(cmd *CommandInfo, prefix string
 			}
 		}
 	}
-	
+
 	sort.Strings(completions)
 	return completions
+}
 
 func (ac *AutoCompleter) completeValueForFlag(cmd *CommandInfo, flagName string) []string {
 	// Remove flag prefix
 	flagName = strings.TrimPrefix(flagName, "--")
 	flagName = strings.TrimPrefix(flagName, "-")
-	
+
 	for _, flag := range cmd.Flags {
 		if flag.Name == flagName || flag.Shorthand == flagName {
 			if len(flag.Values) > 0 {
 				return flag.Values
 			}
-			
+
 			// Special handling for common flag types
 			switch flag.Type {
 			case "bool":
@@ -433,24 +436,25 @@ func (ac *AutoCompleter) completeValueForFlag(cmd *CommandInfo, flagName string)
 			}
 		}
 	}
-	
+
 	return nil
+}
 
 func (ac *AutoCompleter) findCommandInfo(name string) *CommandInfo {
 	if cmd, exists := ac.commands[name]; exists {
 		return cmd
 	}
-	
+
 	// Check aliases
 	if alias, exists := ac.aliases[name]; exists {
 		return ac.commands[alias]
 	}
-	
+
 	return nil
+}
 
 // Completion data providers
 
-}
 func (ac *AutoCompleter) completeTargets(prefix string) []string {
 	// Common LLM API endpoints
 	targets := []string{
@@ -459,15 +463,16 @@ func (ac *AutoCompleter) completeTargets(prefix string) []string {
 		"https://generativelanguage.googleapis.com/v1/models",
 		"https://localhost:8443/v1/completions",
 	}
-	
+
 	completions := make([]string, 0)
 	for _, target := range targets {
 		if strings.HasPrefix(target, prefix) {
 			completions = append(completions, target)
 		}
 	}
-	
+
 	return completions
+}
 
 func (ac *AutoCompleter) completeTemplates(prefix string) []string {
 	// Would load actual templates from filesystem
@@ -478,15 +483,16 @@ func (ac *AutoCompleter) completeTemplates(prefix string) []string {
 		"model-manipulation",
 		"content-safety",
 	}
-	
+
 	completions := make([]string, 0)
 	for _, tmpl := range templates {
 		if strings.HasPrefix(tmpl, prefix) {
 			completions = append(completions, tmpl)
 		}
 	}
-	
+
 	return completions
+}
 
 func (ac *AutoCompleter) completeProviders(prefix string) []string {
 	// Would load from config
@@ -497,15 +503,16 @@ func (ac *AutoCompleter) completeProviders(prefix string) []string {
 		"cohere",
 		"local",
 	}
-	
+
 	completions := make([]string, 0)
 	for _, provider := range providers {
 		if strings.HasPrefix(provider, prefix) {
 			completions = append(completions, provider)
 		}
 	}
-	
+
 	return completions
+}
 
 func (ac *AutoCompleter) completeScanIDs(prefix string) []string {
 	// Would load from scan history
@@ -514,27 +521,27 @@ func (ac *AutoCompleter) completeScanIDs(prefix string) []string {
 		"scan-2024-01-20-002",
 		"scan-2024-01-19-015",
 	}
-
 }
+
 func (ac *AutoCompleter) completeReportIDs(prefix string) []string {
 	// Would load from report history
 	return []string{
 		"report-2024-01-20-001",
 		"report-2024-01-20-002",
 	}
+}
 
 // SuggestionEngine provides intelligent command suggestions
 type SuggestionEngine struct {
 	patterns map[string][]string
 }
 
-}
 // NewSuggestionEngine creates a new suggestion engine
 func NewSuggestionEngine() SuggestionEngine {
 	se := SuggestionEngine{
 		patterns: make(map[string][]string),
 	}
-	
+
 	// Initialize common patterns
 	se.patterns["scan"] = []string{
 		"--template owasp-llm",
@@ -543,25 +550,25 @@ func NewSuggestionEngine() SuggestionEngine {
 		"--concurrent 10",
 		"--timeout 60",
 	}
-	
+
 	se.patterns["template"] = []string{
 		"list --category prompt-injection",
 		"get owasp-llm-top10",
 		"validate ./my-template.yaml",
 		"create",
 	}
-	
+
 	se.patterns["config"] = []string{
 		"init",
 		"set provider.openai.api_key",
 		"get test.concurrent",
 		"list",
 	}
-	
+
 	return se
+}
 
 // GetSuggestions returns suggestions based on context
-}
 func (se SuggestionEngine) GetSuggestions(command, input string) []string {
 	if patterns, exists := se.patterns[command]; exists {
 		suggestions := make([]string, 0)
@@ -573,79 +580,76 @@ func (se SuggestionEngine) GetSuggestions(command, input string) []string {
 		}
 		return suggestions
 	}
-	
+
 	return nil
+}
 
 // BashCompletionScript generates bash completion script
-}
 func GenerateBashCompletionScript(rootCmd *cobra.Command) string {
 	var b strings.Builder
-	
+
 	b.WriteString("#!/bin/bash\n\n")
 	b.WriteString("# LLMrecon bash completion script\n")
 	b.WriteString("# Generated by LLMrecon completion bash\n\n")
-	
+
 	rootCmd.GenBashCompletion(&b)
-	
+
 	return b.String()
+}
 
 // ZshCompletionScript generates zsh completion script
-}
 func GenerateZshCompletionScript(rootCmd *cobra.Command) string {
 	var b strings.Builder
-	
+
 	b.WriteString("#compdef LLMrecon\n\n")
 	b.WriteString("# LLMrecon zsh completion script\n")
 	b.WriteString("# Generated by LLMrecon completion zsh\n\n")
-	
+
 	rootCmd.GenZshCompletion(&b)
-	
+
 	return b.String()
+}
 
 // InstallCompletions installs shell completions
-}
 func InstallCompletions(shell string, rootCmd *cobra.Command) error {
 	var script string
-}
 	var installPath string
-	
+
 	switch shell {
 	case "bash":
 		script = GenerateBashCompletionScript(rootCmd)
 		installPath = "/etc/bash_completion.d/LLMrecon"
-		
+
 	case "zsh":
 		script = GenerateZshCompletionScript(rootCmd)
 		// Get zsh completion directory
 		homeDir, _ := os.UserHomeDir()
 		installPath = filepath.Join(homeDir, ".zsh/completions/_LLMrecon")
-		
+
 	case "fish":
 		var b strings.Builder
 		rootCmd.GenFishCompletion(&b, true)
 		script = b.String()
 		homeDir, _ := os.UserHomeDir()
 		installPath = filepath.Join(homeDir, ".config/fish/completions/LLMrecon.fish")
-		
+
 	default:
 		return fmt.Errorf("unsupported shell: %s", shell)
 	}
-	
+
 	// Create directory if needed
 	dir := filepath.Dir(installPath)
 	if err := os.MkdirAll(dir, 0700); err != nil {
-        		return fmt.Errorf("failed to write completion file: %w", err)
-        	}
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
-	
-        		return fmt.Errorf("failed to write completion file: %w", err)
-        	}
+
 	// Write completion file
-    	if err := os.WriteFile(installPath, []byte(script), 0600); err != nil {
+	if err := os.WriteFile(installPath, []byte(script), 0600); err != nil {
 		return fmt.Errorf("failed to write completion file: %w", err)
 	}
-	
+
 	fmt.Printf("Completions installed to: %s\n", installPath)
 	fmt.Println("Restart your shell or source the completion file to enable completions.")
-	
+
+	return nil
+}

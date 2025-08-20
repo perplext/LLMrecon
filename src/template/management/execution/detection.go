@@ -8,30 +8,45 @@ import (
 	"strings"
 
 	"github.com/perplext/LLMrecon/src/template/format"
+	"github.com/perplext/LLMrecon/src/template/management/interfaces"
 )
+
+// DetectionEngine is the interface for detection engines
+type DetectionEngine interface {
+	Detect(ctx context.Context, template interfaces.Template, response string) (bool, int, map[string]interface{}, error)
+}
 
 // DefaultDetectionEngine is the default implementation of the DetectionEngine interface
 type DefaultDetectionEngine struct {
 	// customDetectors is a map of detection type to custom detector function
 	customDetectors map[string]CustomDetector
+}
 
 // CustomDetector is a function that implements custom detection logic
-type CustomDetector func(ctx context.Context, criteria format.DetectionCriteria, response string) (bool, int, map[string]interface{}, error)
+type CustomDetector func(ctx context.Context, criteria *format.TemplateDetection, response string) (bool, int, map[string]interface{}, error)
 
 // NewDefaultDetectionEngine creates a new default detection engine
 func NewDefaultDetectionEngine() *DefaultDetectionEngine {
 	return &DefaultDetectionEngine{
 		customDetectors: make(map[string]CustomDetector),
 	}
+}
 
 // RegisterCustomDetector registers a custom detector for a specific detection type
 func (e *DefaultDetectionEngine) RegisterCustomDetector(detectionType string, detector CustomDetector) {
 	e.customDetectors[detectionType] = detector
+}
 
 // Detect detects vulnerabilities in an LLM response
-func (e *DefaultDetectionEngine) Detect(ctx context.Context, template *format.Template, response string) (bool, int, map[string]interface{}, error) {
+func (e *DefaultDetectionEngine) Detect(ctx context.Context, template interfaces.Template, response string) (bool, int, map[string]interface{}, error) {
+	// Cast to format.Template to access Test.Detection
+	formatTemplate, ok := template.(*format.Template)
+	if !ok {
+		return false, 0, nil, fmt.Errorf("template is not a format.Template")
+	}
+
 	// Get detection criteria
-	criteria := template.Test.Detection
+	criteria := formatTemplate.Test.Detection
 
 	// Check if there's a custom detector for this type
 	if detector, ok := e.customDetectors[criteria.Type]; ok {
@@ -49,16 +64,17 @@ func (e *DefaultDetectionEngine) Detect(ctx context.Context, template *format.Te
 	default:
 		return false, 0, nil, fmt.Errorf("unsupported detection type: %s", criteria.Type)
 	}
+}
 
 // detectStringMatch detects string matches in the response
-func (e *DefaultDetectionEngine) detectStringMatch(ctx context.Context, criteria format.DetectionCriteria, response string) (bool, int, map[string]interface{}, error) {
+func (e *DefaultDetectionEngine) detectStringMatch(ctx context.Context, criteria *format.TemplateDetection, response string) (bool, int, map[string]interface{}, error) {
 	// Normalize response
 	normalizedResponse := strings.ToLower(response)
 	normalizedMatch := strings.ToLower(criteria.Match)
 
-	// Check condition
+	// Check condition using criteria field
 	var detected bool
-	switch criteria.Condition {
+	switch criteria.Criteria {
 	case "contains":
 		detected = strings.Contains(normalizedResponse, normalizedMatch)
 	case "not_contains":
@@ -78,14 +94,15 @@ func (e *DefaultDetectionEngine) detectStringMatch(ctx context.Context, criteria
 	details := map[string]interface{}{
 		"detection_type": "string_match",
 		"match_string":   criteria.Match,
-		"condition":      criteria.Condition,
+		"condition":      criteria.Criteria,
 		"detected":       detected,
 	}
 
 	return detected, score, details, nil
+}
 
 // detectRegexMatch detects regex matches in the response
-func (e *DefaultDetectionEngine) detectRegexMatch(ctx context.Context, criteria format.DetectionCriteria, response string) (bool, int, map[string]interface{}, error) {
+func (e *DefaultDetectionEngine) detectRegexMatch(ctx context.Context, criteria *format.TemplateDetection, response string) (bool, int, map[string]interface{}, error) {
 	// Compile regex
 	regex, err := regexp.Compile(criteria.Pattern)
 	if err != nil {
@@ -97,7 +114,7 @@ func (e *DefaultDetectionEngine) detectRegexMatch(ctx context.Context, criteria 
 
 	// Check condition
 	var detected bool
-	switch criteria.Condition {
+	switch criteria.Criteria {
 	case "contains":
 		detected = len(matches) > 0
 	case "not_contains":
@@ -117,17 +134,18 @@ func (e *DefaultDetectionEngine) detectRegexMatch(ctx context.Context, criteria 
 	details := map[string]interface{}{
 		"detection_type": "regex_match",
 		"pattern":        criteria.Pattern,
-		"condition":      criteria.Condition,
+		"condition":      criteria.Criteria,
 		"detected":       detected,
 		"match_count":    len(matches),
 		"matches":        matches,
 	}
 
 	return detected, score, details, nil
+}
 
 // detectSemanticMatch detects semantic matches in the response
 // This is a placeholder implementation that should be replaced with actual semantic matching logic
-func (e *DefaultDetectionEngine) detectSemanticMatch(ctx context.Context, criteria format.DetectionCriteria, response string) (bool, int, map[string]interface{}, error) {
+func (e *DefaultDetectionEngine) detectSemanticMatch(ctx context.Context, criteria *format.TemplateDetection, response string) (bool, int, map[string]interface{}, error) {
 	// This is a placeholder implementation
 	// In a real implementation, this would use embeddings or other semantic analysis techniques
 	
@@ -168,6 +186,7 @@ func (e *DefaultDetectionEngine) detectSemanticMatch(ctx context.Context, criter
 	}
 	
 	return detected, score, details, nil
+}
 
 // CompositeDetectionEngine combines multiple detection engines
 type CompositeDetectionEngine struct {
@@ -175,6 +194,7 @@ type CompositeDetectionEngine struct {
 	engines []DetectionEngine
 	// aggregationStrategy is the strategy for aggregating results from multiple engines
 	aggregationStrategy AggregationStrategy
+}
 
 // AggregationStrategy is the strategy for aggregating results from multiple detection engines
 type AggregationStrategy string
@@ -196,6 +216,7 @@ func NewCompositeDetectionEngine(engines []DetectionEngine, strategy Aggregation
 		engines:            engines,
 		aggregationStrategy: strategy,
 	}
+}
 
 // Detect detects vulnerabilities in an LLM response using multiple engines
 func (e *CompositeDetectionEngine) Detect(ctx context.Context, template *format.Template, response string) (bool, int, map[string]interface{}, error) {
@@ -237,13 +258,14 @@ func (e *CompositeDetectionEngine) Detect(ctx context.Context, template *format.
 		// Default to AnyDetected
 		return e.aggregateAny(results)
 	}
+}
 
 // aggregateAny aggregates results using the AnyDetected strategy
 func (e *CompositeDetectionEngine) aggregateAny(results []struct {
 	detected bool
 	score    int
 	details  map[string]interface{}
-) (bool, int, map[string]interface{}, error) {
+}) (bool, int, map[string]interface{}, error) {
 	// Initialize aggregated results
 	detected := false
 	maxScore := 0
@@ -275,13 +297,14 @@ func (e *CompositeDetectionEngine) aggregateAny(results []struct {
 	aggregatedDetails["score"] = maxScore
 
 	return detected, maxScore, aggregatedDetails, nil
+}
 
 // aggregateAll aggregates results using the AllDetected strategy
 func (e *CompositeDetectionEngine) aggregateAll(results []struct {
 	detected bool
 	score    int
 	details  map[string]interface{}
-) (bool, int, map[string]interface{}, error) {
+}) (bool, int, map[string]interface{}, error) {
 	// Initialize aggregated results
 	detected := true
 	totalScore := 0
@@ -317,13 +340,14 @@ func (e *CompositeDetectionEngine) aggregateAll(results []struct {
 	aggregatedDetails["score"] = averageScore
 
 	return detected, averageScore, aggregatedDetails, nil
+}
 
 // aggregateMajority aggregates results using the MajorityDetected strategy
 func (e *CompositeDetectionEngine) aggregateMajority(results []struct {
 	detected bool
 	score    int
 	details  map[string]interface{}
-) (bool, int, map[string]interface{}, error) {
+}) (bool, int, map[string]interface{}, error) {
 	// Initialize aggregated results
 	detectedCount := 0
 	totalScore := 0
@@ -367,13 +391,14 @@ func (e *CompositeDetectionEngine) aggregateMajority(results []struct {
 	aggregatedDetails["total_count"] = len(results)
 
 	return detected, averageScore, aggregatedDetails, nil
+}
 
 // aggregateWeighted aggregates results using the WeightedScore strategy
 func (e *CompositeDetectionEngine) aggregateWeighted(results []struct {
 	detected bool
 	score    int
 	details  map[string]interface{}
-) (bool, int, map[string]interface{}, error) {
+}) (bool, int, map[string]interface{}, error) {
 	// Initialize aggregated results
 	totalScore := 0
 	aggregatedDetails := map[string]interface{}{
@@ -410,3 +435,5 @@ func (e *CompositeDetectionEngine) aggregateWeighted(results []struct {
 	aggregatedDetails["score"] = weightedScore
 	aggregatedDetails["threshold"] = threshold
 
+	return detected, weightedScore, aggregatedDetails, nil
+}

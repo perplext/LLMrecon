@@ -1,11 +1,15 @@
 package update
 
+import (
+	"time"
+)
 
 // Checker interface for checking updates
 type Checker interface {
 	CheckForUpdates() (*VersionInfo, error)
 	GetCurrentVersion() string
 	GetLatestVersion() (string, error)
+}
 
 // VersionInfo contains version information
 type VersionInfo struct {
@@ -44,3 +48,4 @@ type Manager interface {
 	Checker
 	PerformUpdate(request UpdateRequest) (*UpdateResponse, error)
 	GetUpdateHistory() ([]UpdateResult, error)
+}

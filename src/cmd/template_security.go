@@ -92,6 +92,7 @@ var templateSecurityCmd = &cobra.Command{
 			os.Exit(1)
 		}
 	},
+}
 
 func init() {
 	rootCmd.AddCommand(templateSecurityCmd)

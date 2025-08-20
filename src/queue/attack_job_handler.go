@@ -4,15 +4,42 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
+	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
 )
 
+// ProviderManager defines the interface for managing providers
+type ProviderManager interface {
+	GetProvider(providerType core.ProviderType) (Provider, error)
+	ListProviders() []string
+}
+
+// Provider defines the interface for LLM providers  
+type Provider interface {
+	GetModels(ctx context.Context) ([]string, error)
+	Execute(ctx context.Context, request map[string]interface{}) (*ExecutionResult, error)
+	GetName() string
+}
+
+// ExecutionResult represents the result of template execution
+type ExecutionResult struct {
+	Success     bool                   `json:"success"`
+	Response    string                 `json:"response"`
+	Confidence  float64                `json:"confidence"`
+	TokensUsed  int                    `json:"tokens_used"`
+	Cost        float64                `json:"cost"`
+	Metadata    map[string]interface{} `json:"metadata"`
+}
+
+// Note: Job and Logger types are defined in redis_queue.go
+
 // AttackJobHandler handles attack execution jobs
 type AttackJobHandler struct {
-	providerManager interfaces.ProviderManager
-	templateEngine  interfaces.TemplateEngine
+	providerManager ProviderManager
+	templateManager interfaces.TemplateManager
 	logger          Logger
 }
 
@@ -24,6 +51,7 @@ type AttackJobPayload struct {
 	Parameters     map[string]interface{}     `json:"parameters"`
 	Configuration  AttackConfiguration        `json:"configuration"`
 	Metadata       map[string]interface{}     `json:"metadata"`
+}
 
 // AttackConfiguration defines configuration for attack execution
 type AttackConfiguration struct {
@@ -33,6 +61,7 @@ type AttackConfiguration struct {
 	ConcurrentLimit int           `json:"concurrent_limit"`
 	StopOnSuccess   bool          `json:"stop_on_success"`
 	CollectMetrics  bool          `json:"collect_metrics"`
+}
 
 // AttackResult defines the result of attack execution
 type AttackResult struct {
@@ -62,15 +91,16 @@ const (
 
 // NewAttackJobHandler creates a new attack job handler
 func NewAttackJobHandler(
-	providerManager interfaces.ProviderManager,
-	templateEngine interfaces.TemplateEngine,
+	providerManager ProviderManager,
+	templateManager interfaces.TemplateManager,
 	logger Logger,
 ) *AttackJobHandler {
 	return &AttackJobHandler{
 		providerManager: providerManager,
-		templateEngine:  templateEngine,
+		templateManager: templateManager,
 		logger:          logger,
 	}
+}
 
 // ProcessJob processes a job based on its type
 func (h *AttackJobHandler) ProcessJob(ctx context.Context, job *Job) error {
@@ -90,6 +120,7 @@ func (h *AttackJobHandler) ProcessJob(ctx context.Context, job *Job) error {
 	default:
 		return fmt.Errorf("unknown job type: %s", job.Type)
 	}
+}
 
 // GetJobTypes returns the job types this handler can process
 func (h *AttackJobHandler) GetJobTypes() []string {
@@ -100,6 +131,7 @@ func (h *AttackJobHandler) GetJobTypes() []string {
 		JobTypeProviderTest,
 		JobTypeComplianceCheck,
 	}
+}
 
 // processAttackJob processes a single attack job
 func (h *AttackJobHandler) processAttackJob(ctx context.Context, job *Job) error {
@@ -143,6 +175,7 @@ func (h *AttackJobHandler) processAttackJob(ctx context.Context, job *Job) error
 	)
 	
 	return nil
+}
 
 // processBatchAttackJob processes a batch of attacks
 func (h *AttackJobHandler) processBatchAttackJob(ctx context.Context, job *Job) error {
@@ -214,6 +247,7 @@ func (h *AttackJobHandler) processBatchAttackJob(ctx context.Context, job *Job) 
 	)
 	
 	return nil
+}
 
 // processTemplateValidationJob validates a template
 func (h *AttackJobHandler) processTemplateValidationJob(ctx context.Context, job *Job) error {
@@ -224,15 +258,37 @@ func (h *AttackJobHandler) processTemplateValidationJob(ctx context.Context, job
 	}
 	
 	// Validate template
-	template, err := h.templateEngine.LoadTemplate(templateID)
+	template, err := h.templateManager.GetTemplate(ctx, templateID)
 	if err != nil {
 		return fmt.Errorf("failed to load template: %w", err)
+	}
+	
+	// Convert to format.Template if needed
+	var templateMetadata map[string]interface{}
+	if formatTemplate, ok := template.(*format.Template); ok {
+		templateMetadata = map[string]interface{}{
+			"id":      formatTemplate.ID,
+			"name":    formatTemplate.Name,
+			"version": formatTemplate.Version,
+			"info":     formatTemplate.Info,
+		}
+		if formatTemplate.Metadata != nil {
+			for k, v := range formatTemplate.Metadata {
+				templateMetadata[k] = v
+			}
+		}
+	} else {
+		templateMetadata = map[string]interface{}{
+			"id":      template.GetID(),
+			"name":    template.GetName(),
+			"version": template.GetVersion(),
+		}
 	}
 	
 	validationResult := map[string]interface{}{
 		"template_id": templateID,
 		"valid":       true,
-		"metadata":    template.GetMetadata(),
+		"metadata":    templateMetadata,
 		"timestamp":   time.Now(),
 	}
 	
@@ -251,6 +307,7 @@ func (h *AttackJobHandler) processTemplateValidationJob(ctx context.Context, job
 	)
 	
 	return nil
+}
 
 // processProviderTestJob tests provider connectivity and functionality
 func (h *AttackJobHandler) processProviderTestJob(ctx context.Context, job *Job) error {
@@ -294,6 +351,7 @@ func (h *AttackJobHandler) processProviderTestJob(ctx context.Context, job *Job)
 	)
 	
 	return nil
+}
 
 // processComplianceCheckJob performs compliance checks
 func (h *AttackJobHandler) processComplianceCheckJob(ctx context.Context, job *Job) error {
@@ -329,6 +387,8 @@ func (h *AttackJobHandler) processComplianceCheckJob(ctx context.Context, job *J
 	)
 	
 	return nil
+}
+
 // Helper methods
 
 // parseAttackPayload parses attack payload from job payload
@@ -344,10 +404,13 @@ func (h *AttackJobHandler) parseAttackPayload(payload map[string]interface{}) (*
 	}
 	
 	return &attackPayload, nil
+}
+
 // BatchAttackPayload defines payload for batch attacks
 type BatchAttackPayload struct {
 	Attacks       []*AttackJobPayload `json:"attacks"`
 	Configuration AttackConfiguration `json:"configuration"`
+}
 
 // parseBatchPayload parses batch attack payload
 func (h *AttackJobHandler) parseBatchPayload(payload map[string]interface{}) (*BatchAttackPayload, error) {
@@ -362,7 +425,7 @@ func (h *AttackJobHandler) parseBatchPayload(payload map[string]interface{}) (*B
 	}
 	
 	return &batchPayload, nil
-	
+}
 
 // executeAttack executes a single attack
 func (h *AttackJobHandler) executeAttack(ctx context.Context, payload *AttackJobPayload) (*AttackResult, error) {
@@ -373,13 +436,19 @@ func (h *AttackJobHandler) executeAttack(ctx context.Context, payload *AttackJob
 	}
 	
 	// Load template
-	template, err := h.templateEngine.LoadTemplate(payload.TemplateID)
+	template, err := h.templateManager.GetTemplate(ctx, payload.TemplateID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load template: %w", err)
 	}
 	
-	// Execute template with provider
-	executionResult, err := h.templateEngine.ExecuteTemplate(ctx, template, provider, payload.Parameters)
+	// Execute template with provider - create basic execution
+	executionParams := map[string]interface{}{
+		"model":      payload.Model,
+		"parameters": payload.Parameters,
+		"template":   template,
+	}
+	
+	executionResult, err := provider.Execute(ctx, executionParams)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute template: %w", err)
 	}
@@ -398,26 +467,35 @@ func (h *AttackJobHandler) executeAttack(ctx context.Context, payload *AttackJob
 	}
 	
 	return result, nil
+}
 
 // validateTemplateStructure validates template structure
 func (h *AttackJobHandler) validateTemplateStructure(template interfaces.Template) error {
 	// Basic validation - check if template has required fields
-	metadata := template.GetMetadata()
-	
-	if metadata.ID == "" {
+	if template.GetID() == "" {
 		return fmt.Errorf("template missing ID")
 	}
 	
-	if metadata.Name == "" {
+	if template.GetName() == "" {
 		return fmt.Errorf("template missing name")
 	}
 	
-	if metadata.Category == "" {
-		return fmt.Errorf("template missing category")
+	// Check if it's a format.Template for additional validation
+	if formatTemplate, ok := template.(*format.Template); ok {
+		if formatTemplate.Info == nil {
+			return fmt.Errorf("template missing info")
+		}
+		if formatTemplate.Info.Name == "" {
+			return fmt.Errorf("template info missing name")
+		}
+		if formatTemplate.Test == nil {
+			return fmt.Errorf("template missing test configuration")
+		}
 	}
 	
 	// Additional validations can be added here
 	return nil
+}
 
 // performOWASPLLMChecks performs OWASP LLM compliance checks
 func (h *AttackJobHandler) performOWASPLLMChecks() []string {
@@ -433,6 +511,7 @@ func (h *AttackJobHandler) performOWASPLLMChecks() []string {
 		"LLM09: Overreliance",
 		"LLM10: Model Theft",
 	}
+}
 
 // performISO42001Checks performs ISO 42001 compliance checks
 func (h *AttackJobHandler) performISO42001Checks() []string {
@@ -448,15 +527,4 @@ func (h *AttackJobHandler) performISO42001Checks() []string {
 		"Bias Mitigation",
 		"Continuous Monitoring",
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

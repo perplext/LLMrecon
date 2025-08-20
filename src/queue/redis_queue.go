@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -95,11 +96,13 @@ type Worker struct {
 	ctx      context.Context
 	cancel   context.CancelFunc
 	wg       sync.WaitGroup
+}
 
 // JobHandler processes a job
 type JobHandler interface {
 	ProcessJob(ctx context.Context, job *Job) error
 	GetJobTypes() []string
+}
 
 // QueueMetrics tracks queue performance
 type QueueMetrics struct {
@@ -111,6 +114,7 @@ type QueueMetrics struct {
 	QueueLength    int64 `json:"queue_length"`
 	AverageLatency time.Duration `json:"average_latency"`
 	ThroughputRPS  float64 `json:"throughput_rps"`
+}
 
 // WorkerMetrics tracks individual worker performance
 type WorkerMetrics struct {
@@ -120,6 +124,7 @@ type WorkerMetrics struct {
 	AverageLatency time.Duration `json:"average_latency"`
 	LastActive     time.Time     `json:"last_active"`
 	Status         string        `json:"status"`
+}
 
 // Logger interface for queue logging
 type Logger interface {
@@ -127,6 +132,7 @@ type Logger interface {
 	Warn(msg string, args ...interface{})
 	Error(msg string, args ...interface{})
 	Debug(msg string, args ...interface{})
+}
 
 // DefaultQueueConfig returns default configuration
 func DefaultQueueConfig() RedisQueueConfig {
@@ -150,6 +156,7 @@ func DefaultQueueConfig() RedisQueueConfig {
 		EnableMetrics:     true,
 		MetricsInterval:   10 * time.Second,
 	}
+}
 
 // NewRedisJobQueue creates a new Redis job queue
 func NewRedisJobQueue(config RedisQueueConfig, logger Logger) (*RedisJobQueue, error) {
@@ -182,6 +189,7 @@ func NewRedisJobQueue(config RedisQueueConfig, logger Logger) (*RedisJobQueue, e
 	}
 	
 	return queue, nil
+}
 
 // Start starts the job queue and workers
 func (q *RedisJobQueue) Start() error {
@@ -198,6 +206,7 @@ func (q *RedisJobQueue) Start() error {
 	
 	q.logger.Info("Redis job queue started successfully")
 	return nil
+}
 
 // Stop stops the job queue and all workers
 func (q *RedisJobQueue) Stop() error {
@@ -223,6 +232,7 @@ func (q *RedisJobQueue) Stop() error {
 	
 	q.logger.Info("Redis job queue stopped")
 	return nil
+}
 
 // AddWorker adds a worker to process jobs
 func (q *RedisJobQueue) AddWorker(handler JobHandler) (*Worker, error) {
@@ -252,6 +262,7 @@ func (q *RedisJobQueue) AddWorker(handler JobHandler) (*Worker, error) {
 	
 	q.logger.Info("Added worker", "worker_id", workerID, "job_types", handler.GetJobTypes())
 	return worker, nil
+}
 
 // Enqueue adds a job to the queue
 func (q *RedisJobQueue) Enqueue(job *Job) error {
@@ -300,6 +311,7 @@ func (q *RedisJobQueue) Enqueue(job *Job) error {
 	q.logger.Info("Job enqueued", "job_id", job.ID, "type", job.Type, "queue", job.Queue, "priority", job.Priority)
 	
 	return nil
+}
 
 // Dequeue removes and returns the next job from the queue
 func (q *RedisJobQueue) Dequeue(queueName string) (*Job, error) {
@@ -336,6 +348,7 @@ func (q *RedisJobQueue) Dequeue(queueName string) (*Job, error) {
 	q.client.Set(q.ctx, jobKey, jobData, q.config.JobTimeout)
 	
 	return &job, nil
+}
 
 // CompleteJob marks a job as completed
 func (q *RedisJobQueue) CompleteJob(job *Job, result interface{}) error {
@@ -345,6 +358,7 @@ func (q *RedisJobQueue) CompleteJob(job *Job, result interface{}) error {
 	job.Result = result
 	
 	return q.updateJob(job)
+}
 
 // FailJob marks a job as failed and potentially retries it
 func (q *RedisJobQueue) FailJob(job *Job, err error) error {
@@ -373,7 +387,7 @@ func (q *RedisJobQueue) FailJob(job *Job, err error) error {
 	}
 	
 	return q.updateJob(job)
-	
+}
 
 // GetJob retrieves a job by ID
 func (q *RedisJobQueue) GetJob(jobID string) (*Job, error) {
@@ -393,11 +407,13 @@ func (q *RedisJobQueue) GetJob(jobID string) (*Job, error) {
 	}
 	
 	return &job, nil
+}
 
 // GetQueueLength returns the number of jobs in a queue
 func (q *RedisJobQueue) GetQueueLength(queueName string) (int64, error) {
 	queueKey := q.getQueueKey(queueName)
 	return q.client.ZCard(q.ctx, queueKey).Result()
+}
 
 // GetMetrics returns current queue metrics
 func (q *RedisJobQueue) GetMetrics() *QueueMetrics {
@@ -408,6 +424,7 @@ func (q *RedisJobQueue) GetMetrics() *QueueMetrics {
 	q.metrics.ActiveWorkers = int64(len(q.workers))
 	
 	return q.metrics
+}
 
 // GetWorkerMetrics returns metrics for all workers
 func (q *RedisJobQueue) GetWorkerMetrics() []*WorkerMetrics {
@@ -420,14 +437,17 @@ func (q *RedisJobQueue) GetWorkerMetrics() []*WorkerMetrics {
 	}
 	
 	return metrics
+}
 
 // Private methods
 
 func (q *RedisJobQueue) getQueueKey(queueName string) string {
 	return fmt.Sprintf("%s:queue:%s", q.config.QueuePrefix, queueName)
+}
 
 func (q *RedisJobQueue) getJobKey(jobID string) string {
 	return fmt.Sprintf("%s:job:%s", q.config.QueuePrefix, jobID)
+}
 
 func (q *RedisJobQueue) updateJob(job *Job) error {
 	jobKey := q.getJobKey(job.ID)
@@ -437,7 +457,7 @@ func (q *RedisJobQueue) updateJob(job *Job) error {
 	}
 	
 	return q.client.Set(q.ctx, jobKey, jobData, q.config.JobTimeout).Err()
-	
+}
 
 func (q *RedisJobQueue) metricsLoop() {
 	ticker := time.NewTicker(q.config.MetricsInterval)
@@ -451,6 +471,7 @@ func (q *RedisJobQueue) metricsLoop() {
 			return
 		}
 	}
+}
 
 func (q *RedisJobQueue) updateMetrics() {
 	// Update queue length metrics
@@ -472,6 +493,7 @@ func (q *RedisJobQueue) updateMetrics() {
 	}
 	
 	q.metrics.QueueLength = totalLength
+}
 
 // Worker implementation
 
@@ -488,6 +510,7 @@ func (w *Worker) Start() error {
 	w.metrics.Status = "running"
 	w.logger.Info("Worker started", "worker_id", w.id)
 	return nil
+}
 
 // Stop stops the worker
 func (w *Worker) Stop() {
@@ -495,6 +518,7 @@ func (w *Worker) Stop() {
 	w.cancel()
 	w.wg.Wait()
 	w.metrics.Status = "stopped"
+}
 
 // processLoop is the main worker loop
 func (w *Worker) processLoop() {
@@ -509,6 +533,7 @@ func (w *Worker) processLoop() {
 			return
 		}
 	}
+}
 
 // processJobs processes available jobs
 func (w *Worker) processJobs() {
@@ -527,6 +552,7 @@ func (w *Worker) processJobs() {
 		
 		w.processJob(job)
 	}
+}
 
 // processJob processes a single job
 func (w *Worker) processJob(job *Job) {
@@ -555,6 +581,7 @@ func (w *Worker) processJob(job *Job) {
 		w.queue.metrics.JobsProcessed++
 		w.logger.Info("Job completed", "worker_id", w.id, "job_id", job.ID, "duration", duration)
 	}
+}
 
 // updateMetrics updates worker metrics
 func (w *Worker) updateMetrics(duration time.Duration) {
@@ -564,6 +591,7 @@ func (w *Worker) updateMetrics(duration time.Duration) {
 	} else {
 		w.metrics.AverageLatency = (w.metrics.AverageLatency + duration) / 2
 	}
+}
 
 // DefaultLogger provides a simple logger implementation
 type DefaultLogger struct {
@@ -575,40 +603,20 @@ func NewDefaultLogger() *DefaultLogger {
 	return &DefaultLogger{
 		logger: log.New(log.Writer(), "[Queue] ", log.LstdFlags),
 	}
+}
 
 func (l *DefaultLogger) Info(msg string, args ...interface{}) {
 	l.logger.Printf("INFO: "+msg, args...)
+}
 
 func (l *DefaultLogger) Warn(msg string, args ...interface{}) {
 	l.logger.Printf("WARN: "+msg, args...)
+}
 
 func (l *DefaultLogger) Error(msg string, args ...interface{}) {
 	l.logger.Printf("ERROR: "+msg, args...)
+}
 
 func (l *DefaultLogger) Debug(msg string, args ...interface{}) {
 	l.logger.Printf("DEBUG: "+msg, args...)
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

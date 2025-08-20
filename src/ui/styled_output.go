@@ -2,7 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"io"
 	"strings"
+	"time"
 )
 
 // StyledOutput provides styled terminal output
@@ -23,15 +25,18 @@ func NewStyledOutput(writer io.Writer, colorEnabled bool, width int) *StyledOutp
 		boxChars:  DefaultBoxChars(),
 		width:     width,
 	}
+}
 
 // SetColorScheme sets the color scheme
 func (so *StyledOutput) SetColorScheme(scheme *ColorScheme) {
 	so.formatter.scheme = scheme
+}
 
 // SetASCIIMode enables ASCII-only mode
 func (so *StyledOutput) SetASCIIMode() {
 	so.icons = ASCIIIcons()
 	so.boxChars = ASCIIBoxChars()
+}
 
 // Banner prints a large banner
 func (so *StyledOutput) Banner(text string) {
@@ -52,6 +57,7 @@ func (so *StyledOutput) Banner(text string) {
 		so.formatter.Header("║"),
 	)
 	fmt.Fprintln(so.writer, so.formatter.Header(border))
+}
 
 // Section prints a section header
 func (so *StyledOutput) Section(title string) {
@@ -60,6 +66,7 @@ func (so *StyledOutput) Section(title string) {
 		so.formatter.Subheader(title),
 		so.formatter.Muted(strings.Repeat("─", len(title)+2)),
 	)
+}
 
 // StatusLine prints a status line with icon
 func (so *StyledOutput) StatusLine(status, message string, args ...interface{}) {
@@ -90,6 +97,7 @@ func (so *StyledOutput) StatusLine(status, message string, args ...interface{}) 
 	}
 
 	fmt.Fprintf(so.writer, "%s %s\n", format(icon, args...), fmt.Sprintf(message, args...))
+}
 
 // KeyValue prints a key-value pair
 func (so *StyledOutput) KeyValue(key string, value interface{}) {
@@ -97,6 +105,7 @@ func (so *StyledOutput) KeyValue(key string, value interface{}) {
 		so.formatter.Label(key),
 		so.formatter.Value("%v", value),
 	)
+}
 
 // KeyValueList prints a list of key-value pairs
 func (so *StyledOutput) KeyValueList(pairs map[string]interface{}) {
@@ -113,6 +122,7 @@ func (so *StyledOutput) KeyValueList(pairs map[string]interface{}) {
 			so.formatter.Value("%v", value),
 		)
 	}
+}
 
 // VulnerabilityFinding prints a formatted vulnerability finding
 func (so *StyledOutput) VulnerabilityFinding(finding VulnerabilityFinding) {
@@ -156,6 +166,7 @@ func (so *StyledOutput) VulnerabilityFinding(finding VulnerabilityFinding) {
 	}
 
 	fmt.Fprintln(so.writer)
+}
 
 // VulnerabilityFinding represents a security finding
 type VulnerabilityFinding struct {
@@ -165,6 +176,7 @@ type VulnerabilityFinding struct {
 	TemplateID  string
 	Evidence    string
 	Remediation string
+}
 
 // ScanSummary prints a scan summary
 func (so *StyledOutput) ScanSummary(summary ScanSummary) {
@@ -212,6 +224,7 @@ func (so *StyledOutput) ScanSummary(summary ScanSummary) {
 		bar := RenderProgressBar(summary.Passed, summary.TotalTests, 40, so.formatter)
 		fmt.Fprintln(so.writer, bar)
 	}
+}
 
 // ScanSummary represents scan results summary
 type ScanSummary struct {
@@ -223,6 +236,7 @@ type ScanSummary struct {
 	Medium     int
 	Low        int
 	Duration   time.Duration
+}
 
 // TemplateInfo prints template information
 func (so *StyledOutput) TemplateInfo(template TemplateInfo) {
@@ -254,6 +268,7 @@ func (so *StyledOutput) TemplateInfo(template TemplateInfo) {
 		}
 		fmt.Fprintln(so.writer)
 	}
+}
 
 // TemplateInfo represents template information
 type TemplateInfo struct {
@@ -272,6 +287,7 @@ func (so *StyledOutput) CodeBlock(code string, indent string) {
 	for _, line := range lines {
 		fmt.Fprintf(so.writer, "%s%s\n", indent, so.formatter.Code(line))
 	}
+}
 
 // Quote prints a formatted quote
 func (so *StyledOutput) Quote(text string, author string) {
@@ -288,10 +304,12 @@ func (so *StyledOutput) Quote(text string, author string) {
 			so.formatter.Muted(author),
 		)
 	}
+}
 
 // Tree prints a tree structure
 func (so *StyledOutput) Tree(root TreeNode, indent string) {
 	so.printTreeNode(root, indent, true, true)
+}
 
 // TreeNode represents a node in a tree structure
 type TreeNode struct {
@@ -343,6 +361,7 @@ func (so *StyledOutput) printTreeNode(node TreeNode, indent string, isLast bool,
 		}
 		so.printTreeNode(child, childIndent, i == len(node.Children)-1, false)
 	}
+}
 
 // ComparisonTable prints a comparison table
 func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][]string) {
@@ -412,6 +431,7 @@ func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][
 		
 		fmt.Fprintln(so.writer, rowLine.String())
 	}
+}
 
 // Alert prints an alert box
 func (so *StyledOutput) Alert(alertType, title, message string) {
@@ -452,17 +472,4 @@ func (so *StyledOutput) Alert(alertType, title, message string) {
 	for _, line := range lines {
 		fmt.Fprintln(so.writer, colorFunc(line))
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

@@ -38,6 +38,7 @@ type BasicMFAService struct {
 	
 	// AccountName is the account name for the TOTP
 	AccountName string `json:"account_name"`
+}
 
 // Note: MFAManager, MFAStore, DefaultMFAManager types and their implementations are defined in other files to avoid duplicates
 // This file contains only utility functions and basic service definitions
@@ -49,3 +50,5 @@ func generateTOTPSecret() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(secret), nil
+}

@@ -2,8 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/fatih/color"
 	"golang.org/x/term"
@@ -79,6 +82,7 @@ func NewTerminal(opts TerminalOptions) *Terminal {
 	}
 
 	return t
+}
 
 // Clear clears the terminal screen
 func (t *Terminal) Clear() {
@@ -89,6 +93,7 @@ func (t *Terminal) Clear() {
 		// ANSI escape sequence to clear screen and move cursor to top
 		fmt.Fprint(t.output, "\033[2J\033[H")
 	}
+}
 
 // ClearLine clears the current line
 func (t *Terminal) ClearLine() {
@@ -99,6 +104,7 @@ func (t *Terminal) ClearLine() {
 		// Move cursor to beginning of line and clear to end
 		fmt.Fprint(t.output, "\r\033[K")
 	}
+}
 
 // MoveCursorUp moves cursor up n lines
 func (t *Terminal) MoveCursorUp(n int) {
@@ -108,6 +114,7 @@ func (t *Terminal) MoveCursorUp(n int) {
 	if t.isTerminal && n > 0 {
 		fmt.Fprintf(t.output, "\033[%dA", n)
 	}
+}
 
 // ClearPreviousLines clears n previous lines
 func (t *Terminal) ClearPreviousLines(n int) {
@@ -126,28 +133,34 @@ func (t *Terminal) ClearPreviousLines(n int) {
 		// Move back to start
 		t.MoveCursorUp(n - 1)
 	}
+}
 
 // Print methods with color support
 
 // Success prints success message
 func (t *Terminal) Success(format string, args ...interface{}) {
 	t.printWithColor(color.FgGreen, "✓", format, args...)
+}
 
 // Error prints error message
 func (t *Terminal) Error(format string, args ...interface{}) {
 	t.printWithColor(color.FgRed, "✗", format, args...)
+}
 
 // Warning prints warning message
 func (t *Terminal) Warning(format string, args ...interface{}) {
 	t.printWithColor(color.FgYellow, "⚠", format, args...)
+}
 
 // Info prints info message
 func (t *Terminal) Info(format string, args ...interface{}) {
 	t.printWithColor(color.FgCyan, "ℹ", format, args...)
+}
 
 // Debug prints debug message
 func (t *Terminal) Debug(format string, args ...interface{}) {
 	t.printWithColor(color.FgMagenta, "🔍", format, args...)
+}
 
 // Print prints plain message
 func (t *Terminal) Print(format string, args ...interface{}) {
@@ -157,6 +170,7 @@ func (t *Terminal) Print(format string, args ...interface{}) {
 	message := fmt.Sprintf(format, args...)
 	fmt.Fprintln(t.output, message)
 	t.lastLines = strings.Count(message, "\n") + 1
+}
 
 // printWithColor prints colored message with icon
 func (t *Terminal) printWithColor(c color.Attribute, icon, format string, args ...interface{}) {
@@ -174,6 +188,7 @@ func (t *Terminal) printWithColor(c color.Attribute, icon, format string, args .
 	}
 	
 	t.lastLines = strings.Count(message, "\n") + 1
+}
 
 // Header prints a section header
 func (t *Terminal) Header(title string) {
@@ -200,6 +215,7 @@ func (t *Terminal) Header(title string) {
 	}
 	
 	t.lastLines = 5
+}
 
 // Table prints a formatted table
 func (t *Terminal) Table(headers []string, rows [][]string) {
@@ -263,6 +279,7 @@ func (t *Terminal) Table(headers []string, rows [][]string) {
 	}
 	
 	t.lastLines = len(rows) + 2
+}
 
 // List prints a formatted list
 func (t *Terminal) List(items []string, numbered bool) {
@@ -278,6 +295,7 @@ func (t *Terminal) List(items []string, numbered bool) {
 	}
 	
 	t.lastLines = len(items)
+}
 
 // Progress bar methods
 
@@ -286,18 +304,21 @@ func (t *Terminal) StartProgress(id, description string, total int64) {
 	if t.progressMgr != nil {
 		t.progressMgr.CreateProgressBar(id, description, total)
 	}
+}
 
 // UpdateProgress updates a progress bar
 func (t *Terminal) UpdateProgress(id string, current int64) {
 	if t.progressMgr != nil {
 		t.progressMgr.Update(id, current)
 	}
+}
 
 // FinishProgress finishes a progress bar
 func (t *Terminal) FinishProgress(id string) {
 	if t.progressMgr != nil {
 		t.progressMgr.Finish(id)
 	}
+}
 
 // StartSpinner starts an indeterminate spinner
 func (t *Terminal) StartSpinner(message string) func() {
@@ -329,6 +350,7 @@ func (t *Terminal) StartSpinner(message string) func() {
 		close(done)
 		time.Sleep(100 * time.Millisecond) // Allow spinner to clear
 	}
+}
 
 // Interactive methods
 
@@ -342,6 +364,7 @@ func (t *Terminal) Prompt(prompt string) (string, error) {
 	var response string
 	_, err := fmt.Fscanln(t.input, &response)
 	return response, err
+}
 
 // Confirm prompts for yes/no confirmation
 func (t *Terminal) Confirm(prompt string, defaultYes bool) (bool, error) {
@@ -352,6 +375,7 @@ func (t *Terminal) Confirm(prompt string, defaultYes bool) (bool, error) {
 	
 	response, err := t.Prompt(fmt.Sprintf("%s [%s]: ", prompt, defaultStr))
 	if err != nil {
+		if response == "" {
 			// User just pressed enter
 			return defaultYes, nil
 		}
@@ -360,6 +384,7 @@ func (t *Terminal) Confirm(prompt string, defaultYes bool) (bool, error) {
 	
 	response = strings.ToLower(strings.TrimSpace(response))
 	return response == "y" || response == "yes", nil
+}
 
 // Select prompts user to select from options
 func (t *Terminal) Select(prompt string, options []string) (int, error) {
@@ -381,6 +406,7 @@ func (t *Terminal) Select(prompt string, options []string) (int, error) {
 		
 		t.Warning("Invalid selection. Please enter a number between 1 and %d.", len(options))
 	}
+}
 
 // MultiSelect prompts user to select multiple options
 func (t *Terminal) MultiSelect(prompt string, options []string) ([]int, error) {
@@ -415,6 +441,7 @@ func (t *Terminal) MultiSelect(prompt string, options []string) ([]int, error) {
 	}
 	
 	return indices, nil
+}
 
 // ProgressDemo demonstrates progress indicators
 func (t *Terminal) ProgressDemo() {
@@ -462,35 +489,14 @@ func (t *Terminal) ProgressDemo() {
 		// Render final state
 		t.Print("\n%s", t.multiProg.Render())
 	}
+}
 
 // Dimensions returns terminal dimensions
 func (t *Terminal) Dimensions() (width, height int) {
 	return t.width, t.height
+}
 
 // IsTerminal returns true if output is a terminal
 func (t *Terminal) IsTerminal() bool {
 	return t.isTerminal
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

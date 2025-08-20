@@ -5,14 +5,18 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"io/fs"
 	"log"
 	"mime"
 	"net/http"
+	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/utils/config"
 )
@@ -38,6 +42,7 @@ type StaticFileHandler struct {
 	logger *log.Logger
 	// config is the memory configuration
 	config *config.MemoryConfig
+}
 
 // fileCacheEntry represents a cached file
 type fileCacheEntry struct {
@@ -53,6 +58,7 @@ type fileCacheEntry struct {
 	compressible bool
 	// data is the cached file data (optional)
 	data []byte
+}
 
 // StaticFileHandlerOptions contains options for the static file handler
 type StaticFileHandlerOptions struct {
@@ -70,6 +76,7 @@ type StaticFileHandlerOptions struct {
 	EnableFileCache bool
 	// LogFile is the file to log to
 	LogFile string
+}
 
 // DefaultStaticFileHandlerOptions returns default options for the static file handler
 func DefaultStaticFileHandlerOptions() *StaticFileHandlerOptions {
@@ -82,6 +89,7 @@ func DefaultStaticFileHandlerOptions() *StaticFileHandlerOptions {
 		EnableFileCache:   true,
 		LogFile:           "logs/static_handler.log",
 	}
+}
 
 // NewStaticFileHandler creates a new static file handler
 func NewStaticFileHandler(options *StaticFileHandlerOptions) (*StaticFileHandler, error) {
@@ -134,6 +142,7 @@ func NewStaticFileHandler(options *StaticFileHandlerOptions) (*StaticFileHandler
 	}
 
 	return handler, nil
+}
 
 // preloadFileCache preloads the file cache with information about all files
 func (h *StaticFileHandler) preloadFileCache() {
@@ -169,6 +178,7 @@ func (h *StaticFileHandler) preloadFileCache() {
 	} else {
 		h.logger.Printf("File cache preloaded with %d files", len(h.fileCache))
 	}
+}
 
 // cacheFileInfo caches information about a file
 func (h *StaticFileHandler) cacheFileInfo(urlPath, filePath string, info fs.FileInfo) {
@@ -201,6 +211,7 @@ func (h *StaticFileHandler) cacheFileInfo(urlPath, filePath string, info fs.File
 
 	// Add to cache
 	h.fileCache[urlPath] = entry
+}
 
 // ServeHTTP implements the http.Handler interface
 func (h *StaticFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -357,6 +368,7 @@ func (h *StaticFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Length", strconv.FormatInt(cacheEntry.size, 10))
 		io.Copy(w, file)
 	}
+}
 
 // isCompressibleContentType returns true if the content type is compressible
 func isCompressibleContentType(contentType string) bool {
@@ -377,6 +389,7 @@ func isCompressibleContentType(contentType string) bool {
 	}
 
 	return false
+}
 
 // GenerateETag generates an ETag for a file
 func GenerateETag(filePath string) (string, error) {
@@ -396,6 +409,7 @@ func GenerateETag(filePath string) (string, error) {
 	// Generate ETag
 	etag := hex.EncodeToString(hash.Sum(nil))
 	return etag, nil
+}
 
 // ClearCache clears the file cache
 func (h *StaticFileHandler) ClearCache() {
@@ -404,11 +418,13 @@ func (h *StaticFileHandler) ClearCache() {
 
 	h.fileCache = make(map[string]*fileCacheEntry)
 	h.logger.Println("File cache cleared")
+}
 
 // RefreshCache refreshes the file cache
 func (h *StaticFileHandler) RefreshCache() {
 	h.ClearCache()
 	go h.preloadFileCache()
+}
 
 // GetCacheStats returns statistics about the file cache
 func (h *StaticFileHandler) GetCacheStats() map[string]interface{} {
@@ -437,11 +453,13 @@ func (h *StaticFileHandler) GetCacheStats() map[string]interface{} {
 	stats["data_count"] = dataCount
 
 	return stats
+}
 
 // RegisterStaticRoute registers the static file handler with an HTTP server
 func (h *StaticFileHandler) RegisterStaticRoute(mux *http.ServeMux) {
 	mux.Handle(h.urlPrefix, h)
 	h.logger.Printf("Registered static file handler for %s", h.urlPrefix)
+}
 
 // CacheFile caches a file in memory
 func (h *StaticFileHandler) CacheFile(urlPath string) error {
@@ -480,6 +498,7 @@ func (h *StaticFileHandler) CacheFile(urlPath string) error {
 	cacheEntry.data = data
 
 	return nil
+}
 
 // UncacheFile removes a file from memory cache
 func (h *StaticFileHandler) UncacheFile(urlPath string) {
@@ -494,10 +513,12 @@ func (h *StaticFileHandler) UncacheFile(urlPath string) {
 
 	// Clear data
 	cacheEntry.data = nil
+}
 
 // GetFilePath returns the file path for a URL path
 func (h *StaticFileHandler) GetFilePath(urlPath string) string {
 	return filepath.Join(h.rootDir, filepath.FromSlash(urlPath))
+}
 
 // GetURLPath returns the URL path for a file path
 func (h *StaticFileHandler) GetURLPath(filePath string) (string, error) {
@@ -509,4 +530,7 @@ func (h *StaticFileHandler) GetURLPath(filePath string) (string, error) {
 
 	// Convert to URL path
 	urlPath := filepath.ToSlash(relPath)
+
+	return urlPath, nil
+}
 

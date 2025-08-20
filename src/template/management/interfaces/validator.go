@@ -13,13 +13,13 @@ type ValidationResult struct {
 // TemplateValidatorExt extends the basic validator interface
 type TemplateValidatorExt interface {
 	TemplateValidator
-	
+
 	// ValidateWithResult validates and returns detailed result
 	ValidateWithResult(template Template) ValidationResult
-	
+
 	// ValidateContentWithResult validates content and returns detailed result
 	ValidateContentWithResult(content []byte) ValidationResult
-	
+
 	// GetValidationRules returns the validation rules
 	GetValidationRules() []ValidationRule
 }

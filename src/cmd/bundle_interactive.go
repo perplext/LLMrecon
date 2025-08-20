@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -15,9 +16,11 @@ var bundleInteractiveCmd = &cobra.Command{
 	Short: "Interactive bundle management wizard",
 	Long:  `Launch an interactive wizard for bundle operations with guided prompts and validation`,
 	RunE:  runBundleInteractive,
+}
 
 func init() {
 	bundleCmd.AddCommand(bundleInteractiveCmd)
+}
 
 func runBundleInteractive(cmd *cobra.Command, args []string) error {
 	// Welcome message
@@ -64,6 +67,7 @@ func runBundleInteractive(cmd *cobra.Command, args []string) error {
 	default:
 		return fmt.Errorf("unknown operation: %s", operation)
 	}
+}
 
 func interactiveCreateBundle() error {
 	fmt.Println()
@@ -242,6 +246,8 @@ func interactiveCreateBundle() error {
 	// Execute the command
 	rootCmd.SetArgs(args)
 	return rootCmd.Execute()
+}
+
 func interactiveVerifyBundle() error {
 	fmt.Println()
 	color.Yellow("🔍 Bundle Verification Wizard")
@@ -299,6 +305,7 @@ func interactiveVerifyBundle() error {
 	// Execute
 	rootCmd.SetArgs(args)
 	return rootCmd.Execute()
+}
 
 func interactiveImportBundle() error {
 	fmt.Println()
@@ -386,6 +393,7 @@ func interactiveImportBundle() error {
 	// Execute
 	rootCmd.SetArgs(args)
 	return rootCmd.Execute()
+}
 
 func interactiveViewBundleInfo() error {
 	fmt.Println()
@@ -429,6 +437,7 @@ func interactiveViewBundleInfo() error {
 	// Execute
 	rootCmd.SetArgs(args)
 	return rootCmd.Execute()
+}
 
 func interactiveGenerateReport() error {
 	fmt.Println()
@@ -510,6 +519,7 @@ func interactiveGenerateReport() error {
 
 	return nil
 	
+}
 
 func interactiveExportByCategory() error {
 	fmt.Println()
@@ -580,4 +590,6 @@ func interactiveExportByCategory() error {
 	color.Cyan("Output: %s", outputDir)
 
 	// TODO: Execute actual export when category export is implemented
-
+	
+	return nil
+}

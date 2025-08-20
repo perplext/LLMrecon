@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/fatih/color"
 )
@@ -26,9 +27,7 @@ func main() {
 	// Check if we should generate an example manifest
 	if *generateExample {
 		if err := bundle.SaveExampleManifest(*outputPath); err != nil {
-if err != nil {
-treturn err
-}			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 			os.Exit(1)
 		}
 		fmt.Printf("Generated example manifest at %s\n", *outputPath)
@@ -61,9 +60,7 @@ treturn err
 		os.Exit(1)
 	}
 
-if err != nil {
-treturn err
-}	// Validate the manifest
+	// Validate the manifest
 	result, err := validator.ValidateManifestFile(*manifestPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
@@ -81,9 +78,7 @@ treturn err
 		}
 	}
 
-if err != nil {
-treturn err
-}	// If verbose output is enabled, print the full validation result
+	// If verbose output is enabled, print the full validation result
 	if *verbose {
 		fmt.Println("\nValidation Result:")
 		resultJSON, err := json.MarshalIndent(result, "", "  ")

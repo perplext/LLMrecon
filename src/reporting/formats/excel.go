@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/api"
 	"github.com/xuri/excelize/v2"
@@ -14,12 +18,14 @@ import (
 type ExcelFormatter struct {
 	// includeRawData indicates whether to include raw data in the report
 	includeRawData bool
+}
 
 // NewExcelFormatter creates a new Excel formatter
 func NewExcelFormatter(includeRawData bool) *ExcelFormatter {
 	return &ExcelFormatter{
 		includeRawData: includeRawData,
 	}
+}
 
 // FormatReport formats a report and writes it to the given writer
 func (f *ExcelFormatter) FormatReport(results api.TestResults, writer io.Writer) error {
@@ -84,6 +90,7 @@ func (f *ExcelFormatter) FormatReport(results api.TestResults, writer io.Writer)
 
 	// Write to the provided writer
 	return excel.Write(writer)
+}
 
 // Format formats a report as Excel
 func (f *ExcelFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
@@ -102,10 +109,12 @@ func (f *ExcelFormatter) Format(ctx context.Context, reportInterface interface{}
 	}
 	
 	return buf.Bytes(), nil
+}
 
 // GetFormat returns the format supported by this formatter
 func (f *ExcelFormatter) GetFormat() api.ReportFormat {
 	return api.ExcelFormat
+}
 
 // WriteToFile writes a report to a file
 func (f *ExcelFormatter) WriteToFile(ctx context.Context, reportInterface interface{}, optionsInterface interface{}, filePath string) error {
@@ -133,6 +142,7 @@ func (f *ExcelFormatter) WriteToFile(ctx context.Context, reportInterface interf
 	}
 
 	return nil
+}
 
 // sanitizeSheetName sanitizes a sheet name to be valid for Excel
 func sanitizeSheetName(name string) string {
@@ -152,3 +162,5 @@ func sanitizeSheetName(name string) string {
 		name = "Sheet"
 	}
 	
+	return name
+}

@@ -7,7 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"sort"
+	"time"
 )
 
 // SignatureVersion defines the current signature format version
@@ -30,6 +34,7 @@ type SignatureMetadata struct {
 	Environment string   `json:"environment"`
 	BuildID     string   `json:"buildId"`
 	Tags        []string `json:"tags"`
+}
 
 // FileHash represents a file and its hash
 type FileHash struct {
@@ -37,6 +42,7 @@ type FileHash struct {
 	Hash string `json:"hash"`
 	Size int64  `json:"size"`
 	Mode uint32 `json:"mode"`
+}
 
 // ContentManifest represents the content to be signed
 type ContentManifest struct {
@@ -79,6 +85,7 @@ func NewSigner(privateKey ed25519.PrivateKey, keyID string, metadata SignatureMe
 		keyID:      keyID,
 		metadata:   metadata,
 	}
+}
 
 // SignBundle creates a digital signature for the bundle
 func (s *Signer) SignBundle(bundlePath string) (*BundleSignature, error) {
@@ -113,6 +120,7 @@ func (s *Signer) SignBundle(bundlePath string) (*BundleSignature, error) {
 	}
 
 	return sig, nil
+}
 
 // calculateBundleHash computes the hash of bundle contents
 func (s *Signer) calculateBundleHash(bundlePath string) (string, *ContentManifest, error) {
@@ -170,6 +178,7 @@ func (s *Signer) calculateBundleHash(bundlePath string) (string, *ContentManifes
 	h := sha256.Sum256(manifestJSON)
 	contentHash := base64.URLEncoding.EncodeToString(h[:])
 	return contentHash, manifest, nil
+}
 
 // hashFile computes SHA-256 hash of a file
 func (s *Signer) hashFile(path string) (string, error) {
@@ -185,6 +194,7 @@ func (s *Signer) hashFile(path string) (string, error) {
 	}
 
 	return fmt.Sprintf("sha256:%x", h.Sum(nil)), nil
+}
 
 // saveManifest saves the content manifest
 func (s *Signer) saveManifest(bundlePath string, manifest *ContentManifest) error {
@@ -200,7 +210,8 @@ func (s *Signer) saveManifest(bundlePath string, manifest *ContentManifest) erro
 		return err
 	}
 
-	return os.WriteFile(filepath.Clean(manifestPath, data, 0600))
+	return os.WriteFile(filepath.Clean(manifestPath), data, 0600)
+}
 
 // getSigningMessage creates the message to be signed
 func (b *BundleSignature) getSigningMessage() ([]byte, error) {
@@ -215,6 +226,7 @@ func (b *BundleSignature) getSigningMessage() ([]byte, error) {
 	}
 
 	return json.Marshal(msg)
+}
 
 // Verifier handles bundle verification operations
 type Verifier struct {
@@ -226,10 +238,12 @@ func NewVerifier() *Verifier {
 	return &Verifier{
 		publicKeys: make(map[string]ed25519.PublicKey),
 	}
+}
 
 // AddPublicKey adds a public key for verification
 func (v *Verifier) AddPublicKey(keyID string, publicKey ed25519.PublicKey) {
 	v.publicKeys[keyID] = publicKey
+}
 
 // VerifyBundle verifies a bundle's signature
 func (v *Verifier) VerifyBundle(bundlePath string) (*VerificationResult, error) {
@@ -310,6 +324,8 @@ func (v *Verifier) VerifyBundle(bundlePath string) (*VerificationResult, error) 
 	result.Details["environment"] = sig.Metadata.Environment
 
 	return result, nil
+}
+
 // GenerateSigningKeyPair generates a new Ed25519 key pair for signing
 func GenerateSigningKeyPair(keyID string) (*SigningKey, error) {
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
@@ -329,6 +345,7 @@ func GenerateSigningKeyPair(keyID string) (*SigningKey, error) {
 	}
 
 	return key, nil
+}
 
 // SaveSignature saves a signature to the bundle
 func SaveSignature(bundlePath string, sig *BundleSignature) error {
@@ -344,7 +361,8 @@ func SaveSignature(bundlePath string, sig *BundleSignature) error {
 		return fmt.Errorf("failed to marshal signature: %w", err)
 	}
 
-	return os.WriteFile(filepath.Clean(sigPath, data, 0600))
+	return os.WriteFile(filepath.Clean(sigPath), data, 0600)
+}
 
 // LoadSignature loads a signature from the bundle
 func LoadSignature(bundlePath string) (*BundleSignature, error) {
@@ -359,9 +377,5 @@ func LoadSignature(bundlePath string) (*BundleSignature, error) {
 		return nil, fmt.Errorf("failed to parse signature: %w", err)
 	}
 
-}
-}
-}
-}
-}
+	return &sig, nil
 }

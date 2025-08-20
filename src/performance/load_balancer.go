@@ -1,17 +1,16 @@
 package performance
 
 import (
-	"math/big"
-	cryptorand "crypto/rand"
-	
-		"context"
+	"context"
+	"crypto/rand"
 	"fmt"
 	"hash/crc32"
 	"math"
-	"crypto/rand"
+	"math/big"
 	"sort"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 // AdvancedLoadBalancer provides sophisticated load balancing and auto-scaling
@@ -64,6 +63,7 @@ type LoadBalancerConfig struct {
 	EnableMetrics       bool              `json:"enable_metrics"`
 	MetricsInterval     time.Duration     `json:"metrics_interval"`
 	EnablePredictive    bool              `json:"enable_predictive"`
+}
 
 // LoadBalanceTarget represents a target for load balancing
 type LoadBalanceTarget struct {
@@ -81,6 +81,7 @@ type LoadBalanceTarget struct {
 	CircuitState     CircuitState           `json:"circuit_state"`
 	Statistics       *TargetStatistics      `json:"statistics"`
 	mutex            sync.RWMutex
+}
 
 // TargetHealthStatus represents target health states
 type TargetHealthStatus string
@@ -180,6 +181,7 @@ type AutoScalingConfig struct {
 	EvaluationInterval  time.Duration `json:"evaluation_interval"`
 	PredictiveScaling   bool          `json:"predictive_scaling"`
 	ScalingPolicies     []ScalingPolicy `json:"scaling_policies"`
+}
 
 // ScalingPolicy defines scaling behavior
 type ScalingPolicy struct {
@@ -222,6 +224,7 @@ type ScalingCondition struct {
 	Operator  ThresholdOperator `json:"operator"`
 	Value     float64           `json:"value"`
 	Duration  time.Duration     `json:"duration"`
+}
 
 // LoadPredictor predicts future load patterns
 type LoadPredictor struct {
@@ -235,6 +238,7 @@ type LoadPredictor struct {
 	ctx        context.Context
 	cancel     context.CancelFunc
 	wg         sync.WaitGroup
+}
 
 // LoadPredictionConfig defines load prediction configuration
 type LoadPredictionConfig struct {
@@ -246,6 +250,7 @@ type LoadPredictionConfig struct {
 	ConfidenceThreshold  float64       `json:"confidence_threshold"`
 	SeasonalityDetection bool          `json:"seasonality_detection"`
 	TrendAnalysis        bool          `json:"trend_analysis"`
+}
 
 // PredictionAlgorithm defines prediction algorithms
 type PredictionAlgorithm string
@@ -277,6 +282,7 @@ type CircuitBreakerConfig struct {
 	FailureRate          float64       `json:"failure_rate"`
 	MinimumRequests      int           `json:"minimum_requests"`
 	SlidingWindowSize    int           `json:"sliding_window_size"`
+}
 
 // LoadBalancerMetrics tracks load balancer performance
 type LoadBalancerMetrics struct {
@@ -290,6 +296,7 @@ type LoadBalancerMetrics struct {
 	CircuitBreakerTrips  int64             `json:"circuit_breaker_trips"`
 	ScalingEvents        int64             `json:"scaling_events"`
 	TargetMetrics        map[string]*TargetStatistics `json:"target_metrics"`
+}
 
 // Configuration structures
 type HealthMonitorConfig struct {
@@ -299,6 +306,7 @@ type HealthMonitorConfig struct {
 	HealthyThreshold    int           `json:"healthy_threshold"`
 	UnhealthyThreshold  int           `json:"unhealthy_threshold"`
 	MaxConcurrentChecks int           `json:"max_concurrent_checks"`
+}
 
 type WeightConfig struct {
 	Algorithm     WeightAlgorithm `json:"algorithm"`
@@ -323,12 +331,14 @@ type HealthMetrics struct {
 	SuccessfulChecks int64 `json:"successful_checks"`
 	FailedChecks     int64 `json:"failed_checks"`
 	AverageLatency   time.Duration `json:"average_latency"`
+}
 
 type ScalingMetrics struct {
 	ScaleUpEvents   int64 `json:"scale_up_events"`
 	ScaleDownEvents int64 `json:"scale_down_events"`
 	CurrentTargets  int   `json:"current_targets"`
 	PredictionAccuracy float64 `json:"prediction_accuracy"`
+}
 
 type CircuitBreakerMetrics struct {
 	TotalRequests int64 `json:"total_requests"`
@@ -341,11 +351,13 @@ type PredictionMetrics struct {
 	ModelConfidence    float64       `json:"model_confidence"`
 	LastUpdate         time.Time     `json:"last_update"`
 	PredictionLatency  time.Duration `json:"prediction_latency"`
+}
 
 // Data structures
 type ScalingHistory struct {
 	Events []ScalingEvent `json:"events"`
 	mutex  sync.RWMutex
+}
 
 type ScalingEvent struct {
 	Timestamp   time.Time   `json:"timestamp"`
@@ -372,18 +384,21 @@ type PredictionModel struct {
 type LoadHistory struct {
 	DataPoints []LoadDataPoint `json:"data_points"`
 	mutex      sync.RWMutex
+}
 
 type LoadDataPoint struct {
 	Timestamp time.Time `json:"timestamp"`
 	Load      float64   `json:"load"`
 	Targets   int       `json:"targets"`
 	Latency   time.Duration `json:"latency"`
+}
 
 type LoadForecast struct {
 	Predictions []PredictionPoint `json:"predictions"`
 	Confidence  float64           `json:"confidence"`
 	GeneratedAt time.Time         `json:"generated_at"`
 	Algorithm   PredictionAlgorithm `json:"algorithm"`
+}
 
 type PredictionPoint struct {
 	Timestamp time.Time `json:"timestamp"`
@@ -453,6 +468,7 @@ func DefaultLoadBalancerConfig() LoadBalancerConfig {
 		MetricsInterval:     10 * time.Second,
 		EnablePredictive:    true,
 	}
+}
 
 // NewAdvancedLoadBalancer creates a new advanced load balancer
 func NewAdvancedLoadBalancer(config LoadBalancerConfig, logger Logger) *AdvancedLoadBalancer {
@@ -483,6 +499,7 @@ func NewAdvancedLoadBalancer(config LoadBalancerConfig, logger Logger) *Advanced
 	lb.circuit = NewCircuitBreaker(config.CircuitBreaker, logger)
 	
 	return lb
+}
 
 // Start starts the load balancer
 func (lb *AdvancedLoadBalancer) Start() error {
@@ -523,6 +540,7 @@ func (lb *AdvancedLoadBalancer) Start() error {
 	
 	lb.logger.Info("Advanced load balancer started")
 	return nil
+}
 
 // Stop stops the load balancer
 func (lb *AdvancedLoadBalancer) Stop() error {
@@ -539,6 +557,7 @@ func (lb *AdvancedLoadBalancer) Stop() error {
 	
 	lb.logger.Info("Advanced load balancer stopped")
 	return nil
+}
 
 // AddTarget adds a new target
 func (lb *AdvancedLoadBalancer) AddTarget(target *LoadBalanceTarget) error {
@@ -562,6 +581,7 @@ func (lb *AdvancedLoadBalancer) AddTarget(target *LoadBalanceTarget) error {
 	
 	lb.logger.Info("Added load balancer target", "id", target.ID, "address", target.Address)
 	return nil
+}
 
 // RemoveTarget removes a target
 func (lb *AdvancedLoadBalancer) RemoveTarget(targetID string) error {
@@ -578,6 +598,7 @@ func (lb *AdvancedLoadBalancer) RemoveTarget(targetID string) error {
 	
 	lb.logger.Info("Removed load balancer target", "id", targetID)
 	return nil
+}
 
 // SelectTarget selects the best target based on the configured strategy
 func (lb *AdvancedLoadBalancer) SelectTarget(request *BalanceRequest) (*LoadBalanceTarget, error) {
@@ -608,6 +629,7 @@ func (lb *AdvancedLoadBalancer) SelectTarget(request *BalanceRequest) (*LoadBala
 	default:
 		return lb.selectRoundRobin(availableTargets), nil
 	}
+}
 
 // RecordRequest records the result of a request
 func (lb *AdvancedLoadBalancer) RecordRequest(targetID string, latency time.Duration, success bool) {
@@ -668,6 +690,7 @@ func (lb *AdvancedLoadBalancer) RecordRequest(targetID string, latency time.Dura
 	} else {
 		atomic.AddInt64(&lb.metrics.FailedRequests, 1)
 	}
+}
 
 // GetMetrics returns load balancer metrics
 func (lb *AdvancedLoadBalancer) GetMetrics() *LoadBalancerMetrics {
@@ -695,6 +718,7 @@ func (lb *AdvancedLoadBalancer) GetMetrics() *LoadBalancerMetrics {
 	}
 	
 	return lb.metrics
+}
 
 // Private methods
 
@@ -711,6 +735,7 @@ func (lb *AdvancedLoadBalancer) getAvailableTargets() []*LoadBalanceTarget {
 	}
 	
 	return available
+}
 
 // Selection strategies
 
@@ -731,6 +756,7 @@ func (lb *AdvancedLoadBalancer) selectRoundRobin(targets []*LoadBalanceTarget) *
 	}
 	
 	return selected
+}
 
 func (lb *AdvancedLoadBalancer) selectLeastActive(targets []*LoadBalanceTarget) *LoadBalanceTarget {
 	if len(targets) == 0 {
@@ -748,6 +774,7 @@ func (lb *AdvancedLoadBalancer) selectLeastActive(targets []*LoadBalanceTarget) 
 	}
 	
 	return selected
+}
 
 func (lb *AdvancedLoadBalancer) selectWeighted(targets []*LoadBalanceTarget) *LoadBalanceTarget {
 	if len(targets) == 0 {
@@ -776,6 +803,7 @@ func (lb *AdvancedLoadBalancer) selectWeighted(targets []*LoadBalanceTarget) *Lo
 	}
 	
 	return targets[0]
+}
 
 func (lb *AdvancedLoadBalancer) selectConsistentHash(targets []*LoadBalanceTarget, key string) *LoadBalanceTarget {
 	if len(targets) == 0 {
@@ -791,6 +819,7 @@ func (lb *AdvancedLoadBalancer) selectConsistentHash(targets []*LoadBalanceTarge
 	index := int(hash) % len(targets)
 	
 	return targets[index]
+}
 
 func (lb *AdvancedLoadBalancer) selectAdaptive(targets []*LoadBalanceTarget, request *BalanceRequest) *LoadBalanceTarget {
 	if len(targets) == 0 {
@@ -816,6 +845,7 @@ func (lb *AdvancedLoadBalancer) selectAdaptive(targets []*LoadBalanceTarget, req
 	})
 	
 	return scores[0].target
+}
 
 func (lb *AdvancedLoadBalancer) calculateAdaptiveScore(target *LoadBalanceTarget, request *BalanceRequest) float64 {
 	// Base score from weight
@@ -841,6 +871,7 @@ func (lb *AdvancedLoadBalancer) calculateAdaptiveScore(target *LoadBalanceTarget
 	}
 	
 	return score
+}
 
 func (lb *AdvancedLoadBalancer) updateLatencyPercentiles(stats *TargetStatistics) {
 	if len(stats.LatencyHistory) == 0 {
@@ -864,6 +895,7 @@ func (lb *AdvancedLoadBalancer) updateLatencyPercentiles(stats *TargetStatistics
 	if p99Index < len(latencies) {
 		stats.P99Latency = latencies[p99Index]
 	}
+}
 
 func (lb *AdvancedLoadBalancer) metricsLoop() {
 	ticker := time.NewTicker(lb.config.MetricsInterval)
@@ -877,6 +909,7 @@ func (lb *AdvancedLoadBalancer) metricsLoop() {
 			return
 		}
 	}
+}
 
 func (lb *AdvancedLoadBalancer) updateMetrics() {
 	// Update average latency
@@ -893,6 +926,7 @@ func (lb *AdvancedLoadBalancer) updateMetrics() {
 	if len(lb.targets) > 0 {
 		lb.metrics.AverageLatency = totalLatency / time.Duration(len(lb.targets))
 	}
+}
 
 func (lb *AdvancedLoadBalancer) weightAdjustmentLoop() {
 	ticker := time.NewTicker(lb.config.WeightAdjustment.UpdateInterval)
@@ -906,6 +940,7 @@ func (lb *AdvancedLoadBalancer) weightAdjustmentLoop() {
 			return
 		}
 	}
+}
 
 func (lb *AdvancedLoadBalancer) adjustWeights() {
 	if lb.config.WeightAdjustment.Algorithm != WeightAdaptive {
@@ -941,6 +976,7 @@ func (lb *AdvancedLoadBalancer) adjustWeights() {
 		
 		target.Weight = baseWeight
 	}
+}
 
 // BalanceRequest represents a load balancing request
 type BalanceRequest struct {
@@ -948,6 +984,7 @@ type BalanceRequest struct {
 	Strategy    string                 `json:"strategy"`
 	Preferences map[string]interface{} `json:"preferences"`
 	Metadata    map[string]string      `json:"metadata"`
+}
 
 // Placeholder implementations for missing components
 func NewHealthMonitor(config HealthMonitorConfig, logger Logger) *HealthMonitor {
@@ -958,6 +995,7 @@ func NewHealthMonitor(config HealthMonitorConfig, logger Logger) *HealthMonitor 
 		metrics: &HealthMetrics{},
 		logger:  logger,
 	}
+}
 
 func (hm *HealthMonitor) Start() error                                { return nil }
 func (hm *HealthMonitor) Stop() error                                 { return nil }
@@ -973,6 +1011,7 @@ func NewAutoScaler(config AutoScalingConfig, logger Logger) *AutoScaler {
 		metrics:  &ScalingMetrics{},
 		logger:   logger,
 	}
+}
 
 func (as *AutoScaler) Start() error { return nil }
 func (as *AutoScaler) Stop() error  { return nil }
@@ -986,6 +1025,7 @@ func NewLoadPredictor(config LoadPredictionConfig, logger Logger) *LoadPredictor
 		metrics:   &PredictionMetrics{},
 		logger:    logger,
 	}
+}
 
 func (lp *LoadPredictor) Start() error { return nil }
 func (lp *LoadPredictor) Stop() error  { return nil }
@@ -997,45 +1037,22 @@ func NewCircuitBreaker(config CircuitBreakerConfig, logger Logger) *CircuitBreak
 		metrics: &CircuitBreakerMetrics{},
 		logger:  logger,
 	}
+}
 
 func (cb *CircuitBreaker) RecordRequest(targetID string, success bool) {
 	// Placeholder implementation
-// secureRandomInt generates a cryptographically secure random integer
-func secureRandomInt(max int) (int, error) {
-    nBig, err := cryptorandInt(cryptocryptorand.Reader, big.NewInt(int64(max)))
-    if err != nil {
-        return 0, err
-    }
-    return int(nBig.Int64()), nil
+}
 
-// randInt returns a cryptographically secure random integer
-func randInt(max int) int {
+// Types and interfaces
+
+// randIntn returns a cryptographically secure random integer
+func randIntn(max int) int {
 	if max <= 0 {
 		return 0
 	}
-	n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
 	if err != nil {
 		return 0
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return int(n.Int64())
 }

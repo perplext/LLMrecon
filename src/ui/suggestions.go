@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // CommandSuggester provides intelligent command suggestions
@@ -11,11 +12,13 @@ type CommandSuggester struct {
 	context      *CommandContext
 	terminal     *Terminal
 	suggestions  map[string][]Suggestion
+}
 
 // CommandHistory tracks command usage
 type CommandHistory struct {
 	commands   []HistoryEntry
 	maxEntries int
+}
 
 // HistoryEntry represents a command in history
 type HistoryEntry struct {
@@ -23,6 +26,7 @@ type HistoryEntry struct {
 	Timestamp time.Time
 	Success   bool
 	Duration  time.Duration
+}
 
 // CommandContext tracks current command context
 type CommandContext struct {
@@ -32,6 +36,7 @@ type CommandContext struct {
 	ActiveProvider string
 	LoadedTemplate string
 	CurrentScan    string
+}
 
 // Suggestion represents a command suggestion
 type Suggestion struct {
@@ -39,6 +44,7 @@ type Suggestion struct {
 	Description string
 	Confidence  float64
 	Reason      string
+}
 
 // NewCommandSuggester creates a new command suggester
 func NewCommandSuggester(terminal *Terminal) *CommandSuggester {
@@ -54,6 +60,7 @@ func NewCommandSuggester(terminal *Terminal) *CommandSuggester {
 	
 	cs.initializeSuggestions()
 	return cs
+}
 
 // initializeSuggestions sets up suggestion patterns
 func (cs *CommandSuggester) initializeSuggestions() {
@@ -148,6 +155,7 @@ func (cs *CommandSuggester) initializeSuggestions() {
 			Reason:      "Learn about the tool",
 		},
 	}
+}
 
 // RecordCommand records a command execution
 func (cs *CommandSuggester) RecordCommand(command string, success bool, duration time.Duration) {
@@ -164,6 +172,7 @@ func (cs *CommandSuggester) RecordCommand(command string, success bool, duration
 	if len(cs.history.commands) > cs.history.maxEntries {
 		cs.history.commands = cs.history.commands[1:]
 	}
+}
 
 // UpdateContext updates command context
 func (cs *CommandSuggester) UpdateContext(key string, value interface{}) {
@@ -181,6 +190,7 @@ func (cs *CommandSuggester) UpdateContext(key string, value interface{}) {
 	case "current_scan":
 		cs.context.CurrentScan = value.(string)
 	}
+}
 
 // GetSuggestions returns relevant suggestions based on context
 func (cs *CommandSuggester) GetSuggestions() []Suggestion {
@@ -225,6 +235,7 @@ func (cs *CommandSuggester) GetSuggestions() []Suggestion {
 	}
 	
 	return suggestions
+}
 
 // ShowSuggestions displays suggestions to the user
 func (cs *CommandSuggester) ShowSuggestions() {
@@ -255,6 +266,7 @@ func (cs *CommandSuggester) ShowSuggestions() {
 	
 	// Quick select option
 	cs.terminal.Info("Type a number to run the suggested command, or press Enter to continue")
+}
 
 // getContextualSuggestions returns suggestions based on current context
 func (cs *CommandSuggester) getContextualSuggestions() []Suggestion {
@@ -292,6 +304,7 @@ func (cs *CommandSuggester) getContextualSuggestions() []Suggestion {
 	}
 	
 	return suggestions
+}
 
 // processsSuggestions processes suggestion templates
 func (cs *CommandSuggester) processsSuggestions(key string) []Suggestion {
@@ -313,6 +326,7 @@ func (cs *CommandSuggester) processsSuggestions(key string) []Suggestion {
 	}
 	
 	return processed
+}
 
 // replacePlaceholders replaces placeholders with actual values
 func (cs *CommandSuggester) replacePlaceholders(text string) string {
@@ -338,6 +352,7 @@ func (cs *CommandSuggester) replacePlaceholders(text string) string {
 	}
 	
 	return result
+}
 
 // highlightPlaceholders highlights placeholders in command
 func (cs *CommandSuggester) highlightPlaceholders(command string) string {
@@ -358,6 +373,7 @@ func (cs *CommandSuggester) highlightPlaceholders(command string) string {
 	}
 	
 	return result
+}
 
 // Helper methods
 
@@ -376,6 +392,7 @@ func (cs *CommandSuggester) hasRecentProviderTest() bool {
 	}
 	
 	return false
+}
 
 func (cs *CommandSuggester) getFrequentCommands() []string {
 	// Count command frequency
@@ -417,6 +434,7 @@ func (cs *CommandSuggester) getFrequentCommands() []string {
 	}
 	
 	return result
+}
 
 func (cs *CommandSuggester) suggestNextTemplate() string {
 	// Suggest templates based on what's been run
@@ -444,6 +462,7 @@ func (cs *CommandSuggester) suggestNextTemplate() string {
 	}
 	
 	return "advanced-tests"
+}
 
 func sortSuggestionsByConfidence(suggestions []Suggestion) {
 	for i := 0; i < len(suggestions)-1; i++ {
@@ -453,11 +472,13 @@ func sortSuggestionsByConfidence(suggestions []Suggestion) {
 			}
 		}
 	}
+}
 
 // InteractiveSuggestions provides interactive command selection
 type InteractiveSuggestions struct {
 	suggester *CommandSuggester
 	terminal  *Terminal
+}
 
 // NewInteractiveSuggestions creates interactive suggestions
 func NewInteractiveSuggestions(suggester *CommandSuggester, terminal *Terminal) *InteractiveSuggestions {
@@ -465,6 +486,7 @@ func NewInteractiveSuggestions(suggester *CommandSuggester, terminal *Terminal) 
 		suggester: suggester,
 		terminal:  terminal,
 	}
+}
 
 // ShowAndSelect shows suggestions and allows selection
 func (is *InteractiveSuggestions) ShowAndSelect() (string, bool) {
@@ -508,6 +530,7 @@ func (is *InteractiveSuggestions) ShowAndSelect() (string, bool) {
 	confirm, _ := is.terminal.Confirm("Run this command?", true)
 	
 	return selectedCmd, confirm
+}
 
 // fillPlaceholders interactively fills command placeholders
 func (is *InteractiveSuggestions) fillPlaceholders(command string) string {
@@ -537,3 +560,5 @@ func (is *InteractiveSuggestions) fillPlaceholders(command string) string {
 		}
 	}
 	
+	return result
+}

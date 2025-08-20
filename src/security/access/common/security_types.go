@@ -3,9 +3,6 @@ package common
 
 import "time"
 
-import (
-)
-
 // AuthMethod represents an authentication method
 type AuthMethod string
 
@@ -79,39 +76,39 @@ type SecurityIncident struct {
 
 // User represents a user in the system (same as models.User but in common package)
 type User struct {
-	ID                 string                 `json:"id"`
-	Username           string                 `json:"username"`
-	Email              string                 `json:"email"`
-	PasswordHash       string                 `json:"password_hash,omitempty"`
-	Roles              []string               `json:"roles"`
-	Permissions        []string               `json:"permissions,omitempty"`
-	MFAEnabled         bool                   `json:"mfa_enabled"`
-	MFAMethod          string                 `json:"mfa_method,omitempty"`
-	MFAMethods         []string               `json:"mfa_methods,omitempty"`
-	MFASecret          string                 `json:"mfa_secret,omitempty"`
-	LastLogin          time.Time              `json:"last_login"`
-	LastPasswordChange time.Time              `json:"last_password_change"`
-	FailedLoginAttempts int                   `json:"failed_login_attempts"`
-	Locked             bool                   `json:"locked"`
-	Active             bool                   `json:"active"`
-	CreatedAt          time.Time              `json:"created_at"`
-	UpdatedAt          time.Time              `json:"updated_at"`
-	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	ID                  string                 `json:"id"`
+	Username            string                 `json:"username"`
+	Email               string                 `json:"email"`
+	PasswordHash        string                 `json:"password_hash,omitempty"`
+	Roles               []string               `json:"roles"`
+	Permissions         []string               `json:"permissions,omitempty"`
+	MFAEnabled          bool                   `json:"mfa_enabled"`
+	MFAMethod           string                 `json:"mfa_method,omitempty"`
+	MFAMethods          []string               `json:"mfa_methods,omitempty"`
+	MFASecret           string                 `json:"mfa_secret,omitempty"`
+	LastLogin           time.Time              `json:"last_login"`
+	LastPasswordChange  time.Time              `json:"last_password_change"`
+	FailedLoginAttempts int                    `json:"failed_login_attempts"`
+	Locked              bool                   `json:"locked"`
+	Active              bool                   `json:"active"`
+	CreatedAt           time.Time              `json:"created_at"`
+	UpdatedAt           time.Time              `json:"updated_at"`
+	Metadata            map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // Vulnerability represents a security vulnerability
 type Vulnerability struct {
-	ID              string                `json:"id"`
-	Title           string                `json:"title"`
-	Description     string                `json:"description"`
-	Severity        VulnerabilitySeverity `json:"severity"`
-	Status          VulnerabilityStatus   `json:"status"`
-	DiscoveredAt    time.Time             `json:"discovered_at"`
-	DiscoveredBy    string                `json:"discovered_by"`
-	MitigatedAt     *time.Time            `json:"mitigated_at,omitempty"`
-	Mitigation      string                `json:"mitigation,omitempty"`
-	ResolvedAt      *time.Time            `json:"resolved_at,omitempty"`
-	AffectedSystems []string              `json:"affected_systems,omitempty"`
+	ID              string                 `json:"id"`
+	Title           string                 `json:"title"`
+	Description     string                 `json:"description"`
+	Severity        VulnerabilitySeverity  `json:"severity"`
+	Status          VulnerabilityStatus    `json:"status"`
+	DiscoveredAt    time.Time              `json:"discovered_at"`
+	DiscoveredBy    string                 `json:"discovered_by"`
+	MitigatedAt     *time.Time             `json:"mitigated_at,omitempty"`
+	Mitigation      string                 `json:"mitigation,omitempty"`
+	ResolvedAt      *time.Time             `json:"resolved_at,omitempty"`
+	AffectedSystems []string               `json:"affected_systems,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 

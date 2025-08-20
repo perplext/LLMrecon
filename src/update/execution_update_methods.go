@@ -3,6 +3,7 @@ package update
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"runtime"
 	
 	"github.com/perplext/LLMrecon/src/version"
@@ -36,6 +37,7 @@ func (e *UpdateExecutor) executeFullUpdate(ctx context.Context, pkg *UpdatePacka
 	}
 
 	return nil
+}
 
 // executeDifferentialUpdate executes a differential update from the package
 func (e *UpdateExecutor) executeDifferentialUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -66,6 +68,7 @@ func (e *UpdateExecutor) executeDifferentialUpdate(ctx context.Context, pkg *Upd
 	}
 
 	return nil
+}
 
 // executeBinaryUpdate executes a binary update
 func (e *UpdateExecutor) executeBinaryUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -114,6 +117,7 @@ func (e *UpdateExecutor) executeBinaryUpdate(ctx context.Context, pkg *UpdatePac
 	e.CurrentVersions["binary"] = binaryVersion
 
 	return nil
+}
 
 // executeTemplatesUpdate executes a templates update
 func (e *UpdateExecutor) executeTemplatesUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -125,6 +129,7 @@ func (e *UpdateExecutor) executeTemplatesUpdate(ctx context.Context, pkg *Update
 
 	// Get backup path
 	backupTemplatesPath := filepath.Join(transaction.BackupDir, "templates")
+
 	// Add operation to transaction
 	operation := transaction.AddOperation(
 		TemplatesUpdateComponent,
@@ -157,6 +162,7 @@ func (e *UpdateExecutor) executeTemplatesUpdate(ctx context.Context, pkg *Update
 	e.CurrentVersions["templates"] = templatesVersion
 
 	return nil
+}
 
 // executeModulesUpdate executes a modules update
 func (e *UpdateExecutor) executeModulesUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -204,3 +210,5 @@ func (e *UpdateExecutor) executeModulesUpdate(ctx context.Context, pkg *UpdatePa
 		e.CurrentVersions[fmt.Sprintf("module.%s", moduleInfo.ID)] = moduleVersion
 	}
 
+	return nil
+}

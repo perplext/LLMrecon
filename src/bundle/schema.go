@@ -14,9 +14,8 @@ import (
 
 // SchemaValidator provides functionality for validating bundle manifests against a schema
 type SchemaValidator struct {
-    	schemaLoader gojsonschema.JSONLoader
-    }
 	schemaLoader gojsonschema.JSONLoader
+}
 
 // NewSchemaValidator creates a new schema validator with the specified schema path
 func NewSchemaValidator(schemaPath string) (*SchemaValidator, error) {
@@ -31,6 +30,7 @@ func NewSchemaValidator(schemaPath string) (*SchemaValidator, error) {
 	return &SchemaValidator{
 		schemaLoader: schemaLoader,
 	}, nil
+}
 
 // NewDefaultSchemaValidator creates a new schema validator with the default schema path
 func NewDefaultSchemaValidator() (*SchemaValidator, error) {
@@ -63,6 +63,7 @@ func NewDefaultSchemaValidator() (*SchemaValidator, error) {
 	}
 
 	return NewSchemaValidator(schemaPath)
+}
 
 // ValidateManifestFile validates a manifest file against the schema
 func (v *SchemaValidator) ValidateManifestFile(manifestPath string) (*ValidationResult, error) {
@@ -98,6 +99,7 @@ func (v *SchemaValidator) ValidateManifestFile(manifestPath string) (*Validation
 	}
 
 	return validationResult, nil
+}
 
 // ValidateManifestJSON validates a manifest JSON string against the schema
 func (v *SchemaValidator) ValidateManifestJSON(manifestJSON string) (*ValidationResult, error) {
@@ -128,6 +130,7 @@ func (v *SchemaValidator) ValidateManifestJSON(manifestJSON string) (*Validation
 	}
 
 	return validationResult, nil
+}
 
 // ValidateManifestStruct validates a manifest struct against the schema
 func (v *SchemaValidator) ValidateManifestStruct(manifest *BundleManifest) (*ValidationResult, error) {
@@ -139,6 +142,7 @@ func (v *SchemaValidator) ValidateManifestStruct(manifest *BundleManifest) (*Val
 
 	// Validate the manifest JSON
 	return v.ValidateManifestJSON(string(manifestJSON))
+}
 
 // LoadSchemaFromFile loads a JSON schema from a file
 func LoadSchemaFromFile(schemaPath string) (map[string]interface{}, error) {
@@ -155,6 +159,7 @@ func LoadSchemaFromFile(schemaPath string) (map[string]interface{}, error) {
 	}
 
 	return schema, nil
+}
 
 // GenerateExampleManifest generates an example manifest based on the schema
 func GenerateExampleManifest() *BundleManifest {
@@ -190,6 +195,7 @@ func GenerateExampleManifest() *BundleManifest {
 			MinVersion: "1.0.0",
 		},
 	}
+}
 
 // SaveExampleManifest saves an example manifest to a file
 func SaveExampleManifest(outputPath string) error {
@@ -208,7 +214,9 @@ func SaveExampleManifest(outputPath string) error {
 	}
 
 	return nil
+}
 
 // getCurrentTime returns the current time
 func getCurrentTime() time.Time {
 	return time.Now()
+}

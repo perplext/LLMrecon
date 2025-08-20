@@ -3,6 +3,7 @@ package notification
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/update"
 )
@@ -17,6 +18,7 @@ func NewUpdateNotifier(manager *NotificationManager) *UpdateNotifier {
 	return &UpdateNotifier{
 		manager: manager,
 	}
+}
 
 // NotifyAvailableUpdate creates and delivers a notification for an available update
 func (n *UpdateNotifier) NotifyAvailableUpdate(ctx context.Context, versionInfo *update.UpdateVersionInfo) error {
@@ -69,6 +71,7 @@ func (n *UpdateNotifier) NotifyAvailableUpdate(ctx context.Context, versionInfo 
 	}
 
 	return nil
+}
 
 // NotifyRequiredUpdate creates and delivers a notification for a required update
 func (n *UpdateNotifier) NotifyRequiredUpdate(ctx context.Context, versionInfo *update.UpdateVersionInfo) error {
@@ -122,6 +125,7 @@ func (n *UpdateNotifier) NotifyRequiredUpdate(ctx context.Context, versionInfo *
 	}
 
 	return nil
+}
 
 // NotifySecurityUpdate creates and delivers a notification for a security update
 func (n *UpdateNotifier) NotifySecurityUpdate(ctx context.Context, versionInfo *update.UpdateVersionInfo, details string) error {
@@ -169,6 +173,8 @@ func (n *UpdateNotifier) NotifySecurityUpdate(ctx context.Context, versionInfo *
 	}
 
 	return nil
+}
+
 // NotifyUpdateSuccess creates and delivers a notification for a successful update
 func (n *UpdateNotifier) NotifyUpdateSuccess(ctx context.Context, fromVersion, toVersion string) error {
 	// Create metadata for the notification
@@ -199,6 +205,8 @@ func (n *UpdateNotifier) NotifyUpdateSuccess(ctx context.Context, fromVersion, t
 	}
 
 	return nil
+}
+
 // NotifyUpdateFailure creates and delivers a notification for a failed update
 func (n *UpdateNotifier) NotifyUpdateFailure(ctx context.Context, fromVersion, toVersion string, err error) error {
 	// Create metadata for the notification
@@ -232,6 +240,7 @@ func (n *UpdateNotifier) NotifyUpdateFailure(ctx context.Context, fromVersion, t
 	}
 
 	return nil
+}
 
 // ScheduleUpdateReminder schedules a reminder notification for a pending update
 func (n *UpdateNotifier) ScheduleUpdateReminder(ctx context.Context, versionInfo *update.UpdateVersionInfo, reminderTime time.Time) error {
@@ -284,9 +293,5 @@ func (n *UpdateNotifier) ScheduleUpdateReminder(ctx context.Context, versionInfo
 		return fmt.Errorf("failed to schedule update reminder notification: %w", err)
 	}
 
-}
-}
-}
-}
-}
+	return nil
 }

@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -116,6 +119,7 @@ type UserPolicyConfig struct {
 	
 	// ResetInterval is the interval at which the user's tokens are reset
 	ResetInterval string `json:"reset_interval"`
+}
 
 // DefaultConfig returns the default rate limit configuration
 func DefaultConfig() *RateLimitConfig {
@@ -169,6 +173,7 @@ func DefaultConfig() *RateLimitConfig {
 	config.Advanced.MaxStatsEvents = 1000
 	
 	return config
+}
 
 // LoadConfig loads the rate limit configuration from a file
 func LoadConfig(filePath string) (*RateLimitConfig, error) {
@@ -208,6 +213,7 @@ func LoadConfig(filePath string) (*RateLimitConfig, error) {
 	}
 	
 	return &config, nil
+}
 
 // CreateLimiterFromConfig creates a rate limiter from the configuration
 func CreateLimiterFromConfig(config *RateLimitConfig) (interface{}, error) {
@@ -326,6 +332,7 @@ func CreateLimiterFromConfig(config *RateLimitConfig) (interface{}, error) {
 	}
 	
 	return limiter, nil
+}
 
 // ParseUserPolicyFromConfig parses a user policy from the configuration
 func ParseUserPolicyFromConfig(policyConfig UserPolicyConfig) (*UserRateLimitPolicy, error) {
@@ -343,6 +350,4 @@ func ParseUserPolicyFromConfig(policyConfig UserPolicyConfig) (*UserRateLimitPol
 		MaxTokens:     policyConfig.MaxTokens,
 		ResetInterval: resetInterval,
 	}, nil
-}
-}
 }

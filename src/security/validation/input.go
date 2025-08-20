@@ -11,7 +11,6 @@ import (
 type InputValidator struct {
 	maxLength int
 	allowedChars *regexp.Regexp
-
 }
 // NewInputValidator creates a new input validator
 func NewInputValidator() *InputValidator {
@@ -19,9 +18,9 @@ func NewInputValidator() *InputValidator {
 		maxLength: 10000,
 		allowedChars: regexp.MustCompile(`^[\w\s\-\.@/:\[\]\{\}\(\),"'!?;]+$`),
 	}
+}
 
 // ValidatePrompt validates a prompt input for security issues
-}
 func (v *InputValidator) ValidatePrompt(prompt string) error {
 	// Check length
 	if len(prompt) > v.maxLength {
@@ -41,9 +40,9 @@ func (v *InputValidator) ValidatePrompt(prompt string) error {
 	}
 
 	return nil
+}
 
 // ValidateURL validates a URL for security issues
-}
 func (v *InputValidator) ValidateURL(rawURL string) error {
 	// Parse the URL
 	u, err := url.Parse(rawURL)
@@ -64,9 +63,9 @@ func (v *InputValidator) ValidateURL(rawURL string) error {
 	}
 
 	return nil
+}
 
 // ValidateFilePath validates a file path for security issues
-}
 func (v *InputValidator) ValidateFilePath(path string) error {
 	// Check for path traversal attempts
 	if strings.Contains(path, "..") {
@@ -96,9 +95,9 @@ func (v *InputValidator) ValidateFilePath(path string) error {
 	}
 
 	return nil
+}
 
 // SanitizeString removes potentially dangerous characters from a string
-}
 func (v *InputValidator) SanitizeString(input string) string {
 	// Remove null bytes
 	input = strings.ReplaceAll(input, "\x00", "")
@@ -118,9 +117,9 @@ func (v *InputValidator) SanitizeString(input string) string {
 	}
 
 	return result
+}
 
 // ValidateAPIKey validates an API key format
-}
 func (v *InputValidator) ValidateAPIKey(key string) error {
 	// Check if empty
 	if key == "" {
@@ -140,9 +139,9 @@ func (v *InputValidator) ValidateAPIKey(key string) error {
 	}
 
 	return nil
+}
 
 // ValidateModelName validates a model name
-}
 func (v *InputValidator) ValidateModelName(name string) error {
 	// Check if empty
 	if name == "" {
@@ -160,3 +159,5 @@ func (v *InputValidator) ValidateModelName(name string) error {
 		return fmt.Errorf("model name contains invalid characters")
 	}
 
+	return nil
+}

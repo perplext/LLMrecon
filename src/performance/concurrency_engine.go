@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"sync"
+	"time"
 )
 
 // ConcurrencyEngine manages advanced concurrency patterns for high-performance execution
@@ -21,7 +22,6 @@ type ConcurrencyEngine struct {
 	ctx          context.Context
 	cancel       context.CancelFunc
 	wg           sync.WaitGroup
-
 }
 // ConcurrencyEngineConfig defines configuration for the concurrency engine
 type ConcurrencyEngineConfig struct {
@@ -57,8 +57,6 @@ type ConcurrencyEngineConfig struct {
 	EnableMetrics       bool          `json:"enable_metrics"`
 	MetricsInterval     time.Duration `json:"metrics_interval"`
 }
-
-}
 // SchedulingAlgorithm defines task scheduling algorithms
 type SchedulingAlgorithm string
 
@@ -68,17 +66,6 @@ const (
 	SchedulingRoundRobin  SchedulingAlgorithm = "round_robin"
 	SchedulingLeastLoad   SchedulingAlgorithm = "least_load"
 	SchedulingAdaptive    SchedulingAlgorithm = "adaptive"
-)
-
-// BalancingStrategy defines load balancing strategies
-type BalancingStrategy string
-
-const (
-	BalancingRoundRobin   BalancingStrategy = "round_robin"
-	BalancingLeastActive  BalancingStrategy = "least_active"
-	BalancingWeighted     BalancingStrategy = "weighted"
-	BalancingConsistent   BalancingStrategy = "consistent_hash"
-	BalancingAdaptive     BalancingStrategy = "adaptive"
 )
 
 // CoordinationMode defines worker coordination modes
@@ -102,7 +89,6 @@ type WorkerPool struct {
 	ctx          context.Context
 	cancel       context.CancelFunc
 	wg           sync.WaitGroup
-
 }
 // Worker represents an individual worker
 type Worker struct {
@@ -116,7 +102,6 @@ type Worker struct {
 	mutex        sync.RWMutex
 	ctx          context.Context
 	cancel       context.CancelFunc
-
 }
 // WorkerStatus represents worker states
 type WorkerStatus string
@@ -137,16 +122,12 @@ type Task interface {
 	Execute(ctx context.Context) (interface{}, error)
 	OnComplete(result interface{}, err error)
 	OnCancel()
-
-// TaskProcessor processes specific types of tasks
 }
 type TaskProcessor interface {
 	CanProcess(task Task) bool
 	Process(ctx context.Context, task Task) (interface{}, error)
 	GetCapacity() int
 	GetLoad() float64
-
-// ExecutionPipeline manages multi-stage task execution
 }
 type ExecutionPipeline struct {
 	name        string
@@ -159,7 +140,6 @@ type ExecutionPipeline struct {
 	ctx         context.Context
 	cancel      context.CancelFunc
 	wg          sync.WaitGroup
-
 }
 // PipelineStage represents a stage in an execution pipeline
 type PipelineStage struct {
@@ -175,15 +155,11 @@ type PipelineStage struct {
 	cancel      context.CancelFunc
 	wg          sync.WaitGroup
 }
-
-}
 // StageProcessor processes tasks in a pipeline stage
 type StageProcessor interface {
 	ProcessStage(ctx context.Context, task Task) (Task, error)
 	GetStageName() string
 	IsParallel() bool
-
-// WorkerCoordinator coordinates workers across pools and nodes
 }
 type WorkerCoordinator struct {
 	pools       map[string]*WorkerPool
@@ -196,7 +172,6 @@ type WorkerCoordinator struct {
 	ctx         context.Context
 	cancel      context.CancelFunc
 	wg          sync.WaitGroup
-
 }
 // NodeInfo represents information about a worker node
 type NodeInfo struct {
@@ -207,8 +182,6 @@ type NodeInfo struct {
 	Capabilities []string               `json:"capabilities"`
 	Load         NodeLoad               `json:"load"`
 	Metadata     map[string]interface{} `json:"metadata"`
-}
-
 }
 // NodeStatus represents node states
 type NodeStatus string
@@ -228,8 +201,6 @@ type NodeLoad struct {
 	TaskCount  int     `json:"task_count"`
 	QueueDepth int     `json:"queue_depth"`
 }
-
-}
 // TaskScheduler schedules tasks across workers and pools
 type TaskScheduler struct {
 	queues      map[int]*PriorityQueue
@@ -240,7 +211,6 @@ type TaskScheduler struct {
 	mutex       sync.RWMutex
 	ctx         context.Context
 	cancel      context.CancelFunc
-
 }
 // LoadBalancer distributes tasks across available resources
 type LoadBalancer struct {
@@ -253,8 +223,6 @@ type LoadBalancer struct {
 	mutex       sync.RWMutex
 	ctx         context.Context
 	cancel      context.CancelFunc
-}
-
 }
 // Various metrics structures
 type ConcurrencyMetrics struct {
@@ -278,6 +246,7 @@ type PoolMetrics struct {
 	QueueDepth      int           `json:"queue_depth"`
 	AverageWaitTime time.Duration `json:"average_wait_time"`
 	Throughput      float64       `json:"throughput"`
+}
 
 type WorkerMetrics struct {
 	WorkerID        string        `json:"worker_id"`
@@ -294,6 +263,7 @@ type ResourceStats struct {
 	MemoryUsage float64 `json:"memory_usage"`
 	Goroutines  int     `json:"goroutines"`
 	GCStats     GCStats `json:"gc_stats"`
+}
 
 type GCStats struct {
 	NumGC       uint32        `json:"num_gc"`
@@ -301,8 +271,6 @@ type GCStats struct {
 	LastPause   time.Duration `json:"last_pause"`
 	HeapSize    uint64        `json:"heap_size"`
 	HeapObjects uint64        `json:"heap_objects"`
-}
-
 }
 // Configuration structures
 type WorkerPoolConfig struct {
@@ -336,19 +304,19 @@ type SchedulerConfig struct {
 	PriorityLevels  int                 `json:"priority_levels"`
 	QueueTimeout    time.Duration       `json:"queue_timeout"`
 	EnablePreemption bool               `json:"enable_preemption"`
+}
 
 type BalancerConfig struct {
 	Strategy           BalancingStrategy `json:"strategy"`
 	HealthCheckInterval time.Duration    `json:"health_check_interval"`
 	FailureThreshold   int               `json:"failure_threshold"`
 	RecoveryTimeout    time.Duration     `json:"recovery_timeout"`
+}
 
 type CircuitBreakerSettings struct {
 	FailureThreshold int           `json:"failure_threshold"`
 	RecoveryTimeout  time.Duration `json:"recovery_timeout"`
 	HalfOpenRequests int           `json:"half_open_requests"`
-}
-
 }
 // Default configuration
 func DefaultConcurrencyEngineConfig() ConcurrencyEngineConfig {
@@ -378,8 +346,6 @@ func DefaultConcurrencyEngineConfig() ConcurrencyEngineConfig {
 		EnableMetrics:        true,
 		MetricsInterval:      10 * time.Second,
 	}
-
-// NewConcurrencyEngine creates a new concurrency engine
 }
 func NewConcurrencyEngine(config ConcurrencyEngineConfig, logger Logger) *ConcurrencyEngine {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -418,8 +384,6 @@ func NewConcurrencyEngine(config ConcurrencyEngineConfig, logger Logger) *Concur
 	}, logger)
 	
 	return engine
-
-// Start starts the concurrency engine
 }
 func (e *ConcurrencyEngine) Start() error {
 	e.logger.Info("Starting concurrency engine")
@@ -459,8 +423,6 @@ func (e *ConcurrencyEngine) Start() error {
 	
 	e.logger.Info("Concurrency engine started")
 	return nil
-
-// Stop stops the concurrency engine
 }
 func (e *ConcurrencyEngine) Stop() error {
 	e.logger.Info("Stopping concurrency engine")
@@ -486,8 +448,6 @@ func (e *ConcurrencyEngine) Stop() error {
 	
 	e.logger.Info("Concurrency engine stopped")
 	return nil
-
-// CreateWorkerPool creates a new worker pool
 }
 func (e *ConcurrencyEngine) CreateWorkerPool(config WorkerPoolConfig, processor TaskProcessor) (*WorkerPool, error) {
 	e.mutex.Lock()
@@ -507,8 +467,6 @@ func (e *ConcurrencyEngine) CreateWorkerPool(config WorkerPoolConfig, processor 
 	
 	e.logger.Info("Created worker pool", "name", config.Name, "workers", config.MinWorkers)
 	return pool, nil
-
-// CreatePipeline creates a new execution pipeline
 }
 func (e *ConcurrencyEngine) CreatePipeline(config PipelineConfig, stages []StageProcessor) (*ExecutionPipeline, error) {
 	e.mutex.Lock()
@@ -528,12 +486,9 @@ func (e *ConcurrencyEngine) CreatePipeline(config PipelineConfig, stages []Stage
 	
 	e.logger.Info("Created execution pipeline", "name", config.Name, "stages", len(stages))
 	return pipeline, nil
-// SubmitTask submits a task for execution
 }
 func (e *ConcurrencyEngine) SubmitTask(task Task) error {
 	return e.scheduler.ScheduleTask(task)
-
-// SubmitTasks submits multiple tasks for execution
 }
 func (e *ConcurrencyEngine) SubmitTasks(tasks []Task) error {
 	for _, task := range tasks {
@@ -542,8 +497,6 @@ func (e *ConcurrencyEngine) SubmitTasks(tasks []Task) error {
 		}
 	}
 	return nil
-
-// GetMetrics returns concurrency engine metrics
 }
 func (e *ConcurrencyEngine) GetMetrics() *ConcurrencyMetrics {
 	e.mutex.RLock()
@@ -586,6 +539,7 @@ func (e *ConcurrencyEngine) GetMetrics() *ConcurrencyMetrics {
 	e.updateResourceMetrics()
 	
 	return e.metrics
+}
 
 // Private methods
 
@@ -634,9 +588,9 @@ func (e *ConcurrencyEngine) performAdaptiveScaling() {
 	if metrics.TasksQueued > int64(e.config.MaxQueueSize)*8/10 {
 		e.scaleUp()
 	}
+}
 
 // scaleUp increases worker pool sizes
-}
 func (e *ConcurrencyEngine) scaleUp() {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
@@ -647,9 +601,9 @@ func (e *ConcurrencyEngine) scaleUp() {
 			e.logger.Info("Scaled up worker pool", "pool", pool.name, "workers", len(pool.workers))
 		}
 	}
+}
 
 // scaleDown decreases worker pool sizes
-}
 func (e *ConcurrencyEngine) scaleDown() {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
@@ -660,9 +614,9 @@ func (e *ConcurrencyEngine) scaleDown() {
 			e.logger.Info("Scaled down worker pool", "pool", pool.name, "workers", len(pool.workers))
 		}
 	}
+}
 
 // updateResourceMetrics updates system resource metrics
-}
 func (e *ConcurrencyEngine) updateResourceMetrics() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
@@ -679,26 +633,30 @@ func (e *ConcurrencyEngine) updateResourceMetrics() {
 			HeapObjects: m.HeapObjects,
 		},
 	}
+}
 
 // getCPUUsage returns current CPU usage (simplified implementation)
-}
 func getCPUUsage() float64 {
 	// This is a simplified implementation
 	// In production, use a proper CPU monitoring library
 	return float64(runtime.NumGoroutine()) / float64(runtime.NumCPU() * 1000)
+}
 
 // Placeholder implementations for referenced types
 type PriorityQueue struct {
 	tasks []Task
 	mutex sync.Mutex
+}
 
 type SchedulerMetrics struct {
 	TasksScheduled int64 `json:"tasks_scheduled"`
 	QueueDepth     int   `json:"queue_depth"`
+}
 
 type BalancerMetrics struct {
 	RequestsBalanced int64 `json:"requests_balanced"`
 	ActiveTargets    int   `json:"active_targets"`
+}
 
 type BalanceTarget struct {
 	ID      string  `json:"id"`
@@ -723,6 +681,7 @@ type PipelineResult struct {
 type PipelineMetrics struct {
 	TasksProcessed int64         `json:"tasks_processed"`
 	AverageLatency time.Duration `json:"average_latency"`
+}
 
 type StageMetrics struct {
 	StageName      string        `json:"stage_name"`
@@ -739,16 +698,18 @@ type StageWorker struct {
 type CoordinatorMetrics struct {
 	ActiveNodes int `json:"active_nodes"`
 	TotalNodes  int `json:"total_nodes"`
+}
 
 type HeartbeatManager struct {
 	interval time.Duration
 	timeout  time.Duration
+}
 
 type ServiceDiscovery struct {
 	nodes    map[string]*NodeInfo
 	interval time.Duration
-
 }
+
 // Placeholder implementations for missing functions
 func NewWorkerCoordinator(config CoordinatorConfig, logger Logger) *WorkerCoordinator {
 	return &WorkerCoordinator{

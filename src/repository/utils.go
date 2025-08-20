@@ -35,13 +35,14 @@ func getRepositoryIDFromURL(repoURL string) string {
 	id = strings.Trim(id, "-")
 	
 	return id
+}
 
 // sanitizeURLForID creates a safe ID from a URL string
 // Used as a fallback when URL parsing fails
 func sanitizeURLForID(input string) string {
 	// Remove any protocol prefix
 	input = strings.TrimPrefix(input, "https://")
-	input = strings.TrimPrefix(input, "https://")
+	input = strings.TrimPrefix(input, "http://")
 	
 	// Replace any non-alphanumeric characters with dashes
 	re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
@@ -50,3 +51,5 @@ func sanitizeURLForID(input string) string {
 	// Remove leading and trailing dashes
 	id = strings.Trim(id, "-")
 	
+	return id
+}

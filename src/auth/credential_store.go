@@ -8,7 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"sync"
+	"time"
 
 	"golang.org/x/crypto/scrypt"
 )
@@ -26,6 +30,7 @@ type CredentialStore struct {
 	
 	// mutex protects the credentials map
 	mutex sync.RWMutex
+}
 
 // NewCredentialStore creates a new credential store
 func NewCredentialStore(filePath string, passphrase string) (*CredentialStore, error) {
@@ -56,10 +61,13 @@ func NewCredentialStore(filePath string, passphrase string) (*CredentialStore, e
 	}
 	
 	return store, nil
+}
 
 // deriveKey derives an encryption key from a passphrase
 func deriveKey(passphrase string, salt []byte) ([]byte, error) {
 	return scrypt.Key([]byte(passphrase), salt, 32768, 8, 1, 32)
+}
+
 // encrypt encrypts data using AES-GCM
 func (s *CredentialStore) encrypt(data []byte) (string, error) {
 	block, err := aes.NewCipher(s.encryptionKey)
@@ -84,6 +92,7 @@ func (s *CredentialStore) encrypt(data []byte) (string, error) {
 	
 	// Encode as base64
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
 
 // decrypt decrypts data using AES-GCM
 func (s *CredentialStore) decrypt(encryptedData string) ([]byte, error) {
@@ -112,6 +121,7 @@ func (s *CredentialStore) decrypt(encryptedData string) ([]byte, error) {
 	
 	// Decrypt the data
 	return gcm.Open(nil, nonce, ciphertext, nil)
+}
 
 // load loads credentials from the file
 func (s *CredentialStore) load() error {
@@ -143,6 +153,7 @@ func (s *CredentialStore) load() error {
 	}
 	
 	return nil
+}
 
 // save saves credentials to the file
 func (s *CredentialStore) save() error {
@@ -168,7 +179,8 @@ func (s *CredentialStore) save() error {
 	}
 	
 	// Write to file with secure permissions
-	return os.WriteFile(filepath.Clean(s.filePath, []byte(encryptedData)), 0600)
+	return os.WriteFile(filepath.Clean(s.filePath), []byte(encryptedData), 0600)
+}
 
 // GetCredentials gets credentials by ID
 func (s *CredentialStore) GetCredentials(id string) (*Credentials, error) {
@@ -181,6 +193,7 @@ func (s *CredentialStore) GetCredentials(id string) (*Credentials, error) {
 	}
 	
 	return cred, nil
+}
 
 // SaveCredentials saves credentials
 func (s *CredentialStore) SaveCredentials(creds *Credentials) error {
@@ -199,6 +212,7 @@ func (s *CredentialStore) SaveCredentials(creds *Credentials) error {
 	
 	// Save to file
 	return s.save()
+}
 
 // DeleteCredentials deletes credentials by ID
 func (s *CredentialStore) DeleteCredentials(id string) error {
@@ -215,6 +229,7 @@ func (s *CredentialStore) DeleteCredentials(id string) error {
 	
 	// Save to file
 	return s.save()
+}
 
 // ListCredentials lists all credentials
 func (s *CredentialStore) ListCredentials() ([]*Credentials, error) {
@@ -228,6 +243,7 @@ func (s *CredentialStore) ListCredentials() ([]*Credentials, error) {
 	}
 	
 	return creds, nil
+}
 
 // UpdateLastUsed updates the last used timestamp for credentials
 func (s *CredentialStore) UpdateLastUsed(id string) error {
@@ -244,3 +260,5 @@ func (s *CredentialStore) UpdateLastUsed(id string) error {
 	cred.LastUsedAt = time.Now()
 	
 	// Save to file
+	return s.save()
+}

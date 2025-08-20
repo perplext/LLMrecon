@@ -13,6 +13,7 @@ import (
 type UserStoreAdapter struct {
 	legacyStore interface{}
 	converter   UserConverter
+}
 
 // UserConverter converts between legacy and new user models
 type UserConverter interface {
@@ -21,6 +22,7 @@ type UserConverter interface {
 	
 	// FromModelUser converts a model user to a legacy user
 	FromModelUser(user *models.User) (interface{}, error)
+}
 
 // NewUserStoreAdapter creates a new legacy user store adapter
 func NewUserStoreAdapter(legacyStore interface{}, converter UserConverter) interfaces.UserStore {
@@ -28,6 +30,7 @@ func NewUserStoreAdapter(legacyStore interface{}, converter UserConverter) inter
 		legacyStore: legacyStore,
 		converter:   converter,
 	}
+}
 
 // CreateUser creates a new user
 func (s *UserStoreAdapter) CreateUser(ctx context.Context, user *models.User) error {
@@ -45,6 +48,7 @@ func (s *UserStoreAdapter) CreateUser(ctx context.Context, user *models.User) er
 	}
 	
 	return errors.New("legacy store does not implement CreateUser")
+}
 
 // GetUserByID retrieves a user by ID
 func (s *UserStoreAdapter) GetUserByID(ctx context.Context, id string) (*models.User, error) {
@@ -62,6 +66,7 @@ func (s *UserStoreAdapter) GetUserByID(ctx context.Context, id string) (*models.
 	}
 	
 	return nil, errors.New("legacy store does not implement GetUserByID")
+}
 
 // GetUserByUsername retrieves a user by username
 func (s *UserStoreAdapter) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
@@ -79,6 +84,7 @@ func (s *UserStoreAdapter) GetUserByUsername(ctx context.Context, username strin
 	}
 	
 	return nil, errors.New("legacy store does not implement GetUserByUsername")
+}
 
 // GetUserByEmail retrieves a user by email
 func (s *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -96,6 +102,7 @@ func (s *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*m
 	}
 	
 	return nil, errors.New("legacy store does not implement GetUserByEmail")
+}
 
 // UpdateUser updates an existing user
 func (s *UserStoreAdapter) UpdateUser(ctx context.Context, user *models.User) error {
@@ -113,6 +120,7 @@ func (s *UserStoreAdapter) UpdateUser(ctx context.Context, user *models.User) er
 	}
 	
 	return errors.New("legacy store does not implement UpdateUser")
+}
 
 // DeleteUser deletes a user by ID
 func (s *UserStoreAdapter) DeleteUser(ctx context.Context, id string) error {
@@ -124,6 +132,7 @@ func (s *UserStoreAdapter) DeleteUser(ctx context.Context, id string) error {
 	}
 	
 	return errors.New("legacy store does not implement DeleteUser")
+}
 
 // ListUsers lists all users
 func (s *UserStoreAdapter) ListUsers(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*interfaces.User, int, error) {
@@ -151,6 +160,7 @@ func (s *UserStoreAdapter) ListUsers(ctx context.Context, filter map[string]inte
 	}
 	
 	return nil, 0, errors.New("legacy store does not implement ListUsersWithFilter")
+}
 
 // ListUsersWithFilter lists users with optional filtering
 func (s *UserStoreAdapter) ListUsersWithFilter(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.User, int, error) {
@@ -184,6 +194,7 @@ func (s *UserStoreAdapter) ListUsersWithFilter(ctx context.Context, filter map[s
 	
 	// Return the users directly since they're already filtered by the method call
 	return users, total, nil
+}
 
 // Close closes the user store
 func (s *UserStoreAdapter) Close() error {
@@ -195,11 +206,13 @@ func (s *UserStoreAdapter) Close() error {
 	}
 	
 	return nil
+}
 
 // SessionStoreAdapter adapts a legacy session store to the interfaces.SessionStore interface
 type SessionStoreAdapter struct {
 	legacyStore interface{}
 	converter   SessionConverter
+}
 
 // SessionConverter converts between legacy and new session models
 type SessionConverter interface {
@@ -208,6 +221,7 @@ type SessionConverter interface {
 	
 	// FromModelSession converts a model session to a legacy session
 	FromModelSession(session *models.Session) (interface{}, error)
+}
 
 // NewSessionStoreAdapter creates a new legacy session store adapter
 func NewSessionStoreAdapter(legacyStore interface{}, converter SessionConverter) interfaces.SessionStore {
@@ -215,6 +229,7 @@ func NewSessionStoreAdapter(legacyStore interface{}, converter SessionConverter)
 		legacyStore: legacyStore,
 		converter:   converter,
 	}
+}
 
 // CreateSession creates a new session
 func (s *SessionStoreAdapter) CreateSession(ctx context.Context, session *models.Session) error {
@@ -232,6 +247,7 @@ func (s *SessionStoreAdapter) CreateSession(ctx context.Context, session *models
 	}
 	
 	return errors.New("legacy store does not implement CreateSession")
+}
 
 // GetSession retrieves a session by ID
 func (s *SessionStoreAdapter) GetSession(ctx context.Context, id string) (*models.Session, error) {
@@ -249,6 +265,7 @@ func (s *SessionStoreAdapter) GetSession(ctx context.Context, id string) (*model
 	}
 	
 	return nil, errors.New("legacy store does not implement GetSession")
+}
 
 // GetSessionByToken retrieves a session by token
 func (s *SessionStoreAdapter) GetSessionByToken(ctx context.Context, token string) (*models.Session, error) {
@@ -266,6 +283,7 @@ func (s *SessionStoreAdapter) GetSessionByToken(ctx context.Context, token strin
 	}
 	
 	return nil, errors.New("legacy store does not implement GetSessionByToken")
+}
 
 // UpdateSession updates an existing session
 func (s *SessionStoreAdapter) UpdateSession(ctx context.Context, session *models.Session) error {
@@ -283,6 +301,7 @@ func (s *SessionStoreAdapter) UpdateSession(ctx context.Context, session *models
 	}
 	
 	return errors.New("legacy store does not implement UpdateSession")
+}
 
 // DeleteSession deletes a session by ID
 func (s *SessionStoreAdapter) DeleteSession(ctx context.Context, id string) error {
@@ -294,6 +313,7 @@ func (s *SessionStoreAdapter) DeleteSession(ctx context.Context, id string) erro
 	}
 	
 	return errors.New("legacy store does not implement DeleteSession")
+}
 
 // GetUserSessions retrieves all sessions for a user
 func (s *SessionStoreAdapter) GetUserSessions(ctx context.Context, userID string) ([]*models.Session, error) {
@@ -320,6 +340,7 @@ func (s *SessionStoreAdapter) GetUserSessions(ctx context.Context, userID string
 	}
 	
 	return nil, errors.New("legacy store does not implement GetUserSessions")
+}
 
 // CleanExpiredSessions removes all expired sessions and returns the count
 func (s *SessionStoreAdapter) CleanExpiredSessions(ctx context.Context) (int, error) {
@@ -343,6 +364,7 @@ func (s *SessionStoreAdapter) CleanExpiredSessions(ctx context.Context) (int, er
 	}
 	
 	return 0, errors.New("legacy store does not implement CleanExpiredSessions")
+}
 
 // DeleteSessionsByUserID deletes all sessions for a user
 func (s *SessionStoreAdapter) DeleteSessionsByUserID(ctx context.Context, userID string) error {
@@ -354,6 +376,7 @@ func (s *SessionStoreAdapter) DeleteSessionsByUserID(ctx context.Context, userID
 	}
 	
 	return errors.New("legacy store does not implement DeleteSessionsByUserID")
+}
 
 // GetSessionByID retrieves a session by ID  
 func (s *SessionStoreAdapter) GetSessionByID(ctx context.Context, id string) (*models.Session, error) {
@@ -371,6 +394,7 @@ func (s *SessionStoreAdapter) GetSessionByID(ctx context.Context, id string) (*m
 	}
 	
 	return nil, errors.New("legacy store does not implement GetSessionByID")
+}
 
 // GetSessionByRefreshToken retrieves a session by refresh token
 func (s *SessionStoreAdapter) GetSessionByRefreshToken(ctx context.Context, refreshToken string) (*models.Session, error) {
@@ -388,6 +412,7 @@ func (s *SessionStoreAdapter) GetSessionByRefreshToken(ctx context.Context, refr
 	}
 	
 	return nil, errors.New("legacy store does not implement GetSessionByRefreshToken")
+}
 
 // ListSessionsByUserID lists sessions for a user
 func (s *SessionStoreAdapter) ListSessionsByUserID(ctx context.Context, userID string) ([]*models.Session, error) {
@@ -414,6 +439,7 @@ func (s *SessionStoreAdapter) ListSessionsByUserID(ctx context.Context, userID s
 	}
 	
 	return nil, errors.New("legacy store does not implement ListSessionsByUserID")
+}
 
 // Close closes the session store
 func (s *SessionStoreAdapter) Close() error {
@@ -424,3 +450,5 @@ func (s *SessionStoreAdapter) Close() error {
 		return store.Close()
 	}
 	
+	return nil
+}

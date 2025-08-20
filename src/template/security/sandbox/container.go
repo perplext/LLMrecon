@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
-	"strings"
+	"path/filepath"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/security"
@@ -39,6 +41,7 @@ func DefaultContainerSandboxOptions() *ContainerSandboxOptions {
 		VolumeBinds:     []string{},
 		CleanupTimeout:  5 * time.Second,
 	}
+}
 
 // NewContainerSandbox creates a new container-based sandbox
 func NewContainerSandbox(verifier security.TemplateVerifier, options *SandboxOptions, containerOptions *ContainerSandboxOptions) (*ContainerSandbox, error) {
@@ -65,6 +68,7 @@ func NewContainerSandbox(verifier security.TemplateVerifier, options *SandboxOpt
 		networkMode:     containerOptions.NetworkMode,
 		volumeBinds:     containerOptions.VolumeBinds,
 	}, nil
+}
 
 // checkContainerEngine checks if the specified container engine is available
 func checkContainerEngine(engine string) error {
@@ -80,6 +84,7 @@ func checkContainerEngine(engine string) error {
 	}
 	
 	return cmd.Run()
+}
 
 // Execute executes a template in a container sandbox
 func (s *ContainerSandbox) Execute(ctx context.Context, template *format.Template, options *SandboxOptions) (*ExecutionResult, error) {
@@ -131,7 +136,7 @@ func (s *ContainerSandbox) Execute(ctx context.Context, template *format.Templat
 	result.SecurityIssues = issues
 	
 	return result, nil
-	
+}
 
 // executeInContainer executes a template in a container
 func (s *ContainerSandbox) executeInContainer(ctx context.Context, template *format.Template, options *SandboxOptions) (*ExecutionResult, error) {
@@ -243,6 +248,7 @@ echo "Done."
 			ExecutionTime: time.Since(time.Now().Add(-options.TimeoutDuration)),
 		},
 	}, nil
+}
 
 // cleanupContainer cleans up a container
 func (s *ContainerSandbox) cleanupContainer(containerName string) {
@@ -261,9 +267,7 @@ func (s *ContainerSandbox) cleanupContainer(containerName string) {
 	}
 	
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
+		// Log error but don't return it since this is cleanup
+		return
 	}
-}
-}
-}
 }

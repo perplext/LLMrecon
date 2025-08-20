@@ -3,8 +3,12 @@ package version
 import (
 	"context"
 	"fmt"
+	"io"
+	"path/filepath"
 	"strings"
+	"time"
 	
+	"github.com/perplext/LLMrecon/src/repository"
 	"github.com/perplext/LLMrecon/src/repository/interfaces"
 	"github.com/perplext/LLMrecon/src/template/format"
 )
@@ -28,6 +32,7 @@ type AnalyzerOptions struct {
 	
 	// ModulePatterns are the patterns for module files
 	ModulePatterns []string
+}
 
 // DefaultAnalyzerOptions returns the default analyzer options
 func DefaultAnalyzerOptions() *AnalyzerOptions {
@@ -39,6 +44,7 @@ func DefaultAnalyzerOptions() *AnalyzerOptions {
 		TemplatePatterns:        []string{"*.yaml", "*.yml"},
 		ModulePatterns:          []string{"*.yaml", "*.yml"},
 	}
+}
 
 // Analyzer analyzes template and module versions
 type Analyzer struct {
@@ -53,6 +59,7 @@ type Analyzer struct {
 	
 	// DependencyGraph is the dependency graph
 	DependencyGraph *DependencyGraph
+}
 
 // NewAnalyzer creates a new version analyzer
 func NewAnalyzer(localRepo, remoteRepo interfaces.Repository, options *AnalyzerOptions) *Analyzer {
@@ -66,6 +73,7 @@ func NewAnalyzer(localRepo, remoteRepo interfaces.Repository, options *AnalyzerO
 		RemoteRepo:      remoteRepo,
 		DependencyGraph: NewDependencyGraph(),
 	}
+}
 
 // AnalysisResult represents the result of a version analysis
 type AnalysisResult struct {
@@ -89,6 +97,7 @@ type AnalysisResult struct {
 	
 	// AnalysisTime is the time the analysis was performed
 	AnalysisTime time.Time
+}
 
 // AnalyzeTemplate analyzes a template
 func (a *Analyzer) AnalyzeTemplate(ctx context.Context, templatePath string) (*AnalysisResult, error) {
@@ -222,6 +231,7 @@ func (a *Analyzer) AnalyzeTemplate(ctx context.Context, templatePath string) (*A
 	}
 	
 	return result, nil
+}
 
 // AnalyzeModule analyzes a module
 func (a *Analyzer) AnalyzeModule(ctx context.Context, modulePath string) (*AnalysisResult, error) {
@@ -355,6 +365,7 @@ func (a *Analyzer) AnalyzeModule(ctx context.Context, modulePath string) (*Analy
 	}
 	
 	return result, nil
+}
 
 // AnalyzeAll analyzes all templates and modules
 func (a *Analyzer) AnalyzeAll(ctx context.Context) (map[string]*AnalysisResult, error) {
@@ -427,6 +438,7 @@ func (a *Analyzer) AnalyzeAll(ctx context.Context) (map[string]*AnalysisResult, 
 	}
 	
 	return results, nil
+}
 
 // buildDependencyGraph builds a dependency graph for templates and modules
 func (a *Analyzer) buildDependencyGraph(ctx context.Context, rootPath string) error {
@@ -533,6 +545,7 @@ func (a *Analyzer) buildDependencyGraph(ctx context.Context, rootPath string) er
 	}
 	
 	return nil
+}
 
 // findDependencyPath finds the path of a dependency
 func findDependencyPath(ctx context.Context, repo interfaces.Repository, depID string, patterns []string) string {
@@ -574,3 +587,11 @@ func findDependencyPath(ctx context.Context, repo interfaces.Repository, depID s
 		}
 	}
 	
+	return ""
+}
+
+// matchPattern checks if a path matches a pattern
+func matchPattern(path, pattern string) bool {
+	matched, _ := filepath.Match(pattern, filepath.Base(path))
+	return matched
+}

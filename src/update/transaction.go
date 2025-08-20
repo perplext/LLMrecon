@@ -4,6 +4,10 @@ package update
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 // TransactionStatus represents the status of an update transaction
@@ -22,22 +26,22 @@ const (
 	TransactionFailed TransactionStatus = "failed"
 )
 
-// UpdateComponent represents a component being updated
-type UpdateComponent string
+// TransactionComponent represents a component being updated
+type TransactionComponent string
 
 const (
-	// BinaryUpdateComponent represents the binary component
-	BinaryUpdateComponent UpdateComponent = "binary"
-	// TemplatesUpdateComponent represents the templates component
-	TemplatesUpdateComponent UpdateComponent = "templates"
-	// ModuleUpdateComponent represents a module component
-	ModuleUpdateComponent UpdateComponent = "module"
+	// BinaryTransactionComponent represents the binary component
+	BinaryTransactionComponent TransactionComponent = "binary"
+	// TemplatesTransactionComponent represents the templates component
+	TemplatesTransactionComponent TransactionComponent = "templates"
+	// ModuleTransactionComponent represents a module component
+	ModuleTransactionComponent TransactionComponent = "module"
 )
 
 // UpdateOperation represents an operation in an update transaction
 type UpdateOperation struct {
 	// Component is the component being updated
-	Component UpdateComponent
+	Component TransactionComponent
 	// ComponentID is the ID of the component (e.g., module ID)
 	ComponentID string
 	// SourcePath is the path to the source files
@@ -52,6 +56,7 @@ type UpdateOperation struct {
 	Error error
 	// Timestamp is the time the operation was performed
 	Timestamp time.Time
+}
 
 // UpdateTransaction represents a transaction for applying an update
 type UpdateTransaction struct {
@@ -73,6 +78,7 @@ type UpdateTransaction struct {
 	SessionDir string
 	// BackupDir is the directory for backups during the transaction
 	BackupDir string
+}
 
 // NewUpdateTransaction creates a new update transaction
 func NewUpdateTransaction(packageID, sessionDir, backupDir string, logger io.Writer) *UpdateTransaction {
@@ -86,6 +92,7 @@ func NewUpdateTransaction(packageID, sessionDir, backupDir string, logger io.Wri
 		SessionDir: sessionDir,
 		BackupDir:  backupDir,
 	}
+}
 
 // Begin begins the transaction
 func (t *UpdateTransaction) Begin() error {
@@ -97,9 +104,10 @@ func (t *UpdateTransaction) Begin() error {
 	t.Status = TransactionInProgress
 
 	return nil
+}
 
 // AddOperation adds an operation to the transaction
-func (t *UpdateTransaction) AddOperation(component UpdateComponent, componentID, sourcePath, destPath, backupPath string) *UpdateOperation {
+func (t *UpdateTransaction) AddOperation(component TransactionComponent, componentID, sourcePath, destPath, backupPath string) *UpdateOperation {
 	operation := &UpdateOperation{
 		Component:       component,
 		ComponentID:     componentID,
@@ -112,6 +120,7 @@ func (t *UpdateTransaction) AddOperation(component UpdateComponent, componentID,
 
 	t.Operations = append(t.Operations, operation)
 	return operation
+}
 
 // ExecuteOperation executes an operation in the transaction
 func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *UpdateOperation) error {
@@ -177,6 +186,7 @@ func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *Upd
 		time.Now().Format(time.RFC3339), operation.Component, operation.ComponentID)
 
 	return nil
+}
 
 // Commit commits the transaction
 func (t *UpdateTransaction) Commit() error {
@@ -193,6 +203,7 @@ func (t *UpdateTransaction) Commit() error {
 		time.Now().Format(time.RFC3339), t.ID)
 
 	return nil
+}
 
 // Rollback rolls back the transaction
 func (t *UpdateTransaction) Rollback() error {
@@ -242,9 +253,10 @@ func (t *UpdateTransaction) Rollback() error {
 		time.Now().Format(time.RFC3339), t.ID)
 
 	return nil
+}
 
 // GetOperationsByComponent returns operations for a specific component
-func (t *UpdateTransaction) GetOperationsByComponent(component UpdateComponent) []*UpdateOperation {
+func (t *UpdateTransaction) GetOperationsByComponent(component TransactionComponent) []*UpdateOperation {
 	var operations []*UpdateOperation
 	for _, op := range t.Operations {
 		if op.Component == component {
@@ -252,6 +264,7 @@ func (t *UpdateTransaction) GetOperationsByComponent(component UpdateComponent) 
 		}
 	}
 	return operations
+}
 
 // GetOperationsByStatus returns operations with a specific status
 func (t *UpdateTransaction) GetOperationsByStatus(status TransactionStatus) []*UpdateOperation {
@@ -262,14 +275,17 @@ func (t *UpdateTransaction) GetOperationsByStatus(status TransactionStatus) []*U
 		}
 	}
 	return operations
+}
 
 // GetFailedOperations returns operations that failed
 func (t *UpdateTransaction) GetFailedOperations() []*UpdateOperation {
 	return t.GetOperationsByStatus(TransactionFailed)
+}
 
 // HasFailedOperations returns true if any operations failed
 func (t *UpdateTransaction) HasFailedOperations() bool {
 	return len(t.GetFailedOperations()) > 0
+}
 
 // GetSummary returns a summary of the transaction
 func (t *UpdateTransaction) GetSummary() map[string]interface{} {
@@ -280,7 +296,7 @@ func (t *UpdateTransaction) GetSummary() map[string]interface{} {
 	}
 
 	// Count operations by component
-	componentCounts := make(map[UpdateComponent]int)
+	componentCounts := make(map[TransactionComponent]int)
 	for _, op := range t.Operations {
 		componentCounts[op.Component]++
 	}
@@ -298,3 +314,8 @@ func (t *UpdateTransaction) GetSummary() map[string]interface{} {
 		"component_counts": componentCounts,
 		"failed":          t.HasFailedOperations(),
 	}
+}
+
+// Helper functions for file operations
+
+// Use copyDir and replaceDir from apply.go

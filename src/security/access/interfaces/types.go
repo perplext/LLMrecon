@@ -8,19 +8,19 @@ type AuditAction string
 
 // Constants for audit actions
 const (
-	AuditActionLogin           AuditAction = "login"
-	AuditActionLogout          AuditAction = "logout"
-	AuditActionCreate          AuditAction = "create"
-	AuditActionRead            AuditAction = "read"
-	AuditActionUpdate          AuditAction = "update"
-	AuditActionDelete          AuditAction = "delete"
-	AuditActionExecute         AuditAction = "execute"
-	AuditActionApprove         AuditAction = "approve"
-	AuditActionReject          AuditAction = "reject"
-	AuditActionConfigChange    AuditAction = "config_change"
+	AuditActionLogin            AuditAction = "login"
+	AuditActionLogout           AuditAction = "logout"
+	AuditActionCreate           AuditAction = "create"
+	AuditActionRead             AuditAction = "read"
+	AuditActionUpdate           AuditAction = "update"
+	AuditActionDelete           AuditAction = "delete"
+	AuditActionExecute          AuditAction = "execute"
+	AuditActionApprove          AuditAction = "approve"
+	AuditActionReject           AuditAction = "reject"
+	AuditActionConfigChange     AuditAction = "config_change"
 	AuditActionPermissionChange AuditAction = "permission_change"
-	AuditActionRoleChange      AuditAction = "role_change"
-	AuditActionSecurityAlert   AuditAction = "security_alert"
+	AuditActionRoleChange       AuditAction = "role_change"
+	AuditActionSecurityAlert    AuditAction = "security_alert"
 )
 
 // AuditSeverity represents the severity level of an audit event

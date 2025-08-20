@@ -2,10 +2,16 @@
 package errors
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 )
+
+// ErrorHandler defines the interface for error handling
+type ErrorHandler interface {
+	HandleError(ctx context.Context, err error) error
+}
 
 // ErrorCode represents a type of error
 type ErrorCode string
@@ -13,17 +19,17 @@ type ErrorCode string
 // Error codes
 const (
 	// Import errors
-	ImportErrorCode         ErrorCode = "IMPORT_ERROR"
-	ValidationErrorCode     ErrorCode = "VALIDATION_ERROR"
-	ConversionErrorCode     ErrorCode = "CONVERSION_ERROR"
-	FileSystemErrorCode     ErrorCode = "FILE_SYSTEM_ERROR"
-	NetworkErrorCode        ErrorCode = "NETWORK_ERROR"
-	ConfigurationErrorCode  ErrorCode = "CONFIGURATION_ERROR"
-	SecurityErrorCode       ErrorCode = "SECURITY_ERROR"
-	PermissionErrorCode     ErrorCode = "PERMISSION_ERROR"
-	BackupErrorCode         ErrorCode = "BACKUP_ERROR"
-	ConflictErrorCode       ErrorCode = "CONFLICT_ERROR"
-	UnknownErrorCode        ErrorCode = "UNKNOWN_ERROR"
+	ImportErrorCode        ErrorCode = "IMPORT_ERROR"
+	ValidationErrorCode    ErrorCode = "VALIDATION_ERROR"
+	ConversionErrorCode    ErrorCode = "CONVERSION_ERROR"
+	FileSystemErrorCode    ErrorCode = "FILE_SYSTEM_ERROR"
+	NetworkErrorCode       ErrorCode = "NETWORK_ERROR"
+	ConfigurationErrorCode ErrorCode = "CONFIGURATION_ERROR"
+	SecurityErrorCode      ErrorCode = "SECURITY_ERROR"
+	PermissionErrorCode    ErrorCode = "PERMISSION_ERROR"
+	BackupErrorCode        ErrorCode = "BACKUP_ERROR"
+	ConflictErrorCode      ErrorCode = "CONFLICT_ERROR"
+	UnknownErrorCode       ErrorCode = "UNKNOWN_ERROR"
 )
 
 // ErrorCategory represents the category of an error
@@ -31,15 +37,15 @@ type ErrorCategory string
 
 // Error categories
 const (
-	ValidationError     ErrorCategory = "validation"
-	FileSystemError     ErrorCategory = "filesystem"
-	NetworkError        ErrorCategory = "network"
-	ConfigurationError  ErrorCategory = "configuration"
-	SecurityError       ErrorCategory = "security"
-	PermissionError     ErrorCategory = "permission"
-	BackupError         ErrorCategory = "backup"
-	ConflictError       ErrorCategory = "conflict"
-	UnknownError        ErrorCategory = "unknown"
+	ValidationError    ErrorCategory = "validation"
+	FileSystemError    ErrorCategory = "filesystem"
+	NetworkError       ErrorCategory = "network"
+	ConfigurationError ErrorCategory = "configuration"
+	SecurityError      ErrorCategory = "security"
+	PermissionError    ErrorCategory = "permission"
+	BackupError        ErrorCategory = "backup"
+	ConflictError      ErrorCategory = "conflict"
+	UnknownError       ErrorCategory = "unknown"
 )
 
 // ErrorSeverity represents the severity of an error
@@ -66,40 +72,40 @@ const (
 type BundleError struct {
 	// ErrorID is a unique identifier for this error instance
 	ErrorID string `json:"error_id"`
-	
+
 	// Code is the error code
 	Code ErrorCode `json:"code"`
-	
+
 	// Category is the error category
 	Category ErrorCategory `json:"category"`
-	
+
 	// Severity is the error severity
 	Severity ErrorSeverity `json:"severity"`
-	
+
 	// Recoverability indicates if the error is recoverable
 	Recoverability ErrorRecoverability `json:"recoverability"`
-	
+
 	// Message is the human-readable error message
 	Message string `json:"message"`
-	
+
 	// Details contains additional error details
 	Details map[string]interface{} `json:"details,omitempty"`
-	
+
 	// Context contains contextual information
 	Context map[string]interface{} `json:"context,omitempty"`
-	
+
 	// Timestamp is when the error occurred
 	Timestamp time.Time `json:"timestamp"`
-	
+
 	// StackTrace contains the stack trace
 	StackTrace string `json:"stack_trace,omitempty"`
-	
+
 	// RetryAttempt is the current retry attempt
 	RetryAttempt int `json:"retry_attempt"`
-	
+
 	// MaxRetries is the maximum number of retries
 	MaxRetries int `json:"max_retries"`
-	
+
 	// Cause is the underlying error
 	Cause error `json:"-"`
 }

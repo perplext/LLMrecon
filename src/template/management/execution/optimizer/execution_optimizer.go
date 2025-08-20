@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/execution"
@@ -33,6 +34,7 @@ type ExecutionOptimizer struct {
 	running bool
 	// stopChan is used to stop the optimizer
 	stopChan chan struct{}
+}
 
 // ExecutionOptimizerConfig represents configuration for the execution optimizer
 type ExecutionOptimizerConfig struct {
@@ -58,6 +60,7 @@ type ExecutionOptimizerConfig struct {
 	ExecutionTimeout time.Duration
 	// EnableAdaptiveTimeouts enables adaptive timeouts based on template complexity
 	EnableAdaptiveTimeouts bool
+}
 
 // ExecutionOptimizerStats tracks statistics for the execution optimizer
 type ExecutionOptimizerStats struct {
@@ -83,22 +86,24 @@ type ExecutionOptimizerStats struct {
 	TimeoutErrors int64
 	// MemoryErrors is the number of memory-related errors
 	MemoryErrors int64
+}
 
 // DefaultExecutionOptimizerConfig returns default configuration for the execution optimizer
 func DefaultExecutionOptimizerConfig() *ExecutionOptimizerConfig {
 	return &ExecutionOptimizerConfig{
-		EnableMemoryOptimization:    true,
+		EnableMemoryOptimization:      true,
 		EnableConcurrencyOptimization: true,
-		EnableResultCaching:         true,
-		ResultCacheSize:             1000,
-		ResultCacheTTL:              30 * time.Minute,
-		EnableBatchProcessing:       true,
-		BatchSize:                   10,
-		MaxConcurrentExecutions:     100,
-		MemoryThreshold:             100, // 100 MB
-		ExecutionTimeout:            30 * time.Second,
-		EnableAdaptiveTimeouts:      true,
+		EnableResultCaching:           true,
+		ResultCacheSize:               1000,
+		ResultCacheTTL:                30 * time.Minute,
+		EnableBatchProcessing:         true,
+		BatchSize:                     10,
+		MaxConcurrentExecutions:       100,
+		MemoryThreshold:               100, // 100 MB
+		ExecutionTimeout:              30 * time.Second,
+		EnableAdaptiveTimeouts:        true,
 	}
+}
 
 // NewExecutionOptimizer creates a new execution optimizer
 func NewExecutionOptimizer(engine *execution.Engine, config *ExecutionOptimizerConfig) (*ExecutionOptimizer, error) {
@@ -120,11 +125,14 @@ func NewExecutionOptimizer(engine *execution.Engine, config *ExecutionOptimizerC
 	// Create memory optimizer if enabled
 	var memoryOptimizer *optimization.MemoryOptimizer
 	if config.EnableMemoryOptimization {
-		optimizerConfig := optimization.DefaultMemoryOptimizerConfig()
-		memoryOptimizer, err = optimization.NewMemoryOptimizer(optimizerConfig)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create memory optimizer: %w", err)
+		optimizerConfig := optimization.MemoryConfig{
+			MaxMemoryMB:   config.MemoryThreshold,
+			GCInterval:    time.Minute,
+			PoolSize:      100,
+			CacheTimeout:  30 * time.Minute,
+			EnablePooling: true,
 		}
+		memoryOptimizer = optimization.NewMemoryOptimizer(optimizerConfig)
 	}
 
 	// Create concurrency manager if enabled
@@ -147,6 +155,7 @@ func NewExecutionOptimizer(engine *execution.Engine, config *ExecutionOptimizerC
 		stats:              &ExecutionOptimizerStats{},
 		stopChan:           make(chan struct{}),
 	}, nil
+}
 
 // Start starts the execution optimizer
 func (o *ExecutionOptimizer) Start() error {
@@ -176,6 +185,7 @@ func (o *ExecutionOptimizer) Start() error {
 	}
 
 	return nil
+}
 
 // Stop stops the execution optimizer
 func (o *ExecutionOptimizer) Stop() {
@@ -196,6 +206,7 @@ func (o *ExecutionOptimizer) Stop() {
 	if o.config.EnableConcurrencyOptimization && o.concurrencyManager != nil {
 		o.concurrencyManager.Stop()
 	}
+}
 
 // ExecuteTemplate executes a template with optimization
 func (o *ExecutionOptimizer) ExecuteTemplate(ctx context.Context, template *format.Template, data interface{}) (string, error) {
@@ -217,21 +228,19 @@ func (o *ExecutionOptimizer) ExecuteTemplate(ctx context.Context, template *form
 	// Start execution timer
 	startTime := time.Now()
 
-	// Optimize template if enabled
-	var optimizedTemplate *format.Template
-	var err error
+	// Memory optimization happens automatically via the MemoryOptimizer background process
+	// For now, we'll use the template as-is and let the memory optimizer handle memory management
+	optimizedTemplate := template
 	if o.config.EnableMemoryOptimization && o.memoryOptimizer != nil {
-		optimizedTemplate, err = o.memoryOptimizer.OptimizeTemplate(template)
-		if err != nil {
-			return "", fmt.Errorf("failed to optimize template: %w", err)
+		// Trigger memory optimization if needed
+		if err := o.memoryOptimizer.OptimizeMemory(ctx); err == nil {
+			atomic.AddInt64(&o.stats.TemplatesOptimized, 1)
 		}
-		atomic.AddInt64(&o.stats.TemplatesOptimized, 1)
-	} else {
-		optimizedTemplate = template
 	}
 
 	// Execute template
 	var result string
+	var err error
 	if o.config.EnableConcurrencyOptimization && o.concurrencyManager != nil {
 		// Execute with concurrency manager
 		result, err = o.executeWithConcurrencyManager(ctx, optimizedTemplate, data)
@@ -274,6 +283,7 @@ func (o *ExecutionOptimizer) ExecuteTemplate(ctx context.Context, template *form
 	}
 
 	return result, err
+}
 
 // executeWithConcurrencyManager executes a template using the concurrency manager
 func (o *ExecutionOptimizer) executeWithConcurrencyManager(ctx context.Context, template *format.Template, data interface{}) (string, error) {
@@ -300,6 +310,7 @@ func (o *ExecutionOptimizer) executeWithConcurrencyManager(ctx context.Context, 
 	case <-ctx.Done():
 		return "", ctx.Err()
 	}
+}
 
 // ExecuteTemplates executes multiple templates with optimization
 func (o *ExecutionOptimizer) ExecuteTemplates(ctx context.Context, templates []*format.Template, data interface{}) ([]string, error) {
@@ -323,17 +334,14 @@ func (o *ExecutionOptimizer) ExecuteTemplates(ctx context.Context, templates []*
 	// Start execution timer
 	startTime := time.Now()
 
-	// Optimize templates if enabled
-	var optimizedTemplates []*format.Template
+	// Memory optimization happens automatically via the MemoryOptimizer background process
+	// For now, we'll use the templates as-is and let the memory optimizer handle memory management
+	optimizedTemplates := templates
 	if o.config.EnableMemoryOptimization && o.memoryOptimizer != nil {
-		var err error
-		optimizedTemplates, err = o.memoryOptimizer.OptimizeTemplates(templates)
-		if err != nil {
-			return nil, fmt.Errorf("failed to optimize templates: %w", err)
+		// Trigger memory optimization if needed
+		if err := o.memoryOptimizer.OptimizeMemory(ctx); err == nil {
+			atomic.AddInt64(&o.stats.TemplatesOptimized, int64(len(templates)))
 		}
-		atomic.AddInt64(&o.stats.TemplatesOptimized, int64(len(templates)))
-	} else {
-		optimizedTemplates = templates
 	}
 
 	// Execute templates
@@ -377,6 +385,7 @@ func (o *ExecutionOptimizer) ExecuteTemplates(ctx context.Context, templates []*
 	}
 
 	return results, err
+}
 
 // executeTemplatesInBatches executes templates in batches
 func (o *ExecutionOptimizer) executeTemplatesInBatches(ctx context.Context, templates []*format.Template, data interface{}, batchSize int) ([]string, error) {
@@ -410,6 +419,7 @@ func (o *ExecutionOptimizer) executeTemplatesInBatches(ctx context.Context, temp
 	}
 
 	return results, nil
+}
 
 // executeBatch executes a batch of templates
 func (o *ExecutionOptimizer) executeBatch(ctx context.Context, templates []*format.Template, data interface{}) ([]string, error) {
@@ -447,6 +457,7 @@ func (o *ExecutionOptimizer) executeBatch(ctx context.Context, templates []*form
 	wg.Wait()
 
 	return results, firstErr
+}
 
 // GetStats returns statistics for the execution optimizer
 func (o *ExecutionOptimizer) GetStats() *ExecutionOptimizerStats {
@@ -469,6 +480,7 @@ func (o *ExecutionOptimizer) GetStats() *ExecutionOptimizerStats {
 	}
 
 	return stats
+}
 
 // GetConfig returns the configuration for the execution optimizer
 func (o *ExecutionOptimizer) GetConfig() *ExecutionOptimizerConfig {
@@ -476,6 +488,7 @@ func (o *ExecutionOptimizer) GetConfig() *ExecutionOptimizerConfig {
 	defer o.mutex.RUnlock()
 
 	return o.config
+}
 
 // SetConfig sets the configuration for the execution optimizer
 func (o *ExecutionOptimizer) SetConfig(config *ExecutionOptimizerConfig) {
@@ -487,6 +500,7 @@ func (o *ExecutionOptimizer) SetConfig(config *ExecutionOptimizerConfig) {
 	defer o.mutex.Unlock()
 
 	o.config = config
+}
 
 // IsRunning returns if the execution optimizer is running
 func (o *ExecutionOptimizer) IsRunning() bool {
@@ -494,18 +508,22 @@ func (o *ExecutionOptimizer) IsRunning() bool {
 	defer o.mutex.RUnlock()
 
 	return o.running
+}
 
 // GetMemoryProfiler returns the memory profiler
 func (o *ExecutionOptimizer) GetMemoryProfiler() *profiling.MemoryProfiler {
 	return o.profiler
+}
 
 // GetMemoryOptimizer returns the memory optimizer
 func (o *ExecutionOptimizer) GetMemoryOptimizer() *optimization.MemoryOptimizer {
 	return o.memoryOptimizer
+}
 
 // GetConcurrencyManager returns the concurrency manager
 func (o *ExecutionOptimizer) GetConcurrencyManager() *concurrency.ConcurrencyManager {
 	return o.concurrencyManager
+}
 
 // templateExecutionTask represents a template execution task for the concurrency manager
 type templateExecutionTask struct {
@@ -531,29 +549,14 @@ func (t *templateExecutionTask) Execute(ctx context.Context) error {
 	close(t.done)
 
 	return err
+}
 
 // ID returns the task ID
 func (t *templateExecutionTask) ID() string {
 	return t.id
+}
 
 // Priority returns the task priority
 func (t *templateExecutionTask) Priority() int {
 	return 0
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

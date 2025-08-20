@@ -4,9 +4,13 @@ package update
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
+	"time"
 )
 
 // SecureDownloadOptions represents options for secure downloading
@@ -23,6 +27,7 @@ type SecureDownloadOptions struct {
 	ChunkSize int64
 	// Verify file after download
 	VerifyAfterDownload bool
+}
 
 // DefaultSecureDownloadOptions returns the default secure download options
 func DefaultSecureDownloadOptions() *SecureDownloadOptions {
@@ -33,6 +38,7 @@ func DefaultSecureDownloadOptions() *SecureDownloadOptions {
 		ChunkSize:           4 * 1024 * 1024, // 4MB chunks
 		VerifyAfterDownload: true,
 	}
+}
 
 // SecureDownloader provides secure downloading functionality
 type SecureDownloader struct {
@@ -58,6 +64,7 @@ func NewSecureDownloader(options *SecureDownloadOptions) (*SecureDownloader, err
 		options: options,
 		mutex:   sync.RWMutex{},
 	}, nil
+}
 
 // Download securely downloads a file from the given URL to the destination path
 func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, options *SecureDownloadOptions) error {
@@ -132,7 +139,7 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 	}
 
 	return nil
-	
+}
 
 // getFileInfo gets information about the file at the given URL
 func (d *SecureDownloader) getFileInfo(ctx context.Context, url string, headers map[string]string) (size int64, supportsResume bool, err error) {
@@ -162,6 +169,7 @@ func (d *SecureDownloader) getFileInfo(ctx context.Context, url string, headers 
 	}
 
 	return size, supportsResume, nil
+}
 
 // downloadWithRange downloads a file with range requests
 func (d *SecureDownloader) downloadWithRange(ctx context.Context, url string, file *os.File, startOffset, fileSize int64, options *SecureDownloadOptions) error {
@@ -263,6 +271,7 @@ func (d *SecureDownloader) downloadWithRange(ctx context.Context, url string, fi
 	}
 
 	return nil
+}
 
 // downloadInChunks downloads a file in chunks for better reliability
 func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, file *os.File, startOffset, fileSize int64, options *SecureDownloadOptions) error {
@@ -373,6 +382,7 @@ func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, fil
 	}
 
 	return nil
+}
 
 // verifyDownload verifies the integrity of a downloaded file
 func (d *SecureDownloader) verifyDownload(ctx context.Context, url, filePath string, headers map[string]string) error {
@@ -394,6 +404,7 @@ func (d *SecureDownloader) verifyDownload(ctx context.Context, url, filePath str
 	}
 
 	return nil
+}
 
 // DownloadWithSecureProgress downloads a file with progress reporting using the secure downloader
 func DownloadWithSecureProgress(ctx context.Context, url, destPath string, pinnedCerts []PinnedCertificate) error {
@@ -428,10 +439,4 @@ func DownloadWithSecureProgress(ctx context.Context, url, destPath string, pinne
 	// Complete progress
 	fmt.Println("\rDownload complete.                                    ")
 	return nil
-}
-}
-}
-}
-}
-}
 }

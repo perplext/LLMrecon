@@ -3,9 +3,13 @@ package bundle
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 	"strings"
 
-	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
+	"github.com/perplext/LLMrecon/src/audit/trail"
 )
 
 // BundleConverter converts standard bundles to offline bundles
@@ -16,6 +20,7 @@ type BundleConverter struct {
 	Logger io.Writer
 	// AuditTrail is the audit trail manager for logging operations
 	AuditTrail *trail.AuditTrailManager
+}
 
 // NewBundleConverter creates a new bundle converter
 func NewBundleConverter(creator *OfflineBundleCreator, logger io.Writer, auditTrail *trail.AuditTrailManager) *BundleConverter {
@@ -28,6 +33,7 @@ func NewBundleConverter(creator *OfflineBundleCreator, logger io.Writer, auditTr
 		Logger:     logger,
 		AuditTrail: auditTrail,
 	}
+}
 
 // ConvertToOfflineBundle converts a standard bundle to an offline bundle
 func (c *BundleConverter) ConvertToOfflineBundle(bundle *Bundle, outputPath string) (*OfflineBundle, error) {
@@ -106,7 +112,7 @@ func (c *BundleConverter) ConvertToOfflineBundle(bundle *Bundle, outputPath stri
 			return nil, fmt.Errorf("failed to read source file: %w", err)
 		}
 
-		if err := os.WriteFile(filepath.Clean(targetPath, sourceData, 0600)); err != nil {
+		if err := os.WriteFile(filepath.Clean(targetPath), sourceData, 0600); err != nil {
 			return nil, fmt.Errorf("failed to write target file: %w", err)
 		}
 	}
@@ -144,7 +150,7 @@ See the documentation directory for usage instructions.
 		bundle.Manifest.BundleType, bundle.Manifest.CreatedAt.Format(time.RFC3339),
 		bundle.Manifest.Author.Name, bundle.Manifest.Author.Email)
 
-	if err := os.WriteFile(filepath.Clean(readmePath, []byte(readmeContent)), 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(readmePath), []byte(readmeContent), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write README.md: %w", err)
 	}
 
@@ -179,21 +185,23 @@ See the documentation directory for usage instructions.
 	// Log audit event
 	if c.AuditTrail != nil {
 		auditLog := &trail.AuditLog{
-			Operation:     "convert_to_offline_bundle",
-			ResourceType:  "bundle",
-			ResourceID:    bundle.Manifest.BundleID,
-			Status:        "success",
-			Timestamp:     time.Now(),
-			UserID:        bundle.Manifest.Author.Email,
-			Username:      bundle.Manifest.Author.Name,
-			IPAddress:     "",
-			Details: map[string]interface{}{
+			Operation:  "convert_to_offline_bundle",
+			Component:  "bundle",
+			Resource:   "bundle",
+			ResourceID: bundle.Manifest.BundleID,
+			Status:     "success",
+			Timestamp:  time.Now(),
+			UserID:     bundle.Manifest.Author.Email,
+			User:       bundle.Manifest.Author.Name,
+			IPAddress:  "",
+			Message:    "Converted bundle to offline format",
+			Metadata: map[string]interface{}{
 				"original_bundle_id": bundle.Manifest.BundleID,
 				"original_version":   bundle.Manifest.Version,
 			},
 		}
 		
-		if err := c.AuditTrail.LogOperation(nil, auditLog); err != nil {
+		if err := c.AuditTrail.Log(nil, auditLog); err != nil {
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
 	}
@@ -201,6 +209,7 @@ See the documentation directory for usage instructions.
 	fmt.Fprintf(c.Logger, "Bundle converted successfully to offline format: %s\n", outputPath)
 
 	return offlineBundle, nil
+}
 
 // AutoDetectComplianceForTemplates automatically detects and adds compliance mappings for templates
 func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *OfflineBundle) error {
@@ -243,6 +252,7 @@ func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *Offlin
 	fmt.Fprintf(c.Logger, "Compliance mapping auto-detection completed successfully\n")
 
 	return nil
+}
 
 // detectOwaspCategories analyzes template content and detects relevant OWASP LLM Top 10 categories
 func detectOwaspCategories(templateContent string) []string {
@@ -282,6 +292,7 @@ func detectOwaspCategories(templateContent string) []string {
 	}
 	
 	return categories
+}
 
 // detectISOControls analyzes template content and detects relevant ISO/IEC 42001 controls
 func detectISOControls(templateContent string) []string {
@@ -311,6 +322,7 @@ func detectISOControls(templateContent string) []string {
 	}
 	
 	return controls
+}
 
 // containsKeywords checks if any of the keywords are present in the content
 func containsKeywords(content string, keywords ...string) bool {
@@ -319,3 +331,5 @@ func containsKeywords(content string, keywords ...string) bool {
 			return true
 		}
 	}
+	return false
+}

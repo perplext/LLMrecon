@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/api"
 )
@@ -13,12 +17,14 @@ import (
 type TextFormatter struct {
 	// detailed indicates whether to include detailed information
 	detailed bool
+}
 
 // NewTextFormatter creates a new text formatter
 func NewTextFormatter(detailed bool) *TextFormatter {
 	return &TextFormatter{
 		detailed: detailed,
 	}
+}
 
 // FormatReport formats a report and writes it to the given writer
 func (f *TextFormatter) FormatReport(results api.TestResults, writer io.Writer) error {
@@ -58,6 +64,7 @@ func (f *TextFormatter) FormatReport(results api.TestResults, writer io.Writer) 
 	// Write to the provided writer
 	_, err := writer.Write(buf.Bytes())
 	return err
+}
 
 // Format formats a report as plain text
 func (f *TextFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
@@ -76,10 +83,12 @@ func (f *TextFormatter) Format(ctx context.Context, reportInterface interface{},
 	}
 	
 	return buf.Bytes(), nil
+}
 
 // GetFormat returns the format supported by this formatter
 func (f *TextFormatter) GetFormat() api.ReportFormat {
 	return api.TextFormat
+}
 
 // WriteToFile writes a report to a file
 func (f *TextFormatter) WriteToFile(ctx context.Context, reportInterface interface{}, optionsInterface interface{}, filePath string) error {
@@ -106,5 +115,6 @@ func (f *TextFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 	}
 
 	return nil
+}
 
 

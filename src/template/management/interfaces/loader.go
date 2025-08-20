@@ -31,13 +31,13 @@ type LoaderOptions struct {
 // TemplateLoaderExt extends the basic loader interface
 type TemplateLoaderExt interface {
 	TemplateLoader
-	
+
 	// LoadWithOptions loads a template with options
 	LoadWithOptions(source interface{}, options LoaderOptions) (Template, error)
-	
+
 	// LoadMultiple loads multiple templates
 	LoadMultiple(sources []interface{}) ([]Template, error)
-	
+
 	// ValidateSource validates a template source
 	ValidateSource(source interface{}) error
 }

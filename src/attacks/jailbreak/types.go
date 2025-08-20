@@ -3,6 +3,7 @@ package jailbreak
 import (
 	"context"
 	"strings"
+	"time"
 )
 
 // JailbreakResult contains the results of a jailbreak attempt
@@ -17,6 +18,7 @@ type JailbreakResult struct {
 	EndTime           time.Time
 	Duration          time.Duration
 	Metadata          map[string]interface{}
+}
 
 // JailbreakAttempt represents a single attempt within a jailbreak
 type JailbreakAttempt struct {
@@ -35,6 +37,7 @@ type AttemptAnalysis struct {
 	ResistanceLevel    ResistanceLevel
 	PartialSuccess     bool
 	Indicators         []SuccessIndicator
+}
 
 // ResistanceLevel indicates how strongly the model resisted
 type ResistanceLevel int
@@ -96,11 +99,13 @@ type Provider interface {
 	Query(ctx context.Context, messages []Message, options map[string]interface{}) (string, error)
 	GetName() string
 	GetModel() string
+}
 
 // Message represents a conversation message
 type Message struct {
 	Role    string
 	Content string
+}
 
 // Logger interface for logging
 type Logger interface {
@@ -108,6 +113,7 @@ type Logger interface {
 	Info(msg string, keysAndValues ...interface{})
 	Warn(msg string, keysAndValues ...interface{})
 	Error(msg string, keysAndValues ...interface{})
+}
 
 // GuardrailAnalyzer analyzes responses for guardrail detection
 type GuardrailAnalyzer struct {
@@ -122,6 +128,7 @@ type GuardrailPattern struct {
 	Pattern     string // regex
 	Severity    GuardrailSeverity
 	Category    GuardrailCategory
+}
 
 // GuardrailSeverity indicates how strong a guardrail is
 type GuardrailSeverity int
@@ -150,10 +157,12 @@ type ResponseIndicator struct {
 	Pattern     string
 	Meaning     string
 	Confidence  float64
+}
 
 // ResistanceClassifier classifies the level of resistance
 type ResistanceClassifier interface {
 	Classify(response string) ResistanceLevel
+}
 
 // JailbreakMetrics tracks jailbreak statistics
 type JailbreakMetrics struct {
@@ -182,6 +191,7 @@ func NewGuardrailAnalyzer() *GuardrailAnalyzer {
 		indicators: makeResponseIndicators(),
 	}
 	return analyzer
+}
 
 // AnalyzeJailbreak analyzes if a jailbreak was successful
 func (g *GuardrailAnalyzer) AnalyzeJailbreak(response string, objective string) (bool, float64) {
@@ -205,6 +215,7 @@ func (g *GuardrailAnalyzer) AnalyzeJailbreak(response string, objective string) 
 	
 	// Ambiguous case
 	return false, 0.3
+}
 
 func (g *GuardrailAnalyzer) checkRefusalPatterns(response string) float64 {
 	refusalPhrases := []string{
@@ -222,6 +233,7 @@ func (g *GuardrailAnalyzer) checkRefusalPatterns(response string) float64 {
 	}
 	
 	return min(score, 1.0)
+}
 
 func (g *GuardrailAnalyzer) checkCompliancePatterns(response string, objective string) float64 {
 	compliancePhrases := []string{
@@ -245,6 +257,7 @@ func (g *GuardrailAnalyzer) checkCompliancePatterns(response string, objective s
 	}
 	
 	return min(score, 1.0)
+}
 
 func (g *GuardrailAnalyzer) checkPartialSuccess(response string, objective string) float64 {
 	partialPhrases := []string{
@@ -260,6 +273,7 @@ func (g *GuardrailAnalyzer) checkPartialSuccess(response string, objective strin
 	}
 	
 	return min(score, 1.0)
+}
 
 // makeGuardrailPatterns creates default guardrail patterns
 func makeGuardrailPatterns() []GuardrailPattern {
@@ -295,6 +309,7 @@ func makeGuardrailPatterns() []GuardrailPattern {
 			Category: PolicyGuardrail,
 		},
 	}
+}
 
 // makeResponseIndicators creates default response indicators
 func makeResponseIndicators() []ResponseIndicator {
@@ -318,6 +333,7 @@ func makeResponseIndicators() []ResponseIndicator {
 			Confidence: 0.95,
 		},
 	}
+}
 
 // NewJailbreakMetrics creates new metrics tracker
 func NewJailbreakMetrics() *JailbreakMetrics {
@@ -326,6 +342,7 @@ func NewJailbreakMetrics() *JailbreakMetrics {
 		TechniqueAttempts: make(map[string]int64),
 		ModelResistance:   make(map[string]ResistanceProfile),
 	}
+}
 
 // RecordResult records a jailbreak result in metrics
 func (m *JailbreakMetrics) RecordResult(result *JailbreakResult) {
@@ -339,6 +356,7 @@ func (m *JailbreakMetrics) RecordResult(result *JailbreakResult) {
 	
 	// Update average attempts
 	m.AverageAttempts = float64(m.TotalAttempts) / float64(max(m.SuccessfulAttempts, 1))
+}
 
 // Helper functions
 
@@ -347,12 +365,11 @@ func min(a, b float64) float64 {
 		return a
 	}
 	return b
+}
 
 func max(a, b int64) int64 {
 	if a > b {
 		return a
 	}
-}
-}
-}
+	return b
 }

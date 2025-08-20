@@ -5,8 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/prompt"
 	"github.com/spf13/cobra"
@@ -30,6 +32,7 @@ injection protection system, including:
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = cmd.Help()
 	},
+}
 
 // configureCmd represents the prompt-protection configure command
 var configureCmd = &cobra.Command{
@@ -123,6 +126,7 @@ protection system.`,
 		fmt.Println("Configuration summary:")
 		printConfigSummary(config)
 	},
+}
 
 // testCmd represents the prompt-protection test command
 var testCmd = &cobra.Command{
@@ -231,6 +235,7 @@ var testCmd = &cobra.Command{
 			fmt.Println("MINIMAL RISK - This prompt appears to be safe.")
 		}
 	},
+}
 
 // patternsCmd represents the prompt-protection patterns command
 var patternsCmd = &cobra.Command{
@@ -293,6 +298,7 @@ prompt injection pattern library.`,
 			cmd.Help()
 		}
 	},
+}
 
 // reportsCmd represents the prompt-protection reports command
 var reportsCmd = &cobra.Command{
@@ -326,6 +332,7 @@ been detected by the prompt injection protection system.`,
 		// Otherwise, list all reports
 		listReports(reportsDir)
 	},
+}
 
 // monitorCmd represents the prompt-protection monitor command
 var monitorCmd = &cobra.Command{
@@ -346,7 +353,11 @@ var monitorCmd = &cobra.Command{
 			fmt.Printf("Error creating enhanced protection manager: %v\n", err)
 			return
 		}
-		defer func() { if err := manager.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := manager.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Create a context with timeout
 		ctx, cancel := context.WithTimeout(context.Background(), duration)
@@ -395,6 +406,7 @@ var monitorCmd = &cobra.Command{
 			fmt.Println()
 		}
 	},
+}
 
 // approvalCmd represents the prompt-protection approval command
 var approvalCmd = &cobra.Command{
@@ -413,7 +425,11 @@ var approvalCmd = &cobra.Command{
 			fmt.Printf("Error creating enhanced protection manager: %v\n", err)
 			return
 		}
-		defer func() { if err := manager.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := manager.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Get approval workflow
 		workflow := manager.GetApprovalWorkflow()
@@ -462,6 +478,7 @@ var approvalCmd = &cobra.Command{
 			fmt.Println("Invalid action. Use 'list', 'approve', or 'reject'.")
 		}
 	},
+}
 
 func init() {
 	rootCmd.AddCommand(promptProtectionCmd)
@@ -494,6 +511,14 @@ func init() {
 	reportsCmd.Flags().String("dir", "", "Directory containing reports")
 	reportsCmd.Flags().String("id", "", "Report ID")
 
+	// Monitor command flags
+	monitorCmd.Flags().Duration("duration", 0, "Duration to monitor (default: 10m)")
+
+	// Approval command flags
+	approvalCmd.Flags().String("action", "list", "Action to perform (list, approve, reject)")
+	approvalCmd.Flags().String("id", "", "Approval request ID")
+}
+
 // Helper functions
 
 // loadConfigFromFile loads a configuration from a JSON file
@@ -510,6 +535,7 @@ func loadConfigFromFile(filePath string) (*prompt.ProtectionConfig, error) {
 	}
 
 	return &config, nil
+}
 
 // saveConfigToFile saves a configuration to a JSON file
 func saveConfigToFile(config *prompt.ProtectionConfig, filePath string) error {
@@ -524,7 +550,8 @@ func saveConfigToFile(config *prompt.ProtectionConfig, filePath string) error {
 		return err
 	}
 
-	return os.WriteFile(filepath.Clean(filePath, data, 0600))
+	return os.WriteFile(filepath.Clean(filePath), data, 0600)
+}
 
 // enableFeature enables a feature in the configuration
 func enableFeature(config *prompt.ProtectionConfig, feature string) {
@@ -544,6 +571,7 @@ func enableFeature(config *prompt.ProtectionConfig, feature string) {
 	default:
 		fmt.Printf("Unknown feature: %s\n", feature)
 	}
+}
 
 // disableFeature disables a feature in the configuration
 func disableFeature(config *prompt.ProtectionConfig, feature string) {
@@ -563,6 +591,7 @@ func disableFeature(config *prompt.ProtectionConfig, feature string) {
 	default:
 		fmt.Printf("Unknown feature: %s\n", feature)
 	}
+}
 
 // printConfigSummary prints a summary of the configuration
 func printConfigSummary(config *prompt.ProtectionConfig) {
@@ -577,6 +606,7 @@ func printConfigSummary(config *prompt.ProtectionConfig) {
 	fmt.Printf("Max Prompt Length: %d\n", config.MaxPromptLength)
 	fmt.Printf("Approval Threshold: %.2f\n", config.ApprovalThreshold)
 	fmt.Printf("Monitoring Interval: %v\n", config.MonitoringInterval)
+}
 
 // protectionLevelToString converts a ProtectionLevel to a string
 func protectionLevelToString(level prompt.ProtectionLevel) string {
@@ -592,6 +622,7 @@ func protectionLevelToString(level prompt.ProtectionLevel) string {
 	default:
 		return "Unknown"
 	}
+}
 
 // actionTypeToString converts an ActionType to a string
 func actionTypeToString(action prompt.ActionType) string {
@@ -611,6 +642,7 @@ func actionTypeToString(action prompt.ActionType) string {
 	default:
 		return "Unknown"
 	}
+}
 
 // boolToEnabledString converts a bool to an "Enabled" or "Disabled" string
 func boolToEnabledString(b bool) string {
@@ -618,6 +650,7 @@ func boolToEnabledString(b bool) string {
 		return "Enabled"
 	}
 	return "Disabled"
+}
 
 // listPatterns lists all patterns in the library
 func listPatterns(library *prompt.InjectionPatternLibrary) {
@@ -668,6 +701,7 @@ func listPatterns(library *prompt.InjectionPatternLibrary) {
 
 		fmt.Println()
 	}
+}
 
 // showReport shows a specific report
 func showReport(reportsDir, reportID string) {
@@ -740,6 +774,7 @@ func showReport(reportsDir, reportID string) {
 			fmt.Printf("  %s: %v\n", key, value)
 		}
 	}
+}
 
 // listReports lists all reports in the directory
 func listReports(reportsDir string) {
@@ -794,4 +829,4 @@ func listReports(reportsDir string) {
 		fmt.Printf("   Description: %s\n", report.Description)
 		fmt.Println()
 	}
-
+}

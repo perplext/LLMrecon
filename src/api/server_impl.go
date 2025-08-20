@@ -5,9 +5,11 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -68,6 +70,7 @@ func NewServerImpl(config *Config, services *Services) (*ServerImpl, error) {
 	serverInstance = s
 	
 	return s, nil
+}
 
 // Start starts the API server
 func (s *ServerImpl) Start() error {
@@ -98,6 +101,7 @@ func (s *ServerImpl) Start() error {
 	}
 	
 	return nil
+}
 
 // Stop gracefully stops the API server
 func (s *ServerImpl) Stop(timeout time.Duration) error {
@@ -132,6 +136,7 @@ func (s *ServerImpl) Stop(timeout time.Duration) error {
 	
 	log.Info().Msg("API server stopped")
 	return nil
+}
 
 // setupGracefulShutdown sets up signal handling for graceful shutdown
 func (s *ServerImpl) setupGracefulShutdown() {
@@ -149,6 +154,7 @@ func (s *ServerImpl) setupGracefulShutdown() {
 		}
 		os.Exit(0)
 	}()
+}
 
 // startBackgroundWorkers starts background tasks
 func (s *ServerImpl) startBackgroundWorkers() {
@@ -167,6 +173,7 @@ func (s *ServerImpl) startBackgroundWorkers() {
 			s.metricsWorker()
 		}()
 	}
+}
 
 // scanCleanupWorker periodically cleans up old scans
 func (s *ServerImpl) scanCleanupWorker() {
@@ -183,6 +190,7 @@ func (s *ServerImpl) scanCleanupWorker() {
 			return
 		}
 	}
+}
 
 // metricsWorker collects and reports metrics
 func (s *ServerImpl) metricsWorker() {
@@ -198,6 +206,7 @@ func (s *ServerImpl) metricsWorker() {
 			return
 		}
 	}
+}
 
 // RunServer starts the API server with the given configuration
 func RunServer(config *Config, services *Services) error {
@@ -206,10 +215,5 @@ func RunServer(config *Config, services *Services) error {
 		return fmt.Errorf("failed to create server: %w", err)
 	}
 	
-}
-}
-}
-}
-}
-}
+	return server.Start()
 }

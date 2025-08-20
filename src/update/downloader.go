@@ -3,15 +3,19 @@ package update
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // UpdateDownloader handles downloading files for updates
 type UpdateDownloader struct {
-	config *Config
+	config *UpdaterConfig
 	client *http.Client
 	logger Logger
 }
@@ -31,7 +35,7 @@ type DownloadProgress struct {
 type ProgressCallback func(*DownloadProgress)
 
 // NewUpdateDownloader creates a new update downloader
-func NewUpdateDownloader(config *Config, logger Logger) *UpdateDownloader {
+func NewUpdateDownloader(config *UpdaterConfig, logger Logger) *UpdateDownloader {
 	client := &http.Client{
 		Timeout: config.Timeout,
 	}
@@ -50,10 +54,12 @@ func NewUpdateDownloader(config *Config, logger Logger) *UpdateDownloader {
 		client: client,
 		logger: logger,
 	}
+}
 
 // DownloadFile downloads a file from the given URL
 func (d *UpdateDownloader) DownloadFile(ctx context.Context, url, filename string) (string, error) {
 	return d.DownloadFileWithProgress(ctx, url, filename, nil)
+}
 
 // DownloadFileWithProgress downloads a file with progress callback
 func (d *UpdateDownloader) DownloadFileWithProgress(ctx context.Context, url, filename string, progressCallback ProgressCallback) (string, error) {
@@ -98,7 +104,7 @@ func (d *UpdateDownloader) DownloadFileWithProgress(ctx context.Context, url, fi
 	
 	d.logger.Info(fmt.Sprintf("Successfully downloaded %s", filename))
 	return destPath, nil
-	
+}
 
 // downloadWithRetry performs a single download attempt
 func (d *UpdateDownloader) downloadWithRetry(ctx context.Context, req *http.Request, destPath string, progressCallback ProgressCallback) error {
@@ -159,6 +165,7 @@ func (d *UpdateDownloader) downloadWithRetry(ctx context.Context, req *http.Requ
 	}
 	
 	return nil
+}
 
 // DownloadFileToPath downloads a file to a specific path
 func (d *UpdateDownloader) DownloadFileToPath(ctx context.Context, url, destPath string, progressCallback ProgressCallback) error {
@@ -176,6 +183,7 @@ func (d *UpdateDownloader) DownloadFileToPath(ctx context.Context, url, destPath
 	req.Header.Set("User-Agent", d.config.UserAgent)
 	
 	return d.downloadWithRetry(ctx, req, destPath, progressCallback)
+}
 
 // DownloadArchive downloads and extracts an archive
 func (d *UpdateDownloader) DownloadArchive(ctx context.Context, url, destDir string, progressCallback ProgressCallback) error {
@@ -188,6 +196,7 @@ func (d *UpdateDownloader) DownloadArchive(ctx context.Context, url, destDir str
 	
 	// Extract archive
 	return d.extractArchive(tempFile, destDir)
+}
 
 // extractArchive extracts an archive file
 func (d *UpdateDownloader) extractArchive(archivePath, destDir string) error {
@@ -202,18 +211,21 @@ func (d *UpdateDownloader) extractArchive(archivePath, destDir string) error {
 	default:
 		return fmt.Errorf("unsupported archive format: %s", ext)
 	}
+}
 
 // extractZip extracts a ZIP archive
 func (d *UpdateDownloader) extractZip(archivePath, destDir string) error {
 	// Implementation would use archive/zip package
 	d.logger.Info(fmt.Sprintf("Extracting ZIP archive %s to %s", archivePath, destDir))
 	return fmt.Errorf("ZIP extraction not yet implemented")
+}
 
 // extractTar extracts a TAR archive
 func (d *UpdateDownloader) extractTar(archivePath, destDir string) error {
 	// Implementation would use archive/tar package
 	d.logger.Info(fmt.Sprintf("Extracting TAR archive %s to %s", archivePath, destDir))
 	return fmt.Errorf("TAR extraction not yet implemented")
+}
 
 // GetFileSize gets the size of a remote file without downloading
 func (d *UpdateDownloader) GetFileSize(ctx context.Context, url string) (int64, error) {
@@ -242,6 +254,7 @@ func (d *UpdateDownloader) GetFileSize(ctx context.Context, url string) (int64, 
 	}
 	
 	return contentLength, nil
+}
 
 // VerifyFileSize verifies that a downloaded file has the expected size
 func (d *UpdateDownloader) VerifyFileSize(filePath string, expectedSize int64) error {
@@ -255,6 +268,7 @@ func (d *UpdateDownloader) VerifyFileSize(filePath string, expectedSize int64) e
 	}
 	
 	return nil
+}
 
 // CleanupTempFiles removes temporary download files
 func (d *UpdateDownloader) CleanupTempFiles() error {
@@ -265,6 +279,7 @@ func (d *UpdateDownloader) CleanupTempFiles() error {
 	
 	d.logger.Info("Cleaned up temporary download files")
 	return nil
+}
 
 // progressReader wraps an io.Reader to track download progress
 type progressReader struct {
@@ -302,6 +317,7 @@ func (pr *progressReader) Read(p []byte) (int, error) {
 	}
 	
 	return n, err
+}
 
 // DownloadStats represents download statistics
 type DownloadStats struct {
@@ -311,6 +327,7 @@ type DownloadStats struct {
 	FailedDownloads  int
 	AverageSpeed     float64
 	TotalTime        time.Duration
+}
 
 // GetDownloadStats returns download statistics
 func (d *UpdateDownloader) GetDownloadStats() *DownloadStats {
@@ -323,15 +340,6 @@ func (d *UpdateDownloader) GetDownloadStats() *DownloadStats {
 		AverageSpeed:     0,
 		TotalTime:        0,
 	}
+}
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+// Use shared types from types.go for UpdaterConfig and Logger

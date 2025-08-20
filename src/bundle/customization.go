@@ -2,8 +2,10 @@ package bundle
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // ExportCustomization provides advanced customization options for bundle export
@@ -26,6 +28,7 @@ type ExportCustomization struct {
 	
 	// Export behavior
 	BehaviorOptions    *BehaviorOptions           // Export behavior customization
+}
 
 // ScopeOptions defines business object scope selection
 type ScopeOptions struct {
@@ -63,6 +66,7 @@ type DependencyHandling struct {
 	IncludeDevDeps     bool                       // Include development dependencies
 	ExcludePatterns    []string                   // Patterns to exclude
 	ForceInclude       []string                   // Force include specific dependencies
+}
 
 // DependencyStrategy defines dependency resolution strategies
 type DependencyStrategy string
@@ -86,6 +90,7 @@ type TemplateFilterOptions struct {
 	ModifiedBefore     *time.Time                 // Templates modified before this date
 	AuthorFilter       string                     // Filter by author
 	CustomFilter       TemplateFilterFunc         // Custom filter function
+}
 
 // TemplateFilterFunc is a custom template filter function
 type TemplateFilterFunc func(template *TemplateInfo) bool
@@ -100,6 +105,7 @@ type TemplateInfo struct {
 	Modified           time.Time
 	Description        string
 	Dependencies       []string
+}
 
 // ModuleFilterOptions provides module-specific filtering
 type ModuleFilterOptions struct {
@@ -169,20 +175,24 @@ type TransformationOptions struct {
 	ContentTransformers []ContentTransformer      // Content transformation functions
 	MetadataEnrichment  MetadataEnricher          // Add metadata to files
 	Sanitizers          []ContentSanitizer        // Content sanitization
+}
 
 // ContentTransformer transforms file content
 type ContentTransformer interface {
 	Transform(path string, content []byte) ([]byte, error)
 	ShouldTransform(path string) bool
+}
 
 // MetadataEnricher adds metadata to files
 type MetadataEnricher interface {
 	EnrichMetadata(path string, existing map[string]interface{}) map[string]interface{}
+}
 
 // ContentSanitizer sanitizes content
 type ContentSanitizer interface {
 	Sanitize(path string, content []byte) ([]byte, error)
 	ShouldSanitize(path string) bool
+}
 
 // HotfixOptions defines hotfix script generation options
 type HotfixOptions struct {
@@ -192,6 +202,7 @@ type HotfixOptions struct {
 	IncludeRollback    bool                       // Include rollback scripts
 	TestMode           bool                       // Generate in test mode
 	CustomTemplate     string                     // Custom script template
+}
 
 // ScriptFormat defines hotfix script formats
 type ScriptFormat string
@@ -213,6 +224,7 @@ type BehaviorOptions struct {
 	Verbose            bool                       // Verbose output
 	ParallelExport     bool                       // Use parallel processing
 	MaxParallelJobs    int                        // Maximum parallel jobs
+}
 
 // CustomizationBuilder provides a fluent API for building customizations
 type CustomizationBuilder struct {
@@ -234,55 +246,66 @@ func NewCustomizationBuilder() *CustomizationBuilder {
 			BehaviorOptions:    &BehaviorOptions{},
 		},
 	}
+}
 
 // WithScope configures scope options
 func (b *CustomizationBuilder) WithScope(configure func(*ScopeOptions)) *CustomizationBuilder {
 	configure(b.customization.ScopeOptions)
 	return b
+}
 
 // WithEnvironment configures environment options
 func (b *CustomizationBuilder) WithEnvironment(configure func(*EnvironmentConfig)) *CustomizationBuilder {
 	configure(b.customization.EnvironmentConfig)
 	return b
+}
 
 // WithDependencies configures dependency handling
 func (b *CustomizationBuilder) WithDependencies(configure func(*DependencyHandling)) *CustomizationBuilder {
 	configure(b.customization.DependencyHandling)
 	return b
+}
 
 // WithTemplateFilters configures template filters
 func (b *CustomizationBuilder) WithTemplateFilters(configure func(*TemplateFilterOptions)) *CustomizationBuilder {
 	configure(b.customization.TemplateFilters)
 	return b
+}
 
 // WithModuleFilters configures module filters
 func (b *CustomizationBuilder) WithModuleFilters(configure func(*ModuleFilterOptions)) *CustomizationBuilder {
 	configure(b.customization.ModuleFilters)
 	return b
+}
 
 // WithFileFilters configures file filters
 func (b *CustomizationBuilder) WithFileFilters(configure func(*FileFilterOptions)) *CustomizationBuilder {
 	configure(b.customization.FileFilters)
 	return b
+}
 
 // WithTransformations configures transformations
 func (b *CustomizationBuilder) WithTransformations(configure func(*TransformationOptions)) *CustomizationBuilder {
 	configure(b.customization.Transformations)
 	return b
+}
 
 // WithHotfix configures hotfix options
 func (b *CustomizationBuilder) WithHotfix(configure func(*HotfixOptions)) *CustomizationBuilder {
 	configure(b.customization.HotfixOptions)
 	return b
+}
 
 // WithBehavior configures behavior options
 func (b *CustomizationBuilder) WithBehavior(configure func(*BehaviorOptions)) *CustomizationBuilder {
 	configure(b.customization.BehaviorOptions)
 	return b
+}
 
 // Build returns the configured customization
 func (b *CustomizationBuilder) Build() *ExportCustomization {
 	return b.customization
+}
 
 // Validate validates the customization options
 func (c *ExportCustomization) Validate() error {
@@ -312,6 +335,7 @@ func (c *ExportCustomization) Validate() error {
 	}
 	
 	return nil
+}
 
 // ApplyTemplateFilter applies template filtering based on customization
 func (c *ExportCustomization) ApplyTemplateFilter(template *TemplateInfo) bool {
@@ -360,6 +384,7 @@ func (c *ExportCustomization) ApplyTemplateFilter(template *TemplateInfo) bool {
 	}
 	
 	return true
+}
 
 // ApplyFileFilter applies file filtering based on customization
 func (c *ExportCustomization) ApplyFileFilter(path string, info FileInfo) bool {
@@ -404,6 +429,7 @@ func (c *ExportCustomization) ApplyFileFilter(path string, info FileInfo) bool {
 	}
 	
 	return true
+}
 
 // Helper functions
 func containsInSlice(slice []string, item string) bool {
@@ -413,6 +439,7 @@ func containsInSlice(slice []string, item string) bool {
 		}
 	}
 	return false
+}
 
 func hasAnyTag(tags []string, searchTags []string) bool {
 	for _, tag := range tags {
@@ -421,6 +448,7 @@ func hasAnyTag(tags []string, searchTags []string) bool {
 		}
 	}
 	return false
+}
 
 func matchesAnyPattern(path string, patterns []string) bool {
 	for _, pattern := range patterns {
@@ -433,13 +461,5 @@ func matchesAnyPattern(path string, patterns []string) bool {
 			return true
 		}
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return false
 }

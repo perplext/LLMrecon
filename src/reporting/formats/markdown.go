@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/api"
 )
@@ -13,12 +17,14 @@ import (
 type MarkdownFormatter struct {
 	// includeRawData indicates whether to include raw data in the report
 	includeRawData bool
+}
 
 // NewMarkdownFormatter creates a new Markdown formatter
 func NewMarkdownFormatter(includeRawData bool) *MarkdownFormatter {
 	return &MarkdownFormatter{
 		includeRawData: includeRawData,
 	}
+}
 
 // FormatReport formats a report and writes it to the given writer
 func (f *MarkdownFormatter) FormatReport(results api.TestResults, writer io.Writer) error {
@@ -104,6 +110,7 @@ func (f *MarkdownFormatter) FormatReport(results api.TestResults, writer io.Writ
 	// Write to the provided writer
 	_, err := writer.Write(buf.Bytes())
 	return err
+}
 
 // Format formats a report as Markdown
 func (f *MarkdownFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
@@ -122,10 +129,12 @@ func (f *MarkdownFormatter) Format(ctx context.Context, reportInterface interfac
 	}
 	
 	return buf.Bytes(), nil
+}
 
 // GetFormat returns the format supported by this formatter
 func (f *MarkdownFormatter) GetFormat() api.ReportFormat {
 	return api.MarkdownFormat
+}
 
 // WriteToFile writes a report to a file
 func (f *MarkdownFormatter) WriteToFile(ctx context.Context, reportInterface interface{}, optionsInterface interface{}, filePath string) error {
@@ -151,3 +160,5 @@ func (f *MarkdownFormatter) WriteToFile(ctx context.Context, reportInterface int
 		return fmt.Errorf("failed to write report to file %s: %w", filePath, err)
 	}
 
+	return nil
+}

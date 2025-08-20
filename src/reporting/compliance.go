@@ -10,6 +10,7 @@ import (
 type OWASPComplianceProvider struct {
 	// mappings contains the OWASP Top 10 for LLMs mappings
 	mappings map[string]ComplianceMapping
+}
 
 // NewOWASPComplianceProvider creates a new OWASP compliance provider
 func NewOWASPComplianceProvider() *OWASPComplianceProvider {
@@ -21,6 +22,7 @@ func NewOWASPComplianceProvider() *OWASPComplianceProvider {
 	provider.initializeMappings()
 	
 	return provider
+}
 
 // GetMappings returns compliance mappings for a test result
 func (p *OWASPComplianceProvider) GetMappings(ctx context.Context, testResult *TestResult) ([]ComplianceMapping, error) {
@@ -51,10 +53,12 @@ func (p *OWASPComplianceProvider) GetMappings(ctx context.Context, testResult *T
 	}
 	
 	return mappings, nil
+}
 
 // GetFrameworks returns a list of supported compliance frameworks
 func (p *OWASPComplianceProvider) GetFrameworks() []ComplianceFramework {
 	return []ComplianceFramework{OWASPFramework}
+}
 
 // initializeMappings initializes the OWASP Top 10 for LLMs mappings
 func (p *OWASPComplianceProvider) initializeMappings() {
@@ -130,11 +134,13 @@ func (p *OWASPComplianceProvider) initializeMappings() {
 			URL:         "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
 		},
 	}
+}
 
 // ISOComplianceProvider provides compliance mappings for ISO/IEC 42001
 type ISOComplianceProvider struct {
 	// mappings contains the ISO/IEC 42001 mappings
 	mappings map[string]ComplianceMapping
+}
 
 // NewISOComplianceProvider creates a new ISO compliance provider
 func NewISOComplianceProvider() *ISOComplianceProvider {
@@ -146,6 +152,7 @@ func NewISOComplianceProvider() *ISOComplianceProvider {
 	provider.initializeMappings()
 	
 	return provider
+}
 
 // GetMappings returns compliance mappings for a test result
 func (p *ISOComplianceProvider) GetMappings(ctx context.Context, testResult *TestResult) ([]ComplianceMapping, error) {
@@ -176,10 +183,12 @@ func (p *ISOComplianceProvider) GetMappings(ctx context.Context, testResult *Tes
 	}
 	
 	return mappings, nil
+}
 
 // GetFrameworks returns a list of supported compliance frameworks
 func (p *ISOComplianceProvider) GetFrameworks() []ComplianceFramework {
 	return []ComplianceFramework{ISOFramework}
+}
 
 // initializeMappings initializes the ISO/IEC 42001 mappings
 func (p *ISOComplianceProvider) initializeMappings() {
@@ -269,17 +278,20 @@ func (p *ISOComplianceProvider) initializeMappings() {
 			URL:         "https://www.iso.org/standard/81230.html",
 		},
 	}
+}
 
 // CustomComplianceProvider provides custom compliance mappings
 type CustomComplianceProvider struct {
 	// mappings contains the custom mappings
 	mappings map[string]ComplianceMapping
+}
 
 // NewCustomComplianceProvider creates a new custom compliance provider
 func NewCustomComplianceProvider(mappings map[string]ComplianceMapping) *CustomComplianceProvider {
 	return &CustomComplianceProvider{
 		mappings: mappings,
 	}
+}
 
 // GetMappings returns compliance mappings for a test result
 func (p *CustomComplianceProvider) GetMappings(ctx context.Context, testResult *TestResult) ([]ComplianceMapping, error) {
@@ -310,10 +322,12 @@ func (p *CustomComplianceProvider) GetMappings(ctx context.Context, testResult *
 	}
 	
 	return mappings, nil
+}
 
 // GetFrameworks returns a list of supported compliance frameworks
 func (p *CustomComplianceProvider) GetFrameworks() []ComplianceFramework {
 	return []ComplianceFramework{CustomFramework}
+}
 
 // AddMapping adds a mapping to the provider
 func (p *CustomComplianceProvider) AddMapping(id string, name string, description string, url string) {
@@ -324,10 +338,12 @@ func (p *CustomComplianceProvider) AddMapping(id string, name string, descriptio
 		Description: description,
 		URL:         url,
 	}
+}
 
 // RemoveMapping removes a mapping from the provider
 func (p *CustomComplianceProvider) RemoveMapping(id string) {
 	delete(p.mappings, id)
+}
 
 // GetMapping gets a mapping from the provider
 func (p *CustomComplianceProvider) GetMapping(id string) (ComplianceMapping, error) {
@@ -336,7 +352,9 @@ func (p *CustomComplianceProvider) GetMapping(id string) (ComplianceMapping, err
 		return ComplianceMapping{}, fmt.Errorf("mapping not found: %s", id)
 	}
 	return mapping, nil
+}
 
 // GetAllMappings gets all mappings from the provider
 func (p *CustomComplianceProvider) GetAllMappings() map[string]ComplianceMapping {
 	return p.mappings
+}

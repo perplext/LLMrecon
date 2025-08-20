@@ -2,9 +2,7 @@ package update
 
 import (
 	"crypto"
-	"crypto/sha256"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
@@ -13,19 +11,22 @@ import (
 	"encoding/pem"
 	"fmt"
 	"hash"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
 // Verifier handles cryptographic verification of updates
 type Verifier struct {
-	config     *Config
+	config     *UpdaterConfig
 	logger     Logger
 	trustedKeys map[string]*rsa.PublicKey
 }
 
 // NewVerifier creates a new verifier
-func NewVerifier(config *Config, logger Logger) *Verifier {
+func NewVerifier(config *UpdaterConfig, logger Logger) *Verifier {
 	verifier := &Verifier{
 		config:      config,
 		logger:      logger,
@@ -36,6 +37,7 @@ func NewVerifier(config *Config, logger Logger) *Verifier {
 	verifier.loadTrustedKeys()
 	
 	return verifier
+}
 
 // FileVerificationResult represents the result of a file verification
 type FileVerificationResult struct {
@@ -45,6 +47,7 @@ type FileVerificationResult struct {
 	Algorithm      string
 	KeyID          string
 	Error          error
+}
 
 // VerifyFile verifies a file's integrity and authenticity
 func (v *Verifier) VerifyFile(filePath, expectedChecksum, signatureURL string) error {
@@ -67,6 +70,7 @@ func (v *Verifier) VerifyFile(filePath, expectedChecksum, signatureURL string) e
 	}
 	
 	return nil
+}
 
 // verifyChecksum verifies file checksum
 func (v *Verifier) verifyChecksum(filePath, expectedChecksum string) error {
@@ -117,7 +121,7 @@ func (v *Verifier) verifyChecksum(filePath, expectedChecksum string) error {
 	}
 	
 	return nil
-	
+}
 
 // verifySignature verifies file signature
 func (v *Verifier) verifySignature(filePath, signatureURL string) error {
@@ -151,7 +155,7 @@ func (v *Verifier) verifySignature(filePath, signatureURL string) error {
 	}
 	
 	return fmt.Errorf("signature verification failed with all keys: %w", lastError)
-	
+}
 
 // downloadSignature downloads a signature from URL
 func (v *Verifier) downloadSignature(signatureURL string) ([]byte, error) {
@@ -178,6 +182,7 @@ func (v *Verifier) downloadSignature(signatureURL string) ([]byte, error) {
 	}
 	
 	return signatureData, nil
+}
 
 // calculateFileHash calculates hash of a file
 func (v *Verifier) calculateFileHash(filePath string, hashType crypto.Hash) ([]byte, error) {
@@ -204,6 +209,8 @@ func (v *Verifier) calculateFileHash(filePath string, hashType crypto.Hash) ([]b
 	}
 	
 	return hasher.Sum(nil), nil
+}
+
 // loadTrustedKeys loads trusted public keys
 func (v *Verifier) loadTrustedKeys() {
 	// Load keys from configuration
@@ -218,6 +225,7 @@ func (v *Verifier) loadTrustedKeys() {
 	
 	// Load default embedded keys
 	v.loadEmbeddedKeys()
+}
 
 // parsePublicKey parses a public key from various formats
 func (v *Verifier) parsePublicKey(keyData string) (*rsa.PublicKey, string, error) {
@@ -243,6 +251,7 @@ func (v *Verifier) parsePublicKey(keyData string) (*rsa.PublicKey, string, error
 	}
 	
 	return nil, "", fmt.Errorf("unsupported key format")
+}
 
 // parsePEMKey parses a PEM formatted public key
 func (v *Verifier) parsePEMKey(keyData string) (*rsa.PublicKey, string, error) {
@@ -277,6 +286,7 @@ func (v *Verifier) parsePEMKey(keyData string) (*rsa.PublicKey, string, error) {
 	
 	keyID := v.calculateKeyID(publicKey)
 	return publicKey, keyID, nil
+}
 
 // calculateKeyID calculates a unique ID for a public key
 func (v *Verifier) calculateKeyID(key *rsa.PublicKey) string {
@@ -289,6 +299,7 @@ func (v *Verifier) calculateKeyID(key *rsa.PublicKey) string {
 	// Calculate SHA256 hash
 	hash := sha256.Sum256(derBytes)
 	return hex.EncodeToString(hash[:8]) // Use first 8 bytes as ID
+}
 
 // loadEmbeddedKeys loads default embedded keys
 func (v *Verifier) loadEmbeddedKeys() {
@@ -310,6 +321,7 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890...
 			}
 		}
 	}
+}
 
 // isTextData checks if data is likely text (for base64 detection)
 func (v *Verifier) isTextData(data []byte) bool {
@@ -324,6 +336,7 @@ func (v *Verifier) isTextData(data []byte) bool {
 		}
 	}
 	return true
+}
 
 // VerifyBundle verifies an entire update bundle
 func (v *Verifier) VerifyBundle(bundlePath string) (*FileVerificationResult, error) {
@@ -366,6 +379,7 @@ func (v *Verifier) VerifyBundle(bundlePath string) (*FileVerificationResult, err
 	
 	result.Verified = result.ChecksumValid || result.SignatureValid
 	return result, nil
+}
 
 // verifyBundleSignature verifies a bundle signature from a local file
 func (v *Verifier) verifyBundleSignature(bundlePath, signaturePath string) error {
@@ -405,6 +419,7 @@ func (v *Verifier) verifyBundleSignature(bundlePath, signaturePath string) error
 	}
 	
 	return fmt.Errorf("bundle signature verification failed with all keys: %w", lastError)
+}
 
 // CreateChecksum creates a checksum file for a given file
 func (v *Verifier) CreateChecksum(filePath string, algorithm string) error {
@@ -445,12 +460,13 @@ func (v *Verifier) CreateChecksum(filePath string, algorithm string) error {
 	checksumPath := filePath + extension
 	checksumContent := fmt.Sprintf("%s  %s\n", checksum, filepath.Base(filePath))
 	
-	if err := os.WriteFile(filepath.Clean(checksumPath, []byte(checksumContent)), 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(checksumPath), []byte(checksumContent), 0600); err != nil {
 		return fmt.Errorf("failed to write checksum file: %w", err)
 	}
 	
 	v.logger.Info(fmt.Sprintf("Created %s checksum: %s", algorithm, checksumPath))
 	return nil
+}
 
 // AddTrustedKey adds a trusted public key
 func (v *Verifier) AddTrustedKey(keyData string) error {
@@ -462,6 +478,7 @@ func (v *Verifier) AddTrustedKey(keyData string) error {
 	v.trustedKeys[keyID] = key
 	v.logger.Info(fmt.Sprintf("Added trusted key: %s", keyID))
 	return nil
+}
 
 // RemoveTrustedKey removes a trusted public key
 func (v *Verifier) RemoveTrustedKey(keyID string) error {
@@ -472,6 +489,7 @@ func (v *Verifier) RemoveTrustedKey(keyID string) error {
 	delete(v.trustedKeys, keyID)
 	v.logger.Info(fmt.Sprintf("Removed trusted key: %s", keyID))
 	return nil
+}
 
 // ListTrustedKeys returns a list of trusted key IDs
 func (v *Verifier) ListTrustedKeys() []string {
@@ -480,6 +498,7 @@ func (v *Verifier) ListTrustedKeys() []string {
 		keys = append(keys, keyID)
 	}
 	return keys
+}
 
 // GetKeyInfo returns information about a trusted key
 func (v *Verifier) GetKeyInfo(keyID string) (*KeyInfo, error) {
@@ -494,6 +513,7 @@ func (v *Verifier) GetKeyInfo(keyID string) (*KeyInfo, error) {
 		Algorithm: "RSA",
 		Usage:    "signature verification",
 	}, nil
+}
 
 // KeyInfo represents information about a cryptographic key
 type KeyInfo struct {
@@ -501,22 +521,4 @@ type KeyInfo struct {
 	KeySize   int    `json:"key_size"`
 	Algorithm string `json:"algorithm"`
 	Usage     string `json:"usage"`
-
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

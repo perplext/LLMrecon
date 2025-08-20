@@ -6,11 +6,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime/pprof"
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/management/ratelimit"
 )
@@ -144,6 +147,7 @@ func main() {
 	printSummaryTable(result)
 
 	fmt.Printf("\nProfiling completed in %v\n", time.Since(startTime))
+}
 
 // parseUserPriorities parses a comma-separated list of user:priority pairs
 func parseUserPriorities(prioritiesStr string) map[string]int {
@@ -180,6 +184,7 @@ func parseUserPriorities(prioritiesStr string) map[string]int {
 	}
 
 	return result
+}
 
 // printDetailedStats prints detailed statistics about the profiling run
 func printDetailedStats(result *ratelimit.ProfileResult) {
@@ -198,6 +203,7 @@ func printDetailedStats(result *ratelimit.ProfileResult) {
 			fmt.Printf("  %s: %v\n", key, value)
 		}
 	}
+}
 
 // printSummaryTable prints a summary table of the profiling results
 func printSummaryTable(result *ratelimit.ProfileResult) {
@@ -235,3 +241,4 @@ func printSummaryTable(result *ratelimit.ProfileResult) {
 			stats.AverageResponseTime,
 			stats.MaxResponseTime)
 	}
+}

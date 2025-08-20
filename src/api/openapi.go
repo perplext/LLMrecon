@@ -69,6 +69,7 @@ func GenerateOpenAPISpec() map[string]interface{} {
 		"paths":      generatePaths(),
 		"components": generateComponents(),
 	}
+}
 
 // generatePaths generates the API paths section
 func generatePaths() map[string]interface{} {
@@ -511,6 +512,7 @@ func generatePaths() map[string]interface{} {
 			},
 		},
 	}
+}
 
 // generateComponents generates the components section
 func generateComponents() map[string]interface{} {
@@ -1129,6 +1131,7 @@ func generateComponents() map[string]interface{} {
 			},
 		},
 	}
+}
 
 // handleOpenAPISpec serves the OpenAPI specification
 func handleOpenAPISpec(w http.ResponseWriter, r *http.Request) {
@@ -1138,3 +1141,4 @@ func handleOpenAPISpec(w http.ResponseWriter, r *http.Request) {
 		// Log error but response is already partially sent
 		log.Printf("Error encoding OpenAPI spec: %v", err)
 	}
+}

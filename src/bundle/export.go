@@ -9,6 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
+	"path/filepath"
+	"io"
 )
 
 // ExportOptions defines options for bundle export
@@ -64,6 +67,7 @@ type ExportFilters struct {
 	ExcludePatterns    []string    // Glob patterns to exclude
 	IncludeList        []string    // Explicit list of paths to include
 	ExcludeList        []string    // Explicit list of paths to exclude
+}
 
 // ExportProgressHandler is called to report export progress
 type ExportProgressHandler func(progress ProgressInfo)
@@ -80,6 +84,7 @@ type ProgressInfo struct {
 	TimeElapsed     time.Duration
 	TimeRemaining   time.Duration
 	Message         string  // Status message
+}
 
 // BundleExporter handles bundle export operations
 type BundleExporter struct {
@@ -91,6 +96,7 @@ type BundleExporter struct {
 	totalBytes      int64
 	currentStage    string
 	errors          []error
+}
 
 // NewBundleExporter creates a new bundle exporter
 func NewBundleExporter(options ExportOptions) *BundleExporter {
@@ -99,6 +105,7 @@ func NewBundleExporter(options ExportOptions) *BundleExporter {
 		startTime: time.Now(),
 		errors:    []error{},
 	}
+}
 
 // Export creates a bundle with the specified options
 func (e *BundleExporter) Export() error {
@@ -141,6 +148,7 @@ func (e *BundleExporter) Export() error {
 
 	e.reportProgress("Export complete", 100, 100)
 	return nil
+}
 
 // initialize sets up the export process
 func (e *BundleExporter) initialize() error {
@@ -175,12 +183,14 @@ func (e *BundleExporter) initialize() error {
 	}
 
 	return nil
+}
 
 // cleanup removes temporary files
 func (e *BundleExporter) cleanup() {
 	if e.tempDir != "" {
 		os.RemoveAll(e.tempDir)
 	}
+}
 
 // prepareManifest prepares the bundle manifest
 func (e *BundleExporter) prepareManifest() error {
@@ -199,6 +209,7 @@ func (e *BundleExporter) prepareManifest() error {
 	}
 
 	return nil
+}
 
 // collectComponents collects all components for the bundle
 func (e *BundleExporter) collectComponents() error {
@@ -254,6 +265,7 @@ func (e *BundleExporter) collectComponents() error {
 	}
 
 	return nil
+}
 
 // collectBinary collects the tool binary
 func (e *BundleExporter) collectBinary() error {
@@ -284,6 +296,7 @@ func (e *BundleExporter) collectBinary() error {
 		Description: fmt.Sprintf("Binary for %s/%s", getOS(), getArch()),
 	})
 	return nil
+}
 
 // collectTemplates collects security test templates
 func (e *BundleExporter) collectTemplates() error {
@@ -333,6 +346,7 @@ func (e *BundleExporter) collectTemplates() error {
 	}
 
 	return nil
+}
 
 // collectModules collects plugin modules
 func (e *BundleExporter) collectModules() error {
@@ -368,6 +382,7 @@ func (e *BundleExporter) collectModules() error {
 	}
 
 	return nil
+}
 
 // collectDocumentation collects documentation files
 func (e *BundleExporter) collectDocumentation() error {
@@ -417,6 +432,7 @@ func (e *BundleExporter) collectDocumentation() error {
 	}
 
 	return nil
+}
 
 // generateSignatures generates digital signatures for the bundle
 func (e *BundleExporter) generateSignatures() error {
@@ -427,7 +443,7 @@ func (e *BundleExporter) generateSignatures() error {
 		return err
 	}
 	
-	if err := os.WriteFile(filepath.Clean(manifestPath, manifestData, 0600)); err != nil {
+	if err := os.WriteFile(filepath.Clean(manifestPath), manifestData, 0600); err != nil {
 		return err
 	}
 
@@ -465,8 +481,8 @@ func (e *BundleExporter) generateSignatures() error {
 
 	// Update manifest with signature
 	manifestData, _ = json.MarshalIndent(e.manifest, "", "  ")
-	return os.WriteFile(filepath.Clean(manifestPath, manifestData, 0600))
-	}
+	return os.WriteFile(filepath.Clean(manifestPath), manifestData, 0600)
+}
 
 // createArchive creates the final bundle archive
 func (e *BundleExporter) createArchive() error {
@@ -480,6 +496,7 @@ func (e *BundleExporter) createArchive() error {
 	default:
 		return fmt.Errorf("unsupported format: %s", e.options.Format)
 	}
+}
 
 // createTarGzArchive creates a tar.gz archive
 func (e *BundleExporter) createTarGzArchive() error {
@@ -537,6 +554,7 @@ func (e *BundleExporter) createTarGzArchive() error {
 		e.updateFileProgress(path, info.Size())
 		return nil
 	})
+}
 
 // Helper methods
 func (e *BundleExporter) reportProgress(stage string, current, total int) {
@@ -569,10 +587,12 @@ func (e *BundleExporter) reportProgress(stage string, current, total int) {
 	}
 
 	e.options.ProgressHandler(info)
+}
 
 func (e *BundleExporter) updateFileProgress(path string, size int64) {
 	e.bytesProcessed += size
 	e.reportProgress(e.currentStage, int(e.bytesProcessed), int(e.totalBytes))
+}
 
 func (e *BundleExporter) calculateChecksum(path string) (string, error) {
 	file, err := os.Open(filepath.Clean(path))
@@ -587,6 +607,7 @@ func (e *BundleExporter) calculateChecksum(path string) (string, error) {
 	}
 
 	return fmt.Sprintf("sha256:%x", hash.Sum(nil)), nil
+}
 
 func (e *BundleExporter) getIncludeFlags() []string {
 	var flags []string
@@ -603,6 +624,7 @@ func (e *BundleExporter) getIncludeFlags() []string {
 		flags = append(flags, "documentation")
 	}
 	return flags
+}
 
 func (e *BundleExporter) findTemplates(dir string) ([]string, error) {
 	var templates []string
@@ -622,6 +644,7 @@ func (e *BundleExporter) findTemplates(dir string) ([]string, error) {
 	})
 	
 	return templates, err
+}
 
 func (e *BundleExporter) shouldIncludeTemplate(path string) bool {
 	if e.options.Filters == nil {
@@ -655,6 +678,7 @@ func (e *BundleExporter) shouldIncludeTemplate(path string) bool {
 	}
 
 	return true
+}
 
 func (e *BundleExporter) parseTemplateMetadata(data []byte) map[string]interface{} {
 	// Simple YAML front matter parsing
@@ -672,6 +696,7 @@ func (e *BundleExporter) parseTemplateMetadata(data []byte) map[string]interface
 	}
 	
 	return metadata
+}
 
 func (e *BundleExporter) findModules(dir string) ([]string, error) {
 	var modules []string
@@ -688,6 +713,7 @@ func (e *BundleExporter) findModules(dir string) ([]string, error) {
 	})
 	
 	return modules, err
+}
 
 func (e *BundleExporter) getModuleType(path string) string {
 	if strings.Contains(path, "provider") {
@@ -698,23 +724,28 @@ func (e *BundleExporter) getModuleType(path string) string {
 		return "utility"
 	}
 	return "unknown"
+}
 
 func (e *BundleExporter) isDocumentationFile(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	return ext == ".md" || ext == ".txt" || ext == ".pdf" || ext == ".html"
+}
 
 func (e *BundleExporter) getSigningKey() interface{} {
 	// TODO: Implement key management
 	return nil
+}
 
 func (e *BundleExporter) encryptBundle() error {
 	// TODO: Implement encryption
 	return nil
+}
 
 // Utility functions
 
 func generateBundleID() string {
 	return fmt.Sprintf("BDL-%d-%s", time.Now().Unix(), generateRandomString(8))
+}
 
 func generateRandomString(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -723,6 +754,7 @@ func generateRandomString(n int) string {
 		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
 	}
 	return string(b)
+}
 
 func copyFileWithProgress(src, dst string, progressFunc func(string, int64)) error {
 	sourceFile, err := os.Open(filepath.Clean(src))
@@ -763,62 +795,37 @@ func copyFileWithProgress(src, dst string, progressFunc func(string, int64)) err
 	// Copy file permissions
 	srcInfo, _ := os.Stat(src)
 	return os.Chmod(dst, srcInfo.Mode())
+}
 
 func getOS() string {
 	return os.Getenv("GOOS")
+}
 
 func getArch() string {
 	return os.Getenv("GOARCH")
+}
 
 func getTemplateDirectory() string {
 	// TODO: Make configurable
 	return "./templates"
+}
 
 func getModuleDirectory() string {
 	// TODO: Make configurable
 	return "./modules"
+}
 
 func getDocumentationDirectory() string {
 	// TODO: Make configurable
 	return "./docs"
+}
 
 // createZipArchive creates a ZIP archive (stub for now)
 func (e *BundleExporter) createZipArchive() error {
 	return fmt.Errorf("ZIP format not yet implemented")
+}
 
 // createTarArchive creates a plain TAR archive (stub for now)
 func (e *BundleExporter) createTarArchive() error {
 	return fmt.Errorf("plain TAR format not yet implemented")
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

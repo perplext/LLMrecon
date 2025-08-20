@@ -16,6 +16,7 @@ type LocalFSRepository struct {
 	
 	// rootPath is the root path of the repository
 	rootPath string
+}
 
 // NewLocalFSRepository creates a new local file system repository
 func NewLocalFSRepository(config *Config) (Repository, error) {
@@ -43,6 +44,7 @@ func NewLocalFSRepository(config *Config) (Repository, error) {
 		BaseRepository: base,
 		rootPath:       rootPath,
 	}, nil
+}
 
 // parseLocalPath parses a local path from a URL or file path
 func parseLocalPath(urlOrPath string) (string, error) {
@@ -63,6 +65,7 @@ func parseLocalPath(urlOrPath string) (string, error) {
 	}
 	
 	return absPath, nil
+}
 
 // Connect establishes a connection to the local file system repository
 func (r *LocalFSRepository) Connect(ctx context.Context) error {
@@ -82,6 +85,7 @@ func (r *LocalFSRepository) Connect(ctx context.Context) error {
 	r.setConnected(true)
 	
 	return nil
+}
 
 // Disconnect closes the connection to the local file system repository
 func (r *LocalFSRepository) Disconnect() error {
@@ -89,6 +93,7 @@ func (r *LocalFSRepository) Disconnect() error {
 	r.setConnected(false)
 	
 	return nil
+}
 
 // ListFiles lists files in the local file system repository matching the pattern
 func (r *LocalFSRepository) ListFiles(ctx context.Context, pattern string) ([]FileInfo, error) {
@@ -165,6 +170,8 @@ func (r *LocalFSRepository) ListFiles(ctx context.Context, pattern string) ([]Fi
 	}
 	
 	return result, nil
+}
+
 // GetFile retrieves a file from the local file system repository
 func (r *LocalFSRepository) GetFile(ctx context.Context, path string) (io.ReadCloser, error) {
 	// Ensure connected
@@ -194,6 +201,7 @@ func (r *LocalFSRepository) GetFile(ctx context.Context, path string) (io.ReadCl
 			r.ReleaseConnection()
 		},
 	}, nil
+}
 
 // FileExists checks if a file exists in the local file system repository
 	func (r *LocalFSRepository) FileExists(ctx context.Context, path string) (bool, error) {
@@ -233,11 +241,13 @@ func (r *LocalFSRepository) GetFile(ctx context.Context, path string) (io.ReadCl
 	}
 	
 	return exists, nil
-	
+}
+
 // GetBranch returns the branch of the repository
 // Local file system repositories don't have branches, so this returns an empty string
 func (r *LocalFSRepository) GetBranch() string {
 	return ""
+}
 
 // GetLastModified gets the last modified time of a file in the local file system repository
 func (r *LocalFSRepository) GetLastModified(ctx context.Context, path string) (time.Time, error) {
@@ -272,3 +282,5 @@ func (r *LocalFSRepository) GetLastModified(ctx context.Context, path string) (t
 		return time.Time{}, err
 	}
 	
+	return lastModified, nil
+}

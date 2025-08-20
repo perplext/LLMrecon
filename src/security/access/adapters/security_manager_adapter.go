@@ -88,4 +88,3 @@ func (a *SecurityManagerAdapter) UpdateVulnerabilityStatus(ctx context.Context, 
 	vulnerability.Status = status
 	return a.UpdateVulnerability(ctx, vulnerability)
 }
-}

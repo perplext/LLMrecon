@@ -144,6 +144,7 @@ This command creates a new configuration file with customizable vulnerable respo
 		// Create mock configuration
 		createMockProviderConfig(output)
 	},
+}
 
 func init() {
 	rootCmd.AddCommand(owaspCmd)

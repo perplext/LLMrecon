@@ -23,6 +23,7 @@ type TemplateOptimizer struct {
 	mutex sync.RWMutex
 	// optimizationStats tracks optimization statistics
 	optimizationStats OptimizerStats
+}
 
 // OptimizerStats tracks optimizer statistics
 type OptimizerStats struct {
@@ -34,6 +35,7 @@ type OptimizerStats struct {
 	TotalBytesOptimized int64
 	// CompressionRatio is the average compression ratio
 	CompressionRatio float64
+}
 
 // NewTemplateOptimizer creates a new template optimizer
 func NewTemplateOptimizer(minifyEnabled, compressEnabled bool) *TemplateOptimizer {
@@ -42,6 +44,7 @@ func NewTemplateOptimizer(minifyEnabled, compressEnabled bool) *TemplateOptimize
 		compressEnabled:  compressEnabled,
 		optimizationStats: OptimizerStats{},
 	}
+}
 
 // OptimizeTemplate optimizes a template by applying various optimizations
 func (o *TemplateOptimizer) OptimizeTemplate(template *format.Template) (*format.Template, error) {
@@ -58,7 +61,7 @@ func (o *TemplateOptimizer) OptimizeTemplate(template *format.Template) (*format
 	// Apply optimizations
 	if o.minifyEnabled {
 		o.minifyPrompt(&optimizedTemplate.Test.Prompt)
-		o.minifyExpectedBehavior(&optimizedTemplate.Test.ExpectedBehavior)
+		o.minifyExpectedBehavior(&optimizedTemplate.Test.Expected)
 		
 		// Optimize variations
 		for i := range optimizedTemplate.Test.Variations {
@@ -78,6 +81,7 @@ func (o *TemplateOptimizer) OptimizeTemplate(template *format.Template) (*format
 	o.mutex.Unlock()
 
 	return optimizedTemplate, nil
+}
 
 // OptimizeTemplates optimizes multiple templates
 func (o *TemplateOptimizer) OptimizeTemplates(templates []*format.Template) ([]*format.Template, error) {
@@ -116,6 +120,7 @@ func (o *TemplateOptimizer) OptimizeTemplates(templates []*format.Template) ([]*
 	}
 
 	return optimizedTemplates, nil
+}
 
 // minifyPrompt removes unnecessary whitespace from prompt content
 func (o *TemplateOptimizer) minifyPrompt(prompt *string) {
@@ -160,10 +165,12 @@ func (o *TemplateOptimizer) minifyPrompt(prompt *string) {
 	}
 
 	*prompt = strings.TrimSpace(result.String())
+}
 
 // minifyExpectedBehavior optimizes expected behavior content
 func (o *TemplateOptimizer) minifyExpectedBehavior(expectedBehavior *string) {
 	o.minifyPrompt(expectedBehavior)
+}
 
 // compressContent compresses content using gzip
 func (o *TemplateOptimizer) compressContent(content string) ([]byte, error) {
@@ -180,6 +187,7 @@ func (o *TemplateOptimizer) compressContent(content string) ([]byte, error) {
 	}
 	
 	return buf.Bytes(), nil
+}
 
 // decompressContent decompresses gzipped content
 func (o *TemplateOptimizer) decompressContent(compressed []byte) (string, error) {
@@ -196,21 +204,22 @@ func (o *TemplateOptimizer) decompressContent(compressed []byte) (string, error)
 	}
 	
 	return string(decompressed), nil
+}
 
 // cloneTemplate creates a deep copy of a template
 func (o *TemplateOptimizer) cloneTemplate(template *format.Template) *format.Template {
 	// Serialize to JSON and back for a deep copy
 	data, _ := json.Marshal(template)
 	var clone format.Template
-	if err := json.Unmarshal(data, &clone); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
+	json.Unmarshal(data, &clone)
 	return &clone
+}
 
 // estimateTemplateSize estimates the size of a template in bytes
 func (o *TemplateOptimizer) estimateTemplateSize(template *format.Template) int {
 	data, _ := json.Marshal(template)
 	return len(data)
+}
 
 // GetOptimizationStats returns statistics about the optimizer
 func (o *TemplateOptimizer) GetOptimizationStats() map[string]interface{} {
@@ -225,15 +234,18 @@ func (o *TemplateOptimizer) GetOptimizationStats() map[string]interface{} {
 		"minify_enabled":         o.minifyEnabled,
 		"compress_enabled":       o.compressEnabled,
 	}
+}
 
 // SetMinifyEnabled enables or disables minification
 func (o *TemplateOptimizer) SetMinifyEnabled(enabled bool) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.minifyEnabled = enabled
+}
 
 // SetCompressEnabled enables or disables compression
 func (o *TemplateOptimizer) SetCompressEnabled(enabled bool) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.compressEnabled = enabled
+}

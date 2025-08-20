@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	"github.com/xeipuuv/gojsonschema"
@@ -104,6 +105,7 @@ type OWASPLLMMapping struct {
 type ComplianceMapping struct {
 	OWASPLLM []OWASPLLMMapping         `json:"owasp-llm,omitempty"`
 	Other    map[string]interface{}    `json:"-"`
+}
 
 // CategoryInfo contains information about an OWASP LLM category
 type CategoryInfo struct {
@@ -111,6 +113,7 @@ type CategoryInfo struct {
 	Name        string
 	Description string
 	Subcategories []SubcategoryInfo
+}
 
 // SubcategoryInfo contains information about an OWASP LLM subcategory
 type SubcategoryInfo struct {
@@ -129,6 +132,7 @@ type CategoryCoverage struct {
 	SubcategoriesTotal   int
 	Templates          []TemplateSummary
 	MissingSubcategories []OWASPLLMSubcategory
+}
 
 // TemplateSummary provides a summary of a template
 type TemplateSummary struct {
@@ -136,6 +140,7 @@ type TemplateSummary struct {
 	Name        string
 	Subcategory OWASPLLMSubcategory
 	Coverage    CoverageLevel
+}
 
 // OWASPComplianceReport represents an OWASP LLM compliance report
 type OWASPComplianceReport struct {
@@ -145,6 +150,7 @@ type OWASPComplianceReport struct {
 	Summary      ComplianceSummary  `json:"summary"`
 	Categories   []CategoryCoverage `json:"categories"`
 	Gaps         []ComplianceGap    `json:"gaps"`
+}
 
 // ComplianceSummary provides a summary of compliance status
 type ComplianceSummary struct {
@@ -168,6 +174,7 @@ type ComplianceGap struct {
 type OWASPLLMValidator struct {
 	schemaLoader gojsonschema.JSONLoader
 	categories   map[OWASPLLMCategory]CategoryInfo
+}
 
 // NewOWASPLLMValidator creates a new OWASP LLM compliance validator
 func NewOWASPLLMValidator(schemaPath string) (*OWASPLLMValidator, error) {
@@ -186,6 +193,7 @@ func NewOWASPLLMValidator(schemaPath string) (*OWASPLLMValidator, error) {
 	}
 
 	return validator, nil
+}
 
 // NewDefaultOWASPLLMValidator creates a new OWASP LLM compliance validator with the default schema path
 func NewDefaultOWASPLLMValidator() (*OWASPLLMValidator, error) {
@@ -197,6 +205,7 @@ func NewDefaultOWASPLLMValidator() (*OWASPLLMValidator, error) {
 	}
 
 	return validator, nil
+}
 
 // ValidateMapping validates an OWASP LLM compliance mapping
 func (v *OWASPLLMValidator) ValidateMapping(mapping *ComplianceMapping) (bool, []string, error) {
@@ -252,11 +261,13 @@ func (v *OWASPLLMValidator) ValidateMapping(mapping *ComplianceMapping) (bool, [
 	}
 
 	return true, nil, nil
+}
 
 // GetCategoryInfo returns information about an OWASP LLM category
 func (v *OWASPLLMValidator) GetCategoryInfo(category OWASPLLMCategory) (CategoryInfo, bool) {
 	info, ok := v.categories[category]
 	return info, ok
+}
 
 // GetAllCategories returns information about all OWASP LLM categories
 func (v *OWASPLLMValidator) GetAllCategories() []CategoryInfo {
@@ -265,6 +276,7 @@ func (v *OWASPLLMValidator) GetAllCategories() []CategoryInfo {
 		categories = append(categories, category)
 	}
 	return categories
+}
 
 // GenerateComplianceReport generates a compliance report for a set of templates
 func (v *OWASPLLMValidator) GenerateComplianceReport(templates []interface{}, reportID string, timestamp string) (*OWASPComplianceReport, error) {
@@ -452,6 +464,7 @@ func (v *OWASPLLMValidator) GenerateComplianceReport(templates []interface{}, re
 	report.Gaps = gaps
 	
 	return report, nil
+}
 
 // initializeCategories initializes the OWASP LLM category information
 func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
@@ -578,6 +591,5 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 		},
 	}
 	
-}
-}
+	return categories
 }

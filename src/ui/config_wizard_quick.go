@@ -1,8 +1,9 @@
 package ui
 
 import (
-	"os"
 	"fmt"
+	"os"
+	"path/filepath"
 )
 
 // Quick setup implementations
@@ -96,6 +97,7 @@ func (qs *QuickSetup) basicSetup() error {
 	}
 
 	return qs.saveQuickConfig("basic")
+}
 
 func (qs *QuickSetup) professionalSetup() error {
 	qs.wizard.terminal.Info("Setting up professional configuration...")
@@ -187,6 +189,7 @@ func (qs *QuickSetup) professionalSetup() error {
 	}
 
 	return qs.saveQuickConfig("professional")
+}
 
 func (qs *QuickSetup) enterpriseSetup() error {
 	qs.wizard.terminal.Info("Setting up enterprise configuration...")
@@ -302,6 +305,7 @@ func (qs *QuickSetup) enterpriseSetup() error {
 	}
 
 	return qs.saveQuickConfig("enterprise")
+}
 
 func (qs *QuickSetup) developmentSetup() error {
 	qs.wizard.terminal.Info("Setting up development configuration...")
@@ -375,6 +379,7 @@ func (qs *QuickSetup) developmentSetup() error {
 	}
 
 	return qs.saveQuickConfig("development")
+}
 
 func (qs *QuickSetup) cicdSetup() error {
 	qs.wizard.terminal.Info("Setting up CI/CD pipeline configuration...")
@@ -445,11 +450,13 @@ func (qs *QuickSetup) cicdSetup() error {
 	}
 
 	return qs.saveQuickConfig("cicd")
+}
 
 // Helper methods
 
 func (qs *QuickSetup) promptAPIKey(provider string) (string, error) {
 	return qs.wizard.promptAPIKey(provider)
+}
 
 func (qs *QuickSetup) saveQuickConfig(preset string) error {
 	qs.wizard.terminal.Info("\nConfiguration Summary:")
@@ -522,4 +529,7 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 			"Create custom templates for your use cases",
 		}, true)
 	}
+
+	return nil
+}
 

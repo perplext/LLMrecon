@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 )
@@ -34,6 +36,7 @@ type SecurityReportSummary struct {
 	RiskScore         float64            `json:"risk_score"`
 	SeverityBreakdown map[string]int     `json:"severity_breakdown"`
 	CategoryBreakdown map[string]int     `json:"category_breakdown"`
+}
 
 type Finding struct {
 	ID           string                 `json:"id"`
@@ -50,18 +53,22 @@ type Finding struct {
 	Evidence     Evidence               `json:"evidence"`
 	Tags         []string               `json:"tags"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+}
 
 type Remediation struct {
 	Summary string   `json:"summary"`
 	Steps   []string `json:"steps"`
+}
 
 type Reference struct {
 	Title string `json:"title"`
 	URL   string `json:"url"`
+}
 
 type Evidence struct {
 	Request  string `json:"request,omitempty"`
 	Response string `json:"response,omitempty"`
+}
 
 type ReportStatistics struct {
 	StartTime         time.Time       `json:"start_time"`
@@ -74,6 +81,7 @@ type ReportStatistics struct {
 type CategoryCount struct {
 	Category string `json:"category"`
 	Count    int    `json:"count"`
+}
 
 type ComplianceStatus struct {
 	Compliant bool     `json:"compliant"`
@@ -85,12 +93,14 @@ type ComplianceStatus struct {
 type MultiFormatRenderer struct {
 	renderers map[common.ReportFormat]Renderer
 	templates map[string]*template.Template
+}
 
 // Renderer interface for format-specific renderers
 type Renderer interface {
 	Render(report *SecurityReport, options RenderOptions) ([]byte, error)
 	GetContentType() string
 	GetFileExtension() string
+}
 
 // RenderOptions contains options for rendering
 type RenderOptions struct {
@@ -100,6 +110,7 @@ type RenderOptions struct {
 	IncludeRawData bool                   `json:"includeRawData"`
 	Filters        ReportFilter           `json:"filters"`
 	CustomFields   map[string]interface{} `json:"customFields"`
+}
 
 // ReportFilter defines filtering options
 type ReportFilter struct {
@@ -114,11 +125,12 @@ type ReportFilter struct {
 type DateRange struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
+}
 
 // NewMultiFormatRenderer creates a new multi-format renderer
 func NewMultiFormatRenderer() *MultiFormatRenderer {
 	r := &MultiFormatRenderer{
-		renderers: make(map[ReportFormat]Renderer),
+		renderers: make(map[common.ReportFormat]Renderer),
 		templates: make(map[string]*template.Template),
 	}
 
@@ -130,10 +142,12 @@ func NewMultiFormatRenderer() *MultiFormatRenderer {
 	// PDF and Excel renderers would be registered if implemented
 
 	return r
+}
 
 // RegisterRenderer registers a renderer for a format
 func (r *MultiFormatRenderer) RegisterRenderer(format common.ReportFormat, renderer Renderer) {
 	r.renderers[format] = renderer
+}
 
 // Render renders a report in the specified format
 func (r *MultiFormatRenderer) Render(report *SecurityReport, format common.ReportFormat, options RenderOptions) ([]byte, error) {
@@ -148,6 +162,7 @@ func (r *MultiFormatRenderer) Render(report *SecurityReport, format common.Repor
 	}
 
 	return renderer.Render(report, options)
+}
 
 // applyFilters applies filters to a report
 func (r *MultiFormatRenderer) applyFilters(report *SecurityReport, filter ReportFilter) *SecurityReport {
@@ -169,6 +184,7 @@ func (r *MultiFormatRenderer) applyFilters(report *SecurityReport, filter Report
 	filtered.Summary = r.calculateSummary(filtered.Findings)
 
 	return filtered
+}
 
 // matchesFilter checks if a finding matches the filter criteria
 func (r *MultiFormatRenderer) matchesFilter(finding Finding, filter ReportFilter) bool {
@@ -228,6 +244,7 @@ func (r *MultiFormatRenderer) matchesFilter(finding Finding, filter ReportFilter
 	}
 
 	return true
+}
 
 // calculateSummary calculates summary statistics from findings
 func (r *MultiFormatRenderer) calculateSummary(findings []Finding) SecurityReportSummary {
@@ -258,6 +275,7 @@ func (r *MultiFormatRenderer) calculateSummary(findings []Finding) SecurityRepor
 	}
 
 	return summary
+}
 
 // JSONRenderer renders reports as JSON
 type JSONRenderer struct{}
@@ -271,14 +289,17 @@ func (r *JSONRenderer) Render(report *SecurityReport, options RenderOptions) ([]
 	// Create a simplified version without raw data
 	simplified := r.simplifyReport(report)
 	return json.MarshalIndent(simplified, "", "  ")
+}
 
 // GetContentType returns the content type for JSON
 func (r *JSONRenderer) GetContentType() string {
 	return "application/json"
+}
 
 // GetFileExtension returns the file extension for JSON
 func (r *JSONRenderer) GetFileExtension() string {
 	return ".json"
+}
 
 // simplifyReport creates a simplified version of the report
 func (r *JSONRenderer) simplifyReport(report *SecurityReport) interface{} {
@@ -306,6 +327,7 @@ func (r *JSONRenderer) simplifyReport(report *SecurityReport) interface{} {
 	}
 
 	return simplified
+}
 
 // CSVRenderer renders reports as CSV
 type CSVRenderer struct{}
@@ -347,14 +369,17 @@ func (r *CSVRenderer) Render(report *SecurityReport, options RenderOptions) ([]b
 
 	writer.Flush()
 	return buf.Bytes(), writer.Error()
+}
 
 // GetContentType returns the content type for CSV
 func (r *CSVRenderer) GetContentType() string {
 	return "text/csv"
+}
 
 // GetFileExtension returns the file extension for CSV
 func (r *CSVRenderer) GetFileExtension() string {
 	return ".csv"
+}
 
 // formatReferences formats references for CSV
 func (r *CSVRenderer) formatReferences(refs []Reference) string {
@@ -363,6 +388,7 @@ func (r *CSVRenderer) formatReferences(refs []Reference) string {
 		formatted = append(formatted, ref.URL)
 	}
 	return strings.Join(formatted, ";")
+}
 
 // HTMLRenderer renders reports as HTML
 type HTMLRenderer struct {
@@ -385,14 +411,17 @@ func (r *HTMLRenderer) Render(report *SecurityReport, options RenderOptions) ([]
 	}
 
 	return buf.Bytes(), nil
+}
 
 // GetContentType returns the content type for HTML
 func (r *HTMLRenderer) GetContentType() string {
 	return "text/html"
+}
 
 // GetFileExtension returns the file extension for HTML
 func (r *HTMLRenderer) GetFileExtension() string {
 	return ".html"
+}
 
 // getTemplate retrieves a template by name
 func (r *HTMLRenderer) getTemplate(name string) *template.Template {
@@ -400,6 +429,7 @@ func (r *HTMLRenderer) getTemplate(name string) *template.Template {
 		name = "default"
 	}
 	return r.templates[name]
+}
 
 // createDefaultTemplate creates a default HTML template
 func (r *HTMLRenderer) createDefaultTemplate() *template.Template {
@@ -450,11 +480,13 @@ func (r *HTMLRenderer) createDefaultTemplate() *template.Template {
 		"lower": strings.ToLower,
 	}).Parse(defaultTemplate)
 	return tmpl
+}
 
 // prepareTemplateData prepares data for template rendering
 func (r *HTMLRenderer) prepareTemplateData(report *SecurityReport, options RenderOptions) interface{} {
 	// Add any additional data processing here
 	return report
+}
 
 // MarkdownRenderer renders reports as Markdown
 type MarkdownRenderer struct{}
@@ -549,14 +581,17 @@ func (r *MarkdownRenderer) Render(report *SecurityReport, options RenderOptions)
 	}
 
 	return buf.Bytes(), nil
+}
 
 // GetContentType returns the content type for Markdown
 func (r *MarkdownRenderer) GetContentType() string {
 	return "text/markdown"
+}
 
 // GetFileExtension returns the file extension for Markdown
 func (r *MarkdownRenderer) GetFileExtension() string {
 	return ".md"
+}
 
 // severityWeight returns a weight for severity sorting
 func (r *MarkdownRenderer) severityWeight(severity string) int {
@@ -571,12 +606,14 @@ func (r *MarkdownRenderer) severityWeight(severity string) int {
 		return weight
 	}
 	return 0
+}
 
 // StreamingRenderer supports streaming large reports
 type StreamingRenderer interface {
 	StartRender(w io.Writer, metadata ReportMetadata, options RenderOptions) error
 	RenderFinding(w io.Writer, finding Finding) error
 	FinishRender(w io.Writer, summary SecurityReportSummary) error
+}
 
 // ReportBuilder builds reports with various options
 type ReportBuilder struct {
@@ -595,21 +632,25 @@ func NewReportBuilder() *ReportBuilder {
 		sorters:   []func([]Finding){},
 		enrichers: []func(*Finding){},
 	}
+}
 
 // WithMetadata sets report metadata
 func (rb *ReportBuilder) WithMetadata(metadata ReportMetadata) *ReportBuilder {
 	rb.metadata = metadata
 	return rb
+}
 
 // AddFinding adds a finding to the report
 func (rb *ReportBuilder) AddFinding(finding Finding) *ReportBuilder {
 	rb.findings = append(rb.findings, finding)
 	return rb
+}
 
 // AddFilter adds a filter function
 func (rb *ReportBuilder) AddFilter(filter func(Finding) bool) *ReportBuilder {
 	rb.filters = append(rb.filters, filter)
 	return rb
+}
 
 // Build builds the final report
 func (rb *ReportBuilder) Build() *SecurityReport {
@@ -650,6 +691,7 @@ func (rb *ReportBuilder) Build() *SecurityReport {
 		Findings:   filtered,
 		Statistics: stats,
 	}
+}
 
 // calculateSummary calculates report summary
 func (rb *ReportBuilder) calculateSummary(findings []Finding) SecurityReportSummary {
@@ -680,6 +722,7 @@ func (rb *ReportBuilder) calculateSummary(findings []Finding) SecurityReportSumm
 	}
 
 	return summary
+}
 
 // calculateStatistics calculates report statistics
 func (rb *ReportBuilder) calculateStatistics(findings []Finding) ReportStatistics {
@@ -721,27 +764,5 @@ func (rb *ReportBuilder) calculateStatistics(findings []Finding) ReportStatistic
 		return stats.TopCategories[i].Count > stats.TopCategories[j].Count
 	})
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return stats
 }

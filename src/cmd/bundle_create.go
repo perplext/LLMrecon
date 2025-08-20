@@ -3,6 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/perplext/LLMrecon/src/config"
@@ -22,6 +25,7 @@ var owaspCategories = []string{
 	"llm08-excessive-agency",
 	"llm09-overreliance",
 	"llm10-model-theft",
+}
 
 // bundleCreateCmd represents the bundle create command
 var bundleCreateCmd = &cobra.Command{
@@ -50,6 +54,7 @@ Templates are organized by OWASP LLM Top 10 categories with proper versioning.`,
   # Create a bundle with custom filters
   LLMrecon bundle create --filter="security/*" --output=security-templates.bundle`,
 	RunE: runBundleCreate,
+}
 
 func init() {
 	bundleCmd.AddCommand(bundleCreateCmd)
@@ -69,6 +74,7 @@ func init() {
 	bundleCreateCmd.Flags().String("password", "", "Password for encryption")
 	bundleCreateCmd.Flags().Duration("timeout", 10*time.Minute, "Timeout for remote operations")
 	bundleCreateCmd.Flags().Bool("verbose", false, "Verbose output")
+}
 
 func runBundleCreate(cmd *cobra.Command, args []string) error {
 	// Get flags
@@ -158,6 +164,7 @@ func runBundleCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
 
 func createBundleOptions(cfg *config.Config, component, filter, category, source string, includeCompliance, compress bool, compressionAlg string, encrypt bool, password string) *bundle.ExportOptions {
 	opts := &bundle.ExportOptions{
@@ -216,6 +223,7 @@ func createBundleOptions(cfg *config.Config, component, filter, category, source
 		}
 	}
 	return opts
+}
 
 func createBundleExporter(ctx context.Context, cfg *config.Config, source string, opts *bundle.ExportOptions) (*bundle.BundleExporter, error) {
 	switch source {
@@ -240,6 +248,7 @@ func createBundleExporter(ctx context.Context, cfg *config.Config, source string
 	}
 
 	return bundle.NewBundleExporter(*opts), nil
+}
 
 func createProgressHandler(verbose bool) bundle.ExportProgressHandler {
 	startTime := time.Now()
@@ -268,21 +277,25 @@ func createProgressHandler(verbose bool) bundle.ExportProgressHandler {
 		}
 
 	}
+}
 
 func fetchFromGitHub(ctx context.Context, cfg *config.Config) (string, error) {
 	// This is a placeholder implementation
 	// In a real implementation, this would use git or GitHub API
 	return "", fmt.Errorf("GitHub integration not implemented yet")
+}
 
 func fetchFromGitLab(ctx context.Context, cfg *config.Config) (string, error) {
 	// This is a placeholder implementation
 	// In a real implementation, this would use git or GitLab API
 	return "", fmt.Errorf("GitLab integration not implemented yet")
+}
 
 func signBundle(bundlePath, keyID string) error {
 	// This is a placeholder implementation
 	// In a real implementation, this would use GPG or similar
 	return fmt.Errorf("bundle signing not implemented yet")
+}
 
 func calculateBundleChecksum(bundlePath string) string {
 	// Calculate SHA256 checksum
@@ -296,6 +309,7 @@ func calculateBundleChecksum(bundlePath string) string {
 		return checksum[:12] + "..."
 	}
 	return checksum
+}
 
 func formatSize(size int64) string {
 	const unit = 1024
@@ -308,6 +322,7 @@ func formatSize(size int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
+}
 
 // ValidateOWASPCategory validates if a category is valid
 func ValidateOWASPCategory(category string) bool {
@@ -317,7 +332,9 @@ func ValidateOWASPCategory(category string) bool {
 		}
 	}
 	return false
+}
 
 // GetOWASPCategories returns all OWASP LLM Top 10 categories
 func GetOWASPCategories() []string {
 	return owaspCategories
+}

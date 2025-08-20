@@ -5,8 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -15,6 +17,7 @@ import (
 type PromptProtectionMiddleware struct {
 	protectionManager *ProtectionManager
 	config            *ProtectionConfig
+}
 
 // NewPromptProtectionMiddleware creates a new prompt protection middleware
 func NewPromptProtectionMiddleware(config *ProtectionConfig) (*PromptProtectionMiddleware, error) {
@@ -28,6 +31,7 @@ func NewPromptProtectionMiddleware(config *ProtectionConfig) (*PromptProtectionM
 		protectionManager: protectionManager,
 		config:            config,
 	}, nil
+}
 
 // Middleware returns an HTTP middleware function
 func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler {
@@ -303,6 +307,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 			w.Write(rw.body)
 		}
 	})
+}
 
 // responseWrapper is a wrapper for http.ResponseWriter that captures the response
 type responseWrapper struct {
@@ -317,15 +322,18 @@ func newResponseWrapper(w http.ResponseWriter) *responseWrapper {
 		ResponseWriter: w,
 		status:         http.StatusOK,
 	}
+}
 
 // WriteHeader captures the status code
 func (rw *responseWrapper) WriteHeader(status int) {
 	rw.status = status
+}
 
 // Write captures the response body
 func (rw *responseWrapper) Write(b []byte) (int, error) {
 	rw.body = append(rw.body, b...)
 	return len(b), nil
+}
 
 // extractPromptFields extracts fields that might contain prompts from a request
 func extractPromptFields(data map[string]interface{}) map[string]interface{} {
@@ -381,6 +389,7 @@ func extractPromptFields(data map[string]interface{}) map[string]interface{} {
 	}
 
 	return fields
+}
 
 // extractResponseFields extracts fields that might contain LLM-generated content from a response
 func extractResponseFields(data map[string]interface{}) map[string]interface{} {
@@ -436,6 +445,7 @@ func extractResponseFields(data map[string]interface{}) map[string]interface{} {
 	}
 
 	return fields
+}
 
 // setNestedField sets a value in a nested map using a dot-separated path
 func setNestedField(data map[string]interface{}, path string, value interface{}) {
@@ -500,6 +510,7 @@ func setNestedField(data map[string]interface{}, path string, value interface{})
 			}
 		}
 	}
+}
 
 // simplifyDetections simplifies detection objects for inclusion in metadata
 func simplifyDetections(detections []*Detection) []map[string]interface{} {
@@ -519,11 +530,6 @@ func simplifyDetections(detections []*Detection) []map[string]interface{} {
 		}
 		simplified = append(simplified, simple)
 	}
-}
-}
-}
-}
-}
-}
-}
+	
+	return simplified
 }

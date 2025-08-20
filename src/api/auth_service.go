@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -28,6 +29,7 @@ type AuthService interface {
 	// JWT operations
 	GenerateJWT(userID string, claims map[string]interface{}) (string, error)
 	ValidateJWT(token string) (*JWTClaims, error)
+	ValidateToken(token string) (*User, error)
 	RefreshJWT(token string) (string, error)
 	
 	// API key operations
@@ -41,6 +43,7 @@ type AuthService interface {
 	Authenticate(username, password string) (*User, error)
 	CreateUser(request CreateUserRequest) (*User, error)
 	UpdatePassword(userID, oldPassword, newPassword string) error
+}
 
 // AuthServiceImpl implements AuthService
 type AuthServiceImpl struct {
@@ -59,6 +62,7 @@ func NewAuthService(config *Config) AuthService {
 		apiKeys:       make(map[string]*APIKey),
 		users:         make(map[string]*User),
 	}
+}
 
 // JWTClaims represents JWT claims
 type JWTClaims struct {
@@ -107,6 +111,7 @@ type CreateAPIKeyRequest struct {
 	RateLimit   int               `json:"rate_limit,omitempty"`
 	ExpiresIn   int               `json:"expires_in,omitempty"` // Days
 	Metadata    map[string]string `json:"metadata,omitempty"`
+}
 
 // APIKeyFilter represents API key filter criteria
 type APIKeyFilter struct {
@@ -151,11 +156,13 @@ func (s *AuthServiceImpl) GenerateJWT(userID string, claims map[string]interface
 	
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims)
 	return token.SignedString(s.jwtSecret)
+}
 
 // ValidateJWT validates a JWT token
 func (s *AuthServiceImpl) ValidateJWT(tokenString string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return s.jwtSecret, nil
 	})
@@ -169,6 +176,7 @@ func (s *AuthServiceImpl) ValidateJWT(tokenString string) (*JWTClaims, error) {
 	}
 	
 	return nil, ErrTokenInvalid
+}
 
 // RefreshJWT refreshes a JWT token
 func (s *AuthServiceImpl) RefreshJWT(tokenString string) (string, error) {
@@ -179,6 +187,27 @@ func (s *AuthServiceImpl) RefreshJWT(tokenString string) (string, error) {
 	
 	// Generate new token with same claims but new expiration
 	return s.GenerateJWT(claims.UserID, claims.Extra)
+}
+
+// ValidateToken validates a JWT token and returns the associated user
+func (s *AuthServiceImpl) ValidateToken(tokenString string) (*User, error) {
+	claims, err := s.ValidateJWT(tokenString)
+	if err != nil {
+		return nil, err
+	}
+	
+	s.mu.RLock()
+	user, exists := s.users[claims.UserID]
+	s.mu.RUnlock()
+	
+	if !exists {
+		return nil, errors.New("user not found")
+	}
+	
+	// Return copy
+	result := *user
+	return &result, nil
+}
 
 // CreateAPIKey creates a new API key
 func (s *AuthServiceImpl) CreateAPIKey(request CreateAPIKeyRequest) (*APIKey, error) {
@@ -229,6 +258,7 @@ func (s *AuthServiceImpl) CreateAPIKey(request CreateAPIKeyRequest) (*APIKey, er
 	// Return copy with key included (only time it's exposed)
 	result := *apiKey
 	return &result, nil
+}
 
 // GetAPIKey retrieves an API key by ID
 func (s *AuthServiceImpl) GetAPIKey(keyID string) (*APIKey, error) {
@@ -244,6 +274,7 @@ func (s *AuthServiceImpl) GetAPIKey(keyID string) (*APIKey, error) {
 	result := *apiKey
 	result.Key = ""
 	return &result, nil
+}
 
 // ListAPIKeys lists API keys based on filter
 func (s *AuthServiceImpl) ListAPIKeys(filter APIKeyFilter) ([]APIKey, error) {
@@ -277,6 +308,7 @@ func (s *AuthServiceImpl) ListAPIKeys(filter APIKeyFilter) ([]APIKey, error) {
 	}
 	
 	return results, nil
+}
 
 // RevokeAPIKey revokes an API key
 func (s *AuthServiceImpl) RevokeAPIKey(keyID string) error {
@@ -293,6 +325,7 @@ func (s *AuthServiceImpl) RevokeAPIKey(keyID string) error {
 	apiKey.UpdatedAt = now
 	
 	return nil
+}
 
 // ValidateAPIKey validates an API key
 func (s *AuthServiceImpl) ValidateAPIKey(key string) (*APIKey, error) {
@@ -328,6 +361,7 @@ func (s *AuthServiceImpl) ValidateAPIKey(key string) (*APIKey, error) {
 	}
 	
 	return nil, ErrInvalidCredentials
+}
 
 // Authenticate authenticates a user
 func (s *AuthServiceImpl) Authenticate(username, password string) (*User, error) {
@@ -360,6 +394,7 @@ func (s *AuthServiceImpl) Authenticate(username, password string) (*User, error)
 	// Return copy
 	result := *user
 	return &result, nil
+}
 
 // CreateUser creates a new user
 func (s *AuthServiceImpl) CreateUser(request CreateUserRequest) (*User, error) {
@@ -403,7 +438,7 @@ func (s *AuthServiceImpl) CreateUser(request CreateUserRequest) (*User, error) {
 	// Return copy
 	result := *user
 	return &result, nil
-	
+}
 
 // UpdatePassword updates a user's password
 func (s *AuthServiceImpl) UpdatePassword(userID, oldPassword, newPassword string) error {
@@ -430,27 +465,22 @@ func (s *AuthServiceImpl) UpdatePassword(userID, oldPassword, newPassword string
 	user.UpdatedAt = time.Now()
 	
 	return nil
+}
 
 // normalizeAPIKey normalizes an API key for comparison
 func normalizeAPIKey(key string) string {
 	// Remove any whitespace and ensure consistent format
 	return strings.TrimSpace(key)
+}
 
 // generateID generates a unique ID
 func generateID() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
+}
 
 // Helper function for constant-time string comparison
 func secureCompare(a, b string) bool {
 	return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
-}
-}
-}
-}
-}
-}
-}
-}
 }

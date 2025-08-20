@@ -7,8 +7,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
@@ -17,6 +21,7 @@ import (
 type DefaultBundleValidator struct {
 	// Logger is the logger for validation operations
 	Logger io.Writer
+}
 
 // NewBundleValidator creates a new bundle validator
 func NewBundleValidator(logger io.Writer) BundleValidator {
@@ -26,6 +31,7 @@ func NewBundleValidator(logger io.Writer) BundleValidator {
 	return &DefaultBundleValidator{
 		Logger: logger,
 	}
+}
 
 // Validate validates a bundle with the specified validation level
 func (v *DefaultBundleValidator) Validate(bundle *Bundle, level ValidationLevel) (*ValidationResult, error) {
@@ -107,6 +113,7 @@ func (v *DefaultBundleValidator) Validate(bundle *Bundle, level ValidationLevel)
 		Valid:   true,
 		Message: "Bundle validation successful",
 	}, nil
+}
 
 // ValidateManifest validates a bundle manifest
 func (v *DefaultBundleValidator) ValidateManifest(manifest *BundleManifest) (*ValidationResult, error) {
@@ -213,6 +220,7 @@ func (v *DefaultBundleValidator) ValidateManifest(manifest *BundleManifest) (*Va
 	}
 
 	return result, nil
+}
 
 // ValidateSignature validates a bundle signature
 func (v *DefaultBundleValidator) ValidateSignature(bundle *Bundle, publicKey ed25519.PublicKey) (*ValidationResult, error) {
@@ -275,6 +283,7 @@ func (v *DefaultBundleValidator) ValidateSignature(bundle *Bundle, publicKey ed2
 
 	// Return success
 	return result, nil
+}
 
 // ValidateChecksums validates bundle checksums
 func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationResult, error) {
@@ -388,6 +397,7 @@ func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationR
 	}
 	
 	return result, nil
+}
 
 // ValidateCompatibility validates bundle compatibility with current versions
 func (v *DefaultBundleValidator) ValidateCompatibility(bundle *Bundle, currentVersions map[string]*version.SemVersion) (*ValidationResult, error) {
@@ -507,12 +517,13 @@ func (v *DefaultBundleValidator) ValidateCompatibility(bundle *Bundle, currentVe
 	}
 
 	return result, nil
+}
 
 // calculateHash calculates the SHA-256 hash of data
 func calculateHash(data []byte) string {
 	hash := sha256.Sum256(data)
 	return fmt.Sprintf("sha256:%x", hash)
-	
+}
 
 // calculateDirectoryHash calculates the SHA-256 hash of a directory
 func calculateDirectoryHash(dirPath string) (string, error) {
@@ -563,6 +574,7 @@ func calculateDirectoryHash(dirPath string) (string, error) {
 
 	// Return the hash
 	return fmt.Sprintf("sha256:%x", h.Sum(nil)), nil
+}
 
 // getCurrentVersions gets the current versions of components
 func getCurrentVersions() (map[string]*version.SemVersion, error) {
@@ -576,3 +588,4 @@ func getCurrentVersions() (map[string]*version.SemVersion, error) {
 	return map[string]*version.SemVersion{
 		"core": &coreVersion,
 	}, nil
+}

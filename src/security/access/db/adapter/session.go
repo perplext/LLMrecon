@@ -3,6 +3,7 @@ package adapter
 
 import (
 	"context"
+	"time"
 )
 
 // Session represents a user session
@@ -17,6 +18,7 @@ type Session struct {
 	IPAddress      string
 	UserAgent      string
 	Metadata       string
+}
 
 // SessionStore defines the interface for session storage operations
 type SessionStore interface {
@@ -48,3 +50,5 @@ type SessionStore interface {
 	CleanExpiredSessions(ctx context.Context) (int, error)
 	
 	// Close closes the session store
+	Close() error
+}

@@ -155,6 +155,7 @@ If no private key is provided, the command can generate a new key pair.`,
 			fmt.Printf("Signature: %s\n", signature)
 		}
 	},
+}
 
 func init() {
 	rootCmd.AddCommand(signCmd)

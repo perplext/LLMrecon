@@ -4,6 +4,7 @@ package monitoring
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/management/benchmark"
 )
@@ -18,6 +19,7 @@ type PerformanceMonitor struct {
 	startTime time.Time
 	// config is the monitor configuration
 	config *MonitorConfig
+}
 
 // PerformanceMetric represents a performance metric
 type PerformanceMetric struct {
@@ -43,6 +45,7 @@ type PerformanceMetric struct {
 	Tags map[string]string
 	// History stores historical values for trending
 	History []HistoryEntry
+}
 
 // HistoryEntry represents a historical metric value
 type HistoryEntry struct {
@@ -50,6 +53,7 @@ type HistoryEntry struct {
 	Timestamp time.Time
 	// Value is the value of the metric
 	Value float64
+}
 
 // MonitorConfig contains configuration for the performance monitor
 type MonitorConfig struct {
@@ -61,6 +65,7 @@ type MonitorConfig struct {
 	AlertThresholds map[string]float64
 	// EnableAlerts enables or disables alerts
 	EnableAlerts bool
+}
 
 // NewPerformanceMonitor creates a new performance monitor
 func NewPerformanceMonitor(config *MonitorConfig) *PerformanceMonitor {
@@ -79,6 +84,7 @@ func NewPerformanceMonitor(config *MonitorConfig) *PerformanceMonitor {
 		startTime: time.Now(),
 		config:    config,
 	}
+}
 
 // RegisterMetric registers a new metric
 func (m *PerformanceMonitor) RegisterMetric(name string, description string, unit string, tags map[string]string) {
@@ -101,6 +107,7 @@ func (m *PerformanceMonitor) RegisterMetric(name string, description string, uni
 		LastUpdated: time.Now(),
 		History:     make([]HistoryEntry, 0, m.config.HistorySize),
 	}
+}
 
 // RecordMetric records a value for a metric
 func (m *PerformanceMonitor) RecordMetric(name string, value float64) {
@@ -160,6 +167,7 @@ func (m *PerformanceMonitor) RecordMetric(name string, value float64) {
 			m.triggerAlert(name, value, threshold)
 		}
 	}
+}
 
 // GetMetric gets a metric by name
 func (m *PerformanceMonitor) GetMetric(name string) (*PerformanceMetric, bool) {
@@ -168,6 +176,7 @@ func (m *PerformanceMonitor) GetMetric(name string) (*PerformanceMetric, bool) {
 
 	metric, exists := m.metrics[name]
 	return metric, exists
+}
 
 // GetMetrics gets all metrics
 func (m *PerformanceMonitor) GetMetrics() map[string]*PerformanceMetric {
@@ -181,6 +190,7 @@ func (m *PerformanceMonitor) GetMetrics() map[string]*PerformanceMetric {
 	}
 
 	return metrics
+}
 
 // GetMetricAverage gets the average value of a metric
 func (m *PerformanceMonitor) GetMetricAverage(name string) (float64, bool) {
@@ -193,6 +203,7 @@ func (m *PerformanceMonitor) GetMetricAverage(name string) (float64, bool) {
 	}
 
 	return metric.Sum / float64(metric.Count), true
+}
 
 // GetMetricHistory gets the history of a metric
 func (m *PerformanceMonitor) GetMetricHistory(name string) ([]HistoryEntry, bool) {
@@ -209,6 +220,7 @@ func (m *PerformanceMonitor) GetMetricHistory(name string) ([]HistoryEntry, bool
 	copy(history, metric.History)
 
 	return history, true
+}
 
 // GetMetricsByTag gets metrics by tag
 func (m *PerformanceMonitor) GetMetricsByTag(tag string, value string) map[string]*PerformanceMetric {
@@ -223,6 +235,7 @@ func (m *PerformanceMonitor) GetMetricsByTag(tag string, value string) map[strin
 	}
 
 	return metrics
+}
 
 // ResetMetric resets a metric
 func (m *PerformanceMonitor) ResetMetric(name string) bool {
@@ -244,6 +257,7 @@ func (m *PerformanceMonitor) ResetMetric(name string) bool {
 	metric.History = make([]HistoryEntry, 0, m.config.HistorySize)
 
 	return true
+}
 
 // ResetAllMetrics resets all metrics
 func (m *PerformanceMonitor) ResetAllMetrics() {
@@ -260,6 +274,7 @@ func (m *PerformanceMonitor) ResetAllMetrics() {
 		metric.LastUpdated = time.Now()
 		metric.History = make([]HistoryEntry, 0, m.config.HistorySize)
 	}
+}
 
 // RemoveMetric removes a metric
 func (m *PerformanceMonitor) RemoveMetric(name string) bool {
@@ -273,18 +288,22 @@ func (m *PerformanceMonitor) RemoveMetric(name string) bool {
 
 	delete(m.metrics, name)
 	return true
+}
 
 // SetAlertThreshold sets an alert threshold for a metric
 func (m *PerformanceMonitor) SetAlertThreshold(name string, threshold float64) {
 	m.config.AlertThresholds[name] = threshold
+}
 
 // EnableAlerts enables alerts
 func (m *PerformanceMonitor) EnableAlerts(enable bool) {
 	m.config.EnableAlerts = enable
+}
 
 // GetUptime gets the uptime of the monitor
 func (m *PerformanceMonitor) GetUptime() time.Duration {
 	return time.Since(m.startTime)
+}
 
 // GetReport generates a performance report
 func (m *PerformanceMonitor) GetReport() map[string]interface{} {
@@ -319,12 +338,14 @@ func (m *PerformanceMonitor) GetReport() map[string]interface{} {
 	report["metrics"] = metricSummaries
 	
 	return report
+}
 
 // triggerAlert triggers an alert for a metric
 func (m *PerformanceMonitor) triggerAlert(name string, value float64, threshold float64) {
 	// This is a placeholder for alert functionality
 	// In a real implementation, this would send an alert to a monitoring system
 	fmt.Printf("ALERT: Metric %s exceeded threshold %.2f with value %.2f\n", name, threshold, value)
+}
 
 // RecordBenchmarkResult records a benchmark result as metrics
 func (m *PerformanceMonitor) RecordBenchmarkResult(result *benchmark.BenchmarkResult) {
@@ -337,12 +358,14 @@ func (m *PerformanceMonitor) RecordBenchmarkResult(result *benchmark.BenchmarkRe
 	
 	// Record operation count
 	m.RecordMetric(fmt.Sprintf("%s.operation_count", result.Name), float64(result.OperationCount))
+}
 
 // RecordBenchmarkResults records multiple benchmark results
 func (m *PerformanceMonitor) RecordBenchmarkResults(results map[string]*benchmark.BenchmarkResult) {
 	for _, result := range results {
 		m.RecordBenchmarkResult(result)
 	}
+}
 
 // GetMetricTrend gets the trend of a metric over time
 func (m *PerformanceMonitor) GetMetricTrend(name string, duration time.Duration) (float64, bool) {
@@ -379,6 +402,7 @@ func (m *PerformanceMonitor) GetMetricTrend(name string, duration time.Duration)
 	
 	// Calculate trend (positive means increasing, negative means decreasing)
 	return newestValue - oldestValue, true
+}
 
 // GetPerformanceSummary gets a summary of performance metrics
 func (m *PerformanceMonitor) GetPerformanceSummary() map[string]interface{} {
@@ -436,3 +460,5 @@ func (m *PerformanceMonitor) GetPerformanceSummary() map[string]interface{} {
 	
 	summary["categories"] = categories
 	
+	return summary
+}

@@ -4,7 +4,9 @@ package scan
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
+	"time"
 )
 
 // Common errors
@@ -37,6 +39,7 @@ type Storage interface {
 	UpdateScanResult(ctx context.Context, result *ScanResult) error
 	DeleteScanResult(ctx context.Context, id string) error
 	ListScanResults(ctx context.Context, scanID string, page, pageSize int, filters FilterParams) ([]*ScanResult, int, error)
+}
 
 // MemoryStorage implements the Storage interface using in-memory storage
 // This is primarily for testing and development purposes
@@ -56,6 +59,7 @@ func NewMemoryStorage() *MemoryStorage {
 		results:      make(map[string]*ScanResult),
 		resultsByScan: make(map[string][]*ScanResult),
 	}
+}
 
 // CreateScanConfig creates a new scan configuration
 func (s *MemoryStorage) CreateScanConfig(ctx context.Context, config *ScanConfig) error {
@@ -80,6 +84,7 @@ func (s *MemoryStorage) CreateScanConfig(ctx context.Context, config *ScanConfig
 	s.configs[config.ID] = &configCopy
 
 	return nil
+}
 
 // GetScanConfig retrieves a scan configuration by ID
 func (s *MemoryStorage) GetScanConfig(ctx context.Context, id string) (*ScanConfig, error) {
@@ -94,6 +99,7 @@ func (s *MemoryStorage) GetScanConfig(ctx context.Context, id string) (*ScanConf
 	// Return a copy to prevent external modification
 	configCopy := *config
 	return &configCopy, nil
+}
 
 // UpdateScanConfig updates an existing scan configuration
 func (s *MemoryStorage) UpdateScanConfig(ctx context.Context, config *ScanConfig) error {
@@ -116,6 +122,7 @@ func (s *MemoryStorage) UpdateScanConfig(ctx context.Context, config *ScanConfig
 	s.configs[config.ID] = &configCopy
 
 	return nil
+}
 
 // DeleteScanConfig deletes a scan configuration by ID
 func (s *MemoryStorage) DeleteScanConfig(ctx context.Context, id string) error {
@@ -128,6 +135,7 @@ func (s *MemoryStorage) DeleteScanConfig(ctx context.Context, id string) error {
 
 	delete(s.configs, id)
 	return nil
+}
 
 // ListScanConfigs lists scan configurations with pagination and filtering
 func (s *MemoryStorage) ListScanConfigs(ctx context.Context, page, pageSize int, filters FilterParams) ([]*ScanConfig, int, error) {
@@ -159,6 +167,7 @@ func (s *MemoryStorage) ListScanConfigs(ctx context.Context, page, pageSize int,
 	}
 
 	return filtered[start:end], total, nil
+}
 
 // CreateScan creates a new scan
 func (s *MemoryStorage) CreateScan(ctx context.Context, scan *Scan) error {
@@ -184,6 +193,7 @@ func (s *MemoryStorage) CreateScan(ctx context.Context, scan *Scan) error {
 	s.scans[scan.ID] = &scanCopy
 
 	return nil
+}
 
 // GetScan retrieves a scan by ID
 func (s *MemoryStorage) GetScan(ctx context.Context, id string) (*Scan, error) {
@@ -206,6 +216,7 @@ func (s *MemoryStorage) GetScan(ctx context.Context, id string) (*Scan, error) {
 	}
 
 	return &scanCopy, nil
+}
 
 // UpdateScan updates an existing scan
 func (s *MemoryStorage) UpdateScan(ctx context.Context, scan *Scan) error {
@@ -226,6 +237,7 @@ func (s *MemoryStorage) UpdateScan(ctx context.Context, scan *Scan) error {
 	s.scans[scan.ID] = &scanCopy
 
 	return nil
+}
 
 // DeleteScan deletes a scan by ID
 func (s *MemoryStorage) DeleteScan(ctx context.Context, id string) error {
@@ -247,6 +259,7 @@ func (s *MemoryStorage) DeleteScan(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
 
 // ListScans lists scans with pagination and filtering
 func (s *MemoryStorage) ListScans(ctx context.Context, page, pageSize int, filters FilterParams) ([]*Scan, int, error) {
@@ -276,6 +289,7 @@ func (s *MemoryStorage) ListScans(ctx context.Context, page, pageSize int, filte
 	}
 
 	return filtered[start:end], total, nil
+}
 
 // CreateScanResult creates a new scan result
 func (s *MemoryStorage) CreateScanResult(ctx context.Context, result *ScanResult) error {
@@ -303,6 +317,7 @@ func (s *MemoryStorage) CreateScanResult(ctx context.Context, result *ScanResult
 	s.resultsByScan[result.ScanID] = append(s.resultsByScan[result.ScanID], &resultCopy)
 
 	return nil
+}
 
 // GetScanResult retrieves a scan result by ID
 func (s *MemoryStorage) GetScanResult(ctx context.Context, id string) (*ScanResult, error) {
@@ -317,6 +332,7 @@ func (s *MemoryStorage) GetScanResult(ctx context.Context, id string) (*ScanResu
 	// Return a copy to prevent external modification
 	resultCopy := *result
 	return &resultCopy, nil
+}
 
 // UpdateScanResult updates an existing scan result
 func (s *MemoryStorage) UpdateScanResult(ctx context.Context, result *ScanResult) error {
@@ -346,6 +362,7 @@ func (s *MemoryStorage) UpdateScanResult(ctx context.Context, result *ScanResult
 	}
 
 	return nil
+}
 
 // DeleteScanResult deletes a scan result by ID
 func (s *MemoryStorage) DeleteScanResult(ctx context.Context, id string) error {
@@ -368,6 +385,7 @@ func (s *MemoryStorage) DeleteScanResult(ctx context.Context, id string) error {
 
 	delete(s.results, id)
 	return nil
+}
 
 // ListScanResults lists scan results for a specific scan with pagination and filtering
 func (s *MemoryStorage) ListScanResults(ctx context.Context, scanID string, page, pageSize int, filters FilterParams) ([]*ScanResult, int, error) {
@@ -408,6 +426,7 @@ func (s *MemoryStorage) ListScanResults(ctx context.Context, scanID string, page
 	}
 
 	return filtered[start:end], total, nil
+}
 
 // Helper functions for filtering and sorting
 
@@ -427,6 +446,7 @@ func matchesConfigFilters(config *ScanConfig, filters FilterParams) bool {
 
 	// Add more filters as needed
 	return true
+}
 
 func matchesScanFilters(scan *Scan, filters FilterParams) bool {
 	// Apply status filter if provided
@@ -451,6 +471,7 @@ func matchesScanFilters(scan *Scan, filters FilterParams) bool {
 
 	// Add more filters as needed
 	return true
+}
 
 func matchesResultFilters(result *ScanResult, filters FilterParams) bool {
 	// Apply severity filter if provided
@@ -470,6 +491,7 @@ func matchesResultFilters(result *ScanResult, filters FilterParams) bool {
 
 	// Add more filters as needed
 	return true
+}
 
 func sortConfigsByCreationTime(configs []*ScanConfig) {
 	// Sort by creation time (newest first)
@@ -481,6 +503,7 @@ func sortConfigsByCreationTime(configs []*ScanConfig) {
 			}
 		}
 	}
+}
 
 func sortScansByStartTime(scans []*Scan) {
 	// Sort by start time (newest first)
@@ -491,6 +514,7 @@ func sortScansByStartTime(scans []*Scan) {
 			}
 		}
 	}
+}
 
 func sortResultsByTimestamp(results []*ScanResult) {
 	// Sort by timestamp (newest first)
@@ -501,6 +525,7 @@ func sortResultsByTimestamp(results []*ScanResult) {
 			}
 		}
 	}
+}
 
 func calculatePaginationBounds(page, pageSize, total int) (int, int) {
 	if page < 1 {
@@ -514,30 +539,10 @@ func calculatePaginationBounds(page, pageSize, total int) (int, int) {
 	end := start + pageSize
 
 	return start, end
+}
 
 func containsIgnoreCase(s, substr string) bool {
 	// Simple case-insensitive substring check
 	// In a real implementation, we would use a more sophisticated search mechanism
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }

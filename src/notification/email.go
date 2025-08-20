@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/smtp"
 	"strings"
+	"time"
 )
 
 // EmailConfig represents the configuration for the email notification channel
@@ -28,6 +29,7 @@ type EmailChannel struct {
 	name     string
 	config   EmailConfig
 	template *template.Template
+}
 
 // NewEmailChannel creates a new email notification channel
 func NewEmailChannel(config EmailConfig) (*EmailChannel, error) {
@@ -53,14 +55,17 @@ func NewEmailChannel(config EmailConfig) (*EmailChannel, error) {
 		config:   config,
 		template: tmpl,
 	}, nil
+}
 
 // ID returns the unique identifier for the channel
 func (e *EmailChannel) ID() string {
 	return e.id
+}
 
 // Name returns the human-readable name of the channel
 func (e *EmailChannel) Name() string {
 	return e.name
+}
 
 // Deliver delivers a notification via email
 func (e *EmailChannel) Deliver(notification *Notification) error {
@@ -188,6 +193,7 @@ func (e *EmailChannel) Deliver(notification *Notification) error {
 	}
 
 	return nil
+}
 
 // CanDeliver checks if the channel can deliver the notification
 func (e *EmailChannel) CanDeliver(notification *Notification) bool {
@@ -208,6 +214,7 @@ func (e *EmailChannel) CanDeliver(notification *Notification) bool {
 	}
 
 	return true
+}
 
 // Default email template
 const defaultEmailTemplate = `<!DOCTYPE html>
@@ -298,7 +305,3 @@ const defaultEmailTemplate = `<!DOCTYPE html>
     </div>
 </body>
 </html>`
-}
-}
-}
-}

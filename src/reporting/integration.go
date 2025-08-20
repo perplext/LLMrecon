@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 	"github.com/perplext/LLMrecon/src/template/management/types"
@@ -13,12 +14,14 @@ import (
 type TemplateResultConverter struct {
 	// complianceProviders is a list of compliance mapping providers
 	complianceProviders []ComplianceMappingProvider
+}
 
 // NewTemplateResultConverter creates a new template result converter
 func NewTemplateResultConverter(complianceProviders []ComplianceMappingProvider) *TemplateResultConverter {
 	return &TemplateResultConverter{
 		complianceProviders: complianceProviders,
 	}
+}
 
 // ConvertToTestSuite converts template results to a test suite
 func (c *TemplateResultConverter) ConvertToTestSuite(ctx context.Context, results []*types.TemplateResult, suiteID string, suiteName string) (*TestSuite, error) {
@@ -50,6 +53,7 @@ func (c *TemplateResultConverter) ConvertToTestSuite(ctx context.Context, result
 	}
 
 	return suite, nil
+}
 
 // convertToTestResult converts a template result to a test result
 func (c *TemplateResultConverter) convertToTestResult(ctx context.Context, result *types.TemplateResult) (*TestResult, error) {
@@ -97,6 +101,7 @@ func (c *TemplateResultConverter) convertToTestResult(ctx context.Context, resul
 	}
 
 	return testResult, nil
+}
 
 // mapStatus maps template status to test status
 func (c *TemplateResultConverter) mapStatus(status types.TemplateStatus, detected bool) TestStatus {
@@ -115,6 +120,7 @@ func (c *TemplateResultConverter) mapStatus(status types.TemplateStatus, detecte
 	default:
 		return PendingStatus
 	}
+}
 
 func convertSeverity(severity string) common.SeverityLevel {
 	switch strings.ToLower(severity) {
@@ -129,10 +135,12 @@ func convertSeverity(severity string) common.SeverityLevel {
 	default:
 		return common.Info
 	}
+}
 
 // mapSeverity maps score to severity level
 func (c *TemplateResultConverter) mapSeverity(score int) common.SeverityLevel {
 	return convertSeverity(c.mapSeverityString(score))
+}
 
 func (c *TemplateResultConverter) mapSeverityString(score int) string {
 	switch {
@@ -147,6 +155,7 @@ func (c *TemplateResultConverter) mapSeverityString(score int) string {
 	default:
 		return "info"
 	}
+}
 
 // calculateTotalDuration calculates the total duration of all template results
 func calculateTotalDuration(results []*types.TemplateResult) time.Duration {
@@ -155,6 +164,7 @@ func calculateTotalDuration(results []*types.TemplateResult) time.Duration {
 		total += result.Duration
 	}
 	return total
+}
 
 // TemplateReportingService provides reporting services for template results
 type TemplateReportingService struct {
@@ -162,6 +172,7 @@ type TemplateReportingService struct {
 	converter *TemplateResultConverter
 	// generator is the report generator
 	generator common.ReportGenerator
+}
 
 // NewTemplateReportingService creates a new template reporting service
 func NewTemplateReportingService(converter *TemplateResultConverter, generator common.ReportGenerator) *TemplateReportingService {
@@ -169,6 +180,7 @@ func NewTemplateReportingService(converter *TemplateResultConverter, generator c
 		converter: converter,
 		generator: generator,
 	}
+}
 
 // GenerateReport generates a report from template results
 func (s *TemplateReportingService) GenerateReport(ctx context.Context, results []*types.TemplateResult, options *ReportOptions) ([]byte, error) {
@@ -197,17 +209,20 @@ func (s *TemplateReportingService) GenerateReport(ctx context.Context, results [
 	}
 
 	return data, nil
+}
 
 // BatchReportingService provides reporting services for multiple test suites
 type BatchReportingService struct {
 	// generator is the report generator
 	generator common.ReportGenerator
+}
 
 // NewBatchReportingService creates a new batch reporting service
 func NewBatchReportingService(generator common.ReportGenerator) *BatchReportingService {
 	return &BatchReportingService{
 		generator: generator,
 	}
+}
 
 // GenerateReport generates a report from multiple test suites
 func (s *BatchReportingService) GenerateReport(ctx context.Context, suites []*TestSuite, options *ReportOptions) ([]byte, error) {
@@ -228,4 +243,7 @@ func (s *BatchReportingService) GenerateReport(ctx context.Context, suites []*Te
 	if err != nil {
 		return nil, fmt.Errorf("failed to format report: %w", err)
 	}
+
+	return data, nil
+}
 

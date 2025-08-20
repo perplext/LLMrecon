@@ -18,6 +18,7 @@ type UsageMetrics struct {
 	LastRequestTime time.Time
 	// TotalRequestDuration is the total duration of all requests
 	TotalRequestDuration time.Duration
+}
 
 // UsageTracker provides usage tracking functionality
 type UsageTracker struct {
@@ -29,6 +30,7 @@ type UsageTracker struct {
 	resetInterval time.Duration
 	// lastResetTime is the time of the last reset
 	lastResetTime time.Time
+}
 
 // NewUsageTracker creates a new usage tracker
 func NewUsageTracker(resetInterval time.Duration) *UsageTracker {
@@ -38,6 +40,7 @@ func NewUsageTracker(resetInterval time.Duration) *UsageTracker {
 		resetInterval: resetInterval,
 		lastResetTime: time.Now(),
 	}
+}
 
 // TrackRequest tracks a request
 func (ut *UsageTracker) TrackRequest(modelID string, tokens int64, duration time.Duration, err error) {
@@ -64,6 +67,7 @@ func (ut *UsageTracker) TrackRequest(modelID string, tokens int64, duration time
 	if err != nil {
 		metrics.Errors++
 	}
+}
 
 // GetMetrics returns the usage metrics for a model
 func (ut *UsageTracker) GetMetrics(modelID string) *UsageMetrics {
@@ -85,6 +89,7 @@ func (ut *UsageTracker) GetMetrics(modelID string) *UsageMetrics {
 		return &UsageMetrics{}
 	}
 	return metrics
+}
 
 // GetAllMetrics returns the usage metrics for all models
 func (ut *UsageTracker) GetAllMetrics() map[string]*UsageMetrics {
@@ -107,20 +112,24 @@ func (ut *UsageTracker) GetAllMetrics() map[string]*UsageMetrics {
 		metrics[modelID] = &metricsCopy
 	}
 	return metrics
+}
 
 // ResetMetrics resets the usage metrics
 func (ut *UsageTracker) ResetMetrics() {
 	ut.mutex.Lock()
 	defer ut.mutex.Unlock()
 	ut.resetMetricsLocked()
+}
 
 // resetMetricsLocked resets the usage metrics (must be called with the mutex locked)
 func (ut *UsageTracker) resetMetricsLocked() {
 	ut.metrics = make(map[string]*UsageMetrics)
 	ut.lastResetTime = time.Now()
+}
 
 // SetResetInterval sets the reset interval
 func (ut *UsageTracker) SetResetInterval(resetInterval time.Duration) {
 	ut.mutex.Lock()
 	defer ut.mutex.Unlock()
 	ut.resetInterval = resetInterval
+}

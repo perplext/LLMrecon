@@ -1,7 +1,9 @@
 package monitoring
 
 import (
+	"fmt"
 	"sync"
+	"time"
 )
 
 // StaticFileMetrics contains metrics for the static file handler
@@ -39,29 +41,34 @@ func NewStaticFileMonitor(fileHandler FileHandlerInterface, metricsManager Metri
 		sampleInterval: time.Minute,
 		enabled:        true,
 	}
+}
 
 // SetSampleInterval sets the sample interval for metrics collection
 func (m *StaticFileMonitor) SetSampleInterval(interval time.Duration) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.sampleInterval = interval
+}
 
 // Enable enables the monitor
 func (m *StaticFileMonitor) Enable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.enabled = true
+}
 
 // Disable disables the monitor
 func (m *StaticFileMonitor) Disable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.enabled = false
+}
 
 // Start starts the monitoring process
 func (m *StaticFileMonitor) Start() {
 	// Start monitoring loop
 	go m.monitorLoop()
+}
 
 // monitorLoop periodically collects metrics
 func (m *StaticFileMonitor) monitorLoop() {
@@ -79,12 +86,13 @@ func (m *StaticFileMonitor) monitorLoop() {
 		}
 
 		if err := m.CollectMetrics(); err != nil {
-			return fmt.Errorf("operation failed: %w", err)
+			fmt.Printf("Error collecting metrics: %v\n", err)
 		}
 		if err := m.CheckAlerts(); err != nil {
-			return fmt.Errorf("operation failed: %w", err)
+			fmt.Printf("Error checking alerts: %v\n", err)
 		}
 	}
+}
 
 // CollectMetrics collects metrics from the static file handler
 func (m *StaticFileMonitor) CollectMetrics() error {
@@ -100,148 +108,75 @@ func (m *StaticFileMonitor) CollectMetrics() error {
 	if stats == nil {
 		return nil
 	}
-	
-	cacheSize := m.fileHandler.GetCacheSize()
-	cacheItemCount := m.fileHandler.GetCacheItemCount()
 
-	// Calculate cache hit ratio
-	cacheHitRatio := float64(0)
-	if stats.CacheHits+stats.CacheMisses > 0 {
-		cacheHitRatio = float64(stats.CacheHits) / float64(stats.CacheHits+stats.CacheMisses)
-	}
-
-	// Create metrics
-	metrics := &StaticFileMetrics{
-		FilesServed:      stats.FilesServed,
-		CacheHits:        stats.CacheHits,
-		CacheMisses:      stats.CacheMisses,
-		CacheHitRatio:    cacheHitRatio,
-		CompressedFiles:  stats.CompressedFiles,
-		TotalSize:        stats.TotalSize,
-		CompressedSize:   stats.CompressedSize,
-		CompressionRatio: stats.CompressionRatio,
-		CacheSize:        cacheSize,
-		CacheItemCount:   cacheItemCount,
-		AverageServeTime: stats.AverageServeTime,
-	}
+	// Store last stats for comparison
+	m.lastStats = stats
 
 	// Record metrics
-	if m.metricsManager != nil {
-		m.recordMetrics(metrics)
-	}
-
-	// Update last stats
-	m.lastStats = stats
-	return nil
-
-// recordMetrics records metrics to the metrics manager
-func (m *StaticFileMonitor) recordMetrics(metrics *StaticFileMetrics) error {
-	// Record counter metrics
-	if err := m.metricsManager.RecordCounter("static_file.files_served", metrics.FilesServed, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	if err := m.metricsManager.RecordCounter("static_file.cache_hits", metrics.CacheHits, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	if err := m.metricsManager.RecordCounter("static_file.cache_misses", metrics.CacheMisses, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	if err := m.metricsManager.RecordCounter("static_file.compressed_files", metrics.CompressedFiles, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	if err := m.metricsManager.RecordCounter("static_file.total_size", metrics.TotalSize, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	if err := m.metricsManager.RecordCounter("static_file.compressed_size", metrics.CompressedSize, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	// Record gauge metrics
-	if err := m.metricsManager.RecordGauge("static_file.cache_hit_ratio", metrics.CacheHitRatio, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	if err := m.metricsManager.RecordGauge("static_file.compression_ratio", metrics.CompressionRatio, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	if err := m.metricsManager.RecordGauge("static_file.cache_size", metrics.CacheSize, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	if err := m.metricsManager.RecordGauge("static_file.cache_item_count", metrics.CacheItemCount, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-	if err := m.metricsManager.RecordGauge("static_file.average_serve_time_ms", metrics.AverageServeTime.Milliseconds(), nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
+	tags := map[string]string{"component": "static_file_handler"}
+	
+	if err := m.metricsManager.RecordGauge("static_file.files_served", stats.FilesServed, tags); err != nil {
+		return fmt.Errorf("failed to record files_served metric: %w", err)
 	}
 	
+	if err := m.metricsManager.RecordGauge("static_file.cache_hits", stats.CacheHits, tags); err != nil {
+		return fmt.Errorf("failed to record cache_hits metric: %w", err)
+	}
+	
+	if err := m.metricsManager.RecordGauge("static_file.cache_misses", stats.CacheMisses, tags); err != nil {
+		return fmt.Errorf("failed to record cache_misses metric: %w", err)
+	}
+
 	return nil
+}
 
 // CheckAlerts checks for alert conditions
 func (m *StaticFileMonitor) CheckAlerts() error {
-	if m.alertManager == nil {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	
+	if m.alertManager == nil || m.lastStats == nil {
 		return nil
 	}
 
-	metrics := m.GetMetrics()
-	if metrics == nil {
-		return nil
-	}
-
-	// Check cache size
-	if err := m.alertManager.CheckThreshold("static_file.cache_size", metrics.CacheSize, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-
+	tags := map[string]string{"component": "static_file_handler"}
+	
 	// Check cache hit ratio
-	if err := m.alertManager.CheckThreshold("static_file.cache_hit_ratio", metrics.CacheHitRatio, nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
-
-	// Check average serve time
-	if err := m.alertManager.CheckThreshold("static_file.average_serve_time_ms", metrics.AverageServeTime.Milliseconds(), nil); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
+	if m.lastStats.CacheHits+m.lastStats.CacheMisses > 0 {
+		hitRatio := float64(m.lastStats.CacheHits) / float64(m.lastStats.CacheHits+m.lastStats.CacheMisses)
+		if err := m.alertManager.CheckThreshold("static_file.cache_hit_ratio", hitRatio, tags); err != nil {
+			return fmt.Errorf("failed to check cache hit ratio alert: %w", err)
+		}
 	}
 
 	return nil
+}
 
-// GetMetrics returns the current static file metrics
+// GetMetrics returns the current metrics
 func (m *StaticFileMonitor) GetMetrics() *StaticFileMetrics {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	
-	if m.fileHandler == nil {
-		return nil
+	if m.lastStats == nil {
+		return &StaticFileMetrics{}
 	}
 
-	stats := m.fileHandler.GetStats()
-	if stats == nil {
-		return nil
-	}
-	
-	cacheSize := m.fileHandler.GetCacheSize()
-	cacheItemCount := m.fileHandler.GetCacheItemCount()
-
-	cacheHitRatio := float64(0)
-	if stats.CacheHits+stats.CacheMisses > 0 {
-		cacheHitRatio = float64(stats.CacheHits) / float64(stats.CacheHits+stats.CacheMisses)
+	hitRatio := 0.0
+	if m.lastStats.CacheHits+m.lastStats.CacheMisses > 0 {
+		hitRatio = float64(m.lastStats.CacheHits) / float64(m.lastStats.CacheHits+m.lastStats.CacheMisses)
 	}
 
 	return &StaticFileMetrics{
-		FilesServed:      stats.FilesServed,
-		CacheHits:        stats.CacheHits,
-		CacheMisses:      stats.CacheMisses,
-		CacheHitRatio:    cacheHitRatio,
-		CompressedFiles:  stats.CompressedFiles,
-		TotalSize:        stats.TotalSize,
-		CompressedSize:   stats.CompressedSize,
-		CompressionRatio: stats.CompressionRatio,
-		CacheSize:        cacheSize,
-		CacheItemCount:   cacheItemCount,
-		AverageServeTime: stats.AverageServeTime,
+		FilesServed:      m.lastStats.FilesServed,
+		CacheHits:        m.lastStats.CacheHits,
+		CacheMisses:      m.lastStats.CacheMisses,
+		CacheHitRatio:    hitRatio,
+		CompressedFiles:  m.lastStats.CompressedFiles,
+		TotalSize:        m.lastStats.TotalSize,
+		CompressedSize:   m.lastStats.CompressedSize,
+		CompressionRatio: m.lastStats.CompressionRatio,
+		CacheSize:        m.fileHandler.GetCacheSize(),
+		CacheItemCount:   m.fileHandler.GetCacheItemCount(),
+		AverageServeTime: m.lastStats.AverageServeTime,
 	}
-}
-}
-}
-}
-}
-}
-}
 }

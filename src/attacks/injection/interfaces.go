@@ -2,6 +2,7 @@ package injection
 
 import (
 	"context"
+	"time"
 )
 
 // InjectionEngine defines the interface for injection attacks
@@ -17,6 +18,7 @@ type InjectionEngine interface {
 	
 	// ValidatePayload checks if a payload is valid
 	ValidatePayload(payload string) error
+}
 
 // AttackConfig configures an injection attack
 type AttackConfig struct {
@@ -59,6 +61,7 @@ type TargetConfig struct {
 type Message struct {
 	Role    string
 	Content string
+}
 
 // AttackResult contains the results of an injection attempt
 type AttackResult struct {
@@ -89,24 +92,9 @@ type AttackResult struct {
 	
 	// Metadata
 	Metadata    map[string]interface{}
+}
 
-// Evidence provides proof of successful injection
-type Evidence struct {
-	Type        EvidenceType
-	Content     string
-	Confidence  float64
-	Explanation string
-
-// EvidenceType categorizes evidence
-type EvidenceType string
-
-const (
-	DirectResponseEvidence    EvidenceType = "direct_response"
-	BehaviorChangeEvidence    EvidenceType = "behavior_change"
-	InstructionLeakEvidence   EvidenceType = "instruction_leak"
-	ConstraintViolationEvidence EvidenceType = "constraint_violation"
-	OutputPatternEvidence     EvidenceType = "output_pattern"
-)
+// Evidence and EvidenceType are defined in enhanced_detector.go
 
 // TechniqueInfo provides information about an injection technique
 type TechniqueInfo struct {
@@ -125,6 +113,7 @@ type InjectionChain struct {
 	Name        string
 	Description string
 	Steps       []ChainStep
+}
 
 // ChainStep represents a step in an injection chain
 type ChainStep struct {
@@ -141,6 +130,7 @@ type StepCondition struct {
 	PreviousResult string // e.g., "success", "failure", "partial"
 	ResponsePattern string // regex pattern
 	MinConfidence  float64
+}
 
 // ConditionType defines types of step conditions
 type ConditionType string
@@ -166,6 +156,7 @@ type PayloadGenerator interface {
 	
 	// Obfuscate applies obfuscation to a payload
 	Obfuscate(payload string) string
+}
 
 // SuccessDetector analyzes responses for success indicators
 type SuccessDetector interface {
@@ -177,6 +168,7 @@ type SuccessDetector interface {
 	
 	// CompareResponses checks behavior change
 	CompareResponses(baseline, injected string) (changed bool, confidence float64)
+}
 
 // MetricsCollector collects attack metrics
 type MetricsCollector interface {
@@ -191,6 +183,7 @@ type MetricsCollector interface {
 	
 	// GetTechniqueStats returns detailed statistics
 	GetTechniqueStats(technique string) *TechniqueStats
+}
 
 // TechniqueStats contains statistics for a technique
 type TechniqueStats struct {
@@ -202,6 +195,7 @@ type TechniqueStats struct {
 	LastSuccess     time.Time
 	LastFailure     time.Time
 	CommonFailures  map[string]int
+}
 
 // Logger defines logging interface
 type Logger interface {
@@ -209,6 +203,7 @@ type Logger interface {
 	Info(msg string, keysAndValues ...interface{})
 	Warn(msg string, keysAndValues ...interface{})
 	Error(msg string, keysAndValues ...interface{})
+}
 
 // Error types
 type InjectionError struct {
@@ -219,6 +214,7 @@ type InjectionError struct {
 
 func (e *InjectionError) Error() string {
 	return e.Message
+}
 
 type ErrorType string
 

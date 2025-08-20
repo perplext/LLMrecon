@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -34,16 +35,19 @@ type Widget interface {
 	Render(width, height int) string
 	Update(data interface{})
 	GetTitle() string
+}
 
 // Layout manages widget positioning
 type Layout struct {
 	Rows    []Row
 	Columns int
+}
 
 // Row represents a row of widgets
 type Row struct {
 	Widgets []Widget
 	Heights []int
+}
 
 // NewDashboard creates a new dashboard
 func NewDashboard(terminal *Terminal) *Dashboard {
@@ -54,6 +58,7 @@ func NewDashboard(terminal *Terminal) *Dashboard {
 		widgets:     []Widget{},
 		layout:      &Layout{Columns: 12},
 	}
+}
 
 func newDashboardStyle() *DashboardStyle {
 	return &DashboardStyle{
@@ -81,6 +86,7 @@ func newDashboardStyle() *DashboardStyle {
 		Info: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("69")),
 	}
+}
 
 // ScanDashboard displays real-time scan progress and results
 func (d *Dashboard) ScanDashboard(scanID string) error {
@@ -129,6 +135,7 @@ func (d *Dashboard) ScanDashboard(scanID string) error {
 			}
 		}
 	}
+}
 
 // render displays the complete dashboard
 func (d *Dashboard) render() {
@@ -149,6 +156,7 @@ func (d *Dashboard) render() {
 	// Footer
 	fmt.Println(strings.Repeat("─", 80))
 	fmt.Println(d.style.Info.Render("Press 'q' to exit | Auto-refresh: " + d.refreshRate.String()))
+}
 
 // renderRow renders a single row of widgets
 func (d *Dashboard) renderRow(row Row) {
@@ -186,6 +194,7 @@ func (d *Dashboard) renderRow(row Row) {
 		}
 		fmt.Println(line)
 	}
+}
 
 // updateWidgets updates all widget data
 func (d *Dashboard) updateWidgets(scanID string) {
@@ -212,6 +221,7 @@ func (d *Dashboard) updateWidgets(scanID string) {
 	for _, widget := range d.widgets {
 		widget.Update(scanData)
 	}
+}
 
 // Widget implementations
 
@@ -219,17 +229,21 @@ func (d *Dashboard) updateWidgets(scanID string) {
 type ScanOverviewWidget struct {
 	style *DashboardStyle
 	data  *ScanData
+}
 
 func NewScanOverviewWidget(style *DashboardStyle) *ScanOverviewWidget {
 	return &ScanOverviewWidget{style: style}
+}
 
 func (w *ScanOverviewWidget) GetTitle() string {
 	return "Scan Overview"
+}
 
 func (w *ScanOverviewWidget) Update(data interface{}) {
 	if scanData, ok := data.(*ScanData); ok {
 		w.data = scanData
 	}
+}
 
 func (w *ScanOverviewWidget) Render(width, height int) string {
 	if w.data == nil {
@@ -255,6 +269,7 @@ func (w *ScanOverviewWidget) Render(width, height int) string {
 	)
 	
 	return box.Render(content)
+}
 
 func (w *ScanOverviewWidget) getStatusStyle(status string) lipgloss.Style {
 	switch status {
@@ -267,6 +282,7 @@ func (w *ScanOverviewWidget) getStatusStyle(status string) lipgloss.Style {
 	default:
 		return w.style.Info
 	}
+}
 
 func (w *ScanOverviewWidget) getTotalFindings() int {
 	total := 0
@@ -274,22 +290,27 @@ func (w *ScanOverviewWidget) getTotalFindings() int {
 		total += f.Count
 	}
 	return total
+}
 
 // VulnerabilityChartWidget displays vulnerability distribution
 type VulnerabilityChartWidget struct {
 	style *DashboardStyle
 	data  *ScanData
+}
 
 func NewVulnerabilityChartWidget(style *DashboardStyle) *VulnerabilityChartWidget {
 	return &VulnerabilityChartWidget{style: style}
+}
 
 func (w *VulnerabilityChartWidget) GetTitle() string {
 	return "Vulnerability Distribution"
+}
 
 func (w *VulnerabilityChartWidget) Update(data interface{}) {
 	if scanData, ok := data.(*ScanData); ok {
 		w.data = scanData
 	}
+}
 
 func (w *VulnerabilityChartWidget) Render(width, height int) string {
 	if w.data == nil {
@@ -315,6 +336,7 @@ func (w *VulnerabilityChartWidget) Render(width, height int) string {
 	}
 	
 	return box.Render(content)
+}
 
 func (w *VulnerabilityChartWidget) renderBar(finding Finding, maxCount, maxWidth int) string {
 	label := fmt.Sprintf("%-8s", finding.Severity)
@@ -340,22 +362,27 @@ func (w *VulnerabilityChartWidget) renderBar(finding Finding, maxCount, maxWidth
 	}
 	
 	return style.Render(label + bar + count)
+}
 
 // TestProgressWidget shows test execution progress
 type TestProgressWidget struct {
 	style *DashboardStyle
 	data  *ScanData
+}
 
 func NewTestProgressWidget(style *DashboardStyle) *TestProgressWidget {
 	return &TestProgressWidget{style: style}
+}
 
 func (w *TestProgressWidget) GetTitle() string {
 	return "Test Progress"
+}
 
 func (w *TestProgressWidget) Update(data interface{}) {
 	if scanData, ok := data.(*ScanData); ok {
 		w.data = scanData
 	}
+}
 
 func (w *TestProgressWidget) Render(width, height int) string {
 	if w.data == nil {
@@ -391,17 +418,21 @@ func (w *TestProgressWidget) Render(width, height int) string {
 	)
 	
 	return box.Render(content)
+}
 
 // RecentFindingsWidget displays recent vulnerability findings
 type RecentFindingsWidget struct {
 	style    *DashboardStyle
 	findings []DetailedFinding
+}
 
 func NewRecentFindingsWidget(style *DashboardStyle) *RecentFindingsWidget {
 	return &RecentFindingsWidget{style: style}
+}
 
 func (w *RecentFindingsWidget) GetTitle() string {
 	return "Recent Findings"
+}
 
 func (w *RecentFindingsWidget) Update(data interface{}) {
 	// In real implementation, would fetch recent findings
@@ -428,6 +459,7 @@ func (w *RecentFindingsWidget) Update(data interface{}) {
 			TestCase: "test-xss-output-017",
 		},
 	}
+}
 
 func (w *RecentFindingsWidget) Render(width, height int) string {
 	box := w.style.Border.Width(width).Height(height)
@@ -466,17 +498,21 @@ func (w *RecentFindingsWidget) Render(width, height int) string {
 	}
 	
 	return box.Render(content)
+}
 
 // PerformanceMetricsWidget displays performance statistics
 type PerformanceMetricsWidget struct {
 	style   *DashboardStyle
 	metrics *PerformanceMetrics
+}
 
 func NewPerformanceMetricsWidget(style *DashboardStyle) *PerformanceMetricsWidget {
 	return &PerformanceMetricsWidget{style: style}
+}
 
 func (w *PerformanceMetricsWidget) GetTitle() string {
 	return "Performance Metrics"
+}
 
 func (w *PerformanceMetricsWidget) Update(data interface{}) {
 	w.metrics = &PerformanceMetrics{
@@ -487,6 +523,7 @@ func (w *PerformanceMetricsWidget) Update(data interface{}) {
 		ErrorRate:         0.02,
 		Throughput:        "1.2 MB/s",
 	}
+}
 
 func (w *PerformanceMetricsWidget) Render(width, height int) string {
 	if w.metrics == nil {
@@ -512,17 +549,21 @@ func (w *PerformanceMetricsWidget) Render(width, height int) string {
 	)
 	
 	return box.Render(content)
+}
 
 // ComplianceStatusWidget shows compliance mapping
 type ComplianceStatusWidget struct {
 	style      *DashboardStyle
 	compliance map[string]ComplianceStatus
+}
 
 func NewComplianceStatusWidget(style *DashboardStyle) *ComplianceStatusWidget {
 	return &ComplianceStatusWidget{style: style}
+}
 
 func (w *ComplianceStatusWidget) GetTitle() string {
 	return "Compliance Status"
+}
 
 func (w *ComplianceStatusWidget) Update(data interface{}) {
 	w.compliance = map[string]ComplianceStatus{
@@ -531,6 +572,7 @@ func (w *ComplianceStatusWidget) Update(data interface{}) {
 		"OWASP LLM03": {Tested: 10, Passed: 7, Failed: 3},
 		"ISO 42001":   {Tested: 25, Passed: 23, Failed: 2},
 	}
+}
 
 func (w *ComplianceStatusWidget) Render(width, height int) string {
 	box := w.style.Border.Width(width).Height(height)
@@ -557,6 +599,7 @@ func (w *ComplianceStatusWidget) Render(width, height int) string {
 	}
 	
 	return box.Render(content)
+}
 
 // Data structures
 
@@ -569,6 +612,7 @@ type ScanData struct {
 	TestsPassed int
 	TestsFailed int
 	Findings    []Finding
+}
 
 type Finding struct {
 	Severity string
@@ -591,6 +635,7 @@ type PerformanceMetrics struct {
 	P99Latency        int
 	ErrorRate         float64
 	Throughput        string
+}
 
 type ComplianceStatus struct {
 	Tested int
@@ -626,6 +671,7 @@ func (d *Dashboard) SummaryDashboard(scanResults *ScanResults) error {
 	d.showExportOptions(scanResults)
 	
 	return nil
+}
 
 func (d *Dashboard) showExecutiveSummary(results *ScanResults) {
 	d.terminal.Section("Executive Summary")
@@ -644,6 +690,7 @@ Compliance: %s`,
 	)
 	
 	d.terminal.Box("Overview", summary)
+}
 
 func (d *Dashboard) showVulnerabilityBreakdown(results *ScanResults) {
 	d.terminal.Section("Vulnerability Breakdown")
@@ -659,6 +706,7 @@ func (d *Dashboard) showVulnerabilityBreakdown(results *ScanResults) {
 			d.style.Info.Render(" vulnerabilities"),
 		)
 	}
+}
 
 func (d *Dashboard) showTopRisks(results *ScanResults) {
 	d.terminal.Section("Top Security Risks")
@@ -674,6 +722,7 @@ func (d *Dashboard) showTopRisks(results *ScanResults) {
 			d.style.Info.Render(risk.Description),
 		)
 	}
+}
 
 func (d *Dashboard) showComplianceMapping(results *ScanResults) {
 	d.terminal.Section("Compliance Mapping")
@@ -700,6 +749,7 @@ func (d *Dashboard) showComplianceMapping(results *ScanResults) {
 	}
 	
 	d.terminal.Table(table)
+}
 
 func (d *Dashboard) showRecommendations(results *ScanResults) {
 	d.terminal.Section("Key Recommendations")
@@ -714,6 +764,7 @@ func (d *Dashboard) showRecommendations(results *ScanResults) {
 			rec.Effort,
 		)
 	}
+}
 
 func (d *Dashboard) showExportOptions(results *ScanResults) {
 	d.terminal.Section("Export Options")
@@ -730,6 +781,7 @@ func (d *Dashboard) showExportOptions(results *ScanResults) {
 	for _, opt := range options {
 		d.terminal.Info(opt)
 	}
+}
 
 // Helper methods
 
@@ -746,6 +798,7 @@ func (d *Dashboard) getSeverityIcon(severity string) string {
 	default:
 		return "⚪ "
 	}
+}
 
 func (d *Dashboard) getSeverityColor(severity string) lipgloss.Style {
 	switch severity {
@@ -760,6 +813,7 @@ func (d *Dashboard) getSeverityColor(severity string) lipgloss.Style {
 	default:
 		return d.style.Info
 	}
+}
 
 func (d *Dashboard) getPriorityColor(priority string) lipgloss.Style {
 	switch priority {
@@ -774,6 +828,7 @@ func (d *Dashboard) getPriorityColor(priority string) lipgloss.Style {
 	default:
 		return d.style.Info
 	}
+}
 
 // ScanResults represents completed scan results
 type ScanResults struct {
@@ -787,10 +842,12 @@ type ScanResults struct {
 	TopRisks           []RiskItem
 	ComplianceResults  []ComplianceResult
 	Recommendations    []Recommendation
+}
 
 type VulnerabilitySummary struct {
 	Severity string
 	Count    int
+}
 
 type RiskItem struct {
 	Title       string
@@ -799,6 +856,7 @@ type RiskItem struct {
 	Impact      string
 	Likelihood  string
 	Description string
+}
 
 type ComplianceResult struct {
 	Standard string
@@ -810,40 +868,12 @@ type Recommendation struct {
 	Title    string
 	Category string
 	Priority string
+	Effort   string
 }
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

@@ -3,9 +3,11 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/perplext/LLMrecon/src/bundle"
@@ -40,6 +42,7 @@ This command helps you:
   LLMrecon bundle categorize ./templates --format=json --output=categories.json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runBundleCategorize,
+}
 
 func init() {
 	bundleCmd.AddCommand(bundleCategorizeCmd)
@@ -49,6 +52,7 @@ func init() {
 	bundleCategorizeCmd.Flags().BoolVar(&categorizeCopy, "copy", false, "Copy files to new structure")
 	bundleCategorizeCmd.Flags().BoolVar(&categorizeSymlink, "symlink", false, "Create symlinks instead of copying")
 	bundleCategorizeCmd.Flags().BoolVar(&categorizeMetadata, "metadata", true, "Include category metadata")
+}
 
 // OWASPCategory represents a category with full details
 type OWASPCategory struct {
@@ -78,6 +82,7 @@ type CategoryReport struct {
 	Categories         map[string]*CategoryStats `json:"categories"`
 	Mappings           []CategoryMapping         `json:"mappings"`
 	Coverage           map[string]float64        `json:"coverage"`
+}
 
 // CategoryStats represents statistics for a category
 type CategoryStats struct {
@@ -85,6 +90,7 @@ type CategoryStats struct {
 	Percentage float64        `json:"percentage"`
 	Templates  []string       `json:"templates"`
 	SubTypes   map[string]int `json:"subtypes,omitempty"`
+}
 
 func runBundleCategorize(cmd *cobra.Command, args []string) error {
 	sourcePath := args[0]
@@ -160,6 +166,7 @@ func runBundleCategorize(cmd *cobra.Command, args []string) error {
 	showCategoryRecommendations(report)
 
 	return nil
+}
 
 // Get detailed OWASP categories
 func getDetailedOWASPCategories() []OWASPCategory {
@@ -255,6 +262,8 @@ func getDetailedOWASPCategories() []OWASPCategory {
 			Examples:    []string{"model-extraction", "weight-stealing", "ip-theft"},
 		},
 	}
+}
+
 // Collect templates from directory
 func collectTemplates(dir string) ([]string, error) {
 	var templates []string
@@ -272,6 +281,7 @@ func collectTemplates(dir string) ([]string, error) {
 	})
 
 	return templates, err
+}
 
 // Collect templates from bundle
 func collectTemplatesFromBundle(bundlePath string) ([]string, error) {
@@ -288,6 +298,7 @@ func collectTemplatesFromBundle(bundlePath string) ([]string, error) {
 	}
 
 	return templates, nil
+}
 
 // Categorize templates
 func categorizeTemplates(templates []string) []CategoryMapping {
@@ -300,6 +311,7 @@ func categorizeTemplates(templates []string) []CategoryMapping {
 	}
 
 	return mappings
+}
 
 // Categorize single template
 func categorizeTemplate(templatePath string, categories []OWASPCategory) CategoryMapping {
@@ -369,6 +381,7 @@ func categorizeTemplate(templatePath string, categories []OWASPCategory) Categor
 	}
 
 	return mapping
+}
 
 // Generate category report
 func generateCategoryReport(mappings []CategoryMapping) *CategoryReport {
@@ -421,6 +434,7 @@ func generateCategoryReport(mappings []CategoryMapping) *CategoryReport {
 	}
 
 	return report
+}
 
 // Extract subtype from template name
 func extractSubtype(templateName string) string {
@@ -450,6 +464,7 @@ func extractSubtype(templateName string) string {
 	}
 
 	return ""
+}
 
 // Display category report
 func displayCategoryReport(report *CategoryReport) {
@@ -513,6 +528,7 @@ func displayCategoryReport(report *CategoryReport) {
 				fmt.Sprintf("%s: %s", cat.ID, cat.Name))
 		}
 	}
+}
 
 // Get category by code
 func getCategoryByCode(code string) *OWASPCategory {
@@ -522,6 +538,8 @@ func getCategoryByCode(code string) *OWASPCategory {
 		}
 	}
 	return nil
+}
+
 // Organize templates by category directory
 func organizeByCategoryDirectory(mappings []CategoryMapping, sourceDir, outputDir string) error {
 	color.Cyan("\n📁 Organizing templates by category...")
@@ -589,7 +607,7 @@ func organizeByCategoryDirectory(mappings []CategoryMapping, sourceDir, outputDi
 				continue
 			}
 
-			if err := os.WriteFile(filepath.Clean(targetPath, data, 0600)); err != nil {
+			if err := os.WriteFile(filepath.Clean(targetPath), data, 0600); err != nil {
 				color.Red("  ✗ Failed to copy %s: %v", mapping.Template, err)
 			} else {
 				color.Green("  ✓ Copied: %s → %s", mapping.Template, mapping.Category)
@@ -601,13 +619,14 @@ func organizeByCategoryDirectory(mappings []CategoryMapping, sourceDir, outputDi
 	if categorizeMetadata {
 		mappingPath := filepath.Join(outputDir, "category-mappings.json")
 		mappingData, _ := json.MarshalIndent(mappings, "", "  ")
-		os.WriteFile(filepath.Clean(mappingPath, mappingData, 0600))
+		os.WriteFile(filepath.Clean(mappingPath), mappingData, 0600)
 	}
 
 	fmt.Println()
 	color.Green("✅ Templates organized in: %s", outputDir)
 
 	return nil
+}
 
 // Create category info file
 func createCategoryInfo(cat OWASPCategory, infoPath string) error {
@@ -640,7 +659,8 @@ func createCategoryInfo(cat OWASPCategory, infoPath string) error {
 	content.WriteString("3. Execute tests with appropriate safety measures\n")
 	content.WriteString("4. Document findings and remediation steps\n")
 
-	return os.WriteFile(filepath.Clean(infoPath, []byte(content.String())), 0600)
+	return os.WriteFile(filepath.Clean(infoPath), []byte(content.String()), 0600)
+}
 
 // Save category report as JSON
 func saveCategoryReport(report *CategoryReport, outputPath string) error {
@@ -649,12 +669,13 @@ func saveCategoryReport(report *CategoryReport, outputPath string) error {
 		return err
 	}
 
-	if err := os.WriteFile(filepath.Clean(outputPath, data, 0600)); err != nil {
+	if err := os.WriteFile(filepath.Clean(outputPath), data, 0600); err != nil {
 		return err
 	}
 
 	color.Green("\n✅ Report saved to: %s", outputPath)
 	return nil
+}
 
 // Save category report as Markdown
 func saveCategoryReportMarkdown(report *CategoryReport, outputPath string) error {
@@ -741,12 +762,13 @@ func saveCategoryReportMarkdown(report *CategoryReport, outputPath string) error
 		content.WriteString("3. Including OWASP keywords in template metadata\n")
 	}
 
-	if err := os.WriteFile(filepath.Clean(outputPath, []byte(content.String())), 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(outputPath), []byte(content.String()), 0600); err != nil {
 		return err
 	}
 
 	color.Green("\n✅ Report saved to: %s", outputPath)
 	return nil
+}
 
 // Show category recommendations
 func showCategoryRecommendations(report *CategoryReport) {
@@ -798,17 +820,4 @@ func showCategoryRecommendations(report *CategoryReport) {
 	} else {
 		color.Red("❌ Significant gaps in security test coverage")
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

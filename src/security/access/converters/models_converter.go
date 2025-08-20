@@ -13,6 +13,7 @@ type ModelConverter struct{}
 // NewModelConverter creates a new model converter
 func NewModelConverter() *ModelConverter {
 	return &ModelConverter{}
+}
 
 // ToModelUser converts a legacy user to a model user
 func (c *ModelConverter) ToModelUser(legacyUser interface{}) (*models.User, error) {
@@ -27,6 +28,7 @@ func (c *ModelConverter) ToModelUser(legacyUser interface{}) (*models.User, erro
 		ID:       "placeholder-id",
 		Username: "placeholder-username",
 	}, nil
+}
 
 // FromModelUser converts a model user to a legacy user
 func (c *ModelConverter) FromModelUser(user *models.User) (interface{}, error) {
@@ -38,6 +40,7 @@ func (c *ModelConverter) FromModelUser(user *models.User) (interface{}, error) {
 	}
 	
 	return user, nil
+}
 
 // ToModelIncident converts a legacy incident to a model incident
 func (c *ModelConverter) ToModelIncident(legacyIncident interface{}) (*models.SecurityIncident, error) {
@@ -51,6 +54,7 @@ func (c *ModelConverter) ToModelIncident(legacyIncident interface{}) (*models.Se
 		Title:  "placeholder-title",
 		Status: models.SecurityIncidentStatusOpen,
 	}, nil
+}
 
 // FromModelIncident converts a model incident to a legacy incident
 func (c *ModelConverter) FromModelIncident(incident *models.SecurityIncident) (interface{}, error) {
@@ -60,6 +64,7 @@ func (c *ModelConverter) FromModelIncident(incident *models.SecurityIncident) (i
 	}
 	
 	return incident, nil
+}
 
 // ToModelVulnerability converts a legacy vulnerability to a model vulnerability
 func (c *ModelConverter) ToModelVulnerability(legacyVulnerability interface{}) (*models.Vulnerability, error) {
@@ -73,6 +78,7 @@ func (c *ModelConverter) ToModelVulnerability(legacyVulnerability interface{}) (
 		Title:  "placeholder-title",
 		Status: models.VulnerabilityStatusOpen,
 	}, nil
+}
 
 // FromModelVulnerability converts a model vulnerability to a legacy vulnerability
 func (c *ModelConverter) FromModelVulnerability(vulnerability *models.Vulnerability) (interface{}, error) {
@@ -82,6 +88,7 @@ func (c *ModelConverter) FromModelVulnerability(vulnerability *models.Vulnerabil
 	}
 	
 	return vulnerability, nil
+}
 
 // ToModelSession converts a legacy session to a model session
 func (c *ModelConverter) ToModelSession(legacySession interface{}) (*models.Session, error) {
@@ -94,6 +101,7 @@ func (c *ModelConverter) ToModelSession(legacySession interface{}) (*models.Sess
 		ID:     "placeholder-id",
 		UserID: "placeholder-user-id",
 	}, nil
+}
 
 // FromModelSession converts a model session to a legacy session
 func (c *ModelConverter) FromModelSession(session *models.Session) (interface{}, error) {
@@ -103,6 +111,7 @@ func (c *ModelConverter) FromModelSession(session *models.Session) (interface{},
 	}
 	
 	return session, nil
+}
 
 // ToModelAuditLog converts a legacy audit log to a model audit log
 func (c *ModelConverter) ToModelAuditLog(legacyAuditLog interface{}) (*models.AuditLog, error) {
@@ -116,6 +125,7 @@ func (c *ModelConverter) ToModelAuditLog(legacyAuditLog interface{}) (*models.Au
 		Action:      string(models.AuditActionRead),
 		Description: "placeholder-description",
 	}, nil
+}
 
 // FromModelAuditLog converts a model audit log to a legacy audit log
 func (c *ModelConverter) FromModelAuditLog(log *models.AuditLog) (interface{}, error) {
@@ -125,6 +135,7 @@ func (c *ModelConverter) FromModelAuditLog(log *models.AuditLog) (interface{}, e
 	}
 	
 	return log, nil
+}
 
 // Legacy conversion functions for backward compatibility
 
@@ -133,57 +144,67 @@ func UserToModel(user interface{}) *models.User {
 	converter := NewModelConverter()
 	result, _ := converter.ToModelUser(user)
 	return result
+}
 
 // ModelToUser converts a models.User to a legacy User
 func ModelToUser(user *models.User) interface{} {
 	converter := NewModelConverter()
 	result, _ := converter.FromModelUser(user)
 	return result
+}
 
 // SecurityIncidentToModel converts a legacy SecurityIncident to a models.SecurityIncident
 func SecurityIncidentToModel(incident interface{}) *models.SecurityIncident {
 	converter := NewModelConverter()
 	result, _ := converter.ToModelIncident(incident)
 	return result
+}
 
 // ModelToSecurityIncident converts a models.SecurityIncident to a legacy SecurityIncident
 func ModelToSecurityIncident(incident *models.SecurityIncident) interface{} {
 	converter := NewModelConverter()
 	result, _ := converter.FromModelIncident(incident)
 	return result
+}
 
 // VulnerabilityToModel converts a legacy Vulnerability to a models.Vulnerability
 func VulnerabilityToModel(vulnerability interface{}) *models.Vulnerability {
 	converter := NewModelConverter()
 	result, _ := converter.ToModelVulnerability(vulnerability)
 	return result
+}
 
 // ModelToVulnerability converts a models.Vulnerability to a legacy Vulnerability
 func ModelToVulnerability(vulnerability *models.Vulnerability) interface{} {
 	converter := NewModelConverter()
 	result, _ := converter.FromModelVulnerability(vulnerability)
 	return result
+}
 
 // AuditLogToModel converts a legacy AuditLog to a models.AuditLog
 func AuditLogToModel(log interface{}) *models.AuditLog {
 	converter := NewModelConverter()
 	result, _ := converter.ToModelAuditLog(log)
 	return result
+}
 
 // ModelToAuditLog converts a models.AuditLog to a legacy AuditLog
 func ModelToAuditLog(log *models.AuditLog) interface{} {
 	converter := NewModelConverter()
 	result, _ := converter.FromModelAuditLog(log)
 	return result
+}
 
 // SessionToModel converts a legacy Session to a models.Session
 func SessionToModel(session interface{}) *models.Session {
 	converter := NewModelConverter()
 	result, _ := converter.ToModelSession(session)
 	return result
+}
 
 // ModelToSession converts a models.Session to a legacy Session
 func ModelToSession(session *models.Session) interface{} {
 	converter := NewModelConverter()
 	result, _ := converter.FromModelSession(session)
 	return result
+}

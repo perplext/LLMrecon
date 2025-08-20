@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"time"
 )
 
 // Manager implements the AuthManager interface
@@ -15,6 +17,7 @@ type Manager struct {
 	
 	// providers is a map of authentication providers
 	providers map[ProviderType]AuthProvider
+}
 
 // AuthProvider defines the interface for authentication providers
 type AuthProvider interface {
@@ -23,6 +26,7 @@ type AuthProvider interface {
 	
 	// RefreshToken refreshes a token
 	RefreshToken(ctx context.Context, creds *Credentials) error
+}
 
 // NewManager creates a new authentication manager
 func NewManager(configDir string, passphrase string) (*Manager, error) {
@@ -56,10 +60,12 @@ func NewManager(configDir string, passphrase string) (*Manager, error) {
 	manager.RegisterProvider(GenericProvider, NewGenericAuthProvider())
 	
 	return manager, nil
+}
 
 // RegisterProvider registers an authentication provider
 func (m *Manager) RegisterProvider(providerType ProviderType, provider AuthProvider) {
 	m.providers[providerType] = provider
+}
 
 // Authenticate authenticates a user with the given credentials
 func (m *Manager) Authenticate(ctx context.Context, creds *Credentials) (bool, error) {
@@ -94,22 +100,27 @@ func (m *Manager) Authenticate(ctx context.Context, creds *Credentials) (bool, e
 	}
 	
 	return authenticated, nil
+}
 
 // GetCredentials gets credentials by ID
 func (m *Manager) GetCredentials(id string) (*Credentials, error) {
 	return m.credStore.GetCredentials(id)
+}
 
 // SaveCredentials saves credentials
 func (m *Manager) SaveCredentials(creds *Credentials) error {
 	return m.credStore.SaveCredentials(creds)
+}
 
 // DeleteCredentials deletes credentials by ID
 func (m *Manager) DeleteCredentials(id string) error {
 	return m.credStore.DeleteCredentials(id)
+}
 
 // ListCredentials lists all credentials
 func (m *Manager) ListCredentials() ([]*Credentials, error) {
 	return m.credStore.ListCredentials()
+}
 
 // RefreshToken refreshes a token if it's expired
 func (m *Manager) RefreshToken(ctx context.Context, creds *Credentials) error {
@@ -126,34 +137,42 @@ func (m *Manager) RefreshToken(ctx context.Context, creds *Credentials) error {
 	
 	// Save updated credentials
 	return m.SaveCredentials(creds)
+}
 
 // HasPermission checks if a user has a specific permission
 func (m *Manager) HasPermission(user *User, permission Permission) bool {
 	return m.userStore.HasPermission(user, permission)
+}
 
 // GetUser gets a user by ID
 func (m *Manager) GetUser(id string) (*User, error) {
 	return m.userStore.GetUser(id)
+}
 
 // SaveUser saves a user
 func (m *Manager) SaveUser(user *User) error {
 	return m.userStore.SaveUser(user)
+}
 
 // DeleteUser deletes a user by ID
 func (m *Manager) DeleteUser(id string) error {
 	return m.userStore.DeleteUser(id)
+}
 
 // ListUsers lists all users
 func (m *Manager) ListUsers() ([]*User, error) {
 	return m.userStore.ListUsers()
+}
 
 // UpdateLastLogin updates the last login timestamp for a user
 func (m *Manager) UpdateLastLogin(id string) error {
 	return m.userStore.UpdateLastLogin(id)
+}
 
 // GenerateCredentialID generates a unique ID for credentials
 func GenerateCredentialID(provider ProviderType, name string) string {
 	return fmt.Sprintf("%s-%s-%d", provider, name, time.Now().UnixNano())
+}
 
 // DefaultManager is the default authentication manager
 var DefaultManager *Manager
@@ -163,3 +182,4 @@ func InitDefaultManager(configDir string, passphrase string) error {
 	var err error
 	DefaultManager, err = NewManager(configDir, passphrase)
 	return err
+}

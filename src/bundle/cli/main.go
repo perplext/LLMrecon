@@ -3,19 +3,18 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
+	"github.com/perplext/LLMrecon/src/audit/trail"
 )
 
 // RunOfflineBundleCLI runs the offline bundle CLI
 func RunOfflineBundleCLI() {
 	// Create audit trail manager
 	auditConfig := &trail.AuditConfig{
-		Enabled:        true,
-		LoggingBackend: "file",
-		LogDirectory:   "logs/audit",
-		RetentionDays:  90,
-		SigningEnabled: true,
+		MinLogLevel:         trail.LogLevelInfo,
+		TamperEvident:       true,
+		RedactSensitiveInfo: true,
 	}
 	
 	auditTrailManager, err := trail.NewAuditTrailManager(auditConfig)
@@ -33,3 +32,4 @@ func RunOfflineBundleCLI() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+}

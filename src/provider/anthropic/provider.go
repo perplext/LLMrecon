@@ -7,8 +7,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/provider/middleware"
@@ -126,6 +128,7 @@ func NewAnthropicProvider(config *core.ProviderConfig) (core.Provider, error) {
 		requestQueue:      requestQueue,
 		usageTracker:      usageTracker,
 	}, nil
+}
 
 // GetModels returns a list of available models
 func (p *AnthropicProvider) GetModels(ctx context.Context) ([]core.ModelInfo, error) {
@@ -205,6 +208,7 @@ func (p *AnthropicProvider) GetModels(ctx context.Context) ([]core.ModelInfo, er
 	}
 
 	return result.([]core.ModelInfo), nil
+}
 
 // GetModelInfo returns information about a specific model
 func (p *AnthropicProvider) GetModelInfo(ctx context.Context, modelID string) (*core.ModelInfo, error) {
@@ -220,6 +224,7 @@ func (p *AnthropicProvider) GetModelInfo(ctx context.Context, modelID string) (*
 	}
 
 	return nil, fmt.Errorf("model %s not found", modelID)
+}
 
 // TextCompletion generates a text completion
 func (p *AnthropicProvider) TextCompletion(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
@@ -345,6 +350,7 @@ func (p *AnthropicProvider) TextCompletion(ctx context.Context, request *core.Te
 	}
 
 	return result.(*core.TextCompletionResponse), nil
+}
 
 // ChatCompletion generates a chat completion
 func (p *AnthropicProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -474,6 +480,7 @@ func (p *AnthropicProvider) ChatCompletion(ctx context.Context, request *core.Ch
 	})
 
 	return result.(*core.ChatCompletionResponse), nil
+}
 
 // StreamingChatCompletion generates a streaming chat completion
 func (p *AnthropicProvider) StreamingChatCompletion(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
@@ -703,10 +710,12 @@ func (p *AnthropicProvider) StreamingChatCompletion(ctx context.Context, request
 	}
 
 	return nil
+}
 
 // CreateEmbedding creates an embedding
 func (p *AnthropicProvider) CreateEmbedding(ctx context.Context, request *core.EmbeddingRequest) (*core.EmbeddingResponse, error) {
 	return nil, fmt.Errorf("embeddings are not supported by Anthropic provider")
+}
 
 // CountTokens counts the number of tokens in a text
 func (p *AnthropicProvider) CountTokens(ctx context.Context, text string, modelID string) (int, error) {
@@ -715,6 +724,7 @@ func (p *AnthropicProvider) CountTokens(ctx context.Context, text string, modelI
 	// For now, we'll just estimate based on words
 	words := strings.Fields(text)
 	return len(words) * 4 / 3, nil // Rough estimate: 4 tokens per 3 words
+}
 
 // Close closes the provider and releases any resources
 func (p *AnthropicProvider) Close() error {
@@ -732,6 +742,7 @@ func (p *AnthropicProvider) Close() error {
 	}
 	
 	return nil
+}
 
 // GetUsageMetrics returns the usage metrics for a specific model
 func (p *AnthropicProvider) GetUsageMetrics(modelID string) (*core.UsageMetrics, error) {
@@ -776,6 +787,7 @@ func (p *AnthropicProvider) GetUsageMetrics(modelID string) (*core.UsageMetrics,
 	}
 
 	return coreMetrics, nil
+}
 
 // GetAllUsageMetrics returns the usage metrics for all models
 func (p *AnthropicProvider) GetAllUsageMetrics() (map[string]*core.UsageMetrics, error) {
@@ -818,11 +830,13 @@ func (p *AnthropicProvider) GetAllUsageMetrics() (map[string]*core.UsageMetrics,
 	}
 
 	return coreMetrics, nil
+}
 
 // ResetUsageMetrics resets the usage metrics
 func (p *AnthropicProvider) ResetUsageMetrics() error {
 	p.usageTracker.ResetMetrics()
 	return nil
+}
 
 // GetRateLimitConfig returns the rate limit configuration
 func (p *AnthropicProvider) GetRateLimitConfig() *core.RateLimitConfig {
@@ -833,6 +847,7 @@ func (p *AnthropicProvider) GetRateLimitConfig() *core.RateLimitConfig {
 		MaxConcurrentRequests: maxConcurrentRequests,
 		BurstSize:             burstSize,
 	}
+}
 
 // UpdateRateLimitConfig updates the rate limit configuration
 func (p *AnthropicProvider) UpdateRateLimitConfig(config *core.RateLimitConfig) error {
@@ -849,11 +864,12 @@ func (p *AnthropicProvider) UpdateRateLimitConfig(config *core.RateLimitConfig) 
 	)
 	
 	return nil
+}
 
 // GetRetryConfig returns the retry configuration
 func (p *AnthropicProvider) GetRetryConfig() *core.RetryConfig {
 	return p.retryMiddleware.GetConfig()
-	
+}
 
 // UpdateRetryConfig updates the retry configuration
 func (p *AnthropicProvider) UpdateRetryConfig(config *core.RetryConfig) error {
@@ -864,6 +880,7 @@ func (p *AnthropicProvider) UpdateRetryConfig(config *core.RetryConfig) error {
 	// Update the retry middleware with the new configuration
 	p.retryMiddleware.UpdateConfig(config)
 	return nil
+}
 
 // handleErrorResponse handles an error response from the Anthropic API
 func (p *AnthropicProvider) handleErrorResponse(statusCode int, body []byte) error {
@@ -888,6 +905,7 @@ func (p *AnthropicProvider) handleErrorResponse(statusCode int, body []byte) err
 		Message:     errorResponse.Error.Message,
 		RawResponse: string(body),
 	}
+}
 
 // executeWithResilience executes a function with resilience
 func (p *AnthropicProvider) executeWithResilience(ctx context.Context, operation string, request interface{}, fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
@@ -986,6 +1004,7 @@ func (p *AnthropicProvider) executeWithResilience(ctx context.Context, operation
 	}
 
 	return result, err
+}
 
 // Helper functions
 
@@ -1016,6 +1035,7 @@ func convertMessagesToAnthropicFormat(messages []core.Message) []map[string]inte
 		})
 	}
 	return result
+}
 
 // convertToolsToAnthropicFormat converts tools to Anthropic API format
 func convertToolsToAnthropicFormat(tools []core.Tool) []map[string]interface{} {
@@ -1033,13 +1053,14 @@ func convertToolsToAnthropicFormat(tools []core.Tool) []map[string]interface{} {
 		}
 	}
 	return result
+}
 
 // getContentText extracts text content from Anthropic response content
 func getContentText(content []struct {
 	Type  string `json:"type"`
 	Text  string `json:"text"`
 	Role  string `json:"role"`
-) string {
+}) string {
 	var result strings.Builder
 	for _, block := range content {
 		if block.Type == "text" {
@@ -1047,6 +1068,7 @@ func getContentText(content []struct {
 		}
 	}
 	return result.String()
+}
 
 // convertStopReasonToFinishReason converts Anthropic stop reason to standard finish reason
 func convertStopReasonToFinishReason(stopReason string) string {
@@ -1060,24 +1082,4 @@ func convertStopReasonToFinishReason(stopReason string) string {
 	default:
 		return stopReason
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

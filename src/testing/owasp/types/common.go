@@ -2,6 +2,7 @@
 package types
 
 import (
+	"time"
 
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
@@ -81,6 +82,7 @@ type ReportOptions struct {
 	OutputPath  string                 `json:"output_path"`
 	Title       string                 `json:"title"`
 	Metadata    map[string]interface{} `json:"metadata"`
+}
 
 // Report represents a generated report
 type Report struct {
@@ -100,18 +102,22 @@ var defaultTestFactory TestFactory
 // RegisterTestCase registers a test case with the global registry
 func RegisterTestCase(vulnerabilityType VulnerabilityType, testCase *TestCase) {
 	testCaseRegistry[vulnerabilityType] = append(testCaseRegistry[vulnerabilityType], testCase)
+}
 
 // GetRegisteredTestCases returns all test cases registered for a specific vulnerability type
 func GetRegisteredTestCases(vulnerabilityType VulnerabilityType) []*TestCase {
 	return testCaseRegistry[vulnerabilityType]
+}
 
 // GetAllRegisteredTestCases returns all registered test cases
 func GetAllRegisteredTestCases() map[VulnerabilityType][]*TestCase {
 	return testCaseRegistry
+}
 
 // SetDefaultTestFactory sets the default test factory
 func SetDefaultTestFactory(factory TestFactory) {
 	defaultTestFactory = factory
+}
 
 // GetDefaultTestFactory returns the default test factory
 func GetDefaultTestFactory() TestFactory {

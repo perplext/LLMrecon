@@ -11,24 +11,21 @@ type FormatterFactory struct {
 	formatters map[ReportFormat]FormatterCreator
 	mu         sync.RWMutex
 }
-
-
-}
 // NewFormatterFactory creates a new formatter factory
 func NewFormatterFactory() *FormatterFactory {
 	return &FormatterFactory{
 		formatters: make(map[ReportFormat]FormatterCreator),
 	}
+}
 
 // RegisterFormatter registers a formatter creator for a specific format
-}
 func (f *FormatterFactory) RegisterFormatter(format ReportFormat, creator FormatterCreator) {
 	f.mu.Lock()
 	f.formatters[format] = creator
 	f.mu.Unlock()
+}
 
 // CreateFormatter creates a formatter for the specified format
-}
 func (f *FormatterFactory) CreateFormatter(format ReportFormat, options map[string]interface{}) (ReportFormatter, error) {
 	f.mu.RLock()
 	creator, ok := f.formatters[format]
@@ -38,9 +35,9 @@ func (f *FormatterFactory) CreateFormatter(format ReportFormat, options map[stri
 	}
 	
 	return creator(options)
+}
 
 // CreateDefaultReportGenerator creates a default report generator with all formatters registered
-}
 func (f *FormatterFactory) CreateDefaultReportGenerator(generator ReportGenerator) error {
 	// Register all formatters
 	formats := []ReportFormat{
@@ -62,3 +59,5 @@ func (f *FormatterFactory) CreateDefaultReportGenerator(generator ReportGenerato
 		generator.RegisterFormatter(formatter)
 	}
 	
+	return nil
+}

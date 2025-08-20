@@ -16,12 +16,12 @@ func (m *ConfigManager) SetProviderAPIKey(providerType core.ProviderType, apiKey
 	// Get the existing config or create a new one
 	var config *core.ProviderConfig
 	var isNewConfig bool
-	
+
 	// First check if the config exists
 	m.mutex.RLock()
 	existingConfig, exists := m.configs[providerType]
 	m.mutex.RUnlock()
-	
+
 	if !exists {
 		// Create a new config if it doesn't exist
 		config = &core.ProviderConfig{
@@ -40,7 +40,7 @@ func (m *ConfigManager) SetProviderAPIKey(providerType core.ProviderType, apiKey
 	m.mutex.Lock()
 	// Create a deep copy to avoid modifying the original
 	configCopy := *config
-	
+
 	// Encrypt sensitive data if encryption is available
 	if m.encryptData != nil {
 		if err := m.EncryptSensitiveData(&configCopy); err != nil {
@@ -48,25 +48,28 @@ func (m *ConfigManager) SetProviderAPIKey(providerType core.ProviderType, apiKey
 			return fmt.Errorf("failed to encrypt sensitive data: %w", err)
 		}
 	}
-	
+
 	// Set config
 	m.configs[providerType] = &configCopy
-	
+
 	// Prepare changes message
 	changes := "Updated API key"
 	if isNewConfig {
 		changes = "Initial configuration with API key"
 	}
-	
+
 	// Release the lock before I/O operations
 	m.mutex.Unlock()
-	
+
 	// Add a version to the history
 	if err := m.AddConfigVersion(providerType, changes); err != nil {
 		return fmt.Errorf("failed to add config version: %w", err)
 	}
-	
+
 	// Save the updated configs
 	if err := m.Save(); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
+
+	return nil
+}

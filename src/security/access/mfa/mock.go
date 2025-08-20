@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 )
 
 // MockMFAManager is a mock implementation of the MFAManager interface for testing
@@ -15,6 +16,7 @@ type MockMFAManager struct {
 	webAuthnDevices map[string][]WebAuthnDevice
 	mfaMethods      map[string][]MFAMethod
 	mu              sync.RWMutex
+}
 
 // NewMockMFAManager creates a new mock MFA manager
 func NewMockMFAManager() *MockMFAManager {
@@ -25,6 +27,7 @@ func NewMockMFAManager() *MockMFAManager {
 		webAuthnDevices: make(map[string][]WebAuthnDevice),
 		mfaMethods:      make(map[string][]MFAMethod),
 	}
+}
 
 // GetMFASettings gets the MFA settings for a user
 func (m *MockMFAManager) GetMFASettings(ctx context.Context, userID string) (*MFASettings, error) {
@@ -52,6 +55,7 @@ func (m *MockMFAManager) GetMFASettings(ctx context.Context, userID string) (*MF
 		DefaultMethod: methods[0],
 		Methods:       methodSettings,
 	}, nil
+}
 
 // EnableMFA enables MFA for a user
 func (m *MockMFAManager) EnableMFA(ctx context.Context, userID string, method MFAMethod) (*MFASettings, error) {
@@ -75,6 +79,7 @@ func (m *MockMFAManager) EnableMFA(ctx context.Context, userID string, method MF
 		DefaultMethod: methods[0],
 		Methods:       methodSettings,
 	}, nil
+}
 
 // DisableMFA disables MFA for a user
 func (m *MockMFAManager) DisableMFA(ctx context.Context, userID string) error {
@@ -88,6 +93,7 @@ func (m *MockMFAManager) DisableMFA(ctx context.Context, userID string) error {
 	delete(m.webAuthnDevices, userID)
 
 	return nil
+}
 
 // SetupTOTP sets up TOTP for a user
 func (m *MockMFAManager) SetupTOTP(ctx context.Context, userID string, username string) (*TOTPConfig, error) {
@@ -106,6 +112,7 @@ func (m *MockMFAManager) SetupTOTP(ctx context.Context, userID string, username 
 		Secret:    secret,
 		QRCodeURL: qrCodeURL,
 	}, nil
+}
 
 // VerifyTOTPSetup verifies TOTP setup
 func (m *MockMFAManager) VerifyTOTPSetup(ctx context.Context, userID string, code string) error {
@@ -136,6 +143,7 @@ func (m *MockMFAManager) VerifyTOTPSetup(ctx context.Context, userID string, cod
 	}
 
 	return nil
+}
 
 // GenerateBackupCodes generates backup codes for a user
 func (m *MockMFAManager) GenerateBackupCodes(ctx context.Context, userID string) ([]MFABackupCode, error) {
@@ -165,6 +173,7 @@ func (m *MockMFAManager) GenerateBackupCodes(ctx context.Context, userID string)
 	}
 
 	return codes, nil
+}
 
 // SetupWebAuthn initiates WebAuthn setup
 func (m *MockMFAManager) SetupWebAuthn(ctx context.Context, userID string, username string, displayName string) (map[string]interface{}, error) {
@@ -186,6 +195,7 @@ func (m *MockMFAManager) SetupWebAuthn(ctx context.Context, userID string, usern
 	}
 
 	return options, nil
+}
 
 // VerifyWebAuthnSetup verifies WebAuthn setup
 func (m *MockMFAManager) VerifyWebAuthnSetup(ctx context.Context, userID string, attestationResponse string) error {
@@ -214,6 +224,7 @@ func (m *MockMFAManager) VerifyWebAuthnSetup(ctx context.Context, userID string,
 	}
 
 	return nil
+}
 
 // SetupSMS initiates SMS setup
 func (m *MockMFAManager) SetupSMS(ctx context.Context, userID string, phoneNumber string) error {
@@ -232,6 +243,7 @@ func (m *MockMFAManager) SetupSMS(ctx context.Context, userID string, phoneNumbe
 	// For mock purposes, we'll just store the code
 
 	return nil
+}
 
 // VerifySMSSetup verifies SMS setup
 func (m *MockMFAManager) VerifySMSSetup(ctx context.Context, userID string, code string) error {
@@ -258,6 +270,7 @@ func (m *MockMFAManager) VerifySMSSetup(ctx context.Context, userID string, code
 	delete(m.smsCodes, userID)
 
 	return nil
+}
 
 // VerifyMFA verifies an MFA code
 func (m *MockMFAManager) VerifyMFA(ctx context.Context, userID string, method MFAMethod, code string) (bool, error) {
@@ -298,10 +311,12 @@ func (m *MockMFAManager) VerifyMFA(ctx context.Context, userID string, method MF
 	default:
 		return false, errors.New("unsupported MFA method")
 	}
+}
 
 // InitiateSMSVerification initiates SMS verification
 func (m *MockMFAManager) InitiateSMSVerification(ctx context.Context, userID string) error {
 	return m.SetupSMS(ctx, userID, "")
+}
 
 // VerifySMSCode verifies an SMS code
 func (m *MockMFAManager) VerifySMSCode(ctx context.Context, userID string, code string) (bool, error) {
@@ -325,6 +340,7 @@ func (m *MockMFAManager) VerifySMSCode(ctx context.Context, userID string, code 
 	delete(m.smsCodes, userID)
 	
 	return true, nil
+}
 
 // InitiateWebAuthnVerification initiates WebAuthn verification
 func (m *MockMFAManager) InitiateWebAuthnVerification(ctx context.Context, userID string) (map[string]interface{}, error) {
@@ -339,6 +355,7 @@ func (m *MockMFAManager) InitiateWebAuthnVerification(ctx context.Context, userI
 	}
 
 	return options, nil
+}
 
 // VerifyWebAuthnAssertion verifies a WebAuthn assertion
 func (m *MockMFAManager) VerifyWebAuthnAssertion(ctx context.Context, userID string, assertionResponse string) (bool, error) {
@@ -347,6 +364,7 @@ func (m *MockMFAManager) VerifyWebAuthnAssertion(ctx context.Context, userID str
 
 	// For mock purposes, we'll accept "mock-assertion-response"
 	return assertionResponse == "mock-assertion-response", nil
+}
 
 // ValidateMFASettings validates MFA settings
 func (m *MockMFAManager) ValidateMFASettings(ctx context.Context, userID string) (bool, []string, error) {
@@ -388,6 +406,7 @@ func (m *MockMFAManager) ValidateMFASettings(ctx context.Context, userID string)
 	}
 
 	return valid, issues, nil
+}
 
 // Helper methods for testing
 
@@ -403,15 +422,18 @@ func (m *MockMFAManager) GenerateTOTPSecret(userID string) (string, error) {
 	m.totpSecrets[userID] = secret
 
 	return secret, nil
+}
 
 // GenerateTOTPQRCodeURL generates a TOTP QR code URL for testing
 func (m *MockMFAManager) GenerateTOTPQRCodeURL(username, secret string) string {
 	return GenerateTOTPQRCodeURL("LLMrecon", username, secret)
+}
 
 // VerifyTOTPCode verifies a TOTP code for testing
 func (m *MockMFAManager) VerifyTOTPCode(userID, secret, code string) (bool, error) {
 	// For mock purposes, we'll accept "123456"
 	return code == "123456", nil
+}
 
 // VerifyBackupCode verifies a backup code for testing
 func (m *MockMFAManager) VerifyBackupCode(userID, code string) (bool, error) {
@@ -432,6 +454,7 @@ func (m *MockMFAManager) VerifyBackupCode(userID, code string) (bool, error) {
 	}
 	
 	return valid, nil
+}
 
 // GenerateSMSCode generates an SMS code for testing
 func (m *MockMFAManager) GenerateSMSCode(userID string) (string, error) {
@@ -445,24 +468,29 @@ func (m *MockMFAManager) GenerateSMSCode(userID string) (string, error) {
 	m.smsCodes[userID] = code
 
 	return code, nil
+}
 
 // SendSMS sends an SMS for testing
 func (m *MockMFAManager) SendSMS(userID, phoneNumber, message string) error {
 	// In a real implementation, we would send the SMS
 	// For mock purposes, this is a no-op
 	return nil
+}
 
 // GenerateWebAuthnRegistrationOptions generates WebAuthn registration options for testing
 func (m *MockMFAManager) GenerateWebAuthnRegistrationOptions(userID string) (map[string]interface{}, error) {
 	return m.SetupWebAuthn(context.Background(), userID, userID, userID)
+}
 
 // VerifyWebAuthnRegistration verifies WebAuthn registration for testing
 func (m *MockMFAManager) VerifyWebAuthnRegistration(userID, attestationResponse string) error {
 	return m.VerifyWebAuthnSetup(context.Background(), userID, attestationResponse)
+}
 
 // GenerateWebAuthnAuthenticationOptions generates WebAuthn authentication options for testing
 func (m *MockMFAManager) GenerateWebAuthnAuthenticationOptions(userID string) (map[string]interface{}, error) {
 	return m.InitiateWebAuthnVerification(context.Background(), userID)
+}
 
 // VerifyWebAuthnAuthentication verifies WebAuthn authentication for testing
 func (m *MockMFAManager) VerifyWebAuthnAuthentication(userID, assertionResponse string) error {
@@ -474,18 +502,21 @@ func (m *MockMFAManager) VerifyWebAuthnAuthentication(userID, assertionResponse 
 		return errors.New("invalid WebAuthn assertion")
 	}
 	return nil
+}
 
 // GetMFAMethods gets the MFA methods for a user for testing
 func (m *MockMFAManager) GetMFAMethods(userID string) ([]MFAMethod, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.mfaMethods[userID], nil
+}
 
 // IsMFAEnabled checks if MFA is enabled for a user for testing
 func (m *MockMFAManager) IsMFAEnabled(userID string) (bool, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return len(m.mfaMethods[userID]) > 0, nil
+}
 
 // DisableMFAMethod disables an MFA method for a user for testing
 func (m *MockMFAManager) DisableMFAMethod(userID string, method MFAMethod) error {
@@ -502,22 +533,26 @@ func (m *MockMFAManager) DisableMFAMethod(userID string, method MFAMethod) error
 	m.mfaMethods[userID] = newMethods
 
 	return nil
+}
 
 // VerifyMFACode verifies an MFA code for testing
 func (m *MockMFAManager) VerifyMFACode(ctx context.Context, userID, methodStr, code string) (bool, error) {
 	method := MFAMethod(methodStr)
 	return m.VerifyMFA(ctx, userID, method, code)
+}
 
 // CleanupExpiredCodes cleans up expired codes for testing
 func (m *MockMFAManager) CleanupExpiredCodes() {
 	// In a real implementation, we would clean up expired codes
 	// For mock purposes, this is a no-op
+}
 
 // Close closes the MFA manager for testing
 func (m *MockMFAManager) Close() error {
 	// In a real implementation, we would close connections
 	// For mock purposes, this is a no-op
 	return nil
+}
 
 // Helper function to check if a slice contains a value
 func containsMFAMethod(slice []MFAMethod, item MFAMethod) bool {
@@ -526,3 +561,5 @@ func containsMFAMethod(slice []MFAMethod, item MFAMethod) bool {
 			return true
 		}
 	}
+	return false
+}

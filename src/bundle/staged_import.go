@@ -4,6 +4,10 @@ package bundle
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 // StagedImportPhase represents a phase in the staged import process
@@ -42,6 +46,7 @@ type StagedImportOptions struct {
 	Logger io.Writer
 	// ProgressCallback is called with progress updates
 	ProgressCallback func(phase StagedImportPhase, progress float64, message string)
+}
 
 // StagedImportStatus represents the status of a staged import
 type StagedImportStatus struct {
@@ -67,6 +72,7 @@ type StagedImportStatus struct {
 	BackupPath string
 	// ImportedItems are the items that were imported
 	ImportedItems []ContentItem
+}
 
 // StagedImporter defines the interface for staged import
 type StagedImporter interface {
@@ -76,6 +82,7 @@ type StagedImporter interface {
 	GetStatus() *StagedImportStatus
 	// Cancel cancels the import
 	Cancel() error
+}
 
 // DefaultStagedImporter is the default implementation of StagedImporter
 type DefaultStagedImporter struct {
@@ -85,6 +92,7 @@ type DefaultStagedImporter struct {
 	Status *StagedImportStatus
 	// CancelCh is a channel for cancellation
 	CancelCh chan struct{}
+}
 
 // NewStagedImporter creates a new staged importer
 func NewStagedImporter(importer BundleImporter) StagedImporter {
@@ -100,6 +108,7 @@ func NewStagedImporter(importer BundleImporter) StagedImporter {
 		},
 		CancelCh: make(chan struct{}),
 	}
+}
 
 // Import performs a staged import
 func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, options StagedImportOptions) (*ImportResult, error) {
@@ -523,10 +532,12 @@ func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, o
 	fmt.Fprintf(logger, "Bundle import successful: %d items imported\n", len(result.ImportedItems))
 
 	return result, nil
+}
 
 // GetStatus returns the current status of the import
 func (i *DefaultStagedImporter) GetStatus() *StagedImportStatus {
 	return i.Status
+}
 
 // Cancel cancels the import
 func (i *DefaultStagedImporter) Cancel() error {
@@ -537,6 +548,7 @@ func (i *DefaultStagedImporter) Cancel() error {
 		// Channel already closed or full
 		return nil
 	}
+}
 
 // checkForConflicts checks for conflicts between the bundle and the target directory
 func (i *DefaultStagedImporter) checkForConflicts(ctx context.Context, tempDir, targetDir string, content []ContentItem) ([]string, error) {
@@ -551,3 +563,6 @@ func (i *DefaultStagedImporter) checkForConflicts(ctx context.Context, tempDir, 
 		}
 	}
 
+
+	return conflicts, nil
+}

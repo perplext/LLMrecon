@@ -23,6 +23,7 @@ type Template struct {
 	Author      string
 	Tags        []string
 	Path        string
+}
 
 // TemplateFilters for filtering templates
 type TemplateFilters struct {
@@ -40,10 +41,12 @@ func NewTemplateSelector(terminal *Terminal) *TemplateSelector {
 		templates: make([]Template, 0),
 		filters:   TemplateFilters{},
 	}
+}
 
 // LoadTemplates loads available templates
 func (ts *TemplateSelector) LoadTemplates(templates []Template) {
 	ts.templates = templates
+}
 
 // SelectTemplates runs interactive template selection
 func (ts *TemplateSelector) SelectTemplates() ([]Template, error) {
@@ -117,6 +120,7 @@ func (ts *TemplateSelector) SelectTemplates() ([]Template, error) {
 		
 		fmt.Println()
 	}
+}
 
 // browseTemplates allows browsing and selecting templates
 func (ts *TemplateSelector) browseTemplates() error {
@@ -175,6 +179,7 @@ func (ts *TemplateSelector) browseTemplates() error {
 	}
 
 	return nil
+}
 
 // filterByCategory filters templates by category
 func (ts *TemplateSelector) filterByCategory() error {
@@ -204,6 +209,7 @@ func (ts *TemplateSelector) filterByCategory() error {
 	}
 	ts.terminal.Success("Filter applied: %d categories selected", len(ts.filters.Categories))
 	return nil
+}
 
 // filterBySeverity filters templates by severity
 func (ts *TemplateSelector) filterBySeverity() error {
@@ -238,6 +244,7 @@ func (ts *TemplateSelector) filterBySeverity() error {
 
 	ts.terminal.Success("Filter applied: %d severity levels selected", len(ts.filters.Severities))
 	return nil
+}
 
 // filterByTags filters templates by tags
 func (ts *TemplateSelector) filterByTags() error {
@@ -273,6 +280,7 @@ func (ts *TemplateSelector) filterByTags() error {
 
 	ts.terminal.Success("Filter applied: %d tags selected", len(ts.filters.Tags))
 	return nil
+}
 
 // searchTemplates searches templates by keyword
 func (ts *TemplateSelector) searchTemplates() error {
@@ -291,6 +299,7 @@ func (ts *TemplateSelector) searchTemplates() error {
 	}
 
 	return nil
+}
 
 // quickSelectOWASP quickly selects OWASP Top 10 templates
 func (ts *TemplateSelector) quickSelectOWASP() error {
@@ -328,6 +337,7 @@ func (ts *TemplateSelector) quickSelectOWASP() error {
 
 	ts.terminal.Success("Selected %d OWASP templates", selectedCount)
 	return nil
+}
 
 // getFilteredTemplates returns templates matching current filters
 func (ts *TemplateSelector) getFilteredTemplates() []Template {
@@ -390,18 +400,22 @@ func (ts *TemplateSelector) getFilteredTemplates() []Template {
 	}
 
 	return filtered
+}
 
 // Template selection tracking
 var selectedTemplates = make(map[string]bool)
 
 func (ts *TemplateSelector) isSelected(id string) bool {
 	return selectedTemplates[id]
+}
 
 func (ts *TemplateSelector) selectTemplate(tmpl Template) {
 	selectedTemplates[tmpl.ID] = true
+}
 
 func (ts *TemplateSelector) deselectTemplate(tmpl Template) {
 	delete(selectedTemplates, tmpl.ID)
+}
 
 func (ts *TemplateSelector) toggleTemplate(tmpl Template) {
 	if ts.isSelected(tmpl.ID) {
@@ -409,6 +423,7 @@ func (ts *TemplateSelector) toggleTemplate(tmpl Template) {
 	} else {
 		ts.selectTemplate(tmpl)
 	}
+}
 
 func (ts *TemplateSelector) getSelectedTemplates() []Template {
 	selected := make([]Template, 0)
@@ -418,6 +433,7 @@ func (ts *TemplateSelector) getSelectedTemplates() []Template {
 		}
 	}
 	return selected
+}
 
 func (ts *TemplateSelector) viewSelectedTemplates() {
 	selected := ts.getSelectedTemplates()
@@ -441,10 +457,12 @@ func (ts *TemplateSelector) viewSelectedTemplates() {
 			ts.terminal.Print("  • %s %s", ts.formatSeverity(tmpl.Severity), tmpl.Name)
 		}
 	}
+}
 
 func (ts *TemplateSelector) clearFilters() {
 	ts.filters = TemplateFilters{}
 	selectedTemplates = make(map[string]bool)
+}
 
 func (ts *TemplateSelector) formatSeverity(severity string) string {
 	switch strings.ToLower(severity) {
@@ -461,6 +479,7 @@ func (ts *TemplateSelector) formatSeverity(severity string) string {
 	default:
 		return "[?]"
 	}
+}
 
 func (ts *TemplateSelector) hasTag(tmpl Template, tag string) bool {
 	for _, t := range tmpl.Tags {
@@ -469,6 +488,7 @@ func (ts *TemplateSelector) hasTag(tmpl Template, tag string) bool {
 		}
 	}
 	return false
+}
 
 // TemplateBrowser provides advanced template browsing
 type TemplateBrowser struct {
@@ -488,6 +508,7 @@ func NewTemplateBrowser(selector *TemplateSelector) *TemplateBrowser {
 		groupBy:     "category",
 		showDetails: true,
 	}
+}
 
 // Browse starts the browsing interface
 func (tb *TemplateBrowser) Browse() error {
@@ -524,6 +545,7 @@ func (tb *TemplateBrowser) Browse() error {
 			return nil
 		}
 	}
+}
 
 // showCurrentView displays templates in the current view
 func (tb *TemplateBrowser) showCurrentView() {
@@ -537,6 +559,7 @@ func (tb *TemplateBrowser) showCurrentView() {
 	case "tree":
 		tb.showTreeView(templates)
 	}
+}
 
 // showListView shows templates in a list
 func (tb *TemplateBrowser) showListView(templates []Template) {
@@ -569,6 +592,7 @@ func (tb *TemplateBrowser) showListView(templates []Template) {
 			}
 		}
 	}
+}
 
 // showGridView shows templates in a grid
 func (tb *TemplateBrowser) showGridView(templates []Template) {
@@ -593,6 +617,7 @@ func (tb *TemplateBrowser) showGridView(templates []Template) {
 	for sev, count := range severityCounts {
 		tb.selector.terminal.Print("  %s: %d", tb.selector.formatSeverity(sev), count)
 	}
+}
 
 // showTreeView shows templates in a tree structure
 func (tb *TemplateBrowser) showTreeView(templates []Template) {
@@ -624,22 +649,26 @@ func (tb *TemplateBrowser) showTreeView(templates []Template) {
 			}
 		}
 	}
+}
 
 // Helper methods
 func (tb *TemplateBrowser) changeView() {
 	views := []string{"list", "grid", "tree"}
 	choice, _ := tb.selector.terminal.Select("Select view:", views)
 	tb.currentView = views[choice]
+}
 
 func (tb *TemplateBrowser) changeSorting() {
 	options := []string{"name", "severity", "category", "author"}
 	choice, _ := tb.selector.terminal.Select("Sort by:", options)
 	tb.sortBy = options[choice]
+}
 
 func (tb *TemplateBrowser) changeGrouping() {
 	options := []string{"category", "severity", "author", "none"}
 	choice, _ := tb.selector.terminal.Select("Group by:", options)
 	tb.groupBy = options[choice]
+}
 
 func (tb *TemplateBrowser) sortTemplates(templates []Template) {
 	sort.Slice(templates, func(i, j int) bool {
@@ -656,6 +685,7 @@ func (tb *TemplateBrowser) sortTemplates(templates []Template) {
 			return templates[i].Name < templates[j].Name
 		}
 	})
+}
 
 func (tb *TemplateBrowser) groupTemplates(templates []Template) map[string][]Template {
 	grouped := make(map[string][]Template)
@@ -679,10 +709,12 @@ func (tb *TemplateBrowser) groupTemplates(templates []Template) map[string][]Tem
 	}
 	
 	return grouped
+}
 
 func (tb *TemplateBrowser) selectFromCurrentView() error {
 	// Implementation would allow selecting templates from current view
 	return nil
+}
 
 func getSeverityWeight(severity string) int {
 	switch strings.ToLower(severity) {
@@ -699,32 +731,4 @@ func getSeverityWeight(severity string) int {
 	default:
 		return 0
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

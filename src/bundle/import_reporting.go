@@ -15,8 +15,12 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // Using ReportLevel from report.go for consistency
@@ -47,6 +51,7 @@ type ImportStatistics struct {
 	ExtractionTime time.Duration `json:"extraction_time"`
 	// InstallationTime is the time spent installing the bundle
 	InstallationTime time.Duration `json:"installation_time"`
+}
 
 // SystemImpactAssessment contains information about the impact of an import on the system
 type SystemImpactAssessment struct {
@@ -64,6 +69,7 @@ type SystemImpactAssessment struct {
 	ConfigChanges int `json:"config_changes"`
 	// SecurityImpact contains information about the security impact of the import
 	SecurityImpact string `json:"security_impact"`
+}
 
 // EnhancedImportReport extends ImportReport with additional detailed information
 type EnhancedImportReport struct {
@@ -83,6 +89,7 @@ type EnhancedImportReport struct {
 	LogEntries []string `json:"log_entries,omitempty"`
 	// ReportingLevel is the level of detail in the report
 	ReportingLevel ReportLevel `json:"reporting_level"` // Using ReportLevel from report.go for consistency
+}
 
 // ImportReportingSystem defines the interface for the import reporting system
 type ImportReportingSystem interface {
@@ -102,6 +109,7 @@ type ImportReportingSystem interface {
 	AddPerformanceMetric(bundleID string, metricName string, value interface{})
 	// GenerateUserFriendlySummary creates a human-readable summary of an import operation
 	GenerateUserFriendlySummary(report *EnhancedImportReport) string
+}
 
 // DefaultImportReportingSystem is the default implementation of ImportReportingSystem
 type DefaultImportReportingSystem struct {
@@ -115,6 +123,7 @@ type DefaultImportReportingSystem struct {
 	PerformanceMetrics map[string]map[string]interface{}
 	// ReportsDir is the directory where reports are stored
 	ReportsDir string
+}
 
 // NewImportReportingSystem creates a new import reporting system
 func NewImportReportingSystem(reportManager ReportManager, reportsDir string, logger io.Writer) ImportReportingSystem {
@@ -131,6 +140,7 @@ func NewImportReportingSystem(reportManager ReportManager, reportsDir string, lo
 		PerformanceMetrics: make(map[string]map[string]interface{}),
 		ReportsDir:         reportsDir,
 	}
+}
 
 // CreateReport creates an enhanced report for an import operation.
 // This method uses ReportLevel from report.go for consistency across the reporting system.
@@ -168,6 +178,7 @@ func (r *DefaultImportReportingSystem) CreateReport(result *ImportResult, level 
 	}
 
 	return enhancedReport, nil
+}
 
 // SaveReport saves a report to a file
 func (r *DefaultImportReportingSystem) SaveReport(report *EnhancedImportReport, path string) error {
@@ -192,6 +203,7 @@ func (r *DefaultImportReportingSystem) SaveReport(report *EnhancedImportReport, 
 	}
 
 	return nil
+}
 
 // GenerateStatistics generates statistics for an import operation
 func (r *DefaultImportReportingSystem) GenerateStatistics(result *ImportResult) *ImportStatistics {
@@ -230,6 +242,7 @@ func (r *DefaultImportReportingSystem) GenerateStatistics(result *ImportResult) 
 	}
 
 	return stats
+}
 
 // AssessSystemImpact assesses the impact of an import on the system
 func (r *DefaultImportReportingSystem) AssessSystemImpact(result *ImportResult) *SystemImpactAssessment {
@@ -281,6 +294,7 @@ func (r *DefaultImportReportingSystem) AssessSystemImpact(result *ImportResult) 
 	}
 
 	return impact
+}
 
 // LogImportEvent logs an event during the import process
 func (r *DefaultImportReportingSystem) LogImportEvent(bundleID, event string, args ...interface{}) {
@@ -296,10 +310,12 @@ func (r *DefaultImportReportingSystem) LogImportEvent(bundleID, event string, ar
 		r.LogEntries[bundleID] = []string{}
 	}
 	r.LogEntries[bundleID] = append(r.LogEntries[bundleID], logEntry)
+}
 
 // GetLogEntries gets the log entries for an import
 func (r *DefaultImportReportingSystem) GetLogEntries(bundleID string) []string {
 	return r.LogEntries[bundleID]
+}
 
 // AddPerformanceMetric adds a performance metric for an import
 func (r *DefaultImportReportingSystem) AddPerformanceMetric(bundleID string, metricName string, value interface{}) {
@@ -313,6 +329,7 @@ func (r *DefaultImportReportingSystem) AddPerformanceMetric(bundleID string, met
 	
 	// Log the metric addition
 	r.LogImportEvent(bundleID, "Performance metric added: %s = %v", metricName, value)
+}
 
 // extractValidationDetails extracts detailed validation information about the import operation
 // This provides a comprehensive view of all validation checks performed during import
@@ -397,6 +414,7 @@ func (r *DefaultImportReportingSystem) extractValidationDetails(result *ImportRe
 	details["summary_text"] = summaryText.String()
 
 	return details
+}
 
 // extractConflictDetails extracts detailed conflict information
 func (r *DefaultImportReportingSystem) extractConflictDetails(result *ImportResult) map[string]interface{} {
@@ -425,6 +443,7 @@ func (r *DefaultImportReportingSystem) extractConflictDetails(result *ImportResu
 	details["resolutions"] = resolutionStats
 
 	return details
+}
 
 // GenerateUserFriendlySummary creates a human-readable summary of an import operation
 // This provides a clear, concise overview of the import results suitable for end users
@@ -554,6 +573,7 @@ func (r *DefaultImportReportingSystem) GenerateUserFriendlySummary(report *Enhan
 	}
 	
 	return summary.String()
+}
 
 // Helper function to format byte sizes in a human-readable way
 func formatByteSize(bytes int64) string {
@@ -567,6 +587,7 @@ func formatByteSize(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
 
 // formatImportDuration formats durations for import reporting in a human-readable way
 func formatImportDuration(d time.Duration) string {
@@ -588,6 +609,7 @@ func formatImportDuration(d time.Duration) string {
 	minutes = minutes % 60
 	
 	return fmt.Sprintf("%dh %dm %ds", hours, minutes, seconds)
+}
 
 // collectPerformanceMetrics collects detailed performance metrics
 func (r *DefaultImportReportingSystem) collectPerformanceMetrics(result *ImportResult) map[string]interface{} {
@@ -619,6 +641,7 @@ func (r *DefaultImportReportingSystem) collectPerformanceMetrics(result *ImportR
 	}
 
 	return metrics
+}
 
 // calculateDirectorySize calculates the size of a directory in bytes
 func (r *DefaultImportReportingSystem) calculateDirectorySize(path string) (int64, error) {
@@ -633,6 +656,7 @@ func (r *DefaultImportReportingSystem) calculateDirectorySize(path string) (int6
 		return nil
 	})
 	return size, err
+}
 
 // ImportConflict represents a conflict between a bundle file and an existing file during import reporting
 type ImportConflict struct {
@@ -644,6 +668,17 @@ type ImportConflict struct {
 	ExistingChecksum string `json:"existing_checksum,omitempty"`
 	// Type is the type of conflict
 	Type string `json:"type,omitempty"`
+}
 
 // ConflictResolution represents a resolution for a conflict
 // ValidationResult is defined in types.go
+
+// getDiskSpaceForImportedFiles calculates the available disk space for imported files
+func (r *DefaultImportReportingSystem) getDiskSpaceForImportedFiles(importedFiles []string) int64 {
+	if len(importedFiles) > 0 {
+		dir := filepath.Dir(importedFiles[0])
+		return getDiskSpaceAvailable(dir)
+	}
+	// Fallback for empty file list
+	return 1024 * 1024 * 1024 * 10 // 10GB placeholder
+}

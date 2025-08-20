@@ -42,3 +42,20 @@
 2025-08-13 10:17:32,650 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
 2025-08-13 10:17:40,211 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
 2025-08-13 10:17:53,259 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
+2025-08-20 17:16:43,213 - __main__ - INFO - Loaded template: Character Smuggling & Unicode Injection
+2025-08-20 17:16:43,213 - __main__ - INFO - Loaded template: Unbounded Consumption Attack
+2025-08-20 17:16:43,214 - __main__ - INFO - Loaded template: Persuasive Adversarial Prompts (PAP)
+2025-08-20 17:16:43,214 - __main__ - INFO - Loaded template: Policy Puppetry Attack
+2025-08-20 17:16:43,214 - __main__ - INFO - Loaded template: FlipAttack Character Order Manipulation
+2025-08-20 17:16:43,214 - __main__ - INFO - Loaded template: Vector and Embedding Vulnerabilities
+2025-08-20 17:16:43,214 - __main__ - INFO - Loaded template: DrAttack Decomposed Prompt Fragments
+2025-08-20 17:16:43,214 - __main__ - INFO - Loaded template: Multi-Stage Injection Attack
+2025-08-20 17:16:43,215 - __main__ - INFO - Loaded template: System Prompt Leakage
+2025-08-20 17:17:03,983 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
+2025-08-20 17:17:33,989 - __main__ - ERROR - Test failed: HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)
+2025-08-20 17:18:03,993 - __main__ - ERROR - Test failed: HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)
+2025-08-20 17:18:14,143 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
+2025-08-20 17:18:20,558 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
+2025-08-20 17:18:27,547 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
+2025-08-20 17:18:34,239 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'
+2025-08-20 17:18:37,633 - __main__ - ERROR - Test failed: 'AttackDataPipeline' object has no attribute 'record_attack'

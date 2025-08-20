@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"time"
 )
 
 // PinnedCertificate represents a pinned certificate for a specific host
@@ -20,6 +21,7 @@ type PinnedCertificate struct {
 	PublicKeyHashes []string // SHA-256 hashes of the public key in base64
 	SubjectName     string   // Expected subject name
 	Issuer          string   // Expected issuer
+}
 
 // ConnectionSecurityOptions contains security options for connections
 type ConnectionSecurityOptions struct {
@@ -47,6 +49,7 @@ type ConnectionSecurityOptions struct {
 	MaxIdleConnectionsPerHost int
 	// Retry configuration
 	RetryConfig RetryConfig
+}
 
 // RetryConfig contains configuration for retry behavior
 type RetryConfig struct {
@@ -64,6 +67,7 @@ type RetryConfig struct {
 	RetryableStatusCodes []int
 	// Network errors that should trigger a retry
 	RetryableNetworkErrors []string
+}
 
 // DefaultConnectionSecurityOptions returns the default security options
 func DefaultConnectionSecurityOptions() *ConnectionSecurityOptions {
@@ -102,6 +106,7 @@ func DefaultConnectionSecurityOptions() *ConnectionSecurityOptions {
 			},
 		},
 	}
+}
 
 // SecureClient provides a secure HTTP client with enhanced security features
 type SecureClient struct {
@@ -173,6 +178,7 @@ func NewSecureClient(options *ConnectionSecurityOptions) (*SecureClient, error) 
 		options: options,
 		mutex:   sync.RWMutex{},
 	}, nil
+}
 
 // createDialContext creates a custom dial context function with timeout
 func createDialContext(timeout time.Duration) func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -183,6 +189,7 @@ func createDialContext(timeout time.Duration) func(ctx context.Context, network,
 		}
 		return dialer.DialContext(ctx, network, addr)
 	}
+}
 
 // verifyPinnedCertificate verifies that the certificate chain matches the pinned certificates
 func verifyPinnedCertificate(state tls.ConnectionState, pinnedCerts []PinnedCertificate) error {
@@ -234,6 +241,7 @@ func verifyPinnedCertificate(state tls.ConnectionState, pinnedCerts []PinnedCert
 	}
 
 	return fmt.Errorf("certificate public key hash mismatch for %s", state.ServerName)
+}
 
 // Do performs an HTTP request with retry logic
 func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
@@ -339,6 +347,7 @@ func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	return nil, fmt.Errorf("all retry attempts failed with status code: %d", resp.StatusCode)
+}
 
 // isRetryableError checks if an error is retryable based on its message
 func isRetryableError(err error, retryableErrors []string) bool {
@@ -354,6 +363,7 @@ func isRetryableError(err error, retryableErrors []string) bool {
 	}
 
 	return false
+}
 
 // isRetryableStatusCode checks if a status code is retryable
 func isRetryableStatusCode(statusCode int, retryableStatusCodes []int) bool {
@@ -363,16 +373,17 @@ func isRetryableStatusCode(statusCode int, retryableStatusCodes []int) bool {
 		}
 	}
 	return false
+}
 
 // containsIgnoreCase checks if a string contains a substring, ignoring case
 func containsIgnoreCase(s, substr string) bool {
-	s, substr = s, substr
 	for i := 0; i+len(substr) <= len(s); i++ {
 		if equalIgnoreCase(s[i:i+len(substr)], substr) {
 			return true
 		}
 	}
 	return false
+}
 
 // equalIgnoreCase checks if two strings are equal, ignoring case
 func equalIgnoreCase(s1, s2 string) bool {
@@ -392,6 +403,7 @@ func equalIgnoreCase(s1, s2 string) bool {
 		}
 	}
 	return true
+}
 
 // AddPinnedCertificate adds a pinned certificate to the client
 func (c *SecureClient) AddPinnedCertificate(pinnedCert PinnedCertificate) {
@@ -412,6 +424,7 @@ func (c *SecureClient) AddPinnedCertificate(pinnedCert PinnedCertificate) {
 
 	// Add new pinned certificate
 	c.options.PinnedCertificates = append(c.options.PinnedCertificates, pinnedCert)
+}
 
 // RemovePinnedCertificate removes a pinned certificate for a host
 func (c *SecureClient) RemovePinnedCertificate(host string) {
@@ -433,6 +446,7 @@ func (c *SecureClient) RemovePinnedCertificate(host string) {
 	if len(c.options.PinnedCertificates) == 0 {
 		c.options.EnableCertificatePinning = false
 	}
+}
 
 // GetPinnedCertificates returns a copy of the pinned certificates
 func (c *SecureClient) GetPinnedCertificates() []PinnedCertificate {
@@ -444,6 +458,7 @@ func (c *SecureClient) GetPinnedCertificates() []PinnedCertificate {
 	copy(pinnedCerts, c.options.PinnedCertificates)
 
 	return pinnedCerts
+}
 
 // UpdateRetryConfig updates the retry configuration
 func (c *SecureClient) UpdateRetryConfig(retryConfig RetryConfig) {
@@ -451,6 +466,7 @@ func (c *SecureClient) UpdateRetryConfig(retryConfig RetryConfig) {
 	defer c.mutex.Unlock()
 
 	c.options.RetryConfig = retryConfig
+}
 
 // GetRetryConfig returns a copy of the retry configuration
 func (c *SecureClient) GetRetryConfig() RetryConfig {
@@ -458,6 +474,7 @@ func (c *SecureClient) GetRetryConfig() RetryConfig {
 	defer c.mutex.RUnlock()
 
 	return c.options.RetryConfig
+}
 
 // Get performs a GET request with the secure client
 func (c *SecureClient) Get(ctx context.Context, url string, headers map[string]string) (*http.Response, error) {
@@ -472,6 +489,7 @@ func (c *SecureClient) Get(ctx context.Context, url string, headers map[string]s
 	}
 
 	return c.Do(req)
+}
 
 // Head performs a HEAD request with the secure client
 func (c *SecureClient) Head(ctx context.Context, url string, headers map[string]string) (*http.Response, error) {
@@ -485,18 +503,5 @@ func (c *SecureClient) Head(ctx context.Context, url string, headers map[string]
 		req.Header.Set(key, value)
 	}
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return c.Do(req)
 }

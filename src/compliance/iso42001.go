@@ -3,6 +3,7 @@ package compliance
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // ISO42001Standard represents the ISO/IEC 42001:2023 standard
@@ -96,7 +97,6 @@ type Recommendation struct {
 	Timeline    string   `json:"timeline"`
 }
 
-}
 // ISO42001Summary represents a compliance summary for ISO 42001
 type ISO42001Summary struct {
 	TotalControls        int `json:"totalControls"`
@@ -122,15 +122,15 @@ type EvidenceStore interface {
 	Store(evidence Evidence) error
 	Retrieve(controlID string) ([]Evidence, error)
 	Search(criteria map[string]interface{}) ([]Evidence, error)
+}
 
 // AssessmentEngine interface for assessing controls
-}
 type AssessmentEngine interface {
 	Assess(control *Control, evidence []Evidence) (*AssessmentResult, error)
 	CalculateCompliance(results []*AssessmentResult) float64
+}
 
 // Finding represents a compliance finding
-}
 type Finding struct {
 	ID          string    `json:"id"`
 	Severity    string    `json:"severity"`
@@ -158,9 +158,9 @@ func NewISO42001Compliance() *ISO42001Compliance {
 		standard: initializeISO42001Standard(),
 		controls: make(map[string]*Control),
 	}
+}
 
 // initializeISO42001Standard initializes the ISO 42001 standard structure
-}
 func initializeISO42001Standard() *ISO42001Standard {
 	return &ISO42001Standard{
 		Name:        "ISO/IEC 42001",
@@ -211,9 +211,9 @@ func initializeISO42001Standard() *ISO42001Standard {
 			},
 		},
 	}
+}
 
 // CheckCompliance performs a comprehensive compliance check
-}
 func (iso *ISO42001Compliance) CheckCompliance() (*ComplianceReport, error) {
 	report := &ComplianceReport{
 		Standard:       "ISO/IEC 42001:2023",
@@ -238,9 +238,9 @@ func (iso *ISO42001Compliance) CheckCompliance() (*ComplianceReport, error) {
 	report.Recommendations = iso.generateRecommendations(report.Results)
 
 	return report, nil
+}
 
 // assessControl assesses a single control
-}
 func (iso *ISO42001Compliance) assessControl(control *Control) (*AssessmentResult, error) {
 	// Retrieve evidence for the control
 	evidence, err := iso.evidenceStore.Retrieve(control.ID)
@@ -265,9 +265,9 @@ func (iso *ISO42001Compliance) assessControl(control *Control) (*AssessmentResul
 	}
 
 	return result, nil
+}
 
 // assessTechnicalControl performs technical control assessment
-}
 func (iso *ISO42001Compliance) assessTechnicalControl(control *Control, result *AssessmentResult) {
 	// Check for security scan results
 	scanEvidence := iso.filterEvidence(result.ControlID, "scan_result")
@@ -295,9 +295,9 @@ func (iso *ISO42001Compliance) assessTechnicalControl(control *Control, result *
 		})
 		result.ComplianceScore *= 0.85
 	}
+}
 
 // assessOrganizationalControl performs organizational control assessment
-}
 func (iso *ISO42001Compliance) assessOrganizationalControl(control *Control, result *AssessmentResult) {
 	// Check for policy documents
 	policyEvidence := iso.filterEvidence(result.ControlID, "document")
@@ -323,9 +323,9 @@ func (iso *ISO42001Compliance) assessOrganizationalControl(control *Control, res
 			result.ComplianceScore *= 0.8
 		}
 	}
+}
 
 // assessDocumentationControl performs documentation control assessment
-}
 func (iso *ISO42001Compliance) assessDocumentationControl(control *Control, result *AssessmentResult) {
 	// Check for required documentation
 	docs := iso.filterEvidence(result.ControlID, "document")
@@ -353,9 +353,9 @@ func (iso *ISO42001Compliance) assessDocumentationControl(control *Control, resu
 			result.ComplianceScore *= 0.95
 		}
 	}
+}
 
 // calculateOverallCompliance calculates the overall compliance percentage
-}
 func (iso *ISO42001Compliance) calculateOverallCompliance(results map[string]*AssessmentResult) float64 {
 	if len(results) == 0 {
 		return 0.0
@@ -367,9 +367,9 @@ func (iso *ISO42001Compliance) calculateOverallCompliance(results map[string]*As
 	}
 
 	return (totalScore / float64(len(results))) * 100
+}
 
 // generateExecutiveSummary generates an executive summary string
-}
 func (iso *ISO42001Compliance) generateExecutiveSummary(results map[string]*AssessmentResult) string {
 	summary := iso.generateSummary(results)
 	return fmt.Sprintf("ISO 42001 Compliance Assessment: Overall compliance score is %.1f%%. "+
@@ -379,9 +379,9 @@ func (iso *ISO42001Compliance) generateExecutiveSummary(results map[string]*Asse
 		summary.TotalControls, summary.CompliantControls, 
 		summary.PartialControls, summary.NonCompliantControls,
 		summary.CriticalGaps, summary.HighGaps)
+}
 
 // generateSummary generates a compliance summary
-}
 func (iso *ISO42001Compliance) generateSummary(results map[string]*AssessmentResult) ISO42001Summary {
 	summary := ISO42001Summary{
 		TotalControls:      len(results),
@@ -419,9 +419,9 @@ func (iso *ISO42001Compliance) generateSummary(results map[string]*AssessmentRes
 	}
 
 	return summary
+}
 
 // generateRecommendations generates prioritized recommendations
-}
 func (iso *ISO42001Compliance) generateRecommendations(results map[string]*AssessmentResult) []Recommendation {
 	recommendations := []Recommendation{}
 
@@ -442,9 +442,9 @@ func (iso *ISO42001Compliance) generateRecommendations(results map[string]*Asses
 	sortRecommendationsByPriority(recommendations)
 
 	return recommendations
+}
 
 // Helper functions for control definitions
-}
 func getContextControls() []Control {
 	return []Control{
 		{
@@ -462,7 +462,6 @@ func getContextControls() []Control {
 			Type:         "organizational",
 		},
 	}
-
 }
 func getLeadershipControls() []Control {
 	return []Control{
@@ -481,7 +480,6 @@ func getLeadershipControls() []Control {
 			Type:         "documentation",
 		},
 	}
-
 }
 func getPlanningControls() []Control {
 	return []Control{
@@ -507,7 +505,6 @@ func getPlanningControls() []Control {
 			Type:         "organizational",
 		},
 	}
-
 }
 func getSupportControls() []Control {
 	return []Control{
@@ -533,7 +530,6 @@ func getSupportControls() []Control {
 			Type:         "organizational",
 		},
 	}
-
 }
 func getOperationControls() []Control {
 	return []Control{
@@ -559,7 +555,6 @@ func getOperationControls() []Control {
 			Type:         "technical",
 		},
 	}
-
 }
 func getPerformanceControls() []Control {
 	return []Control{
@@ -585,7 +580,6 @@ func getPerformanceControls() []Control {
 			Type:         "organizational",
 		},
 	}
-
 }
 func getImprovementControls() []Control {
 	return []Control{
@@ -604,9 +598,9 @@ func getImprovementControls() []Control {
 			Type:         "organizational",
 		},
 	}
+}
 
 // Helper methods
-}
 func (iso *ISO42001Compliance) filterEvidence(controlID, evidenceType string) []Evidence {
 	allEvidence, _ := iso.evidenceStore.Retrieve(controlID)
 	filtered := []Evidence{}
@@ -616,6 +610,7 @@ func (iso *ISO42001Compliance) filterEvidence(controlID, evidenceType string) []
 		}
 	}
 	return filtered
+}
 
 func (iso *ISO42001Compliance) findLatestEvidence(controlID, evidenceType string) *Evidence {
 	evidence := iso.filterEvidence(controlID, evidenceType)
@@ -630,6 +625,7 @@ func (iso *ISO42001Compliance) findLatestEvidence(controlID, evidenceType string
 		}
 	}
 	return latest
+}
 
 func (iso *ISO42001Compliance) calculatePriority(result *AssessmentResult) string {
 	// Priority based on compliance score and finding severity
@@ -656,6 +652,7 @@ func (iso *ISO42001Compliance) calculatePriority(result *AssessmentResult) strin
 		return "medium"
 	}
 	return "low"
+}
 
 func (iso *ISO42001Compliance) calculateDueDate(priority string) time.Time {
 	now := time.Now()
@@ -669,8 +666,8 @@ func (iso *ISO42001Compliance) calculateDueDate(priority string) time.Time {
 	default:
 		return now.AddDate(0, 0, 180) // 180 days
 	}
-
 }
+
 func (iso *ISO42001Compliance) calculateTimeline(priority string) string {
 	switch priority {
 	case "critical":
@@ -682,8 +679,8 @@ func (iso *ISO42001Compliance) calculateTimeline(priority string) string {
 	default:
 		return "180 days"
 	}
-
 }
+
 func sortRecommendationsByPriority(recommendations []Recommendation) {
 	priorityOrder := map[string]int{
 		"critical": 0,
@@ -700,9 +697,9 @@ func sortRecommendationsByPriority(recommendations []Recommendation) {
 			}
 		}
 	}
+}
 
 // ExportReport exports the compliance report in various formats
-}
 func (iso *ISO42001Compliance) ExportReport(report *ComplianceReport, format string) ([]byte, error) {
 	switch format {
 	case "json":
@@ -712,9 +709,9 @@ func (iso *ISO42001Compliance) ExportReport(report *ComplianceReport, format str
 	default:
 		return nil, fmt.Errorf("unsupported format: %s", format)
 	}
+}
 
 // generateTextSummary generates a text summary of the report
-}
 func (iso *ISO42001Compliance) generateTextSummary(report *ComplianceReport) []byte {
 	// Generate summary from results
 	summaryData := iso.generateSummary(report.Results)
@@ -752,4 +749,7 @@ Top Recommendations:
 		}
 		summary += fmt.Sprintf("%d. [%s] %s\n", i+1, rec.Priority, rec.Description)
 	}
+
+	return []byte(summary)
+}
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -14,6 +15,7 @@ import (
 type ErrorReporter interface {
 	Report(ctx context.Context, err *BundleError) error
 	GenerateReport(ctx context.Context, errors []*BundleError) (*ErrorReport, error)
+	GenerateErrorReport(ctx context.Context, errors []*BundleError, outputPath string) error
 }
 
 // ErrorReport represents a collection of errors with statistics
@@ -42,7 +44,7 @@ func NewErrorReporter(writer io.Writer, auditLogger *AuditLogger) *DefaultErrorR
 	if writer == nil {
 		writer = os.Stdout
 	}
-	
+
 	return &DefaultErrorReporter{
 		Writer:      writer,
 		AuditLogger: auditLogger,
@@ -54,11 +56,11 @@ func (r *DefaultErrorReporter) Report(ctx context.Context, err *BundleError) err
 	if err == nil {
 		return nil
 	}
-	
+
 	// Log the error
-	fmt.Fprintf(r.Writer, "Error Report: %s (ID: %s, Category: %s, Severity: %s)\n", 
+	fmt.Fprintf(r.Writer, "Error Report: %s (ID: %s, Category: %s, Severity: %s)\n",
 		err.Message, err.ErrorID, err.Category, err.Severity)
-	
+
 	// Log audit event
 	if r.AuditLogger != nil {
 		details := map[string]interface{}{
@@ -68,30 +70,54 @@ func (r *DefaultErrorReporter) Report(ctx context.Context, err *BundleError) err
 			"recoverability": err.Recoverability,
 			"message":        err.Message,
 		}
-		
+
 		// Add context if available
 		for k, v := range err.Context {
 			details[k] = v
 		}
-		
+
 		r.AuditLogger.LogEventWithStatus("error_reported", "ErrorReporter", err.ErrorID, "error", details)
 	}
-	
+
 	return nil
 }
 
 // GenerateReport generates a comprehensive error report
 func (r *DefaultErrorReporter) GenerateReport(ctx context.Context, errors []*BundleError) (*ErrorReport, error) {
 	stats := calculateErrorStats(errors)
-	
+
 	report := &ErrorReport{
 		GeneratedAt: time.Now(),
 		TotalErrors: len(errors),
 		Statistics:  stats,
 		Errors:      errors,
 	}
-	
+
 	return report, nil
+}
+
+// GenerateErrorReport generates and writes an error report to a file
+func (r *DefaultErrorReporter) GenerateErrorReport(ctx context.Context, errors []*BundleError, outputPath string) error {
+	// Generate the report
+	report, err := r.GenerateReport(ctx, errors)
+	if err != nil {
+		return fmt.Errorf("failed to generate error report: %w", err)
+	}
+
+	// Create the output directory if it doesn't exist
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0700); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	// Create or open the output file
+	file, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %w", err)
+	}
+	defer file.Close()
+
+	// Write the report as JSON
+	return WriteReportJSON(file, report)
 }
 
 // calculateErrorStats calculates statistics from errors
@@ -101,13 +127,13 @@ func calculateErrorStats(errors []*BundleError) ErrorStats {
 		ByCategory:       make(map[string]int),
 		ByRecoverability: make(map[string]int),
 	}
-	
+
 	for _, err := range errors {
 		stats.BySeverity[string(err.Severity)]++
 		stats.ByCategory[string(err.Category)]++
 		stats.ByRecoverability[string(err.Recoverability)]++
 	}
-	
+
 	return stats
 }
 
@@ -124,26 +150,26 @@ func WriteReportText(w io.Writer, report *ErrorReport) error {
 	fmt.Fprintf(w, "============\n\n")
 	fmt.Fprintf(w, "Generated: %s\n", report.GeneratedAt.Format(time.RFC3339))
 	fmt.Fprintf(w, "Total Errors: %d\n\n", report.TotalErrors)
-	
+
 	// Write statistics
 	fmt.Fprintf(w, "Statistics:\n")
 	fmt.Fprintf(w, "-----------\n")
-	
+
 	fmt.Fprintf(w, "By Severity:\n")
 	for severity, count := range report.Statistics.BySeverity {
 		fmt.Fprintf(w, "  %s: %d\n", severity, count)
 	}
-	
+
 	fmt.Fprintf(w, "\nBy Category:\n")
 	for category, count := range report.Statistics.ByCategory {
 		fmt.Fprintf(w, "  %s: %d\n", category, count)
 	}
-	
+
 	fmt.Fprintf(w, "\nBy Recoverability:\n")
 	for recoverability, count := range report.Statistics.ByRecoverability {
 		fmt.Fprintf(w, "  %s: %d\n", recoverability, count)
 	}
-	
+
 	// Write individual errors
 	fmt.Fprintf(w, "\n\nErrors:\n")
 	fmt.Fprintf(w, "-------\n")
@@ -153,7 +179,7 @@ func WriteReportText(w io.Writer, report *ErrorReport) error {
 		fmt.Fprintf(w, "   Category: %s\n", err.Category)
 		fmt.Fprintf(w, "   Severity: %s\n", err.Severity)
 		fmt.Fprintf(w, "   Recoverability: %s\n", err.Recoverability)
-		
+
 		if len(err.Context) > 0 {
 			fmt.Fprintf(w, "   Context:\n")
 			for k, v := range err.Context {
@@ -161,6 +187,6 @@ func WriteReportText(w io.Writer, report *ErrorReport) error {
 			}
 		}
 	}
-	
+
 	return nil
 }

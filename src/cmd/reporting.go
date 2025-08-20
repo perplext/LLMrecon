@@ -408,6 +408,7 @@ func isValidFormat(format reporting.ReportFormat) bool {
 	}
 
 	return false
+}
 
 func init() {
 	rootCmd.AddCommand(reportCmd)

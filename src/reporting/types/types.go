@@ -11,14 +11,14 @@ type ReportFormat string
 
 // Supported report formats
 const (
-	TextFormat    ReportFormat = "txt"
+	TextFormat     ReportFormat = "txt"
 	MarkdownFormat ReportFormat = "md"
-	JSONFormat    ReportFormat = "json"
-	JSONLFormat   ReportFormat = "jsonl"
-	CSVFormat     ReportFormat = "csv"
-	ExcelFormat   ReportFormat = "xlsx"
-	PDFFormat     ReportFormat = "pdf"
-	HTMLFormat    ReportFormat = "html"
+	JSONFormat     ReportFormat = "json"
+	JSONLFormat    ReportFormat = "jsonl"
+	CSVFormat      ReportFormat = "csv"
+	ExcelFormat    ReportFormat = "xlsx"
+	PDFFormat      ReportFormat = "pdf"
+	HTMLFormat     ReportFormat = "html"
 )
 
 // SeverityLevel represents the severity level of a test result
@@ -204,9 +204,9 @@ type ComplianceFramework string
 
 // Supported compliance frameworks
 const (
-	OWASPFramework ComplianceFramework = "owasp-top-10-llm"
-	ISOFramework   ComplianceFramework = "iso-iec-42001"
-	NISTFramework  ComplianceFramework = "nist-ai-risk"
+	OWASPFramework  ComplianceFramework = "owasp-top-10-llm"
+	ISOFramework    ComplianceFramework = "iso-iec-42001"
+	NISTFramework   ComplianceFramework = "nist-ai-risk"
 	CustomFramework ComplianceFramework = "custom"
 )
 

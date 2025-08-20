@@ -15,21 +15,19 @@ import (
 type ruleAdapter struct {
 	rule interfaces.InputValidationRule
 }
-
 // InputValidator validates template inputs before sending to LLM providers
 type InputValidator struct {
 	// rules is the list of validation rules
 	rules []interfaces.InputValidationRule
 	// strictMode determines if validation errors should fail execution
 	strictMode bool
-
+}
 // NewInputValidator creates a new input validator with default rules
 func NewInputValidator(strictMode bool) *InputValidator {
 	validator := &InputValidator{
 		strictMode: strictMode,
 		rules:      make([]interfaces.InputValidationRule, 0),
 	}
-
 	// Add default rules
 	validator.AddRule(NewNoJailbreakPatternRule())
 	validator.AddRule(NewNoSensitiveDataRule())
@@ -38,36 +36,34 @@ func NewInputValidator(strictMode bool) *InputValidator {
 	validator.AddRule(NewSanitizeScriptRule())
 	validator.AddRule(NewNoSQLInjectionRule())
 	validator.AddRule(NewNoCommandInjectionRule())
-
 	return validator
-
+}
 // AddRule adds a validation rule
-func (v *InputValidator) AddRule(rule interfaces.InputValidationRule) {
+func (v *InputValidator) AddRule(rule interfaces.InputValidationRule) error {
 	v.rules = append(v.rules, rule)
-
+	return nil
+}
 // RemoveRule removes a validation rule by name
-func (v *InputValidator) RemoveRule(name string) bool {
+func (v *InputValidator) RemoveRule(name string) error {
 	for i, rule := range v.rules {
 		if rule.GetName() == name {
 			v.rules = append(v.rules[:i], v.rules[i+1:]...)
-			return true
+			return nil
 		}
 	}
-	return false
-
+	return fmt.Errorf("rule with name '%s' not found", name)
+}
 // SetStrictMode sets the strict mode
 func (v *InputValidator) SetStrictMode(strict bool) {
 	v.strictMode = strict
-
+}
 // ValidateTemplate validates a template against all rules
 func (v *InputValidator) ValidateTemplate(ctx context.Context, template *format.Template) error {
 	if template == nil {
 		return fmt.Errorf("template is nil")
 	}
-
 	// Collect all validation errors
 	var validationErrors []string
-
 	for _, rule := range v.rules {
 		if err := rule.Validate(ctx, template); err != nil {
 			if v.strictMode {
@@ -76,18 +72,15 @@ func (v *InputValidator) ValidateTemplate(ctx context.Context, template *format.
 			validationErrors = append(validationErrors, fmt.Sprintf("%s: %s", rule.GetName(), err.Error()))
 		}
 	}
-
 	if len(validationErrors) > 0 {
 		return fmt.Errorf("template validation warnings: %s", strings.Join(validationErrors, "; "))
 	}
-
 	return nil
-
+}
 // SanitizePrompt sanitizes a prompt to make it safer for execution
 func (v *InputValidator) SanitizePrompt(prompt string) string {
 	// Apply basic sanitization
 	sanitized := prompt
-
 	// Remove potential HTML/script tags
 	sanitized = regexp.MustCompile(`<script[^>]*>[\s\S]*?</script>`).ReplaceAllString(sanitized, "[SCRIPT_REMOVED]")
 	sanitized = regexp.MustCompile(`<[^>]*>`).ReplaceAllString(sanitized, "[TAG_REMOVED]")
@@ -97,26 +90,28 @@ func (v *InputValidator) SanitizePrompt(prompt string) string {
 	
 	// Replace potential command injection patterns
 	sanitized = regexp.MustCompile(`(?i)(;|\||\$\(|\`+"`"+`|&&|\|\|)\s*(rm|cat|chmod|chown|wget|curl|bash|sh|sudo)`).ReplaceAllString(sanitized, "[CMD_REMOVED]")
-
 	return sanitized
-
+}
 // NoJailbreakPatternRule checks for common jailbreak patterns
 type NoJailbreakPatternRule struct{}
-
 // NewNoJailbreakPatternRule creates a new jailbreak pattern rule
 func NewNoJailbreakPatternRule() interfaces.InputValidationRule {
 	return &NoJailbreakPatternRule{}
-
+}
 // GetName returns the name of the rule
 func (r *NoJailbreakPatternRule) GetName() string {
 	return "NoJailbreakPattern"
-
+}
 // GetDescription returns the description of the rule
 func (r *NoJailbreakPatternRule) GetDescription() string {
 	return "Checks for common jailbreak patterns in prompts"
-
+}
 // Validate validates a template against the rule
-func (r *NoJailbreakPatternRule) Validate(ctx context.Context, template *format.Template) error {
+func (r *NoJailbreakPatternRule) Validate(ctx context.Context, templateInterface interface{}) error {
+	template, ok := templateInterface.(*format.Template)
+	if !ok {
+		return fmt.Errorf("invalid template type")
+	}
 	prompt := template.Test.Prompt
 	
 	// Check for common jailbreak patterns
@@ -142,24 +137,27 @@ func (r *NoJailbreakPatternRule) Validate(ctx context.Context, template *format.
 	}
 	
 	return nil
-
+}
 // NoSensitiveDataRule checks for sensitive data patterns
 type NoSensitiveDataRule struct{}
-
 // NewNoSensitiveDataRule creates a new sensitive data rule
 func NewNoSensitiveDataRule() interfaces.InputValidationRule {
 	return &NoSensitiveDataRule{}
-
+}
 // GetName returns the name of the rule
 func (r *NoSensitiveDataRule) GetName() string {
 	return "NoSensitiveData"
-
+}
 // GetDescription returns the description of the rule
 func (r *NoSensitiveDataRule) GetDescription() string {
 	return "Checks for sensitive data patterns in prompts"
-
+}
 // Validate validates a template against the rule
-func (r *NoSensitiveDataRule) Validate(ctx context.Context, template *format.Template) error {
+func (r *NoSensitiveDataRule) Validate(ctx context.Context, templateInterface interface{}) error {
+	template, ok := templateInterface.(*format.Template)
+	if !ok {
+		return fmt.Errorf("invalid template type")
+	}
 	prompt := template.Test.Prompt
 	
 	// Check for common sensitive data patterns
@@ -178,50 +176,56 @@ func (r *NoSensitiveDataRule) Validate(ctx context.Context, template *format.Tem
 	}
 	
 	return nil
-
+}
 // MaxPromptLengthRule checks if the prompt exceeds the maximum length
 type MaxPromptLengthRule struct {
 	maxLength int
 }
-
 // NewMaxPromptLengthRule creates a new maximum prompt length rule
 func NewMaxPromptLengthRule(maxLength int) interfaces.InputValidationRule {
 	return &MaxPromptLengthRule{
 		maxLength: maxLength,
 	}
-
+}
 // GetName returns the name of the rule
 func (r *MaxPromptLengthRule) GetName() string {
 	return "MaxPromptLength"
-
+}
 // GetDescription returns the description of the rule
 func (r *MaxPromptLengthRule) GetDescription() string {
 	return fmt.Sprintf("Checks if the prompt exceeds %d characters", r.maxLength)
-
+}
 // Validate validates a template against the rule
-func (r *MaxPromptLengthRule) Validate(ctx context.Context, template *format.Template) error {
+func (r *MaxPromptLengthRule) Validate(ctx context.Context, templateInterface interface{}) error {
+	template, ok := templateInterface.(*format.Template)
+	if !ok {
+		return fmt.Errorf("invalid template type")
+	}
 	if len(template.Test.Prompt) > r.maxLength {
 		return fmt.Errorf("prompt exceeds maximum length of %d characters", r.maxLength)
 	}
 	return nil
-
+}
 // SanitizeHTMLRule checks for and sanitizes HTML content
 type SanitizeHTMLRule struct{}
-
 // NewSanitizeHTMLRule creates a new HTML sanitization rule
 func NewSanitizeHTMLRule() interfaces.InputValidationRule {
 	return &SanitizeHTMLRule{}
-
+}
 // GetName returns the name of the rule
 func (r *SanitizeHTMLRule) GetName() string {
 	return "SanitizeHTML"
-
+}
 // GetDescription returns the description of the rule
 func (r *SanitizeHTMLRule) GetDescription() string {
 	return "Checks for and warns about HTML content in prompts"
-
+}
 // Validate validates a template against the rule
-func (r *SanitizeHTMLRule) Validate(ctx context.Context, template *format.Template) error {
+func (r *SanitizeHTMLRule) Validate(ctx context.Context, templateInterface interface{}) error {
+	template, ok := templateInterface.(*format.Template)
+	if !ok {
+		return fmt.Errorf("invalid template type")
+	}
 	prompt := template.Test.Prompt
 	
 	if regexp.MustCompile(`<[^>]*>`).MatchString(prompt) {
@@ -229,24 +233,27 @@ func (r *SanitizeHTMLRule) Validate(ctx context.Context, template *format.Templa
 	}
 	
 	return nil
-
+}
 // SanitizeScriptRule checks for script tags and JavaScript code
 type SanitizeScriptRule struct{}
-
 // NewSanitizeScriptRule creates a new script sanitization rule
 func NewSanitizeScriptRule() interfaces.InputValidationRule {
 	return &SanitizeScriptRule{}
-
+}
 // GetName returns the name of the rule
 func (r *SanitizeScriptRule) GetName() string {
 	return "SanitizeScript"
-
+}
 // GetDescription returns the description of the rule
 func (r *SanitizeScriptRule) GetDescription() string {
 	return "Checks for script tags and JavaScript code in prompts"
-
+}
 // Validate validates a template against the rule
-func (r *SanitizeScriptRule) Validate(ctx context.Context, template *format.Template) error {
+func (r *SanitizeScriptRule) Validate(ctx context.Context, templateInterface interface{}) error {
+	template, ok := templateInterface.(*format.Template)
+	if !ok {
+		return fmt.Errorf("invalid template type")
+	}
 	prompt := template.Test.Prompt
 	
 	if regexp.MustCompile(`<script[^>]*>[\s\S]*?</script>`).MatchString(prompt) {
@@ -270,24 +277,27 @@ func (r *SanitizeScriptRule) Validate(ctx context.Context, template *format.Temp
 	}
 	
 	return nil
-
+}
 // NoSQLInjectionRule checks for SQL injection patterns
 type NoSQLInjectionRule struct{}
-
 // NewNoSQLInjectionRule creates a new SQL injection rule
 func NewNoSQLInjectionRule() interfaces.InputValidationRule {
 	return &NoSQLInjectionRule{}
-
+}
 // GetName returns the name of the rule
 func (r *NoSQLInjectionRule) GetName() string {
 	return "NoSQLInjection"
-
+}
 // GetDescription returns the description of the rule
 func (r *NoSQLInjectionRule) GetDescription() string {
 	return "Checks for SQL injection patterns in prompts"
-
+}
 // Validate validates a template against the rule
-func (r *NoSQLInjectionRule) Validate(ctx context.Context, template *format.Template) error {
+func (r *NoSQLInjectionRule) Validate(ctx context.Context, templateInterface interface{}) error {
+	template, ok := templateInterface.(*format.Template)
+	if !ok {
+		return fmt.Errorf("invalid template type")
+	}
 	prompt := template.Test.Prompt
 	
 	sqlPatterns := []string{
@@ -311,24 +321,27 @@ func (r *NoSQLInjectionRule) Validate(ctx context.Context, template *format.Temp
 	}
 	
 	return nil
-
+}
 // NoCommandInjectionRule checks for command injection patterns
 type NoCommandInjectionRule struct{}
-
 // NewNoCommandInjectionRule creates a new command injection rule
 func NewNoCommandInjectionRule() interfaces.InputValidationRule {
 	return &NoCommandInjectionRule{}
-
+}
 // GetName returns the name of the rule
 func (r *NoCommandInjectionRule) GetName() string {
 	return "NoCommandInjection"
-
+}
 // GetDescription returns the description of the rule
 func (r *NoCommandInjectionRule) GetDescription() string {
 	return "Checks for command injection patterns in prompts"
-
+}
 // Validate validates a template against the rule
-func (r *NoCommandInjectionRule) Validate(ctx context.Context, template *format.Template) error {
+func (r *NoCommandInjectionRule) Validate(ctx context.Context, templateInterface interface{}) error {
+	template, ok := templateInterface.(*format.Template)
+	if !ok {
+		return fmt.Errorf("invalid template type")
+	}
 	prompt := template.Test.Prompt
 	
 	// Check for common command injection patterns
@@ -344,35 +357,34 @@ func (r *NoCommandInjectionRule) Validate(ctx context.Context, template *format.
 		}
 	}
 	
+	return nil
 }
+
+// Validate validates a template input (interface implementation)
+func (v *InputValidator) Validate(ctx context.Context, template interface{}) error {
+	switch t := template.(type) {
+	case *format.Template:
+		return v.ValidateTemplate(ctx, t)
+	default:
+		return fmt.Errorf("unsupported template type: %T", template)
+	}
 }
+
+// ValidateContent validates content against validation rules
+func (v *InputValidator) ValidateContent(ctx context.Context, content string) error {
+	// Create a temporary template with the content for validation
+	template := &format.Template{
+		Content: []byte(content),
+	}
+	return v.ValidateTemplate(ctx, template)
 }
+
+// GetRules returns all validation rules
+func (v *InputValidator) GetRules() []interfaces.InputValidationRule {
+	return v.rules
 }
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+
+// IsStrictMode returns whether strict mode is enabled
+func (v *InputValidator) IsStrictMode() bool {
+	return v.strictMode
 }

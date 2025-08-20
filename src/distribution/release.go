@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 // ReleaseManagerImpl implements the ReleaseManager interface
@@ -26,6 +27,7 @@ type ReleaseManagerImpl struct {
 	ctx         context.Context
 	cancel      context.CancelFunc
 	wg          sync.WaitGroup
+}
 
 // HealthMonitor tracks release health
 type HealthMonitor struct {
@@ -88,6 +90,7 @@ func NewReleaseManager(strategy ReleaseStrategy, logger Logger) ReleaseManager {
 		ctx:    ctx,
 		cancel: cancel,
 	}
+}
 
 func (rm *ReleaseManagerImpl) CreateRelease(ctx context.Context, release *ReleaseDefinition) (*ReleaseExecution, error) {
 	rm.logger.Info("Creating release", "name", release.Name, "version", release.Version, "channel", release.Channel.Name)
@@ -114,6 +117,7 @@ func (rm *ReleaseManagerImpl) CreateRelease(ctx context.Context, release *Releas
 	}
 	
 	return execution, nil
+}
 
 func (rm *ReleaseManagerImpl) PromoteRelease(ctx context.Context, releaseID string, targetChannel ReleaseChannel) error {
 	rm.mutex.RLock()
@@ -134,6 +138,7 @@ func (rm *ReleaseManagerImpl) PromoteRelease(ctx context.Context, releaseID stri
 	rm.mutex.Unlock()
 	
 	return nil
+}
 
 func (rm *ReleaseManagerImpl) RollbackRelease(ctx context.Context, releaseID string) error {
 	rm.mutex.RLock()
@@ -165,6 +170,7 @@ func (rm *ReleaseManagerImpl) RollbackRelease(ctx context.Context, releaseID str
 	go rm.executeRollback(execution, rollback)
 	
 	return nil
+}
 
 func (rm *ReleaseManagerImpl) CancelRelease(ctx context.Context, releaseID string) error {
 	rm.mutex.RLock()
@@ -190,6 +196,7 @@ func (rm *ReleaseManagerImpl) CancelRelease(ctx context.Context, releaseID strin
 	}
 	
 	return nil
+}
 
 func (rm *ReleaseManagerImpl) CheckReleaseHealth(ctx context.Context, releaseID string) (*HealthStatus, error) {
 	rm.mutex.RLock()
@@ -211,6 +218,7 @@ func (rm *ReleaseManagerImpl) CheckReleaseHealth(ctx context.Context, releaseID 
 		Score:     rm.calculateHealthScore(monitor.Results),
 		UpdatedAt: monitor.LastCheck,
 	}, nil
+}
 
 func (rm *ReleaseManagerImpl) GetHealthChecks(ctx context.Context, releaseID string) ([]HealthCheckResult, error) {
 	rm.mutex.RLock()
@@ -222,14 +230,17 @@ func (rm *ReleaseManagerImpl) GetHealthChecks(ctx context.Context, releaseID str
 	}
 	
 	return monitor.Results, nil
+}
 
 func (rm *ReleaseManagerImpl) GetStrategy() ReleaseStrategy {
 	return rm.strategy
+}
 
 func (rm *ReleaseManagerImpl) UpdateStrategy(ctx context.Context, strategy ReleaseStrategy) error {
 	rm.strategy = strategy
 	rm.logger.Info("Updated release strategy", "type", strategy.Type)
 	return nil
+}
 
 func (rm *ReleaseManagerImpl) GetReleaseStatus(ctx context.Context, releaseID string) (*ReleaseStatus, error) {
 	rm.mutex.RLock()
@@ -250,6 +261,7 @@ func (rm *ReleaseManagerImpl) GetReleaseStatus(ctx context.Context, releaseID st
 	}
 	
 	return &status, nil
+}
 
 func (rm *ReleaseManagerImpl) ListReleases(ctx context.Context, filters ReleaseFilters) ([]ReleaseInfo, error) {
 	rm.mutex.RLock()
@@ -273,6 +285,7 @@ func (rm *ReleaseManagerImpl) ListReleases(ctx context.Context, filters ReleaseF
 	}
 	
 	return releases, nil
+}
 
 // Internal methods
 
@@ -300,6 +313,7 @@ func (rm *ReleaseManagerImpl) executeRelease(execution *ReleaseExecution) {
 	default:
 		rm.executeImmediateRelease(execution)
 	}
+}
 
 func (rm *ReleaseManagerImpl) executeImmediateRelease(execution *ReleaseExecution) {
 	rm.addReleaseLog(execution, "info", "Starting immediate release", nil)
@@ -325,6 +339,7 @@ func (rm *ReleaseManagerImpl) executeImmediateRelease(execution *ReleaseExecutio
 	}
 	
 	rm.completeRelease(execution)
+}
 
 func (rm *ReleaseManagerImpl) executeStagedRelease(execution *ReleaseExecution) {
 	rm.addReleaseLog(execution, "info", "Starting staged release", nil)
@@ -349,6 +364,7 @@ func (rm *ReleaseManagerImpl) executeStagedRelease(execution *ReleaseExecution) 
 	}
 	
 	rm.completeRelease(execution)
+}
 
 func (rm *ReleaseManagerImpl) executeCanaryRelease(execution *ReleaseExecution) {
 	rm.addReleaseLog(execution, "info", "Starting canary release", nil)
@@ -378,6 +394,7 @@ func (rm *ReleaseManagerImpl) executeCanaryRelease(execution *ReleaseExecution) 
 		rm.addReleaseLog(execution, "error", "Canary unhealthy, initiating rollback", nil)
 		rm.RollbackRelease(context.Background(), execution.ID)
 	}
+}
 
 func (rm *ReleaseManagerImpl) executeBlueGreenRelease(execution *ReleaseExecution) {
 	rm.addReleaseLog(execution, "info", "Starting blue-green release", nil)
@@ -393,6 +410,7 @@ func (rm *ReleaseManagerImpl) executeBlueGreenRelease(execution *ReleaseExecutio
 	// Switch traffic
 	rm.addReleaseLog(execution, "info", "Switching traffic to green environment", nil)
 	rm.completeRelease(execution)
+}
 
 func (rm *ReleaseManagerImpl) completeRelease(execution *ReleaseExecution) {
 	rm.mutex.Lock()
@@ -403,6 +421,7 @@ func (rm *ReleaseManagerImpl) completeRelease(execution *ReleaseExecution) {
 	rm.mutex.Unlock()
 	
 	rm.addReleaseLog(execution, "info", "Release completed successfully", nil)
+}
 
 func (rm *ReleaseManagerImpl) setupHealthMonitoring(releaseID string, checks []HealthCheck) {
 	ctx, cancel := context.WithCancel(rm.ctx)
@@ -424,6 +443,7 @@ func (rm *ReleaseManagerImpl) setupHealthMonitoring(releaseID string, checks []H
 	// Start monitoring
 	rm.wg.Add(1)
 	go rm.runHealthMonitoring(monitor)
+}
 
 func (rm *ReleaseManagerImpl) runHealthMonitoring(monitor *HealthMonitor) {
 	defer rm.wg.Done()
@@ -439,6 +459,7 @@ func (rm *ReleaseManagerImpl) runHealthMonitoring(monitor *HealthMonitor) {
 			return
 		}
 	}
+}
 
 func (rm *ReleaseManagerImpl) performHealthChecks(monitor *HealthMonitor) {
 	monitor.Results = make([]HealthCheckResult, 0)
@@ -460,6 +481,7 @@ func (rm *ReleaseManagerImpl) performHealthChecks(monitor *HealthMonitor) {
 			rm.RollbackRelease(context.Background(), monitor.ReleaseID)
 		}
 	}
+}
 
 func (rm *ReleaseManagerImpl) performHealthCheck(check HealthCheck) HealthCheckResult {
 	start := time.Now()
@@ -489,6 +511,7 @@ func (rm *ReleaseManagerImpl) performHealthCheck(check HealthCheck) HealthCheckR
 		Duration:  time.Since(start),
 		Timestamp: time.Now(),
 	}
+}
 
 func (rm *ReleaseManagerImpl) calculateOverallHealth(results []HealthCheckResult) HealthState {
 	if len(results) == 0 {
@@ -509,6 +532,7 @@ func (rm *ReleaseManagerImpl) calculateOverallHealth(results []HealthCheckResult
 	} else {
 		return HealthStateUnhealthy
 	}
+}
 
 func (rm *ReleaseManagerImpl) calculateHealthScore(results []HealthCheckResult) float64 {
 	if len(results) == 0 {
@@ -523,6 +547,7 @@ func (rm *ReleaseManagerImpl) calculateHealthScore(results []HealthCheckResult) 
 	}
 	
 	return float64(healthyCount) / float64(len(results))
+}
 
 func (rm *ReleaseManagerImpl) executeRollback(execution *ReleaseExecution, rollback *RollbackState) {
 	rm.logger.Info("Executing rollback", "releaseID", rollback.ReleaseID, "previousVersion", rollback.PreviousVersion)
@@ -562,10 +587,12 @@ func (rm *ReleaseManagerImpl) executeRollback(execution *ReleaseExecution, rollb
 	rollback.CompletedAt = &now
 	
 	rm.addReleaseLog(execution, "info", "Rollback completed successfully", nil)
+}
 
 func (rm *ReleaseManagerImpl) getPreviousVersion(currentVersion string) string {
 	// Mock implementation - would look up actual previous version
 	return "1.0.0"
+}
 
 func (rm *ReleaseManagerImpl) addReleaseLog(execution *ReleaseExecution, level, message string, context map[string]interface{}) {
 	log := ReleaseLog{
@@ -580,6 +607,7 @@ func (rm *ReleaseManagerImpl) addReleaseLog(execution *ReleaseExecution, level, 
 	rm.mutex.Unlock()
 	
 	rm.logger.Info("Release log", "releaseID", execution.ID, "level", level, "message", message)
+}
 
 func (rm *ReleaseManagerImpl) matchesReleaseFilters(execution *ReleaseExecution, filters ReleaseFilters) bool {
 	if len(filters.Status) > 0 {
@@ -601,31 +629,8 @@ func (rm *ReleaseManagerImpl) matchesReleaseFilters(execution *ReleaseExecution,
 	}
 	
 	return true
+}
 
 func generateReleaseID() string {
 	return fmt.Sprintf("release_%d_%d", time.Now().UnixNano(), time.Now().Unix())
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

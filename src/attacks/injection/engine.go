@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -28,17 +29,20 @@ type EngineConfig struct {
 	RetryDelay         time.Duration
 	CollectMetrics     bool
 	DebugMode          bool
+}
 
 // ProviderManager manages LLM provider connections
 type ProviderManager interface {
 	GetProvider(name string) (Provider, error)
 	ListProviders() []string
+}
 
 // Provider represents an LLM provider
 type Provider interface {
 	Query(ctx context.Context, messages []Message, options map[string]interface{}) (string, error)
 	GetModel() string
 	GetTokenCount(text string) int
+}
 
 // NewEngine creates a new injection engine
 func NewEngine(config EngineConfig, logger Logger) *Engine {
@@ -63,6 +67,7 @@ func NewEngine(config EngineConfig, logger Logger) *Engine {
 		logger:   logger,
 		config:   config,
 	}
+}
 
 // Execute runs a single injection attack
 func (e *Engine) Execute(ctx context.Context, config AttackConfig) (*AttackResult, error) {
@@ -209,6 +214,7 @@ func (e *Engine) Execute(ctx context.Context, config AttackConfig) (*AttackResul
 	)
 	
 	return result, nil
+}
 
 // ExecuteBatch runs multiple injection attempts concurrently
 func (e *Engine) ExecuteBatch(ctx context.Context, configs []AttackConfig) ([]*AttackResult, error) {
@@ -257,6 +263,7 @@ func (e *Engine) ExecuteBatch(ctx context.Context, configs []AttackConfig) ([]*A
 	}
 	
 	return results, firstError
+}
 
 // GetTechniques returns available injection techniques
 func (e *Engine) GetTechniques() []TechniqueInfo {
@@ -284,6 +291,7 @@ func (e *Engine) GetTechniques() []TechniqueInfo {
 	}
 	
 	return infos
+}
 
 // ValidatePayload checks if a payload is valid
 func (e *Engine) ValidatePayload(payload string) error {
@@ -310,12 +318,14 @@ func (e *Engine) ValidatePayload(payload string) error {
 	}
 	
 	return nil
+}
 
 // SetProviderManager sets the provider manager
 func (e *Engine) SetProviderManager(pm ProviderManager) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.providerManager = pm
+}
 
 // validateConfig validates attack configuration
 func (e *Engine) validateConfig(config AttackConfig) error {
@@ -341,6 +351,7 @@ func (e *Engine) validateConfig(config AttackConfig) error {
 	}
 	
 	return nil
+}
 
 // buildMessages constructs the message array for the provider
 func (e *Engine) buildMessages(target TargetConfig, payload string) []Message {
@@ -364,6 +375,7 @@ func (e *Engine) buildMessages(target TargetConfig, payload string) []Message {
 	})
 	
 	return messages
+}
 
 // riskToString converts risk level to string
 func (e *Engine) riskToString(risk RiskLevel) string {
@@ -379,6 +391,7 @@ func (e *Engine) riskToString(risk RiskLevel) string {
 	default:
 		return "unknown"
 	}
+}
 
 // BasicSuccessDetector provides basic success detection
 type BasicSuccessDetector struct {
@@ -400,9 +413,11 @@ func NewBasicSuccessDetector() *BasicSuccessDetector {
 	return &BasicSuccessDetector{
 		analyzer: NewResponseAnalyzer(patterns),
 	}
+}
 
 func (d *BasicSuccessDetector) Detect(response string, expectedBehavior string) (bool, float64) {
 	return d.analyzer.AnalyzeResponse(response)
+}
 
 func (d *BasicSuccessDetector) AnalyzeEvidence(response string) []Evidence {
 	evidence := make([]Evidence, 0)
@@ -438,6 +453,7 @@ func (d *BasicSuccessDetector) AnalyzeEvidence(response string) []Evidence {
 	}
 	
 	return evidence
+}
 
 func (d *BasicSuccessDetector) CompareResponses(baseline, injected string) (bool, float64) {
 	// Simple comparison based on length and content difference
@@ -454,16 +470,19 @@ func (d *BasicSuccessDetector) CompareResponses(baseline, injected string) (bool
 	}
 	
 	return false, 0.3
+}
 
 // InMemoryMetricsCollector provides in-memory metrics collection
 type InMemoryMetricsCollector struct {
 	stats map[string]*TechniqueStats
 	mu    sync.RWMutex
+}
 
 func NewInMemoryMetricsCollector() *InMemoryMetricsCollector {
 	return &InMemoryMetricsCollector{
 		stats: make(map[string]*TechniqueStats),
 	}
+}
 
 func (m *InMemoryMetricsCollector) RecordAttempt(result *AttackResult) {
 	m.mu.Lock()
@@ -492,6 +511,7 @@ func (m *InMemoryMetricsCollector) RecordAttempt(result *AttackResult) {
 	stats.AverageTime = (stats.AverageTime*time.Duration(stats.TotalAttempts-1) + result.Duration) / time.Duration(stats.TotalAttempts)
 	stats.AverageTokens = (stats.AverageTokens*(stats.TotalAttempts-1) + result.TokensUsed) / stats.TotalAttempts
 	stats.SuccessRate = float64(stats.SuccessfulAttempts) / float64(stats.TotalAttempts)
+}
 
 func (m *InMemoryMetricsCollector) GetSuccessRate(technique string) float64 {
 	m.mu.RLock()
@@ -501,6 +521,7 @@ func (m *InMemoryMetricsCollector) GetSuccessRate(technique string) float64 {
 		return stats.SuccessRate
 	}
 	return 0.0
+}
 
 func (m *InMemoryMetricsCollector) GetAverageTime(technique string) time.Duration {
 	m.mu.RLock()
@@ -510,6 +531,7 @@ func (m *InMemoryMetricsCollector) GetAverageTime(technique string) time.Duratio
 		return stats.AverageTime
 	}
 	return 0
+}
 
 func (m *InMemoryMetricsCollector) GetTechniqueStats(technique string) *TechniqueStats {
 	m.mu.RLock()
@@ -525,6 +547,7 @@ func (m *InMemoryMetricsCollector) GetTechniqueStats(technique string) *Techniqu
 		return &statsCopy
 	}
 	return nil
+}
 
 // Helper functions
 
@@ -536,6 +559,7 @@ func contains(text string, keywords []string) bool {
 		}
 	}
 	return false
+}
 
 func extractContext(text string, keywords []string, contextSize int) string {
 	lowerText := strings.ToLower(text)
@@ -548,34 +572,18 @@ func extractContext(text string, keywords []string, contextSize int) string {
 		}
 	}
 	return ""
+}
 
 func min(a, b int) int {
 	if a < b {
 		return a
 	}
 	return b
+}
 
 func max(a, b int) int {
 	if a > b {
 		return a
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return b
 }

@@ -26,6 +26,7 @@ type AdvancedTemplateMonitor struct {
 	maxSessionStats       int
 	mu                    sync.RWMutex
 	stopChan              chan struct{}
+}
 
 // TemplateStats tracks statistics for a template
 type TemplateStats struct {
@@ -79,12 +80,16 @@ type AnomalyDetector struct {
 	anomalyThresholds     map[string]float64
 	detectionAlgorithms   map[string]func(interface{}, interface{}) float64
 
+}
+
 // AlertManager manages alerts for template monitoring
 type AlertManager struct {
 	alertHandlers        map[string]func(context.Context, *Alert) error
 	alertHistory         []*Alert
 	maxAlertHistory      int
 	alertThresholds      map[string]float64
+
+}
 
 // Alert represents a monitoring alert
 type Alert struct {
@@ -104,7 +109,6 @@ type Alert struct {
 }
 
 // NewAdvancedTemplateMonitor creates a new advanced template monitor
-}
 func NewAdvancedTemplateMonitor(config *ProtectionConfig, patternLibrary *EnhancedInjectionPatternLibrary) *AdvancedTemplateMonitor {
 	// Create anomaly detector
 	anomalyDetector := &AnomalyDetector{
@@ -174,6 +178,7 @@ func NewAdvancedTemplateMonitor(config *ProtectionConfig, patternLibrary *Enhanc
 		maxSessionStats:     1000,
 		stopChan:            make(chan struct{}),
 	}
+}
 
 // StartMonitoring starts the template monitoring
 func (m *AdvancedTemplateMonitor) StartMonitoring(ctx context.Context) error {
@@ -204,6 +209,7 @@ func (m *AdvancedTemplateMonitor) StartMonitoring(ctx context.Context) error {
 	}()
 	
 	return nil
+}
 
 // StopMonitoring stops the template monitoring
 func (m *AdvancedTemplateMonitor) StopMonitoring() {
@@ -216,6 +222,7 @@ func (m *AdvancedTemplateMonitor) StopMonitoring() {
 	
 	m.monitoringActive = false
 	m.stopChan <- struct{}{}
+}
 
 // MonitorTemplate monitors a template execution
 func (m *AdvancedTemplateMonitor) MonitorTemplate(ctx context.Context, templateID string, templateName string, userID string, sessionID string, prompt string, result *ProtectionResult) error {
@@ -255,6 +262,7 @@ func (m *AdvancedTemplateMonitor) MonitorTemplate(ctx context.Context, templateI
 	}
 	
 	return nil
+}
 
 // updateTemplateStats updates the statistics for a template
 func (m *AdvancedTemplateMonitor) updateTemplateStats(templateID string, templateName string, result *ProtectionResult) {
@@ -306,6 +314,7 @@ func (m *AdvancedTemplateMonitor) updateTemplateStats(templateID string, templat
 		avgTime := stats.Metadata["average_response_time"].(time.Duration)
 		stats.Metadata["average_response_time"] = ((avgTime * time.Duration(stats.ExecutionCount-1)) + result.ProcessingTime) / time.Duration(stats.ExecutionCount)
 	}
+}
 
 // updateUserStats updates the statistics for a user
 func (m *AdvancedTemplateMonitor) updateUserStats(userID string, templateID string, result *ProtectionResult) {
@@ -353,6 +362,7 @@ func (m *AdvancedTemplateMonitor) updateUserStats(userID string, templateID stri
 	} else {
 		stats.SuccessRate = ((stats.SuccessRate * float64(stats.TotalExecutions-1)) + 1) / float64(stats.TotalExecutions)
 	}
+}
 
 // updateSessionStats updates the statistics for a session
 func (m *AdvancedTemplateMonitor) updateSessionStats(sessionID string, userID string, templateID string, result *ProtectionResult) {
@@ -393,6 +403,7 @@ func (m *AdvancedTemplateMonitor) updateSessionStats(sessionID string, userID st
 			stats.DetectionTypes[detection.Type]++
 		}
 	}
+}
 
 // Anomaly represents a detected anomaly
 type Anomaly struct {
@@ -400,9 +411,9 @@ type Anomaly struct {
 	Message  string                 `json:"message"`
 	Score    float64                `json:"score"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // detectAnomalies detects anomalies in template usage
-}
 func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID string, sessionID string) []*Anomaly {
 	anomalies := make([]*Anomaly, 0)
 	
@@ -515,6 +526,7 @@ func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID stri
 	}
 	
 	return anomalies
+}
 
 // processAlert processes an alert
 func (m *AdvancedTemplateMonitor) processAlert(ctx context.Context, alert *Alert) {
@@ -533,6 +545,7 @@ func (m *AdvancedTemplateMonitor) processAlert(ctx context.Context, alert *Alert
 			fmt.Printf("Error processing alert: %v\n", err)
 		}
 	}
+}
 
 // performMonitoring performs periodic monitoring tasks
 func (m *AdvancedTemplateMonitor) performMonitoring(ctx context.Context) {
@@ -598,10 +611,12 @@ func (m *AdvancedTemplateMonitor) performMonitoring(ctx context.Context) {
 			m.processAlert(ctx, alert)
 		}
 	}
+}
 
 // RegisterAlertHandler registers a handler for alerts
 func (m *AdvancedTemplateMonitor) RegisterAlertHandler(name string, handler func(context.Context, *Alert) error) {
 	m.alertManager.alertHandlers[name] = handler
+}
 
 // GetTemplateStats gets statistics for a template
 func (m *AdvancedTemplateMonitor) GetTemplateStats(templateID string) (*TemplateStats, error) {
@@ -614,6 +629,7 @@ func (m *AdvancedTemplateMonitor) GetTemplateStats(templateID string) (*Template
 	}
 	
 	return stats, nil
+}
 
 // GetUserStats gets statistics for a user
 func (m *AdvancedTemplateMonitor) GetUserStats(userID string) (*UserStats, error) {
@@ -626,6 +642,7 @@ func (m *AdvancedTemplateMonitor) GetUserStats(userID string) (*UserStats, error
 	}
 	
 	return stats, nil
+}
 
 // GetSessionStats gets statistics for a session
 func (m *AdvancedTemplateMonitor) GetSessionStats(sessionID string) (*SessionStats, error) {
@@ -638,6 +655,7 @@ func (m *AdvancedTemplateMonitor) GetSessionStats(sessionID string) (*SessionSta
 	}
 	
 	return stats, nil
+}
 
 // GetAlertHistory gets the alert history
 func (m *AdvancedTemplateMonitor) GetAlertHistory() []*Alert {
@@ -645,6 +663,7 @@ func (m *AdvancedTemplateMonitor) GetAlertHistory() []*Alert {
 	defer m.mu.RUnlock()
 	
 	return m.alertManager.alertHistory
+}
 
 // getSeverityForRiskScore gets the severity level for a risk score
 func getSeverityForRiskScore(score float64) string {
@@ -655,6 +674,7 @@ func getSeverityForRiskScore(score float64) string {
 	} else {
 		return "low"
 	}
+}
 
 // getSeverityForAnomalyScore gets the severity level for an anomaly score
 func getSeverityForAnomalyScore(score float64) string {
@@ -665,21 +685,12 @@ func getSeverityForAnomalyScore(score float64) string {
 	} else {
 		return "low"
 	}
+}
 
-// minFloat returns the minimum of two float64 values
-func minFloat(a, b float64) float64 {
+// min returns the minimum of two float64 values
+func min(a, b float64) float64 {
 	if a < b {
 		return a
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return b
 }

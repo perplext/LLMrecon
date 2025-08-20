@@ -1,15 +1,15 @@
 package injection
 
 import (
-	"math/big"
-	cryptorand "crypto/rand"
-	
-		"encoding/base64"
+	"encoding/base64"
 	"fmt"
-	"crypto/rand"
+	"math/big"
 	"regexp"
 	"strings"
+	"time"
 	"unicode"
+	cryptorand "crypto/rand"
+	"math/rand"
 )
 
 // AdvancedInjector provides sophisticated prompt injection techniques
@@ -96,14 +96,14 @@ func NewAdvancedInjector(config InjectorConfig) *AdvancedInjector {
 	}
 	
 	return injector
+}
 
 // RegisterTechnique adds a new injection technique
-}
 func (i *AdvancedInjector) RegisterTechnique(technique InjectionTechnique) {
 	i.techniques[technique.ID] = technique
+}
 
 // GeneratePayload creates an injection payload using specified technique
-}
 func (i *AdvancedInjector) GeneratePayload(techniqueID string, target string, context map[string]interface{}) (string, error) {
 	technique, exists := i.techniques[techniqueID]
 	if !exists {
@@ -129,9 +129,9 @@ func (i *AdvancedInjector) GeneratePayload(techniqueID string, target string, co
 	}
 	
 	return payload, nil
+}
 
 // GenerateMultiPayload creates multiple payload variants
-}
 func (i *AdvancedInjector) GenerateMultiPayload(techniqueID string, target string, context map[string]interface{}, count int) ([]string, error) {
 	payloads := make([]string, 0, count)
 	seen := make(map[string]bool)
@@ -150,9 +150,9 @@ func (i *AdvancedInjector) GenerateMultiPayload(techniqueID string, target strin
 	}
 	
 	return payloads, nil
+}
 
 // registerBuiltInTechniques registers all built-in injection techniques
-}
 func (i *AdvancedInjector) registerBuiltInTechniques() {
 	// Token Smuggling Techniques
 	i.RegisterTechnique(InjectionTechnique{
@@ -289,9 +289,9 @@ func (i *AdvancedInjector) registerBuiltInTechniques() {
 		Generator:   i.synonymSubstitution,
 	})
 
-// Technique Generators
-
 }
+
+// Technique Generators
 func (i *AdvancedInjector) unicodeTokenSmuggling(target string, context map[string]interface{}) string {
 	// Unicode tricks to smuggle tokens
 	tricks := []func(string) string{
@@ -302,13 +302,12 @@ func (i *AdvancedInjector) unicodeTokenSmuggling(target string, context map[stri
 			result := make([]rune, 0, len(runes)*2)
 			for i, r := range runes {
 				result = append(result, r)
-				if i < len(runes)-1 && rand.Float32() < 0.3 {
+				if i < len(runes)-1 && randFloat64() < 0.3 {
 					result = append(result, zeroWidth[randInt(len(zeroWidth))])
 				}
 			}
 			return string(result)
 		},
-}
 		// Unicode normalization tricks
 		func(s string) string {
 			replacements := map[rune]rune{
@@ -319,16 +318,15 @@ func (i *AdvancedInjector) unicodeTokenSmuggling(target string, context map[stri
 			}
 			runes := []rune(s)
 			for i, r := range runes {
-				if replacement, ok := replacements[r]; ok && rand.Float32() < 0.5 {
+				if replacement, ok := replacements[r]; ok && randFloat64() < 0.5 {
 					runes[i] = replacement
 				}
 			}
 			return string(runes)
 		},
-}
 		// Direction override characters
 		func(s string) string {
-			if rand.Float32() < 0.3 {
+			if randFloat64() < 0.3 {
 				return "\u202E" + s + "\u202C" // Right-to-left override
 			}
 			return s
@@ -344,6 +342,7 @@ func (i *AdvancedInjector) unicodeTokenSmuggling(target string, context map[stri
 	}
 	
 	return payload
+}
 
 func (i *AdvancedInjector) homoglyphTokenSmuggling(target string, context map[string]interface{}) string {
 	homoglyphs := map[rune][]rune{
@@ -376,7 +375,7 @@ func (i *AdvancedInjector) homoglyphTokenSmuggling(target string, context map[st
 	result := make([]rune, len(runes))
 	
 	for i, r := range runes {
-		if alternatives, ok := homoglyphs[r]; ok && rand.Float32() < 0.4 {
+		if alternatives, ok := homoglyphs[r]; ok && randFloat64() < 0.4 {
 			result[i] = alternatives[randInt(len(alternatives))]
 		} else {
 			result[i] = r
@@ -384,7 +383,6 @@ func (i *AdvancedInjector) homoglyphTokenSmuggling(target string, context map[st
 	}
 	
 	return string(result)
-
 }
 func (i *AdvancedInjector) base64EncodingExploit(target string, context map[string]interface{}) string {
 	encoded := base64.StdEncoding.EncodeToString([]byte(target))
@@ -399,7 +397,6 @@ func (i *AdvancedInjector) base64EncodingExploit(target string, context map[stri
 	
 	template := templates[randInt(len(templates))]
 	return fmt.Sprintf(template, encoded)
-
 }
 func (i *AdvancedInjector) rot13EncodingExploit(target string, context map[string]interface{}) string {
 	rot13 := func(s string) string {
@@ -426,7 +423,6 @@ func (i *AdvancedInjector) rot13EncodingExploit(target string, context map[strin
 	
 	template := templates[randInt(len(templates))]
 	return fmt.Sprintf(template, encoded)
-
 }
 func (i *AdvancedInjector) contextOverflow(target string, context map[string]interface{}) string {
 	// Create massive context to push out safety instructions
@@ -546,6 +542,7 @@ func (i *AdvancedInjector) delimiterConfusion(target string, context map[string]
 	return fmt.Sprintf("%s%s%s\n%sActually, %s%s", 
 		d1.start, decoy, d1.end,
 		d2.start, target, d2.end)
+}
 
 func (i *AdvancedInjector) formatStringExploit(target string, context map[string]interface{}) string {
 	formats := []string{
@@ -572,14 +569,14 @@ func (i *AdvancedInjector) semanticNegation(target string, context map[string]in
 	}
 	
 	// Sometimes add more negations
-	if rand.Float32() < 0.3 {
+	if randFloat64() < 0.3 {
+		pattern := patterns[randInt(len(patterns))]
 		return fmt.Sprintf("I'm not asking you not to %s", 
-			patterns[randInt(len(patterns))], target)
+			fmt.Sprintf(pattern, target))
 	}
 	
 	pattern := patterns[randInt(len(patterns))]
 	return fmt.Sprintf(pattern, target)
-
 }
 func (i *AdvancedInjector) synonymSubstitution(target string, context map[string]interface{}) string {
 	// Common filtered words and their synonyms
@@ -606,9 +603,9 @@ func (i *AdvancedInjector) synonymSubstitution(target string, context map[string
 	}
 	
 	return result
+}
 
 // registerEncoders registers encoding functions
-}
 func (i *AdvancedInjector) registerEncoders() {
 	// Base64
 	i.encoders["base64"] = func(text string) string {
@@ -645,6 +642,7 @@ func (i *AdvancedInjector) registerEncoders() {
 		}
 		return result.String()
 	}
+}
 
 // Obfuscator handles text obfuscation
 type Obfuscator struct {
@@ -659,6 +657,7 @@ func NewObfuscator() *Obfuscator {
 	}
 	o.registerTechniques()
 	return o
+}
 
 func (o *Obfuscator) registerTechniques() {
 	// Add spaces
@@ -683,7 +682,7 @@ func (o *Obfuscator) registerTechniques() {
 	o.techniques = append(o.techniques, func(s string) string {
 		runes := []rune(s)
 		for i := range runes {
-			if rand.Float32() < 0.3 {
+			if randFloat64() < 0.3 {
 				if unicode.IsLower(runes[i]) {
 					runes[i] = unicode.ToUpper(runes[i])
 				} else if unicode.IsUpper(runes[i]) {
@@ -702,11 +701,13 @@ func (o *Obfuscator) Obfuscate(text string) string {
 	
 	technique := o.techniques[randInt(len(o.techniques))]
 	return technique(text)
+}
 
 // PayloadMutator handles payload mutations
 type PayloadMutator struct {
 	mutationRate float64
 	mutations    []MutationFunc
+}
 
 type MutationFunc func(string) string
 
@@ -717,6 +718,7 @@ func NewPayloadMutator(rate float64) *PayloadMutator {
 	}
 	m.registerMutations()
 	return m
+}
 
 func (m *PayloadMutator) registerMutations() {
 	// Typo simulation
@@ -739,7 +741,7 @@ func (m *PayloadMutator) registerMutations() {
 		}
 		runes := []rune(s)
 		for i, r := range runes {
-			if sub, ok := substitutions[r]; ok && rand.Float32() < 0.2 {
+			if sub, ok := substitutions[r]; ok && randFloat64() < 0.2 {
 				runes[i] = sub
 			}
 		}
@@ -764,11 +766,13 @@ func (m *PayloadMutator) Mutate(payload string) string {
 	
 	mutation := m.mutations[randInt(len(m.mutations))]
 	return mutation(payload)
+}
 
 // ResponseAnalyzer analyzes responses for success indicators
 type ResponseAnalyzer struct {
 	successPatterns []*regexp.Regexp
 	failurePatterns []*regexp.Regexp
+}
 
 func NewResponseAnalyzer(patterns []string) *ResponseAnalyzer {
 	a := &ResponseAnalyzer{
@@ -799,7 +803,6 @@ func NewResponseAnalyzer(patterns []string) *ResponseAnalyzer {
 	}
 	
 	return a
-
 }
 func (a *ResponseAnalyzer) AnalyzeResponse(response string) (bool, float64) {
 	// Check for explicit success patterns
@@ -827,29 +830,28 @@ func (a *ResponseAnalyzer) AnalyzeResponse(response string) (bool, float64) {
 	// Ambiguous result
 	confidence := 1.0 - (float64(failureCount) * 0.3)
 	return false, confidence
+}
 
 // Helper functions
-
-}
 func init() {
 	rand.Seed(time.Now().UnixNano())
+}
 
 // GetAvailableTechniques returns all registered technique IDs
-}
 func (i *AdvancedInjector) GetAvailableTechniques() []string {
 	techniques := make([]string, 0, len(i.techniques))
 	for id := range i.techniques {
 		techniques = append(techniques, id)
 	}
 	return techniques
+}
 
 // GetTechniques returns map of all techniques (exported for demo)
-}
 func (i *AdvancedInjector) GetTechniques() map[string]InjectionTechnique {
 	return i.techniques
+}
 
 // GetTechniquesByCategory returns techniques filtered by category
-}
 func (i *AdvancedInjector) GetTechniquesByCategory(category TechniqueCategory) []string {
 	techniques := make([]string, 0)
 	for id, technique := range i.techniques {
@@ -858,9 +860,9 @@ func (i *AdvancedInjector) GetTechniquesByCategory(category TechniqueCategory) [
 		}
 	}
 	return techniques
+}
 
 // GetTechniquesByRisk returns techniques filtered by maximum risk level
-}
 func (i *AdvancedInjector) GetTechniquesByRisk(maxRisk RiskLevel) []string {
 	techniques := make([]string, 0)
 	for id, technique := range i.techniques {
@@ -869,6 +871,8 @@ func (i *AdvancedInjector) GetTechniquesByRisk(maxRisk RiskLevel) []string {
 		}
 	}
 	return techniques
+}
+
 // secureRandomInt generates a cryptographically secure random integer
 func secureRandomInt(max int) (int, error) {
     nBig, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
@@ -876,28 +880,33 @@ func secureRandomInt(max int) (int, error) {
         return 0, err
     }
     return int(nBig.Int64()), nil
+}
 
 // Secure random number generation helpers
-}
 func randInt(max int) int {
-    n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+    n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
     if err != nil {
         panic(err)
     }
     return int(n.Int64())
-
 }
 func randInt64(max int64) int64 {
-    n, err := rand.Int(rand.Reader, big.NewInt(max))
+    n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(max))
     if err != nil {
         panic(err)
     }
     return n.Int64()
-
 }
 func randFloat64() float64 {
     bytes := make([]byte, 8)
-    rand.Read(bytes)
-}
-}
+    _, err := cryptorand.Read(bytes)
+    if err != nil {
+        panic(err)
+    }
+    // Convert bytes to float64
+    var result uint64
+    for i := 0; i < 8; i++ {
+        result = (result << 8) | uint64(bytes[i])
+    }
+    return float64(result) / float64(1<<64)
 }

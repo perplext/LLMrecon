@@ -24,12 +24,12 @@ func NewCustomizationDetector(basePath string) *CustomizationDetector {
 // DetectCustomizations detects customizations in the given path
 func (d *CustomizationDetector) DetectCustomizations() ([]Customization, error) {
 	var customizations []Customization
-	
+
 	err := filepath.Walk(d.BasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if !info.IsDir() && d.isCustomizationFile(path) {
 			custom := Customization{
 				Path:        path,
@@ -38,10 +38,10 @@ func (d *CustomizationDetector) DetectCustomizations() ([]Customization, error) 
 			}
 			customizations = append(customizations, custom)
 		}
-		
+
 		return nil
 	})
-	
+
 	return customizations, err
 }
 
@@ -49,9 +49,9 @@ func (d *CustomizationDetector) DetectCustomizations() ([]Customization, error) 
 func (d *CustomizationDetector) isCustomizationFile(path string) bool {
 	// Simple heuristic - check for common customization patterns
 	base := filepath.Base(path)
-	return strings.Contains(base, "custom") || 
-		   strings.Contains(base, "user") ||
-		   strings.HasSuffix(base, ".custom")
+	return strings.Contains(base, "custom") ||
+		strings.Contains(base, "user") ||
+		strings.HasSuffix(base, ".custom")
 }
 
 // Customization represents a detected customization
@@ -68,7 +68,7 @@ func (c *Customization) CalculateHash() error {
 	if err != nil {
 		return err
 	}
-	
+
 	hash := sha256.Sum256(content)
 	c.Hash = fmt.Sprintf("%x", hash)
 	return nil

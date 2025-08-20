@@ -65,6 +65,7 @@ func DefaultColorScheme() *ColorScheme {
 		Code:      color.New(color.FgMagenta, color.BgHiBlack),
 		Quote:     color.New(color.FgHiWhite),
 	}
+}
 
 // DarkColorScheme returns a color scheme optimized for dark terminals
 func DarkColorScheme() *ColorScheme {
@@ -88,6 +89,7 @@ func DarkColorScheme() *ColorScheme {
 		Code:      color.New(color.FgHiMagenta),
 		Quote:     color.New(color.FgHiWhite),
 	}
+}
 
 // LightColorScheme returns a color scheme optimized for light terminals
 func LightColorScheme() *ColorScheme {
@@ -111,11 +113,13 @@ func LightColorScheme() *ColorScheme {
 		Code:      color.New(color.FgWhite, color.BgBlack),
 		Quote:     color.New(color.FgHiBlack),
 	}
+}
 
 // Formatter provides color formatting functions
 type Formatter struct {
 	scheme  *ColorScheme
 	enabled bool
+}
 
 // NewFormatter creates a new formatter
 func NewFormatter(scheme *ColorScheme, enabled bool) *Formatter {
@@ -126,28 +130,32 @@ func NewFormatter(scheme *ColorScheme, enabled bool) *Formatter {
 		scheme:  scheme,
 		enabled: enabled,
 	}
-
-// Format methods for different elements
+}
 
 // Success formats success messages
 func (f *Formatter) Success(format string, args ...interface{}) string {
 	return f.format(f.scheme.Success, format, args...)
+}
 
 // Error formats error messages
 func (f *Formatter) Error(format string, args ...interface{}) string {
 	return f.format(f.scheme.Error, format, args...)
+}
 
 // Warning formats warning messages
 func (f *Formatter) Warning(format string, args ...interface{}) string {
 	return f.format(f.scheme.Warning, format, args...)
+}
 
 // Info formats info messages
 func (f *Formatter) Info(format string, args ...interface{}) string {
 	return f.format(f.scheme.Info, format, args...)
+}
 
 // Debug formats debug messages
 func (f *Formatter) Debug(format string, args ...interface{}) string {
 	return f.format(f.scheme.Debug, format, args...)
+}
 
 // Severity formats severity levels
 func (f *Formatter) Severity(level string) string {
@@ -163,42 +171,52 @@ func (f *Formatter) Severity(level string) string {
 	default:
 		return level
 	}
+}
 
 // Header formats headers
 func (f *Formatter) Header(text string) string {
 	return f.format(f.scheme.Header, text)
+}
 
 // Subheader formats subheaders
 func (f *Formatter) Subheader(text string) string {
 	return f.format(f.scheme.Subheader, text)
+}
 
 // Label formats labels
 func (f *Formatter) Label(text string) string {
 	return f.format(f.scheme.Label, text)
+}
 
 // Value formats values
 func (f *Formatter) Value(format string, args ...interface{}) string {
 	return f.format(f.scheme.Value, format, args...)
+}
 
 // Muted formats muted text
 func (f *Formatter) Muted(format string, args ...interface{}) string {
 	return f.format(f.scheme.Muted, format, args...)
+}
 
 // Highlight formats highlighted text
 func (f *Formatter) Highlight(text string) string {
 	return f.format(f.scheme.Highlight, text)
+}
 
 // Link formats links
 func (f *Formatter) Link(url string) string {
 	return f.format(f.scheme.Link, url)
+}
 
 // Code formats code snippets
 func (f *Formatter) Code(code string) string {
 	return f.format(f.scheme.Code, code)
+}
 
 // Quote formats quotes
 func (f *Formatter) Quote(text string) string {
 	return f.format(f.scheme.Quote, text)
+}
 
 // format applies color if enabled
 func (f *Formatter) format(c *color.Color, format string, args ...interface{}) string {
@@ -207,6 +225,7 @@ func (f *Formatter) format(c *color.Color, format string, args ...interface{}) s
 		return c.Sprint(text)
 	}
 	return text
+}
 
 // Icons provides colored icons
 type Icons struct {
@@ -230,6 +249,7 @@ type Icons struct {
 	Globe     string
 	Cloud     string
 	Database  string
+}
 
 // DefaultIcons returns default icon set
 func DefaultIcons() *Icons {
@@ -255,6 +275,7 @@ func DefaultIcons() *Icons {
 		Cloud:     "☁",
 		Database:  "🗄",
 	}
+}
 
 // ASCIIIcons returns ASCII-only icons for compatibility
 func ASCIIIcons() *Icons {
@@ -280,6 +301,7 @@ func ASCIIIcons() *Icons {
 		Cloud:     "[C]",
 		Database:  "[DB]",
 	}
+}
 
 // Box drawing characters
 type BoxChars struct {
@@ -311,6 +333,7 @@ func DefaultBoxChars() *BoxChars {
 		TeeTop:      "┬",
 		TeeBottom:   "┴",
 	}
+}
 
 // ASCIIBoxChars returns ASCII box drawing characters
 func ASCIIBoxChars() *BoxChars {
@@ -327,6 +350,7 @@ func ASCIIBoxChars() *BoxChars {
 		TeeTop:      "+",
 		TeeBottom:   "+",
 	}
+}
 
 // RenderBox renders a box with content
 func RenderBox(title, content string, width int, boxChars *BoxChars, formatter *Formatter) string {
@@ -376,6 +400,7 @@ func RenderBox(title, content string, width int, boxChars *BoxChars, formatter *
 	result.WriteString(boxChars.BottomRight)
 
 	return result.String()
+}
 
 // RenderSeverityBar renders a colored severity indicator bar
 func RenderSeverityBar(critical, high, medium, low int, width int, formatter *Formatter) string {
@@ -413,6 +438,7 @@ func RenderSeverityBar(critical, high, medium, low int, width int, formatter *Fo
 	}
 
 	return bar.String()
+}
 
 // RenderProgressBar renders a colored progress bar
 func RenderProgressBar(current, total int, width int, formatter *Formatter) string {
@@ -456,28 +482,5 @@ func RenderProgressBar(current, total int, width int, formatter *Formatter) stri
 	bar.WriteString("] ")
 	bar.WriteString(formatter.format(barColor, "%.1f%%", percentage*100))
 	
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return bar.String()
 }

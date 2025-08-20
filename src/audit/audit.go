@@ -86,7 +86,7 @@ func NewFileAuditLogger(filePath string) (*AuditLogger, error) {
 	if filepath.IsAbs(cleanPath) && !strings.HasPrefix(cleanPath, "/tmp/") && !strings.HasPrefix(cleanPath, "/var/log/") {
 		return nil, fmt.Errorf("invalid audit log path: must be relative or in allowed directories")
 	}
-	
+
 	// Create or open the file with append mode
 	file, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
@@ -117,13 +117,13 @@ func (l *AuditLogger) LogEventWithStatus(event, component, id, status string, de
 	if l.Writer == nil && !l.StoreEvents {
 		return
 	}
-	
+
 	timestamp := time.Now()
 	user := l.User
 	if user == "" {
 		user = "system"
 	}
-	
+
 	// Create audit event
 	auditEvent := AuditEvent{
 		Timestamp: timestamp,
@@ -134,12 +134,12 @@ func (l *AuditLogger) LogEventWithStatus(event, component, id, status string, de
 		Status:    status,
 		Details:   details,
 	}
-	
+
 	// Store event if enabled
 	if l.StoreEvents {
 		l.Events = append(l.Events, auditEvent)
 	}
-	
+
 	// Write to log if writer is available
 	if l.Writer != nil {
 		// Format the details as a string
@@ -147,7 +147,7 @@ func (l *AuditLogger) LogEventWithStatus(event, component, id, status string, de
 		for k, v := range details {
 			detailsStr += fmt.Sprintf(" %s=%v", k, v)
 		}
-		
+
 		// Write the audit log entry
 		fmt.Fprintf(l.Writer, "[%s] [%s] [%s] [%s] [%s] [%s]%s\n",
 			timestamp.Format(time.RFC3339), status, user, component, event, id, detailsStr)
@@ -210,9 +210,9 @@ func (l *AuditLogger) FilterEvents(options FilterOptions) []AuditEvent {
 	if !l.StoreEvents {
 		return nil
 	}
-	
+
 	var filtered []AuditEvent
-	
+
 	for _, event := range l.Events {
 		// Filter by time range
 		if options.StartTime != nil && event.Timestamp.Before(*options.StartTime) {
@@ -221,35 +221,35 @@ func (l *AuditLogger) FilterEvents(options FilterOptions) []AuditEvent {
 		if options.EndTime != nil && event.Timestamp.After(*options.EndTime) {
 			continue
 		}
-		
+
 		// Filter by event type
 		if len(options.EventTypes) > 0 && !contains(options.EventTypes, event.EventType) {
 			continue
 		}
-		
+
 		// Filter by ID
 		if len(options.IDs) > 0 && !contains(options.IDs, event.ID) {
 			continue
 		}
-		
+
 		// Filter by bundle ID
 		if len(options.BundleIDs) > 0 && !contains(options.BundleIDs, event.ID) {
 			continue
 		}
-		
+
 		// Filter by status
 		if len(options.Statuses) > 0 && !contains(options.Statuses, event.Status) {
 			continue
 		}
-		
+
 		// Filter by user
 		if len(options.Users) > 0 && !contains(options.Users, event.User) {
 			continue
 		}
-		
+
 		filtered = append(filtered, event)
 	}
-	
+
 	return filtered
 }
 
@@ -359,13 +359,13 @@ func (l *AuditLogger) GenerateComplianceReport(writer io.Writer, options Complia
 func (l *AuditLogger) generateSummaryReport(events []AuditEvent, writer io.Writer, options ComplianceReportOptions) error {
 	// Create summary
 	summary := ComplianceReportSummary{
-		ReportType:  options.ReportType,
-		GeneratedAt: time.Now(),
-		EventCounts: make(map[string]int),
+		ReportType:   options.ReportType,
+		GeneratedAt:  time.Now(),
+		EventCounts:  make(map[string]int),
 		BundleCounts: make(map[string]int),
 		StatusCounts: make(map[string]int),
 		UserCounts:   make(map[string]int),
-		TotalEvents: len(events),
+		TotalEvents:  len(events),
 	}
 
 	// Set time range if provided
@@ -401,7 +401,7 @@ func (l *AuditLogger) generateSummaryReport(events []AuditEvent, writer io.Write
 	_ = csv.Write([]string{"Time Range Start", "Time Range End"})
 	_ = csv.Write([]string{summary.TimeRange.Start.Format(time.RFC3339), summary.TimeRange.End.Format(time.RFC3339)})
 
-	// Write event counts  
+	// Write event counts
 	_ = csv.Write([]string{"Event Type", "Count"})
 	for eventType, count := range summary.EventCounts {
 		_ = csv.Write([]string{eventType, fmt.Sprintf("%d", count)})
@@ -439,14 +439,14 @@ func (l *AuditLogger) generateActivityReport(events []AuditEvent, writer io.Writ
 
 	// Create activity report
 	activityReport := struct {
-		ReportType  ComplianceReportType       `json:"report_type"`
-		GeneratedAt time.Time                  `json:"generated_at"`
+		ReportType  ComplianceReportType `json:"report_type"`
+		GeneratedAt time.Time            `json:"generated_at"`
 		TimeRange   struct {
 			Start time.Time `json:"start,omitempty"`
 			End   time.Time `json:"end,omitempty"`
 		} `json:"time_range,omitempty"`
-		TotalEvents int                        `json:"total_events"`
-		Activities  map[string][]AuditEvent    `json:"activities"`
+		TotalEvents int                     `json:"total_events"`
+		Activities  map[string][]AuditEvent `json:"activities"`
 	}{
 		ReportType:  options.ReportType,
 		GeneratedAt: time.Now(),

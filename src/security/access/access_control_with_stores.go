@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/access/common"
 	"github.com/perplext/LLMrecon/src/security/access/mfa"
@@ -42,18 +43,20 @@ func NewAccessControlSystemWithStores(
 
 	// Create the security manager
 	// Note: We don't use these managers directly as we create simpleRBACManager and simpleSecurityManager below
-	if err := NewSecurityManager(; err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
+	_, err := NewSecurityManager(
 		config,
 		incidentStore,
 		vulnerabilityStore,
 		auditLogger,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create security manager: %w", err)
+	}
 
 	// Create the RBAC manager
-	if err := NewRBACManager(config); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
+	_, err = NewRBACManager(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create RBAC manager: %w", err)
 	}
 
 	// Create the auth manager
@@ -110,17 +113,20 @@ func NewAccessControlSystemWithStores(
 		mfaManager:      mfaManager,
 		config:          config,
 	}, nil
+}
 
 // InMemoryUserStore is a simple in-memory implementation of UserStore
 type InMemoryUserStore struct {
 	users map[string]*User
 	mu    sync.RWMutex
+}
 
 // NewInMemoryUserStore creates a new in-memory user store
 func NewInMemoryUserStore() *InMemoryUserStore {
 	return &InMemoryUserStore{
 		users: make(map[string]*User),
 	}
+}
 
 // CreateUser creates a new user
 func (s *InMemoryUserStore) CreateUser(ctx context.Context, user *User) error {
@@ -157,6 +163,7 @@ func (s *InMemoryUserStore) CreateUser(ctx context.Context, user *User) error {
 	s.users[user.ID] = &newUser
 
 	return nil
+}
 
 // GetUserByID retrieves a user by ID
 func (s *InMemoryUserStore) GetUserByID(ctx context.Context, id string) (*User, error) {
@@ -171,6 +178,7 @@ func (s *InMemoryUserStore) GetUserByID(ctx context.Context, id string) (*User, 
 	// Return a copy of the user
 	userCopy := *user
 	return &userCopy, nil
+}
 
 // GetUserByUsername retrieves a user by username
 func (s *InMemoryUserStore) GetUserByUsername(ctx context.Context, username string) (*User, error) {
@@ -186,6 +194,7 @@ func (s *InMemoryUserStore) GetUserByUsername(ctx context.Context, username stri
 	}
 
 	return nil, fmt.Errorf("user with username %s not found", username)
+}
 
 // GetUserByEmail retrieves a user by email
 func (s *InMemoryUserStore) GetUserByEmail(ctx context.Context, email string) (*User, error) {
@@ -201,6 +210,7 @@ func (s *InMemoryUserStore) GetUserByEmail(ctx context.Context, email string) (*
 	}
 
 	return nil, fmt.Errorf("user with email %s not found", email)
+}
 
 // UpdateUser updates an existing user
 func (s *InMemoryUserStore) UpdateUser(ctx context.Context, user *User) error {
@@ -236,6 +246,7 @@ func (s *InMemoryUserStore) UpdateUser(ctx context.Context, user *User) error {
 	s.users[user.ID] = &updatedUser
 
 	return nil
+}
 
 // DeleteUser deletes a user by ID
 func (s *InMemoryUserStore) DeleteUser(ctx context.Context, id string) error {
@@ -251,6 +262,7 @@ func (s *InMemoryUserStore) DeleteUser(ctx context.Context, id string) error {
 	delete(s.users, id)
 
 	return nil
+}
 
 // ListUsers lists all users
 func (s *InMemoryUserStore) ListUsers(ctx context.Context) ([]*User, error) {
@@ -266,22 +278,26 @@ func (s *InMemoryUserStore) ListUsers(ctx context.Context) ([]*User, error) {
 	}
 
 	return users, nil
+}
 
 // Close closes the user store
 func (s *InMemoryUserStore) Close() error {
 	// Nothing to close for in-memory store
 	return nil
+}
 
 // InMemorySessionStore is a simple in-memory implementation of SessionStore
 type InMemorySessionStore struct {
 	sessions map[string]*Session
 	mu       sync.RWMutex
+}
 
 // NewInMemorySessionStore creates a new in-memory session store
 func NewInMemorySessionStore() *InMemorySessionStore {
 	return &InMemorySessionStore{
 		sessions: make(map[string]*Session),
 	}
+}
 
 // CreateSession creates a new session
 func (s *InMemorySessionStore) CreateSession(ctx context.Context, session *Session) error {
@@ -305,6 +321,7 @@ func (s *InMemorySessionStore) CreateSession(ctx context.Context, session *Sessi
 	s.sessions[session.ID] = &newSession
 
 	return nil
+}
 
 // GetSession retrieves a session by ID
 func (s *InMemorySessionStore) GetSession(ctx context.Context, id string) (*Session, error) {
@@ -319,6 +336,7 @@ func (s *InMemorySessionStore) GetSession(ctx context.Context, id string) (*Sess
 	// Return a copy of the session
 	sessionCopy := *session
 	return &sessionCopy, nil
+}
 
 // UpdateSession updates an existing session
 func (s *InMemorySessionStore) UpdateSession(ctx context.Context, session *Session) error {
@@ -337,6 +355,7 @@ func (s *InMemorySessionStore) UpdateSession(ctx context.Context, session *Sessi
 	s.sessions[session.ID] = &updatedSession
 
 	return nil
+}
 
 // DeleteSession deletes a session by ID
 func (s *InMemorySessionStore) DeleteSession(ctx context.Context, id string) error {
@@ -352,6 +371,7 @@ func (s *InMemorySessionStore) DeleteSession(ctx context.Context, id string) err
 	delete(s.sessions, id)
 
 	return nil
+}
 
 // GetUserSessions retrieves all sessions for a user
 func (s *InMemorySessionStore) GetUserSessions(ctx context.Context, userID string) ([]*Session, error) {
@@ -369,6 +389,7 @@ func (s *InMemorySessionStore) GetUserSessions(ctx context.Context, userID strin
 	}
 
 	return sessions, nil
+}
 
 // CleanExpiredSessions removes all expired sessions
 func (s *InMemorySessionStore) CleanExpiredSessions(ctx context.Context) error {
@@ -386,27 +407,32 @@ func (s *InMemorySessionStore) CleanExpiredSessions(ctx context.Context) error {
 	}
 
 	return nil
+}
 
 // Close closes the session store
 func (s *InMemorySessionStore) Close() error {
 	// Nothing to close for in-memory store
 	return nil
+}
 
 // InMemoryAuditLoggerWithTypes is a simple in-memory implementation of AuditLogger using common.AuditLog
 type InMemoryAuditLoggerWithTypes struct {
 	logs map[string]*common.AuditLog
 	mu   sync.RWMutex
+}
 
 // NewInMemoryAuditLoggerWithTypes creates a new in-memory audit logger with types
 func NewInMemoryAuditLoggerWithTypes() *InMemoryAuditLoggerWithTypes {
 	return &InMemoryAuditLoggerWithTypes{
 		logs: make(map[string]*common.AuditLog),
 	}
+}
 
 // Initialize initializes the audit logger
 func (l *InMemoryAuditLoggerWithTypes) Initialize(ctx context.Context) error {
 	// Nothing to initialize for in-memory logger
 	return nil
+}
 
 // LogAudit logs an audit event
 func (l *InMemoryAuditLoggerWithTypes) LogAudit(ctx context.Context, log *common.AuditLog) error {
@@ -425,6 +451,7 @@ func (l *InMemoryAuditLoggerWithTypes) LogAudit(ctx context.Context, log *common
 	l.logs[log.ID] = &newLog
 
 	return nil
+}
 
 // GetAuditLogs retrieves audit logs
 func (l *InMemoryAuditLoggerWithTypes) GetAuditLogs(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*common.AuditLog, int, error) {
@@ -459,6 +486,7 @@ func (l *InMemoryAuditLoggerWithTypes) GetAuditLogs(ctx context.Context, filter 
 	}
 
 	return logs[offset:end], total, nil
+}
 
 // GetAuditLogByID retrieves an audit log by ID
 func (l *InMemoryAuditLoggerWithTypes) GetAuditLogByID(ctx context.Context, id string) (*common.AuditLog, error) {
@@ -473,22 +501,26 @@ func (l *InMemoryAuditLoggerWithTypes) GetAuditLogByID(ctx context.Context, id s
 	// Return a copy of the log
 	logCopy := *log
 	return &logCopy, nil
+}
 
 // Close closes the logger
 func (l *InMemoryAuditLoggerWithTypes) Close() error {
 	// Nothing to close for in-memory logger
 	return nil
+}
 
 // InMemoryIncidentStore is a simple in-memory implementation of IncidentStore
 type InMemoryIncidentStore struct {
 	incidents map[string]*common.SecurityIncident
 	mu        sync.RWMutex
+}
 
 // NewInMemoryIncidentStore creates a new in-memory incident store
 func NewInMemoryIncidentStore() *InMemoryIncidentStore {
 	return &InMemoryIncidentStore{
 		incidents: make(map[string]*common.SecurityIncident),
 	}
+}
 
 // CreateIncident creates a new security incident
 func (s *InMemoryIncidentStore) CreateIncident(ctx context.Context, incident *common.SecurityIncident) error {
@@ -512,6 +544,7 @@ func (s *InMemoryIncidentStore) CreateIncident(ctx context.Context, incident *co
 	s.incidents[incident.ID] = &newIncident
 
 	return nil
+}
 
 // GetIncidentByID retrieves a security incident by ID
 func (s *InMemoryIncidentStore) GetIncidentByID(ctx context.Context, id string) (*common.SecurityIncident, error) {
@@ -526,6 +559,7 @@ func (s *InMemoryIncidentStore) GetIncidentByID(ctx context.Context, id string) 
 	// Return a copy of the incident
 	incidentCopy := *incident
 	return &incidentCopy, nil
+}
 
 // UpdateIncident updates an existing security incident
 func (s *InMemoryIncidentStore) UpdateIncident(ctx context.Context, incident *common.SecurityIncident) error {
@@ -544,6 +578,7 @@ func (s *InMemoryIncidentStore) UpdateIncident(ctx context.Context, incident *co
 	s.incidents[incident.ID] = &updatedIncident
 
 	return nil
+}
 
 // DeleteIncident deletes a security incident by ID
 func (s *InMemoryIncidentStore) DeleteIncident(ctx context.Context, id string) error {
@@ -559,6 +594,7 @@ func (s *InMemoryIncidentStore) DeleteIncident(ctx context.Context, id string) e
 	delete(s.incidents, id)
 
 	return nil
+}
 
 // ListIncidents lists security incidents
 func (s *InMemoryIncidentStore) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*common.SecurityIncident, int, error) {
@@ -593,22 +629,26 @@ func (s *InMemoryIncidentStore) ListIncidents(ctx context.Context, filter map[st
 	}
 
 	return incidents[offset:end], total, nil
+}
 
 // Close closes the store
 func (s *InMemoryIncidentStore) Close() error {
 	// Nothing to close for in-memory store
 	return nil
+}
 
 // InMemoryVulnerabilityStore is a simple in-memory implementation of VulnerabilityStore
 type InMemoryVulnerabilityStore struct {
 	vulnerabilities map[string]*common.Vulnerability
 	mu              sync.RWMutex
+}
 
 // NewInMemoryVulnerabilityStore creates a new in-memory vulnerability store
 func NewInMemoryVulnerabilityStore() *InMemoryVulnerabilityStore {
 	return &InMemoryVulnerabilityStore{
 		vulnerabilities: make(map[string]*common.Vulnerability),
 	}
+}
 
 // CreateVulnerability creates a new vulnerability
 func (s *InMemoryVulnerabilityStore) CreateVulnerability(ctx context.Context, vulnerability *common.Vulnerability) error {
@@ -632,6 +672,7 @@ func (s *InMemoryVulnerabilityStore) CreateVulnerability(ctx context.Context, vu
 	s.vulnerabilities[vulnerability.ID] = &newVulnerability
 
 	return nil
+}
 
 // GetVulnerabilityByID retrieves a vulnerability by ID
 func (s *InMemoryVulnerabilityStore) GetVulnerabilityByID(ctx context.Context, id string) (*common.Vulnerability, error) {
@@ -646,6 +687,7 @@ func (s *InMemoryVulnerabilityStore) GetVulnerabilityByID(ctx context.Context, i
 	// Return a copy of the vulnerability
 	vulnerabilityCopy := *vulnerability
 	return &vulnerabilityCopy, nil
+}
 
 // UpdateVulnerability updates an existing vulnerability
 func (s *InMemoryVulnerabilityStore) UpdateVulnerability(ctx context.Context, vulnerability *common.Vulnerability) error {
@@ -664,6 +706,7 @@ func (s *InMemoryVulnerabilityStore) UpdateVulnerability(ctx context.Context, vu
 	s.vulnerabilities[vulnerability.ID] = &updatedVulnerability
 
 	return nil
+}
 
 // DeleteVulnerability deletes a vulnerability by ID
 func (s *InMemoryVulnerabilityStore) DeleteVulnerability(ctx context.Context, id string) error {
@@ -679,6 +722,7 @@ func (s *InMemoryVulnerabilityStore) DeleteVulnerability(ctx context.Context, id
 	delete(s.vulnerabilities, id)
 
 	return nil
+}
 
 // ListVulnerabilities lists vulnerabilities
 func (s *InMemoryVulnerabilityStore) ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*common.Vulnerability, int, error) {
@@ -713,7 +757,10 @@ func (s *InMemoryVulnerabilityStore) ListVulnerabilities(ctx context.Context, fi
 	}
 
 	return vulnerabilities[offset:end], total, nil
+}
 
 // Close closes the store
 func (s *InMemoryVulnerabilityStore) Close() error {
 	// Nothing to close for in-memory store
+	return nil
+}

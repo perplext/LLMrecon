@@ -26,6 +26,7 @@ func (s *MonitoringService) AddStaticFileMonitor(fileHandler FileHandlerInterfac
 	s.logger.Printf("[INFO] Added static file handler to monitoring service")
 	
 	return monitor
+}
 
 // GetStaticFileMonitors returns all static file monitors
 func (s *MonitoringService) GetStaticFileMonitors() []*StaticFileMonitor {
@@ -37,6 +38,7 @@ func (s *MonitoringService) GetStaticFileMonitors() []*StaticFileMonitor {
 	copy(monitors, s.staticFileMonitors)
 	
 	return monitors
+}
 
 // GetStaticFileMetrics returns metrics for all static file handlers
 func (s *MonitoringService) GetStaticFileMetrics() []*StaticFileMetrics {
@@ -52,6 +54,7 @@ func (s *MonitoringService) GetStaticFileMetrics() []*StaticFileMetrics {
 	}
 	
 	return metrics
+}
 
 // EnableStaticFileMonitoring enables monitoring for all static file handlers
 func (s *MonitoringService) EnableStaticFileMonitoring() {
@@ -65,6 +68,7 @@ func (s *MonitoringService) EnableStaticFileMonitoring() {
 	}
 	
 	s.logger.Printf("[INFO] Enabled static file monitoring")
+}
 
 // DisableStaticFileMonitoring disables monitoring for all static file handlers
 func (s *MonitoringService) DisableStaticFileMonitoring() {
@@ -77,3 +81,5 @@ func (s *MonitoringService) DisableStaticFileMonitoring() {
 		}
 	}
 	
+	s.logger.Printf("[INFO] Disabled static file monitoring")
+}

@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/manifest"
@@ -30,6 +32,7 @@ var templateCmd = &cobra.Command{
 	Use:   "template",
 	Short: "Manage vulnerability templates",
 	Long:  `Create, list, and manage vulnerability templates for the LLMreconing Tool.`,
+}
 
 // templateListCmd represents the template list command
 var templateListCmd = &cobra.Command{
@@ -78,6 +81,7 @@ var templateListCmd = &cobra.Command{
 			}
 		}
 	},
+}
 
 // templateCreateCmd represents the template create command
 var templateCreateCmd = &cobra.Command{
@@ -101,27 +105,25 @@ var templateCreateCmd = &cobra.Command{
 		}
 
 		// Create template
-		template := format.NewTemplate()
-		template.Info = format.TemplateInfo{
-			Name:        templateName,
-			Description: templateDescription,
-			Version:     templateVersion,
-			Author:      templateAuthor,
-			Severity:    templateSeverity,
-			Tags:        templateTags,
-		}
-
-		// Generate ID
-		template.ID = fmt.Sprintf("%s_%s_v%s", templateCategory, format.SanitizeFilename(templateName), templateVersion)
-
-		// Create test definition with placeholder
-		template.Test = format.TestDefinition{
-			Prompt:           "Add your test prompt here",
-			ExpectedBehavior: "Describe the expected behavior here",
-			Detection: format.DetectionCriteria{
-				Type:      "string_match",
-				Match:     "Add detection string here",
-				Condition: "contains",
+		template := &format.Template{
+			ID:        fmt.Sprintf("%s_%s_v%s", templateCategory, templateName, templateVersion),
+			Name:      templateName,
+			Version:   templateVersion,
+			Metadata:  make(map[string]interface{}),
+			Variables: make(map[string]interface{}),
+			Info: &format.TemplateInfo{
+				Name:        templateName,
+				Description: templateDescription,
+				Version:     templateVersion,
+				Author:      templateAuthor,
+				Severity:    templateSeverity,
+				Tags:        templateTags,
+			},
+			Test: &format.TemplateTest{
+				Prompt:     "Add your test prompt here",
+				Expected:   "Describe the expected behavior here",
+				Detection: &format.TemplateDetection{},
+				Variations: make([]*format.TemplateVariation, 0),
 			},
 		}
 
@@ -143,7 +145,7 @@ var templateCreateCmd = &cobra.Command{
 
 		// Save template to file
 		templatePath := filepath.Join(categoryDir, fmt.Sprintf("%s_v%s.yaml", format.SanitizeFilename(templateName), templateVersion))
-		if err := template.SaveToFile(templatePath); err != nil {
+		if err := template.Save(templatePath); err != nil {
 			fmt.Printf("Error saving template: %v\n", err)
 			return
 		}
@@ -163,12 +165,14 @@ var templateCreateCmd = &cobra.Command{
 		fmt.Printf("Template '%s' created successfully at %s\n", templateName, templatePath)
 		fmt.Println("Remember to edit the template to add your test prompt and detection criteria.")
 	},
+}
 
 // moduleCmd represents the module command
 var moduleCmd = &cobra.Command{
 	Use:   "module",
 	Short: "Manage modules",
 	Long:  `Create, list, and manage modules for the LLMreconing Tool.`,
+}
 
 // moduleListCmd represents the module list command
 var moduleListCmd = &cobra.Command{
@@ -217,6 +221,7 @@ var moduleListCmd = &cobra.Command{
 			}
 		}
 	},
+}
 
 // moduleCreateCmd represents the module create command
 var moduleCreateCmd = &cobra.Command{
@@ -254,13 +259,19 @@ var moduleCreateCmd = &cobra.Command{
 		}
 
 		// Create module
-		module := format.NewModule(moduleTypeEnum)
-		module.Info = format.ModuleInfo{
+		module := &format.Module{
+			ID:          moduleName,
 			Name:        moduleName,
-			Description: moduleDescription,
+			Type:        moduleTypeEnum,
 			Version:     moduleVersion,
-			Author:      moduleAuthor,
-			Tags:        moduleTags,
+			Description: moduleDescription,
+			Info: &format.ModuleInfo{
+				Name:        moduleName,
+				Description: moduleDescription,
+				Version:     moduleVersion,
+				Author:      moduleAuthor,
+				Tags:        moduleTags,
+			},
 		}
 
 		// Generate ID
@@ -293,7 +304,7 @@ var moduleCreateCmd = &cobra.Command{
 
 		// Save module to file
 		modulePath := filepath.Join(moduleDir, fmt.Sprintf("%s_v%s.yaml", format.SanitizeFilename(moduleName), moduleVersion))
-		if err := module.SaveToFile(modulePath); err != nil {
+		if err := module.Save(modulePath); err != nil {
 			fmt.Printf("Error saving module: %v\n", err)
 			return
 		}
@@ -312,7 +323,7 @@ var moduleCreateCmd = &cobra.Command{
 		fmt.Printf("Module '%s' created successfully at %s\n", moduleName, modulePath)
 		fmt.Println("Remember to edit the module to add your specific configuration.")
 	},
-	
+}
 
 // scanCmd represents the scan command
 var scanCmd = &cobra.Command{
@@ -357,6 +368,7 @@ var scanCmd = &cobra.Command{
 		fmt.Printf("Scan complete. Found %d templates and %d modules.\n",
 			len(templateManifest.Templates), len(moduleManifest.Modules))
 	},
+}
 
 // getBaseDir returns the base directory for the LLMreconing Tool
 func getBaseDir() (string, error) {
@@ -368,6 +380,7 @@ func getBaseDir() (string, error) {
 	}
 
 	return cwd, nil
+}
 
 func init() {
 	rootCmd.AddCommand(templateCmd)
@@ -398,3 +411,4 @@ func init() {
 	moduleCreateCmd.Flags().StringVar(&moduleAuthor, "author", "", "Module author")
 	moduleCreateCmd.Flags().StringVar(&moduleType, "type", "", "Module type (provider, utility, detector)")
 	moduleCreateCmd.Flags().StringSliceVar(&moduleTags, "tags", []string{}, "Module tags (comma-separated)")
+}

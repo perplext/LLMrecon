@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	
+	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
 )
 
@@ -56,8 +57,10 @@ func (a *RegistryAdapter) GetTemplate(ctx context.Context, id string) (interface
 		return nil, fmt.Errorf("template not found: %s", id)
 	}
 	return template, nil
+}
 
 // CreateTemplate creates a new template
+
 func (a *RegistryAdapter) CreateTemplate(ctx context.Context, template interfaces.Template) error {
 	return a.registry.Register(template)
 }
@@ -68,14 +71,121 @@ func (a *RegistryAdapter) UpdateTemplate(ctx context.Context, id string, templat
 		return err
 	}
 	return a.registry.Register(template)
+}
 
 // DeleteTemplate deletes a template
+
 func (a *RegistryAdapter) DeleteTemplate(ctx context.Context, id string) error {
 	return a.registry.Unregister(id)
 }
-
 // ValidateTemplate validates a template
 func (a *RegistryAdapter) ValidateTemplate(ctx context.Context, template interfaces.Template) error {
 	return template.Validate()
 }
+
+// NewTemplateRegistryAdapter creates a new template registry adapter from a concrete registry
+func NewTemplateRegistryAdapter(concreteRegistry *TemplateRegistry) *RegistryAdapter {
+	return &RegistryAdapter{
+		registry: &ConcreteRegistryWrapper{concreteRegistry: concreteRegistry},
+	}
+}
+
+// ConcreteRegistryWrapper wraps the concrete TemplateRegistry to implement interfaces.TemplateRegistry
+type ConcreteRegistryWrapper struct {
+	concreteRegistry *TemplateRegistry
+}
+
+// Register registers a template
+func (w *ConcreteRegistryWrapper) Register(template interfaces.Template) error {
+	// Convert interfaces.Template to *format.Template
+	formatTemplate, ok := template.(*format.Template)
+	if !ok {
+		return fmt.Errorf("template must be of type *format.Template")
+	}
+	return w.concreteRegistry.Register(formatTemplate)
+}
+
+// Unregister unregisters a template
+func (w *ConcreteRegistryWrapper) Unregister(id string) error {
+	return w.concreteRegistry.Unregister(id)
+}
+
+// Get gets a registered template
+func (w *ConcreteRegistryWrapper) Get(id string) (interfaces.Template, bool) {
+	template, found := w.concreteRegistry.Get(id)
+	if !found {
+		return nil, false
+	}
+	return template, true
+}
+
+// List lists all registered templates
+func (w *ConcreteRegistryWrapper) List() []interfaces.Template {
+	concreteList := w.concreteRegistry.List()
+	interfaceList := make([]interfaces.Template, len(concreteList))
+	for i, template := range concreteList {
+		interfaceList[i] = template
+	}
+	return interfaceList
+}
+
+// Clear clears the registry
+func (w *ConcreteRegistryWrapper) Clear() {
+	w.concreteRegistry.Clear()
+}
+
+// Additional methods for TemplateRegistryExtended interface
+
+// FindByTag finds templates by tag
+func (a *RegistryAdapter) FindByTag(tag string) []*format.Template {
+	// Use the concrete registry method
+	if concreteWrapper, ok := a.registry.(*ConcreteRegistryWrapper); ok {
+		return concreteWrapper.concreteRegistry.FindByTag(tag)
+	}
+	return []*format.Template{}
+}
+
+// FindByTags finds templates by multiple tags
+func (a *RegistryAdapter) FindByTags(tags []string) []*format.Template {
+	// Use the concrete registry method
+	if concreteWrapper, ok := a.registry.(*ConcreteRegistryWrapper); ok {
+		return concreteWrapper.concreteRegistry.FindByTags(tags)
+	}
+	return []*format.Template{}
+}
+
+// GetMetadata gets metadata for a template
+func (a *RegistryAdapter) GetMetadata(id string) (map[string]interface{}, error) {
+	// Use the concrete registry method
+	if concreteWrapper, ok := a.registry.(*ConcreteRegistryWrapper); ok {
+		return concreteWrapper.concreteRegistry.GetMetadata(id)
+	}
+	return nil, fmt.Errorf("metadata not supported by this registry implementation")
+}
+
+// SetMetadata sets metadata for a template
+func (a *RegistryAdapter) SetMetadata(id string, metadata map[string]interface{}) error {
+	// Use the concrete registry method
+	if concreteWrapper, ok := a.registry.(*ConcreteRegistryWrapper); ok {
+		return concreteWrapper.concreteRegistry.SetMetadata(id, metadata)
+	}
+	return fmt.Errorf("metadata not supported by this registry implementation")
+}
+
+// Count returns the number of templates
+func (a *RegistryAdapter) Count() int {
+	// Use the concrete registry method
+	if concreteWrapper, ok := a.registry.(*ConcreteRegistryWrapper); ok {
+		return concreteWrapper.concreteRegistry.Count()
+	}
+	return 0
+}
+
+// Update updates a template
+func (a *RegistryAdapter) Update(template *format.Template) error {
+	// Use the concrete registry method
+	if concreteWrapper, ok := a.registry.(*ConcreteRegistryWrapper); ok {
+		return concreteWrapper.concreteRegistry.Update(template)
+	}
+	return fmt.Errorf("update not supported by this registry implementation")
 }

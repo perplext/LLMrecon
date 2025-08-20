@@ -5,6 +5,7 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // JailbreakDetector detects jailbreaking attempts in prompts
@@ -17,6 +18,7 @@ type JailbreakDetector struct {
 	delimiterPatterns  []*regexp.Regexp
 	overridePatterns   []*regexp.Regexp
 	knownJailbreakTechniques map[string]*regexp.Regexp
+}
 
 // NewJailbreakDetector creates a new jailbreak detector
 func NewJailbreakDetector(config *ProtectionConfig, patternLibrary *InjectionPatternLibrary) *JailbreakDetector {
@@ -97,6 +99,7 @@ func NewJailbreakDetector(config *ProtectionConfig, patternLibrary *InjectionPat
 		overridePatterns:        overridePatterns,
 		knownJailbreakTechniques: knownJailbreakTechniques,
 	}
+}
 
 // DetectJailbreak detects jailbreaking attempts in a prompt
 func (d *JailbreakDetector) DetectJailbreak(ctx context.Context, prompt string) (*ProtectionResult, error) {
@@ -206,6 +209,7 @@ func (d *JailbreakDetector) DetectJailbreak(ctx context.Context, prompt string) 
 
 	result.ProcessingTime = time.Since(startTime)
 	return result, nil
+}
 
 // detectRoleChanges detects role change attempts in a prompt
 func (d *JailbreakDetector) detectRoleChanges(prompt string, result *ProtectionResult) {
@@ -251,6 +255,7 @@ func (d *JailbreakDetector) detectRoleChanges(prompt string, result *ProtectionR
 			result.RiskScore = max(result.RiskScore, confidence)
 		}
 	}
+}
 
 // detectSystemPrompts detects system prompt injection attempts in a prompt
 func (d *JailbreakDetector) detectSystemPrompts(prompt string, result *ProtectionResult) {
@@ -278,6 +283,7 @@ func (d *JailbreakDetector) detectSystemPrompts(prompt string, result *Protectio
 			result.RiskScore = max(result.RiskScore, 0.9)
 		}
 	}
+}
 
 // detectDelimiterMisuse detects delimiter misuse in a prompt
 func (d *JailbreakDetector) detectDelimiterMisuse(prompt string, result *ProtectionResult) {
@@ -317,6 +323,7 @@ func (d *JailbreakDetector) detectDelimiterMisuse(prompt string, result *Protect
 			result.RiskScore = max(result.RiskScore, confidence)
 		}
 	}
+}
 
 // detectInstructionOverride detects instruction override attempts in a prompt
 func (d *JailbreakDetector) detectInstructionOverride(prompt string, result *ProtectionResult) {
@@ -344,6 +351,7 @@ func (d *JailbreakDetector) detectInstructionOverride(prompt string, result *Pro
 			result.RiskScore = max(result.RiskScore, 0.9)
 		}
 	}
+}
 
 // detectKnownJailbreakTechniques detects known jailbreak techniques in a prompt
 func (d *JailbreakDetector) detectKnownJailbreakTechniques(prompt string, result *ProtectionResult) {
@@ -376,6 +384,7 @@ func (d *JailbreakDetector) detectKnownJailbreakTechniques(prompt string, result
 			}
 		}
 	}
+}
 
 // isHighRiskRole determines if a role is considered high risk
 func (d *JailbreakDetector) isHighRiskRole(role string) bool {
@@ -409,6 +418,7 @@ func (d *JailbreakDetector) isHighRiskRole(role string) bool {
 	}
 	
 	return false
+}
 
 // hasSuspiciousContext checks if there's a suspicious context around a match
 func (d *JailbreakDetector) hasSuspiciousContext(context string) bool {
@@ -428,3 +438,5 @@ func (d *JailbreakDetector) hasSuspiciousContext(context string) bool {
 		}
 	}
 	
+	return false
+}

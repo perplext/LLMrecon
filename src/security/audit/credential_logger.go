@@ -107,10 +107,10 @@ func (l *CredentialAuditLogger) LogCredentialEvent(eventType string, credentialI
 	if err != nil {
 		return fmt.Errorf("failed to open audit log file: %w", err)
 	}
-	defer func() { 
-		if err := file.Close(); err != nil { 
-			fmt.Printf("Failed to close: %v\n", err) 
-		} 
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
 	}()
 
 	// Write event
@@ -180,10 +180,10 @@ func (l *CredentialAuditLogger) GetAuditEvents(limit int, filter map[string]stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to open audit log file: %w", err)
 	}
-	defer func() { 
-		if err := file.Close(); err != nil { 
-			fmt.Printf("Failed to close: %v\n", err) 
-		} 
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
 	}()
 
 	// Read events

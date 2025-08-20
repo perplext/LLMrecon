@@ -73,11 +73,11 @@ func (v *MetadataValidator) ValidateField(field string, value interface{}) error
 // NormalizeMetadata normalizes metadata fields
 func (v *MetadataValidator) NormalizeMetadata(metadata map[string]interface{}) map[string]interface{} {
 	normalized := make(map[string]interface{})
-	
+
 	for key, value := range metadata {
 		// Normalize field names to lowercase
 		normalizedKey := strings.ToLower(key)
-		
+
 		// Handle tags field
 		if normalizedKey == "tags" {
 			if str, ok := value.(string); ok {
@@ -94,7 +94,7 @@ func (v *MetadataValidator) NormalizeMetadata(metadata map[string]interface{}) m
 			normalized[normalizedKey] = value
 		}
 	}
-	
+
 	return normalized
 }
 
@@ -103,12 +103,10 @@ func (v *MetadataValidator) GetRequiredFields() []string {
 	return v.RequiredFields
 }
 
-
 // GetOptionalFields returns the list of optional fields
 func (v *MetadataValidator) GetOptionalFields() []string {
 	return v.OptionalFields
 }
-
 
 // IsRequiredField checks if a field is required
 func (v *MetadataValidator) IsRequiredField(field string) bool {
@@ -133,4 +131,62 @@ func (v *MetadataValidator) IsOptionalField(field string) bool {
 // IsValidField checks if a field is valid (either required or optional)
 func (v *MetadataValidator) IsValidField(field string) bool {
 	return v.IsRequiredField(field) || v.IsOptionalField(field)
+}
+
+// CompatibilityMetadata represents compatibility metadata for a template
+type CompatibilityMetadata struct {
+	// MinToolVersion is the minimum tool version required
+	MinToolVersion string `json:"min_tool_version"`
+	// MaxToolVersion is the maximum tool version supported
+	MaxToolVersion string `json:"max_tool_version"`
+	// Providers is the list of compatible providers
+	Providers []string `json:"providers"`
+	// RequiredFeatures is the list of required features
+	RequiredFeatures []string `json:"required_features"`
+}
+
+// IsCompatibleWithToolVersion checks if the metadata is compatible with a tool version
+func (c *CompatibilityMetadata) IsCompatibleWithToolVersion(version string) (bool, error) {
+	// Simple string comparison - in production would use semantic versioning
+	if c.MinToolVersion != "" && version < c.MinToolVersion {
+		return false, nil
+	}
+	if c.MaxToolVersion != "" && version > c.MaxToolVersion {
+		return false, nil
+	}
+	return true, nil
+}
+
+// HasRequiredFeatures checks if the given features contain all required features
+func (c *CompatibilityMetadata) HasRequiredFeatures(availableFeatures []string) bool {
+	for _, required := range c.RequiredFeatures {
+		found := false
+		for _, available := range availableFeatures {
+			if required == available {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+// IsCompatibleWithProvider checks if the metadata is compatible with a provider
+func (c *CompatibilityMetadata) IsCompatibleWithProvider(providerID string) bool {
+	for _, p := range c.Providers {
+		if p == providerID {
+			return true
+		}
+	}
+	return false
+}
+
+// IsCompatibleWithModel checks if the metadata is compatible with a model
+func (c *CompatibilityMetadata) IsCompatibleWithModel(modelID string) bool {
+	// For now, we don't have specific model compatibility checks
+	// This could be extended to check model-specific requirements
+	return true
 }

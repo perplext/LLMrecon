@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -26,6 +27,7 @@ type MonitoringDashboard struct {
 	ctx          context.Context
 	cancel       context.CancelFunc
 	wg           sync.WaitGroup
+}
 
 // DashboardConfig defines configuration for the monitoring dashboard
 type DashboardConfig struct {
@@ -54,6 +56,7 @@ type DashboardConfig struct {
 	EnableAlerts    bool          `json:"enable_alerts"`
 	EnableExport    bool          `json:"enable_export"`
 	EnableDebug     bool          `json:"enable_debug"`
+}
 
 // DashboardClient represents a connected dashboard client
 type DashboardClient struct {
@@ -63,6 +66,7 @@ type DashboardClient struct {
 	LastSeen    time.Time       `json:"last_seen"`
 	Subscriptions []string      `json:"subscriptions"`
 	mutex       sync.Mutex
+}
 
 // ClientPermissions defines what a client can access
 type ClientPermissions struct {
@@ -70,6 +74,7 @@ type ClientPermissions struct {
 	WriteConfig   bool `json:"write_config"`
 	ManageAlerts  bool `json:"manage_alerts"`
 	ExportData    bool `json:"export_data"`
+}
 
 // DashboardMetrics tracks dashboard performance
 type DashboardMetrics struct {
@@ -82,18 +87,13 @@ type DashboardMetrics struct {
 	ErrorCount          int64         `json:"error_count"`
 }
 
-// MetricsCollector interface for collecting metrics from various sources
-type MetricsCollector interface {
-	GetMetrics() map[string]interface{}
-	GetName() string
-	IsEnabled() bool
-
 // MetricsMessage represents a real-time metrics update
 type MetricsMessage struct {
 	Type      string                 `json:"type"`
 	Timestamp time.Time              `json:"timestamp"`
 	Source    string                 `json:"source"`
 	Metrics   map[string]interface{} `json:"metrics"`
+}
 
 // AlertMessage represents a real-time alert
 type AlertMessage struct {
@@ -122,6 +122,7 @@ func DefaultDashboardConfig() DashboardConfig {
 		EnableExport:    true,
 		EnableDebug:     false,
 	}
+}
 
 // NewMonitoringDashboard creates a new monitoring dashboard
 func NewMonitoringDashboard(config DashboardConfig, logger Logger) *MonitoringDashboard {
@@ -146,6 +147,7 @@ func NewMonitoringDashboard(config DashboardConfig, logger Logger) *MonitoringDa
 	dashboard.setupRoutes()
 	
 	return dashboard
+}
 
 // Start starts the monitoring dashboard server
 func (d *MonitoringDashboard) Start() error {
@@ -191,6 +193,7 @@ func (d *MonitoringDashboard) Start() error {
 	
 	d.logger.Info("Monitoring dashboard started", "url", fmt.Sprintf("https://%s", addr))
 	return nil
+}
 
 // Stop stops the monitoring dashboard
 func (d *MonitoringDashboard) Stop() error {
@@ -215,6 +218,7 @@ func (d *MonitoringDashboard) Stop() error {
 	
 	d.logger.Info("Monitoring dashboard stopped")
 	return nil
+}
 
 // AddMetricsCollector adds a metrics collector
 func (d *MonitoringDashboard) AddMetricsCollector(collector MetricsCollector) {
@@ -223,6 +227,7 @@ func (d *MonitoringDashboard) AddMetricsCollector(collector MetricsCollector) {
 	
 	d.collectors[collector.GetName()] = collector
 	d.logger.Info("Added metrics collector", "name", collector.GetName())
+}
 
 // RemoveMetricsCollector removes a metrics collector
 func (d *MonitoringDashboard) RemoveMetricsCollector(name string) {
@@ -231,6 +236,7 @@ func (d *MonitoringDashboard) RemoveMetricsCollector(name string) {
 	
 	delete(d.collectors, name)
 	d.logger.Info("Removed metrics collector", "name", name)
+}
 
 // BroadcastAlert broadcasts an alert to all connected clients
 func (d *MonitoringDashboard) BroadcastAlert(alert AlertMessage) {
@@ -243,6 +249,7 @@ func (d *MonitoringDashboard) BroadcastAlert(alert AlertMessage) {
 	
 	d.broadcastMessage(alert)
 	d.logger.Info("Alert broadcasted", "severity", alert.Severity, "title", alert.Title)
+}
 
 // GetMetrics returns dashboard metrics
 func (d *MonitoringDashboard) GetMetrics() *DashboardMetrics {
@@ -251,6 +258,7 @@ func (d *MonitoringDashboard) GetMetrics() *DashboardMetrics {
 	
 	d.metrics.ConnectedClients = int64(len(d.clients))
 	return d.metrics
+}
 
 // Private methods
 
@@ -280,6 +288,7 @@ func (d *MonitoringDashboard) setupRoutes() {
 	
 	// Static files (dashboard UI)
 	d.router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./web/dashboard/"))))
+}
 
 // handleWebSocket handles WebSocket connections
 func (d *MonitoringDashboard) handleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -333,6 +342,7 @@ func (d *MonitoringDashboard) handleWebSocket(w http.ResponseWriter, r *http.Req
 	
 	// Handle client messages
 	go d.handleClient(client)
+}
 
 // handleClient handles messages from a client
 func (d *MonitoringDashboard) handleClient(client *DashboardClient) {
@@ -368,6 +378,7 @@ func (d *MonitoringDashboard) handleClient(client *DashboardClient) {
 		// Reset read deadline
 		client.Conn.SetReadDeadline(time.Now().Add(d.config.ClientTimeout))
 	}
+}
 
 // handleClientMessage processes messages from clients
 func (d *MonitoringDashboard) handleClientMessage(client *DashboardClient, msg map[string]interface{}) {
@@ -400,6 +411,7 @@ func (d *MonitoringDashboard) handleClientMessage(client *DashboardClient, msg m
 	default:
 		d.logger.Warn("Unknown message type", "client", client.ID, "type", msgType)
 	}
+}
 
 // metricsLoop broadcasts metrics at regular intervals
 func (d *MonitoringDashboard) metricsLoop() {
@@ -414,6 +426,7 @@ func (d *MonitoringDashboard) metricsLoop() {
 			return
 		}
 	}
+}
 
 // broadcastMetrics collects and broadcasts metrics to all clients
 func (d *MonitoringDashboard) broadcastMetrics() {
@@ -440,6 +453,7 @@ func (d *MonitoringDashboard) broadcastMetrics() {
 			d.broadcastMessage(msg)
 		}
 	}
+}
 
 // broadcastMessage sends a message to all subscribed clients
 func (d *MonitoringDashboard) broadcastMessage(msg interface{}) {
@@ -453,6 +467,7 @@ func (d *MonitoringDashboard) broadcastMessage(msg interface{}) {
 	for _, client := range clients {
 		d.sendToClient(client, msg)
 	}
+}
 
 // sendToClient sends a message to a specific client
 func (d *MonitoringDashboard) sendToClient(client *DashboardClient, msg interface{}) {
@@ -467,6 +482,7 @@ func (d *MonitoringDashboard) sendToClient(client *DashboardClient, msg interfac
 	}
 	
 	d.metrics.MessagesSent++
+}
 
 // clientManagementLoop manages client connections
 func (d *MonitoringDashboard) clientManagementLoop() {
@@ -481,6 +497,7 @@ func (d *MonitoringDashboard) clientManagementLoop() {
 			return
 		}
 	}
+}
 
 // cleanupStaleClients removes inactive clients
 func (d *MonitoringDashboard) cleanupStaleClients() {
@@ -495,6 +512,7 @@ func (d *MonitoringDashboard) cleanupStaleClients() {
 		}
 	}
 	d.mutex.Unlock()
+}
 
 // authenticateToken validates authentication tokens
 func (d *MonitoringDashboard) authenticateToken(token string) bool {
@@ -503,6 +521,7 @@ func (d *MonitoringDashboard) authenticateToken(token string) bool {
 	}
 	
 	return token == d.config.AdminToken || token == d.config.ReadOnlyToken
+}
 
 // HTTP handlers
 
@@ -524,6 +543,7 @@ func (d *MonitoringDashboard) handleGetMetrics(w http.ResponseWriter, r *http.Re
 	
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(allMetrics) // Best effort, headers already sent
+}
 
 // handleGetStatus returns dashboard status
 func (d *MonitoringDashboard) handleGetStatus(w http.ResponseWriter, r *http.Request) {
@@ -537,6 +557,7 @@ func (d *MonitoringDashboard) handleGetStatus(w http.ResponseWriter, r *http.Req
 	
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(status) // Best effort, headers already sent
+}
 
 // handleHealthCheck returns health status
 func (d *MonitoringDashboard) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
@@ -545,6 +566,7 @@ func (d *MonitoringDashboard) handleHealthCheck(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "healthy",
 	})
+}
 
 // handleGetMetricsHistory returns historical metrics (placeholder)
 func (d *MonitoringDashboard) handleGetMetricsHistory(w http.ResponseWriter, r *http.Request) {
@@ -553,6 +575,7 @@ func (d *MonitoringDashboard) handleGetMetricsHistory(w http.ResponseWriter, r *
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "Historical metrics not implemented yet",
 	})
+}
 
 // handleExportMetrics exports metrics data
 func (d *MonitoringDashboard) handleExportMetrics(w http.ResponseWriter, r *http.Request) {
@@ -566,6 +589,7 @@ func (d *MonitoringDashboard) handleExportMetrics(w http.ResponseWriter, r *http
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "Metrics export not implemented yet",
 	})
+}
 
 // handleExportLogs exports log data
 func (d *MonitoringDashboard) handleExportLogs(w http.ResponseWriter, r *http.Request) {
@@ -579,6 +603,7 @@ func (d *MonitoringDashboard) handleExportLogs(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "Logs export not implemented yet",
 	})
+}
 
 // DefaultLogger provides a simple logger implementation
 type DefaultLogger struct {
@@ -590,42 +615,20 @@ func NewDefaultLogger() *DefaultLogger {
 	return &DefaultLogger{
 		logger: log.New(log.Writer(), "[Dashboard] ", log.LstdFlags),
 	}
+}
 
 func (l *DefaultLogger) Info(msg string, args ...interface{}) {
 	l.logger.Printf("INFO: "+msg, args...)
+}
 
 func (l *DefaultLogger) Warn(msg string, args ...interface{}) {
 	l.logger.Printf("WARN: "+msg, args...)
+}
 
 func (l *DefaultLogger) Error(msg string, args ...interface{}) {
 	l.logger.Printf("ERROR: "+msg, args...)
+}
 
 func (l *DefaultLogger) Debug(msg string, args ...interface{}) {
 	l.logger.Printf("DEBUG: "+msg, args...)
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

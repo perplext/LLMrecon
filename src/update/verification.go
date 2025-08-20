@@ -5,7 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
@@ -18,17 +21,20 @@ type VerificationResult struct {
 	Message string
 	// Details contains additional details about the verification
 	Details map[string]interface{}
+}
 
 // IntegrityVerifier handles verification of update package integrity
 type IntegrityVerifier struct {
 	// Logger is the logger for verification operations
 	Logger io.Writer
+}
 
 // NewIntegrityVerifier creates a new integrity verifier
 func NewIntegrityVerifier(logger io.Writer) *IntegrityVerifier {
 	return &IntegrityVerifier{
 		Logger: logger,
 	}
+}
 
 // VerifyPackage verifies the integrity of an update package
 func (v *IntegrityVerifier) VerifyPackage(pkg *UpdatePackage) (*VerificationResult, error) {
@@ -67,6 +73,7 @@ func (v *IntegrityVerifier) VerifyPackage(pkg *UpdatePackage) (*VerificationResu
 		Success: true,
 		Message: "Package integrity verification successful",
 	}, nil
+}
 
 // VerifyCompatibility verifies that the update package is compatible with the current installation
 func (v *IntegrityVerifier) VerifyCompatibility(pkg *UpdatePackage, currentVersions map[string]version.Version) (*VerificationResult, error) {
@@ -96,11 +103,13 @@ func (v *IntegrityVerifier) VerifyCompatibility(pkg *UpdatePackage, currentVersi
 		Success: true,
 		Message: "Package compatibility verification successful",
 	}, nil
+}
 
 // calculateFileHash calculates the SHA-256 hash of a file
 func calculateFileHash(data []byte) string {
 	hash := sha256.Sum256(data)
 	return hex.EncodeToString(hash[:])
+}
 
 // calculateDirectoryHash calculates the SHA-256 hash of a directory
 func calculateDirectoryHash(dirPath string) (string, error) {
@@ -142,3 +151,5 @@ func calculateDirectoryHash(dirPath string) (string, error) {
 	}
 
 	// Return hash as hex string
+	return hex.EncodeToString(h.Sum(nil)), nil
+}

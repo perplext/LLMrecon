@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -12,16 +13,24 @@ import (
 //go:embed docs/*
 var helpDocs embed.FS
 
+// HelpExample represents a command example for help documentation
+type HelpExample struct {
+	Command     string `yaml:"command"`
+	Description string `yaml:"description"`
+	Output      string `yaml:"output,omitempty"`
+}
+
 // HelpDoc represents a help document
 type HelpDoc struct {
 	Title       string            `yaml:"title"`
 	Category    string            `yaml:"category"`
 	Tags        []string          `yaml:"tags"`
 	Content     string            `yaml:"content"`
-	Examples    []Example         `yaml:"examples"`
+	Examples    []HelpExample     `yaml:"examples"`
 	Related     []string          `yaml:"related"`
 	LastUpdated string            `yaml:"last_updated"`
 	Metadata    map[string]string `yaml:"metadata"`
+}
 
 // HelpDocManager manages help documentation
 type HelpDocManager struct {
@@ -29,6 +38,7 @@ type HelpDocManager struct {
 	categories map[string][]*HelpDoc
 	tags       map[string][]*HelpDoc
 	index      *HelpIndex
+}
 
 // HelpIndex provides full-text search capabilities
 type HelpIndex struct {
@@ -62,6 +72,7 @@ func NewHelpDocManager() (*HelpDocManager, error) {
 	hdm.buildIndices()
 	
 	return hdm, nil
+}
 
 // loadEmbeddedDocs loads documentation from embedded files
 func (hdm *HelpDocManager) loadEmbeddedDocs() error {
@@ -71,6 +82,7 @@ func (hdm *HelpDocManager) loadEmbeddedDocs() error {
 	// In a real implementation, this would load from embedded files
 	// For now, we'll use the default docs
 	return nil
+}
 
 // createDefaultDocs creates default help documentation
 func (hdm *HelpDocManager) createDefaultDocs() {
@@ -113,7 +125,7 @@ LLMrecon is a comprehensive security testing framework for Large Language Model 
 - Create custom test cases
 - Set up continuous monitoring
 - Join our community`,
-		Examples: []Example{
+		Examples: []HelpExample{
 			{
 				Command:     "LLMrecon init",
 				Description: "Initialize a new project",
@@ -165,7 +177,7 @@ Templates support variables and functions for dynamic test generation:
 3. Version your templates
 4. Test thoroughly
 5. Share with the community`,
-		Examples: []Example{
+		Examples: []HelpExample{
 			{
 				Command:     "LLMrecon template create my-template",
 				Description: "Create a new template interactively",
@@ -264,11 +276,12 @@ LLMrecon scan --owasp-category LLM01
 
 # Generate compliance report
 LLMrecon report --format owasp-compliance
-` + "```"`,
-		Examples: []Example{
+` + "```",
+		Examples: []HelpExample{
 			{
 				Command:     "LLMrecon scan --owasp-category LLM01",
 				Description: "Scan for prompt injection vulnerabilities",
+				Output:      "Starting OWASP LLM01 scan...",
 			},
 		},
 		Related: []string{"compliance", "reporting", "templates"},
@@ -315,13 +328,14 @@ LLMrecon report --format owasp-compliance
 
 Enable debug mode for detailed diagnostics:
 
-\`\`\`bash
+` + "```bash" + `
 LLMrecon --debug scan ...
 LLMrecon debug logs --tail
 LLMrecon debug stats
-\`\`\``,
+` + "```",
 		Related: []string{"debug", "performance", "errors"},
 	}
+}
 
 // buildIndices builds search indices for documentation
 func (hdm *HelpDocManager) buildIndices() {
@@ -339,6 +353,7 @@ func (hdm *HelpDocManager) buildIndices() {
 		// Full-text index
 		hdm.indexDocument(id, doc)
 	}
+}
 
 // indexDocument adds a document to the search index
 func (hdm *HelpDocManager) indexDocument(id string, doc *HelpDoc) {
@@ -352,6 +367,7 @@ func (hdm *HelpDocManager) indexDocument(id string, doc *HelpDoc) {
 	for _, ex := range doc.Examples {
 		hdm.addToIndex(id, doc.Title, ex.Description, 1.5, "example")
 	}
+}
 
 // addToIndex adds content to the search index
 func (hdm *HelpDocManager) addToIndex(docID, title, content string, score float64, location string) {
@@ -373,6 +389,7 @@ func (hdm *HelpDocManager) addToIndex(docID, title, content string, score float6
 		
 		hdm.index.entries[word] = append(hdm.index.entries[word], entry)
 	}
+}
 
 // Search performs a full-text search across documentation
 func (hdm *HelpDocManager) Search(query string) []*HelpDoc {
@@ -397,14 +414,17 @@ func (hdm *HelpDocManager) Search(query string) []*HelpDoc {
 	}
 	
 	return docs
+}
 
 // GetByCategory returns all documents in a category
 func (hdm *HelpDocManager) GetByCategory(category string) []*HelpDoc {
 	return hdm.categories[category]
+}
 
 // GetByTag returns all documents with a specific tag
 func (hdm *HelpDocManager) GetByTag(tag string) []*HelpDoc {
 	return hdm.tags[tag]
+}
 
 // GetRelated returns related documents
 func (hdm *HelpDocManager) GetRelated(docID string) []*HelpDoc {
@@ -430,6 +450,7 @@ func (hdm *HelpDocManager) GetRelated(docID string) []*HelpDoc {
 	}
 	
 	return related
+}
 
 // LoadCustomDocs loads additional documentation from a directory
 func (hdm *HelpDocManager) LoadCustomDocs(dir string) error {
@@ -456,6 +477,7 @@ func (hdm *HelpDocManager) LoadCustomDocs(dir string) error {
 		
 		return nil
 	})
+}
 
 // ExportDocs exports documentation in various formats
 func (hdm *HelpDocManager) ExportDocs(format, output string) error {
@@ -469,33 +491,25 @@ func (hdm *HelpDocManager) ExportDocs(format, output string) error {
 	default:
 		return fmt.Errorf("unsupported format: %s", format)
 	}
+}
 
 // exportMarkdown exports docs as markdown
 func (hdm *HelpDocManager) exportMarkdown(output string) error {
 	// Implementation for markdown export
 	// Would create a single markdown file or directory of files
 	return nil
+}
 
 // exportHTML exports docs as HTML
 func (hdm *HelpDocManager) exportHTML(output string) error {
 	// Implementation for HTML export
 	// Would create an HTML documentation site
 	return nil
+}
 
 // exportPDF exports docs as PDF
 func (hdm *HelpDocManager) exportPDF(output string) error {
 	// Implementation for PDF export
 	// Would create a PDF manual
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return nil
 }

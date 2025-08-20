@@ -1,17 +1,17 @@
 package payloads
 
 import (
-	"math/big"
-	cryptorand "crypto/rand"
-	
-		"context"
+	"context"
 	"fmt"
 	"math"
-	"crypto/rand"
+	"math/big"
 	"regexp"
 	"sort"
 	"strings"
 	"sync"
+	"time"
+	cryptorand "crypto/rand"
+	"math/rand"
 )
 
 // PayloadGenerator creates and evolves attack payloads dynamically
@@ -26,8 +26,8 @@ type PayloadGenerator struct {
 	logger        Logger
 	metrics       *GeneratorMetrics
 	mu            sync.RWMutex
-
 }
+
 // GeneratorConfig configures the payload generator
 type GeneratorConfig struct {
 	PopulationSize     int     // Number of payloads per generation
@@ -41,7 +41,6 @@ type GeneratorConfig struct {
 	ModelAdaptation    bool    // Adapt to specific models
 }
 
-}
 // Payload represents an attack payload with metadata
 type Payload struct {
 	ID            string
@@ -54,8 +53,8 @@ type Payload struct {
 	Mutations     []MutationType
 	Features      PayloadFeatures
 	Timestamp     time.Time
-
 }
+
 // PayloadFeatures captures payload characteristics
 type PayloadFeatures struct {
 	Length           int
@@ -68,8 +67,8 @@ type PayloadFeatures struct {
 	EmotionalAppeal  float64
 	LogicalStructure float64
 	Tokens           []string
-
 }
+
 // MutationEngine handles payload mutations
 type MutationEngine struct {
 	mutations   map[MutationType]MutationFunc
@@ -77,7 +76,6 @@ type MutationEngine struct {
 	constraints MutationConstraints
 }
 
-}
 // MutationType categorizes mutations
 type MutationType string
 
@@ -121,7 +119,6 @@ type MutationParams struct {
 	Context     map[string]interface{}
 }
 
-}
 // EvolutionEngine manages genetic algorithm evolution
 type EvolutionEngine struct {
 	config           EvolutionConfig
@@ -129,26 +126,25 @@ type EvolutionEngine struct {
 	populationTracker *PopulationTracker
 }
 
-}
 // EvolutionConfig configures evolution parameters
 type EvolutionConfig struct {
 	SelectionPressure   float64
 	MutationDecay       float64 // Reduce mutation over time
 	DiversityPressure   float64
 	ConvergencePatience int     // Generations without improvement
-
 }
+
 // SelectionMethod determines how parents are chosen
 type SelectionMethod interface {
 	Select(population []Payload, count int) []Payload
+}
 
 // CrossoverEngine handles payload recombination
-}
 type CrossoverEngine struct {
 	methods map[CrossoverType]CrossoverFunc
 	weights map[CrossoverType]float64
-
 }
+
 // CrossoverType categorizes crossover methods
 type CrossoverType string
 
@@ -171,7 +167,6 @@ type FitnessEvaluator struct {
 	successHistory *SuccessHistory
 }
 
-}
 // FitnessCriterion defines what makes a good payload
 type FitnessCriterion string
 
@@ -202,9 +197,9 @@ func NewPayloadGenerator(config GeneratorConfig, logger Logger) *PayloadGenerato
 	gen.initializeSeedBank()
 	
 	return gen
+}
 
 // GeneratePayload creates a new payload using evolutionary algorithms
-}
 func (g *PayloadGenerator) GeneratePayload(ctx context.Context, objective string, constraints PayloadConstraints) (*Payload, error) {
 	// Start with seed population
 	population := g.createInitialPopulation(objective, constraints)
@@ -261,9 +256,9 @@ func (g *PayloadGenerator) GeneratePayload(ctx context.Context, objective string
 	g.metrics.RecordGeneration(bestPayload, bestFitness)
 	
 	return bestPayload, nil
+}
 
 // GenerateBatch creates multiple payload variants
-}
 func (g *PayloadGenerator) GenerateBatch(ctx context.Context, objective string, count int, constraints PayloadConstraints) ([]*Payload, error) {
 	payloads := make([]*Payload, 0, count)
 	
@@ -303,6 +298,7 @@ func (g *PayloadGenerator) GenerateBatch(ctx context.Context, objective string, 
 	}
 	
 	return payloads, nil
+}
 
 // EvolveFromSuccess evolves new payloads from successful ones
 func (g *PayloadGenerator) EvolveFromSuccess(successful *Payload, variations int) []*Payload {
@@ -318,9 +314,9 @@ func (g *PayloadGenerator) EvolveFromSuccess(successful *Payload, variations int
 	}
 	
 	return evolved
+}
 
 // LearnFromFeedback updates the generator based on success/failure
-}
 func (g *PayloadGenerator) LearnFromFeedback(payload *Payload, success bool, response string) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -340,9 +336,9 @@ func (g *PayloadGenerator) LearnFromFeedback(payload *Payload, success bool, res
 	
 	// Record metrics
 	g.metrics.RecordFeedback(payload, success)
+}
 
 // createInitialPopulation generates starting payloads
-}
 func (g *PayloadGenerator) createInitialPopulation(objective string, constraints PayloadConstraints) []Payload {
 	population := make([]Payload, g.config.PopulationSize)
 	
@@ -361,16 +357,16 @@ func (g *PayloadGenerator) createInitialPopulation(objective string, constraints
 	}
 	
 	return population
+}
 
 // evaluatePopulation scores all payloads
-}
 func (g *PayloadGenerator) evaluatePopulation(population []Payload, objective string, constraints PayloadConstraints) {
 	for i := range population {
 		population[i].Fitness = g.fitnessEvaluator.Evaluate(&population[i], objective, constraints)
 	}
+}
 
 // evolvePopulation creates next generation
-}
 func (g *PayloadGenerator) evolvePopulation(population []Payload) []Payload {
 	newPopulation := make([]Payload, 0, len(population))
 	
@@ -432,6 +428,7 @@ func NewMutationEngine() *MutationEngine {
 	engine.initializeWeights()
 	
 	return engine
+}
 
 func (m *MutationEngine) registerMutations() {
 	// Token-level mutations
@@ -554,6 +551,7 @@ func (m *MutationEngine) synonymReplace(content string, params MutationParams) s
 	}
 	
 	return result
+}
 
 func (m *MutationEngine) paraphrase(content string, params MutationParams) string {
 	// Simple paraphrasing patterns
@@ -577,6 +575,7 @@ func (m *MutationEngine) paraphrase(content string, params MutationParams) strin
 	}
 	
 	return result
+}
 
 func (m *MutationEngine) toneShift(content string, params MutationParams) string {
 	tones := []struct {
@@ -649,12 +648,10 @@ func (m *MutationEngine) spacingVariation(content string, params MutationParams)
 			pos := randInt(len(s))
 			return s[:pos] + " " + s[pos:]
 		},
-}
 		// Double spaces
 		func(s string) string {
 			return strings.Replace(s, " ", "  ", randInt(3)+1)
 		},
-}
 		// No-break spaces
 		func(s string) string {
 			return strings.Replace(s, " ", " ", randInt(3)+1) // Unicode no-break space
@@ -663,6 +660,7 @@ func (m *MutationEngine) spacingVariation(content string, params MutationParams)
 	
 	variation := variations[randInt(len(variations))]
 	return variation(content)
+}
 
 func (m *MutationEngine) addMetaphor(content string, params MutationParams) string {
 	metaphors := []string{
@@ -684,6 +682,7 @@ func (m *MutationEngine) addMetaphor(content string, params MutationParams) stri
 		examples[randInt(len(examples))])
 	
 	return metaphor + ". " + content
+}
 
 func (m *MutationEngine) narrativeWrapper(content string, params MutationParams) string {
 	narratives := []struct {
@@ -733,6 +732,7 @@ func (m *MutationEngine) selectMutations(intensity float64) []MutationType {
 	}
 	
 	return selected
+}
 
 func (m *MutationEngine) initializeWeights() {
 	// Default weights (can be adjusted based on success)
@@ -749,10 +749,9 @@ func (m *MutationEngine) initializeWeights() {
 		MetaphorMutation:       0.6,
 		NarrativeMutation:      0.7,
 	}
+}
 
 // EvolutionEngine implementation
-
-}
 func NewEvolutionEngine(config GeneratorConfig) *EvolutionEngine {
 	return &EvolutionEngine{
 		config: EvolutionConfig{
@@ -764,6 +763,7 @@ func NewEvolutionEngine(config GeneratorConfig) *EvolutionEngine {
 		selectionMethod:   NewTournamentSelection(3),
 		populationTracker: NewPopulationTracker(),
 	}
+}
 
 // TournamentSelection implements tournament selection
 type TournamentSelection struct {
@@ -772,7 +772,6 @@ type TournamentSelection struct {
 
 func NewTournamentSelection(size int) *TournamentSelection {
 	return &TournamentSelection{tournamentSize: size}
-
 }
 func (t *TournamentSelection) Select(population []Payload, count int) []Payload {
 	selected := make([]Payload, count)
@@ -790,10 +789,9 @@ func (t *TournamentSelection) Select(population []Payload, count int) []Payload 
 	}
 	
 	return selected
+}
 
 // CrossoverEngine implementation
-
-}
 func NewCrossoverEngine() *CrossoverEngine {
 	engine := &CrossoverEngine{
 		methods: make(map[CrossoverType]CrossoverFunc),
@@ -802,6 +800,7 @@ func NewCrossoverEngine() *CrossoverEngine {
 	
 	engine.registerMethods()
 	return engine
+}
 
 func (c *CrossoverEngine) registerMethods() {
 	c.methods[SinglePointCrossover] = c.singlePointCrossover
@@ -814,14 +813,14 @@ func (c *CrossoverEngine) registerMethods() {
 		UniformCrossover:     0.3,
 		SemanticCrossover:    0.2,
 	}
-
 }
+
 func (c *CrossoverEngine) Crossover(parent1, parent2 Payload) (Payload, Payload) {
 	// Select crossover method based on weights
 	method := c.selectMethod()
 	return method(parent1, parent2)
-
 }
+
 func (c *CrossoverEngine) singlePointCrossover(parent1, parent2 Payload) (Payload, Payload) {
 	tokens1 := strings.Fields(parent1.Content)
 	tokens2 := strings.Fields(parent2.Content)
@@ -853,6 +852,7 @@ func (c *CrossoverEngine) singlePointCrossover(parent1, parent2 Payload) (Payloa
 	}
 	
 	return child1, child2
+}
 
 func (c *CrossoverEngine) uniformCrossover(parent1, parent2 Payload) (Payload, Payload) {
 	tokens1 := strings.Fields(parent1.Content)
@@ -893,6 +893,7 @@ func (c *CrossoverEngine) uniformCrossover(parent1, parent2 Payload) (Payload, P
 	}
 	
 	return child1, child2
+}
 
 func (c *CrossoverEngine) semanticCrossover(parent1, parent2 Payload) (Payload, Payload) {
 	// Extract semantic components
@@ -929,6 +930,7 @@ func (c *CrossoverEngine) semanticCrossover(parent1, parent2 Payload) (Payload, 
 	}
 	
 	return child1, child2
+}
 
 func (c *CrossoverEngine) selectMethod() CrossoverFunc {
 	// Weighted random selection
@@ -1009,6 +1011,7 @@ func (f *FitnessEvaluator) calculateComplexity(payload *Payload) float64 {
 	complexity += math.Min(float64(features.Length)/500.0, 1.0) * 0.2
 	
 	return complexity
+}
 
 func (f *FitnessEvaluator) calculateUniqueness(payload *Payload) float64 {
 	// Check against success history
@@ -1045,8 +1048,8 @@ func (f *FitnessEvaluator) calculateStealth(payload *Payload) float64 {
 	stealth += features.Obfuscation * 0.3
 	
 	return math.Max(stealth, 0.0)
-
 }
+
 func (f *FitnessEvaluator) calculateAdaptability(payload *Payload) float64 {
 	// How many mutations and crossovers it has survived
 	adaptability := float64(len(payload.Mutations)) / 10.0
@@ -1056,8 +1059,8 @@ func (f *FitnessEvaluator) calculateAdaptability(payload *Payload) float64 {
 	adaptability += float64(features.TechniqueCount) / 5.0 * 0.5
 	
 	return math.Min(adaptability, 1.0)
-
 }
+
 func (f *FitnessEvaluator) UpdateScores(payload *Payload, success bool, response string) {
 	// Update success history
 	f.successHistory.Record(payload.Content, success)
@@ -1079,6 +1082,7 @@ func (f *FitnessEvaluator) UpdateScores(payload *Payload, success bool, response
 			}
 		}
 	}
+}
 
 // Helper structures and functions
 
@@ -1089,6 +1093,7 @@ type PayloadConstraints struct {
 	ForbiddenPatterns []string
 	TargetComplexity  float64
 	RequireDiversity  bool
+}
 
 type MutationConstraints struct {
 	MaxLength    int
@@ -1101,10 +1106,12 @@ type SemanticComponents struct {
 	Action    string
 	Object    string
 	Modifiers []string
+}
 
 type PopulationTracker struct {
 	generations []GenerationStats
 	mu          sync.RWMutex
+}
 
 type GenerationStats struct {
 	Number       int
@@ -1118,23 +1125,26 @@ func NewPopulationTracker() *PopulationTracker {
 	return &PopulationTracker{
 		generations: make([]GenerationStats, 0),
 	}
+}
 
 type SuccessCache struct {
 	cache map[string]*SuccessRecord
 	mu    sync.RWMutex
+}
 
 type SuccessRecord struct {
 	Payload    *Payload
 	SuccessCount int
 	TotalTries  int
 	LastSuccess time.Time
+}
 
 func NewSuccessCache() *SuccessCache {
 	return &SuccessCache{
 		cache: make(map[string]*SuccessRecord),
 	}
-
 }
+
 func (s *SuccessCache) AddSuccess(payload *Payload) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1152,6 +1162,7 @@ func (s *SuccessCache) AddSuccess(payload *Payload) {
 			LastSuccess:  time.Now(),
 		}
 	}
+}
 
 type SuccessHistory struct {
 	records  map[string]float64
@@ -1198,6 +1209,7 @@ func (s *SuccessHistory) GetSuccessRate(content string) float64 {
 	}
 	
 	return 0.5 // Unknown
+}
 
 func (s *SuccessHistory) FindSimilar(content string, threshold float64) []string {
 	similar := []string{}
@@ -1213,6 +1225,7 @@ func (s *SuccessHistory) FindSimilar(content string, threshold float64) []string
 	}
 	
 	return similar
+}
 
 func (s *SuccessHistory) RecordPattern(pattern string, score float64) {
 	s.mu.Lock()
@@ -1220,10 +1233,12 @@ func (s *SuccessHistory) RecordPattern(pattern string, score float64) {
 	
 	current := s.patterns[pattern]
 	s.patterns[pattern] = (current*0.7 + score*0.3) // Weighted average
+}
 
 type SeedBank struct {
 	seeds    []Payload
 	mu       sync.RWMutex
+}
 
 func NewSeedBank() *SeedBank {
 	bank := &SeedBank{
@@ -1231,6 +1246,7 @@ func NewSeedBank() *SeedBank {
 	}
 	bank.initializeDefaultSeeds()
 	return bank
+}
 
 func (s *SeedBank) initializeDefaultSeeds() {
 	// Add some proven effective seeds
@@ -1252,8 +1268,8 @@ func (s *SeedBank) initializeDefaultSeeds() {
 			Timestamp:  time.Now(),
 		})
 	}
-
 }
+
 func (s *SeedBank) AddSuccessfulSeed(payload *Payload) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1268,8 +1284,8 @@ func (s *SeedBank) AddSuccessfulSeed(payload *Payload) {
 	}
 	
 	s.seeds = append(s.seeds, *payload)
-
 }
+
 func (s *SeedBank) GetRandomSeed() Payload {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -1279,6 +1295,7 @@ func (s *SeedBank) GetRandomSeed() Payload {
 	}
 	
 	return s.seeds[randInt(len(s.seeds))]
+}
 
 type GeneratorMetrics struct {
 	generationsRun    int64
@@ -1287,10 +1304,10 @@ type GeneratorMetrics struct {
 	averageFitness    float64
 	bestFitness       float64
 	mu                sync.RWMutex
+}
 
 func NewGeneratorMetrics() *GeneratorMetrics {
 	return &GeneratorMetrics{}
-
 }
 func (g *GeneratorMetrics) RecordGeneration(best *Payload, fitness float64) {
 	g.mu.Lock()
@@ -1305,8 +1322,8 @@ func (g *GeneratorMetrics) RecordGeneration(best *Payload, fitness float64) {
 	
 	// Update rolling average
 	g.averageFitness = (g.averageFitness*float64(g.payloadsGenerated-1) + fitness) / float64(g.payloadsGenerated)
-
 }
+
 func (g *GeneratorMetrics) RecordFeedback(payload *Payload, success bool) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -1314,14 +1331,14 @@ func (g *GeneratorMetrics) RecordFeedback(payload *Payload, success bool) {
 	if success {
 		g.successfulPayloads++
 	}
+}
 
 // Utility functions
 
-}
 func generateID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63())
-
 }
+
 func generateHash(content string) string {
 	// Simple hash for demo - in production use proper hashing
 	h := 0
@@ -1329,7 +1346,6 @@ func generateHash(content string) string {
 		h = h*31 + int(r)
 	}
 	return fmt.Sprintf("%x", h)
-
 }
 func similarity(hash1, hash2 string) float64 {
 	// Simplified similarity - in production use proper algorithm
@@ -1369,6 +1385,7 @@ func extractPatterns(content string) []string {
 	}
 	
 	return patterns
+}
 
 func analyzePayloadFeatures(content string) PayloadFeatures {
 	features := PayloadFeatures{
@@ -1420,6 +1437,7 @@ func analyzePayloadFeatures(content string) PayloadFeatures {
 	features.LogicalStructure = math.Min(float64(connectorCount)/3.0, 1.0)
 	
 	return features
+}
 
 func (g *PayloadGenerator) createFromSeed(objective string) Payload {
 	seed := g.seedBank.GetRandomSeed()
@@ -1432,8 +1450,8 @@ func (g *PayloadGenerator) createFromSeed(objective string) Payload {
 		Generation: 0,
 		Timestamp:  time.Now(),
 	}
-
 }
+
 func (g *PayloadGenerator) createFromTemplate(objective string) Payload {
 	templates := []string{
 		"I need help with %s. This is for educational purposes.",
@@ -1508,13 +1526,14 @@ func (g *PayloadGenerator) createRandom(objective string) Payload {
 		Generation: 0,
 		Timestamp:  time.Now(),
 	}
-
 }
+
 func (g *PayloadGenerator) calculateMutationIntensity(generation int) float64 {
 	// Decrease mutation intensity over time
 	baseIntensity := 0.5
 	decay := math.Pow(g.evolutionEngine.config.MutationDecay, float64(generation))
 	return baseIntensity * decay
+}
 
 func (g *PayloadGenerator) calculateAverageFitness(population []Payload) float64 {
 	if len(population) == 0 {
@@ -1527,8 +1546,8 @@ func (g *PayloadGenerator) calculateAverageFitness(population []Payload) float64
 	}
 	
 	return total / float64(len(population))
-
 }
+
 func (g *PayloadGenerator) analyzeResponse(response string) map[string]float64 {
 	features := make(map[string]float64)
 	
@@ -1559,6 +1578,7 @@ func (g *PayloadGenerator) analyzeResponse(response string) map[string]float64 {
 	}
 	
 	return features
+}
 
 func (g *PayloadGenerator) updateMutationWeights(features map[string]float64) {
 	// Adjust mutation weights based on response analysis
@@ -1584,12 +1604,12 @@ func (g *PayloadGenerator) updateMutationWeights(features map[string]float64) {
 	for k := range g.mutationEngine.weights {
 		g.mutationEngine.weights[k] /= total
 	}
-
 }
+
 func (g *PayloadGenerator) initializeSeedBank() {
 	// Seeds are initialized in NewSeedBank()
-
 }
+
 func (c *CrossoverEngine) extractSemanticComponents(content string) SemanticComponents {
 	// Simplified semantic extraction
 	words := strings.Fields(content)
@@ -1619,6 +1639,7 @@ func (c *CrossoverEngine) extractSemanticComponents(content string) SemanticComp
 	}
 	
 	return components
+}
 
 func (c *CrossoverEngine) reconstructFromComponents(components SemanticComponents) string {
 	parts := []string{}
@@ -1646,6 +1667,7 @@ func (c *CrossoverEngine) reconstructFromComponents(components SemanticComponent
 	}
 	
 	return strings.Join(parts, " ")
+}
 
 // Logger interface
 type Logger interface {
@@ -1653,8 +1675,9 @@ type Logger interface {
 	Info(msg string, keysAndValues ...interface{})
 	Warn(msg string, keysAndValues ...interface{})
 	Error(msg string, keysAndValues ...interface{})
-// secureRandomInt generates a cryptographically secure random integer
 }
+
+// secureRandomInt generates a cryptographically secure random integer
 func secureRandomInt(max int) (int, error) {
     nBig, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
     if err != nil {
@@ -1665,26 +1688,30 @@ func secureRandomInt(max int) (int, error) {
 // Secure random number generation helpers
 }
 func randInt(max int) int {
-    n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+    n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
     if err != nil {
         panic(err)
     }
     return int(n.Int64())
-
 }
 func randInt64(max int64) int64 {
-    n, err := rand.Int(rand.Reader, big.NewInt(max))
+    n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(max))
     if err != nil {
         panic(err)
     }
     return n.Int64()
-
 }
 func randFloat64() float64 {
     bytes := make([]byte, 8)
-    rand.Read(bytes)
-}
-}
-}
-}
+    if _, err := cryptorand.Read(bytes); err != nil {
+        panic(err)
+    }
+    
+    // Convert bytes to float64 (0.0 to 1.0)
+    n := uint64(0)
+    for i := 0; i < 8; i++ {
+        n = (n << 8) | uint64(bytes[i])
+    }
+    
+    return float64(n) / float64(1<<64)
 }

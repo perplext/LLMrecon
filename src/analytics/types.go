@@ -1,13 +1,23 @@
 package analytics
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
+	"time"
 )
 
 // TimeRange represents a time period for analytics queries
 type TimeRange struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
+}
+
+// TimeWindow represents a time window for analysis
+type TimeWindow struct {
+	Start    time.Time     `json:"start"`
+	End      time.Time     `json:"end"`
+	Duration time.Duration `json:"duration"`
+}
 
 // ScanResult represents a scan result for analytics processing
 type ScanResult struct {
@@ -23,6 +33,7 @@ type ScanResult struct {
 	Metadata         map[string]string `json:"metadata"`
 	Success          bool              `json:"success"`
 	ErrorMessage     string            `json:"error_message,omitempty"`
+}
 
 // Vulnerability represents a discovered vulnerability
 type Vulnerability struct {
@@ -38,6 +49,7 @@ type Vulnerability struct {
 	OWASP       string            `json:"owasp,omitempty"`
 	Evidence    map[string]string `json:"evidence"`
 	Remediation string            `json:"remediation,omitempty"`
+}
 
 // Metric represents a custom metric data point
 type Metric struct {
@@ -47,6 +59,17 @@ type Metric struct {
 	Tags      map[string]string `json:"tags"`
 	Timestamp time.Time         `json:"timestamp"`
 	Source    string            `json:"source"`
+}
+
+// AggregatedMetric represents an aggregated metric over a time window
+type AggregatedMetric struct {
+	ID           string                 `json:"id"`
+	TimeWindow   TimeWindow             `json:"time_window"`
+	MetricCount  int                    `json:"metric_count"`
+	Aggregations map[string]interface{} `json:"aggregations"`
+	CreatedAt    time.Time              `json:"created_at"`
+	Type         string                 `json:"type"`
+}
 
 // MetricsQuery represents a query for metrics data
 type MetricsQuery struct {
@@ -58,6 +81,7 @@ type MetricsQuery struct {
 	Interval   string            `json:"interval"`    // 1h, 1d, 1w, 1m
 	Limit      int               `json:"limit"`
 	Offset     int               `json:"offset"`
+}
 
 // MetricsResult represents query results
 type MetricsResult struct {
@@ -75,23 +99,9 @@ type DataPoint struct {
 	Tags      map[string]string  `json:"tags"`
 }
 
-// Dashboard represents dashboard data
-type Dashboard struct {
-	GeneratedAt time.Time      `json:"generated_at"`
-	TimeRange   TimeRange      `json:"time_range"`
-	Widgets     []Widget       `json:"widgets"`
-	Summary     DashboardSummary `json:"summary"`
-	Alerts      []Alert        `json:"alerts"`
-}
+// Note: Dashboard is defined in dashboard.go
 
-// Widget represents a dashboard widget
-type Widget struct {
-	ID       string      `json:"id"`
-	Type     string      `json:"type"` // chart, table, metric, alert
-	Title    string      `json:"title"`
-	Data     interface{} `json:"data"`
-	Position Position    `json:"position"`
-	Config   WidgetConfig `json:"config"`
+// Note: Widget is defined in dashboard.go
 
 // Position represents widget position on dashboard
 type Position struct {
@@ -99,17 +109,9 @@ type Position struct {
 	Y      int `json:"y"`
 	Width  int `json:"width"`
 	Height int `json:"height"`
-
-// WidgetConfig represents widget configuration
-type WidgetConfig struct {
-	ChartType    string            `json:"chart_type,omitempty"`    // line, bar, pie, area
-	ColorScheme  string            `json:"color_scheme,omitempty"`  // default, danger, warning, success
-	ShowLegend   bool              `json:"show_legend,omitempty"`
-	ShowGrid     bool              `json:"show_grid,omitempty"`
-	Aggregation  string            `json:"aggregation,omitempty"`
-	ThresholdValues map[string]float64 `json:"threshold_values,omitempty"`
-	RefreshInterval string           `json:"refresh_interval,omitempty"`
 }
+
+// Note: WidgetConfig is defined in dashboard.go
 
 // DashboardSummary represents high-level dashboard metrics
 type DashboardSummary struct {
@@ -121,6 +123,7 @@ type DashboardSummary struct {
 	HighVulns            int     `json:"high_vulns"`
 	TrendDirection       string  `json:"trend_direction"` // up, down, stable
 	TrendPercentage      float64 `json:"trend_percentage"`
+}
 
 // Alert represents a dashboard alert
 type Alert struct {
@@ -159,6 +162,7 @@ type TrendAnalysis struct {
 	Forecast    []ForecastPoint `json:"forecast,omitempty"`
 	Anomalies   []Anomaly      `json:"anomalies"`
 	GeneratedAt time.Time      `json:"generated_at"`
+}
 
 // Trend represents a single metric trend
 type Trend struct {
@@ -170,6 +174,7 @@ type Trend struct {
 	RSquared    float64     `json:"r_squared"` // correlation coefficient
 	Slope       float64     `json:"slope"`
 	Confidence  float64     `json:"confidence"`
+}
 
 // TrendSummary represents overall trend summary
 type TrendSummary struct {
@@ -212,6 +217,7 @@ type ReportParams struct {
 	Template    string            `json:"template_name,omitempty"`
 	Recipients  []string          `json:"recipients,omitempty"`
 	Schedule    string            `json:"schedule,omitempty"` // for recurring reports
+}
 
 // Report represents a generated analytics report
 type Report struct {
@@ -236,6 +242,7 @@ type ReportSection struct {
 	Content  interface{} `json:"content"`
 	Order    int         `json:"order"`
 	PageBreak bool       `json:"page_break"`
+}
 
 // ComparisonParams represents parameters for comparative analysis
 type ComparisonParams struct {
@@ -245,6 +252,7 @@ type ComparisonParams struct {
 	Templates   []string       `json:"templates,omitempty"`
 	Metrics     []string       `json:"metrics"`
 	Filters     map[string]string `json:"filters"`
+}
 
 // ComparisonType represents the type of comparison
 type ComparisonType string
@@ -253,14 +261,24 @@ const (
 	ComparisonTypeTimeRange ComparisonType = "time_range"
 	ComparisonTypeTargets   ComparisonType = "targets"
 	ComparisonTypeTemplates ComparisonType = "templates"
+	ComparisonTypeTimePeriod ComparisonType = "time_period"
+	ComparisonTypeMetrics   ComparisonType = "metrics"
+	ComparisonTypeBaseline  ComparisonType = "baseline"
+	ComparisonTypeAnomalyPattern ComparisonType = "anomaly_pattern"
 )
 
 // ComparisonResult represents comparison analysis results
 type ComparisonResult struct {
-	ComparisonType ComparisonType `json:"comparison_type"`
-	Comparisons    []Comparison   `json:"comparisons"`
-	Summary        ComparisonSummary `json:"summary"`
-	GeneratedAt    time.Time      `json:"generated_at"`
+	ComparisonType     ComparisonType        `json:"comparison_type"`
+	BaselineDataset    ComparisonDataset     `json:"baseline_dataset"`
+	ComparisonDataset  ComparisonDataset     `json:"comparison_dataset"`
+	Statistics         ComparisonStatistics  `json:"statistics"`
+	Insights           []ComparisonInsight   `json:"insights"`
+	Recommendations    []string              `json:"recommendations"`
+	Comparisons        []Comparison          `json:"comparisons"`
+	Summary            ComparisonSummary     `json:"summary"`
+	GeneratedAt        time.Time             `json:"generated_at"`
+}
 
 // Comparison represents a single comparison
 type Comparison struct {
@@ -268,6 +286,7 @@ type Comparison struct {
 	Metrics map[string]float64 `json:"metrics"`
 	Deltas  map[string]float64 `json:"deltas,omitempty"` // percentage changes
 	Rank    int                `json:"rank,omitempty"`
+}
 
 // ComparisonSummary represents overall comparison summary
 type ComparisonSummary struct {
@@ -286,6 +305,7 @@ type ExportParams struct {
 	Metrics   []string          `json:"metrics"`
 	Filters   map[string]string `json:"filters"`
 	Filename  string            `json:"filename,omitempty"`
+}
 
 // AnalyticsSummary represents a high-level analytics summary
 type AnalyticsSummary struct {
@@ -308,6 +328,7 @@ type StorageStats struct {
 	TotalRecords int64 `json:"total_records"`
 	CompressedSize int64 `json:"compressed_size,omitempty"`
 	IndexSize    int64 `json:"index_size,omitempty"`
+}
 
 // VulnSummary represents a vulnerability summary
 type VulnSummary struct {
@@ -358,6 +379,17 @@ type DataStorage interface {
 	// Advanced queries
 	GetAggregatedData(query *MetricsQuery) (*MetricsResult, error)
 	GetTimeSeriesData(metric string, timeRange TimeRange) ([]DataPoint, error)
+	GetMetricsByTimeRange(ctx context.Context, start, end time.Time) ([]Metric, error)
+	GetMetricsByNameAndTimeRange(ctx context.Context, name string, start, end time.Time) ([]Metric, error)
+	StoreAggregatedMetric(ctx context.Context, metric AggregatedMetric) error
+	DeleteMetricsByTimeRange(ctx context.Context, start, end time.Time) error
+	CountMetricsByTimeRange(ctx context.Context, start, end time.Time) (int, error)
+}
+
+// ReportGenerator interface for generating reports
+type ReportGenerator interface {
+	GenerateReport(params *ReportParams) (*Report, error)
+}
 
 // Constants for metric names
 const (
@@ -374,6 +406,14 @@ const (
 	MetricErrorRate         = "error_rate"
 )
 
+// Constants for metric types (if needed by collector)
+const (
+	MetricTypeEvent   = "event"
+	MetricTypeGauge   = "gauge"
+	MetricTypeCounter = "counter"
+	MetricTypeCustom  = "custom"
+)
+
 // Constants for severities
 const (
 	SeverityCritical = "critical"
@@ -383,22 +423,9 @@ const (
 	SeverityInfo     = "info"
 )
 
-// Constants for trend directions
-const (
-	TrendDirectionUp     = "up"
-	TrendDirectionDown   = "down"
-	TrendDirectionStable = "stable"
-)
+// Note: Trend direction constants are defined in trends.go
 
-// Constants for widget types
-const (
-	WidgetTypeChart  = "chart"
-	WidgetTypeTable  = "table"
-	WidgetTypeMetric = "metric"
-	WidgetTypeAlert  = "alert"
-	WidgetTypeGauge  = "gauge"
-	WidgetTypeSparkline = "sparkline"
-)
+// Note: Widget type constants are defined in dashboard.go
 
 // Constants for chart types
 const (
@@ -421,14 +448,17 @@ func (tr TimeRange) Validate() error {
 		return fmt.Errorf("start time must be before end time")
 	}
 	return nil
+}
 
 // Duration returns the duration of the time range
 func (tr TimeRange) Duration() time.Duration {
 	return tr.End.Sub(tr.Start)
+}
 
 // Contains checks if a time is within the range
 func (tr TimeRange) Contains(t time.Time) bool {
 	return !t.Before(tr.Start) && !t.After(tr.End)
+}
 
 // Validate validates MetricsQuery
 func (mq *MetricsQuery) Validate() error {
@@ -459,4 +489,4 @@ func (mq *MetricsQuery) Validate() error {
 	}
 	
 	return nil
-
+}

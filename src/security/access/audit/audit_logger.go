@@ -12,12 +12,14 @@ import (
 type AuditLogger struct {
 	writer io.Writer
 	mutex  sync.Mutex
+}
 
 // NewAuditLogger creates a new audit logger
 func NewAuditLogger(writer io.Writer) *AuditLogger {
 	return &AuditLogger{
 		writer: writer,
 	}
+}
 
 // Log writes an audit log entry
 func (l *AuditLogger) Log(ctx context.Context, level, message string) error {
@@ -29,10 +31,12 @@ func (l *AuditLogger) Log(ctx context.Context, level, message string) error {
 	
 	_, err := l.writer.Write([]byte(entry))
 	return err
+}
 
 // LogEvent logs an audit event
 func (l *AuditLogger) LogEvent(event, component, id string, details map[string]interface{}) {
 	l.LogEventWithStatus(event, component, id, "info", details)
+}
 
 // LogEventWithStatus logs an audit event with status
 func (l *AuditLogger) LogEventWithStatus(event, component, id, status string, details map[string]interface{}) {
@@ -50,3 +54,4 @@ func (l *AuditLogger) LogEventWithStatus(event, component, id, status string, de
 	entry += "\n"
 	
 	l.writer.Write([]byte(entry))
+}

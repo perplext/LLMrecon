@@ -2,9 +2,11 @@ package sandbox
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/security"
@@ -52,6 +54,7 @@ type TemplateVersion struct {
 	SecurityIssues []*security.SecurityIssue
 	// Comments are comments on the template
 	Comments []string
+}
 
 // ApprovalWorkflow manages the template approval workflow
 type ApprovalWorkflow struct {
@@ -65,6 +68,7 @@ type ApprovalWorkflow struct {
 	approvers []string
 	// storageDir is the directory for storing template versions
 	storageDir string
+}
 
 // NewApprovalWorkflow creates a new approval workflow
 func NewApprovalWorkflow(validator *TemplateValidator, scorer *TemplateScorer, storageDir string) *ApprovalWorkflow {
@@ -75,10 +79,12 @@ func NewApprovalWorkflow(validator *TemplateValidator, scorer *TemplateScorer, s
 		approvers:  []string{},
 		storageDir: storageDir,
 	}
+}
 
 // AddApprover adds an approver to the workflow
 func (w *ApprovalWorkflow) AddApprover(approver string) {
 	w.approvers = append(w.approvers, approver)
+}
 
 // IsApprover checks if a user is an approver
 func (w *ApprovalWorkflow) IsApprover(user string) bool {
@@ -88,6 +94,7 @@ func (w *ApprovalWorkflow) IsApprover(user string) bool {
 		}
 	}
 	return false
+}
 
 // CreateVersion creates a new version of a template
 func (w *ApprovalWorkflow) CreateVersion(ctx context.Context, template *format.Template, user string) (*TemplateVersion, error) {
@@ -108,7 +115,6 @@ func (w *ApprovalWorkflow) CreateVersion(ctx context.Context, template *format.T
 	if len(versions) == 0 {
 		version = "1.0.0"
 	} else {
-		lastVersion := versions[len(versions)-1]
 		// Simple version increment for now
 		version = fmt.Sprintf("1.0.%d", len(versions))
 	}
@@ -118,7 +124,7 @@ func (w *ApprovalWorkflow) CreateVersion(ctx context.Context, template *format.T
 		ID:            fmt.Sprintf("%s-v%s", template.ID, version),
 		TemplateID:    template.ID,
 		Version:       version,
-		Content:       template.Content,
+		Content:       string(template.Content),
 		Status:        StatusDraft,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
@@ -136,6 +142,7 @@ func (w *ApprovalWorkflow) CreateVersion(ctx context.Context, template *format.T
 	}
 	
 	return templateVersion, nil
+}
 
 // saveVersion saves a template version to disk
 func (w *ApprovalWorkflow) saveVersion(version *TemplateVersion) error {
@@ -157,7 +164,7 @@ func (w *ApprovalWorkflow) saveVersion(version *TemplateVersion) error {
 	}
 	
 	return nil
-	
+}
 
 // SubmitForReview submits a template version for review
 func (w *ApprovalWorkflow) SubmitForReview(templateID, versionID, user string) error {
@@ -185,6 +192,7 @@ func (w *ApprovalWorkflow) SubmitForReview(templateID, versionID, user string) e
 	}
 	
 	return nil
+}
 
 // ApproveVersion approves a template version
 func (w *ApprovalWorkflow) ApproveVersion(templateID, versionID, user string) error {
@@ -219,6 +227,7 @@ func (w *ApprovalWorkflow) ApproveVersion(templateID, versionID, user string) er
 	}
 	
 	return nil
+}
 
 // RejectVersion rejects a template version
 func (w *ApprovalWorkflow) RejectVersion(templateID, versionID, user, reason string) error {
@@ -255,6 +264,7 @@ func (w *ApprovalWorkflow) RejectVersion(templateID, versionID, user, reason str
 	}
 	
 	return nil
+}
 
 // DeprecateVersion deprecates a template version
 func (w *ApprovalWorkflow) DeprecateVersion(templateID, versionID, user, reason string) error {
@@ -291,10 +301,12 @@ func (w *ApprovalWorkflow) DeprecateVersion(templateID, versionID, user, reason 
 	}
 	
 	return nil
+}
 
 // GetVersion gets a template version
 func (w *ApprovalWorkflow) GetVersion(templateID, versionID string) (*TemplateVersion, error) {
 	return w.findVersion(templateID, versionID)
+}
 
 // GetVersions gets all versions of a template
 func (w *ApprovalWorkflow) GetVersions(templateID string) ([]*TemplateVersion, error) {
@@ -304,6 +316,7 @@ func (w *ApprovalWorkflow) GetVersions(templateID string) ([]*TemplateVersion, e
 	}
 	
 	return versions, nil
+}
 
 // GetLatestVersion gets the latest version of a template
 func (w *ApprovalWorkflow) GetLatestVersion(templateID string) (*TemplateVersion, error) {
@@ -317,6 +330,7 @@ func (w *ApprovalWorkflow) GetLatestVersion(templateID string) (*TemplateVersion
 	}
 	
 	return versions[len(versions)-1], nil
+}
 
 // GetLatestApprovedVersion gets the latest approved version of a template
 func (w *ApprovalWorkflow) GetLatestApprovedVersion(templateID string) (*TemplateVersion, error) {
@@ -333,7 +347,7 @@ func (w *ApprovalWorkflow) GetLatestApprovedVersion(templateID string) (*Templat
 	}
 	
 	return nil, fmt.Errorf("no approved versions found for template: %s", templateID)
-	
+}
 
 // findVersion finds a template version
 func (w *ApprovalWorkflow) findVersion(templateID, versionID string) (*TemplateVersion, error) {
@@ -349,6 +363,7 @@ func (w *ApprovalWorkflow) findVersion(templateID, versionID string) (*TemplateV
 	}
 	
 	return nil, fmt.Errorf("version not found: %s", versionID)
+}
 
 // AddComment adds a comment to a template version
 func (w *ApprovalWorkflow) AddComment(templateID, versionID, user, comment string) error {
@@ -365,4 +380,7 @@ func (w *ApprovalWorkflow) AddComment(templateID, versionID, user, comment strin
 	if err := w.saveVersion(version); err != nil {
 		return fmt.Errorf("failed to save template version: %w", err)
 	}
+	
+	return nil
+}
 	

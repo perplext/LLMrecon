@@ -1,7 +1,9 @@
 package update
 
 import (
+	"archive/zip"
 	"fmt"
+	"time"
 )
 
 // UpdateCheck represents the result of checking for updates
@@ -47,9 +49,10 @@ type ReleaseAsset struct {
 	SignatureURL string
 	Platform     string
 	Architecture string
+}
 
-// UpdateManifest represents metadata about updates
-type UpdateManifest struct {
+// GeneralUpdateManifest represents metadata about updates
+type GeneralUpdateManifest struct {
 	Version     string            `json:"version"`
 	Components  []ComponentInfo   `json:"components"`
 	Checksums   map[string]string `json:"checksums"`
@@ -58,6 +61,7 @@ type UpdateManifest struct {
 	MinVersion  string            `json:"min_version"`
 	MaxVersion  string            `json:"max_version"`
 	ChangelogURL string           `json:"changelog_url"`
+}
 
 // ComponentInfo represents information about a component
 type ComponentInfo struct {
@@ -69,6 +73,7 @@ type ComponentInfo struct {
 	Checksum    string `json:"checksum"`
 	Required    bool   `json:"required"`
 	Description string `json:"description"`
+}
 
 // Bundle represents an offline update bundle
 type Bundle struct {
@@ -125,6 +130,7 @@ type ModuleInfo struct {
 	Size            int64             `json:"size"`
 	Checksum        string            `json:"checksum"`
 	LastUpdated     time.Time         `json:"last_updated"`
+}
 
 // UpdateProgress represents progress of an update operation
 type UpdateProgress struct {
@@ -136,6 +142,7 @@ type UpdateProgress struct {
 	Message       string
 	StartTime     time.Time
 	EstimatedTime time.Duration
+}
 
 // UpdateError represents an error during update
 type UpdateError struct {
@@ -145,6 +152,7 @@ type UpdateError struct {
 	Err       error
 	Fatal     bool
 	Retry     bool
+}
 
 // Error implements the error interface
 func (e *UpdateError) Error() string {
@@ -152,10 +160,12 @@ func (e *UpdateError) Error() string {
 		return fmt.Sprintf("%s %s: %s: %v", e.Component, e.Operation, e.Message, e.Err)
 	}
 	return fmt.Sprintf("%s %s: %s", e.Component, e.Operation, e.Message)
+}
 
 // Unwrap returns the underlying error
 func (e *UpdateError) Unwrap() error {
 	return e.Err
+}
 
 // UpdateOptions represents options for update operations
 type UpdateOptions struct {
@@ -171,6 +181,7 @@ type UpdateOptions struct {
 	Timeout          time.Duration
 	ProgressCallback func(*UpdateProgress)
 	ErrorCallback    func(*UpdateError) bool // Return true to continue
+}
 
 // ChangelogEntry represents an entry in a changelog
 type ChangelogEntry struct {
@@ -184,6 +195,7 @@ type ChangelogEntry struct {
 	Breaking    bool      `json:"breaking"`
 	Security    bool      `json:"security"`
 	References  []string  `json:"references"`
+}
 
 // Changelog represents a collection of changelog entries
 type Changelog struct {
@@ -191,6 +203,7 @@ type Changelog struct {
 	Format      string           `json:"format"`
 	LastUpdated time.Time        `json:"last_updated"`
 	Entries     []ChangelogEntry `json:"entries"`
+}
 
 // RepositoryStatus represents the status of a repository
 type RepositoryStatus struct {
@@ -204,6 +217,7 @@ type RepositoryStatus struct {
 	TotalSize    int64     `json:"total_size"`
 	Error        string    `json:"error,omitempty"`
 	Version      string    `json:"version"`
+}
 
 // UpdateStatistics represents statistics about updates
 type UpdateStatistics struct {
@@ -215,13 +229,14 @@ type UpdateStatistics struct {
 	TotalDownloadSize   int64         `json:"total_download_size"`
 	UpdatesByComponent  map[string]int `json:"updates_by_component"`
 	ErrorsByType        map[string]int `json:"errors_by_type"`
+}
 
 // Constants for update operations
 const (
 	// Component types
-	ComponentBinary    = "binary"
-	ComponentTemplates = "templates"
-	ComponentModules   = "modules"
+	BinaryUpdateComponent    = "binary"
+	TemplatesUpdateComponent = "templates"
+	ModuleUpdateComponent    = "module"
 	
 	// Update types
 	UpdateTypeFull        = "full"
@@ -289,6 +304,7 @@ const (
 func IsValidVersion(version string) bool {
 	// Simple validation - in real implementation would use semver
 	return version != "" && len(version) > 0
+}
 
 // IsValidComponent checks if a component name is valid
 func IsValidComponent(component string) bool {
@@ -299,16 +315,91 @@ func IsValidComponent(component string) bool {
 		}
 	}
 	return false
+}
 
 // GetPlatformString returns the current platform string
 func GetPlatformString() string {
 	// Would be implemented based on runtime.GOOS
 	return "linux" // placeholder
+}
 
 // GetArchString returns the current architecture string
 func GetArchString() string {
 	// Would be implemented based on runtime.GOARCH
 	return "amd64" // placeholder
+}
+
+// Shared interfaces and types used across update package
+
+// Logger interface for update operations
+type Logger interface {
+	Debug(msg string, args ...interface{})
+	Info(msg string, args ...interface{})
+	Warn(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+}
+
+// UpdaterConfig holds general configuration for update operations
+type UpdaterConfig struct {
+	// Download settings
+	Timeout    time.Duration
+	ProxyURL   string
+	UserAgent  string
+	MaxRetries int
+
+	// Installation paths
+	TemplateDirectory string
+	ModuleDirectory   string
+	BackupDirectory   string
+	BackupEnabled     bool
+
+	// Binary update settings
+	BinaryUpdateEnabled bool
+	BinaryRepo          string
+	BinaryUpdateURL     string
+
+	// Template update settings
+	TemplateUpdateEnabled bool
+	TemplateRepos         []RepositoryConfig
+	
+	// Module update settings
+	ModuleUpdateEnabled bool
+	ModuleRepos         []RepositoryConfig
+	
+	// Security settings
+	VerifySignatures     bool
+	TrustedKeys          []string
+	ChecksumVerification bool
+	
+	// General settings
+	AutoUpdate          bool
+	UpdateCheckInterval time.Duration
+}
+
+// RepositoryConfig represents configuration for a repository
+type RepositoryConfig struct {
+	Name     string
+	URL      string
+	Branch   string
+	Type     string
+	Token    string
+	Priority int
+	Enabled  bool
+}
+
+// Basic shared types - complex implementations are in specific files
+// ConnectionSecurityOptions, SecureClient, and SignatureGenerator have full implementations
+// in secure_connection.go and sign.go respectively
+
+// Use PackageManifest from package.go
+
+// UpdatePackage represents an update package
+type UpdatePackage struct {
+	PackagePath string
+	Reader      *zip.ReadCloser
+	Manifest    PackageManifest
+	Verified    bool
+}
 
 // FormatFileSize formats a file size in bytes to human readable format
 func FormatFileSize(bytes int64) string {
@@ -322,6 +413,7 @@ func FormatFileSize(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
 
 // FormatDuration formats a duration to human readable format
 func FormatDuration(duration time.Duration) string {
@@ -331,5 +423,5 @@ func FormatDuration(duration time.Duration) string {
 	if duration < time.Hour {
 		return fmt.Sprintf("%.0fm", duration.Minutes())
 	}
-}
+	return fmt.Sprintf("%.0fh", duration.Hours())
 }

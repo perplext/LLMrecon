@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // DashboardEngine manages interactive dashboard components
@@ -44,6 +45,7 @@ type Dashboard struct {
 	Tags        []string               `json:"tags"`
 	IsPublic    bool                   `json:"is_public"`
 	Metadata    map[string]interface{} `json:"metadata"`
+}
 
 // Layout defines dashboard layout configuration
 type Layout struct {
@@ -53,6 +55,7 @@ type Layout struct {
 	GridSize    GridSize   `json:"grid_size"`
 	Responsive  bool       `json:"responsive"`
 	Breakpoints map[string]BreakpointConfig `json:"breakpoints"`
+}
 
 // LayoutType represents different layout types
 type LayoutType string
@@ -68,6 +71,7 @@ const (
 type GridSize struct {
 	Width  int `json:"width"`
 	Height int `json:"height"`
+}
 
 // BreakpointConfig defines responsive breakpoint settings
 type BreakpointConfig struct {
@@ -86,6 +90,7 @@ type WidgetConfig struct {
 	Config   map[string]interface{} `json:"config"`
 	DataSource DataSourceConfig     `json:"data_source"`
 	Style    WidgetStyle            `json:"style"`
+}
 
 // Widget interface for all dashboard widgets
 type Widget interface {
@@ -94,6 +99,7 @@ type Widget interface {
 	Render(data interface{}, style WidgetStyle) (string, error)
 	Validate(config map[string]interface{}) error
 	GetMetadata() WidgetMetadata
+}
 
 // WidgetType represents different widget types
 type WidgetType string
@@ -115,11 +121,13 @@ const (
 type WidgetPosition struct {
 	X int `json:"x"`
 	Y int `json:"y"`
+}
 
 // WidgetSize defines widget dimensions
 type WidgetSize struct {
 	Width  int `json:"width"`
 	Height int `json:"height"`
+}
 
 // DataSourceConfig defines how widgets fetch data
 type DataSourceConfig struct {
@@ -129,6 +137,7 @@ type DataSourceConfig struct {
 	Filters    map[string]interface{} `json:"filters"`
 	Aggregation AggregationConfig     `json:"aggregation"`
 	RefreshInterval time.Duration      `json:"refresh_interval"`
+}
 
 // DataSourceType represents different data source types
 type DataSourceType string
@@ -159,13 +168,14 @@ type WidgetStyle struct {
 
 // ColorScheme defines color configuration
 type ColorScheme struct {
-	Primary   string   `json:"primary"`
-	Secondary string   `json:"secondary"`
-	Success   string   `json:"success"`
-	Warning   string   `json:"warning"`
-	Error     string   `json:"error"`
-	Info      string   `json:"info"`
-	Palette   []string `json:"palette"`
+	Primary    string   `json:"primary"`
+	Secondary  string   `json:"secondary"`
+	Success    string   `json:"success"`
+	Warning    string   `json:"warning"`
+	Error      string   `json:"error"`
+	Info       string   `json:"info"`
+	Palette    []string `json:"palette"`
+	Background string   `json:"background"`
 }
 
 // FontConfig defines font styling
@@ -174,6 +184,7 @@ type FontConfig struct {
 	Size   int    `json:"size"`
 	Weight string `json:"weight"`
 	Color  string `json:"color"`
+}
 
 // BorderConfig defines border styling
 type BorderConfig struct {
@@ -181,6 +192,7 @@ type BorderConfig struct {
 	Style  string `json:"style"`
 	Color  string `json:"color"`
 	Radius int    `json:"radius"`
+}
 
 // BackgroundConfig defines background styling
 type BackgroundConfig struct {
@@ -208,6 +220,7 @@ type Theme struct {
 	Fonts       FontConfig             `json:"fonts"`
 	Layout      ThemeLayoutConfig      `json:"layout"`
 	Components  map[string]interface{} `json:"components"`
+}
 
 // ThemeLayoutConfig defines theme layout settings
 type ThemeLayoutConfig struct {
@@ -215,11 +228,13 @@ type ThemeLayoutConfig struct {
 	Padding    int    `json:"padding"`
 	Margin     int    `json:"margin"`
 	GridGutter int    `json:"grid_gutter"`
+}
 
 // DashboardSubscriber interface for real-time updates
 type DashboardSubscriber interface {
 	OnDashboardUpdate(update DashboardUpdate) error
 	GetSubscriptionID() string
+}
 
 // DashboardUpdate represents real-time dashboard updates
 type DashboardUpdate struct {
@@ -229,6 +244,7 @@ type DashboardUpdate struct {
 	Data        interface{}            `json:"data"`
 	Timestamp   time.Time              `json:"timestamp"`
 	Metadata    map[string]interface{} `json:"metadata"`
+}
 
 // UpdateType represents different update types
 type UpdateType string
@@ -273,6 +289,7 @@ func NewDashboardEngine(config *Config, storage DataStorage, trendAnalyzer *Tren
 	go engine.processUpdates()
 	
 	return engine
+}
 
 // CreateDashboard creates a new dashboard
 func (de *DashboardEngine) CreateDashboard(name, description, createdBy string) (*Dashboard, error) {
@@ -294,9 +311,10 @@ func (de *DashboardEngine) CreateDashboard(name, description, createdBy string) 
 	}
 	
 	de.dashboards[dashboard.ID] = dashboard
-	de.logger.Info("Created dashboard", "id", dashboard.ID, "name", name)
+	de.logger.Info("Created dashboard")
 	
 	return dashboard, nil
+}
 
 // AddWidget adds a widget to a dashboard
 func (de *DashboardEngine) AddWidget(dashboardID string, widgetConfig WidgetConfig) error {
@@ -320,7 +338,7 @@ func (de *DashboardEngine) AddWidget(dashboardID string, widgetConfig WidgetConf
 	dashboard.Widgets = append(dashboard.Widgets, widgetConfig)
 	dashboard.UpdatedAt = time.Now()
 	
-	de.logger.Info("Added widget to dashboard", "dashboardID", dashboardID, "widgetID", widgetConfig.ID, "type", widgetConfig.Type)
+	de.logger.Info("Added widget to dashboard")
 	
 	// Send update notification
 	update := DashboardUpdate{
@@ -334,6 +352,7 @@ func (de *DashboardEngine) AddWidget(dashboardID string, widgetConfig WidgetConf
 	de.sendUpdate(update)
 	
 	return nil
+}
 
 // GetDashboard retrieves a dashboard by ID
 func (de *DashboardEngine) GetDashboard(dashboardID string) (*Dashboard, error) {
@@ -343,6 +362,7 @@ func (de *DashboardEngine) GetDashboard(dashboardID string) (*Dashboard, error) 
 	}
 	
 	return dashboard, nil
+}
 
 // ListDashboards returns all dashboards (with optional filtering)
 func (de *DashboardEngine) ListDashboards(filters map[string]interface{}) ([]*Dashboard, error) {
@@ -355,6 +375,7 @@ func (de *DashboardEngine) ListDashboards(filters map[string]interface{}) ([]*Da
 	}
 	
 	return dashboards, nil
+}
 
 // RenderDashboard renders a complete dashboard
 func (de *DashboardEngine) RenderDashboard(ctx context.Context, dashboardID string) (string, error) {
@@ -374,7 +395,7 @@ func (de *DashboardEngine) RenderDashboard(ctx context.Context, dashboardID stri
 	for _, widgetConfig := range dashboard.Widgets {
 		rendered, err := de.renderWidget(ctx, widgetConfig, theme)
 		if err != nil {
-			de.logger.Error("Failed to render widget", "widgetID", widgetConfig.ID, "error", err)
+			de.logger.Error("Failed to render widget", fmt.Errorf("error"))
 			continue
 		}
 		renderedWidgets = append(renderedWidgets, rendered)
@@ -384,6 +405,7 @@ func (de *DashboardEngine) RenderDashboard(ctx context.Context, dashboardID stri
 	dashboardHTML := de.renderDashboardLayout(dashboard, renderedWidgets, theme)
 	
 	return dashboardHTML, nil
+}
 
 // GetWidgetData retrieves data for a specific widget
 func (de *DashboardEngine) GetWidgetData(ctx context.Context, widgetConfig WidgetConfig) (interface{}, error) {
@@ -393,6 +415,7 @@ func (de *DashboardEngine) GetWidgetData(ctx context.Context, widgetConfig Widge
 	}
 	
 	return widget.GetData(ctx, widgetConfig.DataSource)
+}
 
 // UpdateWidget updates widget configuration
 func (de *DashboardEngine) UpdateWidget(dashboardID, widgetID string, updates map[string]interface{}) error {
@@ -433,6 +456,7 @@ func (de *DashboardEngine) UpdateWidget(dashboardID, widgetID string, updates ma
 	}
 	
 	return fmt.Errorf("widget not found: %s", widgetID)
+}
 
 // Subscribe adds a subscriber for dashboard updates
 func (de *DashboardEngine) Subscribe(dashboardID string, subscriber DashboardSubscriber) {
@@ -441,7 +465,8 @@ func (de *DashboardEngine) Subscribe(dashboardID string, subscriber DashboardSub
 	}
 	
 	de.subscribers[dashboardID] = append(de.subscribers[dashboardID], subscriber)
-	de.logger.Debug("Added dashboard subscriber", "dashboardID", dashboardID, "subscriberID", subscriber.GetSubscriptionID())
+	de.logger.Debug("Added dashboard subscriber")
+}
 
 // Unsubscribe removes a subscriber
 func (de *DashboardEngine) Unsubscribe(dashboardID string, subscriberID string) {
@@ -450,26 +475,30 @@ func (de *DashboardEngine) Unsubscribe(dashboardID string, subscriberID string) 
 		if subscriber.GetSubscriptionID() == subscriberID {
 			// Remove subscriber
 			de.subscribers[dashboardID] = append(subscribers[:i], subscribers[i+1:]...)
-			de.logger.Debug("Removed dashboard subscriber", "dashboardID", dashboardID, "subscriberID", subscriberID)
+			de.logger.Debug("Removed dashboard subscriber")
 			break
 		}
 	}
+}
 
 // RegisterWidget registers a custom widget type
 func (de *DashboardEngine) RegisterWidget(widget Widget) {
 	de.widgets[string(widget.GetType())] = widget
-	de.logger.Info("Registered widget type", "type", widget.GetType())
+	de.logger.Info("Registered widget type")
+}
 
 // RegisterTheme registers a custom theme
 func (de *DashboardEngine) RegisterTheme(theme *Theme) {
 	de.themes[theme.ID] = theme
-	de.logger.Info("Registered theme", "id", theme.ID, "name", theme.Name)
+	de.logger.Info("Registered theme")
+}
 
 // Shutdown gracefully shuts down the dashboard engine
 func (de *DashboardEngine) Shutdown() {
 	de.cancel()
 	close(de.updateChannel)
 	de.logger.Info("Dashboard engine shut down")
+}
 
 // Internal methods
 
@@ -490,6 +519,7 @@ func (de *DashboardEngine) renderWidget(ctx context.Context, widgetConfig Widget
 	
 	// Render widget
 	return widget.Render(data, style)
+}
 
 func (de *DashboardEngine) renderDashboardLayout(dashboard *Dashboard, widgets []string, theme *Theme) string {
 	// Simple grid layout implementation
@@ -520,6 +550,7 @@ func (de *DashboardEngine) renderDashboardLayout(dashboard *Dashboard, widgets [
 </div>`
 	
 	return html
+}
 
 func (de *DashboardEngine) applyThemeToWidgetStyle(widgetStyle WidgetStyle, theme *Theme) WidgetStyle {
 	// Apply theme colors if widget style colors are not set
@@ -539,6 +570,7 @@ func (de *DashboardEngine) applyThemeToWidgetStyle(widgetStyle WidgetStyle, them
 	}
 	
 	return widgetStyle
+}
 
 func (de *DashboardEngine) matchesFilters(dashboard *Dashboard, filters map[string]interface{}) bool {
 	if len(filters) == 0 {
@@ -574,6 +606,7 @@ func (de *DashboardEngine) matchesFilters(dashboard *Dashboard, filters map[stri
 	}
 	
 	return true
+}
 
 func (de *DashboardEngine) sendUpdate(update DashboardUpdate) {
 	select {
@@ -582,6 +615,7 @@ func (de *DashboardEngine) sendUpdate(update DashboardUpdate) {
 	default:
 		de.logger.Warn("Update channel full, dropping update", "dashboardID", update.DashboardID)
 	}
+}
 
 func (de *DashboardEngine) processUpdates() {
 	for update := range de.updateChannel {
@@ -597,6 +631,7 @@ func (de *DashboardEngine) processUpdates() {
 			}(subscriber)
 		}
 	}
+}
 
 func (de *DashboardEngine) registerDefaultWidgets() {
 	de.widgets[string(WidgetTypeChart)] = &ChartWidget{storage: de.storage, logger: de.logger}
@@ -608,6 +643,7 @@ func (de *DashboardEngine) registerDefaultWidgets() {
 	de.widgets[string(WidgetTypeAlert)] = &AlertWidget{storage: de.storage, logger: de.logger}
 	de.widgets[string(WidgetTypeProgress)] = &ProgressWidget{storage: de.storage, logger: de.logger}
 	de.widgets[string(WidgetTypeText)] = &TextWidget{logger: de.logger}
+}
 
 func (de *DashboardEngine) registerDefaultThemes() {
 	// Default light theme
@@ -665,6 +701,7 @@ func (de *DashboardEngine) registerDefaultThemes() {
 			GridGutter: 16,
 		},
 	}
+}
 
 func (de *DashboardEngine) registerDefaultLayouts() {
 	de.layouts["default"] = &Layout{
@@ -692,28 +729,14 @@ func (de *DashboardEngine) registerDefaultLayouts() {
 			"desktop": {MinWidth: 1024, Columns: 4, Margin: 16},
 		},
 	}
+}
 
 // Utility functions
 
 func generateDashboardID() string {
 	return fmt.Sprintf("dashboard_%d_%d", time.Now().UnixNano(), time.Now().Unix())
+}
 
 func generateWidgetID() string {
 	return fmt.Sprintf("widget_%d_%d", time.Now().UnixNano(), time.Now().Unix())
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

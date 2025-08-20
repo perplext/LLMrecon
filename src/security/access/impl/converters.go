@@ -13,10 +13,12 @@ type DefaultConverter struct{}
 // NewDefaultConverter creates a new default converter
 func NewDefaultConverter() *DefaultConverter {
 	return &DefaultConverter{}
+}
 
 // NewModelConverter creates a new converter that implements all converter interfaces
 func NewModelConverter() *DefaultConverter {
 	return &DefaultConverter{}
+}
 
 // ToModelUser converts a legacy user to a model user
 func (c *DefaultConverter) ToModelUser(legacyUser interface{}) (*models.User, error) {
@@ -31,6 +33,7 @@ func (c *DefaultConverter) ToModelUser(legacyUser interface{}) (*models.User, er
 		ID:       "placeholder-id",
 		Username: "placeholder-username",
 	}, nil
+}
 
 // FromModelUser converts a model user to a legacy user
 func (c *DefaultConverter) FromModelUser(user *models.User) (interface{}, error) {
@@ -42,6 +45,7 @@ func (c *DefaultConverter) FromModelUser(user *models.User) (interface{}, error)
 	// In a real implementation, we would create a new instance of the legacy User
 	// and populate it with values from the models.User
 	return user, nil
+}
 
 // ToModelIncident converts a legacy incident to a model incident
 func (c *DefaultConverter) ToModelIncident(legacyIncident interface{}) (*models.SecurityIncident, error) {
@@ -55,6 +59,7 @@ func (c *DefaultConverter) ToModelIncident(legacyIncident interface{}) (*models.
 		Title:  "Placeholder Incident",
 		Status: models.SecurityIncidentStatusOpen,
 	}, nil
+}
 
 // FromModelIncident converts a model incident to a legacy incident
 func (c *DefaultConverter) FromModelIncident(incident *models.SecurityIncident) (interface{}, error) {
@@ -64,6 +69,7 @@ func (c *DefaultConverter) FromModelIncident(incident *models.SecurityIncident) 
 	
 	// This is a placeholder implementation
 	return incident, nil
+}
 
 // ToModelVulnerability converts a legacy vulnerability to a model vulnerability
 func (c *DefaultConverter) ToModelVulnerability(legacyVulnerability interface{}) (*models.Vulnerability, error) {
@@ -77,6 +83,7 @@ func (c *DefaultConverter) ToModelVulnerability(legacyVulnerability interface{})
 		Title:  "Placeholder Vulnerability",
 		Status: models.VulnerabilityStatusOpen,
 	}, nil
+}
 
 // FromModelVulnerability converts a model vulnerability to a legacy vulnerability
 func (c *DefaultConverter) FromModelVulnerability(vulnerability *models.Vulnerability) (interface{}, error) {
@@ -86,6 +93,7 @@ func (c *DefaultConverter) FromModelVulnerability(vulnerability *models.Vulnerab
 	
 	// This is a placeholder implementation
 	return vulnerability, nil
+}
 
 // ToModelSession converts a legacy session to a model session
 func (c *DefaultConverter) ToModelSession(legacySession interface{}) (*models.Session, error) {
@@ -98,6 +106,7 @@ func (c *DefaultConverter) ToModelSession(legacySession interface{}) (*models.Se
 		ID:     "placeholder-id",
 		UserID: "placeholder-user-id",
 	}, nil
+}
 
 // FromModelSession converts a model session to a legacy session
 func (c *DefaultConverter) FromModelSession(session *models.Session) (interface{}, error) {
@@ -107,6 +116,7 @@ func (c *DefaultConverter) FromModelSession(session *models.Session) (interface{
 	
 	// This is a placeholder implementation
 	return session, nil
+}
 
 // ToModelAuditLog converts a legacy audit log to a model audit log
 func (c *DefaultConverter) ToModelAuditLog(legacyAuditLog interface{}) (*models.AuditLog, error) {
@@ -120,6 +130,7 @@ func (c *DefaultConverter) ToModelAuditLog(legacyAuditLog interface{}) (*models.
 		Action:      string(models.AuditActionRead),
 		Description: "placeholder-description",
 	}, nil
+}
 
 // FromModelAuditLog converts a model audit log to a legacy audit log
 func (c *DefaultConverter) FromModelAuditLog(log *models.AuditLog) (interface{}, error) {
@@ -128,3 +139,5 @@ func (c *DefaultConverter) FromModelAuditLog(log *models.AuditLog) (interface{},
 	}
 	
 	// This is a placeholder implementation
+	return log, nil
+}

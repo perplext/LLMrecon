@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
@@ -9,6 +10,7 @@ import (
 type ExportConfigurator struct {
 	terminal *Terminal
 	preview  *ExportPreview
+}
 
 // NewExportConfigurator creates a new export configurator
 func NewExportConfigurator(terminal *Terminal) *ExportConfigurator {
@@ -16,6 +18,7 @@ func NewExportConfigurator(terminal *Terminal) *ExportConfigurator {
 		terminal: terminal,
 		preview:  NewExportPreview(terminal),
 	}
+}
 
 // ConfigureExport interactively configures export settings
 func (ec *ExportConfigurator) ConfigureExport(data interface{}) (*ExportConfig, error) {
@@ -52,10 +55,12 @@ func (ec *ExportConfigurator) ConfigureExport(data interface{}) (*ExportConfig, 
 	}
 	
 	return config, nil
+}
 
 // Step 1: Format selection with preview
 func (ec *ExportConfigurator) selectFormat(data interface{}) (string, error) {
 	return ec.preview.ShowFormatSelection(data)
+}
 
 // Step 2: Output configuration
 func (ec *ExportConfigurator) configureOutput(config *ExportConfig) error {
@@ -106,6 +111,7 @@ func (ec *ExportConfigurator) configureOutput(config *ExportConfig) error {
 	}
 	
 	return nil
+}
 
 // Step 3: Format-specific options
 func (ec *ExportConfigurator) configureFormatOptions(config *ExportConfig) error {
@@ -153,14 +159,20 @@ func (ec *ExportConfigurator) configureFormatOptions(config *ExportConfig) error
 		options["include_graphs"] = ec.askYesNo("Include code flow graphs?", false)
 		
 	case "jira":
-		options["project_key"], if err := ec.terminal.Input("JIRA project key:", "SEC"); err != nil { return err }
-		options["issue_type"], if err := ec.terminal.Select("Issue type:", ; err != nil { return err }
-			[]string{"Bug", "Security Vulnerability", "Task"})
+		projectKey, err := ec.terminal.Input("JIRA project key:", "SEC")
+		if err != nil { return err }
+		options["project_key"] = projectKey
+		
+		issueType, err := ec.terminal.Select("Issue type:", []string{"Bug", "Security Vulnerability", "Task"})
+		if err != nil { return err }
+		options["issue_type"] = issueType
+		
 		options["auto_assign"] = ec.askYesNo("Auto-assign issues?", true)
 	}
 	
 	config.FormatOptions = options
 	return nil
+}
 
 // Step 4: Filtering configuration
 func (ec *ExportConfigurator) configureFiltering(config *ExportConfig) error {
@@ -213,6 +225,7 @@ func (ec *ExportConfigurator) configureFiltering(config *ExportConfig) error {
 	}
 	
 	return nil
+}
 
 // Step 5: Review configuration
 func (ec *ExportConfigurator) reviewConfiguration(config *ExportConfig) error {
@@ -276,12 +289,14 @@ Data Redaction: %s`,
 	}
 	
 	return nil
+}
 
 // Helper methods
 
 func (ec *ExportConfigurator) askYesNo(question string, defaultYes bool) bool {
 	result, _ := ec.terminal.Confirm(question)
 	return result
+}
 
 func (ec *ExportConfigurator) getDefaultExtension(format string) string {
 	extensions := map[string]string{
@@ -295,6 +310,7 @@ func (ec *ExportConfigurator) getDefaultExtension(format string) string {
 		"jira":     "", // No file extension
 	}
 	return extensions[format]
+}
 
 func (ec *ExportConfigurator) humanizeKey(key string) string {
 	// Convert snake_case to Title Case
@@ -303,12 +319,14 @@ func (ec *ExportConfigurator) humanizeKey(key string) string {
 		words[i] = strings.Title(word)
 	}
 	return strings.Join(words, " ")
+}
 
 func (ec *ExportConfigurator) boolToString(value bool, trueStr, falseStr string) string {
 	if value {
 		return trueStr
 	}
 	return falseStr
+}
 
 // saveConfigTemplate saves the configuration as a reusable template
 func (ec *ExportConfigurator) saveConfigTemplate(config *ExportConfig) error {
@@ -329,6 +347,7 @@ func (ec *ExportConfigurator) saveConfigTemplate(config *ExportConfig) error {
 	ec.terminal.Info("Use --export-template " + name + " to reuse this configuration")
 	
 	return nil
+}
 
 // LoadTemplate loads a saved configuration template
 func (ec *ExportConfigurator) LoadTemplate(name string) (*ExportConfig, error) {
@@ -361,6 +380,7 @@ func (ec *ExportConfigurator) LoadTemplate(name string) (*ExportConfig, error) {
 	}
 	
 	return nil, fmt.Errorf("template not found: %s", name)
+}
 
 // QuickExport provides common export presets
 func (ec *ExportConfigurator) QuickExport(preset string, data interface{}) (*ExportConfig, error) {
@@ -423,6 +443,7 @@ func (ec *ExportConfigurator) QuickExport(preset string, data interface{}) (*Exp
 	}
 	
 	return nil, fmt.Errorf("unknown preset: %s", preset)
+}
 
 // Data structures
 
@@ -447,6 +468,7 @@ type ExportFilters struct {
 type DateRange struct {
 	Start string
 	End   string
+}
 
 type RedactionConfig struct {
 	Enabled       bool
@@ -454,15 +476,4 @@ type RedactionConfig struct {
 	RedactSecrets bool
 	RedactURLs    bool
 	CustomPatterns []string
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

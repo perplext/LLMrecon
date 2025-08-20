@@ -5,6 +5,9 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/reporting/api"
 )
@@ -15,6 +18,7 @@ type CSVFormatter struct {
 	delimiter rune
 	// includeHeaders indicates whether to include headers
 	includeHeaders bool
+}
 
 // FormatReport formats a report and writes it to the given writer
 func (f *CSVFormatter) FormatReport(results api.TestResults, writer io.Writer) error {
@@ -25,6 +29,7 @@ func (f *CSVFormatter) FormatReport(results api.TestResults, writer io.Writer) e
 	
 	_, err = writer.Write(data)
 	return err
+}
 
 // NewCSVFormatter creates a new CSV formatter
 func NewCSVFormatter(delimiter rune, includeHeaders bool) *CSVFormatter {
@@ -35,6 +40,7 @@ func NewCSVFormatter(delimiter rune, includeHeaders bool) *CSVFormatter {
 		delimiter:      delimiter,
 		includeHeaders: includeHeaders,
 	}
+}
 
 // Format formats a report as CSV
 func (f *CSVFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
@@ -81,11 +87,12 @@ func (f *CSVFormatter) Format(ctx context.Context, reportInterface interface{}, 
 	}
 
 	return buf.Bytes(), nil
+}
 
 // GetFormat returns the format supported by this formatter
 func (f *CSVFormatter) GetFormat() api.ReportFormat {
 	return api.CSVFormat
-	
+}
 
 // WriteToFile writes a report to a file
 func (f *CSVFormatter) WriteToFile(ctx context.Context, reportInterface interface{}, optionsInterface interface{}, filePath string) error {
@@ -102,7 +109,9 @@ func (f *CSVFormatter) WriteToFile(ctx context.Context, reportInterface interfac
 	}
 
 	// Write to file
-	if err := os.WriteFile(filepath.Clean(filePath, data, 0600)); err != nil {
+	if err := os.WriteFile(filepath.Clean(filePath), data, 0600); err != nil {
 		return fmt.Errorf("failed to write report to file %s: %w", filePath, err)
 	}
 
+	return nil
+}

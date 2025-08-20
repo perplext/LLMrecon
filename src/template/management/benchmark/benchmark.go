@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
@@ -29,6 +30,7 @@ type BenchmarkResult struct {
 	Errors int
 	// Details contains additional details about the benchmark
 	Details map[string]interface{}
+}
 
 // TemplateLoadBenchmark benchmarks template loading
 func TemplateLoadBenchmark(ctx context.Context, loader types.TemplateLoader, source string, sourceType string, iterations int) (*BenchmarkResult, error) {
@@ -39,7 +41,7 @@ func TemplateLoadBenchmark(ctx context.Context, loader types.TemplateLoader, sou
 
 	// Record start time
 	startTime := time.Now()
-	
+
 	// Get initial memory stats
 	var memStatsBefore runtime.MemStats
 	runtime.ReadMemStats(&memStatsBefore)
@@ -70,6 +72,7 @@ func TemplateLoadBenchmark(ctx context.Context, loader types.TemplateLoader, sou
 	result.Details["iterations"] = iterations
 
 	return result, nil
+}
 
 // TemplateExecuteBenchmark benchmarks template execution
 func TemplateExecuteBenchmark(ctx context.Context, executor interfaces.TemplateExecutor, templates []*format.Template, options map[string]interface{}, iterations int) (*BenchmarkResult, error) {
@@ -80,20 +83,22 @@ func TemplateExecuteBenchmark(ctx context.Context, executor interfaces.TemplateE
 
 	// Record start time
 	startTime := time.Now()
-	
+
 	// Get initial memory stats
 	var memStatsBefore runtime.MemStats
 	runtime.ReadMemStats(&memStatsBefore)
 
-	// Perform benchmark
+	// Perform benchmark - execute each template individually since ExecuteBatch doesn't exist
 	for i := 0; i < iterations; i++ {
-		_, err := executor.ExecuteBatch(ctx, templates, options)
-		if err != nil {
-			result.Errors++
+		for _, template := range templates {
+			_, err := executor.Execute(ctx, template, options)
+			if err != nil {
+				result.Errors++
+			}
+			result.OperationCount++
 		}
-		result.OperationCount += len(templates)
 	}
-	
+
 	// Get final memory stats
 	var memStatsAfter runtime.MemStats
 	runtime.ReadMemStats(&memStatsAfter)
@@ -110,6 +115,7 @@ func TemplateExecuteBenchmark(ctx context.Context, executor interfaces.TemplateE
 	result.Details["iterations"] = iterations
 
 	return result, nil
+}
 
 // RunBenchmarkSuite runs a suite of benchmarks and returns the results
 func RunBenchmarkSuite(ctx context.Context, manager types.TemplateManager, sources []types.TemplateSource, options map[string]interface{}) (map[string]*BenchmarkResult, error) {
@@ -118,29 +124,30 @@ func RunBenchmarkSuite(ctx context.Context, manager types.TemplateManager, sourc
 	// Load templates benchmark
 	for _, source := range sources {
 		benchName := fmt.Sprintf("Load_%s_%s", source.Type, source.Path)
-		// Skip load benchmarks for now - interface mismatch
-		// TODO: Fix when LoadTemplate method is added to TemplateLoader interface
-		if err := benchName; err != nil {
-			return fmt.Errorf("operation failed: %w", err)
+		// Run template loading benchmark
+		result, err := TemplateLoadBenchmark(ctx, manager.GetLoader(), source.Path, source.Type, 3)
+		if err != nil {
+			fmt.Printf("Warning: Failed to benchmark loading for %s: %v\n", benchName, err)
+			continue
 		}
-		continue
+		results[benchName] = result
 	}
 
 	// Load templates for execution benchmark
 	templates := make([]*format.Template, 0)
 	for _, source := range sources {
-		// Use LoadBatch for directory sources
-		if source.Type == "directory" {
-			loadedTemplates, err := manager.(interfaces.TemplateManagerInternal).GetLoader().LoadBatch(source.Path)
-			if err != nil {
-				continue
-			}
-			templates = append(templates, loadedTemplates...)
+		// Load templates using the manager's LoadTemplates method
+		loadedTemplates, err := manager.LoadTemplates(ctx, source.Path, source.Type)
+		if err != nil {
+			fmt.Printf("Warning: Failed to load templates from %s: %v\n", source.Path, err)
+			continue
 		}
+		templates = append(templates, loadedTemplates...)
 	}
+	
 	// Execute templates benchmark
 	if len(templates) > 0 {
-		result, err := TemplateExecuteBenchmark(ctx, manager.(interfaces.TemplateManagerInternal).GetExecutor(), templates, options, 3)
+		result, err := TemplateExecuteBenchmark(ctx, manager.GetExecutor(), templates, options, 3)
 		if err != nil {
 			return results, err
 		}
@@ -148,6 +155,7 @@ func RunBenchmarkSuite(ctx context.Context, manager types.TemplateManager, sourc
 	}
 
 	return results, nil
+}
 
 // PrintBenchmarkResults prints benchmark results in a human-readable format
 func PrintBenchmarkResults(results map[string]*BenchmarkResult) {
@@ -165,3 +173,4 @@ func PrintBenchmarkResults(results map[string]*BenchmarkResult) {
 			fmt.Printf("    %s: %v\n", k, v)
 		}
 	}
+}

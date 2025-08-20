@@ -5,31 +5,73 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
 )
+
+
+// TemplateHook represents a function that can be called before or after template execution
+type TemplateHook func(ctx context.Context, template *format.Template, result *interfaces.TemplateResult) error
+
+// ReporterFunc represents a function that generates reports
+type ReporterFunc func(results []*interfaces.TemplateResult, format string) ([]byte, error)
+
+// TemplateLoaderExtended extends the basic loader interface to support batch operations
+type TemplateLoaderExtended interface {
+	interfaces.TemplateLoader
+	// LoadTemplates loads multiple templates from a source
+	LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error)
+}
+
+// TemplateRegistryExtended extends the basic registry interface with additional functionality
+type TemplateRegistryExtended interface {
+	interfaces.TemplateRegistry
+	// FindByTag finds templates by tag
+	FindByTag(tag string) []*format.Template
+	// FindByTags finds templates by multiple tags
+	FindByTags(tags []string) []*format.Template
+	// GetMetadata gets metadata for a template
+	GetMetadata(id string) (map[string]interface{}, error)
+	// SetMetadata sets metadata for a template
+	SetMetadata(id string, metadata map[string]interface{}) error
+	// Count returns the number of templates
+	Count() int
+	// Update updates a template
+	Update(template *format.Template) error
+}
+
+// TemplateCacheExtended extends the basic cache interface with additional functionality
+type TemplateCacheExtended interface {
+	interfaces.TemplateCache
+	// GetStats returns cache statistics
+	GetStats() map[string]interface{}
+	// Prune removes old entries from the cache
+	Prune(maxAge time.Duration) int
+}
 
 // Manager is the implementation of the TemplateManager interface
 type Manager struct {
 	// loaders is the list of template loaders
 	loaders []interfaces.TemplateLoader
 	// parser is the template parser
-	parser interfaces.TemplateParser
+	parser interfaces.TemplateValidator
 	// executor is the template executor
 	executor interfaces.TemplateExecutor
-	// reporter is the template reporter
-	reporter interfaces.TemplateReporter
+	// reporter is the template reporter (using a function for now)
+	reporter ReporterFunc
 	// cache is the template cache
-	cache interfaces.TemplateCache
+	cache TemplateCacheExtended
 	// registry is the template registry
-	registry interfaces.TemplateRegistry
+	registry TemplateRegistryExtended
 	// preExecutionHooks are functions to run before template execution
 	preExecutionHooks []TemplateHook
 	// postExecutionHooks are functions to run after template execution
 	postExecutionHooks []TemplateHook
 	// mutex is a mutex for concurrent operations
 	mutex sync.RWMutex
+}
 
 // NewManager creates a new template manager
 func NewManager(options *ManagerOptions) (*Manager, error) {
@@ -47,37 +89,39 @@ func NewManager(options *ManagerOptions) (*Manager, error) {
 	}
 
 	return &Manager{
-		loaders:           options.Loaders,
-		parser:            options.Parser,
-		executor:          options.Executor,
-		reporter:          options.Reporter,
-		cache:             options.Cache,
-		registry:          options.Registry,
-		preExecutionHooks: options.PreExecutionHooks,
+		loaders:            options.Loaders,
+		parser:             options.Parser,
+		executor:           options.Executor,
+		reporter:           options.Reporter,
+		cache:              options.Cache,
+		registry:           options.Registry,
+		preExecutionHooks:  options.PreExecutionHooks,
 		postExecutionHooks: options.PostExecutionHooks,
 	}, nil
+}
 
 // ManagerOptions contains options for creating a new template manager
 type ManagerOptions struct {
 	// Loaders is the list of template loaders
 	Loaders []interfaces.TemplateLoader
 	// Parser is the template parser
-	Parser interfaces.TemplateParser
+	Parser interfaces.TemplateValidator
 	// Executor is the template executor
 	Executor interfaces.TemplateExecutor
 	// Reporter is the template reporter
-	Reporter interfaces.TemplateReporter
+	Reporter ReporterFunc
 	// Cache is the template cache
-	Cache interfaces.TemplateCache
+	Cache TemplateCacheExtended
 	// Registry is the template registry
-	Registry interfaces.TemplateRegistry
+	Registry TemplateRegistryExtended
 	// PreExecutionHooks are functions to run before template execution
 	PreExecutionHooks []TemplateHook
 	// PostExecutionHooks are functions to run after template execution
 	PostExecutionHooks []TemplateHook
+}
 
 // LoadTemplates loads templates from the specified sources
-func (m *Manager) LoadTemplates(ctx context.Context, sources []TemplateSource) error {
+func (m *Manager) LoadTemplates(ctx context.Context, sources []interfaces.TemplateSource) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -85,22 +129,24 @@ func (m *Manager) LoadTemplates(ctx context.Context, sources []TemplateSource) e
 		for _, loader := range m.loaders {
 			// Convert string source to the appropriate source type
 			sourceType := string(source)
-			
+
 			// Check if loader supports the extended interface
 			var templates []*format.Template
 			var err error
-			
-			if extLoader, ok := loader.(interfaces.TemplateLoaderExtended); ok {
+
+			if extLoader, ok := loader.(TemplateLoaderExtended); ok {
 				// Use the extended loader interface
 				templates, err = extLoader.LoadTemplates(ctx, string(source), sourceType)
 			} else {
 				// Fall back to basic loader - load single file
-				template, err := loader.Load(string(source))
+				templateIface, err := loader.LoadFromFile(string(source))
 				if err == nil {
-					templates = []*format.Template{template}
+					if template, ok := templateIface.(*format.Template); ok {
+						templates = []*format.Template{template}
+					}
 				}
 			}
-			
+
 			if err != nil {
 				// Try next loader
 				continue
@@ -115,13 +161,14 @@ func (m *Manager) LoadTemplates(ctx context.Context, sources []TemplateSource) e
 				}
 
 				if m.cache != nil {
-					m.cache.Set(template.ID, template)
+					m.cache.Set(template.ID, template, 0) // Use 0 for no expiry
 				}
 			}
 		}
 	}
 
 	return nil
+}
 
 // GetTemplate gets a template by ID
 func (m *Manager) GetTemplate(id string) (*format.Template, error) {
@@ -130,38 +177,59 @@ func (m *Manager) GetTemplate(id string) (*format.Template, error) {
 
 	// Check cache first if available
 	if m.cache != nil {
-		if template, ok := m.cache.Get(id); ok {
-			return template, nil
+		if templateIface, ok := m.cache.Get(id); ok {
+			if template, ok := templateIface.(*format.Template); ok {
+				return template, nil
+			}
 		}
 	}
 
 	// Get from registry
-	template, err := m.registry.Get(id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get template %s: %w", id, err)
+	templateIface, found := m.registry.Get(id)
+	if !found {
+		return nil, fmt.Errorf("template %s not found", id)
+	}
+
+	// Convert interface to concrete type
+	template, ok := templateIface.(*format.Template)
+	if !ok {
+		return nil, fmt.Errorf("template %s has invalid type", id)
 	}
 
 	// Update cache
 	if m.cache != nil {
-		m.cache.Set(id, template)
+		m.cache.Set(id, template, 0) // Use 0 for no expiry
 	}
 
 	return template, nil
+}
 
 // ListTemplates lists all templates
 func (m *Manager) ListTemplates() []*format.Template {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	return m.registry.List()
+
+	interfaceList := m.registry.List()
+	templates := make([]*format.Template, 0, len(interfaceList))
+
+	for _, templateIface := range interfaceList {
+		if template, ok := templateIface.(*format.Template); ok {
+			templates = append(templates, template)
+		}
+	}
+
+	return templates
+}
 
 // ValidateTemplate validates a template
 func (m *Manager) ValidateTemplate(template *format.Template) error {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	return m.parser.Validate(template)
+}
 
 // ExecuteTemplate executes a template
-func (m *Manager) ExecuteTemplate(ctx context.Context, templateID string, options map[string]interface{}) (*TemplateResult, error) {
+func (m *Manager) ExecuteTemplate(ctx context.Context, templateID string, options map[string]interface{}) (*interfaces.TemplateResult, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
@@ -191,7 +259,7 @@ func (m *Manager) ExecuteTemplate(ctx context.Context, templateID string, option
 
 	// Execute template
 	result.Status = string(interfaces.StatusExecuting)
-	execResult, err := m.executor.Execute(ctx, template, options)
+	execOutput, err := m.executor.Execute(ctx, template, options)
 	if err != nil {
 		result.Status = string(interfaces.StatusFailed)
 		result.Error = err
@@ -200,8 +268,8 @@ func (m *Manager) ExecuteTemplate(ctx context.Context, templateID string, option
 		return result, fmt.Errorf("failed to execute template %s: %w", templateID, err)
 	}
 
-	// Update result
-	result = execResult
+	// Update result with execution output
+	result.Response = string(execOutput)
 	result.Status = string(interfaces.StatusCompleted)
 	result.EndTime = time.Now()
 	result.Duration = result.EndTime.Sub(result.StartTime)
@@ -216,13 +284,14 @@ func (m *Manager) ExecuteTemplate(ctx context.Context, templateID string, option
 	}
 
 	return result, nil
+}
 
 // ExecuteTemplates executes multiple templates
-func (m *Manager) ExecuteTemplates(ctx context.Context, templateIDs []string, options map[string]interface{}) ([]*TemplateResult, error) {
+func (m *Manager) ExecuteTemplates(ctx context.Context, templateIDs []string, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	var results []*TemplateResult
+	var results []*interfaces.TemplateResult
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	errChan := make(chan error, len(templateIDs))
@@ -259,12 +328,14 @@ func (m *Manager) ExecuteTemplates(ctx context.Context, templateIDs []string, op
 	}
 
 	return results, nil
+}
 
 // GenerateReport generates a report for template execution results
-func (m *Manager) GenerateReport(results []*TemplateResult, format string) ([]byte, error) {
+func (m *Manager) GenerateReport(results []*interfaces.TemplateResult, format string) ([]byte, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	return m.reporter.GenerateReport(results, format)
+	return m.reporter(results, format)
+}
 
 // AddHook adds a hook to the template manager
 func (m *Manager) AddHook(hook TemplateHook, pre bool) {
@@ -276,6 +347,7 @@ func (m *Manager) AddHook(hook TemplateHook, pre bool) {
 	} else {
 		m.postExecutionHooks = append(m.postExecutionHooks, hook)
 	}
+}
 
 // RemoveHook removes a hook from the template manager
 func (m *Manager) RemoveHook(hook TemplateHook, pre bool) bool {
@@ -301,6 +373,7 @@ func (m *Manager) RemoveHook(hook TemplateHook, pre bool) bool {
 	}
 
 	return false
+}
 
 // ClearHooks clears all hooks
 func (m *Manager) ClearHooks() {
@@ -308,6 +381,7 @@ func (m *Manager) ClearHooks() {
 	defer m.mutex.Unlock()
 	m.preExecutionHooks = nil
 	m.postExecutionHooks = nil
+}
 
 // RegisterTemplate registers a template
 func (m *Manager) RegisterTemplate(template *format.Template) error {
@@ -326,10 +400,11 @@ func (m *Manager) RegisterTemplate(template *format.Template) error {
 
 	// Add to cache
 	if m.cache != nil {
-		m.cache.Set(template.ID, template)
+		m.cache.Set(template.ID, template, 0) // Use 0 for no expiry
 	}
 
 	return nil
+}
 
 // UnregisterTemplate unregisters a template
 func (m *Manager) UnregisterTemplate(id string) error {
@@ -346,6 +421,7 @@ func (m *Manager) UnregisterTemplate(id string) error {
 	}
 
 	return nil
+}
 
 // UpdateTemplate updates a template
 func (m *Manager) UpdateTemplate(template *format.Template) error {
@@ -364,34 +440,39 @@ func (m *Manager) UpdateTemplate(template *format.Template) error {
 
 	// Update cache
 	if m.cache != nil {
-		m.cache.Set(template.ID, template)
+		m.cache.Set(template.ID, template, 0) // Use 0 for no expiry
 	}
 
 	return nil
+}
 
 // FindTemplatesByTag finds templates by tag
 func (m *Manager) FindTemplatesByTag(tag string) []*format.Template {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	return m.registry.FindByTag(tag)
+}
 
 // FindTemplatesByTags finds templates by multiple tags
 func (m *Manager) FindTemplatesByTags(tags []string) []*format.Template {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	return m.registry.FindByTags(tags)
+}
 
 // GetTemplateMetadata gets metadata for a template
 func (m *Manager) GetTemplateMetadata(id string) (map[string]interface{}, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	return m.registry.GetMetadata(id)
+}
 
 // SetTemplateMetadata sets metadata for a template
 func (m *Manager) SetTemplateMetadata(id string, metadata map[string]interface{}) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	return m.registry.SetMetadata(id, metadata)
+}
 
 // GetStats gets statistics about the template manager
 func (m *Manager) GetStats() map[string]interface{} {
@@ -407,6 +488,7 @@ func (m *Manager) GetStats() map[string]interface{} {
 	}
 
 	return stats
+}
 
 // ClearCache clears the template cache
 func (m *Manager) ClearCache() {
@@ -415,6 +497,7 @@ func (m *Manager) ClearCache() {
 	if m.cache != nil {
 		m.cache.Clear()
 	}
+}
 
 // PruneCache removes old entries from the cache
 func (m *Manager) PruneCache(maxAge time.Duration) int {
@@ -423,3 +506,5 @@ func (m *Manager) PruneCache(maxAge time.Duration) int {
 	if m.cache != nil {
 		return m.cache.Prune(maxAge)
 	}
+	return 0
+}

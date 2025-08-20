@@ -395,8 +395,11 @@ func getFilterParams(r *http.Request) FilterParams {
 		Search:    r.URL.Query().Get("search"),
 	}
 
+}
+
 // getUserIDFromContext gets the user ID from the request context
 // In a real implementation, this would come from authentication middleware
-}
 func getUserIDFromContext(ctx interface{}) string {
 	// Placeholder implementation
+	return "user123"
+}

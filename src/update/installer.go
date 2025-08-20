@@ -2,21 +2,26 @@ package update
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // Installer handles installation of updates
 type Installer struct {
-	config *Config
+	config *UpdaterConfig
 	logger Logger
+}
 
 // NewInstaller creates a new installer
-func NewInstaller(config *Config, logger Logger) *Installer {
+func NewInstaller(config *UpdaterConfig, logger Logger) *Installer {
 	return &Installer{
 		config: config,
 		logger: logger,
 	}
+}
 
 // InstallBinary installs a new binary
 func (i *Installer) InstallBinary(binaryPath string) error {
@@ -41,6 +46,7 @@ func (i *Installer) InstallBinary(binaryPath string) error {
 	default:
 		return i.installBinaryUnix(binaryPath, execPath)
 	}
+}
 
 // installBinaryWindows installs binary on Windows
 func (i *Installer) installBinaryWindows(newBinary, targetPath string) error {
@@ -68,6 +74,7 @@ func (i *Installer) installBinaryWindows(newBinary, targetPath string) error {
 	
 	i.logger.Info("Binary installation completed (restart required)")
 	return nil
+}
 
 // installBinaryUnix installs binary on Unix systems
 func (i *Installer) installBinaryUnix(newBinary, targetPath string) error {
@@ -87,6 +94,7 @@ func (i *Installer) installBinaryUnix(newBinary, targetPath string) error {
 	
 	i.logger.Info("Binary installation completed")
 	return nil
+}
 
 // InstallTemplates installs template updates
 func (i *Installer) InstallTemplates(templateFiles map[string]string) error {
@@ -116,6 +124,7 @@ func (i *Installer) InstallTemplates(templateFiles map[string]string) error {
 	
 	i.logger.Info("Template installation completed")
 	return nil
+}
 
 // InstallModules installs module updates
 func (i *Installer) InstallModules(moduleFiles map[string]string) error {
@@ -152,6 +161,7 @@ func (i *Installer) InstallModules(moduleFiles map[string]string) error {
 	
 	i.logger.Info("Module installation completed")
 	return nil
+}
 
 // RemoveObsoleteFiles removes files that are no longer needed
 func (i *Installer) RemoveObsoleteFiles(obsoleteFiles []string, baseDir string) error {
@@ -177,6 +187,7 @@ func (i *Installer) RemoveObsoleteFiles(obsoleteFiles []string, baseDir string) 
 	i.removeEmptyDirectories(baseDir)
 	
 	return nil
+}
 
 // createBackup creates a backup of a file
 func (i *Installer) createBackup(filePath string) error {
@@ -204,6 +215,7 @@ func (i *Installer) createBackup(filePath string) error {
 	
 	i.logger.Debug(fmt.Sprintf("Created backup: %s", backupPath))
 	return nil
+}
 
 // copyFile copies a file from source to destination
 func (i *Installer) copyFile(src, dst string) error {
@@ -227,7 +239,7 @@ func (i *Installer) copyFile(src, dst string) error {
 	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Copy content
-		if _, err := sourceFile.WriteTo(destFile); err != nil {
+	if _, err := sourceFile.WriteTo(destFile); err != nil {
 		return fmt.Errorf("failed to copy file content: %w", err)
 	}
 	
@@ -237,6 +249,7 @@ func (i *Installer) copyFile(src, dst string) error {
 	}
 	
 	return nil
+}
 
 // isBinaryModule checks if a file is a binary module
 func (i *Installer) isBinaryModule(filePath string) bool {
@@ -258,6 +271,7 @@ func (i *Installer) isBinaryModule(filePath string) bool {
 	}
 	
 	return false
+}
 
 // removeEmptyDirectories removes empty directories recursively
 func (i *Installer) removeEmptyDirectories(baseDir string) {
@@ -278,6 +292,7 @@ func (i *Installer) removeEmptyDirectories(baseDir string) {
 		
 		return nil
 	})
+}
 
 // ValidateInstallation validates that an installation was successful
 func (i *Installer) ValidateInstallation(component string) error {
@@ -291,6 +306,7 @@ func (i *Installer) ValidateInstallation(component string) error {
 	default:
 		return fmt.Errorf("unknown component: %s", component)
 	}
+}
 
 // validateBinaryInstallation validates binary installation
 func (i *Installer) validateBinaryInstallation() error {
@@ -311,6 +327,7 @@ func (i *Installer) validateBinaryInstallation() error {
 	}
 	
 	return nil
+}
 
 // validateTemplateInstallation validates template installation
 func (i *Installer) validateTemplateInstallation() error {
@@ -345,6 +362,7 @@ func (i *Installer) validateTemplateInstallation() error {
 	
 	i.logger.Debug(fmt.Sprintf("Validated %d template files", templateCount))
 	return nil
+}
 
 // validateModuleInstallation validates module installation
 func (i *Installer) validateModuleInstallation() error {
@@ -375,7 +393,7 @@ func (i *Installer) validateModuleInstallation() error {
 	
 	i.logger.Debug(fmt.Sprintf("Validated %d module files", moduleCount))
 	return nil
-	
+}
 
 // CleanupInstallation cleans up installation artifacts
 func (i *Installer) CleanupInstallation() error {
@@ -405,6 +423,7 @@ func (i *Installer) CleanupInstallation() error {
 	}
 	
 	return nil
+}
 
 // GetInstallationInfo returns information about the current installation
 func (i *Installer) GetInstallationInfo() (*InstallationInfo, error) {
@@ -439,6 +458,7 @@ func (i *Installer) GetInstallationInfo() (*InstallationInfo, error) {
 	}
 	
 	return info, nil
+}
 
 // countFiles counts files in a directory with optional extension filter
 func (i *Installer) countFiles(dir string, extensions []string) (int, error) {
@@ -470,6 +490,7 @@ func (i *Installer) countFiles(dir string, extensions []string) (int, error) {
 	})
 	
 	return count, err
+}
 
 // InstallationInfo contains information about the current installation
 type InstallationInfo struct {
@@ -482,3 +503,15 @@ type InstallationInfo struct {
 	ModuleCount    int       `json:"module_count"`
 	BackupDir      string    `json:"backup_dir"`
 	Platform       string    `json:"platform"`
+	Architecture   string    `json:"architecture"`
+}
+
+// Logger interface used throughout the installer
+// Use shared Logger and UpdaterConfig from types.go
+
+// Component constants for installation validation
+const (
+	ComponentBinary    = "binary"
+	ComponentTemplates = "templates"
+	ComponentModules   = "modules"
+)

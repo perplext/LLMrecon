@@ -8,7 +8,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
@@ -50,6 +54,7 @@ type BinaryComponentInfo struct {
 	Required     bool              `json:"required"`
 	ChangelogURL string            `json:"changelog_url"`
 	Checksums    map[string]string `json:"checksums"`
+}
 
 // TemplatesComponent represents the templates component in an update package
 type TemplatesComponentInfo struct {
@@ -66,6 +71,7 @@ type TemplatesComponentInfo struct {
 type ModuleDependency struct {
 	ID         string `json:"id"`
 	MinVersion string `json:"min_version"`
+}
 
 // ModuleComponent represents a module component in an update package
 type ModuleComponentInfo struct {
@@ -77,6 +83,7 @@ type ModuleComponentInfo struct {
 	ChangelogURL string            `json:"changelog_url"`
 	Checksum     string            `json:"checksum"`
 	Dependencies []ModuleDependency `json:"dependencies"`
+}
 
 // PatchInfo represents information about a patch in a differential update
 type PatchInfo struct {
@@ -86,6 +93,7 @@ type PatchInfo struct {
 	Checksums   map[string]string `json:"checksums,omitempty"`
 	Checksum    string            `json:"checksum,omitempty"`
 	ID          string            `json:"id,omitempty"`
+}
 
 // PatchesInfo represents all patches in a differential update
 type PatchesInfo struct {
@@ -105,6 +113,7 @@ type ComplianceInfo struct {
 type ComplianceMap struct {
 	OWASPLLMTop10 ComplianceInfo `json:"owasp_llm_top10"`
 	ISO42001      ComplianceInfo `json:"iso_42001"`
+}
 
 // Components represents all components in an update package
 type Components struct {
@@ -112,6 +121,7 @@ type Components struct {
 	Templates TemplatesComponentInfo `json:"templates"`
 	Modules   []ModuleComponentInfo  `json:"modules"`
 	Patches   PatchesInfo            `json:"patches,omitempty"`
+}
 
 // PackageManifest represents the manifest of an update package
 type PackageManifest struct {
@@ -126,12 +136,7 @@ type PackageManifest struct {
 	Signature     string       `json:"signature"`
 }
 
-// UpdatePackage represents an update package
-type UpdatePackage struct {
-	Manifest    PackageManifest
-	PackagePath string
-	reader      *zip.ReadCloser
-	verified    bool
+// Use shared UpdatePackage from types.go
 
 // OpenPackage opens an update package from the given path
 func OpenPackage(path string) (*UpdatePackage, error) {
@@ -144,8 +149,8 @@ func OpenPackage(path string) (*UpdatePackage, error) {
 	// Create update package
 	pkg := &UpdatePackage{
 		PackagePath: path,
-		reader:      reader,
-		verified:    false,
+		Reader:      reader,
+		Verified:    false,
 	}
 
 	// Read manifest
@@ -156,19 +161,21 @@ func OpenPackage(path string) (*UpdatePackage, error) {
 	}
 
 	return pkg, nil
+}
 
 // Close closes the update package
 func (p *UpdatePackage) Close() error {
-	if p.reader != nil {
-		return p.reader.Close()
+	if p.Reader != nil {
+		return p.Reader.Close()
 	}
 	return nil
+}
 
 // readManifest reads the manifest from the update package
 func (p *UpdatePackage) readManifest() error {
 	// Find manifest file
 	var manifestFile *zip.File
-	for _, file := range p.reader.File {
+	for _, file := range p.Reader.File {
 		if file.Name == "manifest.json" {
 			manifestFile = file
 			break
@@ -198,11 +205,12 @@ func (p *UpdatePackage) readManifest() error {
 	}
 
 	return nil
+}
 
 // Verify verifies the integrity and authenticity of the update package
 func (p *UpdatePackage) Verify(publicKey ed25519.PublicKey) error {
 	// Check if already verified
-	if p.verified {
+	if p.Verified {
 		return nil
 	}
 
@@ -225,8 +233,9 @@ func (p *UpdatePackage) Verify(publicKey ed25519.PublicKey) error {
 	}
 
 	// Mark as verified
-	p.verified = true
+	p.Verified = true
 	return nil
+}
 
 // verifyManifestSignature verifies the signature of the manifest
 func (p *UpdatePackage) verifyManifestSignature(publicKey ed25519.PublicKey) error {
@@ -253,6 +262,7 @@ func (p *UpdatePackage) verifyManifestSignature(publicKey ed25519.PublicKey) err
 	}
 
 	return nil
+}
 
 // verifyComponentChecksums verifies the checksums of all components in the package
 func (p *UpdatePackage) verifyComponentChecksums() error {
@@ -323,11 +333,13 @@ func (p *UpdatePackage) verifyComponentChecksums() error {
 	}
 
 	return nil
+}
+
 // verifyFileChecksum verifies the checksum of a file in the package
 func (p *UpdatePackage) verifyFileChecksum(path, expectedChecksum string) error {
 	// Find file
 	var file *zip.File
-	for _, f := range p.reader.File {
+	for _, f := range p.Reader.File {
 		if f.Name == path {
 			file = f
 			break
@@ -358,13 +370,14 @@ func (p *UpdatePackage) verifyFileChecksum(path, expectedChecksum string) error 
 	}
 
 	return nil
+}
 
 // verifyDirectoryChecksum verifies the checksum of a directory in the package
 func (p *UpdatePackage) verifyDirectoryChecksum(dirPath, expectedChecksum string) error {
 	// Find all files in directory
 	var files []*zip.File
 	prefix := dirPath + "/"
-	for _, file := range p.reader.File {
+	for _, file := range p.Reader.File {
 		if strings.HasPrefix(file.Name, prefix) && !strings.HasSuffix(file.Name, "/") {
 			files = append(files, file)
 		}
@@ -402,6 +415,8 @@ func (p *UpdatePackage) verifyDirectoryChecksum(dirPath, expectedChecksum string
 	}
 
 	return nil
+}
+
 // IsCompatible checks if the update package is compatible with the current version
 func (p *UpdatePackage) IsCompatible(currentVersions map[string]version.Version) (bool, error) {
 	// Check binary compatibility
@@ -513,6 +528,8 @@ func (p *UpdatePackage) IsCompatible(currentVersions map[string]version.Version)
 		}
 	}
 	return true, nil
+}
+
 // HasRequiredUpdates checks if the package contains any required updates
 func (p *UpdatePackage) HasRequiredUpdates() bool {
 	if p.Manifest.Components.Binary.Required {
@@ -530,12 +547,13 @@ func (p *UpdatePackage) HasRequiredUpdates() bool {
 	}
 
 	return false
+}
 
 // ExtractFile extracts a file from the package to the given path
 func (p *UpdatePackage) ExtractFile(filePath, destPath string) error {
 	// Find file
 	var file *zip.File
-	for _, f := range p.reader.File {
+	for _, f := range p.Reader.File {
 		if f.Name == filePath {
 			file = f
 			break
@@ -577,14 +595,14 @@ func (p *UpdatePackage) ExtractFile(filePath, destPath string) error {
 	}
 
 	return nil
-	
+}
 
 // ExtractDirectory extracts a directory from the package to the given path
 func (p *UpdatePackage) ExtractDirectory(dirPath, destPath string) error {
 	// Find all files in directory
 	var files []*zip.File
 	prefix := dirPath + "/"
-	for _, file := range p.reader.File {
+	for _, file := range p.Reader.File {
 		if strings.HasPrefix(file.Name, prefix) {
 			files = append(files, file)
 		}
@@ -650,6 +668,7 @@ func (p *UpdatePackage) ExtractDirectory(dirPath, destPath string) error {
 	}
 
 	return nil
+}
 
 // GetBinaryPath returns the path to the binary in the package for the given platform
 func (p *UpdatePackage) GetBinaryPath(platform string) string {
@@ -658,26 +677,32 @@ func (p *UpdatePackage) GetBinaryPath(platform string) string {
 		binaryPath += ".exe"
 	}
 	return binaryPath
+}
 
 // GetTemplatesPath returns the path to the templates in the package
 func (p *UpdatePackage) GetTemplatesPath() string {
 	return "templates"
+}
 
 // GetModulePath returns the path to a module in the package
 func (p *UpdatePackage) GetModulePath(moduleID string) string {
 	return fmt.Sprintf("modules/%s", moduleID)
+}
 
 // GetBinaryPatchPath returns the path to a binary patch in the package
 func (p *UpdatePackage) GetBinaryPatchPath(platform, fromVersion, toVersion string) string {
 	return fmt.Sprintf("patches/binary/%s/%s-%s.patch", platform, fromVersion, toVersion)
+}
 
 // GetTemplatesPatchPath returns the path to a templates patch in the package
 func (p *UpdatePackage) GetTemplatesPatchPath(fromVersion, toVersion string) string {
 	return fmt.Sprintf("patches/templates/%s-%s.patch", fromVersion, toVersion)
+}
 
 // GetModulePatchPath returns the path to a module patch in the package
 func (p *UpdatePackage) GetModulePatchPath(moduleID, fromVersion, toVersion string) string {
 	return fmt.Sprintf("patches/modules/%s/%s-%s.patch", moduleID, fromVersion, toVersion)
+}
 
 // CreatePackage creates a new update package with the given manifest
 func CreatePackage(manifestPath, outputPath string) error {
@@ -717,17 +742,5 @@ func CreatePackage(manifestPath, outputPath string) error {
 
 	// TODO: Add files to package based on manifest
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return nil
 }

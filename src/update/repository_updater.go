@@ -7,26 +7,31 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
 // RepositoryUpdater handles updating from various repository sources
 type RepositoryUpdater struct {
-	config     *Config
+	config     *UpdaterConfig
 	downloader *Downloader
 	verifier   *Verifier
 	logger     Logger
+}
 
 // NewRepositoryUpdater creates a new repository updater
-func NewRepositoryUpdater(config *Config, downloader *Downloader, verifier *Verifier, logger Logger) *RepositoryUpdater {
+func NewRepositoryUpdater(config *UpdaterConfig, downloader *Downloader, verifier *Verifier, logger Logger) *RepositoryUpdater {
 	return &RepositoryUpdater{
 		config:     config,
 		downloader: downloader,
 		verifier:   verifier,
 		logger:     logger,
 	}
+}
 
 // UpdateFromGitHub updates templates/modules from GitHub repository
 func (ru *RepositoryUpdater) UpdateFromGitHub(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
@@ -74,6 +79,7 @@ func (ru *RepositoryUpdater) UpdateFromGitHub(ctx context.Context, repo Reposito
 	
 	ru.logger.Info(fmt.Sprintf("Successfully updated %d files from %s", len(updatedFiles), repo.Name))
 	return updatedFiles, nil
+}
 
 // UpdateFromGitLab updates templates/modules from GitLab repository
 func (ru *RepositoryUpdater) UpdateFromGitLab(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
@@ -121,6 +127,8 @@ func (ru *RepositoryUpdater) UpdateFromGitLab(ctx context.Context, repo Reposito
 	
 	ru.logger.Info(fmt.Sprintf("Successfully updated %d files from %s", len(updatedFiles), repo.Name))
 	return updatedFiles, nil
+}
+
 // UpdateFromHTTP updates from HTTP repository
 func (ru *RepositoryUpdater) UpdateFromHTTP(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
 	ru.logger.Info(fmt.Sprintf("Updating from HTTP repository: %s", repo.URL))
@@ -140,6 +148,8 @@ func (ru *RepositoryUpdater) UpdateFromHTTP(ctx context.Context, repo Repository
 	
 	ru.logger.Info(fmt.Sprintf("Successfully updated %d files from %s", len(updatedFiles), repo.Name))
 	return updatedFiles, nil
+}
+
 // UpdateFromLocal updates from local repository
 func (ru *RepositoryUpdater) UpdateFromLocal(ctx context.Context, repo RepositoryConfig, targetDir string) ([]string, error) {
 	ru.logger.Info(fmt.Sprintf("Updating from local repository: %s", repo.URL))
@@ -152,7 +162,7 @@ func (ru *RepositoryUpdater) UpdateFromLocal(ctx context.Context, repo Repositor
 	
 	ru.logger.Info(fmt.Sprintf("Successfully updated %d files from %s", len(updatedFiles), repo.Name))
 	return updatedFiles, nil
-	
+}
 
 // downloadRepositoryArchive downloads repository archive
 func (ru *RepositoryUpdater) downloadRepositoryArchive(ctx context.Context, url, token, repoName string) (string, error) {
@@ -194,6 +204,7 @@ func (ru *RepositoryUpdater) downloadRepositoryArchive(ctx context.Context, url,
 	}
 	
 	return tempFile.Name(), nil
+}
 
 // extractAndInstall extracts archive and installs files
 func (ru *RepositoryUpdater) extractAndInstall(archivePath, targetDir, repoName string) ([]string, error) {
@@ -228,6 +239,7 @@ func (ru *RepositoryUpdater) extractAndInstall(archivePath, targetDir, repoName 
 	}
 	
 	return updatedFiles, nil
+}
 
 // extractArchive extracts various archive formats
 func (ru *RepositoryUpdater) extractArchive(archivePath, destDir string) error {
@@ -246,7 +258,7 @@ func (ru *RepositoryUpdater) extractArchive(archivePath, destDir string) error {
 	default:
 			return fmt.Errorf("unsupported archive format: %s", ext)
 	}
-	
+}
 
 // extractZip extracts a ZIP archive
 func (ru *RepositoryUpdater) extractZip(archivePath, destDir string) error {
@@ -263,6 +275,8 @@ func (ru *RepositoryUpdater) extractZip(archivePath, destDir string) error {
 	}
 	
 	return nil
+}
+
 // extractZipFile extracts a single file from ZIP
 func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) error {
 	// Clean the file path
@@ -302,6 +316,8 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 	
 	// Set file permissions
 	return os.Chmod(destPath, file.FileInfo().Mode())
+}
+
 // extractTar extracts a TAR archive
 func (ru *RepositoryUpdater) extractTar(archivePath, destDir string, compressed bool) error {
 	file, err := os.Open(filepath.Clean(archivePath))
@@ -338,6 +354,7 @@ func (ru *RepositoryUpdater) extractTar(archivePath, destDir string, compressed 
 	}
 	
 	return nil
+}
 
 // extractTarEntry extracts a single entry from TAR
 func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reader, destDir string) error {
@@ -376,6 +393,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		// Skip other file types (symlinks, etc.)
 		return nil
 	}
+}
 
 // findExtractedDirectory finds the main directory in extracted archive
 func (ru *RepositoryUpdater) findExtractedDirectory(tempDir string) (string, error) {
@@ -403,6 +421,7 @@ func (ru *RepositoryUpdater) findExtractedDirectory(tempDir string) (string, err
 	
 	// No directories found, use temp dir
 	return tempDir, nil
+}
 
 // copyAndTrackFiles copies files and tracks what was updated
 func (ru *RepositoryUpdater) copyAndTrackFiles(srcDir, destDir string) ([]string, error) {
@@ -456,6 +475,7 @@ func (ru *RepositoryUpdater) copyAndTrackFiles(srcDir, destDir string) ([]string
 	})
 	
 	return updatedFiles, err
+}
 
 // fileNeedsUpdate checks if a file needs updating
 func (ru *RepositoryUpdater) fileNeedsUpdate(srcPath, destPath string) (bool, error) {
@@ -486,6 +506,7 @@ func (ru *RepositoryUpdater) fileNeedsUpdate(srcPath, destPath string) (bool, er
 	
 	// Files appear to be the same
 	return false, nil
+}
 
 // copyFile copies a file from source to destination
 func (ru *RepositoryUpdater) copyFile(src, dst string) error {
@@ -512,6 +533,8 @@ func (ru *RepositoryUpdater) copyFile(src, dst string) error {
 	}
 	
 	return nil
+}
+
 // copyLocalRepository copies from local repository
 func (ru *RepositoryUpdater) copyLocalRepository(srcDir, destDir, repoName string) ([]string, error) {
 	repoDestDir := filepath.Join(destDir, repoName)
@@ -520,6 +543,8 @@ func (ru *RepositoryUpdater) copyLocalRepository(srcDir, destDir, repoName strin
 	}
 	
 	return ru.copyAndTrackFiles(srcDir, repoDestDir)
+}
+
 // Helper functions for repository parsing and commit tracking
 // parseGitHubURL parses GitHub repository URL
 func (ru *RepositoryUpdater) parseGitHubURL(repoURL string) (*GitHubRepoInfo, error) {
@@ -540,6 +565,7 @@ func (ru *RepositoryUpdater) parseGitHubURL(repoURL string) (*GitHubRepoInfo, er
 		Owner: parts[0],
 		Repo:  parts[1],
 	}, nil
+}
 
 // parseGitLabURL parses GitLab repository URL
 func (ru *RepositoryUpdater) parseGitLabURL(repoURL string) (*GitLabRepoInfo, error) {
@@ -561,6 +587,7 @@ func (ru *RepositoryUpdater) parseGitLabURL(repoURL string) (*GitLabRepoInfo, er
 		Owner: parts[0],
 		Repo:  parts[1],
 	}, nil
+}
 
 // getLatestGitHubCommit gets the latest commit from GitHub
 func (ru *RepositoryUpdater) getLatestGitHubCommit(ctx context.Context, repoInfo *GitHubRepoInfo, branch, token string) (*GitHubCommit, error) {
@@ -596,6 +623,7 @@ func (ru *RepositoryUpdater) getLatestGitHubCommit(ctx context.Context, repoInfo
 	}
 	
 	return &commit, nil
+}
 
 // getLatestGitLabCommit gets the latest commit from GitLab
 func (ru *RepositoryUpdater) getLatestGitLabCommit(ctx context.Context, repoInfo *GitLabRepoInfo, branch, token string) (*GitLabCommit, error) {
@@ -632,6 +660,7 @@ func (ru *RepositoryUpdater) getLatestGitLabCommit(ctx context.Context, repoInfo
 	}
 	
 	return &commit, nil
+}
 
 // getCurrentCommit gets the current commit hash for a repository
 func (ru *RepositoryUpdater) getCurrentCommit(targetDir, repoName string) string {
@@ -640,6 +669,7 @@ func (ru *RepositoryUpdater) getCurrentCommit(targetDir, repoName string) string
 		return strings.TrimSpace(string(data))
 	}
 	return ""
+}
 
 // updateCommitTracking updates the commit tracking file
 func (ru *RepositoryUpdater) updateCommitTracking(targetDir, repoName, commit string) error {
@@ -650,13 +680,15 @@ func (ru *RepositoryUpdater) updateCommitTracking(targetDir, repoName, commit st
 		return err
 	}
 	
-	return os.WriteFile(filepath.Clean(commitFile, []byte(commit)), 0600)
+	return os.WriteFile(filepath.Clean(commitFile), []byte(commit), 0600)
+}
 
 // Data structures for repository information
 
 type GitHubRepoInfo struct {
 	Owner string
 	Repo  string
+}
 
 type GitLabRepoInfo struct {
 	Host  string
@@ -678,24 +710,4 @@ type GitLabCommit struct {
 	ID           string    `json:"id"`
 	Title        string    `json:"title"`
 	Message      string    `json:"message"`
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }
