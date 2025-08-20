@@ -3,8 +3,9 @@
 package cmd
 
 import (
-	"path/filepath"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/perplext/LLMrecon/src/config"
@@ -77,11 +78,11 @@ If no private key is provided, the command can generate a new key pair.`,
 			publicKeyPath := filepath.Join(keyOutputDir, fmt.Sprintf("public_key_%s.pem", strings.ToLower(algorithm)))
 
 			// Write keys to files
-			if err := os.WriteFile(filepath.Clean(privateKeyPath, []byte(privateKeyPEM)), 0600); err != nil {
+			if err := os.WriteFile(privateKeyPath, []byte(privateKeyPEM), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing private key: %v\n", err)
 				os.Exit(1)
 			}
-			if err := os.WriteFile(filepath.Clean(publicKeyPath, []byte(publicKeyPEM)), 0600); err != nil {
+			if err := os.WriteFile(publicKeyPath, []byte(publicKeyPEM), 0644); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing public key: %v\n", err)
 				os.Exit(1)
 			}
@@ -145,7 +146,7 @@ If no private key is provided, the command can generate a new key pair.`,
 		// Output signature
 		if outputFile != "" {
 			// Write signature to file
-			if err := os.WriteFile(filepath.Clean(outputFile, []byte(signature)), 0600); err != nil {
+			if err := os.WriteFile(outputFile, []byte(signature), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing signature to file: %v\n", err)
 				os.Exit(1)
 			}
@@ -167,3 +168,4 @@ func init() {
 	signCmd.Flags().BoolP("generate-keys", "g", false, "Generate a new key pair")
 	signCmd.Flags().String("key-output-dir", ".", "Directory to store generated keys")
 	signCmd.Flags().BoolP("checksum", "c", false, "Calculate and output SHA-256 checksum")
+}

@@ -162,7 +162,7 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 	}
 
 	return nil
-	
+}
 
 // verifyTemplateDirectory verifies all templates in a directory
 func verifyTemplateDirectory(ctx context.Context, integration *compliance.ComplianceIntegration, options *security.VerificationOptions) error {
@@ -199,6 +199,7 @@ func verifyTemplateDirectory(ctx context.Context, integration *compliance.Compli
 	}
 
 	return nil
+}
 
 // runSecurityPipeline runs the template security pipeline
 func runSecurityPipeline(ctx context.Context, verifier security.TemplateVerifier, options *security.VerificationOptions) error {
@@ -245,6 +246,7 @@ func runSecurityPipeline(ctx context.Context, verifier security.TemplateVerifier
 
 	fmt.Printf("\nPipeline completed successfully. Reports saved to %s\n", config.OutputDirectory)
 	return nil
+}
 
 // printVerificationResult prints a verification result
 func printVerificationResult(result *security.VerificationResult) {
@@ -266,6 +268,7 @@ func printVerificationResult(result *security.VerificationResult) {
 	} else {
 		fmt.Println("No issues found")
 	}
+}
 
 // printComplianceResult prints a compliance result
 func printComplianceResult(result *compliance.TemplateComplianceResult) {
@@ -282,6 +285,7 @@ func printComplianceResult(result *compliance.TemplateComplianceResult) {
 	fmt.Printf("  Passed: %t\n", result.SecurityResult.Passed)
 	fmt.Printf("  Score: %.2f/%.2f\n", result.SecurityResult.Score, result.SecurityResult.MaxScore)
 	fmt.Printf("  Issues: %d\n", len(result.SecurityResult.Issues))
+}
 
 // printSummary prints a verification summary
 func printSummary(summary *security.VerificationSummary) {
@@ -292,6 +296,7 @@ func printSummary(summary *security.VerificationSummary) {
 	fmt.Printf("Total Issues: %d\n", summary.TotalIssues)
 	fmt.Printf("Average Score: %.2f\n", summary.AverageScore)
 	fmt.Printf("Compliance Percentage: %.2f%%\n", summary.CompliancePercentage)
+}
 
 	fmt.Println("\nIssues by Severity:")
 	for severity, count := range summary.IssuesBySeverity {

@@ -457,3 +457,4 @@ func init() {
 	convertCmd.Flags().String("format", "json", "Output format (json, jsonl, csv, xlsx, txt, md, pdf, html)")
 	convertCmd.Flags().String("output", "", "Output file path")
 	convertCmd.Flags().String("template", "", "Path to custom template file")
+}

@@ -24,6 +24,26 @@ const (
 	ActionReported
 )
 
+// String returns the string representation of ActionType
+func (a ActionType) String() string {
+	switch a {
+	case ActionNone:
+		return "None"
+	case ActionModified:
+		return "Modified"
+	case ActionWarned:
+		return "Warned"
+	case ActionBlocked:
+		return "Blocked"
+	case ActionLogged:
+		return "Logged"
+	case ActionReported:
+		return "Reported"
+	default:
+		return "Unknown"
+	}
+}
+
 // DetectionType defines the type of detection
 type DetectionType string
 
