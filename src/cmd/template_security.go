@@ -7,7 +7,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 	"github.com/perplext/LLMrecon/src/template/security"
@@ -104,6 +106,7 @@ func init() {
 	templateSecurityCmd.Flags().StringSliceVar(&templateReportFormats, "format", []string{"JSON", "HTML"}, "Report formats (JSON, HTML, CSV, XML)")
 	templateSecurityCmd.Flags().StringVar(&templatePipelineConfig, "pipeline-config", "", "Path to pipeline configuration file")
 	templateSecurityCmd.Flags().StringVar(&templateSeverityThreshold, "severity", "medium", "Severity threshold (critical, high, medium, low, info)")
+}
 
 // verifyTemplate verifies a single template
 func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, options *security.VerificationOptions) error {
@@ -296,7 +299,6 @@ func printSummary(summary *security.VerificationSummary) {
 	fmt.Printf("Total Issues: %d\n", summary.TotalIssues)
 	fmt.Printf("Average Score: %.2f\n", summary.AverageScore)
 	fmt.Printf("Compliance Percentage: %.2f%%\n", summary.CompliancePercentage)
-}
 
 	fmt.Println("\nIssues by Severity:")
 	for severity, count := range summary.IssuesBySeverity {
@@ -312,6 +314,7 @@ func printSummary(summary *security.VerificationSummary) {
 	for standard, compliant := range summary.ComplianceStatus {
 		fmt.Printf("  %s: %t\n", standard, compliant)
 	}
+}
 
 // calculateTemplateSummary calculates a summary of template verification results
 func calculateTemplateSummary(results []*security.VerificationResult) *security.VerificationSummary {
@@ -345,6 +348,7 @@ func calculateTemplateSummary(results []*security.VerificationResult) *security.
 	}
 
 	return summary
+}
 
 // generateReports generates reports for verification results
 func generateReports(results []*security.VerificationResult) error {
@@ -355,7 +359,7 @@ func generateReports(results []*security.VerificationResult) error {
 		TemplateResults: results,
 		Options:         security.DefaultVerificationOptions(),
 		// We'll calculate the summary ourselves instead of using a non-existent method
-		Summary: calculateSummary(results),
+		Summary: calculateTemplateSummary(results),
 	}
 	// Convert to test results
 	testResults := security.ConvertToTestResults(report)
@@ -383,13 +387,14 @@ func generateReports(results []*security.VerificationResult) error {
 		}
 
 		// Save the report to file
-		if err := os.WriteFile(filepath.Clean(outputPath, []byte(formattedReport)), 0600); err != nil {
+		if err := os.WriteFile(filepath.Clean(outputPath), []byte(formattedReport), 0600); err != nil {
 			return fmt.Errorf("failed to save report to file: %w", err)
 		}
 		fmt.Printf("Report saved to %s\n", outputPath)
 	}
 
 	return nil
+}
 
 // generateComplianceReports generates compliance reports
 func generateComplianceReports(integration *compliance.ReportingIntegration, result *compliance.TemplateComplianceResult) error {
@@ -421,7 +426,7 @@ func generateComplianceReports(integration *compliance.ReportingIntegration, res
 		}
 
 		// Save the report to file
-		if err := os.WriteFile(filepath.Clean(outputPath, []byte(formattedReport)), 0600); err != nil {
+		if err := os.WriteFile(filepath.Clean(outputPath), []byte(formattedReport), 0600); err != nil {
 			return fmt.Errorf("failed to save report to file: %w", err)
 		}
 
@@ -429,6 +434,7 @@ func generateComplianceReports(integration *compliance.ReportingIntegration, res
 	}
 
 	return nil
+}
 
 // convertReportFormats converts string report formats to common.ReportFormat
 func convertReportFormats(formats []string) []common.ReportFormat {
@@ -436,3 +442,5 @@ func convertReportFormats(formats []string) []common.ReportFormat {
 	for _, format := range formats {
 		result = append(result, common.ReportFormat(format))
 	}
+	return result
+}

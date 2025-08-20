@@ -247,11 +247,11 @@ dependencies:
 	localTemplatePath := filepath.Join(exampleDir, "basic_prompt_injection.yaml")
 	remoteTemplatePath := filepath.Join(remoteExampleDir, "basic_prompt_injection.yaml")
 	
-	if err := os.WriteFile(filepath.Clean(localTemplatePath, []byte(localTemplateContent)), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(localTemplatePath), []byte(localTemplateContent), 0644); err != nil {
 		fmt.Printf("Failed to write local template file: %v\n", err)
 	}
 	
-	if err := os.WriteFile(filepath.Clean(remoteTemplatePath, []byte(remoteTemplateContent)), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(remoteTemplatePath), []byte(remoteTemplateContent), 0644); err != nil {
 		fmt.Printf("Failed to write remote template file: %v\n", err)
 	}
 	

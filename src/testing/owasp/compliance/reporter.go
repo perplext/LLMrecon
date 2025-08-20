@@ -204,7 +204,7 @@ func (r *ComplianceReporterImpl) exportAsJSON(report *ComplianceReport, outputPa
 	}
 
 	// Write the JSON to the output file
-	if err := os.WriteFile(filepath.Clean(outputPath, jsonData, 0600)); err != nil {
+	if err := os.WriteFile(filepath.Clean(outputPath), jsonData, 0600); err != nil {
 		return fmt.Errorf("error writing report to file: %w", err)
 	}
 

@@ -454,7 +454,7 @@ treturn err
 	}
 	
 	// Write file
-	if err := os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(filePath), []byte(content), 0644); err != nil {
 		log.Fatalf("Failed to write file: %v", err)
 	}
 }
