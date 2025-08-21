@@ -15,24 +15,24 @@ import (
 
 // CreateUserRequest represents a request to create a new user
 type CreateUserRequest struct {
-	Username    string            `json:"username"`
-	Email       string            `json:"email"`
-	Password    string            `json:"password"`
-	Roles       []string          `json:"roles"`
-	MFAEnabled  bool              `json:"mfa_enabled"`
-	MFAMethods  []common.AuthMethod `json:"mfa_methods,omitempty"`
-	Permissions []string          `json:"permissions,omitempty"`
+	Username    string                 `json:"username"`
+	Email       string                 `json:"email"`
+	Password    string                 `json:"password"`
+	Roles       []string               `json:"roles"`
+	MFAEnabled  bool                   `json:"mfa_enabled"`
+	MFAMethods  []common.AuthMethod    `json:"mfa_methods,omitempty"`
+	Permissions []string               `json:"permissions,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // UpdateUserRequest represents a request to update a user
 type UpdateUserRequest struct {
-	Email       string            `json:"email,omitempty"`
-	Roles       []string          `json:"roles,omitempty"`
-	Active      *bool             `json:"active,omitempty"`
-	MFAEnabled  *bool             `json:"mfa_enabled,omitempty"`
-	MFAMethods  []common.AuthMethod `json:"mfa_methods,omitempty"`
-	Permissions []string          `json:"permissions,omitempty"`
+	Email       string                 `json:"email,omitempty"`
+	Roles       []string               `json:"roles,omitempty"`
+	Active      *bool                  `json:"active,omitempty"`
+	MFAEnabled  *bool                  `json:"mfa_enabled,omitempty"`
+	MFAMethods  []common.AuthMethod    `json:"mfa_methods,omitempty"`
+	Permissions []string               `json:"permissions,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -43,57 +43,59 @@ type ResetPasswordRequest struct {
 
 // ManageMFARequest represents a request to manage a user's MFA settings
 type ManageMFARequest struct {
-	Enabled  bool     `json:"enabled"`
-	Methods  []string `json:"methods,omitempty"`
+	Enabled bool     `json:"enabled"`
+	Methods []string `json:"methods,omitempty"`
+}
 
 // UserResponse represents a user response
 type UserResponse struct {
-	ID             string                 `json:"id"`
-	Username       string                 `json:"username"`
-	Email          string                 `json:"email"`
-	Roles          []string               `json:"roles"`
-	Permissions    []string               `json:"permissions,omitempty"`
-	MFAEnabled     bool                   `json:"mfa_enabled"`
-	MFAMethods     []string               `json:"mfa_methods,omitempty"`
-	Active         bool                   `json:"active"`
-	Locked         bool                   `json:"locked"`
-	LastLogin      string                 `json:"last_login,omitempty"`
-	CreatedAt      string                 `json:"created_at"`
-	UpdatedAt      string                 `json:"updated_at"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	ID          string                 `json:"id"`
+	Username    string                 `json:"username"`
+	Email       string                 `json:"email"`
+	Roles       []string               `json:"roles"`
+	Permissions []string               `json:"permissions,omitempty"`
+	MFAEnabled  bool                   `json:"mfa_enabled"`
+	MFAMethods  []string               `json:"mfa_methods,omitempty"`
+	Active      bool                   `json:"active"`
+	Locked      bool                   `json:"locked"`
+	LastLogin   string                 `json:"last_login,omitempty"`
+	CreatedAt   string                 `json:"created_at"`
+	UpdatedAt   string                 `json:"updated_at"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // handleListUsers handles listing users
 func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	// Get current user from context
 	// Get current user from context - could be either access.User or interfaces.User
-currentUserVal := r.Context().Value("user")
-var currentUser *access.User
-var ok bool
+	currentUserVal := r.Context().Value("user")
+	var currentUser *access.User
+	var ok bool
 
-// Try to cast to access.User first
-currentUser, ok = currentUserVal.(*access.User)
-if !ok {
-	// If that fails, try to cast to interfaces.User and convert
-	if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
-		// Convert interfaces.User to access.User for compatibility
-		currentUser = &access.User{
-			ID:                 interfaceUser.ID,
-			Username:           interfaceUser.Username,
-			Email:              interfaceUser.Email,
-			MFAEnabled:         interfaceUser.MFAEnabled,
-			FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
-			Locked:             interfaceUser.Locked,
-			Active:             interfaceUser.Active,
-			LastLogin:          interfaceUser.LastLogin,
-			CreatedAt:          interfaceUser.CreatedAt,
-			UpdatedAt:          interfaceUser.UpdatedAt,
-		}
-		ok = true
-	}
+	// Try to cast to access.User first
+	currentUser, ok = currentUserVal.(*access.User)
 	if !ok {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
-		return
+		// If that fails, try to cast to interfaces.User and convert
+		if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
+			// Convert interfaces.User to access.User for compatibility
+			currentUser = &access.User{
+				ID:                  interfaceUser.ID,
+				Username:            interfaceUser.Username,
+				Email:               interfaceUser.Email,
+				MFAEnabled:          interfaceUser.MFAEnabled,
+				FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
+				Locked:              interfaceUser.Locked,
+				Active:              interfaceUser.Active,
+				LastLogin:           interfaceUser.LastLogin,
+				CreatedAt:           interfaceUser.CreatedAt,
+				UpdatedAt:           interfaceUser.UpdatedAt,
+			}
+			ok = true
+		}
+		if !ok {
+			WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
 	}
 
 	// Check permission
@@ -105,18 +107,18 @@ if !ok {
 
 	// Parse query parameters
 	query := r.URL.Query()
-	
+
 	// Get page and limit parameters
 	page, _ := strconv.Atoi(query.Get("page"))
 	if page < 1 {
 		page = 1
 	}
-	
+
 	limit, _ := strconv.Atoi(query.Get("limit"))
 	if limit < 1 || limit > 100 {
 		limit = 20
 	}
-	
+
 	// Get role filter
 	roleFilter := query.Get("role")
 
@@ -154,7 +156,7 @@ if !ok {
 	if end > len(filteredUsers) {
 		end = len(filteredUsers)
 	}
-	
+
 	paginatedUsers := filteredUsers
 	if start < end {
 		paginatedUsers = filteredUsers[start:end]
@@ -185,38 +187,40 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Users retrieved successfully", resp)
+}
 
 // handleCreateUser handles creating a new user
 func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	// Get current user from context
 	// Get current user from context - could be either access.User or interfaces.User
-currentUserVal := r.Context().Value("user")
-var currentUser *access.User
-var ok bool
+	currentUserVal := r.Context().Value("user")
+	var currentUser *access.User
+	var ok bool
 
-// Try to cast to access.User first
-currentUser, ok = currentUserVal.(*access.User)
-if !ok {
-	// If that fails, try to cast to interfaces.User and convert
-	if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
-		// Convert interfaces.User to access.User for compatibility
-		currentUser = &access.User{
-			ID:                 interfaceUser.ID,
-			Username:           interfaceUser.Username,
-			Email:              interfaceUser.Email,
-			MFAEnabled:         interfaceUser.MFAEnabled,
-			FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
-			Locked:             interfaceUser.Locked,
-			Active:             interfaceUser.Active,
-			LastLogin:          interfaceUser.LastLogin,
-			CreatedAt:          interfaceUser.CreatedAt,
-			UpdatedAt:          interfaceUser.UpdatedAt,
-		}
-		ok = true
-	}
+	// Try to cast to access.User first
+	currentUser, ok = currentUserVal.(*access.User)
 	if !ok {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
-		return
+		// If that fails, try to cast to interfaces.User and convert
+		if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
+			// Convert interfaces.User to access.User for compatibility
+			currentUser = &access.User{
+				ID:                  interfaceUser.ID,
+				Username:            interfaceUser.Username,
+				Email:               interfaceUser.Email,
+				MFAEnabled:          interfaceUser.MFAEnabled,
+				FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
+				Locked:              interfaceUser.Locked,
+				Active:              interfaceUser.Active,
+				LastLogin:           interfaceUser.LastLogin,
+				CreatedAt:           interfaceUser.CreatedAt,
+				UpdatedAt:           interfaceUser.UpdatedAt,
+			}
+			ok = true
+		}
+		if !ok {
+			WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
 	}
 
 	// Check permission
@@ -250,7 +254,7 @@ if !ok {
 	// Create user
 	// We need to check which type the UserManager expects
 	userManager := s.accessManager.GetUserManager()
-	
+
 	// Try to use interfaces.User first
 	user := &interfaces.User{
 		Username:    req.Username,
@@ -262,31 +266,31 @@ if !ok {
 		Active:      true,
 		Metadata:    req.Metadata,
 	}
-	
+
 	// Convert roles to access.Role for compatibility
 	accessRoles := make([]access.Role, len(req.Roles))
 	for i, role := range req.Roles {
 		accessRoles[i] = access.Role(role)
 	}
-	
+
 	// Convert permissions to access.Permission for compatibility
 	accessPermissions := make([]access.Permission, len(req.Permissions))
 	for i, perm := range req.Permissions {
 		accessPermissions[i] = access.Permission(perm)
 	}
-	
+
 	// Convert MFA methods to common.AuthMethod for compatibility
 	accessMFAMethods := make([]common.AuthMethod, len(req.MFAMethods))
 	for i, method := range req.MFAMethods {
 		accessMFAMethods[i] = common.AuthMethod(method)
 	}
-	
+
 	// Try to create the user
 	var err error
-	
+
 	// First try with interfaces.User
 	err = userManager.CreateUser(r.Context(), user, req.Password)
-	
+
 	// If that fails with a type error, try with access.User
 	if err != nil && strings.Contains(err.Error(), "invalid type") {
 		// Fall back to access.User
@@ -300,10 +304,10 @@ if !ok {
 			Active:      true,
 			Metadata:    req.Metadata,
 		}
-		
+
 		// Try again with access.User
 		err = userManager.CreateUser(r.Context(), accessUser, req.Password)
-		
+
 		// If successful, update our user variable for the response
 		if err == nil {
 			user = &interfaces.User{
@@ -321,7 +325,7 @@ if !ok {
 			}
 		}
 	}
-	
+
 	// Handle any errors
 	if err != nil {
 		// Handle specific error types
@@ -340,38 +344,40 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusCreated, "User created successfully", convertUserToResponse(user))
+}
 
 // handleGetUser handles retrieving a user
 func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	// Get current user from context
 	// Get current user from context - could be either access.User or interfaces.User
-currentUserVal := r.Context().Value("user")
-var currentUser *access.User
-var ok bool
+	currentUserVal := r.Context().Value("user")
+	var currentUser *access.User
+	var ok bool
 
-// Try to cast to access.User first
-currentUser, ok = currentUserVal.(*access.User)
-if !ok {
-	// If that fails, try to cast to interfaces.User and convert
-	if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
-		// Convert interfaces.User to access.User for compatibility
-		currentUser = &access.User{
-			ID:                 interfaceUser.ID,
-			Username:           interfaceUser.Username,
-			Email:              interfaceUser.Email,
-			MFAEnabled:         interfaceUser.MFAEnabled,
-			FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
-			Locked:             interfaceUser.Locked,
-			Active:             interfaceUser.Active,
-			LastLogin:          interfaceUser.LastLogin,
-			CreatedAt:          interfaceUser.CreatedAt,
-			UpdatedAt:          interfaceUser.UpdatedAt,
-		}
-		ok = true
-	}
+	// Try to cast to access.User first
+	currentUser, ok = currentUserVal.(*access.User)
 	if !ok {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
-		return
+		// If that fails, try to cast to interfaces.User and convert
+		if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
+			// Convert interfaces.User to access.User for compatibility
+			currentUser = &access.User{
+				ID:                  interfaceUser.ID,
+				Username:            interfaceUser.Username,
+				Email:               interfaceUser.Email,
+				MFAEnabled:          interfaceUser.MFAEnabled,
+				FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
+				Locked:              interfaceUser.Locked,
+				Active:              interfaceUser.Active,
+				LastLogin:           interfaceUser.LastLogin,
+				CreatedAt:           interfaceUser.CreatedAt,
+				UpdatedAt:           interfaceUser.UpdatedAt,
+			}
+			ok = true
+		}
+		if !ok {
+			WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
 	}
 
 	// Get user ID from URL
@@ -386,7 +392,7 @@ if !ok {
 	rbacManager := s.accessManager.GetRBACManager()
 	isSelf := currentUser.ID == userID
 	canViewOthers := rbacManager.HasPermission(r.Context(), currentUser, access.PermissionUserView)
-	
+
 	if !isSelf && !canViewOthers {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
@@ -402,38 +408,40 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User retrieved successfully", convertUserToResponse(user))
+}
 
 // handleUpdateUser handles updating a user
 func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	// Get current user from context
 	// Get current user from context - could be either access.User or interfaces.User
-currentUserVal := r.Context().Value("user")
-var currentUser *access.User
-var ok bool
+	currentUserVal := r.Context().Value("user")
+	var currentUser *access.User
+	var ok bool
 
-// Try to cast to access.User first
-currentUser, ok = currentUserVal.(*access.User)
-if !ok {
-	// If that fails, try to cast to interfaces.User and convert
-	if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
-		// Convert interfaces.User to access.User for compatibility
-		currentUser = &access.User{
-			ID:                 interfaceUser.ID,
-			Username:           interfaceUser.Username,
-			Email:              interfaceUser.Email,
-			MFAEnabled:         interfaceUser.MFAEnabled,
-			FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
-			Locked:             interfaceUser.Locked,
-			Active:             interfaceUser.Active,
-			LastLogin:          interfaceUser.LastLogin,
-			CreatedAt:          interfaceUser.CreatedAt,
-			UpdatedAt:          interfaceUser.UpdatedAt,
-		}
-		ok = true
-	}
+	// Try to cast to access.User first
+	currentUser, ok = currentUserVal.(*access.User)
 	if !ok {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
-		return
+		// If that fails, try to cast to interfaces.User and convert
+		if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
+			// Convert interfaces.User to access.User for compatibility
+			currentUser = &access.User{
+				ID:                  interfaceUser.ID,
+				Username:            interfaceUser.Username,
+				Email:               interfaceUser.Email,
+				MFAEnabled:          interfaceUser.MFAEnabled,
+				FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
+				Locked:              interfaceUser.Locked,
+				Active:              interfaceUser.Active,
+				LastLogin:           interfaceUser.LastLogin,
+				CreatedAt:           interfaceUser.CreatedAt,
+				UpdatedAt:           interfaceUser.UpdatedAt,
+			}
+			ok = true
+		}
+		if !ok {
+			WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
 	}
 
 	// Get user ID from URL
@@ -462,7 +470,7 @@ if !ok {
 	rbacManager := s.accessManager.GetRBACManager()
 	isSelf := currentUser.ID == userID
 	canUpdateOthers := rbacManager.HasPermission(r.Context(), currentUser, access.PermissionUserUpdate)
-	
+
 	if !isSelf && !canUpdateOthers {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
@@ -489,11 +497,11 @@ if !ok {
 	if req.Email != "" {
 		user.Email = req.Email
 	}
-	
+
 	if len(req.Roles) > 0 {
 		user.Roles = req.Roles
 	}
-	
+
 	if req.Active != nil {
 		// Only admins can activate/deactivate accounts
 		if !rbacManager.HasRole(r.Context(), currentUser, access.RoleAdmin) {
@@ -502,7 +510,7 @@ if !ok {
 		}
 		user.Active = *req.Active
 	}
-	
+
 	if len(req.Permissions) > 0 {
 		// Only admins can update direct permissions
 		if !rbacManager.HasRole(r.Context(), currentUser, access.RoleAdmin) {
@@ -511,7 +519,7 @@ if !ok {
 		}
 		user.Permissions = req.Permissions
 	}
-	
+
 	if req.Metadata != nil {
 		user.Metadata = req.Metadata
 	}
@@ -530,38 +538,40 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User updated successfully", convertUserToResponse(user))
+}
 
 // handleDeleteUser handles deleting a user
 func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Get current user from context
 	// Get current user from context - could be either access.User or interfaces.User
-currentUserVal := r.Context().Value("user")
-var currentUser *access.User
-var ok bool
+	currentUserVal := r.Context().Value("user")
+	var currentUser *access.User
+	var ok bool
 
-// Try to cast to access.User first
-currentUser, ok = currentUserVal.(*access.User)
-if !ok {
-	// If that fails, try to cast to interfaces.User and convert
-	if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
-		// Convert interfaces.User to access.User for compatibility
-		currentUser = &access.User{
-			ID:                 interfaceUser.ID,
-			Username:           interfaceUser.Username,
-			Email:              interfaceUser.Email,
-			MFAEnabled:         interfaceUser.MFAEnabled,
-			FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
-			Locked:             interfaceUser.Locked,
-			Active:             interfaceUser.Active,
-			LastLogin:          interfaceUser.LastLogin,
-			CreatedAt:          interfaceUser.CreatedAt,
-			UpdatedAt:          interfaceUser.UpdatedAt,
-		}
-		ok = true
-	}
+	// Try to cast to access.User first
+	currentUser, ok = currentUserVal.(*access.User)
 	if !ok {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
-		return
+		// If that fails, try to cast to interfaces.User and convert
+		if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
+			// Convert interfaces.User to access.User for compatibility
+			currentUser = &access.User{
+				ID:                  interfaceUser.ID,
+				Username:            interfaceUser.Username,
+				Email:               interfaceUser.Email,
+				MFAEnabled:          interfaceUser.MFAEnabled,
+				FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
+				Locked:              interfaceUser.Locked,
+				Active:              interfaceUser.Active,
+				LastLogin:           interfaceUser.LastLogin,
+				CreatedAt:           interfaceUser.CreatedAt,
+				UpdatedAt:           interfaceUser.UpdatedAt,
+			}
+			ok = true
+		}
+		if !ok {
+			WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
 	}
 
 	// Get user ID from URL
@@ -599,33 +609,34 @@ if !ok {
 func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 	// Get current user from context
 	// Get current user from context - could be either access.User or interfaces.User
-currentUserVal := r.Context().Value("user")
-var currentUser *access.User
-var ok bool
+	currentUserVal := r.Context().Value("user")
+	var currentUser *access.User
+	var ok bool
 
-// Try to cast to access.User first
-currentUser, ok = currentUserVal.(*access.User)
-if !ok {
-	// If that fails, try to cast to interfaces.User and convert
-	if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
-		// Convert interfaces.User to access.User for compatibility
-		currentUser = &access.User{
-			ID:                 interfaceUser.ID,
-			Username:           interfaceUser.Username,
-			Email:              interfaceUser.Email,
-			MFAEnabled:         interfaceUser.MFAEnabled,
-			FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
-			Locked:             interfaceUser.Locked,
-			Active:             interfaceUser.Active,
-			LastLogin:          interfaceUser.LastLogin,
-			CreatedAt:          interfaceUser.CreatedAt,
-			UpdatedAt:          interfaceUser.UpdatedAt,
-		}
-		ok = true
-	}
+	// Try to cast to access.User first
+	currentUser, ok = currentUserVal.(*access.User)
 	if !ok {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
-		return
+		// If that fails, try to cast to interfaces.User and convert
+		if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
+			// Convert interfaces.User to access.User for compatibility
+			currentUser = &access.User{
+				ID:                  interfaceUser.ID,
+				Username:            interfaceUser.Username,
+				Email:               interfaceUser.Email,
+				MFAEnabled:          interfaceUser.MFAEnabled,
+				FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
+				Locked:              interfaceUser.Locked,
+				Active:              interfaceUser.Active,
+				LastLogin:           interfaceUser.LastLogin,
+				CreatedAt:           interfaceUser.CreatedAt,
+				UpdatedAt:           interfaceUser.UpdatedAt,
+			}
+			ok = true
+		}
+		if !ok {
+			WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
 	}
 	// Get user ID from URL
 	vars := mux.Vars(r)
@@ -651,7 +662,7 @@ if !ok {
 	rbacManager := s.accessManager.GetRBACManager()
 	isSelf := currentUser.ID == userID
 	canResetOthers := rbacManager.HasPermission(r.Context(), currentUser, access.PermissionUserResetPassword)
-	
+
 	if !isSelf && !canResetOthers {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
@@ -680,33 +691,34 @@ if !ok {
 func (s *Server) handleLockUser(w http.ResponseWriter, r *http.Request) {
 	// Get current user from context
 	// Get current user from context - could be either access.User or interfaces.User
-currentUserVal := r.Context().Value("user")
-var currentUser *access.User
-var ok bool
+	currentUserVal := r.Context().Value("user")
+	var currentUser *access.User
+	var ok bool
 
-// Try to cast to access.User first
-currentUser, ok = currentUserVal.(*access.User)
-if !ok {
-	// If that fails, try to cast to interfaces.User and convert
-	if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
-		// Convert interfaces.User to access.User for compatibility
-		currentUser = &access.User{
-			ID:                 interfaceUser.ID,
-			Username:           interfaceUser.Username,
-			Email:              interfaceUser.Email,
-			MFAEnabled:         interfaceUser.MFAEnabled,
-			FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
-			Locked:             interfaceUser.Locked,
-			Active:             interfaceUser.Active,
-			LastLogin:          interfaceUser.LastLogin,
-			CreatedAt:          interfaceUser.CreatedAt,
-			UpdatedAt:          interfaceUser.UpdatedAt,
-		}
-		ok = true
-	}
+	// Try to cast to access.User first
+	currentUser, ok = currentUserVal.(*access.User)
 	if !ok {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
-		return
+		// If that fails, try to cast to interfaces.User and convert
+		if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
+			// Convert interfaces.User to access.User for compatibility
+			currentUser = &access.User{
+				ID:                  interfaceUser.ID,
+				Username:            interfaceUser.Username,
+				Email:               interfaceUser.Email,
+				MFAEnabled:          interfaceUser.MFAEnabled,
+				FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
+				Locked:              interfaceUser.Locked,
+				Active:              interfaceUser.Active,
+				LastLogin:           interfaceUser.LastLogin,
+				CreatedAt:           interfaceUser.CreatedAt,
+				UpdatedAt:           interfaceUser.UpdatedAt,
+			}
+			ok = true
+		}
+		if !ok {
+			WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
 	}
 
 	// Get user ID from URL
@@ -751,33 +763,34 @@ if !ok {
 func (s *Server) handleUnlockUser(w http.ResponseWriter, r *http.Request) {
 	// Get current user from context
 	// Get current user from context - could be either access.User or interfaces.User
-currentUserVal := r.Context().Value("user")
-var currentUser *access.User
-var ok bool
+	currentUserVal := r.Context().Value("user")
+	var currentUser *access.User
+	var ok bool
 
-// Try to cast to access.User first
-currentUser, ok = currentUserVal.(*access.User)
-if !ok {
-	// If that fails, try to cast to interfaces.User and convert
-	if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
-		// Convert interfaces.User to access.User for compatibility
-		currentUser = &access.User{
-			ID:                 interfaceUser.ID,
-			Username:           interfaceUser.Username,
-			Email:              interfaceUser.Email,
-			MFAEnabled:         interfaceUser.MFAEnabled,
-			FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
-			Locked:             interfaceUser.Locked,
-			Active:             interfaceUser.Active,
-			LastLogin:          interfaceUser.LastLogin,
-			CreatedAt:          interfaceUser.CreatedAt,
-			UpdatedAt:          interfaceUser.UpdatedAt,
-		}
-		ok = true
-	}
+	// Try to cast to access.User first
+	currentUser, ok = currentUserVal.(*access.User)
 	if !ok {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
-		return
+		// If that fails, try to cast to interfaces.User and convert
+		if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
+			// Convert interfaces.User to access.User for compatibility
+			currentUser = &access.User{
+				ID:                  interfaceUser.ID,
+				Username:            interfaceUser.Username,
+				Email:               interfaceUser.Email,
+				MFAEnabled:          interfaceUser.MFAEnabled,
+				FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
+				Locked:              interfaceUser.Locked,
+				Active:              interfaceUser.Active,
+				LastLogin:           interfaceUser.LastLogin,
+				CreatedAt:           interfaceUser.CreatedAt,
+				UpdatedAt:           interfaceUser.UpdatedAt,
+			}
+			ok = true
+		}
+		if !ok {
+			WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
 	}
 
 	// Get user ID from URL
@@ -816,33 +829,34 @@ if !ok {
 func (s *Server) handleManageUserMFA(w http.ResponseWriter, r *http.Request) {
 	// Get current user from context
 	// Get current user from context - could be either access.User or interfaces.User
-currentUserVal := r.Context().Value("user")
-var currentUser *access.User
-var ok bool
+	currentUserVal := r.Context().Value("user")
+	var currentUser *access.User
+	var ok bool
 
-// Try to cast to access.User first
-currentUser, ok = currentUserVal.(*access.User)
-if !ok {
-	// If that fails, try to cast to interfaces.User and convert
-	if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
-		// Convert interfaces.User to access.User for compatibility
-		currentUser = &access.User{
-			ID:                 interfaceUser.ID,
-			Username:           interfaceUser.Username,
-			Email:              interfaceUser.Email,
-			MFAEnabled:         interfaceUser.MFAEnabled,
-			FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
-			Locked:             interfaceUser.Locked,
-			Active:             interfaceUser.Active,
-			LastLogin:          interfaceUser.LastLogin,
-			CreatedAt:          interfaceUser.CreatedAt,
-			UpdatedAt:          interfaceUser.UpdatedAt,
-		}
-		ok = true
-	}
+	// Try to cast to access.User first
+	currentUser, ok = currentUserVal.(*access.User)
 	if !ok {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
-		return
+		// If that fails, try to cast to interfaces.User and convert
+		if interfaceUser, ok := currentUserVal.(*interfaces.User); ok {
+			// Convert interfaces.User to access.User for compatibility
+			currentUser = &access.User{
+				ID:                  interfaceUser.ID,
+				Username:            interfaceUser.Username,
+				Email:               interfaceUser.Email,
+				MFAEnabled:          interfaceUser.MFAEnabled,
+				FailedLoginAttempts: interfaceUser.FailedLoginAttempts,
+				Locked:              interfaceUser.Locked,
+				Active:              interfaceUser.Active,
+				LastLogin:           interfaceUser.LastLogin,
+				CreatedAt:           interfaceUser.CreatedAt,
+				UpdatedAt:           interfaceUser.UpdatedAt,
+			}
+			ok = true
+		}
+		if !ok {
+			WriteErrorResponse(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
 	}
 
 	// Get user ID from URL
@@ -864,7 +878,7 @@ if !ok {
 	rbacManager := s.accessManager.GetRBACManager()
 	isSelf := currentUser.ID == userID
 	canManageOthersMFA := rbacManager.HasPermission(r.Context(), currentUser, access.PermissionUserManageMFA)
-	
+
 	if !isSelf && !canManageOthersMFA {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return

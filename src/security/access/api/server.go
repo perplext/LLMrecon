@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/perplext/LLMrecon/src/security/access"
@@ -67,6 +68,7 @@ type Server struct {
 	rbacMiddleware   *RBACMiddleware
 	loggingMiddleware *LoggingMiddleware
 	rateLimitMiddleware *RateLimitMiddleware
+}
 
 // NewServer creates a new API server
 func NewServer(config *APIConfig, accessManager access.AccessControlManager) *Server {
@@ -98,16 +100,19 @@ func NewServer(config *APIConfig, accessManager access.AccessControlManager) *Se
 	server.registerRoutes()
 
 	return server
+}
 
 // Start starts the API server
 func (s *Server) Start() error {
 	log.Printf("Starting API server on port %d", s.config.Port)
 	return s.httpServer.ListenAndServe()
+}
 
 // Stop stops the API server
 func (s *Server) Stop(ctx context.Context) error {
 	log.Println("Stopping API server")
 	return s.httpServer.Shutdown(ctx)
+}
 
 // registerRoutes registers all API routes
 func (s *Server) registerRoutes() {
@@ -184,6 +189,7 @@ func (s *Server) registerRoutes() {
 	
 	// Health check route (no authentication required)
 	api.HandleFunc("/health", s.handleHealthCheck).Methods("GET")
+}
 
 // corsMiddleware handles Cross-Origin Resource Sharing
 func (s *Server) corsMiddleware(next http.Handler) http.Handler {
@@ -202,117 +208,153 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		// Call the next handler
 		next.ServeHTTP(w, r)
 	})
+}
 
 // Handler methods for authentication routes
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in auth_handlers.go
+}
 
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in auth_handlers.go
+}
 
 func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in auth_handlers.go
+}
 
 func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in auth_handlers.go
+}
 
 func (s *Server) handleMFAVerify(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in auth_handlers.go
+}
 
 // Handler methods for user routes
 func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in user_handlers.go
+}
 
 func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in user_handlers.go
+}
 
 func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in user_handlers.go
+}
 
 func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in user_handlers.go
+}
 
 func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in user_handlers.go
+}
 
 func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in user_handlers.go
+}
 
 func (s *Server) handleLockUser(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in user_handlers.go
+}
 
 func (s *Server) handleUnlockUser(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in user_handlers.go
+}
 
 func (s *Server) handleManageUserMFA(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in user_handlers.go
+}
 
 // Handler methods for role routes
 func (s *Server) handleListRoles(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in role_handlers.go
+}
 
 func (s *Server) handleCreateRole(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in role_handlers.go
+}
 
 func (s *Server) handleGetRole(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in role_handlers.go
+}
 
 func (s *Server) handleUpdateRole(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in role_handlers.go
+}
 
 func (s *Server) handleDeleteRole(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in role_handlers.go
+}
 
 func (s *Server) handleAddPermission(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in role_handlers.go
+}
 
 func (s *Server) handleRemovePermission(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in role_handlers.go
+}
 
 // Handler methods for audit routes
 func (s *Server) handleListAuditLogs(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in audit_handlers.go
+}
 
 func (s *Server) handleGetAuditLog(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in audit_handlers.go
+}
 
 func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in audit_handlers.go
+}
 
 // Handler methods for security incident routes
 func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 // Handler methods for vulnerability routes
 func (s *Server) handleListVulnerabilities(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 func (s *Server) handleCreateVulnerability(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 func (s *Server) handleGetVulnerability(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 func (s *Server) handleUpdateVulnerability(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 func (s *Server) handleDeleteVulnerability(w http.ResponseWriter, r *http.Request) {
 	// Implementation will be in security_handlers.go
+}
 
 // Health check handler
 func (s *Server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"ok"}`))
+}
