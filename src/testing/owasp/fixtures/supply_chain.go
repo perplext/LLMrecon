@@ -169,3 +169,4 @@ func GetSupplyChainFixtures() TestFixtures {
 			LLM05_SupplyChainVulnerabilities,
 		),
 	}
+}
