@@ -2,6 +2,7 @@
 package mocks
 
 import (
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/types"
@@ -11,12 +12,14 @@ import (
 type MockProviderFactory struct {
 	// Registry of created providers
 	providers map[core.ProviderType]MockProvider
+}
 
 // NewMockProviderFactory creates a new mock provider factory
 func NewMockProviderFactory() *MockProviderFactory {
 	return &MockProviderFactory{
 		providers: make(map[core.ProviderType]MockProvider),
 	}
+}
 
 // GetProvider gets or creates a mock provider for the specified provider type
 func (f *MockProviderFactory) GetProvider(providerType core.ProviderType) MockProvider {
@@ -37,10 +40,10 @@ func (f *MockProviderFactory) GetProvider(providerType core.ProviderType) MockPr
 	default:
 		// Create a generic mock provider for other types
 		config := &MockProviderConfig{
-			ProviderType:    providerType,
-			DefaultModel:    "mock-" + string(providerType) + "-model",
-			DefaultResponse: "This is a default response from the " + string(providerType) + " mock provider.",
-			VulnerableResponses: make(map[string]string),
+			ProviderType:           providerType,
+			DefaultModel:           "mock-" + string(providerType) + "-model",
+			DefaultResponse:        "This is a default response from the " + string(providerType) + " mock provider.",
+			VulnerableResponses:    make(map[string]string),
 			VulnerabilityBehaviors: make(map[types.VulnerabilityType]*VulnerabilityBehavior),
 		}
 		provider = NewBaseMockProviderImpl(config)
@@ -50,16 +53,19 @@ func (f *MockProviderFactory) GetProvider(providerType core.ProviderType) MockPr
 	f.providers[providerType] = provider
 
 	return provider
+}
 
 // GetAllProviders gets all created providers
 func (f *MockProviderFactory) GetAllProviders() map[core.ProviderType]MockProvider {
 	return f.providers
+}
 
 // ResetAllProviders resets the state of all providers
 func (f *MockProviderFactory) ResetAllProviders() {
 	for _, provider := range f.providers {
 		provider.ResetState()
 	}
+}
 
 // ConfigureVulnerability configures a specific vulnerability type for all providers
 func (f *MockProviderFactory) ConfigureVulnerability(vulnerabilityType types.VulnerabilityType, enabled bool, behavior *VulnerabilityBehavior) {
@@ -70,6 +76,7 @@ func (f *MockProviderFactory) ConfigureVulnerability(vulnerabilityType types.Vul
 			provider.DisableVulnerability(vulnerabilityType)
 		}
 	}
+}
 
 // ConfigureProviderVulnerability configures a specific vulnerability type for a specific provider
 func (f *MockProviderFactory) ConfigureProviderVulnerability(providerType core.ProviderType, vulnerabilityType types.VulnerabilityType, enabled bool, behavior *VulnerabilityBehavior) {
@@ -84,49 +91,57 @@ func (f *MockProviderFactory) ConfigureProviderVulnerability(providerType core.P
 	} else {
 		provider.DisableVulnerability(vulnerabilityType)
 	}
+}
 
 // CreateVulnerabilityBehavior creates a new vulnerability behavior with default settings
 func (f *MockProviderFactory) CreateVulnerabilityBehavior(responsePatterns []string, triggerPhrases []string, severity core.SeverityLevel) *VulnerabilityBehavior {
 	return &VulnerabilityBehavior{
-		Enabled:         true,
+		Enabled:          true,
 		ResponsePatterns: responsePatterns,
-		TriggerPhrases:  triggerPhrases,
-		Severity:        severity,
-		Metadata:        make(map[string]interface{}),
+		TriggerPhrases:   triggerPhrases,
+		Severity:         severity,
+		Metadata:         make(map[string]interface{}),
 	}
+}
 
 // SetGlobalResponseDelay sets the response delay for all providers
 func (f *MockProviderFactory) SetGlobalResponseDelay(delay time.Duration) {
 	for _, provider := range f.providers {
 		provider.SetResponseDelay(delay)
 	}
+}
 
 // SetGlobalErrorRate sets the error rate for all providers
 func (f *MockProviderFactory) SetGlobalErrorRate(rate float64) {
 	for _, provider := range f.providers {
 		provider.SetErrorRate(rate)
 	}
+}
 
 // SimulateGlobalRateLimiting enables or disables rate limiting simulation for all providers
 func (f *MockProviderFactory) SimulateGlobalRateLimiting(enabled bool) {
 	for _, provider := range f.providers {
 		provider.SimulateRateLimiting(enabled)
 	}
+}
 
 // SimulateGlobalTimeout enables or disables timeout simulation for all providers
 func (f *MockProviderFactory) SimulateGlobalTimeout(enabled bool) {
 	for _, provider := range f.providers {
 		provider.SimulateTimeout(enabled)
 	}
+}
 
 // SimulateGlobalNetworkErrors enables or disables network error simulation for all providers
 func (f *MockProviderFactory) SimulateGlobalNetworkErrors(enabled bool) {
 	for _, provider := range f.providers {
 		provider.SimulateNetworkErrors(enabled)
 	}
+}
 
 // SimulateGlobalServerErrors enables or disables server error simulation for all providers
 func (f *MockProviderFactory) SimulateGlobalServerErrors(enabled bool) {
 	for _, provider := range f.providers {
 		provider.SimulateServerErrors(enabled)
 	}
+}
