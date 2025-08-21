@@ -174,3 +174,4 @@ func GetPromptInjectionFixtures() TestFixtures {
 			LLM01_PromptInjection,
 		),
 	}
+}

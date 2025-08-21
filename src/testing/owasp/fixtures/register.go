@@ -8,17 +8,18 @@ import (
 // GetAllFixtures returns all test fixtures for all OWASP LLM vulnerabilities
 func GetAllFixtures() map[types.VulnerabilityType]TestFixtures {
 	return map[types.VulnerabilityType]TestFixtures{
-		types.PromptInjection:        GetPromptInjectionFixtures(),
-		types.InsecureOutput:         GetInsecureOutputFixtures(),
-		types.TrainingDataPoisoning:  GetTrainingDataPoisoningFixtures(),
-		types.ModelDOS:               GetModelDoSFixtures(),
-		types.SupplyChainVulnerabilities:            GetSupplyChainFixtures(),
+		types.PromptInjection:                GetPromptInjectionFixtures(),
+		types.InsecureOutput:                 GetInsecureOutputFixtures(),
+		types.TrainingDataPoisoning:          GetTrainingDataPoisoningFixtures(),
+		types.ModelDOS:                       GetModelDoSFixtures(),
+		types.SupplyChainVulnerabilities:     GetSupplyChainFixtures(),
 		types.SensitiveInformationDisclosure: GetSensitiveInfoDisclosureFixtures(),
-		types.InsecurePluginDesign:         GetInsecurePluginFixtures(),
-		types.ExcessiveAgency:        GetExcessiveAgencyFixtures(),
-		types.Overreliance:           GetOverrelianceFixtures(),
-		types.ModelTheft:             GetModelTheftFixtures(),
+		types.InsecurePluginDesign:           GetInsecurePluginFixtures(),
+		types.ExcessiveAgency:                GetExcessiveAgencyFixtures(),
+		types.Overreliance:                   GetOverrelianceFixtures(),
+		types.ModelTheft:                     GetModelTheftFixtures(),
 	}
+}
 
 // GetFixturesByVulnerabilityType returns test fixtures for a specific vulnerability type
 func GetFixturesByVulnerabilityType(vulnType types.VulnerabilityType) TestFixtures {
@@ -27,6 +28,7 @@ func GetFixturesByVulnerabilityType(vulnType types.VulnerabilityType) TestFixtur
 		return fixtures
 	}
 	return TestFixtures{}
+}
 
 // GetFixtureByID returns a test fixture by its ID
 func GetFixtureByID(id string) *TestFixture {
@@ -39,18 +41,22 @@ func GetFixtureByID(id string) *TestFixture {
 		}
 	}
 	return nil
+}
 
 // GetTestCasesByVulnerabilityType converts fixtures to test cases for a specific vulnerability type
 func GetTestCasesByVulnerabilityType(vulnType types.VulnerabilityType) []*types.TestCase {
 	fixtures := GetFixturesByVulnerabilityType(vulnType)
 	return fixtures.ToTestCases()
+}
 
 // GetAllTestCases converts all fixtures to test cases
 func GetAllTestCases() []*types.TestCase {
 	var testCases []*types.TestCase
 	allFixtures := GetAllFixtures()
-	
+
 	for _, fixtures := range allFixtures {
 		testCases = append(testCases, fixtures.ToTestCases()...)
 	}
-	
+
+	return testCases
+}
