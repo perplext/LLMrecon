@@ -14,6 +14,7 @@ type MockTestFactory struct {
 // NewMockTestFactory creates a new mock test factory
 func NewMockTestFactory() *MockTestFactory {
 	return &MockTestFactory{}
+}
 
 // CreateTestCase creates a new test case
 func (f *MockTestFactory) CreateTestCase(vulnerabilityType types.VulnerabilityType, id string, name string, description string) (*types.TestCase, error) {
@@ -24,6 +25,7 @@ func (f *MockTestFactory) CreateTestCase(vulnerabilityType types.VulnerabilityTy
 		VulnerabilityType: vulnerabilityType,
 		Metadata:          map[string]interface{}{},
 	}, nil
+}
 
 // CreateTestSuite creates a new test suite
 func (f *MockTestFactory) CreateTestSuite(id string, name string, description string) (*types.TestSuite, error) {
@@ -32,14 +34,17 @@ func (f *MockTestFactory) CreateTestSuite(id string, name string, description st
 		Name:        name,
 		Description: description,
 	}, nil
+}
 
 // RegisterValidator registers a validator with the test factory
 func (f *MockTestFactory) RegisterValidator(validator interface{}) error {
 	return nil
+}
 
 // GetValidator returns a validator for a specific vulnerability type
 func (f *MockTestFactory) GetValidator(vulnerabilityType types.VulnerabilityType) (interface{}, error) {
 	return nil, nil
+}
 
 // RegisterComplianceService registers a compliance service with the test factory
 func (f *MockTestFactory) RegisterComplianceService(service interface{}) error {
@@ -52,6 +57,7 @@ func (f *MockTestFactory) RegisterComplianceService(service interface{}) error {
 	}
 	f.complianceService = complianceService
 	return nil
+}
 
 // GetComplianceService returns the registered compliance service
 func (f *MockTestFactory) GetComplianceService() (interface{}, error) {
@@ -59,11 +65,6 @@ func (f *MockTestFactory) GetComplianceService() (interface{}, error) {
 		return nil, fmt.Errorf("no compliance service registered")
 	}
 	return f.complianceService, nil
+}
 
 // Note: GetComplianceService function is defined in integration.go
-}
-}
-}
-}
-}
-}
