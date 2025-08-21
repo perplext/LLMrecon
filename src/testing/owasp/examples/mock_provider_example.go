@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/fixtures"
@@ -76,6 +77,7 @@ func RunMockProviderExample() {
 			float64(vulnCount)/float64(len(providerResults))*100,
 		)
 	}
+}
 
 // RunCustomVulnerabilityTest demonstrates how to test a specific vulnerability
 func RunCustomVulnerabilityTest(vulnerabilityType types.VulnerabilityType) {
@@ -124,17 +126,17 @@ func RunCustomVulnerabilityTest(vulnerabilityType types.VulnerabilityType) {
 	// Run tests for each fixture with each provider
 	for _, fixture := range fixturesList {
 		fmt.Printf("\nTesting Fixture: %s (%s)\n", fixture.ID, fixture.Description)
-		
+
 		for providerType := range runner.ProviderFactory.GetAllProviders() {
 			fmt.Printf("  Provider: %s\n", providerType)
-			
+
 			result, err := runner.RunTest(ctx, fixture, providerType)
 			if err != nil {
 				log.Fatalf("Error running test: %v", err)
 			}
-			
+
 			fmt.Printf("  Vulnerable: %t\n", result.Success)
-			
+
 			// Print attack vector results
 			for vectorID, attackResult := range result.AttackResults {
 				fmt.Printf("    Attack Vector %s: %t\n", vectorID, attackResult.Vulnerable)
@@ -146,19 +148,20 @@ func RunCustomVulnerabilityTest(vulnerabilityType types.VulnerabilityType) {
 			}
 		}
 	}
+}
 
 // RunCustomProviderTest demonstrates how to test a specific provider
 func RunCustomProviderTest(providerType core.ProviderType) {
 	// Create a new mock provider factory
 	factory := mocks.NewMockProviderFactory()
-	
+
 	// Get the provider
 	provider := factory.GetProvider(providerType)
-	
+
 	// Configure the provider for testing
 	provider.SetResponseDelay(100 * time.Millisecond)
 	provider.SetErrorRate(0.1) // 10% error rate
-	
+
 	// Enable vulnerabilities
 	provider.EnableVulnerability(types.PromptInjectionVulnerability, &mocks.VulnerabilityBehavior{
 		Enabled: true,
@@ -172,7 +175,7 @@ func RunCustomProviderTest(providerType core.ProviderType) {
 		},
 		Severity: core.SeverityHigh,
 	})
-	
+
 	// Create a chat request
 	request := &core.ChatCompletionRequest{
 		ModelID: provider.GetConfig().DefaultModel,
@@ -187,34 +190,37 @@ func RunCustomProviderTest(providerType core.ProviderType) {
 			},
 		},
 	}
-	
+
 	// Execute the request
 	fmt.Printf("Testing provider: %s\n", providerType)
 	fmt.Printf("Request: %s\n", request.Messages[len(request.Messages)-1].Content)
-	
+
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	response, err := provider.ChatCompletion(ctx, request)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
-	
+
 	if len(response.Choices) > 0 {
 		fmt.Printf("Response: %s\n", response.Choices[0].Message.Content)
 	}
-	
+
 	// Print usage metrics
 	metrics := provider.(*mocks.BaseMockProviderImpl).GetUsageMetrics(provider.GetConfig().DefaultModel)
 	fmt.Printf("Usage Metrics:\n")
 	fmt.Printf("  Requests: %d\n", metrics.Requests)
 	fmt.Printf("  Tokens: %d\n", metrics.Tokens)
 	fmt.Printf("  Errors: %d\n", metrics.Errors)
+}
 
 // Helper function to truncate a string
 func truncateString(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
 	}
+	return s[:maxLen] + "..."
+}

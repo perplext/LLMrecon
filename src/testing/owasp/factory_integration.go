@@ -24,26 +24,32 @@ func (a *testFactoryAdapter) CreateTestCase(vulnerabilityType types.Vulnerabilit
 	builder.WithDescription(description)
 	builder.WithVulnerabilityType(vulnerabilityType)
 	return builder.Build()
+}
 
 // CreateTestSuite creates a new test suite
 func (a *testFactoryAdapter) CreateTestSuite(id string, name string, description string) (*types.TestSuite, error) {
 	return a.factory.CreateTestSuite(id, name, description), nil
+}
 
 // RegisterValidator registers a validator
 func (a *testFactoryAdapter) RegisterValidator(validator interface{}) error {
 	return nil
+}
 
 // GetValidator returns a validator
 func (a *testFactoryAdapter) GetValidator(vulnerabilityType types.VulnerabilityType) (interface{}, error) {
 	return nil, nil
+}
 
 // RegisterComplianceService registers a compliance service
 func (a *testFactoryAdapter) RegisterComplianceService(service interface{}) error {
 	return nil
+}
 
 // GetComplianceService returns the compliance service
 func (a *testFactoryAdapter) GetComplianceService() (interface{}, error) {
 	return nil, nil
+}
 
 // RegisterFixtureBasedTestFactory registers the fixture-based test factory as the default test factory
 func RegisterFixtureBasedTestFactory() {
@@ -55,10 +61,12 @@ func RegisterFixtureBasedTestFactory() {
 	
 	// Register it as the default test factory
 	types.SetDefaultTestFactory(adapter)
+}
 
 // GetFixtureBasedTestFactory returns a new fixture-based test factory
 func GetFixtureBasedTestFactory() types.TestCaseFactory {
 	return NewFixtureBasedTestCaseFactory()
+}
 
 // NewDefaultTestingEnvironment creates a new testing environment with fixture-based components
 func NewDefaultTestingEnvironment() *TestingEnvironment {
@@ -70,9 +78,8 @@ func NewDefaultTestingEnvironment() *TestingEnvironment {
 	
 	// Create compliance components
 	complianceMapper := compliance.NewBaseComplianceMapper()
-	if err := compliance.NewComplianceReporter(complianceMapper) // complianceReporter created but not used in this context; err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
+	complianceReporter := compliance.NewComplianceReporter(complianceMapper)
+	_ = complianceReporter // Suppress unused variable warning
 	complianceService := compliance.NewComplianceService()
 	
 	// Create template security verifier
@@ -88,6 +95,7 @@ func NewDefaultTestingEnvironment() *TestingEnvironment {
 		TestCaseFactory:     testFactory,
 		ReportingIntegration: reportingIntegration,
 	}
+}
 
 // TestingEnvironment encapsulates all components needed for OWASP testing
 type TestingEnvironment struct {
@@ -95,16 +103,9 @@ type TestingEnvironment struct {
 	ReportGenerator     types.ReportGenerator
 	TestCaseFactory     types.TestCaseFactory
 	ReportingIntegration *compliance.ReportingIntegration
+}
 
 // init registers the fixture-based test factory
 func init() {
 	RegisterFixtureBasedTestFactory()
-}
-}
-}
-}
-}
-}
-}
-}
 }
