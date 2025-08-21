@@ -90,7 +90,7 @@ func (a *TemplateExecutorAdapter) Execute(ctx context.Context, template interfac
 	if !ok {
 		return nil, fmt.Errorf("template must be of type *format.Template")
 	}
-	
+
 	// Convert data to options map
 	options := make(map[string]interface{})
 	if data != nil {
@@ -100,13 +100,13 @@ func (a *TemplateExecutorAdapter) Execute(ctx context.Context, template interfac
 			options["data"] = data
 		}
 	}
-	
+
 	// Execute template
 	result, err := a.executor.Execute(ctx, formatTemplate, options)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Return response as bytes
 	return []byte(result.Response), nil
 }
@@ -118,7 +118,7 @@ func (a *TemplateExecutorAdapter) ExecuteWithOptions(ctx context.Context, templa
 	if !ok {
 		return nil, fmt.Errorf("template must be of type *format.Template")
 	}
-	
+
 	// Merge data into options if needed
 	if data != nil {
 		if options == nil {
@@ -126,13 +126,13 @@ func (a *TemplateExecutorAdapter) ExecuteWithOptions(ctx context.Context, templa
 		}
 		options["data"] = data
 	}
-	
+
 	// Execute template
 	result, err := a.executor.Execute(ctx, formatTemplate, options)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Return response as bytes
 	return []byte(result.Response), nil
 }
@@ -316,7 +316,7 @@ func (e *TemplateExecutor) executeWithRetry(ctx context.Context, template *forma
 	// Apply rate limiting if configured
 	if options.RateLimiter != nil {
 		var err error
-		
+
 		// Apply user-specific rate limiting if enabled and user ID is provided
 		if options.EnableUserRateLimiting && options.UserID != "" {
 			err = options.RateLimiter.Wait(ctx, options.UserID)
@@ -324,7 +324,7 @@ func (e *TemplateExecutor) executeWithRetry(ctx context.Context, template *forma
 			// Fall back to global rate limiting
 			err = options.RateLimiter.Wait(ctx, "")
 		}
-		
+
 		if err != nil {
 			return "", fmt.Errorf("rate limiter wait failed: %w", err)
 		}
@@ -394,20 +394,20 @@ func (e *TemplateExecutor) executeWithRetry(ctx context.Context, template *forma
 func (e *TemplateExecutor) mergeOptions(userOptions map[string]interface{}) *ExecutionOptions {
 	// Create a copy of default options
 	options := &ExecutionOptions{
-		Provider:              e.defaultOptions.Provider,
-		DetectionEngine:       e.defaultOptions.DetectionEngine,
-		RateLimiter:           e.defaultOptions.RateLimiter,
-		InputValidator:        e.defaultOptions.InputValidator,
-		Timeout:               e.defaultOptions.Timeout,
-		RetryCount:            e.defaultOptions.RetryCount,
-		RetryDelay:            e.defaultOptions.RetryDelay,
-		MaxConcurrent:         e.defaultOptions.MaxConcurrent,
-		StrictValidation:      e.defaultOptions.StrictValidation,
-		SanitizePrompts:       e.defaultOptions.SanitizePrompts,
-		UserID:                e.defaultOptions.UserID,
+		Provider:               e.defaultOptions.Provider,
+		DetectionEngine:        e.defaultOptions.DetectionEngine,
+		RateLimiter:            e.defaultOptions.RateLimiter,
+		InputValidator:         e.defaultOptions.InputValidator,
+		Timeout:                e.defaultOptions.Timeout,
+		RetryCount:             e.defaultOptions.RetryCount,
+		RetryDelay:             e.defaultOptions.RetryDelay,
+		MaxConcurrent:          e.defaultOptions.MaxConcurrent,
+		StrictValidation:       e.defaultOptions.StrictValidation,
+		SanitizePrompts:        e.defaultOptions.SanitizePrompts,
+		UserID:                 e.defaultOptions.UserID,
 		EnableUserRateLimiting: e.defaultOptions.EnableUserRateLimiting,
-		Variables:             make(map[string]interface{}),
-		ProviderOptions:       make(map[string]interface{}),
+		Variables:              make(map[string]interface{}),
+		ProviderOptions:        make(map[string]interface{}),
 	}
 
 	// Copy default variables
@@ -447,12 +447,12 @@ func (e *TemplateExecutor) mergeOptions(userOptions map[string]interface{}) *Exe
 		if sanitizePrompts, ok := userOptions["sanitize_prompts"].(bool); ok {
 			options.SanitizePrompts = sanitizePrompts
 		}
-		
+
 		// User rate limiting options
 		if userID, ok := userOptions["user_id"].(string); ok {
 			options.UserID = userID
 		}
-		
+
 		if enableUserRateLimiting, ok := userOptions["enable_user_rate_limiting"].(bool); ok {
 			options.EnableUserRateLimiting = enableUserRateLimiting
 		}
@@ -563,11 +563,11 @@ func (e *TemplateExecutor) ExecuteForUser(ctx context.Context, template *format.
 	if options == nil {
 		options = make(map[string]interface{})
 	}
-	
+
 	// Set user ID and enable user rate limiting
 	options["user_id"] = userID
 	options["enable_user_rate_limiting"] = true
-	
+
 	// Execute template with user-specific options
 	return e.Execute(ctx, template, options)
 }
@@ -578,11 +578,11 @@ func (e *TemplateExecutor) ExecuteBatchForUser(ctx context.Context, templates []
 	if options == nil {
 		options = make(map[string]interface{})
 	}
-	
+
 	// Set user ID and enable user rate limiting
 	options["user_id"] = userID
 	options["enable_user_rate_limiting"] = true
-	
+
 	// Execute templates with user-specific options
 	return e.ExecuteBatch(ctx, templates, options)
 }

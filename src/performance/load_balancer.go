@@ -37,50 +37,50 @@ type LoadBalancerConfig struct {
 	DefaultStrategy     BalancingStrategy `json:"default_strategy"`
 	EnableHealthChecks  bool              `json:"enable_health_checks"`
 	HealthCheckInterval time.Duration     `json:"health_check_interval"`
-	
+
 	// Circuit breaker settings
-	CircuitBreaker      CircuitBreakerConfig `json:"circuit_breaker"`
-	
+	CircuitBreaker CircuitBreakerConfig `json:"circuit_breaker"`
+
 	// Auto-scaling settings
-	AutoScaling         AutoScalingConfig    `json:"auto_scaling"`
-	
+	AutoScaling AutoScalingConfig `json:"auto_scaling"`
+
 	// Load prediction
-	LoadPrediction      LoadPredictionConfig `json:"load_prediction"`
-	
+	LoadPrediction LoadPredictionConfig `json:"load_prediction"`
+
 	// Advanced features
-	EnableStickySessions bool              `json:"enable_sticky_sessions"`
-	SessionTimeout      time.Duration     `json:"session_timeout"`
-	EnableWeighting     bool              `json:"enable_weighting"`
-	WeightAdjustment    WeightConfig      `json:"weight_adjustment"`
-	
+	EnableStickySessions bool          `json:"enable_sticky_sessions"`
+	SessionTimeout       time.Duration `json:"session_timeout"`
+	EnableWeighting      bool          `json:"enable_weighting"`
+	WeightAdjustment     WeightConfig  `json:"weight_adjustment"`
+
 	// Performance tuning
-	MaxConcurrentChecks int               `json:"max_concurrent_checks"`
-	RequestTimeout      time.Duration     `json:"request_timeout"`
-	RetryAttempts       int               `json:"retry_attempts"`
-	RetryDelay          time.Duration     `json:"retry_delay"`
-	
+	MaxConcurrentChecks int           `json:"max_concurrent_checks"`
+	RequestTimeout      time.Duration `json:"request_timeout"`
+	RetryAttempts       int           `json:"retry_attempts"`
+	RetryDelay          time.Duration `json:"retry_delay"`
+
 	// Monitoring
-	EnableMetrics       bool              `json:"enable_metrics"`
-	MetricsInterval     time.Duration     `json:"metrics_interval"`
-	EnablePredictive    bool              `json:"enable_predictive"`
+	EnableMetrics    bool          `json:"enable_metrics"`
+	MetricsInterval  time.Duration `json:"metrics_interval"`
+	EnablePredictive bool          `json:"enable_predictive"`
 }
 
 // LoadBalanceTarget represents a target for load balancing
 type LoadBalanceTarget struct {
-	ID               string                 `json:"id"`
-	Address          string                 `json:"address"`
-	Weight           int                    `json:"weight"`
-	MaxConcurrency   int                    `json:"max_concurrency"`
-	CurrentLoad      int64                  `json:"current_load"`
-	HealthStatus     TargetHealthStatus     `json:"health_status"`
-	ResponseTime     time.Duration          `json:"response_time"`
-	SuccessRate      float64                `json:"success_rate"`
-	LastHealthCheck  time.Time              `json:"last_health_check"`
-	Capabilities     []string               `json:"capabilities"`
-	Metadata         map[string]interface{} `json:"metadata"`
-	CircuitState     CircuitState           `json:"circuit_state"`
-	Statistics       *TargetStatistics      `json:"statistics"`
-	mutex            sync.RWMutex
+	ID              string                 `json:"id"`
+	Address         string                 `json:"address"`
+	Weight          int                    `json:"weight"`
+	MaxConcurrency  int                    `json:"max_concurrency"`
+	CurrentLoad     int64                  `json:"current_load"`
+	HealthStatus    TargetHealthStatus     `json:"health_status"`
+	ResponseTime    time.Duration          `json:"response_time"`
+	SuccessRate     float64                `json:"success_rate"`
+	LastHealthCheck time.Time              `json:"last_health_check"`
+	Capabilities    []string               `json:"capabilities"`
+	Metadata        map[string]interface{} `json:"metadata"`
+	CircuitState    CircuitState           `json:"circuit_state"`
+	Statistics      *TargetStatistics      `json:"statistics"`
+	mutex           sync.RWMutex
 }
 
 // TargetHealthStatus represents target health states
@@ -105,30 +105,30 @@ const (
 
 // TargetStatistics tracks detailed target performance
 type TargetStatistics struct {
-	TotalRequests     int64         `json:"total_requests"`
-	SuccessfulRequests int64        `json:"successful_requests"`
-	FailedRequests    int64         `json:"failed_requests"`
-	AverageLatency    time.Duration `json:"average_latency"`
-	P95Latency        time.Duration `json:"p95_latency"`
-	P99Latency        time.Duration `json:"p99_latency"`
-	Throughput        float64       `json:"throughput"`
-	ErrorRate         float64       `json:"error_rate"`
-	SuccessRate       float64       `json:"success_rate"`
-	LastUpdated       time.Time     `json:"last_updated"`
-	LatencyHistory    []time.Duration `json:"latency_history"`
+	TotalRequests      int64           `json:"total_requests"`
+	SuccessfulRequests int64           `json:"successful_requests"`
+	FailedRequests     int64           `json:"failed_requests"`
+	AverageLatency     time.Duration   `json:"average_latency"`
+	P95Latency         time.Duration   `json:"p95_latency"`
+	P99Latency         time.Duration   `json:"p99_latency"`
+	Throughput         float64         `json:"throughput"`
+	ErrorRate          float64         `json:"error_rate"`
+	SuccessRate        float64         `json:"success_rate"`
+	LastUpdated        time.Time       `json:"last_updated"`
+	LatencyHistory     []time.Duration `json:"latency_history"`
 }
 
 // HealthMonitor monitors target health
 type HealthMonitor struct {
-	config    HealthMonitorConfig
-	targets   map[string]*LoadBalanceTarget
-	checks    map[string]*HealthCheck
-	metrics   *HealthMetrics
-	logger    Logger
-	mutex     sync.RWMutex
-	ctx       context.Context
-	cancel    context.CancelFunc
-	wg        sync.WaitGroup
+	config  HealthMonitorConfig
+	targets map[string]*LoadBalanceTarget
+	checks  map[string]*HealthCheck
+	metrics *HealthMetrics
+	logger  Logger
+	mutex   sync.RWMutex
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
 }
 
 // HealthCheck represents a health check configuration
@@ -148,154 +148,154 @@ type HealthCheck struct {
 type HealthCheckType string
 
 const (
-	HealthCheckHTTP  HealthCheckType = "http"
-	HealthCheckTCP   HealthCheckType = "tcp"
-	HealthCheckPing  HealthCheckType = "ping"
+	HealthCheckHTTP   HealthCheckType = "http"
+	HealthCheckTCP    HealthCheckType = "tcp"
+	HealthCheckPing   HealthCheckType = "ping"
 	HealthCheckCustom HealthCheckType = "custom"
 )
 
 // AutoScaler handles automatic scaling of targets
 type AutoScaler struct {
-	config      AutoScalingConfig
-	policies    []*ScalingPolicy
-	history     *ScalingHistory
-	predictor   *LoadPredictor
-	triggers    map[string]*ScalingTrigger
-	metrics     *ScalingMetrics
-	logger      Logger
-	mutex       sync.RWMutex
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
+	config    AutoScalingConfig
+	policies  []*ScalingPolicy
+	history   *ScalingHistory
+	predictor *LoadPredictor
+	triggers  map[string]*ScalingTrigger
+	metrics   *ScalingMetrics
+	logger    Logger
+	mutex     sync.RWMutex
+	ctx       context.Context
+	cancel    context.CancelFunc
+	wg        sync.WaitGroup
 }
 
 // AutoScalingConfig defines auto-scaling configuration
 type AutoScalingConfig struct {
-	Enabled             bool          `json:"enabled"`
-	MinTargets          int           `json:"min_targets"`
-	MaxTargets          int           `json:"max_targets"`
-	ScaleUpThreshold    float64       `json:"scale_up_threshold"`
-	ScaleDownThreshold  float64       `json:"scale_down_threshold"`
-	ScaleUpCooldown     time.Duration `json:"scale_up_cooldown"`
-	ScaleDownCooldown   time.Duration `json:"scale_down_cooldown"`
-	EvaluationInterval  time.Duration `json:"evaluation_interval"`
-	PredictiveScaling   bool          `json:"predictive_scaling"`
-	ScalingPolicies     []ScalingPolicy `json:"scaling_policies"`
+	Enabled            bool            `json:"enabled"`
+	MinTargets         int             `json:"min_targets"`
+	MaxTargets         int             `json:"max_targets"`
+	ScaleUpThreshold   float64         `json:"scale_up_threshold"`
+	ScaleDownThreshold float64         `json:"scale_down_threshold"`
+	ScaleUpCooldown    time.Duration   `json:"scale_up_cooldown"`
+	ScaleDownCooldown  time.Duration   `json:"scale_down_cooldown"`
+	EvaluationInterval time.Duration   `json:"evaluation_interval"`
+	PredictiveScaling  bool            `json:"predictive_scaling"`
+	ScalingPolicies    []ScalingPolicy `json:"scaling_policies"`
 }
 
 // ScalingPolicy defines scaling behavior
 type ScalingPolicy struct {
-	Name         string              `json:"name"`
-	Type         ScalingType         `json:"type"`
-	Metric       string              `json:"metric"`
-	Threshold    float64             `json:"threshold"`
-	Operator     ThresholdOperator   `json:"operator"`
-	ScaleAmount  int                 `json:"scale_amount"`
-	Cooldown     time.Duration       `json:"cooldown"`
-	Priority     int                 `json:"priority"`
-	Conditions   []ScalingCondition  `json:"conditions"`
+	Name        string             `json:"name"`
+	Type        ScalingType        `json:"type"`
+	Metric      string             `json:"metric"`
+	Threshold   float64            `json:"threshold"`
+	Operator    ThresholdOperator  `json:"operator"`
+	ScaleAmount int                `json:"scale_amount"`
+	Cooldown    time.Duration      `json:"cooldown"`
+	Priority    int                `json:"priority"`
+	Conditions  []ScalingCondition `json:"conditions"`
 }
 
 // ScalingType defines scaling types
 type ScalingType string
 
 const (
-	ScalingTypeUp       ScalingType = "scale_up"
-	ScalingTypeDown     ScalingType = "scale_down"
+	ScalingTypeUp         ScalingType = "scale_up"
+	ScalingTypeDown       ScalingType = "scale_down"
 	ScalingTypePredictive ScalingType = "predictive"
-	ScalingTypeScheduled ScalingType = "scheduled"
+	ScalingTypeScheduled  ScalingType = "scheduled"
 )
 
 // ThresholdOperator defines threshold comparison operators
 type ThresholdOperator string
 
 const (
-	OperatorGreaterThan    ThresholdOperator = "gt"
-	OperatorLessThan       ThresholdOperator = "lt"
-	OperatorGreaterEqual   ThresholdOperator = "gte"
-	OperatorLessEqual      ThresholdOperator = "lte"
-	OperatorEqual          ThresholdOperator = "eq"
-	OperatorNotEqual       ThresholdOperator = "ne"
+	OperatorGreaterThan  ThresholdOperator = "gt"
+	OperatorLessThan     ThresholdOperator = "lt"
+	OperatorGreaterEqual ThresholdOperator = "gte"
+	OperatorLessEqual    ThresholdOperator = "lte"
+	OperatorEqual        ThresholdOperator = "eq"
+	OperatorNotEqual     ThresholdOperator = "ne"
 )
 
 // ScalingCondition defines additional scaling conditions
 type ScalingCondition struct {
-	Metric    string            `json:"metric"`
-	Operator  ThresholdOperator `json:"operator"`
-	Value     float64           `json:"value"`
-	Duration  time.Duration     `json:"duration"`
+	Metric   string            `json:"metric"`
+	Operator ThresholdOperator `json:"operator"`
+	Value    float64           `json:"value"`
+	Duration time.Duration     `json:"duration"`
 }
 
 // LoadPredictor predicts future load patterns
 type LoadPredictor struct {
-	config     LoadPredictionConfig
-	models     map[string]*PredictionModel
-	history    *LoadHistory
-	forecasts  map[string]*LoadForecast
-	metrics    *PredictionMetrics
-	logger     Logger
-	mutex      sync.RWMutex
-	ctx        context.Context
-	cancel     context.CancelFunc
-	wg         sync.WaitGroup
+	config    LoadPredictionConfig
+	models    map[string]*PredictionModel
+	history   *LoadHistory
+	forecasts map[string]*LoadForecast
+	metrics   *PredictionMetrics
+	logger    Logger
+	mutex     sync.RWMutex
+	ctx       context.Context
+	cancel    context.CancelFunc
+	wg        sync.WaitGroup
 }
 
 // LoadPredictionConfig defines load prediction configuration
 type LoadPredictionConfig struct {
-	Enabled              bool          `json:"enabled"`
+	Enabled              bool                `json:"enabled"`
 	Algorithm            PredictionAlgorithm `json:"algorithm"`
-	HistoryDuration      time.Duration `json:"history_duration"`
-	PredictionHorizon    time.Duration `json:"prediction_horizon"`
-	UpdateInterval       time.Duration `json:"update_interval"`
-	ConfidenceThreshold  float64       `json:"confidence_threshold"`
-	SeasonalityDetection bool          `json:"seasonality_detection"`
-	TrendAnalysis        bool          `json:"trend_analysis"`
+	HistoryDuration      time.Duration       `json:"history_duration"`
+	PredictionHorizon    time.Duration       `json:"prediction_horizon"`
+	UpdateInterval       time.Duration       `json:"update_interval"`
+	ConfidenceThreshold  float64             `json:"confidence_threshold"`
+	SeasonalityDetection bool                `json:"seasonality_detection"`
+	TrendAnalysis        bool                `json:"trend_analysis"`
 }
 
 // PredictionAlgorithm defines prediction algorithms
 type PredictionAlgorithm string
 
 const (
-	PredictionLinearRegression  PredictionAlgorithm = "linear_regression"
+	PredictionLinearRegression     PredictionAlgorithm = "linear_regression"
 	PredictionExponentialSmoothing PredictionAlgorithm = "exponential_smoothing"
-	PredictionARIMA             PredictionAlgorithm = "arima"
-	PredictionNeuralNetwork     PredictionAlgorithm = "neural_network"
-	PredictionEnsemble          PredictionAlgorithm = "ensemble"
+	PredictionARIMA                PredictionAlgorithm = "arima"
+	PredictionNeuralNetwork        PredictionAlgorithm = "neural_network"
+	PredictionEnsemble             PredictionAlgorithm = "ensemble"
 )
 
 // CircuitBreaker protects targets from overload
 type CircuitBreaker struct {
-	config      CircuitBreakerConfig
-	states      map[string]*CircuitState
-	metrics     *CircuitBreakerMetrics
-	logger      Logger
-	mutex       sync.RWMutex
+	config  CircuitBreakerConfig
+	states  map[string]*CircuitState
+	metrics *CircuitBreakerMetrics
+	logger  Logger
+	mutex   sync.RWMutex
 }
 
 // CircuitBreakerConfig defines circuit breaker configuration
 type CircuitBreakerConfig struct {
-	Enabled              bool          `json:"enabled"`
-	FailureThreshold     int           `json:"failure_threshold"`
-	SuccessThreshold     int           `json:"success_threshold"`
-	Timeout              time.Duration `json:"timeout"`
-	HalfOpenMaxRequests  int           `json:"half_open_max_requests"`
-	FailureRate          float64       `json:"failure_rate"`
-	MinimumRequests      int           `json:"minimum_requests"`
-	SlidingWindowSize    int           `json:"sliding_window_size"`
+	Enabled             bool          `json:"enabled"`
+	FailureThreshold    int           `json:"failure_threshold"`
+	SuccessThreshold    int           `json:"success_threshold"`
+	Timeout             time.Duration `json:"timeout"`
+	HalfOpenMaxRequests int           `json:"half_open_max_requests"`
+	FailureRate         float64       `json:"failure_rate"`
+	MinimumRequests     int           `json:"minimum_requests"`
+	SlidingWindowSize   int           `json:"sliding_window_size"`
 }
 
 // LoadBalancerMetrics tracks load balancer performance
 type LoadBalancerMetrics struct {
-	TotalRequests        int64             `json:"total_requests"`
-	SuccessfulRequests   int64             `json:"successful_requests"`
-	FailedRequests       int64             `json:"failed_requests"`
-	AverageLatency       time.Duration     `json:"average_latency"`
-	RequestsPerSecond    float64           `json:"requests_per_second"`
-	ActiveTargets        int               `json:"active_targets"`
-	HealthyTargets       int               `json:"healthy_targets"`
-	CircuitBreakerTrips  int64             `json:"circuit_breaker_trips"`
-	ScalingEvents        int64             `json:"scaling_events"`
-	TargetMetrics        map[string]*TargetStatistics `json:"target_metrics"`
+	TotalRequests       int64                        `json:"total_requests"`
+	SuccessfulRequests  int64                        `json:"successful_requests"`
+	FailedRequests      int64                        `json:"failed_requests"`
+	AverageLatency      time.Duration                `json:"average_latency"`
+	RequestsPerSecond   float64                      `json:"requests_per_second"`
+	ActiveTargets       int                          `json:"active_targets"`
+	HealthyTargets      int                          `json:"healthy_targets"`
+	CircuitBreakerTrips int64                        `json:"circuit_breaker_trips"`
+	ScalingEvents       int64                        `json:"scaling_events"`
+	TargetMetrics       map[string]*TargetStatistics `json:"target_metrics"`
 }
 
 // Configuration structures
@@ -309,34 +309,34 @@ type HealthMonitorConfig struct {
 }
 
 type WeightConfig struct {
-	Algorithm     WeightAlgorithm `json:"algorithm"`
-	UpdateInterval time.Duration  `json:"update_interval"`
-	ResponseTimeFactor float64    `json:"response_time_factor"`
-	ErrorRateFactor    float64    `json:"error_rate_factor"`
-	LoadFactor         float64    `json:"load_factor"`
+	Algorithm          WeightAlgorithm `json:"algorithm"`
+	UpdateInterval     time.Duration   `json:"update_interval"`
+	ResponseTimeFactor float64         `json:"response_time_factor"`
+	ErrorRateFactor    float64         `json:"error_rate_factor"`
+	LoadFactor         float64         `json:"load_factor"`
 }
 
 type WeightAlgorithm string
 
 const (
-	WeightStatic       WeightAlgorithm = "static"
-	WeightDynamic      WeightAlgorithm = "dynamic"
-	WeightAdaptive     WeightAlgorithm = "adaptive"
-	WeightMLBased      WeightAlgorithm = "ml_based"
+	WeightStatic   WeightAlgorithm = "static"
+	WeightDynamic  WeightAlgorithm = "dynamic"
+	WeightAdaptive WeightAlgorithm = "adaptive"
+	WeightMLBased  WeightAlgorithm = "ml_based"
 )
 
 // Metrics structures
 type HealthMetrics struct {
-	TotalChecks      int64 `json:"total_checks"`
-	SuccessfulChecks int64 `json:"successful_checks"`
-	FailedChecks     int64 `json:"failed_checks"`
+	TotalChecks      int64         `json:"total_checks"`
+	SuccessfulChecks int64         `json:"successful_checks"`
+	FailedChecks     int64         `json:"failed_checks"`
 	AverageLatency   time.Duration `json:"average_latency"`
 }
 
 type ScalingMetrics struct {
-	ScaleUpEvents   int64 `json:"scale_up_events"`
-	ScaleDownEvents int64 `json:"scale_down_events"`
-	CurrentTargets  int   `json:"current_targets"`
+	ScaleUpEvents      int64   `json:"scale_up_events"`
+	ScaleDownEvents    int64   `json:"scale_down_events"`
+	CurrentTargets     int     `json:"current_targets"`
 	PredictionAccuracy float64 `json:"prediction_accuracy"`
 }
 
@@ -360,10 +360,10 @@ type ScalingHistory struct {
 }
 
 type ScalingEvent struct {
-	Timestamp   time.Time   `json:"timestamp"`
-	Type        ScalingType `json:"type"`
-	Reason      string      `json:"reason"`
-	TargetCount int         `json:"target_count"`
+	Timestamp   time.Time          `json:"timestamp"`
+	Type        ScalingType        `json:"type"`
+	Reason      string             `json:"reason"`
+	TargetCount int                `json:"target_count"`
 	Metrics     map[string]float64 `json:"metrics"`
 }
 
@@ -374,11 +374,11 @@ type ScalingTrigger struct {
 }
 
 type PredictionModel struct {
-	Algorithm   PredictionAlgorithm `json:"algorithm"`
-	Parameters  map[string]float64  `json:"parameters"`
-	Accuracy    float64             `json:"accuracy"`
-	LastTrained time.Time           `json:"last_trained"`
-	TrainingData []DataPoint        `json:"training_data"`
+	Algorithm    PredictionAlgorithm `json:"algorithm"`
+	Parameters   map[string]float64  `json:"parameters"`
+	Accuracy     float64             `json:"accuracy"`
+	LastTrained  time.Time           `json:"last_trained"`
+	TrainingData []DataPoint         `json:"training_data"`
 }
 
 type LoadHistory struct {
@@ -387,28 +387,28 @@ type LoadHistory struct {
 }
 
 type LoadDataPoint struct {
-	Timestamp time.Time `json:"timestamp"`
-	Load      float64   `json:"load"`
-	Targets   int       `json:"targets"`
+	Timestamp time.Time     `json:"timestamp"`
+	Load      float64       `json:"load"`
+	Targets   int           `json:"targets"`
 	Latency   time.Duration `json:"latency"`
 }
 
 type LoadForecast struct {
-	Predictions []PredictionPoint `json:"predictions"`
-	Confidence  float64           `json:"confidence"`
-	GeneratedAt time.Time         `json:"generated_at"`
+	Predictions []PredictionPoint   `json:"predictions"`
+	Confidence  float64             `json:"confidence"`
+	GeneratedAt time.Time           `json:"generated_at"`
 	Algorithm   PredictionAlgorithm `json:"algorithm"`
 }
 
 type PredictionPoint struct {
-	Timestamp time.Time `json:"timestamp"`
-	Value     float64   `json:"value"`
-	Confidence float64  `json:"confidence"`
+	Timestamp  time.Time `json:"timestamp"`
+	Value      float64   `json:"value"`
+	Confidence float64   `json:"confidence"`
 }
 
 type LoadBalancerDataPoint struct {
-	Timestamp time.Time `json:"timestamp"`
-	Value     float64   `json:"value"`
+	Timestamp time.Time          `json:"timestamp"`
+	Value     float64            `json:"value"`
 	Features  map[string]float64 `json:"features"`
 }
 
@@ -473,7 +473,7 @@ func DefaultLoadBalancerConfig() LoadBalancerConfig {
 // NewAdvancedLoadBalancer creates a new advanced load balancer
 func NewAdvancedLoadBalancer(config LoadBalancerConfig, logger Logger) *AdvancedLoadBalancer {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	lb := &AdvancedLoadBalancer{
 		config:     config,
 		targets:    make(map[string]*LoadBalanceTarget),
@@ -483,7 +483,7 @@ func NewAdvancedLoadBalancer(config LoadBalancerConfig, logger Logger) *Advanced
 		ctx:        ctx,
 		cancel:     cancel,
 	}
-	
+
 	// Initialize components
 	lb.health = NewHealthMonitor(HealthMonitorConfig{
 		Enabled:             config.EnableHealthChecks,
@@ -493,33 +493,33 @@ func NewAdvancedLoadBalancer(config LoadBalancerConfig, logger Logger) *Advanced
 		UnhealthyThreshold:  3,
 		MaxConcurrentChecks: config.MaxConcurrentChecks,
 	}, logger)
-	
+
 	lb.scaler = NewAutoScaler(config.AutoScaling, logger)
 	lb.predictor = NewLoadPredictor(config.LoadPrediction, logger)
 	lb.circuit = NewCircuitBreaker(config.CircuitBreaker, logger)
-	
+
 	return lb
 }
 
 // Start starts the load balancer
 func (lb *AdvancedLoadBalancer) Start() error {
 	lb.logger.Info("Starting advanced load balancer")
-	
+
 	// Start health monitor
 	if err := lb.health.Start(); err != nil {
 		return fmt.Errorf("failed to start health monitor: %w", err)
 	}
-	
+
 	// Start auto scaler
 	if err := lb.scaler.Start(); err != nil {
 		return fmt.Errorf("failed to start auto scaler: %w", err)
 	}
-	
+
 	// Start load predictor
 	if err := lb.predictor.Start(); err != nil {
 		return fmt.Errorf("failed to start load predictor: %w", err)
 	}
-	
+
 	// Start metrics collection
 	if lb.config.EnableMetrics {
 		lb.wg.Add(1)
@@ -528,7 +528,7 @@ func (lb *AdvancedLoadBalancer) Start() error {
 			lb.metricsLoop()
 		}()
 	}
-	
+
 	// Start weight adjustment
 	if lb.config.EnableWeighting {
 		lb.wg.Add(1)
@@ -537,7 +537,7 @@ func (lb *AdvancedLoadBalancer) Start() error {
 			lb.weightAdjustmentLoop()
 		}()
 	}
-	
+
 	lb.logger.Info("Advanced load balancer started")
 	return nil
 }
@@ -545,16 +545,16 @@ func (lb *AdvancedLoadBalancer) Start() error {
 // Stop stops the load balancer
 func (lb *AdvancedLoadBalancer) Stop() error {
 	lb.logger.Info("Stopping advanced load balancer")
-	
+
 	lb.cancel()
-	
+
 	// Stop components
 	lb.health.Stop()
 	lb.scaler.Stop()
 	lb.predictor.Stop()
-	
+
 	lb.wg.Wait()
-	
+
 	lb.logger.Info("Advanced load balancer stopped")
 	return nil
 }
@@ -563,11 +563,11 @@ func (lb *AdvancedLoadBalancer) Stop() error {
 func (lb *AdvancedLoadBalancer) AddTarget(target *LoadBalanceTarget) error {
 	lb.mutex.Lock()
 	defer lb.mutex.Unlock()
-	
+
 	if _, exists := lb.targets[target.ID]; exists {
 		return fmt.Errorf("target %s already exists", target.ID)
 	}
-	
+
 	// Initialize target
 	target.HealthStatus = TargetUnknown
 	target.CircuitState = CircuitClosed
@@ -575,10 +575,10 @@ func (lb *AdvancedLoadBalancer) AddTarget(target *LoadBalanceTarget) error {
 		LatencyHistory: make([]time.Duration, 0, 100),
 		LastUpdated:    time.Now(),
 	}
-	
+
 	lb.targets[target.ID] = target
 	lb.health.AddTarget(target)
-	
+
 	lb.logger.Info("Added load balancer target", "id", target.ID, "address", target.Address)
 	return nil
 }
@@ -587,15 +587,15 @@ func (lb *AdvancedLoadBalancer) AddTarget(target *LoadBalanceTarget) error {
 func (lb *AdvancedLoadBalancer) RemoveTarget(targetID string) error {
 	lb.mutex.Lock()
 	defer lb.mutex.Unlock()
-	
+
 	target, exists := lb.targets[targetID]
 	if !exists {
 		return fmt.Errorf("target %s not found", targetID)
 	}
-	
+
 	lb.health.RemoveTarget(target)
 	delete(lb.targets, targetID)
-	
+
 	lb.logger.Info("Removed load balancer target", "id", targetID)
 	return nil
 }
@@ -605,16 +605,16 @@ func (lb *AdvancedLoadBalancer) SelectTarget(request *BalanceRequest) (*LoadBala
 	lb.mutex.RLock()
 	availableTargets := lb.getAvailableTargets()
 	lb.mutex.RUnlock()
-	
+
 	if len(availableTargets) == 0 {
 		return nil, fmt.Errorf("no available targets")
 	}
-	
+
 	strategy := lb.config.DefaultStrategy
 	if request.Strategy != "" {
 		strategy = BalancingStrategy(request.Strategy)
 	}
-	
+
 	switch strategy {
 	case BalancingRoundRobin:
 		return lb.selectRoundRobin(availableTargets), nil
@@ -636,14 +636,14 @@ func (lb *AdvancedLoadBalancer) RecordRequest(targetID string, latency time.Dura
 	lb.mutex.RLock()
 	target, exists := lb.targets[targetID]
 	lb.mutex.RUnlock()
-	
+
 	if !exists {
 		return
 	}
-	
+
 	target.mutex.Lock()
 	defer target.mutex.Unlock()
-	
+
 	// Update statistics
 	stats := target.Statistics
 	stats.TotalRequests++
@@ -652,37 +652,37 @@ func (lb *AdvancedLoadBalancer) RecordRequest(targetID string, latency time.Dura
 	} else {
 		stats.FailedRequests++
 	}
-	
+
 	// Update latency metrics
 	if stats.AverageLatency == 0 {
 		stats.AverageLatency = latency
 	} else {
 		stats.AverageLatency = (stats.AverageLatency + latency) / 2
 	}
-	
+
 	// Add to latency history
 	stats.LatencyHistory = append(stats.LatencyHistory, latency)
 	if len(stats.LatencyHistory) > 100 {
 		stats.LatencyHistory = stats.LatencyHistory[1:]
 	}
-	
+
 	// Calculate percentiles
 	lb.updateLatencyPercentiles(stats)
-	
+
 	// Update error rate
 	stats.ErrorRate = float64(stats.FailedRequests) / float64(stats.TotalRequests)
-	
+
 	// Update success rate
 	stats.SuccessRate = float64(stats.SuccessfulRequests) / float64(stats.TotalRequests)
-	
+
 	// Update target response time
 	target.ResponseTime = stats.AverageLatency
-	
+
 	stats.LastUpdated = time.Now()
-	
+
 	// Update circuit breaker
 	lb.circuit.RecordRequest(targetID, success)
-	
+
 	// Update load balancer metrics
 	atomic.AddInt64(&lb.metrics.TotalRequests, 1)
 	if success {
@@ -696,7 +696,7 @@ func (lb *AdvancedLoadBalancer) RecordRequest(targetID string, latency time.Dura
 func (lb *AdvancedLoadBalancer) GetMetrics() *LoadBalancerMetrics {
 	lb.mutex.RLock()
 	defer lb.mutex.RUnlock()
-	
+
 	// Update target counts
 	var activeTargets, healthyTargets int
 	for _, target := range lb.targets {
@@ -704,19 +704,19 @@ func (lb *AdvancedLoadBalancer) GetMetrics() *LoadBalancerMetrics {
 		if target.HealthStatus == TargetHealthy {
 			healthyTargets++
 		}
-		
+
 		// Copy target statistics
 		lb.metrics.TargetMetrics[target.ID] = target.Statistics
 	}
-	
+
 	lb.metrics.ActiveTargets = activeTargets
 	lb.metrics.HealthyTargets = healthyTargets
-	
+
 	// Calculate requests per second
 	if lb.metrics.AverageLatency > 0 {
 		lb.metrics.RequestsPerSecond = float64(lb.metrics.SuccessfulRequests) / lb.metrics.AverageLatency.Seconds()
 	}
-	
+
 	return lb.metrics
 }
 
@@ -725,15 +725,15 @@ func (lb *AdvancedLoadBalancer) GetMetrics() *LoadBalancerMetrics {
 // getAvailableTargets returns targets that are available for requests
 func (lb *AdvancedLoadBalancer) getAvailableTargets() []*LoadBalanceTarget {
 	var available []*LoadBalanceTarget
-	
+
 	for _, target := range lb.targets {
-		if target.HealthStatus == TargetHealthy && 
-		   target.CircuitState != CircuitOpen &&
-		   target.CurrentLoad < int64(target.MaxConcurrency) {
+		if target.HealthStatus == TargetHealthy &&
+			target.CircuitState != CircuitOpen &&
+			target.CurrentLoad < int64(target.MaxConcurrency) {
 			available = append(available, target)
 		}
 	}
-	
+
 	return available
 }
 
@@ -743,18 +743,18 @@ func (lb *AdvancedLoadBalancer) selectRoundRobin(targets []*LoadBalanceTarget) *
 	if len(targets) == 0 {
 		return nil
 	}
-	
+
 	// Simple round robin based on total requests
 	minRequests := int64(math.MaxInt64)
 	var selected *LoadBalanceTarget
-	
+
 	for _, target := range targets {
 		if target.Statistics.TotalRequests < minRequests {
 			minRequests = target.Statistics.TotalRequests
 			selected = target
 		}
 	}
-	
+
 	return selected
 }
 
@@ -762,17 +762,17 @@ func (lb *AdvancedLoadBalancer) selectLeastActive(targets []*LoadBalanceTarget) 
 	if len(targets) == 0 {
 		return nil
 	}
-	
+
 	var selected *LoadBalanceTarget
 	minLoad := int64(math.MaxInt64)
-	
+
 	for _, target := range targets {
 		if target.CurrentLoad < minLoad {
 			minLoad = target.CurrentLoad
 			selected = target
 		}
 	}
-	
+
 	return selected
 }
 
@@ -780,28 +780,28 @@ func (lb *AdvancedLoadBalancer) selectWeighted(targets []*LoadBalanceTarget) *Lo
 	if len(targets) == 0 {
 		return nil
 	}
-	
+
 	// Calculate total weight
 	totalWeight := 0
 	for _, target := range targets {
 		totalWeight += target.Weight
 	}
-	
+
 	if totalWeight == 0 {
 		return lb.selectRoundRobin(targets)
 	}
-	
+
 	// Select based on weight
 	r := randIntn(totalWeight)
 	currentWeight := 0
-	
+
 	for _, target := range targets {
 		currentWeight += target.Weight
 		if r < currentWeight {
 			return target
 		}
 	}
-	
+
 	return targets[0]
 }
 
@@ -809,15 +809,15 @@ func (lb *AdvancedLoadBalancer) selectConsistentHash(targets []*LoadBalanceTarge
 	if len(targets) == 0 {
 		return nil
 	}
-	
+
 	if key == "" {
 		return lb.selectRoundRobin(targets)
 	}
-	
+
 	// Use CRC32 hash for consistent hashing
 	hash := crc32.ChecksumIEEE([]byte(key))
 	index := int(hash) % len(targets)
-	
+
 	return targets[index]
 }
 
@@ -825,51 +825,51 @@ func (lb *AdvancedLoadBalancer) selectAdaptive(targets []*LoadBalanceTarget, req
 	if len(targets) == 0 {
 		return nil
 	}
-	
+
 	// Calculate adaptive score for each target
 	type targetScore struct {
 		target *LoadBalanceTarget
 		score  float64
 	}
-	
+
 	var scores []targetScore
-	
+
 	for _, target := range targets {
 		score := lb.calculateAdaptiveScore(target, request)
 		scores = append(scores, targetScore{target: target, score: score})
 	}
-	
+
 	// Sort by score (higher is better)
 	sort.Slice(scores, func(i, j int) bool {
 		return scores[i].score > scores[j].score
 	})
-	
+
 	return scores[0].target
 }
 
 func (lb *AdvancedLoadBalancer) calculateAdaptiveScore(target *LoadBalanceTarget, request *BalanceRequest) float64 {
 	// Base score from weight
 	score := float64(target.Weight)
-	
+
 	// Adjust for response time
 	if target.ResponseTime > 0 {
 		responseTimeFactor := 1.0 / target.ResponseTime.Seconds()
 		score *= responseTimeFactor * lb.config.WeightAdjustment.ResponseTimeFactor
 	}
-	
+
 	// Adjust for error rate
 	errorRateFactor := 1.0 - target.Statistics.ErrorRate
 	score *= errorRateFactor * lb.config.WeightAdjustment.ErrorRateFactor
-	
+
 	// Adjust for current load
 	loadFactor := 1.0 - (float64(target.CurrentLoad) / float64(target.MaxConcurrency))
 	score *= loadFactor * lb.config.WeightAdjustment.LoadFactor
-	
+
 	// Adjust for circuit breaker state
 	if target.CircuitState == CircuitHalfOpen {
 		score *= 0.5
 	}
-	
+
 	return score
 }
 
@@ -877,18 +877,18 @@ func (lb *AdvancedLoadBalancer) updateLatencyPercentiles(stats *TargetStatistics
 	if len(stats.LatencyHistory) == 0 {
 		return
 	}
-	
+
 	// Create a copy and sort it
 	latencies := make([]time.Duration, len(stats.LatencyHistory))
 	copy(latencies, stats.LatencyHistory)
 	sort.Slice(latencies, func(i, j int) bool {
 		return latencies[i] < latencies[j]
 	})
-	
+
 	// Calculate percentiles
 	p95Index := int(float64(len(latencies)) * 0.95)
 	p99Index := int(float64(len(latencies)) * 0.99)
-	
+
 	if p95Index < len(latencies) {
 		stats.P95Latency = latencies[p95Index]
 	}
@@ -900,7 +900,7 @@ func (lb *AdvancedLoadBalancer) updateLatencyPercentiles(stats *TargetStatistics
 func (lb *AdvancedLoadBalancer) metricsLoop() {
 	ticker := time.NewTicker(lb.config.MetricsInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -915,14 +915,14 @@ func (lb *AdvancedLoadBalancer) updateMetrics() {
 	// Update average latency
 	var totalLatency time.Duration
 	var totalRequests int64
-	
+
 	lb.mutex.RLock()
 	for _, target := range lb.targets {
 		totalLatency += target.ResponseTime
 		totalRequests += target.Statistics.TotalRequests
 	}
 	lb.mutex.RUnlock()
-	
+
 	if len(lb.targets) > 0 {
 		lb.metrics.AverageLatency = totalLatency / time.Duration(len(lb.targets))
 	}
@@ -931,7 +931,7 @@ func (lb *AdvancedLoadBalancer) updateMetrics() {
 func (lb *AdvancedLoadBalancer) weightAdjustmentLoop() {
 	ticker := time.NewTicker(lb.config.WeightAdjustment.UpdateInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -946,34 +946,34 @@ func (lb *AdvancedLoadBalancer) adjustWeights() {
 	if lb.config.WeightAdjustment.Algorithm != WeightAdaptive {
 		return
 	}
-	
+
 	lb.mutex.Lock()
 	defer lb.mutex.Unlock()
-	
+
 	for _, target := range lb.targets {
 		// Calculate new weight based on performance
 		baseWeight := 100 // Base weight
-		
+
 		// Adjust for response time
 		if target.ResponseTime > 0 {
 			responseTimeFactor := 1000.0 / float64(target.ResponseTime.Milliseconds())
 			baseWeight = int(float64(baseWeight) * responseTimeFactor)
 		}
-		
+
 		// Adjust for error rate
 		errorRateFactor := 1.0 - target.Statistics.ErrorRate
 		baseWeight = int(float64(baseWeight) * errorRateFactor)
-		
+
 		// Ensure minimum weight
 		if baseWeight < 1 {
 			baseWeight = 1
 		}
-		
+
 		// Ensure maximum weight
 		if baseWeight > 1000 {
 			baseWeight = 1000
 		}
-		
+
 		target.Weight = baseWeight
 	}
 }
@@ -997,10 +997,10 @@ func NewHealthMonitor(config HealthMonitorConfig, logger Logger) *HealthMonitor 
 	}
 }
 
-func (hm *HealthMonitor) Start() error                                { return nil }
-func (hm *HealthMonitor) Stop() error                                 { return nil }
-func (hm *HealthMonitor) AddTarget(target *LoadBalanceTarget)         {}
-func (hm *HealthMonitor) RemoveTarget(target *LoadBalanceTarget)      {}
+func (hm *HealthMonitor) Start() error                           { return nil }
+func (hm *HealthMonitor) Stop() error                            { return nil }
+func (hm *HealthMonitor) AddTarget(target *LoadBalanceTarget)    {}
+func (hm *HealthMonitor) RemoveTarget(target *LoadBalanceTarget) {}
 
 func NewAutoScaler(config AutoScalingConfig, logger Logger) *AutoScaler {
 	return &AutoScaler{

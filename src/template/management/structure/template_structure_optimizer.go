@@ -91,21 +91,21 @@ func (o *TemplateStructureOptimizer) OptimizeTemplate(template *format.Template)
 
 	// Create a deep copy of the template to avoid modifying the original
 	optimizedTemplate := o.cloneTemplate(template)
-	
+
 	// Apply each optimization rule
 	for _, rule := range o.optimizationRules {
 		applied, err := rule.ApplyFunc(optimizedTemplate)
 		if err != nil {
 			return nil, fmt.Errorf("error applying rule %s: %w", rule.Name, err)
 		}
-		
+
 		if applied {
 			o.mutex.Lock()
 			o.optimizationStats.OptimizationsByRule[rule.Name]++
 			o.mutex.Unlock()
 		}
 	}
-	
+
 	// Update optimization statistics
 	o.mutex.Lock()
 	o.optimizationStats.TotalOptimizations++
@@ -156,7 +156,7 @@ func (o *TemplateStructureOptimizer) OptimizeTemplates(templates []*format.Templ
 // removeRedundantWhitespace removes redundant whitespace from template content
 func (o *TemplateStructureOptimizer) removeRedundantWhitespace(template *format.Template) (bool, error) {
 	modified := false
-	
+
 	// Optimize prompt
 	if template.Test.Prompt != "" {
 		originalPrompt := template.Test.Prompt
@@ -165,7 +165,7 @@ func (o *TemplateStructureOptimizer) removeRedundantWhitespace(template *format.
 			modified = true
 		}
 	}
-	
+
 	// Optimize expected behavior
 	if template.Test.Expected != "" {
 		originalExpected := template.Test.Expected
@@ -174,7 +174,7 @@ func (o *TemplateStructureOptimizer) removeRedundantWhitespace(template *format.
 			modified = true
 		}
 	}
-	
+
 	// Optimize variations
 	for i := range template.Test.Variations {
 		if template.Test.Variations[i].Prompt != "" {
@@ -185,7 +185,7 @@ func (o *TemplateStructureOptimizer) removeRedundantWhitespace(template *format.
 			}
 		}
 	}
-	
+
 	return modified, nil
 }
 
@@ -198,7 +198,7 @@ func (o *TemplateStructureOptimizer) optimizeWhitespace(content string) string {
 
 	for i, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
-		
+
 		// Check for code block markers
 		if strings.HasPrefix(trimmedLine, "```") {
 			inCodeBlock = !inCodeBlock
@@ -233,7 +233,7 @@ func (o *TemplateStructureOptimizer) optimizeWhitespace(content string) string {
 // optimizeRegexPatterns optimizes regex patterns in detection criteria
 func (o *TemplateStructureOptimizer) optimizeRegexPatterns(template *format.Template) (bool, error) {
 	modified := false
-	
+
 	// Optimize main detection criteria
 	if template.Test.Detection.Type == "regex_match" && template.Test.Detection.Pattern != "" {
 		originalPattern := template.Test.Detection.Pattern
@@ -241,30 +241,30 @@ func (o *TemplateStructureOptimizer) optimizeRegexPatterns(template *format.Temp
 		if err != nil {
 			return false, err
 		}
-		
+
 		if originalPattern != optimizedPattern {
 			template.Test.Detection.Pattern = optimizedPattern
 			modified = true
 		}
 	}
-	
+
 	// Optimize variations
 	for i := range template.Test.Variations {
-		if template.Test.Variations[i].Detection.Type == "regex_match" && 
-		   template.Test.Variations[i].Detection.Pattern != "" {
+		if template.Test.Variations[i].Detection.Type == "regex_match" &&
+			template.Test.Variations[i].Detection.Pattern != "" {
 			originalPattern := template.Test.Variations[i].Detection.Pattern
 			optimizedPattern, err := o.optimizeRegex(originalPattern)
 			if err != nil {
 				return false, err
 			}
-			
+
 			if originalPattern != optimizedPattern {
 				template.Test.Variations[i].Detection.Pattern = optimizedPattern
 				modified = true
 			}
 		}
 	}
-	
+
 	return modified, nil
 }
 
@@ -275,15 +275,15 @@ func (o *TemplateStructureOptimizer) optimizeRegex(pattern string) (string, erro
 	if err != nil {
 		return pattern, fmt.Errorf("invalid regex pattern: %w", err)
 	}
-	
+
 	// Apply regex optimizations
 	optimized := pattern
-	
+
 	// Optimize common inefficient patterns
 	optimized = strings.ReplaceAll(optimized, ".*.*", ".*")
 	optimized = strings.ReplaceAll(optimized, "[a-zA-Z0-9_]", "\\w")
 	optimized = strings.ReplaceAll(optimized, "[0-9]", "\\d")
-	
+
 	// Add anchors if missing and appropriate
 	if !strings.HasPrefix(optimized, "^") && !strings.HasPrefix(optimized, ".*") {
 		// Only add anchor if it's meant to match from the beginning
@@ -291,14 +291,14 @@ func (o *TemplateStructureOptimizer) optimizeRegex(pattern string) (string, erro
 			optimized = "^" + optimized
 		}
 	}
-	
+
 	// Validate the optimized pattern
 	_, err = regexp.Compile(optimized)
 	if err != nil {
 		// If optimization broke the pattern, return the original
 		return pattern, nil
 	}
-	
+
 	return optimized, nil
 }
 
@@ -307,19 +307,19 @@ func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Temp
 	if len(template.Test.Variations) <= 1 {
 		return false, nil
 	}
-	
+
 	// Map to track variations by detection criteria
 	variationMap := make(map[string][]int)
-	
+
 	// Group variations by detection criteria
 	for i, variation := range template.Test.Variations {
-		key := fmt.Sprintf("%s:%s:%s", 
-			variation.Detection.Type, 
-			variation.Detection.Pattern, 
+		key := fmt.Sprintf("%s:%s:%s",
+			variation.Detection.Type,
+			variation.Detection.Pattern,
 			variation.Detection.Match)
 		variationMap[key] = append(variationMap[key], i)
 	}
-	
+
 	// Check if any consolidation is possible
 	consolidationPossible := false
 	for _, indices := range variationMap {
@@ -328,11 +328,11 @@ func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Temp
 			break
 		}
 	}
-	
+
 	if !consolidationPossible {
 		return false, nil
 	}
-	
+
 	// Perform consolidation
 	newVariations := make([]*format.TemplateVariation, 0)
 	for _, indices := range variationMap {
@@ -349,7 +349,7 @@ func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Temp
 				}
 				combinedPrompt += template.Test.Variations[idx].Prompt
 			}
-			
+
 			// Create consolidated variation
 			original := template.Test.Variations[indices[0]]
 			consolidated := &format.TemplateVariation{
@@ -367,45 +367,45 @@ func (o *TemplateStructureOptimizer) consolidateVariations(template *format.Temp
 			newVariations = append(newVariations, consolidated)
 		}
 	}
-	
+
 	// Update template if variations were consolidated
 	if len(newVariations) < len(template.Test.Variations) {
 		template.Test.Variations = newVariations
 		return true, nil
 	}
-	
+
 	return false, nil
 }
 
 // optimizeDetectionCriteria optimizes detection criteria for faster matching
 func (o *TemplateStructureOptimizer) optimizeDetectionCriteria(template *format.Template) (bool, error) {
 	modified := false
-	
+
 	// Optimize main detection criteria
 	if template.Test.Detection.Type == "string_match" && template.Test.Detection.Match != "" {
 		originalMatch := template.Test.Detection.Match
 		optimizedMatch := o.optimizeStringMatch(originalMatch)
-		
+
 		if originalMatch != optimizedMatch {
 			template.Test.Detection.Match = optimizedMatch
 			modified = true
 		}
 	}
-	
+
 	// Optimize variations
 	for i := range template.Test.Variations {
-		if template.Test.Variations[i].Detection.Type == "string_match" && 
-		   template.Test.Variations[i].Detection.Match != "" {
+		if template.Test.Variations[i].Detection.Type == "string_match" &&
+			template.Test.Variations[i].Detection.Match != "" {
 			originalMatch := template.Test.Variations[i].Detection.Match
 			optimizedMatch := o.optimizeStringMatch(originalMatch)
-			
+
 			if originalMatch != optimizedMatch {
 				template.Test.Variations[i].Detection.Match = optimizedMatch
 				modified = true
 			}
 		}
 	}
-	
+
 	return modified, nil
 }
 
@@ -418,14 +418,14 @@ func (o *TemplateStructureOptimizer) optimizeStringMatch(match string) string {
 // normalizeTemplateStructure normalizes template structure for consistent processing
 func (o *TemplateStructureOptimizer) normalizeTemplateStructure(template *format.Template) (bool, error) {
 	modified := false
-	
+
 	// Ensure template has a valid ID
 	if template.ID == "" {
 		// This should be handled by validation, but we'll set a placeholder
 		template.ID = "placeholder_id"
 		modified = true
 	}
-	
+
 	// Ensure template has compatibility information
 	if template.Compatibility == nil {
 		// Create default compatibility section
@@ -435,13 +435,13 @@ func (o *TemplateStructureOptimizer) normalizeTemplateStructure(template *format
 		}
 		modified = true
 	}
-	
+
 	// Ensure detection criteria is valid
 	if template.Test.Detection.Type == "" {
 		template.Test.Detection.Type = "string_match"
 		modified = true
 	}
-	
+
 	return modified, nil
 }
 
@@ -453,13 +453,13 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 		Version: template.Version,
 		Path:    template.Path,
 	}
-	
+
 	// Copy content
 	if template.Content != nil {
 		clone.Content = make([]byte, len(template.Content))
 		copy(clone.Content, template.Content)
 	}
-	
+
 	// Copy metadata
 	if template.Metadata != nil {
 		clone.Metadata = make(map[string]interface{})
@@ -467,7 +467,7 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 			clone.Metadata[k] = v
 		}
 	}
-	
+
 	// Copy variables
 	if template.Variables != nil {
 		clone.Variables = make(map[string]interface{})
@@ -475,7 +475,7 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 			clone.Variables[k] = v
 		}
 	}
-	
+
 	// Copy info
 	if template.Info != nil {
 		clone.Info = &format.TemplateInfo{
@@ -489,14 +489,14 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 			copy(clone.Info.Tags, template.Info.Tags)
 		}
 	}
-	
+
 	// Copy test
 	if template.Test != nil {
 		clone.Test = &format.TemplateTest{
 			Prompt:   template.Test.Prompt,
 			Expected: template.Test.Expected,
 		}
-		
+
 		// Copy detection
 		if template.Test.Detection != nil {
 			clone.Test.Detection = &format.TemplateDetection{
@@ -506,7 +506,7 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 				Criteria: template.Test.Detection.Criteria,
 			}
 		}
-		
+
 		// Copy variations
 		if template.Test.Variations != nil {
 			clone.Test.Variations = make([]*format.TemplateVariation, len(template.Test.Variations))
@@ -515,7 +515,7 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 					Prompt:   variation.Prompt,
 					Expected: variation.Expected,
 				}
-				
+
 				// Copy variation detection
 				if variation.Detection != nil {
 					cloneVariation.Detection = &format.TemplateDetection{
@@ -525,12 +525,12 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 						Criteria: variation.Detection.Criteria,
 					}
 				}
-				
+
 				clone.Test.Variations[i] = cloneVariation
 			}
 		}
 	}
-	
+
 	// Copy compatibility
 	if template.Compatibility != nil {
 		clone.Compatibility = &format.TemplateCompatibility{
@@ -538,7 +538,7 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 			MaxToolVersion: template.Compatibility.MaxToolVersion,
 		}
 	}
-	
+
 	return clone
 }
 
@@ -546,15 +546,15 @@ func (o *TemplateStructureOptimizer) cloneTemplate(template *format.Template) *f
 func (o *TemplateStructureOptimizer) GetOptimizationStats() map[string]interface{} {
 	o.mutex.RLock()
 	defer o.mutex.RUnlock()
-	
+
 	// Copy the map to avoid concurrent access issues
 	ruleStats := make(map[string]int64)
 	for rule, count := range o.optimizationStats.OptimizationsByRule {
 		ruleStats[rule] = count
 	}
-	
+
 	return map[string]interface{}{
-		"total_optimizations": o.optimizationStats.TotalOptimizations,
+		"total_optimizations":   o.optimizationStats.TotalOptimizations,
 		"optimizations_by_rule": ruleStats,
 	}
 }

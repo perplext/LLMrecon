@@ -2,75 +2,75 @@
 package prompt
 
 import (
-	"time"
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 // AdvancedTemplateMonitor provides real-time monitoring for unusual template patterns
 type AdvancedTemplateMonitor struct {
-	config                *ProtectionConfig
-	patternLibrary        *EnhancedInjectionPatternLibrary
-	templateStats         map[string]*TemplateStats
-	userStats             map[string]*UserStats
-	sessionStats          map[string]*SessionStats
-	anomalyDetector       *AnomalyDetector
-	alertManager          *AlertManager
-	monitoringActive      bool
-	monitoringInterval    time.Duration
-	lastMonitoringTime    time.Time
-	monitoringThreshold   float64
-	maxTemplateStats      int
-	maxUserStats          int
-	maxSessionStats       int
-	mu                    sync.RWMutex
-	stopChan              chan struct{}
+	config              *ProtectionConfig
+	patternLibrary      *EnhancedInjectionPatternLibrary
+	templateStats       map[string]*TemplateStats
+	userStats           map[string]*UserStats
+	sessionStats        map[string]*SessionStats
+	anomalyDetector     *AnomalyDetector
+	alertManager        *AlertManager
+	monitoringActive    bool
+	monitoringInterval  time.Duration
+	lastMonitoringTime  time.Time
+	monitoringThreshold float64
+	maxTemplateStats    int
+	maxUserStats        int
+	maxSessionStats     int
+	mu                  sync.RWMutex
+	stopChan            chan struct{}
 }
 
 // TemplateStats tracks statistics for a template
 type TemplateStats struct {
-	TemplateID          string    `json:"template_id"`
-	TemplateName        string    `json:"template_name"`
-	ExecutionCount      int       `json:"execution_count"`
-	FirstSeen           time.Time `json:"first_seen"`
-	LastSeen            time.Time `json:"last_seen"`
-	AverageRiskScore    float64   `json:"average_risk_score"`
-	DetectionCount      int       `json:"detection_count"`
-	DetectionTypes      map[DetectionType]int `json:"detection_types"`
-	SuccessRate         float64   `json:"success_rate"`
-	AverageResponseTime time.Duration `json:"average_response_time"`
+	TemplateID          string                 `json:"template_id"`
+	TemplateName        string                 `json:"template_name"`
+	ExecutionCount      int                    `json:"execution_count"`
+	FirstSeen           time.Time              `json:"first_seen"`
+	LastSeen            time.Time              `json:"last_seen"`
+	AverageRiskScore    float64                `json:"average_risk_score"`
+	DetectionCount      int                    `json:"detection_count"`
+	DetectionTypes      map[DetectionType]int  `json:"detection_types"`
+	SuccessRate         float64                `json:"success_rate"`
+	AverageResponseTime time.Duration          `json:"average_response_time"`
 	Metadata            map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // UserStats tracks statistics for a user
 type UserStats struct {
-	UserID              string    `json:"user_id"`
-	TemplateUsage       map[string]int `json:"template_usage"`
-	TotalExecutions     int       `json:"total_executions"`
-	FirstSeen           time.Time `json:"first_seen"`
-	LastSeen            time.Time `json:"last_seen"`
-	AverageRiskScore    float64   `json:"average_risk_score"`
-	DetectionCount      int       `json:"detection_count"`
-	DetectionTypes      map[DetectionType]int `json:"detection_types"`
-	SuccessRate         float64   `json:"success_rate"`
-	AnomalyScore        float64   `json:"anomaly_score"`
-	Metadata            map[string]interface{} `json:"metadata,omitempty"`
+	UserID           string                 `json:"user_id"`
+	TemplateUsage    map[string]int         `json:"template_usage"`
+	TotalExecutions  int                    `json:"total_executions"`
+	FirstSeen        time.Time              `json:"first_seen"`
+	LastSeen         time.Time              `json:"last_seen"`
+	AverageRiskScore float64                `json:"average_risk_score"`
+	DetectionCount   int                    `json:"detection_count"`
+	DetectionTypes   map[DetectionType]int  `json:"detection_types"`
+	SuccessRate      float64                `json:"success_rate"`
+	AnomalyScore     float64                `json:"anomaly_score"`
+	Metadata         map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // SessionStats tracks statistics for a session
 type SessionStats struct {
-	SessionID           string    `json:"session_id"`
-	UserID              string    `json:"user_id"`
-	StartTime           time.Time `json:"start_time"`
-	LastActivityTime    time.Time `json:"last_activity_time"`
-	ExecutionCount      int       `json:"execution_count"`
-	AverageRiskScore    float64   `json:"average_risk_score"`
-	DetectionCount      int       `json:"detection_count"`
-	DetectionTypes      map[DetectionType]int `json:"detection_types"`
-	TemplateUsage       map[string]int `json:"template_usage"`
-	AnomalyScore        float64   `json:"anomaly_score"`
-	Metadata            map[string]interface{} `json:"metadata,omitempty"`
+	SessionID        string                 `json:"session_id"`
+	UserID           string                 `json:"user_id"`
+	StartTime        time.Time              `json:"start_time"`
+	LastActivityTime time.Time              `json:"last_activity_time"`
+	ExecutionCount   int                    `json:"execution_count"`
+	AverageRiskScore float64                `json:"average_risk_score"`
+	DetectionCount   int                    `json:"detection_count"`
+	DetectionTypes   map[DetectionType]int  `json:"detection_types"`
+	TemplateUsage    map[string]int         `json:"template_usage"`
+	AnomalyScore     float64                `json:"anomaly_score"`
+	Metadata         map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // AnomalyDetector detects anomalies in template usage
@@ -79,33 +79,31 @@ type AnomalyDetector struct {
 	baselineUserStats     map[string]*UserStats
 	anomalyThresholds     map[string]float64
 	detectionAlgorithms   map[string]func(interface{}, interface{}) float64
-
 }
 
 // AlertManager manages alerts for template monitoring
 type AlertManager struct {
-	alertHandlers        map[string]func(context.Context, *Alert) error
-	alertHistory         []*Alert
-	maxAlertHistory      int
-	alertThresholds      map[string]float64
-
+	alertHandlers   map[string]func(context.Context, *Alert) error
+	alertHistory    []*Alert
+	maxAlertHistory int
+	alertThresholds map[string]float64
 }
 
 // Alert represents a monitoring alert
 type Alert struct {
-	AlertID             string    `json:"alert_id"`
-	Timestamp           time.Time `json:"timestamp"`
-	Severity            string    `json:"severity"`
-	Type                string    `json:"type"`
-	Message             string    `json:"message"`
-	TemplateID          string    `json:"template_id,omitempty"`
-	UserID              string    `json:"user_id,omitempty"`
-	SessionID           string    `json:"session_id,omitempty"`
-	DetectionType       DetectionType `json:"detection_type,omitempty"`
-	RiskScore           float64   `json:"risk_score"`
-	AnomalyScore        float64   `json:"anomaly_score"`
-	RelatedAlerts       []string  `json:"related_alerts,omitempty"`
-	Metadata            map[string]interface{} `json:"metadata,omitempty"`
+	AlertID       string                 `json:"alert_id"`
+	Timestamp     time.Time              `json:"timestamp"`
+	Severity      string                 `json:"severity"`
+	Type          string                 `json:"type"`
+	Message       string                 `json:"message"`
+	TemplateID    string                 `json:"template_id,omitempty"`
+	UserID        string                 `json:"user_id,omitempty"`
+	SessionID     string                 `json:"session_id,omitempty"`
+	DetectionType DetectionType          `json:"detection_type,omitempty"`
+	RiskScore     float64                `json:"risk_score"`
+	AnomalyScore  float64                `json:"anomaly_score"`
+	RelatedAlerts []string               `json:"related_alerts,omitempty"`
+	Metadata      map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewAdvancedTemplateMonitor creates a new advanced template monitor
@@ -123,20 +121,20 @@ func NewAdvancedTemplateMonitor(config *ProtectionConfig, patternLibrary *Enhanc
 		},
 		detectionAlgorithms: make(map[string]func(interface{}, interface{}) float64),
 	}
-	
+
 	// Initialize detection algorithms
 	anomalyDetector.detectionAlgorithms["template_risk_score"] = func(current, baseline interface{}) float64 {
 		currentStats := current.(*TemplateStats)
 		baselineStats := baseline.(*TemplateStats)
-		
+
 		if baselineStats.AverageRiskScore == 0 {
 			return 0.0
 		}
-		
+
 		deviation := (currentStats.AverageRiskScore - baselineStats.AverageRiskScore) / baselineStats.AverageRiskScore
 		return deviation
 	}
-	
+
 	// Create alert manager
 	alertManager := &AlertManager{
 		alertHandlers:   make(map[string]func(context.Context, *Alert) error),
@@ -148,19 +146,19 @@ func NewAdvancedTemplateMonitor(config *ProtectionConfig, patternLibrary *Enhanc
 			"low":    0.4,
 		},
 	}
-	
+
 	// Register default alert handlers
 	alertManager.alertHandlers["log"] = func(ctx context.Context, alert *Alert) error {
 		// In a real implementation, this would log to a file or database
-		fmt.Printf("[%s] %s: %s (Risk: %.2f, Anomaly: %.2f)\n", 
-			alert.Severity, 
-			alert.Type, 
-			alert.Message, 
-			alert.RiskScore, 
+		fmt.Printf("[%s] %s: %s (Risk: %.2f, Anomaly: %.2f)\n",
+			alert.Severity,
+			alert.Type,
+			alert.Message,
+			alert.RiskScore,
 			alert.AnomalyScore)
 		return nil
 	}
-	
+
 	return &AdvancedTemplateMonitor{
 		config:              config,
 		patternLibrary:      patternLibrary,
@@ -184,18 +182,18 @@ func NewAdvancedTemplateMonitor(config *ProtectionConfig, patternLibrary *Enhanc
 func (m *AdvancedTemplateMonitor) StartMonitoring(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if m.monitoringActive {
 		return fmt.Errorf("monitoring is already active")
 	}
-	
+
 	m.monitoringActive = true
-	
+
 	// Start monitoring in a goroutine
 	go func() {
 		ticker := time.NewTicker(m.monitoringInterval)
 		defer ticker.Stop()
-		
+
 		for {
 			select {
 			case <-ticker.C:
@@ -207,7 +205,7 @@ func (m *AdvancedTemplateMonitor) StartMonitoring(ctx context.Context) error {
 			}
 		}
 	}()
-	
+
 	return nil
 }
 
@@ -215,11 +213,11 @@ func (m *AdvancedTemplateMonitor) StartMonitoring(ctx context.Context) error {
 func (m *AdvancedTemplateMonitor) StopMonitoring() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if !m.monitoringActive {
 		return
 	}
-	
+
 	m.monitoringActive = false
 	m.stopChan <- struct{}{}
 }
@@ -228,19 +226,19 @@ func (m *AdvancedTemplateMonitor) StopMonitoring() {
 func (m *AdvancedTemplateMonitor) MonitorTemplate(ctx context.Context, templateID string, templateName string, userID string, sessionID string, prompt string, result *ProtectionResult) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	// Update template stats
 	m.updateTemplateStats(templateID, templateName, result)
-	
+
 	// Update user stats
 	m.updateUserStats(userID, templateID, result)
-	
+
 	// Update session stats
 	m.updateSessionStats(sessionID, userID, templateID, result)
-	
+
 	// Check for anomalies
 	anomalies := m.detectAnomalies(templateID, userID, sessionID)
-	
+
 	// Generate alerts for anomalies
 	for _, anomaly := range anomalies {
 		alert := &Alert{
@@ -256,11 +254,11 @@ func (m *AdvancedTemplateMonitor) MonitorTemplate(ctx context.Context, templateI
 			AnomalyScore: anomaly.Score,
 			Metadata:     anomaly.Metadata,
 		}
-		
+
 		// Process the alert
 		m.processAlert(ctx, alert)
 	}
-	
+
 	return nil
 }
 
@@ -283,30 +281,30 @@ func (m *AdvancedTemplateMonitor) updateTemplateStats(templateID string, templat
 		}
 		m.templateStats[templateID] = stats
 	}
-	
+
 	// Update stats
 	stats.ExecutionCount++
 	stats.LastSeen = time.Now()
-	
+
 	// Update average risk score
 	stats.AverageRiskScore = ((stats.AverageRiskScore * float64(stats.ExecutionCount-1)) + result.RiskScore) / float64(stats.ExecutionCount)
-	
+
 	// Update detection count and types
 	if len(result.Detections) > 0 {
 		stats.DetectionCount += len(result.Detections)
-		
+
 		for _, detection := range result.Detections {
 			stats.DetectionTypes[detection.Type]++
 		}
 	}
-	
+
 	// Update success rate (consider blocked or warned as failures)
 	if result.ActionTaken == ActionBlocked || result.ActionTaken == ActionWarned {
 		stats.SuccessRate = ((stats.SuccessRate * float64(stats.ExecutionCount-1)) + 0) / float64(stats.ExecutionCount)
 	} else {
 		stats.SuccessRate = ((stats.SuccessRate * float64(stats.ExecutionCount-1)) + 1) / float64(stats.ExecutionCount)
 	}
-	
+
 	// Update average response time
 	if stats.Metadata["average_response_time"] == nil {
 		stats.Metadata["average_response_time"] = result.ProcessingTime
@@ -336,26 +334,26 @@ func (m *AdvancedTemplateMonitor) updateUserStats(userID string, templateID stri
 		}
 		m.userStats[userID] = stats
 	}
-	
+
 	// Update stats
 	stats.TotalExecutions++
 	stats.LastSeen = time.Now()
-	
+
 	// Update template usage
 	stats.TemplateUsage[templateID]++
-	
+
 	// Update average risk score
 	stats.AverageRiskScore = ((stats.AverageRiskScore * float64(stats.TotalExecutions-1)) + result.RiskScore) / float64(stats.TotalExecutions)
-	
+
 	// Update detection count and types
 	if len(result.Detections) > 0 {
 		stats.DetectionCount += len(result.Detections)
-		
+
 		for _, detection := range result.Detections {
 			stats.DetectionTypes[detection.Type]++
 		}
 	}
-	
+
 	// Update success rate (consider blocked or warned as failures)
 	if result.ActionTaken == ActionBlocked || result.ActionTaken == ActionWarned {
 		stats.SuccessRate = ((stats.SuccessRate * float64(stats.TotalExecutions-1)) + 0) / float64(stats.TotalExecutions)
@@ -384,21 +382,21 @@ func (m *AdvancedTemplateMonitor) updateSessionStats(sessionID string, userID st
 		}
 		m.sessionStats[sessionID] = stats
 	}
-	
+
 	// Update stats
 	stats.ExecutionCount++
 	stats.LastActivityTime = time.Now()
-	
+
 	// Update template usage
 	stats.TemplateUsage[templateID]++
-	
+
 	// Update average risk score
 	stats.AverageRiskScore = ((stats.AverageRiskScore * float64(stats.ExecutionCount-1)) + result.RiskScore) / float64(stats.ExecutionCount)
-	
+
 	// Update detection count and types
 	if len(result.Detections) > 0 {
 		stats.DetectionCount += len(result.Detections)
-		
+
 		for _, detection := range result.Detections {
 			stats.DetectionTypes[detection.Type]++
 		}
@@ -416,16 +414,16 @@ type Anomaly struct {
 // detectAnomalies detects anomalies in template usage
 func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID string, sessionID string) []*Anomaly {
 	anomalies := make([]*Anomaly, 0)
-	
+
 	// Get stats
 	templateStats, templateOk := m.templateStats[templateID]
 	userStats, userOk := m.userStats[userID]
 	sessionStats, sessionOk := m.sessionStats[sessionID]
-	
+
 	if !templateOk || !userOk || !sessionOk {
 		return anomalies
 	}
-	
+
 	// Check for high risk scores
 	if templateStats.AverageRiskScore > m.anomalyDetector.anomalyThresholds["template_risk_score"] {
 		anomalies = append(anomalies, &Anomaly{
@@ -439,7 +437,7 @@ func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID stri
 			},
 		})
 	}
-	
+
 	if userStats.AverageRiskScore > m.anomalyDetector.anomalyThresholds["user_risk_score"] {
 		anomalies = append(anomalies, &Anomaly{
 			Type:    "high_risk_user",
@@ -451,7 +449,7 @@ func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID stri
 			},
 		})
 	}
-	
+
 	// Check for unusual detection patterns
 	if templateStats.DetectionCount > 0 {
 		detectionRate := float64(templateStats.DetectionCount) / float64(templateStats.ExecutionCount)
@@ -469,7 +467,7 @@ func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID stri
 			})
 		}
 	}
-	
+
 	// Check for unusual session patterns
 	if sessionStats.ExecutionCount > 10 {
 		// Check for rapid template switching
@@ -481,15 +479,15 @@ func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID stri
 					Message: fmt.Sprintf("Session %s is rapidly switching between templates (rate: %.2f)", sessionID, switchRate),
 					Score:   switchRate,
 					Metadata: map[string]interface{}{
-						"session_id":   sessionID,
-						"user_id":      userID,
-						"switch_rate":  switchRate,
+						"session_id":     sessionID,
+						"user_id":        userID,
+						"switch_rate":    switchRate,
 						"template_count": len(sessionStats.TemplateUsage),
 					},
 				})
 			}
 		}
-		
+
 		// Check for unusual execution frequency
 		sessionDuration := time.Since(sessionStats.StartTime)
 		executionRate := float64(sessionStats.ExecutionCount) / sessionDuration.Seconds()
@@ -499,15 +497,15 @@ func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID stri
 				Message: fmt.Sprintf("Session %s has a high execution rate of %.2f per second", sessionID, executionRate),
 				Score:   min(executionRate*5, 1.0), // Scale to 0-1
 				Metadata: map[string]interface{}{
-					"session_id":     sessionID,
-					"user_id":        userID,
-					"execution_rate": executionRate,
+					"session_id":       sessionID,
+					"user_id":          userID,
+					"execution_rate":   executionRate,
 					"session_duration": sessionDuration.String(),
 				},
 			})
 		}
 	}
-	
+
 	// Check for unusual detection types
 	for detectionType, count := range templateStats.DetectionTypes {
 		if count > 3 {
@@ -524,7 +522,7 @@ func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID stri
 			})
 		}
 	}
-	
+
 	return anomalies
 }
 
@@ -532,12 +530,12 @@ func (m *AdvancedTemplateMonitor) detectAnomalies(templateID string, userID stri
 func (m *AdvancedTemplateMonitor) processAlert(ctx context.Context, alert *Alert) {
 	// Add to alert history
 	m.alertManager.alertHistory = append(m.alertManager.alertHistory, alert)
-	
+
 	// Trim if too many
 	if len(m.alertManager.alertHistory) > m.alertManager.maxAlertHistory {
 		m.alertManager.alertHistory = m.alertManager.alertHistory[1:]
 	}
-	
+
 	// Process with alert handlers
 	for _, handler := range m.alertManager.alertHandlers {
 		if err := handler(ctx, alert); err != nil {
@@ -551,10 +549,10 @@ func (m *AdvancedTemplateMonitor) processAlert(ctx context.Context, alert *Alert
 func (m *AdvancedTemplateMonitor) performMonitoring(ctx context.Context) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	// Update last monitoring time
 	m.lastMonitoringTime = time.Now()
-	
+
 	// Check for inactive sessions
 	for sessionID, stats := range m.sessionStats {
 		if time.Since(stats.LastActivityTime) > time.Hour {
@@ -562,7 +560,7 @@ func (m *AdvancedTemplateMonitor) performMonitoring(ctx context.Context) {
 			delete(m.sessionStats, sessionID)
 		}
 	}
-	
+
 	// Check for templates with high risk scores
 	for templateID, stats := range m.templateStats {
 		if stats.AverageRiskScore > m.monitoringThreshold {
@@ -576,18 +574,18 @@ func (m *AdvancedTemplateMonitor) performMonitoring(ctx context.Context) {
 				RiskScore:    stats.AverageRiskScore,
 				AnomalyScore: 0,
 				Metadata: map[string]interface{}{
-					"template_name":     stats.TemplateName,
-					"execution_count":   stats.ExecutionCount,
-					"detection_count":   stats.DetectionCount,
-					"success_rate":      stats.SuccessRate,
+					"template_name":   stats.TemplateName,
+					"execution_count": stats.ExecutionCount,
+					"detection_count": stats.DetectionCount,
+					"success_rate":    stats.SuccessRate,
 				},
 			}
-			
+
 			// Process the alert
 			m.processAlert(ctx, alert)
 		}
 	}
-	
+
 	// Check for users with high risk scores
 	for userID, stats := range m.userStats {
 		if stats.AverageRiskScore > m.monitoringThreshold {
@@ -606,7 +604,7 @@ func (m *AdvancedTemplateMonitor) performMonitoring(ctx context.Context) {
 					"success_rate":     stats.SuccessRate,
 				},
 			}
-			
+
 			// Process the alert
 			m.processAlert(ctx, alert)
 		}
@@ -622,12 +620,12 @@ func (m *AdvancedTemplateMonitor) RegisterAlertHandler(name string, handler func
 func (m *AdvancedTemplateMonitor) GetTemplateStats(templateID string) (*TemplateStats, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	stats, ok := m.templateStats[templateID]
 	if !ok {
 		return nil, fmt.Errorf("template stats not found")
 	}
-	
+
 	return stats, nil
 }
 
@@ -635,12 +633,12 @@ func (m *AdvancedTemplateMonitor) GetTemplateStats(templateID string) (*Template
 func (m *AdvancedTemplateMonitor) GetUserStats(userID string) (*UserStats, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	stats, ok := m.userStats[userID]
 	if !ok {
 		return nil, fmt.Errorf("user stats not found")
 	}
-	
+
 	return stats, nil
 }
 
@@ -648,12 +646,12 @@ func (m *AdvancedTemplateMonitor) GetUserStats(userID string) (*UserStats, error
 func (m *AdvancedTemplateMonitor) GetSessionStats(sessionID string) (*SessionStats, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	stats, ok := m.sessionStats[sessionID]
 	if !ok {
 		return nil, fmt.Errorf("session stats not found")
 	}
-	
+
 	return stats, nil
 }
 
@@ -661,7 +659,7 @@ func (m *AdvancedTemplateMonitor) GetSessionStats(sessionID string) (*SessionSta
 func (m *AdvancedTemplateMonitor) GetAlertHistory() []*Alert {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	return m.alertManager.alertHistory
 }
 

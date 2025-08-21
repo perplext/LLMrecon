@@ -149,7 +149,7 @@ func (c *InjectionPatternCheck) Check(template *format.Template, options *Verifi
 	// Check variations for injection patterns
 	for i, variation := range template.Test.Variations {
 		variationPrompt := variation.Prompt
-		
+
 		// Check for SQL injection
 		for _, pattern := range sqlInjectionPatterns {
 			re, err := regexp.Compile(pattern)
@@ -253,7 +253,7 @@ func (c *RegexSafetyCheck) Check(template *format.Template, options *Verificatio
 	// Check main detection pattern
 	if template.Test.Detection.Type == "regex_match" && template.Test.Detection.Pattern != "" {
 		pattern := template.Test.Detection.Pattern
-		
+
 		// Check for potentially dangerous regex patterns
 		for _, dangerousPattern := range dangerousRegexPatterns {
 			if strings.Contains(pattern, dangerousPattern) {
@@ -286,7 +286,7 @@ func (c *RegexSafetyCheck) Check(template *format.Template, options *Verificatio
 	for i, variation := range template.Test.Variations {
 		if variation.Detection.Type == "regex_match" && variation.Detection.Pattern != "" {
 			pattern := variation.Detection.Pattern
-			
+
 			// Check for potentially dangerous regex patterns
 			for _, dangerousPattern := range dangerousRegexPatterns {
 				if strings.Contains(pattern, dangerousPattern) {
@@ -459,7 +459,7 @@ func (c *TemplateFormatCheck) Check(template *format.Template, options *Verifica
 
 	// Run the template's built-in validation
 	validationErr := template.Validate()
-	
+
 	// Convert validation error to security issue if present
 	if validationErr != nil {
 		issues = append(issues, &SecurityIssue{
@@ -543,7 +543,7 @@ func (c *DataLeakageCheck) Check(template *format.Template, options *Verificatio
 	// Check variations for data leakage patterns
 	for i, variation := range template.Test.Variations {
 		variationPrompt := variation.Prompt
-		
+
 		for _, pattern := range dataLeakagePatterns {
 			re, err := regexp.Compile(pattern)
 			if err != nil {
@@ -563,7 +563,6 @@ func (c *DataLeakageCheck) Check(template *format.Template, options *Verificatio
 			}
 		}
 	}
-
 
 	return issues
 }

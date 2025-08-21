@@ -80,7 +80,7 @@ func (m *StaticFileMonitor) monitorLoop() {
 		m.mu.RLock()
 		enabled := m.enabled
 		m.mu.RUnlock()
-		
+
 		if !enabled {
 			continue
 		}
@@ -98,7 +98,7 @@ func (m *StaticFileMonitor) monitorLoop() {
 func (m *StaticFileMonitor) CollectMetrics() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if m.fileHandler == nil {
 		return nil
 	}
@@ -114,15 +114,15 @@ func (m *StaticFileMonitor) CollectMetrics() error {
 
 	// Record metrics
 	tags := map[string]string{"component": "static_file_handler"}
-	
+
 	if err := m.metricsManager.RecordGauge("static_file.files_served", stats.FilesServed, tags); err != nil {
 		return fmt.Errorf("failed to record files_served metric: %w", err)
 	}
-	
+
 	if err := m.metricsManager.RecordGauge("static_file.cache_hits", stats.CacheHits, tags); err != nil {
 		return fmt.Errorf("failed to record cache_hits metric: %w", err)
 	}
-	
+
 	if err := m.metricsManager.RecordGauge("static_file.cache_misses", stats.CacheMisses, tags); err != nil {
 		return fmt.Errorf("failed to record cache_misses metric: %w", err)
 	}
@@ -134,13 +134,13 @@ func (m *StaticFileMonitor) CollectMetrics() error {
 func (m *StaticFileMonitor) CheckAlerts() error {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	if m.alertManager == nil || m.lastStats == nil {
 		return nil
 	}
 
 	tags := map[string]string{"component": "static_file_handler"}
-	
+
 	// Check cache hit ratio
 	if m.lastStats.CacheHits+m.lastStats.CacheMisses > 0 {
 		hitRatio := float64(m.lastStats.CacheHits) / float64(m.lastStats.CacheHits+m.lastStats.CacheMisses)
@@ -156,7 +156,7 @@ func (m *StaticFileMonitor) CheckAlerts() error {
 func (m *StaticFileMonitor) GetMetrics() *StaticFileMetrics {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	if m.lastStats == nil {
 		return &StaticFileMetrics{}
 	}

@@ -1,12 +1,11 @@
 // Package api provides API protection mechanisms for the LLMrecon tool.
 package api
 
-
 import (
-	"time"
 	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	"golang.org/x/time/rate"
 )
@@ -217,11 +216,11 @@ func (rl *RateLimiter) GetStatistics() *RateLimiterStats {
 	rl.mu.RUnlock()
 
 	return &RateLimiterStats{
-		ActiveLimiters:   activeLimiters,
+		ActiveLimiters:    activeLimiters,
 		RequestsPerMinute: rl.config.RequestsPerMinute,
-		BurstSize:        rl.config.BurstSize,
-		ExemptPathsCount: len(rl.config.ExemptPaths),
-		ExemptIPsCount:   len(rl.exemptIPs) + len(rl.exemptCIDR),
+		BurstSize:         rl.config.BurstSize,
+		ExemptPathsCount:  len(rl.config.ExemptPaths),
+		ExemptIPsCount:    len(rl.exemptIPs) + len(rl.exemptCIDR),
 	}
 }
 

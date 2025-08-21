@@ -2,10 +2,10 @@
 package middleware
 
 import (
-	"time"
 	"context"
 	"errors"
 	"sync"
+	"time"
 )
 
 // CircuitBreakerState represents the state of the circuit breaker

@@ -52,19 +52,19 @@ func DefaultFileHandlerOptions() *FileHandlerOptions {
 
 // CachedFile represents a cached static file
 type CachedFile struct {
-	Content       []byte
+	Content           []byte
 	CompressedContent []byte
-	ContentType   string
-	LastModified  time.Time
-	ETag          string
-	Expiration    time.Time
+	ContentType       string
+	LastModified      time.Time
+	ETag              string
+	Expiration        time.Time
 }
 
 // FileHandler handles static file serving with memory optimization
 type FileHandler struct {
-	options *FileHandlerOptions
-	cache   map[string]*CachedFile
-	mutex   sync.RWMutex
+	options   *FileHandlerOptions
+	cache     map[string]*CachedFile
+	mutex     sync.RWMutex
 	cacheSize int64
 }
 
@@ -192,7 +192,11 @@ func (h *FileHandler) serveFromDisk(w http.ResponseWriter, r *http.Request, file
 		http.Error(w, "File not found", http.StatusNotFound)
 		return
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Get file info
 	info, err := file.Stat()
@@ -213,7 +217,7 @@ func (h *FileHandler) serveFromDisk(w http.ResponseWriter, r *http.Request, file
 	// Cache the file if caching is enabled
 	if h.options.EnableCache {
 		h.cacheFile(filePath, file, info, contentType)
-		
+
 		// Try again from cache
 		if cachedFile := h.getFromCache(filePath); cachedFile != nil {
 			if h.checkClientCache(w, r, cachedFile) {
@@ -400,38 +404,38 @@ func (h *FileHandler) GetCacheItemCount() int64 {
 // LoadFromConfig loads file handler options from configuration
 func LoadFromConfig(cfg *config.MemoryConfig) *FileHandlerOptions {
 	options := DefaultFileHandlerOptions()
-	
+
 	if cfg.StaticFileHandler != nil {
 		// Map CacheEnabled to EnableCache
 		options.EnableCache = cfg.StaticFileHandler.CacheEnabled
-		
+
 		// Use MaxFileSize as MaxCacheSize if it's larger than our default
 		if cfg.StaticFileHandler.MaxFileSize > 0 {
 			options.MaxCacheSize = cfg.StaticFileHandler.MaxFileSize
 		}
-		
+
 		// Enable compression if CompressionLevel is greater than 0
 		options.EnableCompression = cfg.StaticFileHandler.CompressionLevel > 0
-		
+
 		// Set cache expiration from CacheTTL
 		if cfg.StaticFileHandler.CacheTTL > 0 {
 			options.CacheExpiration = time.Duration(cfg.StaticFileHandler.CacheTTL) * time.Second
 		}
 	}
-	
+
 	return options
 }
 
 // FileResponse represents a response from the file handler
 type FileResponse struct {
-	Content        []byte
-	ContentType    string
-	ContentLength  int
-	StatusCode     int
-	ETag           string
-	LastModified   time.Time
-	Compressed     bool
-	FromCache      bool
+	Content       []byte
+	ContentType   string
+	ContentLength int
+	StatusCode    int
+	ETag          string
+	LastModified  time.Time
+	Compressed    bool
+	FromCache     bool
 }
 
 // HandlerStats contains statistics for the file handler
@@ -455,20 +459,20 @@ var statsMutex sync.RWMutex
 // This method is primarily for benchmarking and testing
 func (h *FileHandler) ServeFile(fileName string, content []byte) *FileResponse {
 	startTime := time.Now()
-	
+
 	// Update stats
 	statsMutex.Lock()
 	stats.FilesServed++
 	stats.TotalSize += int64(len(content))
 	statsMutex.Unlock()
-	
+
 	// Determine content type
 	contentType := getContentType(fileName)
-	
+
 	// Calculate ETag (MD5 is acceptable for ETags, not for security)
 	hash := md5.Sum(content) // #nosec G401 - MD5 is fine for ETags
 	etag := hex.EncodeToString(hash[:])
-	
+
 	// Create response
 	response := &FileResponse{
 		Content:       content,
@@ -480,7 +484,7 @@ func (h *FileHandler) ServeFile(fileName string, content []byte) *FileResponse {
 		Compressed:    false,
 		FromCache:     false,
 	}
-	
+
 	// Check if file is in cache
 	if h.options.EnableCache {
 		cachedFile := h.getFromCache(fileName)
@@ -489,7 +493,7 @@ func (h *FileHandler) ServeFile(fileName string, content []byte) *FileResponse {
 			statsMutex.Lock()
 			stats.CacheHits++
 			statsMutex.Unlock()
-			
+
 			response.FromCache = true
 			response.Content = cachedFile.Content
 			response.ETag = cachedFile.ETag
@@ -499,35 +503,35 @@ func (h *FileHandler) ServeFile(fileName string, content []byte) *FileResponse {
 			statsMutex.Lock()
 			stats.CacheMisses++
 			statsMutex.Unlock()
-			
+
 			// Cache the file
 			h.cacheFileContent(fileName, content, contentType)
 		}
 	}
-	
+
 	// Compress the file if needed
-	if h.options.EnableCompression && len(content) >= int(h.options.MinCompressSize) && 
-	   shouldCompress(fileName, h.options.CompressExtensions) {
+	if h.options.EnableCompression && len(content) >= int(h.options.MinCompressSize) &&
+		shouldCompress(fileName, h.options.CompressExtensions) {
 		compressedContent := compressContent(content)
-		
+
 		// Update stats
 		statsMutex.Lock()
 		stats.CompressedFiles++
 		stats.CompressedSize += int64(len(compressedContent))
 		statsMutex.Unlock()
-		
+
 		response.Content = compressedContent
 		response.Compressed = true
 		response.ContentLength = len(compressedContent)
 	}
-	
+
 	// Update serve time stats
 	serveTime := time.Since(startTime)
 	statsMutex.Lock()
 	stats.TotalServeTime += serveTime
 	stats.AverageServeTime = stats.TotalServeTime / time.Duration(stats.FilesServed)
 	statsMutex.Unlock()
-	
+
 	return response
 }
 
@@ -537,11 +541,11 @@ func (h *FileHandler) cacheFileContent(fileName string, content []byte, contentT
 	if int64(len(content)) > h.options.MaxCacheSize {
 		return
 	}
-	
+
 	// Calculate ETag (MD5 is acceptable for ETags, not for security)
 	hash := md5.Sum(content) // #nosec G401 - MD5 is fine for ETags
 	etag := hex.EncodeToString(hash[:])
-	
+
 	// Create cached file
 	cachedFile := &CachedFile{
 		Content:      content,
@@ -550,23 +554,23 @@ func (h *FileHandler) cacheFileContent(fileName string, content []byte, contentT
 		ETag:         etag,
 		Expiration:   time.Now().Add(h.options.CacheExpiration),
 	}
-	
+
 	// Compress the file if needed
-	if h.options.EnableCompression && int64(len(content)) >= h.options.MinCompressSize && 
-	   shouldCompress(fileName, h.options.CompressExtensions) {
+	if h.options.EnableCompression && int64(len(content)) >= h.options.MinCompressSize &&
+		shouldCompress(fileName, h.options.CompressExtensions) {
 		cachedFile.CompressedContent = compressContent(content)
 	}
-	
+
 	// Add to cache
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-	
+
 	// Check if we need to evict some files to make room
 	newSize := h.cacheSize + int64(len(content))
 	if newSize > h.options.MaxCacheSize {
 		h.evictCache(newSize - h.options.MaxCacheSize)
 	}
-	
+
 	h.cache[fileName] = cachedFile
 	h.cacheSize += int64(len(content))
 }
@@ -575,13 +579,13 @@ func (h *FileHandler) cacheFileContent(fileName string, content []byte, contentT
 func (h *FileHandler) GetStats() *monitoring.Stats {
 	statsMutex.RLock()
 	defer statsMutex.RUnlock()
-	
+
 	// Calculate compression ratio
 	var compressionRatio float64
 	if stats.TotalSize > 0 && stats.CompressedSize > 0 {
 		compressionRatio = 1.0 - (float64(stats.CompressedSize) / float64(stats.TotalSize))
 	}
-	
+
 	// Return a copy of the stats as monitoring.Stats
 	return &monitoring.Stats{
 		FilesServed:      stats.FilesServed,

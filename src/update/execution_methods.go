@@ -121,7 +121,7 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 
 	if updateErr != nil {
 		e.Logger.Error("UpdateExecutor", fmt.Sprintf("Failed to apply update: %v", updateErr), transaction.ID, nil)
-		
+
 		// Rollback transaction
 		rollbackErr := transaction.Rollback()
 		if rollbackErr != nil {

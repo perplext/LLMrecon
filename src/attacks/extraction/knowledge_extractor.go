@@ -13,21 +13,21 @@ import (
 
 // KnowledgeExtractor extracts training data and model knowledge
 type KnowledgeExtractor struct {
-	strategies     []ExtractionStrategy
-	memorization   *MemorizationDetector
-	dataLeakage    *DataLeakageAnalyzer
-	knowledgeMap   *KnowledgeMapper
-	config         KnowledgeConfig
-	mu             sync.RWMutex
+	strategies   []ExtractionStrategy
+	memorization *MemorizationDetector
+	dataLeakage  *DataLeakageAnalyzer
+	knowledgeMap *KnowledgeMapper
+	config       KnowledgeConfig
+	mu           sync.RWMutex
 }
 
 // KnowledgeConfig configures knowledge extraction
 type KnowledgeConfig struct {
-	MaxExtractionDepth   int
-	ParallelStrategies   int
-	ConfidenceThreshold  float64
-	StealthMode          bool
-	AdaptiveExtraction   bool
+	MaxExtractionDepth  int
+	ParallelStrategies  int
+	ConfidenceThreshold float64
+	StealthMode         bool
+	AdaptiveExtraction  bool
 }
 
 // ExtractionStrategy defines a knowledge extraction approach
@@ -39,22 +39,22 @@ type ExtractionStrategy interface {
 
 // ExtractionResult contains extracted knowledge
 type ExtractionResult struct {
-	Topic       string
-	Content     []string
-	Confidence  float64
-	Source      string
-	Metadata    map[string]interface{}
-	Timestamp   time.Time
+	Topic      string
+	Content    []string
+	Confidence float64
+	Source     string
+	Metadata   map[string]interface{}
+	Timestamp  time.Time
 }
 
 // NewKnowledgeExtractor creates a knowledge extractor
 func NewKnowledgeExtractor(config KnowledgeConfig) *KnowledgeExtractor {
 	ke := &KnowledgeExtractor{
-		config:         config,
-		strategies:     []ExtractionStrategy{},
-		memorization:   NewMemorizationDetector(),
-		dataLeakage:    NewDataLeakageAnalyzer(),
-		knowledgeMap:   NewKnowledgeMapper(),
+		config:       config,
+		strategies:   []ExtractionStrategy{},
+		memorization: NewMemorizationDetector(),
+		dataLeakage:  NewDataLeakageAnalyzer(),
+		knowledgeMap: NewKnowledgeMapper(),
 	}
 
 	// Register extraction strategies
@@ -123,19 +123,19 @@ func (ke *KnowledgeExtractor) RegisterStrategy(strategy ExtractionStrategy) {
 // ExtractKnowledge performs comprehensive knowledge extraction
 func (ke *KnowledgeExtractor) ExtractKnowledge(target interface{}, topics []string) (*KnowledgeReport, error) {
 	report := &KnowledgeReport{
-		ID:            generateReportID(),
-		Timestamp:     time.Now(),
-		Topics:        topics,
-		Extractions:   []ExtractionResult{},
-		Memorization:  []MemorizationInstance{},
-		DataLeaks:     []DataLeak{},
-		KnowledgeMap:  make(map[string][]string),
+		ID:           generateReportID(),
+		Timestamp:    time.Now(),
+		Topics:       topics,
+		Extractions:  []ExtractionResult{},
+		Memorization: []MemorizationInstance{},
+		DataLeaks:    []DataLeak{},
+		KnowledgeMap: make(map[string][]string),
 	}
 
 	// Extract knowledge for each topic
 	var wg sync.WaitGroup
 	resultsChan := make(chan ExtractionResult, len(topics)*len(ke.strategies))
-	
+
 	semaphore := make(chan struct{}, ke.config.ParallelStrategies)
 
 	for _, topic := range topics {
@@ -160,7 +160,7 @@ func (ke *KnowledgeExtractor) ExtractKnowledge(target interface{}, topics []stri
 	// Collect results
 	for result := range resultsChan {
 		report.Extractions = append(report.Extractions, result)
-		
+
 		// Check for memorization
 		if memorized := ke.memorization.Detect(result); memorized != nil {
 			report.Memorization = append(report.Memorization, *memorized)
@@ -195,9 +195,9 @@ type KnowledgeReport struct {
 
 // MemorizationDetector detects memorized content
 type MemorizationDetector struct {
-	patterns      []MemorizationPattern
-	knownContent  map[string]string
-	mu            sync.RWMutex
+	patterns     []MemorizationPattern
+	knownContent map[string]string
+	mu           sync.RWMutex
 }
 
 // MemorizationPattern identifies memorization
@@ -263,9 +263,9 @@ func (md *MemorizationDetector) loadPatterns() {
 		Name: "format_match",
 		Detector: func(content string) bool {
 			patterns := []string{
-				`ISBN[\s-]*([\d-]+)`,           // ISBN
-				`DOI[\s:]*(10\.\d+/[\w.-]+)`,   // DOI
-				`arXiv:(\d+\.\d+)`,              // arXiv
+				`ISBN[\s-]*([\d-]+)`,                        // ISBN
+				`DOI[\s:]*(10\.\d+/[\w.-]+)`,                // DOI
+				`arXiv:(\d+\.\d+)`,                          // arXiv
 				`\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b`, // Email
 			}
 			for _, pattern := range patterns {
@@ -432,8 +432,8 @@ func (c *CredentialDetector) Detect(content string) *DataLeak {
 	}
 
 	// Generic password pattern
-	if strings.Contains(strings.ToLower(content), "password:") || 
-	   strings.Contains(strings.ToLower(content), "passwd:") {
+	if strings.Contains(strings.ToLower(content), "password:") ||
+		strings.Contains(strings.ToLower(content), "passwd:") {
 		return &DataLeak{
 			Type:       "CREDENTIAL",
 			Content:    content,
@@ -508,16 +508,16 @@ func (km *KnowledgeMapper) BuildMap(extractions []ExtractionResult) map[string][
 
 	for _, extraction := range extractions {
 		topic := extraction.Topic
-		
+
 		// Extract key concepts
 		concepts := km.extractConcepts(extraction.Content)
-		
+
 		if _, exists := knowledgeMap[topic]; !exists {
 			knowledgeMap[topic] = []string{}
 		}
-		
+
 		knowledgeMap[topic] = append(knowledgeMap[topic], concepts...)
-		
+
 		// Build relationships
 		for _, concept := range concepts {
 			if _, exists := km.relationships[concept]; !exists {
@@ -533,7 +533,7 @@ func (km *KnowledgeMapper) BuildMap(extractions []ExtractionResult) map[string][
 // extractConcepts extracts key concepts from content
 func (km *KnowledgeMapper) extractConcepts(content []string) []string {
 	concepts := []string{}
-	
+
 	for _, text := range content {
 		// Simple concept extraction (would use NLP in production)
 		words := strings.Fields(text)
@@ -650,9 +650,9 @@ func (m *MembershipInferenceStrategy) analyzeConfidence(responses []string) floa
 	for _, response := range responses {
 		totalLength += len(response)
 	}
-	
+
 	avgLength := float64(totalLength) / float64(len(responses))
-	
+
 	// Longer, more detailed responses suggest training data membership
 	if avgLength > 500 {
 		return 0.9
@@ -674,11 +674,11 @@ func (t *TemplateExtractionStrategy) Name() string { return "template_extraction
 
 func (t *TemplateExtractionStrategy) Extract(target interface{}, topic string) (ExtractionResult, error) {
 	template := t.templates[randInt(len(t.templates))]
-	
+
 	// Try different sources
 	sources := []string{"Wikipedia", "textbooks", "research papers", "documentation"}
 	source := sources[randInt(len(sources))]
-	
+
 	prompt := strings.Replace(template, "[SOURCE]", source, -1)
 	prompt = strings.Replace(prompt, "[TOPIC]", topic, -1)
 
@@ -730,12 +730,12 @@ func (d *DifferentialExtractionStrategy) Extract(target interface{}, topic strin
 func (d *DifferentialExtractionStrategy) findConsistentContent(responses []string) []string {
 	// Find content that appears consistently across variations
 	consistent := []string{}
-	
+
 	// Simplified - would use more sophisticated analysis
 	if len(responses) > 0 {
 		consistent = append(consistent, responses[0])
 	}
-	
+
 	return consistent
 }
 

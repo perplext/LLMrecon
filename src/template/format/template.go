@@ -46,17 +46,17 @@ type TemplateDetection struct {
 
 // TemplateVariation contains a variation of the template test
 type TemplateVariation struct {
-	Prompt    string              `json:"prompt"`
-	Expected  string              `json:"expected,omitempty"`
-	Detection *TemplateDetection  `json:"detection,omitempty"`
+	Prompt    string             `json:"prompt"`
+	Expected  string             `json:"expected,omitempty"`
+	Detection *TemplateDetection `json:"detection,omitempty"`
 }
 
 // TemplateTest contains template test information
 type TemplateTest struct {
-	Prompt     string                `json:"prompt"`
-	Expected   string                `json:"expected,omitempty"`
-	Detection  *TemplateDetection    `json:"detection,omitempty"`
-	Variations []*TemplateVariation  `json:"variations,omitempty"`
+	Prompt     string               `json:"prompt"`
+	Expected   string               `json:"expected,omitempty"`
+	Detection  *TemplateDetection   `json:"detection,omitempty"`
+	Variations []*TemplateVariation `json:"variations,omitempty"`
 }
 
 // LoadTemplate loads a template from the given path
@@ -275,7 +275,7 @@ func (t *Template) Clone() *Template {
 			Prompt:   t.Test.Prompt,
 			Expected: t.Test.Expected,
 		}
-		
+
 		// Copy detection
 		if t.Test.Detection != nil {
 			clone.Test.Detection = &TemplateDetection{
@@ -285,7 +285,7 @@ func (t *Template) Clone() *Template {
 				Criteria: t.Test.Detection.Criteria,
 			}
 		}
-		
+
 		// Copy variations
 		if t.Test.Variations != nil {
 			clone.Test.Variations = make([]*TemplateVariation, len(t.Test.Variations))
@@ -294,7 +294,7 @@ func (t *Template) Clone() *Template {
 					Prompt:   variation.Prompt,
 					Expected: variation.Expected,
 				}
-				
+
 				// Copy variation detection
 				if variation.Detection != nil {
 					cloneVariation.Detection = &TemplateDetection{
@@ -304,7 +304,7 @@ func (t *Template) Clone() *Template {
 						Criteria: variation.Detection.Criteria,
 					}
 				}
-				
+
 				clone.Test.Variations[i] = cloneVariation
 			}
 		}

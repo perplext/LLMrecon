@@ -64,8 +64,8 @@ func (rm *RepositoryManager) AddRepository(name string, repoType RepositoryType,
 
 	// Create repository info
 	repo := &RepositoryInfo{
-		Type:     repoType,
-		URL:      url,
+		Type:      repoType,
+		URL:       url,
 		LocalPath: filepath.Join(rm.BaseDir, string(repoType), name),
 	}
 
@@ -172,10 +172,10 @@ func (rm *RepositoryManager) GetTemplateVersion(name string) (version.Version, e
 	if len(repo.CurrentVersion) >= 7 {
 		// Use 0.0.0+<short commit hash> as version
 		return version.Version{
-			Major:     0,
-			Minor:     0,
-			Patch:     0,
-			Build:     repo.CurrentVersion[:7],
+			Major: 0,
+			Minor: 0,
+			Patch: 0,
+			Build: repo.CurrentVersion[:7],
 		}, nil
 	}
 

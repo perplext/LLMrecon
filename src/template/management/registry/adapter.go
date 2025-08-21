@@ -3,7 +3,7 @@ package registry
 import (
 	"context"
 	"fmt"
-	
+
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
 )
@@ -78,6 +78,7 @@ func (a *RegistryAdapter) UpdateTemplate(ctx context.Context, id string, templat
 func (a *RegistryAdapter) DeleteTemplate(ctx context.Context, id string) error {
 	return a.registry.Unregister(id)
 }
+
 // ValidateTemplate validates a template
 func (a *RegistryAdapter) ValidateTemplate(ctx context.Context, template interfaces.Template) error {
 	return template.Validate()

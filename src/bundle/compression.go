@@ -86,7 +86,11 @@ func (h *GzipHandler) Compress(src io.Reader, dst io.Writer) error {
 			return err
 		}
 	}
-	defer func() { if err := gzWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := gzWriter.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	_, err = io.Copy(gzWriter, src)
 	return err
 }
@@ -96,7 +100,11 @@ func (h *GzipHandler) Decompress(src io.Reader, dst io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := gzReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := gzReader.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	_, err = io.Copy(dst, gzReader)
 	return err
@@ -109,7 +117,6 @@ func (h *GzipHandler) GetExtension() string {
 // ZstdHandler handles Zstandard compression
 type ZstdHandler struct {
 	Level int
-	
 }
 
 func (h *ZstdHandler) Compress(src io.Reader, dst io.Writer) error {
@@ -117,7 +124,11 @@ func (h *ZstdHandler) Compress(src io.Reader, dst io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := encoder.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := encoder.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	_, err = io.Copy(encoder, src)
 	return err
@@ -186,8 +197,10 @@ func (f *EncryptionFactory) GetHandler(algorithm string) (EncryptionHandler, err
 	}
 	return handler, nil
 }
+
 // AESGCMHandler handles AES-256-GCM encryption
 type AESGCMHandler struct{}
+
 func (h *AESGCMHandler) Encrypt(plaintext []byte, password string) ([]byte, error) {
 	// Derive key from password
 	salt := make([]byte, 32)
@@ -427,7 +440,11 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 	if err != nil {
 		return err
 	}
-	defer func() { if err := outputFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := outputFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Create compression writer
 	var writer io.WriteCloser = outputFile
 
@@ -460,13 +477,17 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 	// Apply encryption if requested
 	if options.Encryption != nil {
 		writer.Close()
-		
+
 		// Read compressed data
 		compressedFile, err := os.Open(filepath.Clean(writer.(*os.File).Name()))
 		if err != nil {
 			return err
 		}
-		defer func() { if err := compressedFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := compressedFile.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Encrypt and write to final output
 		encHandler, _ := c.encryptionFactory.GetHandler(options.Encryption.Algorithm)
@@ -489,7 +510,11 @@ func (c *BundleCompressor) DecompressBundle(archivePath string, outputPath strin
 	if err != nil {
 		return err
 	}
-	defer func() { if err := archiveFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := archiveFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	var reader io.Reader = archiveFile
 
@@ -529,7 +554,11 @@ func (c *BundleCompressor) DecompressBundle(archivePath string, outputPath strin
 		if err != nil {
 			return err
 		}
-		defer func() { if err := reader.(*os.File).Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := reader.(*os.File).Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 	}
 
 	// Detect compression type
@@ -577,7 +606,11 @@ type EncryptionHeader struct {
 
 func (c *BundleCompressor) createZipArchive(bundlePath string, output io.Writer, handler CompressionHandler) error {
 	zipWriter := zip.NewWriter(output)
-	defer func() { if err := zipWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := zipWriter.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	return filepath.Walk(bundlePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -614,7 +647,11 @@ func (c *BundleCompressor) createZipArchive(bundlePath string, output io.Writer,
 			if err != nil {
 				return err
 			}
-			defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+			defer func() {
+				if err := file.Close(); err != nil {
+					fmt.Printf("Failed to close: %v\n", err)
+				}
+			}()
 
 			_, err = io.Copy(writer, file)
 			return err
@@ -658,7 +695,11 @@ func (c *BundleCompressor) isEncrypted(path string) bool {
 	if err != nil {
 		return false
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Check for encryption header
 	header := make([]byte, 16)
@@ -702,7 +743,11 @@ func (c *BundleCompressor) readEncryptionHeader(path string) (*EncryptionHeader,
 	if err != nil {
 		return nil, err
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read header
 	headerData := make([]byte, 256)
@@ -784,7 +829,7 @@ func GenerateKeyFromPassword(password string, salt []byte) ([]byte, error) {
 // GenerateRandomPassword generates a secure random password
 func GenerateRandomPassword(length int) (string, error) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?"
-	
+
 	password := make([]byte, length)
 	for i := range password {
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
@@ -793,7 +838,7 @@ func GenerateRandomPassword(length int) (string, error) {
 		}
 		password[i] = charset[n.Int64()]
 	}
-	
+
 	return string(password), nil
 }
 
@@ -805,12 +850,12 @@ func HashPassword(password string) (string, error) {
 	}
 
 	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
-	
+
 	// Encode salt and hash together
 	result := make([]byte, len(salt)+len(hash))
 	copy(result, salt)
 	copy(result[len(salt):], hash)
-	
+
 	return base64.StdEncoding.EncodeToString(result), nil
 }
 
@@ -827,18 +872,18 @@ func VerifyPassword(password, encodedHash string) bool {
 
 	salt := data[:16]
 	expectedHash := data[16:]
-	
+
 	actualHash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
-	
+
 	// Constant time comparison
 	if len(expectedHash) != len(actualHash) {
 		return false
 	}
-	
+
 	var result byte
 	for i := range expectedHash {
 		result |= expectedHash[i] ^ actualHash[i]
 	}
-	
+
 	return result == 0
 }

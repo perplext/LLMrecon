@@ -1,8 +1,8 @@
 package update
 
 import (
-	"crypto/sha1"
 	"crypto/md5"
+	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
@@ -97,7 +97,11 @@ func (g *HashGenerator) HashFile(filePath string) (*HashResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Reset the hasher
 	g.hasher.Reset()
 

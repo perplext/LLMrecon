@@ -299,7 +299,6 @@ func (al *IPAllowlist) GetClientIP(r *http.Request) string {
 	return ip
 }
 
-
 // isTrustedProxy checks if an IP is a trusted proxy
 func (al *IPAllowlist) isTrustedProxy(ip string) bool {
 	for _, trustedProxy := range al.config.TrustedProxies {

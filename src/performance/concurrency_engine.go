@@ -10,62 +10,64 @@ import (
 
 // ConcurrencyEngine manages advanced concurrency patterns for high-performance execution
 type ConcurrencyEngine struct {
-	config       ConcurrencyEngineConfig
-	workerPools  map[string]*WorkerPool
-	pipelines    map[string]*ExecutionPipeline
-	coordinator  *WorkerCoordinator
-	scheduler    *TaskScheduler
-	balancer     *LoadBalancer
-	metrics      *ConcurrencyMetrics
-	logger       Logger
-	mutex        sync.RWMutex
-	ctx          context.Context
-	cancel       context.CancelFunc
-	wg           sync.WaitGroup
+	config      ConcurrencyEngineConfig
+	workerPools map[string]*WorkerPool
+	pipelines   map[string]*ExecutionPipeline
+	coordinator *WorkerCoordinator
+	scheduler   *TaskScheduler
+	balancer    *LoadBalancer
+	metrics     *ConcurrencyMetrics
+	logger      Logger
+	mutex       sync.RWMutex
+	ctx         context.Context
+	cancel      context.CancelFunc
+	wg          sync.WaitGroup
 }
+
 // ConcurrencyEngineConfig defines configuration for the concurrency engine
 type ConcurrencyEngineConfig struct {
 	// Worker pool settings
-	DefaultPoolSize     int           `json:"default_pool_size"`
-	MaxWorkers          int           `json:"max_workers"`
-	MinWorkers          int           `json:"min_workers"`
-	WorkerIdleTimeout   time.Duration `json:"worker_idle_timeout"`
-	
+	DefaultPoolSize   int           `json:"default_pool_size"`
+	MaxWorkers        int           `json:"max_workers"`
+	MinWorkers        int           `json:"min_workers"`
+	WorkerIdleTimeout time.Duration `json:"worker_idle_timeout"`
+
 	// Task scheduling
 	SchedulingAlgorithm SchedulingAlgorithm `json:"scheduling_algorithm"`
 	PriorityLevels      int                 `json:"priority_levels"`
 	TaskTimeout         time.Duration       `json:"task_timeout"`
 	MaxQueueSize        int                 `json:"max_queue_size"`
-	
+
 	// Load balancing
-	BalancingStrategy   BalancingStrategy   `json:"balancing_strategy"`
-	HealthCheckInterval time.Duration       `json:"health_check_interval"`
+	BalancingStrategy    BalancingStrategy      `json:"balancing_strategy"`
+	HealthCheckInterval  time.Duration          `json:"health_check_interval"`
 	CircuitBreakerConfig CircuitBreakerSettings `json:"circuit_breaker"`
-	
+
 	// Coordination
-	EnableCoordination  bool          `json:"enable_coordination"`
-	CoordinationMode    CoordinationMode `json:"coordination_mode"`
-	HeartbeatInterval   time.Duration `json:"heartbeat_interval"`
-	
+	EnableCoordination bool             `json:"enable_coordination"`
+	CoordinationMode   CoordinationMode `json:"coordination_mode"`
+	HeartbeatInterval  time.Duration    `json:"heartbeat_interval"`
+
 	// Performance optimization
 	EnableAdaptiveScaling bool          `json:"enable_adaptive_scaling"`
-	ScalingInterval      time.Duration `json:"scaling_interval"`
-	CPUThreshold         float64       `json:"cpu_threshold"`
-	MemoryThreshold      float64       `json:"memory_threshold"`
-	
+	ScalingInterval       time.Duration `json:"scaling_interval"`
+	CPUThreshold          float64       `json:"cpu_threshold"`
+	MemoryThreshold       float64       `json:"memory_threshold"`
+
 	// Monitoring
-	EnableMetrics       bool          `json:"enable_metrics"`
-	MetricsInterval     time.Duration `json:"metrics_interval"`
+	EnableMetrics   bool          `json:"enable_metrics"`
+	MetricsInterval time.Duration `json:"metrics_interval"`
 }
+
 // SchedulingAlgorithm defines task scheduling algorithms
 type SchedulingAlgorithm string
 
 const (
-	SchedulingFIFO        SchedulingAlgorithm = "fifo"
-	SchedulingPriority    SchedulingAlgorithm = "priority"
-	SchedulingRoundRobin  SchedulingAlgorithm = "round_robin"
-	SchedulingLeastLoad   SchedulingAlgorithm = "least_load"
-	SchedulingAdaptive    SchedulingAlgorithm = "adaptive"
+	SchedulingFIFO       SchedulingAlgorithm = "fifo"
+	SchedulingPriority   SchedulingAlgorithm = "priority"
+	SchedulingRoundRobin SchedulingAlgorithm = "round_robin"
+	SchedulingLeastLoad  SchedulingAlgorithm = "least_load"
+	SchedulingAdaptive   SchedulingAlgorithm = "adaptive"
 )
 
 // CoordinationMode defines worker coordination modes
@@ -79,17 +81,18 @@ const (
 
 // WorkerPool manages a pool of workers for specific task types
 type WorkerPool struct {
-	name         string
-	workers      []*Worker
-	taskQueue    chan Task
-	config       WorkerPoolConfig
-	metrics      *PoolMetrics
-	coordinator  *WorkerCoordinator
-	mutex        sync.RWMutex
-	ctx          context.Context
-	cancel       context.CancelFunc
-	wg           sync.WaitGroup
+	name        string
+	workers     []*Worker
+	taskQueue   chan Task
+	config      WorkerPoolConfig
+	metrics     *PoolMetrics
+	coordinator *WorkerCoordinator
+	mutex       sync.RWMutex
+	ctx         context.Context
+	cancel      context.CancelFunc
+	wg          sync.WaitGroup
 }
+
 // Worker represents an individual worker
 type Worker struct {
 	id           string
@@ -103,6 +106,7 @@ type Worker struct {
 	ctx          context.Context
 	cancel       context.CancelFunc
 }
+
 // WorkerStatus represents worker states
 type WorkerStatus string
 
@@ -130,17 +134,18 @@ type TaskProcessor interface {
 	GetLoad() float64
 }
 type ExecutionPipeline struct {
-	name        string
-	stages      []*PipelineStage
-	input       chan Task
-	output      chan PipelineResult
-	metrics     *PipelineMetrics
-	config      PipelineConfig
-	mutex       sync.RWMutex
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
+	name    string
+	stages  []*PipelineStage
+	input   chan Task
+	output  chan PipelineResult
+	metrics *PipelineMetrics
+	config  PipelineConfig
+	mutex   sync.RWMutex
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
 }
+
 // PipelineStage represents a stage in an execution pipeline
 type PipelineStage struct {
 	name        string
@@ -155,6 +160,7 @@ type PipelineStage struct {
 	cancel      context.CancelFunc
 	wg          sync.WaitGroup
 }
+
 // StageProcessor processes tasks in a pipeline stage
 type StageProcessor interface {
 	ProcessStage(ctx context.Context, task Task) (Task, error)
@@ -162,17 +168,18 @@ type StageProcessor interface {
 	IsParallel() bool
 }
 type WorkerCoordinator struct {
-	pools       map[string]*WorkerPool
-	nodes       map[string]*NodeInfo
-	metrics     *CoordinatorMetrics
-	config      CoordinatorConfig
-	heartbeat   *HeartbeatManager
-	discovery   *ServiceDiscovery
-	mutex       sync.RWMutex
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
+	pools     map[string]*WorkerPool
+	nodes     map[string]*NodeInfo
+	metrics   *CoordinatorMetrics
+	config    CoordinatorConfig
+	heartbeat *HeartbeatManager
+	discovery *ServiceDiscovery
+	mutex     sync.RWMutex
+	ctx       context.Context
+	cancel    context.CancelFunc
+	wg        sync.WaitGroup
 }
+
 // NodeInfo represents information about a worker node
 type NodeInfo struct {
 	ID           string                 `json:"id"`
@@ -183,6 +190,7 @@ type NodeInfo struct {
 	Load         NodeLoad               `json:"load"`
 	Metadata     map[string]interface{} `json:"metadata"`
 }
+
 // NodeStatus represents node states
 type NodeStatus string
 
@@ -201,6 +209,7 @@ type NodeLoad struct {
 	TaskCount  int     `json:"task_count"`
 	QueueDepth int     `json:"queue_depth"`
 }
+
 // TaskScheduler schedules tasks across workers and pools
 type TaskScheduler struct {
 	queues      map[int]*PriorityQueue
@@ -212,6 +221,7 @@ type TaskScheduler struct {
 	ctx         context.Context
 	cancel      context.CancelFunc
 }
+
 // LoadBalancer distributes tasks across available resources
 type LoadBalancer struct {
 	strategy    BalancingStrategy
@@ -224,6 +234,7 @@ type LoadBalancer struct {
 	ctx         context.Context
 	cancel      context.CancelFunc
 }
+
 // Various metrics structures
 type ConcurrencyMetrics struct {
 	TotalWorkers        int64         `json:"total_workers"`
@@ -249,13 +260,13 @@ type PoolMetrics struct {
 }
 
 type WorkerMetrics struct {
-	WorkerID        string        `json:"worker_id"`
-	TasksProcessed  int64         `json:"tasks_processed"`
-	TasksFailed     int64         `json:"tasks_failed"`
-	AverageLatency  time.Duration `json:"average_latency"`
-	LastTaskTime    time.Time     `json:"last_task_time"`
-	Status          WorkerStatus  `json:"status"`
-	Load            float64       `json:"load"`
+	WorkerID       string        `json:"worker_id"`
+	TasksProcessed int64         `json:"tasks_processed"`
+	TasksFailed    int64         `json:"tasks_failed"`
+	AverageLatency time.Duration `json:"average_latency"`
+	LastTaskTime   time.Time     `json:"last_task_time"`
+	Status         WorkerStatus  `json:"status"`
+	Load           float64       `json:"load"`
 }
 
 type ResourceStats struct {
@@ -272,6 +283,7 @@ type GCStats struct {
 	HeapSize    uint64        `json:"heap_size"`
 	HeapObjects uint64        `json:"heap_objects"`
 }
+
 // Configuration structures
 type WorkerPoolConfig struct {
 	Name            string        `json:"name"`
@@ -284,33 +296,33 @@ type WorkerPoolConfig struct {
 }
 
 type PipelineConfig struct {
-	Name            string        `json:"name"`
-	BufferSize      int           `json:"buffer_size"`
-	Timeout         time.Duration `json:"timeout"`
-	EnableParallel  bool          `json:"enable_parallel"`
-	MaxConcurrency  int           `json:"max_concurrency"`
+	Name           string        `json:"name"`
+	BufferSize     int           `json:"buffer_size"`
+	Timeout        time.Duration `json:"timeout"`
+	EnableParallel bool          `json:"enable_parallel"`
+	MaxConcurrency int           `json:"max_concurrency"`
 }
 
 type CoordinatorConfig struct {
-	NodeID              string        `json:"node_id"`
-	HeartbeatInterval   time.Duration `json:"heartbeat_interval"`
-	NodeTimeout         time.Duration `json:"node_timeout"`
-	EnableDiscovery     bool          `json:"enable_discovery"`
-	DiscoveryInterval   time.Duration `json:"discovery_interval"`
+	NodeID            string        `json:"node_id"`
+	HeartbeatInterval time.Duration `json:"heartbeat_interval"`
+	NodeTimeout       time.Duration `json:"node_timeout"`
+	EnableDiscovery   bool          `json:"enable_discovery"`
+	DiscoveryInterval time.Duration `json:"discovery_interval"`
 }
 
 type SchedulerConfig struct {
-	Algorithm       SchedulingAlgorithm `json:"algorithm"`
-	PriorityLevels  int                 `json:"priority_levels"`
-	QueueTimeout    time.Duration       `json:"queue_timeout"`
-	EnablePreemption bool               `json:"enable_preemption"`
+	Algorithm        SchedulingAlgorithm `json:"algorithm"`
+	PriorityLevels   int                 `json:"priority_levels"`
+	QueueTimeout     time.Duration       `json:"queue_timeout"`
+	EnablePreemption bool                `json:"enable_preemption"`
 }
 
 type BalancerConfig struct {
-	Strategy           BalancingStrategy `json:"strategy"`
-	HealthCheckInterval time.Duration    `json:"health_check_interval"`
-	FailureThreshold   int               `json:"failure_threshold"`
-	RecoveryTimeout    time.Duration     `json:"recovery_timeout"`
+	Strategy            BalancingStrategy `json:"strategy"`
+	HealthCheckInterval time.Duration     `json:"health_check_interval"`
+	FailureThreshold    int               `json:"failure_threshold"`
+	RecoveryTimeout     time.Duration     `json:"recovery_timeout"`
 }
 
 type CircuitBreakerSettings struct {
@@ -318,10 +330,11 @@ type CircuitBreakerSettings struct {
 	RecoveryTimeout  time.Duration `json:"recovery_timeout"`
 	HalfOpenRequests int           `json:"half_open_requests"`
 }
+
 // Default configuration
 func DefaultConcurrencyEngineConfig() ConcurrencyEngineConfig {
 	return ConcurrencyEngineConfig{
-		DefaultPoolSize:      runtime.NumCPU() * 2,
+		DefaultPoolSize:     runtime.NumCPU() * 2,
 		MaxWorkers:          runtime.NumCPU() * 10,
 		MinWorkers:          runtime.NumCPU(),
 		WorkerIdleTimeout:   5 * time.Minute,
@@ -336,20 +349,20 @@ func DefaultConcurrencyEngineConfig() ConcurrencyEngineConfig {
 			RecoveryTimeout:  30 * time.Second,
 			HalfOpenRequests: 3,
 		},
-		EnableCoordination:   true,
-		CoordinationMode:     CoordinationHybrid,
-		HeartbeatInterval:    5 * time.Second,
+		EnableCoordination:    true,
+		CoordinationMode:      CoordinationHybrid,
+		HeartbeatInterval:     5 * time.Second,
 		EnableAdaptiveScaling: true,
-		ScalingInterval:      30 * time.Second,
-		CPUThreshold:         0.8,
-		MemoryThreshold:      0.85,
-		EnableMetrics:        true,
-		MetricsInterval:      10 * time.Second,
+		ScalingInterval:       30 * time.Second,
+		CPUThreshold:          0.8,
+		MemoryThreshold:       0.85,
+		EnableMetrics:         true,
+		MetricsInterval:       10 * time.Second,
 	}
 }
 func NewConcurrencyEngine(config ConcurrencyEngineConfig, logger Logger) *ConcurrencyEngine {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	engine := &ConcurrencyEngine{
 		config:      config,
 		workerPools: make(map[string]*WorkerPool),
@@ -359,7 +372,7 @@ func NewConcurrencyEngine(config ConcurrencyEngineConfig, logger Logger) *Concur
 		ctx:         ctx,
 		cancel:      cancel,
 	}
-	
+
 	// Initialize components
 	engine.coordinator = NewWorkerCoordinator(CoordinatorConfig{
 		NodeID:            fmt.Sprintf("node_%d", time.Now().Unix()),
@@ -368,41 +381,41 @@ func NewConcurrencyEngine(config ConcurrencyEngineConfig, logger Logger) *Concur
 		EnableDiscovery:   config.EnableCoordination,
 		DiscoveryInterval: config.HeartbeatInterval * 2,
 	}, logger)
-	
+
 	engine.scheduler = NewTaskScheduler(SchedulerConfig{
-		Algorithm:       config.SchedulingAlgorithm,
-		PriorityLevels:  config.PriorityLevels,
-		QueueTimeout:    config.TaskTimeout,
+		Algorithm:        config.SchedulingAlgorithm,
+		PriorityLevels:   config.PriorityLevels,
+		QueueTimeout:     config.TaskTimeout,
 		EnablePreemption: false,
 	}, engine.coordinator, logger)
-	
+
 	engine.balancer = NewLoadBalancer(BalancerConfig{
-		Strategy:           config.BalancingStrategy,
+		Strategy:            config.BalancingStrategy,
 		HealthCheckInterval: config.HealthCheckInterval,
-		FailureThreshold:   config.CircuitBreakerConfig.FailureThreshold,
-		RecoveryTimeout:    config.CircuitBreakerConfig.RecoveryTimeout,
+		FailureThreshold:    config.CircuitBreakerConfig.FailureThreshold,
+		RecoveryTimeout:     config.CircuitBreakerConfig.RecoveryTimeout,
 	}, logger)
-	
+
 	return engine
 }
 func (e *ConcurrencyEngine) Start() error {
 	e.logger.Info("Starting concurrency engine")
-	
+
 	// Start coordinator
 	if err := e.coordinator.Start(); err != nil {
 		return fmt.Errorf("failed to start coordinator: %w", err)
 	}
-	
+
 	// Start scheduler
 	if err := e.scheduler.Start(); err != nil {
 		return fmt.Errorf("failed to start scheduler: %w", err)
 	}
-	
+
 	// Start load balancer
 	if err := e.balancer.Start(); err != nil {
 		return fmt.Errorf("failed to start load balancer: %w", err)
 	}
-	
+
 	// Start metrics collection
 	if e.config.EnableMetrics {
 		e.wg.Add(1)
@@ -411,7 +424,7 @@ func (e *ConcurrencyEngine) Start() error {
 			e.metricsLoop()
 		}()
 	}
-	
+
 	// Start adaptive scaling
 	if e.config.EnableAdaptiveScaling {
 		e.wg.Add(1)
@@ -420,15 +433,15 @@ func (e *ConcurrencyEngine) Start() error {
 			e.adaptiveScalingLoop()
 		}()
 	}
-	
+
 	e.logger.Info("Concurrency engine started")
 	return nil
 }
 func (e *ConcurrencyEngine) Stop() error {
 	e.logger.Info("Stopping concurrency engine")
-	
+
 	e.cancel()
-	
+
 	// Stop all worker pools
 	e.mutex.Lock()
 	for _, pool := range e.workerPools {
@@ -438,52 +451,52 @@ func (e *ConcurrencyEngine) Stop() error {
 		pipeline.Stop()
 	}
 	e.mutex.Unlock()
-	
+
 	// Stop components
 	e.coordinator.Stop()
 	e.scheduler.Stop()
 	e.balancer.Stop()
-	
+
 	e.wg.Wait()
-	
+
 	e.logger.Info("Concurrency engine stopped")
 	return nil
 }
 func (e *ConcurrencyEngine) CreateWorkerPool(config WorkerPoolConfig, processor TaskProcessor) (*WorkerPool, error) {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
-	
+
 	if _, exists := e.workerPools[config.Name]; exists {
 		return nil, fmt.Errorf("worker pool %s already exists", config.Name)
 	}
-	
+
 	pool := NewWorkerPool(config, processor, e.coordinator, e.logger)
 	e.workerPools[config.Name] = pool
-	
+
 	if err := pool.Start(); err != nil {
 		delete(e.workerPools, config.Name)
 		return nil, fmt.Errorf("failed to start worker pool: %w", err)
 	}
-	
+
 	e.logger.Info("Created worker pool", "name", config.Name, "workers", config.MinWorkers)
 	return pool, nil
 }
 func (e *ConcurrencyEngine) CreatePipeline(config PipelineConfig, stages []StageProcessor) (*ExecutionPipeline, error) {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
-	
+
 	if _, exists := e.pipelines[config.Name]; exists {
 		return nil, fmt.Errorf("pipeline %s already exists", config.Name)
 	}
-	
+
 	pipeline := NewExecutionPipeline(config, stages, e.logger)
 	e.pipelines[config.Name] = pipeline
-	
+
 	if err := pipeline.Start(); err != nil {
 		delete(e.pipelines, config.Name)
 		return nil, fmt.Errorf("failed to start pipeline: %w", err)
 	}
-	
+
 	e.logger.Info("Created execution pipeline", "name", config.Name, "stages", len(stages))
 	return pipeline, nil
 }
@@ -501,18 +514,18 @@ func (e *ConcurrencyEngine) SubmitTasks(tasks []Task) error {
 func (e *ConcurrencyEngine) GetMetrics() *ConcurrencyMetrics {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	
+
 	// Aggregate metrics from all pools
 	var totalWorkers, activeWorkers, idleWorkers int64
 	var tasksProcessed, tasksQueued, tasksFailed int64
-	
+
 	for _, pool := range e.workerPools {
 		poolMetrics := pool.GetMetrics()
 		totalWorkers += int64(poolMetrics.WorkerCount)
 		tasksProcessed += poolMetrics.CompletedTasks
 		tasksFailed += poolMetrics.FailedTasks
 		tasksQueued += int64(poolMetrics.QueueDepth)
-		
+
 		// Count active/idle workers
 		for _, worker := range pool.workers {
 			if worker.status == WorkerStatusProcessing {
@@ -522,22 +535,22 @@ func (e *ConcurrencyEngine) GetMetrics() *ConcurrencyMetrics {
 			}
 		}
 	}
-	
+
 	e.metrics.TotalWorkers = totalWorkers
 	e.metrics.ActiveWorkers = activeWorkers
 	e.metrics.IdleWorkers = idleWorkers
 	e.metrics.TasksProcessed = tasksProcessed
 	e.metrics.TasksQueued = tasksQueued
 	e.metrics.TasksFailed = tasksFailed
-	
+
 	// Calculate throughput
 	if e.metrics.AverageLatency > 0 {
 		e.metrics.Throughput = float64(activeWorkers) / e.metrics.AverageLatency.Seconds()
 	}
-	
+
 	// Update resource utilization
 	e.updateResourceMetrics()
-	
+
 	return e.metrics
 }
 
@@ -547,7 +560,7 @@ func (e *ConcurrencyEngine) GetMetrics() *ConcurrencyMetrics {
 func (e *ConcurrencyEngine) metricsLoop() {
 	ticker := time.NewTicker(e.config.MetricsInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -557,12 +570,12 @@ func (e *ConcurrencyEngine) metricsLoop() {
 		}
 	}
 
-// adaptiveScalingLoop performs adaptive scaling of worker pools
+	// adaptiveScalingLoop performs adaptive scaling of worker pools
 }
 func (e *ConcurrencyEngine) adaptiveScalingLoop() {
 	ticker := time.NewTicker(e.config.ScalingInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -572,18 +585,18 @@ func (e *ConcurrencyEngine) adaptiveScalingLoop() {
 		}
 	}
 
-// performAdaptiveScaling scales worker pools based on load
+	// performAdaptiveScaling scales worker pools based on load
 }
 func (e *ConcurrencyEngine) performAdaptiveScaling() {
 	metrics := e.GetMetrics()
-	
+
 	// Scale based on CPU usage
 	if metrics.ResourceUtilization.CPUUsage > e.config.CPUThreshold {
 		e.scaleUp()
 	} else if metrics.ResourceUtilization.CPUUsage < e.config.CPUThreshold*0.5 {
 		e.scaleDown()
 	}
-	
+
 	// Scale based on queue depth
 	if metrics.TasksQueued > int64(e.config.MaxQueueSize)*8/10 {
 		e.scaleUp()
@@ -594,7 +607,7 @@ func (e *ConcurrencyEngine) performAdaptiveScaling() {
 func (e *ConcurrencyEngine) scaleUp() {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	
+
 	for _, pool := range e.workerPools {
 		if len(pool.workers) < e.config.MaxWorkers {
 			pool.AddWorker()
@@ -607,7 +620,7 @@ func (e *ConcurrencyEngine) scaleUp() {
 func (e *ConcurrencyEngine) scaleDown() {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	
+
 	for _, pool := range e.workerPools {
 		if len(pool.workers) > e.config.MinWorkers {
 			pool.RemoveWorker()
@@ -620,11 +633,11 @@ func (e *ConcurrencyEngine) scaleDown() {
 func (e *ConcurrencyEngine) updateResourceMetrics() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	
+
 	e.metrics.ResourceUtilization = ResourceStats{
-		CPUUsage:   getCPUUsage(),
+		CPUUsage:    getCPUUsage(),
 		MemoryUsage: float64(m.Alloc) / float64(m.Sys),
-		Goroutines: runtime.NumGoroutine(),
+		Goroutines:  runtime.NumGoroutine(),
 		GCStats: GCStats{
 			NumGC:       m.NumGC,
 			PauseTotal:  time.Duration(m.PauseTotalNs),
@@ -639,7 +652,7 @@ func (e *ConcurrencyEngine) updateResourceMetrics() {
 func getCPUUsage() float64 {
 	// This is a simplified implementation
 	// In production, use a proper CPU monitoring library
-	return float64(runtime.NumGoroutine()) / float64(runtime.NumCPU() * 1000)
+	return float64(runtime.NumGoroutine()) / float64(runtime.NumCPU()*1000)
 }
 
 // Placeholder implementations for referenced types
@@ -733,8 +746,8 @@ func NewTaskScheduler(config SchedulerConfig, coordinator *WorkerCoordinator, lo
 	}
 
 }
-func (ts *TaskScheduler) Start() error                { return nil }
-func (ts *TaskScheduler) Stop() error                 { return nil }
+func (ts *TaskScheduler) Start() error                 { return nil }
+func (ts *TaskScheduler) Stop() error                  { return nil }
 func (ts *TaskScheduler) ScheduleTask(task Task) error { return nil }
 
 func NewLoadBalancer(config BalancerConfig, logger Logger) *LoadBalancer {
@@ -764,11 +777,11 @@ func NewWorkerPool(config WorkerPoolConfig, processor TaskProcessor, coordinator
 	}
 
 }
-func (wp *WorkerPool) Start() error                  { return nil }
-func (wp *WorkerPool) Stop() error                   { return nil }
-func (wp *WorkerPool) AddWorker() error              { return nil }
-func (wp *WorkerPool) RemoveWorker() error           { return nil }
-func (wp *WorkerPool) GetMetrics() *PoolMetrics      { return wp.metrics }
+func (wp *WorkerPool) Start() error             { return nil }
+func (wp *WorkerPool) Stop() error              { return nil }
+func (wp *WorkerPool) AddWorker() error         { return nil }
+func (wp *WorkerPool) RemoveWorker() error      { return nil }
+func (wp *WorkerPool) GetMetrics() *PoolMetrics { return wp.metrics }
 
 func NewExecutionPipeline(config PipelineConfig, stages []StageProcessor, logger Logger) *ExecutionPipeline {
 	ctx, cancel := context.WithCancel(context.Background())

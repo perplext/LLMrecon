@@ -27,26 +27,26 @@ func (a *RepositoryAuthenticator) AuthenticateRepository(ctx context.Context, re
 	if err != nil {
 		return fmt.Errorf("failed to get credentials: %w", err)
 	}
-	
+
 	// Authenticate with the authentication manager
 	authenticated, err := a.authManager.Authenticate(ctx, creds)
 	if err != nil {
 		return fmt.Errorf("authentication failed: %w", err)
 	}
-	
+
 	if !authenticated {
 		return fmt.Errorf("invalid credentials")
 	}
-	
+
 	// Apply credentials to repository config
 	config := getRepositoryConfig(repo)
 	if config == nil {
 		return fmt.Errorf("failed to get repository config")
 	}
-	
+
 	// Update config with credentials
 	updateConfigWithCredentials(config, creds)
-	
+
 	return nil
 }
 
@@ -54,14 +54,14 @@ func (a *RepositoryAuthenticator) AuthenticateRepository(ctx context.Context, re
 func getRepositoryConfig(repo repository.Repository) *repository.Config {
 	// This is a simplified implementation
 	// In a real system, we would need to access the repository's config directly
-	
+
 	// Create a new config based on the repository's type, name, and URL
 	config := repository.NewConfig(
 		repo.GetType(),
 		repo.GetName(),
 		repo.GetURL(),
 	)
-	
+
 	return config
 }
 
@@ -95,7 +95,7 @@ func (a *RepositoryAuthenticator) AuthorizeRepositoryOperation(user *User, repo 
 	if !a.authManager.HasPermission(user, operation) {
 		return fmt.Errorf("user does not have permission to perform this operation")
 	}
-	
+
 	return nil
 }
 

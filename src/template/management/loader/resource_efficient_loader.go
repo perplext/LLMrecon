@@ -64,8 +64,6 @@ type ResourceEfficientLoaderOptions struct {
 	MaxMemoryUsage int64
 }
 
-
-
 // NewResourceEfficientLoader creates a new resource-efficient template loader
 func NewResourceEfficientLoader(repoManager *repository.Manager, options ResourceEfficientLoaderOptions) *ResourceEfficientLoader {
 	// Set default values
@@ -672,4 +670,3 @@ func (l *ResourceEfficientLoader) SetConcurrencyLimit(limit int) {
 	l.loadSemaphore = make(chan struct{}, limit)
 	l.options.ConcurrencyLimit = limit
 }
-

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
 
@@ -121,9 +121,9 @@ func (r *ComplianceReporterImpl) generateStandardResult(ctx context.Context, tes
 
 	// Create a new standard result
 	result := &StandardComplianceResult{
-		Standard:          standard,
+		Standard:           standard,
 		RequirementResults: make(map[string]*RequirementComplianceResult),
-		TotalRequirements: len(requirements),
+		TotalRequirements:  len(requirements),
 	}
 
 	// Process each requirement
@@ -163,10 +163,10 @@ func (r *ComplianceReporterImpl) generateStandardResult(ctx context.Context, tes
 
 									// Add recommendations if enabled
 									if options.IncludeRecommendations {
-										recommendation := fmt.Sprintf("Fix issues in test case '%s' (%s) to comply with %s %s", 
-											testResult.TestCase.Name, 
-											testResult.TestCase.ID, 
-											req.Standard, 
+										recommendation := fmt.Sprintf("Fix issues in test case '%s' (%s) to comply with %s %s",
+											testResult.TestCase.Name,
+											testResult.TestCase.ID,
+											req.Standard,
 											req.ID)
 										reqResult.Recommendations = append(reqResult.Recommendations, recommendation)
 									}
@@ -193,10 +193,10 @@ func (r *ComplianceReporterImpl) generateStandardResult(ctx context.Context, tes
 	}
 
 	// Generate a summary
-	result.Summary = fmt.Sprintf("Compliance with %s: %.2f%% (%d/%d requirements met)", 
-		standard, 
-		result.OverallCompliance, 
-		result.PassedRequirements, 
+	result.Summary = fmt.Sprintf("Compliance with %s: %.2f%% (%d/%d requirements met)",
+		standard,
+		result.OverallCompliance,
+		result.PassedRequirements,
 		result.TotalRequirements)
 
 	return result, nil

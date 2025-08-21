@@ -99,7 +99,11 @@ func (p *MemoryProfiler) CaptureHeapProfile(label string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create profile file: %w", err)
 	}
-	defer func() { if err := f.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write heap profile
 	if err := pprof.WriteHeapProfile(f); err != nil {
@@ -191,21 +195,21 @@ func (p *MemoryProfiler) GetFormattedMemoryStats() map[string]interface{} {
 	const MB = 1024 * 1024
 
 	return map[string]interface{}{
-		"alloc_mb":        float64(p.memStats.Alloc) / MB,
-		"total_alloc_mb":  float64(p.memStats.TotalAlloc) / MB,
-		"sys_mb":          float64(p.memStats.Sys) / MB,
-		"heap_alloc_mb":   float64(p.memStats.HeapAlloc) / MB,
-		"heap_sys_mb":     float64(p.memStats.HeapSys) / MB,
-		"heap_idle_mb":    float64(p.memStats.HeapIdle) / MB,
-		"heap_inuse_mb":   float64(p.memStats.HeapInuse) / MB,
+		"alloc_mb":         float64(p.memStats.Alloc) / MB,
+		"total_alloc_mb":   float64(p.memStats.TotalAlloc) / MB,
+		"sys_mb":           float64(p.memStats.Sys) / MB,
+		"heap_alloc_mb":    float64(p.memStats.HeapAlloc) / MB,
+		"heap_sys_mb":      float64(p.memStats.HeapSys) / MB,
+		"heap_idle_mb":     float64(p.memStats.HeapIdle) / MB,
+		"heap_inuse_mb":    float64(p.memStats.HeapInuse) / MB,
 		"heap_released_mb": float64(p.memStats.HeapReleased) / MB,
-		"heap_objects":    p.memStats.HeapObjects,
-		"num_gc":          p.memStats.NumGC,
-		"next_gc_mb":      float64(p.memStats.NextGC) / MB,
-		"gc_cpu_fraction": p.memStats.GCCPUFraction,
-		"num_goroutines":  runtime.NumGoroutine(),
-		"num_cpu":         runtime.NumCPU(),
-		"max_procs":       runtime.GOMAXPROCS(0),
+		"heap_objects":     p.memStats.HeapObjects,
+		"num_gc":           p.memStats.NumGC,
+		"next_gc_mb":       float64(p.memStats.NextGC) / MB,
+		"gc_cpu_fraction":  p.memStats.GCCPUFraction,
+		"num_goroutines":   runtime.NumGoroutine(),
+		"num_cpu":          runtime.NumCPU(),
+		"max_procs":        runtime.GOMAXPROCS(0),
 	}
 }
 
@@ -217,7 +221,7 @@ func (p *MemoryProfiler) CheckMemoryThresholds() {
 	// Check memory usage threshold
 	heapAllocMB := float64(p.memStats.HeapAlloc) / (1024 * 1024)
 	if int64(heapAllocMB) > p.memoryThreshold {
-		alert := fmt.Sprintf("Memory usage alert: HeapAlloc %.2f MB exceeds threshold of %d MB", 
+		alert := fmt.Sprintf("Memory usage alert: HeapAlloc %.2f MB exceeds threshold of %d MB",
 			heapAllocMB, p.memoryThreshold)
 		p.alerts = append(p.alerts, alert)
 	}
@@ -227,7 +231,7 @@ func (p *MemoryProfiler) CheckMemoryThresholds() {
 	if p.memStats.NumGC > 0 {
 		gcPauseMS = float64(p.memStats.PauseNs[(p.memStats.NumGC+255)%256]) / float64(time.Millisecond)
 		if int64(gcPauseMS) > p.gcThreshold {
-			alert := fmt.Sprintf("GC pause time alert: %.2f ms exceeds threshold of %d ms", 
+			alert := fmt.Sprintf("GC pause time alert: %.2f ms exceeds threshold of %d ms",
 				gcPauseMS, p.gcThreshold)
 			p.alerts = append(p.alerts, alert)
 		}
@@ -289,17 +293,17 @@ func (p *MemoryProfiler) CompareSnapshots(name1, name2 string) (map[string]inter
 
 	// Calculate differences
 	return map[string]interface{}{
-		"alloc_diff_mb":        float64(snapshot2.Alloc-snapshot1.Alloc) / MB,
-		"total_alloc_diff_mb":  float64(snapshot2.TotalAlloc-snapshot1.TotalAlloc) / MB,
-		"sys_diff_mb":          float64(snapshot2.Sys-snapshot1.Sys) / MB,
-		"heap_alloc_diff_mb":   float64(snapshot2.HeapAlloc-snapshot1.HeapAlloc) / MB,
-		"heap_sys_diff_mb":     float64(snapshot2.HeapSys-snapshot1.HeapSys) / MB,
-		"heap_idle_diff_mb":    float64(snapshot2.HeapIdle-snapshot1.HeapIdle) / MB,
-		"heap_inuse_diff_mb":   float64(snapshot2.HeapInuse-snapshot1.HeapInuse) / MB,
+		"alloc_diff_mb":         float64(snapshot2.Alloc-snapshot1.Alloc) / MB,
+		"total_alloc_diff_mb":   float64(snapshot2.TotalAlloc-snapshot1.TotalAlloc) / MB,
+		"sys_diff_mb":           float64(snapshot2.Sys-snapshot1.Sys) / MB,
+		"heap_alloc_diff_mb":    float64(snapshot2.HeapAlloc-snapshot1.HeapAlloc) / MB,
+		"heap_sys_diff_mb":      float64(snapshot2.HeapSys-snapshot1.HeapSys) / MB,
+		"heap_idle_diff_mb":     float64(snapshot2.HeapIdle-snapshot1.HeapIdle) / MB,
+		"heap_inuse_diff_mb":    float64(snapshot2.HeapInuse-snapshot1.HeapInuse) / MB,
 		"heap_released_diff_mb": float64(snapshot2.HeapReleased-snapshot1.HeapReleased) / MB,
-		"heap_objects_diff":    snapshot2.HeapObjects - snapshot1.HeapObjects,
-		"num_gc_diff":          snapshot2.NumGC - snapshot1.NumGC,
-		"gc_cpu_fraction_diff": snapshot2.GCCPUFraction - snapshot1.GCCPUFraction,
+		"heap_objects_diff":     snapshot2.HeapObjects - snapshot1.HeapObjects,
+		"num_gc_diff":           snapshot2.NumGC - snapshot1.NumGC,
+		"gc_cpu_fraction_diff":  snapshot2.GCCPUFraction - snapshot1.GCCPUFraction,
 	}, nil
 }
 

@@ -56,7 +56,7 @@ func (v *IntegrityVerifier) VerifyPackage(pkg *UpdatePackage) (*VerificationResu
 	// TODO: Implement checksum verification using component checksums
 	// Current PackageManifest structure uses Components field with individual checksums
 	// rather than a centralized Checksums field
-	
+
 	// For now, we'll skip checksum verification
 
 	// Verify digital signature if provided

@@ -95,7 +95,7 @@ func NewMonitoringService(options *MonitoringServiceOptions) (*MonitoringService
 	metricsManager := &SimpleMetricsManager{
 		metrics: make(map[string]*SimpleMetric),
 	}
-	
+
 	// Create an alert manager
 	alertManager := NewAlertManagerImpl()
 
@@ -123,24 +123,24 @@ func NewMonitoringService(options *MonitoringServiceOptions) (*MonitoringService
 
 	// Commented out for testing purposes
 	/*
-	// Add alert rules
-	alertManager.AddMemoryAlertRules(
-		options.HeapAllocWarningMB,
-		options.HeapAllocCriticalMB,
-		options.AlertCooldown,
-	)
+		// Add alert rules
+		alertManager.AddMemoryAlertRules(
+			options.HeapAllocWarningMB,
+			options.HeapAllocCriticalMB,
+			options.AlertCooldown,
+		)
 
-	// Add resource pool metrics
-	service.registerResourcePoolMetrics()
+		// Add resource pool metrics
+		service.registerResourcePoolMetrics()
 
-	// Add concurrency metrics
-	service.registerConcurrencyMetrics()
+		// Add concurrency metrics
+		service.registerConcurrencyMetrics()
 
-	// Add template execution metrics
-	service.registerTemplateExecutionMetrics()
+		// Add template execution metrics
+		service.registerTemplateExecutionMetrics()
 
-	// Start collecting system metrics
-	metricsManager.StartCollectingSystemMetrics(options.CollectionInterval)
+		// Start collecting system metrics
+		metricsManager.StartCollectingSystemMetrics(options.CollectionInterval)
 	*/
 
 	return service, nil
@@ -150,19 +150,19 @@ func NewMonitoringService(options *MonitoringServiceOptions) (*MonitoringService
 func (s *MonitoringService) registerResourcePoolMetrics() {
 	// Commented out for testing purposes
 	/*
-	// Resource pool metrics
-	s.metricsManager.RegisterGauge("resource.pool.size", "Current size of the resource pool", nil)
-	s.metricsManager.RegisterGauge("resource.pool.active", "Number of active resources in the pool", nil)
-	s.metricsManager.RegisterGauge("resource.pool.idle", "Number of idle resources in the pool", nil)
-	s.metricsManager.RegisterGauge("resource.pool.utilization", "Resource pool utilization (0-1)", nil)
-	s.metricsManager.RegisterCounter("resource.pool.created", "Total number of resources created", nil)
-	s.metricsManager.RegisterCounter("resource.pool.destroyed", "Total number of resources destroyed", nil)
-	s.metricsManager.RegisterCounter("resource.pool.acquired", "Total number of resources acquired", nil)
-	s.metricsManager.RegisterCounter("resource.pool.released", "Total number of resources released", nil)
-	s.metricsManager.RegisterCounter("resource.pool.errors", "Total number of resource errors", nil)
+		// Resource pool metrics
+		s.metricsManager.RegisterGauge("resource.pool.size", "Current size of the resource pool", nil)
+		s.metricsManager.RegisterGauge("resource.pool.active", "Number of active resources in the pool", nil)
+		s.metricsManager.RegisterGauge("resource.pool.idle", "Number of idle resources in the pool", nil)
+		s.metricsManager.RegisterGauge("resource.pool.utilization", "Resource pool utilization (0-1)", nil)
+		s.metricsManager.RegisterCounter("resource.pool.created", "Total number of resources created", nil)
+		s.metricsManager.RegisterCounter("resource.pool.destroyed", "Total number of resources destroyed", nil)
+		s.metricsManager.RegisterCounter("resource.pool.acquired", "Total number of resources acquired", nil)
+		s.metricsManager.RegisterCounter("resource.pool.released", "Total number of resources released", nil)
+		s.metricsManager.RegisterCounter("resource.pool.errors", "Total number of resource errors", nil)
 
-	// Add resource pool alert rules
-	s.alertManager.AddResourcePoolAlertRules(0.8, 0.95, 5*time.Minute)
+		// Add resource pool alert rules
+		s.alertManager.AddResourcePoolAlertRules(0.8, 0.95, 5*time.Minute)
 	*/
 }
 
@@ -170,22 +170,22 @@ func (s *MonitoringService) registerResourcePoolMetrics() {
 func (s *MonitoringService) registerConcurrencyMetrics() {
 	// Commented out for testing purposes
 	/*
-	// Concurrency metrics
-	s.metricsManager.RegisterGauge("concurrency.workers.active", "Number of active workers", nil)
-	s.metricsManager.RegisterGauge("concurrency.workers.idle", "Number of idle workers", nil)
-	s.metricsManager.RegisterGauge("concurrency.workers.total", "Total number of workers", nil)
-	s.metricsManager.RegisterGauge("concurrency.queue.size", "Current size of the task queue", nil)
-	s.metricsManager.RegisterGauge("concurrency.queue.capacity", "Capacity of the task queue", nil)
-	s.metricsManager.RegisterGauge("concurrency.queue.utilization", "Task queue utilization (0-1)", nil)
-	s.metricsManager.RegisterGauge("concurrency.worker.utilization", "Worker utilization (0-1)", nil)
-	s.metricsManager.RegisterCounter("concurrency.tasks.submitted", "Total number of tasks submitted", nil)
-	s.metricsManager.RegisterCounter("concurrency.tasks.completed", "Total number of tasks completed", nil)
-	s.metricsManager.RegisterCounter("concurrency.tasks.errors", "Total number of task errors", nil)
-	s.metricsManager.RegisterHistogram("concurrency.tasks.execution_time", "Task execution time in milliseconds",
-		[]float64{1, 5, 10, 50, 100, 500, 1000, 5000, 10000}, nil)
+		// Concurrency metrics
+		s.metricsManager.RegisterGauge("concurrency.workers.active", "Number of active workers", nil)
+		s.metricsManager.RegisterGauge("concurrency.workers.idle", "Number of idle workers", nil)
+		s.metricsManager.RegisterGauge("concurrency.workers.total", "Total number of workers", nil)
+		s.metricsManager.RegisterGauge("concurrency.queue.size", "Current size of the task queue", nil)
+		s.metricsManager.RegisterGauge("concurrency.queue.capacity", "Capacity of the task queue", nil)
+		s.metricsManager.RegisterGauge("concurrency.queue.utilization", "Task queue utilization (0-1)", nil)
+		s.metricsManager.RegisterGauge("concurrency.worker.utilization", "Worker utilization (0-1)", nil)
+		s.metricsManager.RegisterCounter("concurrency.tasks.submitted", "Total number of tasks submitted", nil)
+		s.metricsManager.RegisterCounter("concurrency.tasks.completed", "Total number of tasks completed", nil)
+		s.metricsManager.RegisterCounter("concurrency.tasks.errors", "Total number of task errors", nil)
+		s.metricsManager.RegisterHistogram("concurrency.tasks.execution_time", "Task execution time in milliseconds",
+			[]float64{1, 5, 10, 50, 100, 500, 1000, 5000, 10000}, nil)
 
-	// Add concurrency alert rules
-	s.alertManager.AddConcurrencyAlertRules(0.8, 0.95, 5*time.Minute)
+		// Add concurrency alert rules
+		s.alertManager.AddConcurrencyAlertRules(0.8, 0.95, 5*time.Minute)
 	*/
 }
 
@@ -193,18 +193,18 @@ func (s *MonitoringService) registerConcurrencyMetrics() {
 func (s *MonitoringService) registerTemplateExecutionMetrics() {
 	// Commented out for testing purposes
 	/*
-	// Template execution metrics
-	s.metricsManager.RegisterCounter("template.execution.count", "Total number of template executions", nil)
-	s.metricsManager.RegisterCounter("template.execution.errors", "Total number of template execution errors", nil)
-	s.metricsManager.RegisterHistogram("template.execution.time", "Template execution time in milliseconds",
-		[]float64{1, 5, 10, 50, 100, 500, 1000, 5000, 10000}, nil)
-	s.metricsManager.RegisterGauge("template.memory.before", "Memory usage before template execution (bytes)", nil)
-	s.metricsManager.RegisterGauge("template.memory.after", "Memory usage after template execution (bytes)", nil)
-	s.metricsManager.RegisterGauge("template.memory.reduction", "Memory reduction from optimization (bytes)", nil)
-	s.metricsManager.RegisterGauge("template.memory.reduction_percent", "Memory reduction percentage from optimization", nil)
+		// Template execution metrics
+		s.metricsManager.RegisterCounter("template.execution.count", "Total number of template executions", nil)
+		s.metricsManager.RegisterCounter("template.execution.errors", "Total number of template execution errors", nil)
+		s.metricsManager.RegisterHistogram("template.execution.time", "Template execution time in milliseconds",
+			[]float64{1, 5, 10, 50, 100, 500, 1000, 5000, 10000}, nil)
+		s.metricsManager.RegisterGauge("template.memory.before", "Memory usage before template execution (bytes)", nil)
+		s.metricsManager.RegisterGauge("template.memory.after", "Memory usage after template execution (bytes)", nil)
+		s.metricsManager.RegisterGauge("template.memory.reduction", "Memory reduction from optimization (bytes)", nil)
+		s.metricsManager.RegisterGauge("template.memory.reduction_percent", "Memory reduction percentage from optimization", nil)
 
-	// Add template execution alert rules
-	s.alertManager.AddExecutionTimeAlertRules(1000, 5000, 5*time.Minute)
+		// Add template execution alert rules
+		s.alertManager.AddExecutionTimeAlertRules(1000, 5000, 5*time.Minute)
 	*/
 }
 
@@ -259,13 +259,13 @@ func (s *MonitoringService) MonitorResourcePool(pool interface{}, poolName strin
 	labels := map[string]string{"pool": poolName}
 
 	// Register pool-specific metrics
-	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.size", poolName), 
+	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.size", poolName),
 		fmt.Sprintf("Current size of the %s pool", poolName), labels)
-	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.active", poolName), 
+	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.active", poolName),
 		fmt.Sprintf("Number of active resources in the %s pool", poolName), labels)
-	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.idle", poolName), 
+	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.idle", poolName),
 		fmt.Sprintf("Number of idle resources in the %s pool", poolName), labels)
-	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.utilization", poolName), 
+	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.utilization", poolName),
 		fmt.Sprintf("Resource pool utilization for %s (0-1)", poolName), labels)
 
 	// Start collecting metrics
@@ -277,27 +277,27 @@ func (s *MonitoringService) MonitorResourcePool(pool interface{}, poolName strin
 			select {
 			case <-ticker.C:
 				// Commented out for testing purposes
-	/*
-	// Get pool stats
-	stats := pool.GetStats()
-	*/
+				/*
+					// Get pool stats
+					stats := pool.GetStats()
+				*/
 
 				// Commented out for testing purposes
 				/*
-				// Update metrics
-				s.metricsManager.SetGauge(fmt.Sprintf("resource.pool.%s.size", poolName), float64(stats.Size))
-				s.metricsManager.SetGauge(fmt.Sprintf("resource.pool.%s.active", poolName), float64(stats.Active))
-				s.metricsManager.SetGauge(fmt.Sprintf("resource.pool.%s.idle", poolName), float64(stats.Idle))
+					// Update metrics
+					s.metricsManager.SetGauge(fmt.Sprintf("resource.pool.%s.size", poolName), float64(stats.Size))
+					s.metricsManager.SetGauge(fmt.Sprintf("resource.pool.%s.active", poolName), float64(stats.Active))
+					s.metricsManager.SetGauge(fmt.Sprintf("resource.pool.%s.idle", poolName), float64(stats.Idle))
 
-				// Calculate utilization
-				utilization := 0.0
-				if stats.Size > 0 {
-					utilization = float64(stats.Active) / float64(stats.Size)
-				}
-				s.metricsManager.SetGauge(fmt.Sprintf("resource.pool.%s.utilization", poolName), utilization)
+					// Calculate utilization
+					utilization := 0.0
+					if stats.Size > 0 {
+						utilization = float64(stats.Active) / float64(stats.Size)
+					}
+					s.metricsManager.SetGauge(fmt.Sprintf("resource.pool.%s.utilization", poolName), utilization)
 
-				// Update global metrics
-				s.metricsManager.SetGauge("resource.pool.utilization", utilization)
+					// Update global metrics
+					s.metricsManager.SetGauge("resource.pool.utilization", utilization)
 				*/
 
 			case <-s.stopChan:
@@ -323,32 +323,32 @@ func (s *MonitoringService) MonitorConcurrencyManager(manager interface{}) {
 			select {
 			case <-ticker.C:
 				// Commented out for testing purposes
-	/*
-	// Get manager stats
-	stats := manager.GetStats()
-	*/
+				/*
+					// Get manager stats
+					stats := manager.GetStats()
+				*/
 
 				// Commented out for testing purposes
 				/*
-				// Update metrics
-				s.metricsManager.SetGauge("concurrency.workers.active", float64(stats.ActiveWorkers))
-				s.metricsManager.SetGauge("concurrency.workers.idle", float64(stats.IdleWorkers))
-				s.metricsManager.SetGauge("concurrency.workers.total", float64(stats.TotalWorkers))
-				s.metricsManager.SetGauge("concurrency.queue.size", float64(stats.QueueSize))
-				s.metricsManager.SetGauge("concurrency.queue.capacity", float64(stats.QueueCapacity))
+					// Update metrics
+					s.metricsManager.SetGauge("concurrency.workers.active", float64(stats.ActiveWorkers))
+					s.metricsManager.SetGauge("concurrency.workers.idle", float64(stats.IdleWorkers))
+					s.metricsManager.SetGauge("concurrency.workers.total", float64(stats.TotalWorkers))
+					s.metricsManager.SetGauge("concurrency.queue.size", float64(stats.QueueSize))
+					s.metricsManager.SetGauge("concurrency.queue.capacity", float64(stats.QueueCapacity))
 
-				// Calculate utilization
-				queueUtilization := 0.0
-				if stats.QueueCapacity > 0 {
-					queueUtilization = float64(stats.QueueSize) / float64(stats.QueueCapacity)
-				}
-				s.metricsManager.SetGauge("concurrency.queue.utilization", queueUtilization)
+					// Calculate utilization
+					queueUtilization := 0.0
+					if stats.QueueCapacity > 0 {
+						queueUtilization = float64(stats.QueueSize) / float64(stats.QueueCapacity)
+					}
+					s.metricsManager.SetGauge("concurrency.queue.utilization", queueUtilization)
 
-				workerUtilization := 0.0
-				if stats.TotalWorkers > 0 {
-					workerUtilization = float64(stats.ActiveWorkers) / float64(stats.TotalWorkers)
-				}
-				s.metricsManager.SetGauge("concurrency.worker.utilization", workerUtilization)
+					workerUtilization := 0.0
+					if stats.TotalWorkers > 0 {
+						workerUtilization = float64(stats.ActiveWorkers) / float64(stats.TotalWorkers)
+					}
+					s.metricsManager.SetGauge("concurrency.worker.utilization", workerUtilization)
 				*/
 
 			case <-s.stopChan:
@@ -362,34 +362,34 @@ func (s *MonitoringService) MonitorConcurrencyManager(manager interface{}) {
 func (s *MonitoringService) RecordTemplateExecution(executionTime time.Duration, memoryBefore, memoryAfter uint64, err error) {
 	// Commented out for testing purposes
 	/*
-	// Increment execution count
-	s.metricsManager.IncrementCounter("template.execution.count", 1, nil)
+		// Increment execution count
+		s.metricsManager.IncrementCounter("template.execution.count", 1, nil)
 
-	// Record execution time
-	s.metricsManager.ObserveHistogram("template.execution.time", float64(executionTime.Milliseconds()), nil)
+		// Record execution time
+		s.metricsManager.ObserveHistogram("template.execution.time", float64(executionTime.Milliseconds()), nil)
 
-	// Record memory usage
-	s.metricsManager.SetGauge("template.memory.before", float64(memoryBefore), nil)
-	s.metricsManager.SetGauge("template.memory.after", float64(memoryAfter), nil)
+		// Record memory usage
+		s.metricsManager.SetGauge("template.memory.before", float64(memoryBefore), nil)
+		s.metricsManager.SetGauge("template.memory.after", float64(memoryAfter), nil)
 	*/
 
 	// Commented out for testing purposes
 	/*
-	// Calculate memory reduction
-	memoryReduction := int64(memoryBefore) - int64(memoryAfter)
-	s.metricsManager.SetGauge("template.memory.reduction", float64(memoryReduction), nil)
+		// Calculate memory reduction
+		memoryReduction := int64(memoryBefore) - int64(memoryAfter)
+		s.metricsManager.SetGauge("template.memory.reduction", float64(memoryReduction), nil)
 
-	// Calculate memory reduction percentage
-	memoryReductionPercent := 0.0
-	if memoryBefore > 0 {
-		memoryReductionPercent = float64(memoryReduction) / float64(memoryBefore) * 100.0
-	}
-	s.metricsManager.SetGauge("template.memory.reduction_percent", memoryReductionPercent, nil)
+		// Calculate memory reduction percentage
+		memoryReductionPercent := 0.0
+		if memoryBefore > 0 {
+			memoryReductionPercent = float64(memoryReduction) / float64(memoryBefore) * 100.0
+		}
+		s.metricsManager.SetGauge("template.memory.reduction_percent", memoryReductionPercent, nil)
 
-	// Record error if any
-	if err != nil {
-		s.metricsManager.IncrementCounter("template.execution.errors", 1, nil)
-	}
+		// Record error if any
+		if err != nil {
+			s.metricsManager.IncrementCounter("template.execution.errors", 1, nil)
+		}
 	*/
 }
 

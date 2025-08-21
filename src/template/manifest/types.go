@@ -28,8 +28,8 @@ type CategoryInfo struct {
 
 // TemplateManifest represents the manifest file for templates
 type TemplateManifest struct {
-	SchemaVersion string                  `json:"schema_version"`
-	LastUpdated   string                  `json:"last_updated"`
+	SchemaVersion string                   `json:"schema_version"`
+	LastUpdated   string                   `json:"last_updated"`
 	Templates     map[string]TemplateEntry `json:"templates"`
 	Categories    map[string]CategoryInfo  `json:"categories"`
 }

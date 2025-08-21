@@ -14,13 +14,13 @@ import (
 type HSMManager struct {
 	// config contains HSM configuration
 	config HSMConfig
-	
+
 	// mutex protects concurrent access to HSM
 	mutex sync.Mutex
-	
+
 	// connected indicates whether the HSM is connected
 	connected bool
-	
+
 	// session holds the HSM session
 	session interface{}
 }
@@ -56,10 +56,10 @@ func (m *HSMManager) connect() error {
 
 	// This is a placeholder for actual HSM connection logic
 	// In a real implementation, this would use a library like PKCS#11 to connect to the HSM
-	
+
 	// For now, we'll just set connected to true to simulate a successful connection
 	m.connected = true
-	
+
 	// Log the connection
 	// TODO: Add logging
 
@@ -76,10 +76,10 @@ func (m *HSMManager) disconnect() error {
 	}
 
 	// This is a placeholder for actual HSM disconnection logic
-	
+
 	// For now, we'll just set connected to false to simulate a successful disconnection
 	m.connected = false
-	
+
 	// Log the disconnection
 	// TODO: Add logging
 
@@ -105,7 +105,7 @@ func (m *HSMManager) StoreKey(key *Key) error {
 
 	// This is a placeholder for actual HSM key storage logic
 	// In a real implementation, this would use PKCS#11 to store the key in the HSM
-	
+
 	// For now, we'll just return success to simulate storing the key
 	// Log the key storage
 	// TODO: Add logging
@@ -124,7 +124,7 @@ func (m *HSMManager) GetKey(id string) (*Key, error) {
 
 	// This is a placeholder for actual HSM key retrieval logic
 	// In a real implementation, this would use PKCS#11 to retrieve the key from the HSM
-	
+
 	// For now, we'll just return an error to indicate that the key is not retrievable directly
 	// This is actually correct behavior for many HSMs, which don't allow private key export
 	return nil, errors.New("direct key retrieval from HSM is not supported; use type-specific methods")
@@ -141,7 +141,7 @@ func (m *HSMManager) DeleteKey(id string) error {
 
 	// This is a placeholder for actual HSM key deletion logic
 	// In a real implementation, this would use PKCS#11 to delete the key from the HSM
-	
+
 	// For now, we'll just return success to simulate deleting the key
 	// Log the key deletion
 	// TODO: Add logging
@@ -165,7 +165,7 @@ func (m *HSMManager) ExportKey(id string, format string, includePrivate bool) ([
 
 	// This is a placeholder for actual HSM key export logic
 	// In a real implementation, this would use PKCS#11 to export the public key from the HSM
-	
+
 	// For now, we'll just return an error
 	return nil, errors.New("key export from HSM is not implemented")
 }
@@ -181,7 +181,7 @@ func (m *HSMManager) ImportKey(keyData []byte, format string, metadata *KeyMetad
 
 	// This is a placeholder for actual HSM key import logic
 	// In a real implementation, this would use PKCS#11 to import the key into the HSM
-	
+
 	// For now, we'll just return an error
 	return nil, errors.New("key import to HSM is not implemented")
 }
@@ -195,7 +195,7 @@ func (m *HSMManager) GetRSAPrivateKey(id string) (*rsa.PrivateKey, error) {
 	// This is a placeholder for actual HSM RSA private key retrieval logic
 	// In a real implementation, this would use PKCS#11 to perform operations with the key in the HSM
 	// without actually retrieving the private key material
-	
+
 	// For now, we'll just return an error
 	return nil, errors.New("RSA private key retrieval from HSM is not implemented")
 }
@@ -208,7 +208,7 @@ func (m *HSMManager) GetRSAPublicKey(id string) (*rsa.PublicKey, error) {
 
 	// This is a placeholder for actual HSM RSA public key retrieval logic
 	// In a real implementation, this would use PKCS#11 to retrieve the public key from the HSM
-	
+
 	// For now, we'll just return an error
 	return nil, errors.New("RSA public key retrieval from HSM is not implemented")
 }
@@ -222,7 +222,7 @@ func (m *HSMManager) GetECDSAPrivateKey(id string) (*ecdsa.PrivateKey, error) {
 	// This is a placeholder for actual HSM ECDSA private key retrieval logic
 	// In a real implementation, this would use PKCS#11 to perform operations with the key in the HSM
 	// without actually retrieving the private key material
-	
+
 	// For now, we'll just return an error
 	return nil, errors.New("ECDSA private key retrieval from HSM is not implemented")
 }
@@ -235,7 +235,7 @@ func (m *HSMManager) GetECDSAPublicKey(id string) (*ecdsa.PublicKey, error) {
 
 	// This is a placeholder for actual HSM ECDSA public key retrieval logic
 	// In a real implementation, this would use PKCS#11 to retrieve the public key from the HSM
-	
+
 	// For now, we'll just return an error
 	return nil, errors.New("ECDSA public key retrieval from HSM is not implemented")
 }
@@ -249,7 +249,7 @@ func (m *HSMManager) GetEd25519PrivateKey(id string) (ed25519.PrivateKey, error)
 	// This is a placeholder for actual HSM Ed25519 private key retrieval logic
 	// In a real implementation, this would use PKCS#11 to perform operations with the key in the HSM
 	// without actually retrieving the private key material
-	
+
 	// For now, we'll just return an error
 	return nil, errors.New("Ed25519 private key retrieval from HSM is not implemented")
 }
@@ -262,7 +262,7 @@ func (m *HSMManager) GetEd25519PublicKey(id string) (ed25519.PublicKey, error) {
 
 	// This is a placeholder for actual HSM Ed25519 public key retrieval logic
 	// In a real implementation, this would use PKCS#11 to retrieve the public key from the HSM
-	
+
 	// For now, we'll just return an error
 	return nil, errors.New("Ed25519 public key retrieval from HSM is not implemented")
 }

@@ -117,7 +117,11 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 		}
 		startOffset = 0
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Download the file
 	if options.ChunkSize > 0 && fileSize > 0 {
@@ -148,7 +152,11 @@ func (d *SecureDownloader) getFileInfo(ctx context.Context, url string, headers 
 	if err != nil {
 		return 0, false, fmt.Errorf("HEAD request failed: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 	}
@@ -188,7 +196,11 @@ func (d *SecureDownloader) downloadWithRange(ctx context.Context, url string, fi
 	if err != nil {
 		return fmt.Errorf("GET request failed: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Check status code
 	if startOffset > 0 && resp.StatusCode != http.StatusPartialContent {

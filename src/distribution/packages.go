@@ -23,19 +23,19 @@ func NewHomebrewManager(config PackageManagerConfig, logger Logger) PackageManag
 func (hm *HomebrewManager) CreatePackage(ctx context.Context, artifact *BuildArtifact, metadata PackageMetadata) (*Package, error) {
 	// Create Homebrew formula
 	_ = hm.generateFormula(artifact, metadata)
-	
+
 	pkg := &Package{
-		ID:       generatePackageID(),
-		Name:     metadata.Name,
-		Version:  metadata.Version,
-		Type:     PackageTypeTarball,
-		Platform: artifact.Platform,
-		Arch:     artifact.Architecture,
-		Metadata: metadata,
-		Artifact: artifact,
+		ID:        generatePackageID(),
+		Name:      metadata.Name,
+		Version:   metadata.Version,
+		Type:      PackageTypeTarball,
+		Platform:  artifact.Platform,
+		Arch:      artifact.Architecture,
+		Metadata:  metadata,
+		Artifact:  artifact,
 		CreatedAt: time.Now(),
 	}
-	
+
 	hm.logger.Info("Created Homebrew package", "name", pkg.Name, "version", pkg.Version)
 	return pkg, nil
 }
@@ -119,19 +119,19 @@ func NewChocolateyManager(config PackageManagerConfig, logger Logger) PackageMan
 
 func (cm *ChocolateyManager) CreatePackage(ctx context.Context, artifact *BuildArtifact, metadata PackageMetadata) (*Package, error) {
 	_ = cm.generateNuspec(artifact, metadata)
-	
+
 	pkg := &Package{
-		ID:       generatePackageID(),
-		Name:     metadata.Name,
-		Version:  metadata.Version,
-		Type:     PackageTypeMSI,
-		Platform: PlatformWindows,
-		Arch:     artifact.Architecture,
-		Metadata: metadata,
-		Artifact: artifact,
+		ID:        generatePackageID(),
+		Name:      metadata.Name,
+		Version:   metadata.Version,
+		Type:      PackageTypeMSI,
+		Platform:  PlatformWindows,
+		Arch:      artifact.Architecture,
+		Metadata:  metadata,
+		Artifact:  artifact,
 		CreatedAt: time.Now(),
 	}
-	
+
 	cm.logger.Info("Created Chocolatey package", "name", pkg.Name, "version", pkg.Version)
 	return pkg, nil
 }
@@ -208,19 +208,19 @@ func NewAPTManager(config PackageManagerConfig, logger Logger) PackageManager {
 
 func (am *APTManager) CreatePackage(ctx context.Context, artifact *BuildArtifact, metadata PackageMetadata) (*Package, error) {
 	_ = am.generateControlFile(artifact, metadata)
-	
+
 	pkg := &Package{
-		ID:       generatePackageID(),
-		Name:     metadata.Name,
-		Version:  metadata.Version,
-		Type:     PackageTypeDEB,
-		Platform: PlatformLinux,
-		Arch:     artifact.Architecture,
-		Metadata: metadata,
-		Artifact: artifact,
+		ID:        generatePackageID(),
+		Name:      metadata.Name,
+		Version:   metadata.Version,
+		Type:      PackageTypeDEB,
+		Platform:  PlatformLinux,
+		Arch:      artifact.Architecture,
+		Metadata:  metadata,
+		Artifact:  artifact,
 		CreatedAt: time.Now(),
 	}
-	
+
 	am.logger.Info("Created APT package", "name", pkg.Name, "version", pkg.Version)
 	return pkg, nil
 }
@@ -272,7 +272,7 @@ func (am *APTManager) generateControlFile(artifact *BuildArtifact, metadata Pack
 	} else if artifact.Architecture == ArchARM {
 		arch = "armhf"
 	}
-	
+
 	return fmt.Sprintf(`Package: %s
 Version: %s
 Section: utils
@@ -295,19 +295,19 @@ func NewRPMManager(config PackageManagerConfig, logger Logger) PackageManager {
 
 func (rm *RPMManager) CreatePackage(ctx context.Context, artifact *BuildArtifact, metadata PackageMetadata) (*Package, error) {
 	_ = rm.generateSpecFile(artifact, metadata)
-	
+
 	pkg := &Package{
-		ID:       generatePackageID(),
-		Name:     metadata.Name,
-		Version:  metadata.Version,
-		Type:     PackageTypeRPM,
-		Platform: PlatformLinux,
-		Arch:     artifact.Architecture,
-		Metadata: metadata,
-		Artifact: artifact,
+		ID:        generatePackageID(),
+		Name:      metadata.Name,
+		Version:   metadata.Version,
+		Type:      PackageTypeRPM,
+		Platform:  PlatformLinux,
+		Arch:      artifact.Architecture,
+		Metadata:  metadata,
+		Artifact:  artifact,
 		CreatedAt: time.Now(),
 	}
-	
+
 	rm.logger.Info("Created RPM package", "name", pkg.Name, "version", pkg.Version)
 	return pkg, nil
 }
@@ -393,19 +393,19 @@ func NewSnapManager(config PackageManagerConfig, logger Logger) PackageManager {
 
 func (sm *SnapManager) CreatePackage(ctx context.Context, artifact *BuildArtifact, metadata PackageMetadata) (*Package, error) {
 	_ = sm.generateSnapcraftYaml(artifact, metadata)
-	
+
 	pkg := &Package{
-		ID:       generatePackageID(),
-		Name:     metadata.Name,
-		Version:  metadata.Version,
-		Type:     PackageTypeSnap,
-		Platform: PlatformLinux,
-		Arch:     artifact.Architecture,
-		Metadata: metadata,
-		Artifact: artifact,
+		ID:        generatePackageID(),
+		Name:      metadata.Name,
+		Version:   metadata.Version,
+		Type:      PackageTypeSnap,
+		Platform:  PlatformLinux,
+		Arch:      artifact.Architecture,
+		Metadata:  metadata,
+		Artifact:  artifact,
 		CreatedAt: time.Now(),
 	}
-	
+
 	sm.logger.Info("Created Snap package", "name", pkg.Name, "version", pkg.Version)
 	return pkg, nil
 }
@@ -487,19 +487,19 @@ func NewWingetManager(config PackageManagerConfig, logger Logger) PackageManager
 
 func (wm *WingetManager) CreatePackage(ctx context.Context, artifact *BuildArtifact, metadata PackageMetadata) (*Package, error) {
 	_ = wm.generateManifest(artifact, metadata)
-	
+
 	pkg := &Package{
-		ID:       generatePackageID(),
-		Name:     metadata.Name,
-		Version:  metadata.Version,
-		Type:     PackageTypeMSI,
-		Platform: PlatformWindows,
-		Arch:     artifact.Architecture,
-		Metadata: metadata,
-		Artifact: artifact,
+		ID:        generatePackageID(),
+		Name:      metadata.Name,
+		Version:   metadata.Version,
+		Type:      PackageTypeMSI,
+		Platform:  PlatformWindows,
+		Arch:      artifact.Architecture,
+		Metadata:  metadata,
+		Artifact:  artifact,
 		CreatedAt: time.Now(),
 	}
-	
+
 	wm.logger.Info("Created Winget package", "name", pkg.Name, "version", pkg.Version)
 	return pkg, nil
 }
@@ -573,19 +573,19 @@ func NewScoopManager(config PackageManagerConfig, logger Logger) PackageManager 
 
 func (sm *ScoopManager) CreatePackage(ctx context.Context, artifact *BuildArtifact, metadata PackageMetadata) (*Package, error) {
 	_ = sm.generateScoopManifest(artifact, metadata)
-	
+
 	pkg := &Package{
-		ID:       generatePackageID(),
-		Name:     metadata.Name,
-		Version:  metadata.Version,
-		Type:     PackageTypeZip,
-		Platform: PlatformWindows,
-		Arch:     artifact.Architecture,
-		Metadata: metadata,
-		Artifact: artifact,
+		ID:        generatePackageID(),
+		Name:      metadata.Name,
+		Version:   metadata.Version,
+		Type:      PackageTypeZip,
+		Platform:  PlatformWindows,
+		Arch:      artifact.Architecture,
+		Metadata:  metadata,
+		Artifact:  artifact,
 		CreatedAt: time.Now(),
 	}
-	
+
 	sm.logger.Info("Created Scoop package", "name", pkg.Name, "version", pkg.Version)
 	return pkg, nil
 }

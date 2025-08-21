@@ -9,13 +9,14 @@ import (
 
 // InputValidator provides methods for validating and sanitizing user input
 type InputValidator struct {
-	maxLength int
+	maxLength    int
 	allowedChars *regexp.Regexp
 }
+
 // NewInputValidator creates a new input validator
 func NewInputValidator() *InputValidator {
 	return &InputValidator{
-		maxLength: 10000,
+		maxLength:    10000,
 		allowedChars: regexp.MustCompile(`^[\w\s\-\.@/:\[\]\{\}\(\),"'!?;]+$`),
 	}
 }

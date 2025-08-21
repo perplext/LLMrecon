@@ -115,7 +115,7 @@ type InputValidationRule interface {
 type SchemaValidator interface {
 	// ValidateSchema validates template data against a schema
 	ValidateSchema(data interface{}) error
-	
+
 	// ValidateTemplate validates a template against a schema
 	ValidateTemplate(template interface{}) error
 }
@@ -231,19 +231,19 @@ type TemplateResult struct {
 type RateLimiter interface {
 	// Allow checks if an operation is allowed under the current rate limit
 	Allow(ctx context.Context, userID string) (bool, error)
-	
+
 	// Wait blocks until the operation is allowed under the rate limit
 	Wait(ctx context.Context, userID string) error
-	
+
 	// Reserve reserves the right to perform an operation at the given time
 	Reserve(ctx context.Context, userID string) (bool, time.Duration, error)
-	
+
 	// SetUserLimit sets a custom rate limit for a specific user
 	SetUserLimit(userID string, qps float64, burst int) error
-	
+
 	// GetUserLimit gets the current rate limit for a specific user
 	GetUserLimit(userID string) (float64, int, error)
-	
+
 	// GetStats returns statistics about the rate limiter
 	GetStats() map[string]interface{}
 }
@@ -252,22 +252,22 @@ type RateLimiter interface {
 type InputValidator interface {
 	// Validate validates a template input
 	Validate(ctx context.Context, template interface{}) error
-	
+
 	// ValidateContent validates content against validation rules
 	ValidateContent(ctx context.Context, content string) error
-	
+
 	// AddRule adds a validation rule
 	AddRule(rule InputValidationRule) error
-	
+
 	// RemoveRule removes a validation rule by name
 	RemoveRule(name string) error
-	
+
 	// GetRules returns all validation rules
 	GetRules() []InputValidationRule
-	
+
 	// SetStrictMode sets whether validation errors should fail execution
 	SetStrictMode(strict bool)
-	
+
 	// IsStrictMode returns whether strict mode is enabled
 	IsStrictMode() bool
 }
@@ -276,25 +276,25 @@ type InputValidator interface {
 type LLMProvider interface {
 	// SendPrompt sends a prompt to the LLM and returns the response
 	SendPrompt(ctx context.Context, prompt string, options map[string]interface{}) (string, error)
-	
+
 	// GetSupportedModels returns the list of supported models
 	GetSupportedModels() []string
-	
+
 	// GetName returns the name of the provider
 	GetName() string
-	
+
 	// GetID returns a unique identifier for the provider
 	GetID() string
-	
+
 	// IsHealthy checks if the provider is healthy and available
 	IsHealthy(ctx context.Context) (bool, error)
-	
+
 	// GetUsage returns usage statistics for the provider
 	GetUsage() map[string]interface{}
-	
+
 	// SetTimeout sets the request timeout for the provider
 	SetTimeout(timeout time.Duration)
-	
+
 	// GetTimeout gets the current request timeout
 	GetTimeout() time.Duration
 }
@@ -303,25 +303,25 @@ type LLMProvider interface {
 type DetectionEngine interface {
 	// Detect analyzes a template and response to detect vulnerabilities
 	Detect(ctx context.Context, template Template, response string) (bool, int, map[string]interface{}, error)
-	
+
 	// GetName returns the name of the detection engine
 	GetName() string
-	
+
 	// GetVersion returns the version of the detection engine
 	GetVersion() string
-	
+
 	// GetSupportedCategories returns the vulnerability categories this engine can detect
 	GetSupportedCategories() []string
-	
+
 	// Configure configures the detection engine with options
 	Configure(options map[string]interface{}) error
-	
+
 	// GetConfiguration returns the current configuration
 	GetConfiguration() map[string]interface{}
-	
+
 	// IsEnabled returns whether the detection engine is enabled
 	IsEnabled() bool
-	
+
 	// SetEnabled enables or disables the detection engine
 	SetEnabled(enabled bool)
 }

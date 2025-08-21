@@ -8,7 +8,7 @@ import (
 	"github.com/perplext/LLMrecon/src/reporting/common"
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/security"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // ComplianceIntegration handles the integration of compliance mapping with the testing framework
@@ -158,7 +158,7 @@ func (ci *ComplianceIntegration) ConvertToTestResults(
 				Severity:    common.Medium,
 				Category:    "compliance",
 				Status:      status,
-				Details:     fmt.Sprintf("Compliance: %.2f%%, Requirements Met: %d/%d",
+				Details: fmt.Sprintf("Compliance: %.2f%%, Requirements Met: %d/%d",
 					standardResult.CompliancePercentage,
 					standardResult.RequirementsMet,
 					standardResult.TotalRequirements),
@@ -199,7 +199,7 @@ func (ci *ComplianceIntegration) ConvertToTestResults(
 			Severity:    common.High,
 			Category:    "template_compliance",
 			Status:      overallStatus,
-			Details:     fmt.Sprintf("Template: %s, Security: %t, Compliance: %s",
+			Details: fmt.Sprintf("Template: %s, Security: %t, Compliance: %s",
 				verificationResult.TemplateName,
 				verificationResult.Passed,
 				overallStatus),

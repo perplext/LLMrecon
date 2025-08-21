@@ -13,7 +13,7 @@ import (
 // LocalFSRepository implements the Repository interface for local file system repositories
 type LocalFSRepository struct {
 	*BaseRepository
-	
+
 	// rootPath is the root path of the repository
 	rootPath string
 }
@@ -22,24 +22,24 @@ type LocalFSRepository struct {
 func NewLocalFSRepository(config *Config) (Repository, error) {
 	// Create base repository
 	base := NewBaseRepository(config)
-	
+
 	// Parse URL to extract path
 	rootPath, err := parseLocalPath(config.URL)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Check if path exists
 	info, err := os.Stat(rootPath)
 	if err != nil {
 		return nil, fmt.Errorf("invalid local path: %w", err)
 	}
-	
+
 	// Check if path is a directory
 	if !info.IsDir() {
 		return nil, fmt.Errorf("local path is not a directory: %s", rootPath)
 	}
-	
+
 	return &LocalFSRepository{
 		BaseRepository: base,
 		rootPath:       rootPath,
@@ -52,18 +52,18 @@ func parseLocalPath(urlOrPath string) (string, error) {
 	if strings.HasPrefix(urlOrPath, "file://") {
 		return strings.TrimPrefix(urlOrPath, "file://"), nil
 	}
-	
+
 	// Handle absolute paths
 	if filepath.IsAbs(urlOrPath) {
 		return urlOrPath, nil
 	}
-	
+
 	// Handle relative paths
 	absPath, err := filepath.Abs(urlOrPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to convert to absolute path: %w", err)
 	}
-	
+
 	return absPath, nil
 }
 
@@ -73,17 +73,17 @@ func (r *LocalFSRepository) Connect(ctx context.Context) error {
 	if r.IsConnected() {
 		return nil
 	}
-	
+
 	// Check if path exists
 	_, err := os.Stat(r.rootPath)
 	if err != nil {
 		r.setLastError(err)
 		return fmt.Errorf("failed to connect to local repository: %w", err)
 	}
-	
+
 	// Set connected flag
 	r.setConnected(true)
-	
+
 	return nil
 }
 
@@ -91,7 +91,7 @@ func (r *LocalFSRepository) Connect(ctx context.Context) error {
 func (r *LocalFSRepository) Disconnect() error {
 	// Set connected flag to false
 	r.setConnected(false)
-	
+
 	return nil
 }
 
@@ -101,16 +101,16 @@ func (r *LocalFSRepository) ListFiles(ctx context.Context, pattern string) ([]Fi
 	if err := r.Connect(ctx); err != nil {
 		return nil, err
 	}
-	
+
 	// Acquire connection
 	if err := r.AcquireConnection(ctx); err != nil {
 		return nil, err
 	}
 	defer r.ReleaseConnection()
-	
+
 	// Create result slice
 	var result []FileInfo
-	
+
 	// Use WithRetry for the operation
 	err := r.WithRetry(ctx, func() error {
 		// Walk the directory
@@ -119,26 +119,26 @@ func (r *LocalFSRepository) ListFiles(ctx context.Context, pattern string) ([]Fi
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
-			
+
 			// Check for errors
 			if err != nil {
 				return err
 			}
-			
+
 			// Skip the root directory itself
 			if path == r.rootPath {
 				return nil
 			}
-			
+
 			// Get relative path
 			relPath, err := filepath.Rel(r.rootPath, path)
 			if err != nil {
 				return err
 			}
-			
+
 			// Convert to forward slashes for consistency
 			relPath = filepath.ToSlash(relPath)
-			
+
 			// Skip if not matching pattern
 			if pattern != "" && !matchPattern(filepath.Base(relPath), pattern) {
 				// Continue walking if it's a directory
@@ -148,7 +148,7 @@ func (r *LocalFSRepository) ListFiles(ctx context.Context, pattern string) ([]Fi
 				// Skip this file
 				return nil
 			}
-			
+
 			// Create file info
 			fileInfo := FileInfo{
 				Path:         relPath,
@@ -157,18 +157,18 @@ func (r *LocalFSRepository) ListFiles(ctx context.Context, pattern string) ([]Fi
 				LastModified: info.ModTime(),
 				IsDirectory:  info.IsDir(),
 			}
-			
+
 			// Add to result
 			result = append(result, fileInfo)
-			
+
 			return nil
 		})
 	})
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return result, nil
 }
 
@@ -178,22 +178,22 @@ func (r *LocalFSRepository) GetFile(ctx context.Context, path string) (io.ReadCl
 	if err := r.Connect(ctx); err != nil {
 		return nil, err
 	}
-	
+
 	// Acquire connection
 	if err := r.AcquireConnection(ctx); err != nil {
 		return nil, err
 	}
-	
+
 	// Create full path
 	fullPath := filepath.Join(r.rootPath, filepath.FromSlash(path))
-	
+
 	// Open file
 	file, err := os.Open(filepath.Clean(fullPath))
 	if err != nil {
 		r.ReleaseConnection()
 		return nil, err
 	}
-	
+
 	// Create a wrapper for the file that releases the connection when closed
 	return &connectionCloser{
 		ReadCloser: file,
@@ -204,21 +204,21 @@ func (r *LocalFSRepository) GetFile(ctx context.Context, path string) (io.ReadCl
 }
 
 // FileExists checks if a file exists in the local file system repository
-	func (r *LocalFSRepository) FileExists(ctx context.Context, path string) (bool, error) {
+func (r *LocalFSRepository) FileExists(ctx context.Context, path string) (bool, error) {
 	// Ensure connected
 	if err := r.Connect(ctx); err != nil {
 		return false, err
 	}
-	
+
 	// Acquire connection
 	if err := r.AcquireConnection(ctx); err != nil {
 		return false, err
 	}
 	defer r.ReleaseConnection()
-	
+
 	// Create full path
 	fullPath := filepath.Join(r.rootPath, filepath.FromSlash(path))
-	
+
 	// Use WithRetry for the operation
 	var exists bool
 	err := r.WithRetry(ctx, func() error {
@@ -231,15 +231,15 @@ func (r *LocalFSRepository) GetFile(ctx context.Context, path string) (io.ReadCl
 			}
 			return err
 		}
-		
+
 		exists = true
 		return nil
 	})
-	
+
 	if err != nil {
 		return false, err
 	}
-	
+
 	return exists, nil
 }
 
@@ -255,16 +255,16 @@ func (r *LocalFSRepository) GetLastModified(ctx context.Context, path string) (t
 	if err := r.Connect(ctx); err != nil {
 		return time.Time{}, err
 	}
-	
+
 	// Acquire connection
 	if err := r.AcquireConnection(ctx); err != nil {
 		return time.Time{}, err
 	}
 	defer r.ReleaseConnection()
-	
+
 	// Create full path
 	fullPath := filepath.Join(r.rootPath, filepath.FromSlash(path))
-	
+
 	// Use WithRetry for the operation
 	var lastModified time.Time
 	err := r.WithRetry(ctx, func() error {
@@ -273,14 +273,14 @@ func (r *LocalFSRepository) GetLastModified(ctx context.Context, path string) (t
 		if err != nil {
 			return err
 		}
-		
+
 		lastModified = info.ModTime()
 		return nil
 	})
-	
+
 	if err != nil {
 		return time.Time{}, err
 	}
-	
+
 	return lastModified, nil
 }

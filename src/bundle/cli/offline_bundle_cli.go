@@ -37,7 +37,7 @@ func NewOfflineBundleCLI(output io.Writer, auditTrailManager *trail.AuditTrailMa
 	}
 
 	cli := &OfflineBundleCLI{
-		Output:           output,
+		Output:            output,
 		AuditTrailManager: auditTrailManager,
 	}
 
@@ -520,4 +520,3 @@ func (c *OfflineBundleCLI) createKeygenCommand() *cobra.Command {
 
 	return cmd
 }
-

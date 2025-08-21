@@ -150,13 +150,13 @@ func (m *PerformanceMonitor) RecordMetric(name string, value float64) {
 		Timestamp: time.Now(),
 		Value:     value,
 	}
-	
+
 	// Maintain history size
 	if len(metric.History) >= m.config.HistorySize {
 		// Remove oldest entry
 		metric.History = metric.History[1:]
 	}
-	
+
 	// Add new entry
 	metric.History = append(metric.History, historyEntry)
 
@@ -313,7 +313,7 @@ func (m *PerformanceMonitor) GetReport() map[string]interface{} {
 	report := make(map[string]interface{})
 	report["uptime"] = m.GetUptime().String()
 	report["metric_count"] = len(m.metrics)
-	
+
 	metricSummaries := make(map[string]map[string]interface{})
 	for name, metric := range m.metrics {
 		summary := make(map[string]interface{})
@@ -321,22 +321,22 @@ func (m *PerformanceMonitor) GetReport() map[string]interface{} {
 		summary["count"] = metric.Count
 		summary["min"] = metric.Min
 		summary["max"] = metric.Max
-		
+
 		// Calculate average
 		avg := float64(0)
 		if metric.Count > 0 {
 			avg = metric.Sum / float64(metric.Count)
 		}
 		summary["avg"] = avg
-		
+
 		summary["unit"] = metric.Unit
 		summary["last_updated"] = metric.LastUpdated.Format(time.RFC3339)
-		
+
 		metricSummaries[name] = summary
 	}
-	
+
 	report["metrics"] = metricSummaries
-	
+
 	return report
 }
 
@@ -355,7 +355,7 @@ func (m *PerformanceMonitor) RecordBenchmarkResult(result *benchmark.BenchmarkRe
 	m.RecordMetric(fmt.Sprintf("%s.avg_latency_ms", result.Name), float64(result.AverageLatency.Milliseconds()))
 	m.RecordMetric(fmt.Sprintf("%s.memory_usage_mb", result.Name), float64(result.MemoryUsage)/(1024*1024))
 	m.RecordMetric(fmt.Sprintf("%s.errors", result.Name), float64(result.Errors))
-	
+
 	// Record operation count
 	m.RecordMetric(fmt.Sprintf("%s.operation_count", result.Name), float64(result.OperationCount))
 }
@@ -380,10 +380,10 @@ func (m *PerformanceMonitor) GetMetricTrend(name string, duration time.Duration)
 	// Get history entries within the specified duration
 	now := time.Now()
 	startTime := now.Add(-duration)
-	
+
 	var oldestValue, newestValue float64
 	var oldestFound, newestFound bool
-	
+
 	// Find oldest and newest values within the duration
 	for _, entry := range metric.History {
 		if entry.Timestamp.After(startTime) {
@@ -395,11 +395,11 @@ func (m *PerformanceMonitor) GetMetricTrend(name string, duration time.Duration)
 			newestFound = true
 		}
 	}
-	
+
 	if !oldestFound || !newestFound {
 		return 0, false
 	}
-	
+
 	// Calculate trend (positive means increasing, negative means decreasing)
 	return newestValue - oldestValue, true
 }
@@ -411,10 +411,10 @@ func (m *PerformanceMonitor) GetPerformanceSummary() map[string]interface{} {
 
 	summary := make(map[string]interface{})
 	summary["uptime"] = m.GetUptime().String()
-	
+
 	// Group metrics by category
 	categories := make(map[string]map[string]interface{})
-	
+
 	for name, metric := range m.metrics {
 		// Extract category from metric name (e.g., "template.load.duration" -> "template")
 		var category string
@@ -431,24 +431,24 @@ func (m *PerformanceMonitor) GetPerformanceSummary() map[string]interface{} {
 		} else {
 			category = "other"
 		}
-		
+
 		// Create category if it doesn't exist
 		if _, exists := categories[category]; !exists {
 			categories[category] = make(map[string]interface{})
 		}
-		
+
 		// Add metric to category
 		metricName := name
 		if len(category) > 0 && len(name) > len(category) {
 			metricName = name[len(category)+1:] // +1 for the dot
 		}
-		
+
 		// Calculate average
 		avg := float64(0)
 		if metric.Count > 0 {
 			avg = metric.Sum / float64(metric.Count)
 		}
-		
+
 		categories[category][metricName] = map[string]interface{}{
 			"value": metric.Value,
 			"avg":   avg,
@@ -457,8 +457,8 @@ func (m *PerformanceMonitor) GetPerformanceSummary() map[string]interface{} {
 			"unit":  metric.Unit,
 		}
 	}
-	
+
 	summary["categories"] = categories
-	
+
 	return summary
 }

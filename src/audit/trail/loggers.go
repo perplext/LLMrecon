@@ -15,10 +15,10 @@ import (
 type AuditLogger interface {
 	// GetID returns the unique identifier for this logger
 	GetID() string
-	
+
 	// Log records an audit log entry
 	Log(ctx context.Context, log *AuditLog) error
-	
+
 	// Close releases any resources used by the logger
 	Close() error
 }
@@ -26,7 +26,7 @@ type AuditLogger interface {
 // AuditQueryLogger extends AuditLogger with query capabilities
 type AuditQueryLogger interface {
 	AuditLogger
-	
+
 	// Query searches for audit logs matching the specified criteria
 	Query(ctx context.Context, query *LogQuery) (*LogQueryResult, error)
 }
@@ -34,7 +34,7 @@ type AuditQueryLogger interface {
 // AuditExporter extends AuditLogger with export capabilities
 type AuditExporter interface {
 	AuditLogger
-	
+
 	// Export exports audit logs in the specified format
 	Export(ctx context.Context, logs []*AuditLog, format ExportFormat) ([]byte, error)
 }
@@ -57,7 +57,7 @@ func NewFileLogger(directory string, maxFileSize int64, maxFiles int, compress b
 	if err := os.MkdirAll(directory, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
-	
+
 	logger := &FileLogger{
 		id:          "file-logger",
 		directory:   directory,
@@ -65,12 +65,12 @@ func NewFileLogger(directory string, maxFileSize int64, maxFiles int, compress b
 		maxFiles:    maxFiles,
 		compress:    compress,
 	}
-	
+
 	// Open initial log file
 	if err := logger.openLogFile(); err != nil {
 		return nil, err
 	}
-	
+
 	return logger, nil
 }
 
@@ -83,13 +83,13 @@ func (l *FileLogger) GetID() string {
 func (l *FileLogger) Log(ctx context.Context, log *AuditLog) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	// Convert log to JSON
 	data, err := log.ToJSON()
 	if err != nil {
 		return fmt.Errorf("failed to convert log to JSON: %w", err)
 	}
-	
+
 	// Check if we need to rotate the log file
 	if l.currentFile != nil {
 		info, err := l.currentFile.Stat()
@@ -99,12 +99,12 @@ func (l *FileLogger) Log(ctx context.Context, log *AuditLog) error {
 			}
 		}
 	}
-	
+
 	// Write the log entry with a newline
 	if _, err := l.currentFile.WriteString(data + "\n"); err != nil {
 		return fmt.Errorf("failed to write to log file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -112,13 +112,13 @@ func (l *FileLogger) Log(ctx context.Context, log *AuditLog) error {
 func (l *FileLogger) Close() error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	if l.currentFile != nil {
 		err := l.currentFile.Close()
 		l.currentFile = nil
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -129,15 +129,15 @@ func (l *FileLogger) openLogFile() error {
 	timestamp := time.Now().Format("20060102-150405")
 	filename := fmt.Sprintf("audit-%s.log", timestamp)
 	filePath := filepath.Join(l.directory, filename)
-	
+
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
-	
+
 	l.currentFile = file
 	l.rotationTime = time.Now()
-	
+
 	return nil
 }
 
@@ -150,12 +150,12 @@ func (l *FileLogger) rotateLogFile() error {
 		}
 		l.currentFile = nil
 	}
-	
+
 	// Open a new log file
 	if err := l.openLogFile(); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -172,7 +172,7 @@ func NewSyslogLogger(facility syslog.Priority, tag string) (*SyslogLogger, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to syslog: %w", err)
 	}
-	
+
 	return &SyslogLogger{
 		id:     "syslog-logger",
 		writer: writer,
@@ -188,18 +188,18 @@ func (l *SyslogLogger) GetID() string {
 func (l *SyslogLogger) Log(ctx context.Context, log *AuditLog) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	// Convert log to JSON
 	data, err := log.ToJSON()
 	if err != nil {
 		return fmt.Errorf("failed to convert log to JSON: %w", err)
 	}
-	
+
 	// Write to syslog with info priority for now
 	if err := l.writer.Info(data); err != nil {
 		return fmt.Errorf("failed to write to syslog: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -207,20 +207,20 @@ func (l *SyslogLogger) Log(ctx context.Context, log *AuditLog) error {
 func (l *SyslogLogger) Close() error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	if l.writer != nil {
 		return l.writer.Close()
 	}
-	
+
 	return nil
 }
 
 // InMemoryLogger implements in-memory audit logging
 type InMemoryLogger struct {
-	id       string
-	logs     []*AuditLog
-	maxLogs  int
-	mu       sync.RWMutex
+	id      string
+	logs    []*AuditLog
+	maxLogs int
+	mu      sync.RWMutex
 }
 
 // NewInMemoryLogger creates a new in-memory audit logger
@@ -228,7 +228,7 @@ func NewInMemoryLogger(maxLogs int) *InMemoryLogger {
 	if maxLogs <= 0 {
 		maxLogs = 1000 // Default to 1000 logs
 	}
-	
+
 	return &InMemoryLogger{
 		id:      "memory-logger",
 		logs:    make([]*AuditLog, 0, maxLogs),
@@ -245,18 +245,18 @@ func (l *InMemoryLogger) GetID() string {
 func (l *InMemoryLogger) Log(ctx context.Context, log *AuditLog) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	// Create a copy of the log to prevent modification
 	logCopy := *log
-	
+
 	// Add to logs
 	l.logs = append(l.logs, &logCopy)
-	
+
 	// Trim if we have too many logs
 	if len(l.logs) > l.maxLogs {
 		l.logs = l.logs[len(l.logs)-l.maxLogs:]
 	}
-	
+
 	return nil
 }
 
@@ -264,9 +264,8 @@ func (l *InMemoryLogger) Log(ctx context.Context, log *AuditLog) error {
 func (l *InMemoryLogger) Close() error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	l.logs = nil
-	
+
 	return nil
 }
-

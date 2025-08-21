@@ -10,10 +10,10 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
-	"path/filepath"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -173,7 +173,11 @@ func VerifyChecksum(filePath, expectedChecksumHex string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Calculate the SHA-256 hash
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
@@ -218,7 +222,11 @@ func CalculateFileChecksum(filePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("opening file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
@@ -279,4 +287,3 @@ func VerifyIntegrity(filePath, expectedChecksum, signature, publicKey string) (*
 
 	return report, nil
 }
-

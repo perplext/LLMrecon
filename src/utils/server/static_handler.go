@@ -336,7 +336,11 @@ func (h *StaticFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			// Compress and serve
 			gzipWriter := gzip.NewWriter(w)
-			defer func() { if err := gzipWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+			defer func() {
+				if err := gzipWriter.Close(); err != nil {
+					fmt.Printf("Failed to close: %v\n", err)
+				}
+			}()
 			gzipWriter.Write(cacheEntry.data)
 		} else {
 			// Serve uncompressed
@@ -353,7 +357,11 @@ func (h *StaticFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.logger.Printf("Error opening file %s: %v", filePath, err)
 		return
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Serve file with compression if enabled
 	if useCompression {
@@ -361,7 +369,11 @@ func (h *StaticFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Vary", "Accept-Encoding")
 
 		gzipWriter := gzip.NewWriter(w)
-		defer func() { if err := gzipWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := gzipWriter.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 		io.Copy(gzipWriter, file)
 	} else {
 		// Set Content-Length header
@@ -398,7 +410,11 @@ func GenerateETag(filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create MD5 hash
 	hash := sha256.New()
@@ -533,4 +549,3 @@ func (h *StaticFileHandler) GetURLPath(filePath string) (string, error) {
 
 	return urlPath, nil
 }
-

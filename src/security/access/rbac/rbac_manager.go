@@ -24,31 +24,31 @@ type RBACManager struct {
 type RBACConfig struct {
 	// Whether RBAC is enabled
 	Enabled bool `json:"enabled"`
-	
+
 	// Whether to enforce strict role hierarchy
 	StrictHierarchy bool `json:"strict_hierarchy"`
-	
+
 	// Whether to allow direct permission assignments to users
 	AllowDirectPermissions bool `json:"allow_direct_permissions"`
-	
+
 	// Default roles to create
 	DefaultRoles []Role `json:"default_roles"`
-	
+
 	// Maximum depth of role hierarchy
 	MaxHierarchyDepth int `json:"max_hierarchy_depth"`
-	
+
 	// Whether to cache permission checks
 	EnablePermissionCache bool `json:"enable_permission_cache"`
-	
+
 	// Permission cache TTL in seconds
 	PermissionCacheTTL int `json:"permission_cache_ttl"`
-	
+
 	// Whether to automatically create missing permissions
 	AutoCreatePermissions bool `json:"auto_create_permissions"`
-	
+
 	// Whether to log permission checks
 	LogPermissionChecks bool `json:"log_permission_checks"`
-	
+
 	// Minimum severity for logging permission checks
 	LogPermissionCheckSeverity common.AuditSeverity `json:"log_permission_check_severity"`
 }
@@ -676,14 +676,14 @@ func (m *RBACManager) addParentRolePermissions(ctx context.Context, parentRoleID
 // DefaultRBACConfig returns the default RBAC configuration
 func DefaultRBACConfig() *RBACConfig {
 	return &RBACConfig{
-		Enabled:                  true,
-		StrictHierarchy:          true,
-		AllowDirectPermissions:   true,
-		MaxHierarchyDepth:        5,
-		EnablePermissionCache:    true,
-		PermissionCacheTTL:       300, // 5 minutes
-		AutoCreatePermissions:    false,
-		LogPermissionChecks:      true,
+		Enabled:                    true,
+		StrictHierarchy:            true,
+		AllowDirectPermissions:     true,
+		MaxHierarchyDepth:          5,
+		EnablePermissionCache:      true,
+		PermissionCacheTTL:         300, // 5 minutes
+		AutoCreatePermissions:      false,
+		LogPermissionChecks:        true,
 		LogPermissionCheckSeverity: common.AuditSeverityInfo,
 	}
 }

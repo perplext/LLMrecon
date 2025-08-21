@@ -55,16 +55,16 @@ func (e *Engine) ExecuteTemplate(ctx context.Context, template *format.Template,
 // ExecuteTemplates executes multiple templates
 func (e *Engine) ExecuteTemplates(ctx context.Context, templates []*format.Template, data interface{}) ([]string, error) {
 	results := make([]string, len(templates))
-	
+
 	for i, template := range templates {
 		result, err := e.ExecuteTemplate(ctx, template, data)
 		if err != nil {
 			return results, fmt.Errorf("failed to execute template %s: %w", template.ID, err)
 		}
-		
+
 		results[i] = result
 	}
-	
+
 	return results, nil
 }
 
@@ -73,10 +73,10 @@ func (e *Engine) renderTemplate(template *format.Template, data interface{}) (st
 	if template == nil || template.Content == nil {
 		return "", fmt.Errorf("template or content is nil")
 	}
-	
+
 	// Get template content
 	content := template.Test.Prompt
-	
+
 	// Replace variables
 	if data != nil {
 		if dataMap, ok := data.(map[string]interface{}); ok {
@@ -88,7 +88,7 @@ func (e *Engine) renderTemplate(template *format.Template, data interface{}) (st
 			}
 		}
 	}
-	
+
 	return content, nil
 }
 

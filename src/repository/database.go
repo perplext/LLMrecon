@@ -297,7 +297,11 @@ func (r *DatabaseRepository) ListFiles(ctx context.Context, pattern string) ([]F
 		if err != nil {
 			return err
 		}
-		defer func() { if err := rows.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Process results
 		for rows.Next() {

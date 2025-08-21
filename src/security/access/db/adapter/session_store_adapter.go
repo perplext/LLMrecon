@@ -104,7 +104,7 @@ func (a *SessionStoreAdapter) ListSessionsByUserID(ctx context.Context, userID s
 	if err != nil {
 		return nil, err
 	}
-	
+
 	interfaceSessions := make([]*interfaces.Session, len(adapterSessions))
 	for i, adapterSession := range adapterSessions {
 		interfaceSessions[i] = convertAdapterSessionToInterface(adapterSession)
@@ -122,18 +122,18 @@ func convertAdapterSessionToInterface(adapterSession *Session) *interfaces.Sessi
 	if adapterSession == nil {
 		return nil
 	}
-	
+
 	return &interfaces.Session{
-		ID:             adapterSession.ID,
-		UserID:         adapterSession.UserID,
-		Token:          adapterSession.Token,
-		RefreshToken:   adapterSession.RefreshToken,
-		ExpiresAt:      adapterSession.ExpiresAt,
-		CreatedAt:      adapterSession.CreatedAt,
-		LastActivity:   adapterSession.LastActivityAt,
-		IPAddress:      adapterSession.IPAddress,
-		UserAgent:      adapterSession.UserAgent,
-		Metadata:       convertStringToMetadata(adapterSession.Metadata),
+		ID:           adapterSession.ID,
+		UserID:       adapterSession.UserID,
+		Token:        adapterSession.Token,
+		RefreshToken: adapterSession.RefreshToken,
+		ExpiresAt:    adapterSession.ExpiresAt,
+		CreatedAt:    adapterSession.CreatedAt,
+		LastActivity: adapterSession.LastActivityAt,
+		IPAddress:    adapterSession.IPAddress,
+		UserAgent:    adapterSession.UserAgent,
+		Metadata:     convertStringToMetadata(adapterSession.Metadata),
 	}
 }
 
@@ -142,7 +142,7 @@ func convertMetadataToString(metadata map[string]interface{}) string {
 	if metadata == nil || len(metadata) == 0 {
 		return ""
 	}
-	
+
 	data, err := json.Marshal(metadata)
 	if err != nil {
 		return ""
@@ -155,7 +155,7 @@ func convertStringToMetadata(metadataStr string) map[string]interface{} {
 	if metadataStr == "" {
 		return make(map[string]interface{})
 	}
-	
+
 	var metadata map[string]interface{}
 	if err := json.Unmarshal([]byte(metadataStr), &metadata); err != nil {
 		return make(map[string]interface{})

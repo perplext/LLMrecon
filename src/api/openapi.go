@@ -115,7 +115,7 @@ func generatePaths() map[string]interface{} {
 				},
 			},
 		},
-		
+
 		// Authentication
 		"/auth/login": map[string]interface{}{
 			"post": map[string]interface{}{
@@ -243,7 +243,7 @@ func generatePaths() map[string]interface{} {
 				},
 			},
 		},
-		
+
 		// API Keys
 		"/auth/keys": map[string]interface{}{
 			"get": map[string]interface{}{
@@ -320,7 +320,7 @@ func generatePaths() map[string]interface{} {
 				},
 			},
 		},
-		
+
 		// Scans
 		"/scans": map[string]interface{}{
 			"get": map[string]interface{}{
@@ -476,7 +476,7 @@ func generatePaths() map[string]interface{} {
 				},
 			},
 		},
-		
+
 		// Templates
 		"/templates": map[string]interface{}{
 			"get": map[string]interface{}{
@@ -599,7 +599,7 @@ func generateComponents() map[string]interface{} {
 					},
 				},
 			},
-			
+
 			// Auth schemas
 			"LoginRequest": map[string]interface{}{
 				"type": "object",
@@ -673,7 +673,7 @@ func generateComponents() map[string]interface{} {
 				},
 				"required": []string{"username", "email", "password"},
 			},
-			
+
 			// API Key schemas
 			"APIKey": map[string]interface{}{
 				"type": "object",
@@ -755,7 +755,7 @@ func generateComponents() map[string]interface{} {
 					},
 				},
 			},
-			
+
 			// Scan schemas
 			"Scan": map[string]interface{}{
 				"type": "object",
@@ -973,7 +973,7 @@ func generateComponents() map[string]interface{} {
 					},
 				},
 			},
-			
+
 			// Template schemas
 			"Template": map[string]interface{}{
 				"type": "object",
@@ -1016,7 +1016,7 @@ func generateComponents() map[string]interface{} {
 					},
 				},
 			},
-			
+
 			// System schemas
 			"HealthResponse": map[string]interface{}{
 				"type": "object",

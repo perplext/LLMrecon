@@ -109,4 +109,3 @@ func CreateEmptyBundle(bundlePath string, schemaVersion string, bundleID string,
 
 	return bundle, nil
 }
-

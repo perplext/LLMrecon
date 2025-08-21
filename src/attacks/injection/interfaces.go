@@ -9,13 +9,13 @@ import (
 type InjectionEngine interface {
 	// Execute runs an injection attack
 	Execute(ctx context.Context, config AttackConfig) (*AttackResult, error)
-	
+
 	// ExecuteBatch runs multiple injection attempts
 	ExecuteBatch(ctx context.Context, configs []AttackConfig) ([]*AttackResult, error)
-	
+
 	// GetTechniques returns available injection techniques
 	GetTechniques() []TechniqueInfo
-	
+
 	// ValidatePayload checks if a payload is valid
 	ValidatePayload(payload string) error
 }
@@ -23,35 +23,35 @@ type InjectionEngine interface {
 // AttackConfig configures an injection attack
 type AttackConfig struct {
 	// Target configuration
-	Target      TargetConfig
-	Provider    string
-	Model       string
-	
+	Target   TargetConfig
+	Provider string
+	Model    string
+
 	// Attack parameters
 	Technique   string
 	Payload     string
 	MaxAttempts int
 	Timeout     time.Duration
-	
+
 	// Advanced options
-	UseMutation      bool
-	MutationRate     float64
-	UseObfuscation   bool
+	UseMutation         bool
+	MutationRate        float64
+	UseObfuscation      bool
 	AggressivenessLevel int
-	
+
 	// Context for the attack
-	Context     map[string]interface{}
-	Metadata    map[string]string
+	Context  map[string]interface{}
+	Metadata map[string]string
 }
 
 // TargetConfig defines the target for injection
 type TargetConfig struct {
 	// What we want the model to do
-	Objective    string
-	
+	Objective string
+
 	// Expected behavior if successful
 	SuccessIndicators []string
-	
+
 	// Context to work with
 	SystemPrompt string
 	History      []Message
@@ -66,32 +66,32 @@ type Message struct {
 // AttackResult contains the results of an injection attempt
 type AttackResult struct {
 	// Identification
-	ID          string
-	Timestamp   time.Time
-	
+	ID        string
+	Timestamp time.Time
+
 	// Attack details
-	Technique   string
-	Payload     string
-	
+	Technique string
+	Payload   string
+
 	// Results
-	Success     bool
-	Confidence  float64
-	Response    string
-	
+	Success    bool
+	Confidence float64
+	Response   string
+
 	// Metrics
 	AttemptCount int
 	Duration     time.Duration
 	TokensUsed   int
-	
+
 	// Analysis
 	SuccessFactors []string
 	FailureReasons []string
-	
+
 	// Evidence
-	Evidence    []Evidence
-	
+	Evidence []Evidence
+
 	// Metadata
-	Metadata    map[string]interface{}
+	Metadata map[string]interface{}
 }
 
 // Evidence and EvidenceType are defined in enhanced_detector.go
@@ -117,43 +117,43 @@ type InjectionChain struct {
 
 // ChainStep represents a step in an injection chain
 type ChainStep struct {
-	Order       int
-	Technique   string
-	Payload     string
-	WaitTime    time.Duration
-	Condition   StepCondition
+	Order     int
+	Technique string
+	Payload   string
+	WaitTime  time.Duration
+	Condition StepCondition
 }
 
 // StepCondition defines when a step should execute
 type StepCondition struct {
-	Type           ConditionType
-	PreviousResult string // e.g., "success", "failure", "partial"
+	Type            ConditionType
+	PreviousResult  string // e.g., "success", "failure", "partial"
 	ResponsePattern string // regex pattern
-	MinConfidence  float64
+	MinConfidence   float64
 }
 
 // ConditionType defines types of step conditions
 type ConditionType string
 
 const (
-	AlwaysCondition        ConditionType = "always"
-	OnSuccessCondition     ConditionType = "on_success"
-	OnFailureCondition     ConditionType = "on_failure"
-	OnPatternCondition     ConditionType = "on_pattern"
-	OnConfidenceCondition  ConditionType = "on_confidence"
+	AlwaysCondition       ConditionType = "always"
+	OnSuccessCondition    ConditionType = "on_success"
+	OnFailureCondition    ConditionType = "on_failure"
+	OnPatternCondition    ConditionType = "on_pattern"
+	OnConfidenceCondition ConditionType = "on_confidence"
 )
 
 // PayloadGenerator generates injection payloads
 type PayloadGenerator interface {
 	// Generate creates a new payload
 	Generate(technique string, target string, context map[string]interface{}) (string, error)
-	
+
 	// GenerateVariants creates multiple payload variants
 	GenerateVariants(technique string, target string, count int) ([]string, error)
-	
+
 	// Mutate modifies an existing payload
 	Mutate(payload string) string
-	
+
 	// Obfuscate applies obfuscation to a payload
 	Obfuscate(payload string) string
 }
@@ -162,10 +162,10 @@ type PayloadGenerator interface {
 type SuccessDetector interface {
 	// Detect checks if an injection was successful
 	Detect(response string, expectedBehavior string) (bool, float64)
-	
+
 	// AnalyzeEvidence extracts evidence from response
 	AnalyzeEvidence(response string) []Evidence
-	
+
 	// CompareResponses checks behavior change
 	CompareResponses(baseline, injected string) (changed bool, confidence float64)
 }
@@ -174,27 +174,27 @@ type SuccessDetector interface {
 type MetricsCollector interface {
 	// RecordAttempt logs an injection attempt
 	RecordAttempt(result *AttackResult)
-	
+
 	// GetSuccessRate returns success rate for a technique
 	GetSuccessRate(technique string) float64
-	
+
 	// GetAverageTime returns average execution time
 	GetAverageTime(technique string) time.Duration
-	
+
 	// GetTechniqueStats returns detailed statistics
 	GetTechniqueStats(technique string) *TechniqueStats
 }
 
 // TechniqueStats contains statistics for a technique
 type TechniqueStats struct {
-	TotalAttempts   int
+	TotalAttempts      int
 	SuccessfulAttempts int
-	SuccessRate     float64
-	AverageTime     time.Duration
-	AverageTokens   int
-	LastSuccess     time.Time
-	LastFailure     time.Time
-	CommonFailures  map[string]int
+	SuccessRate        float64
+	AverageTime        time.Duration
+	AverageTokens      int
+	LastSuccess        time.Time
+	LastFailure        time.Time
+	CommonFailures     map[string]int
 }
 
 // Logger defines logging interface

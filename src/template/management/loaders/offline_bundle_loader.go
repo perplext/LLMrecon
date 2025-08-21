@@ -83,7 +83,7 @@ func (l *OfflineBundleLoader) LoadFromPath(ctx context.Context, path string, rec
 
 			// Add compliance mappings as metadata
 			template.Metadata = make(map[string]interface{})
-			
+
 			// Check if this template has compliance mappings
 			for _, mapping := range offlineBundle.GetComplianceMappings() {
 				if mapping.ContentID == item.ID {
@@ -122,14 +122,14 @@ func (l *OfflineBundleLoader) LoadFromPath(ctx context.Context, path string, rec
 			Status:       "success",
 			Timestamp:    time.Now(),
 			Details: map[string]interface{}{
-				"bundle_path":     path,
-				"recursive":       recursive,
-				"template_count":  len(templates),
-				"bundle_version":  offlineBundle.EnhancedManifest.Version,
+				"bundle_path":      path,
+				"recursive":        recursive,
+				"template_count":   len(templates),
+				"bundle_version":   offlineBundle.EnhancedManifest.Version,
 				"validation_level": string(l.validationLevel),
 			},
 		}
-		
+
 		if err := l.auditTrail.LogOperation(context.Background(), auditLog); err != nil {
 			// Log error but continue
 			fmt.Printf("Warning: Failed to log audit event: %v\n", err)

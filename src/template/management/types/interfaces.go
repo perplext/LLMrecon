@@ -22,7 +22,7 @@ type TemplateSource struct {
 type TemplateLoader interface {
 	// LoadTemplate loads a template from a source
 	LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error)
-	
+
 	// LoadTemplates loads multiple templates from a source
 	LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error)
 }
@@ -30,22 +30,22 @@ type TemplateLoader interface {
 // OptimizedTemplateLoader extends TemplateLoader with additional optimized methods
 type OptimizedTemplateLoader interface {
 	TemplateLoader
-	
+
 	// LoadTemplateWithTimeout loads a template with a timeout
 	LoadTemplateWithTimeout(ctx context.Context, source string, sourceType string, timeout time.Duration) (*format.Template, error)
-	
+
 	// LoadTemplatesWithTimeout loads multiple templates with a timeout
 	LoadTemplatesWithTimeout(ctx context.Context, source string, sourceType string, timeout time.Duration) ([]*format.Template, error)
-	
+
 	// ClearCache clears the template cache
 	ClearCache()
-	
+
 	// GetCacheStats returns statistics about the cache
 	GetCacheStats() map[string]interface{}
-	
+
 	// GetLoaderStats returns statistics about the loader
 	GetLoaderStats() map[string]interface{}
-	
+
 	// SetConcurrencyLimit sets the concurrency limit
 	SetConcurrencyLimit(limit int)
 }
@@ -54,19 +54,19 @@ type OptimizedTemplateLoader interface {
 type TemplateManager interface {
 	// LoadTemplate loads a template from a source
 	LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error)
-	
+
 	// LoadTemplates loads multiple templates from a source
 	LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error)
-	
+
 	// Execute executes a template
 	Execute(ctx context.Context, template *format.Template, options map[string]interface{}) (*TemplateResult, error)
-	
+
 	// ExecuteBatch executes multiple templates
 	ExecuteBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*TemplateResult, error)
-	
+
 	// GetLoader returns the template loader
 	GetLoader() TemplateLoader
-	
+
 	// GetExecutor returns the template executor
 	GetExecutor() interfaces.TemplateExecutor
 }
@@ -74,34 +74,34 @@ type TemplateManager interface {
 // OptimizedTemplateManager extends TemplateManager with additional optimized methods
 type OptimizedTemplateManager interface {
 	TemplateManager
-	
+
 	// ClearCache clears the template cache
 	ClearCache()
-	
+
 	// GetStats returns statistics about the manager
 	GetStats() map[string]interface{}
-	
+
 	// GetTemplateStats returns statistics about a specific template
 	GetTemplateStats(templateID string) map[string]interface{}
-	
+
 	// GetTemplateIDs returns all template IDs
 	GetTemplateIDs() []string
-	
+
 	// SetConcurrencyLimit sets the concurrency limit
 	SetConcurrencyLimit(limit int)
-	
+
 	// SetCacheTTL sets the cache TTL
 	SetCacheTTL(ttl time.Duration)
-	
+
 	// SetCacheSize sets the cache size
 	SetCacheSize(size int)
-	
+
 	// SetExecutionTimeout sets the execution timeout
 	SetExecutionTimeout(timeout time.Duration)
-	
+
 	// SetLoadTimeout sets the load timeout
 	SetLoadTimeout(timeout time.Duration)
-	
+
 	// SetDebug sets the debug flag
 	SetDebug(debug bool)
 }

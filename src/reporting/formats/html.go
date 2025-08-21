@@ -74,16 +74,16 @@ func (f *HTMLFormatter) Format(ctx context.Context, reportInterface interface{},
 	if !ok {
 		return nil, fmt.Errorf("expected api.TestResults, got %T", reportInterface)
 	}
-	
+
 	// Create a buffer to hold the HTML data
 	buf := &bytes.Buffer{}
-	
+
 	// Use the FormatReport method to write to the buffer
 	err := f.FormatReport(results, buf)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return buf.Bytes(), nil
 }
 
@@ -110,7 +110,11 @@ func (f *HTMLFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", filePath, err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Format and write the report
 	if err := f.FormatReport(results, file); err != nil {

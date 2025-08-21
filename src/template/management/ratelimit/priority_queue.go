@@ -21,20 +21,20 @@ type priorityItem struct {
 
 // priorityQueue implements a priority queue for rate limiting
 type priorityQueue struct {
-	items []*priorityItem
-	mu    sync.Mutex
+	items     []*priorityItem
+	mu        sync.Mutex
 	processCh chan struct{}
-	shutdown chan struct{}
-	running int32 // atomic flag for running state
-	
+	shutdown  chan struct{}
+	running   int32 // atomic flag for running state
+
 	// Performance optimization: batch processing
 	batchSize int
-	
+
 	// Performance optimization: fast path for high priority items
-	fastPathEnabled bool
+	fastPathEnabled  bool
 	fastPathPriority int
-	fastPathCh chan *priorityItem
-	
+	fastPathCh       chan *priorityItem
+
 	// Performance optimization: queue statistics for adaptive behavior
 	totalProcessed int64
 	totalWaitTime  int64 // nanoseconds
@@ -53,7 +53,7 @@ func (pq *priorityQueue) Less(i, j int) bool {
 	if pq.items[i].priority != pq.items[j].priority {
 		return pq.items[i].priority > pq.items[j].priority
 	}
-	
+
 	// For equal priorities, earlier arrival time comes first (FIFO)
 	// This ensures that items with the same priority are processed in the order they were added
 	return pq.items[i].added.Before(pq.items[j].added)
@@ -88,14 +88,14 @@ func (pq *priorityQueue) Pop() interface{} {
 // newPriorityQueue creates a new priority queue
 func newPriorityQueue() *priorityQueue {
 	pq := &priorityQueue{
-		items: make([]*priorityItem, 0, 128), // Pre-allocate capacity for better performance
-		processCh: make(chan struct{}, 8),    // Increased buffer size to reduce contention
-		shutdown: make(chan struct{}),
-		batchSize: 16,                         // Process items in batches for efficiency
-		fastPathEnabled: true,
-		fastPathPriority: 8,                   // Items with priority >= 8 take the fast path
-		fastPathCh: make(chan *priorityItem, 32), // Buffer for fast path items
-		lastAdaptation: time.Now(),
+		items:            make([]*priorityItem, 0, 128), // Pre-allocate capacity for better performance
+		processCh:        make(chan struct{}, 8),        // Increased buffer size to reduce contention
+		shutdown:         make(chan struct{}),
+		batchSize:        16, // Process items in batches for efficiency
+		fastPathEnabled:  true,
+		fastPathPriority: 8,                            // Items with priority >= 8 take the fast path
+		fastPathCh:       make(chan *priorityItem, 32), // Buffer for fast path items
+		lastAdaptation:   time.Now(),
 	}
 	heap.Init(pq)
 	pq.startProcessor()
@@ -114,7 +114,7 @@ func (pq *priorityQueue) add(userID string, priority int, ctx context.Context) c
 			ctx:      ctx,
 			done:     done,
 		}
-		
+
 		// Try to send directly to fast path channel
 		select {
 		case pq.fastPathCh <- item:
@@ -123,10 +123,10 @@ func (pq *priorityQueue) add(userID string, priority int, ctx context.Context) c
 			// Fast path channel is full, fall back to normal path
 		}
 	}
-	
+
 	// Normal path for regular priority items
 	pq.mu.Lock()
-	
+
 	done := make(chan struct{})
 	item := &priorityItem{
 		userID:   userID,
@@ -135,10 +135,10 @@ func (pq *priorityQueue) add(userID string, priority int, ctx context.Context) c
 		ctx:      ctx,
 		done:     done,
 	}
-	
+
 	heap.Push(pq, item)
 	pq.mu.Unlock()
-	
+
 	// Signal that a new item has been added
 	select {
 	case pq.processCh <- struct{}{}:
@@ -146,7 +146,7 @@ func (pq *priorityQueue) add(userID string, priority int, ctx context.Context) c
 	default:
 		// Channel already has a signal, no need to send another
 	}
-	
+
 	return done
 }
 
@@ -158,13 +158,13 @@ func (pq *priorityQueue) nextBatch() ([]*priorityItem, bool) {
 		pq.mu.Unlock()
 		return nil, false
 	}
-	
+
 	// Determine batch size (min of queue length and configured batch size)
 	batchSize := pq.batchSize
 	if pq.Len() < batchSize {
 		batchSize = pq.Len()
 	}
-	
+
 	// Extract batch of items
 	batch := make([]*priorityItem, 0, batchSize)
 	for i := 0; i < batchSize; i++ {
@@ -172,7 +172,7 @@ func (pq *priorityQueue) nextBatch() ([]*priorityItem, bool) {
 			break
 		}
 		item := heap.Pop(pq).(*priorityItem)
-		
+
 		// Check if the context is still valid
 		select {
 		case <-item.ctx.Done():
@@ -183,11 +183,11 @@ func (pq *priorityQueue) nextBatch() ([]*priorityItem, bool) {
 		}
 	}
 	pq.mu.Unlock()
-	
+
 	if len(batch) == 0 {
 		return nil, false
 	}
-	
+
 	return batch, true
 }
 
@@ -197,18 +197,18 @@ func (pq *priorityQueue) processBatch() int {
 	if !ok {
 		return 0
 	}
-	
+
 	// Process all items in the batch
 	for _, item := range batch {
 		// Signal that this item is being processed
 		close(item.done)
-		
+
 		// Update statistics
 		waitTime := time.Since(item.added).Nanoseconds()
 		atomic.AddInt64(&pq.totalWaitTime, waitTime)
 		atomic.AddInt64(&pq.totalProcessed, 1)
 	}
-	
+
 	return len(batch)
 }
 
@@ -218,11 +218,11 @@ func (pq *priorityQueue) startProcessor() {
 	if !atomic.CompareAndSwapInt32(&pq.running, 0, 1) {
 		return // Already running
 	}
-	
+
 	// Start the main processor goroutine
 	go func() {
 		processingDelay := time.Microsecond * 100 // Initial delay between processing batches
-		
+
 		for {
 			select {
 			case <-pq.processCh:
@@ -234,7 +234,7 @@ func (pq *priorityQueue) startProcessor() {
 						break
 					}
 					processed += count
-					
+
 					// Adaptive processing: if we're processing a lot of items,
 					// reduce the delay to increase throughput
 					if processed > pq.batchSize*4 {
@@ -242,17 +242,17 @@ func (pq *priorityQueue) startProcessor() {
 					} else {
 						processingDelay = time.Microsecond * 100
 					}
-					
+
 					// Small delay to prevent CPU spinning, but much shorter than before
 					time.Sleep(processingDelay)
 				}
-				
+
 			case <-pq.shutdown:
 				return
 			}
 		}
 	}()
-	
+
 	// Start the fast path processor goroutine if enabled
 	if pq.fastPathEnabled {
 		go func() {
@@ -266,7 +266,7 @@ func (pq *priorityQueue) startProcessor() {
 					default:
 						// Signal that this item is being processed
 						close(item.done)
-						
+
 						// Update statistics
 						waitTime := time.Since(item.added).Nanoseconds()
 						atomic.AddInt64(&pq.totalWaitTime, waitTime)
@@ -278,12 +278,12 @@ func (pq *priorityQueue) startProcessor() {
 			}
 		}()
 	}
-	
+
 	// Start the adaptation goroutine
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
-		
+
 		for {
 			select {
 			case <-ticker.C:
@@ -301,7 +301,7 @@ func (pq *priorityQueue) stop() {
 	if !atomic.CompareAndSwapInt32(&pq.running, 1, 0) {
 		return // Not running
 	}
-	
+
 	close(pq.shutdown)
 }
 
@@ -310,7 +310,7 @@ func (pq *priorityQueue) stop() {
 func (pq *priorityQueue) waitForTurn(userID string, priority int, ctx context.Context) bool {
 	// Add to queue and get the done channel
 	done := pq.add(userID, priority, ctx)
-	
+
 	// Wait for our turn or context cancellation
 	select {
 	case <-done:
@@ -326,10 +326,10 @@ func (pq *priorityQueue) adaptQueueParameters() {
 	if processed == 0 {
 		return // No data yet
 	}
-	
+
 	// Calculate average wait time
 	avgWaitTime := atomic.LoadInt64(&pq.totalWaitTime) / processed
-	
+
 	// Adjust batch size based on wait time
 	// If wait times are high, increase batch size to process more items at once
 	if avgWaitTime > int64(time.Millisecond*5) {
@@ -341,13 +341,13 @@ func (pq *priorityQueue) adaptQueueParameters() {
 			pq.batchSize -= 2
 		}
 	}
-	
+
 	// Adjust fast path priority threshold based on load
 	// If we're processing a lot of items, make the fast path more selective
 	pq.mu.Lock()
 	queueLen := len(pq.items)
 	pq.mu.Unlock()
-	
+
 	if queueLen > 100 {
 		// Under high load, only the highest priority items take the fast path
 		pq.fastPathPriority = 9
@@ -357,7 +357,7 @@ func (pq *priorityQueue) adaptQueueParameters() {
 		// Under normal load, more items can take the fast path
 		pq.fastPathPriority = 7
 	}
-	
+
 	// Reset statistics periodically to adapt to changing conditions
 	if time.Since(pq.lastAdaptation) > time.Minute {
 		atomic.StoreInt64(&pq.totalProcessed, 0)
@@ -371,13 +371,13 @@ func (pq *priorityQueue) GetQueueStats() map[string]interface{} {
 	pq.mu.Lock()
 	queueLen := len(pq.items)
 	pq.mu.Unlock()
-	
+
 	processed := atomic.LoadInt64(&pq.totalProcessed)
 	avgWaitTime := int64(0)
 	if processed > 0 {
 		avgWaitTime = atomic.LoadInt64(&pq.totalWaitTime) / processed
 	}
-	
+
 	return map[string]interface{}{
 		"queue_length":       queueLen,
 		"batch_size":         pq.batchSize,

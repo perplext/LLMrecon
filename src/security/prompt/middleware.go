@@ -55,7 +55,11 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 			http.Error(w, "Failed to read request body", http.StatusBadRequest)
 			return
 		}
-		defer func() { if err := r.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := r.Body.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 		// Create a new request ID
 		requestID := uuid.New().String()
 
@@ -100,7 +104,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 				// Determine the specific error message based on detection types
 				errorMessage := "Prompt injection detected"
 				errorDetails := "The request was blocked due to potential security risks"
-				
+
 				// Check for specific detection types
 				for _, detection := range result.Detections {
 					switch detection.Type {
@@ -118,7 +122,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 						errorDetails = "The request was blocked due to an attempt to access system information"
 					}
 				}
-				
+
 				// Return an error response
 				errorResponse := map[string]interface{}{
 					"error":      errorMessage,
@@ -236,7 +240,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 				// Determine the specific error message based on detection types
 				errorMessage := "Response blocked"
 				errorDetails := "The response was blocked due to potential security risks"
-				
+
 				// Check for specific detection types
 				for _, detection := range result.Detections {
 					switch detection.Type {
@@ -254,7 +258,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 						errorDetails = "The response was blocked due to potential exposure of system information"
 					}
 				}
-				
+
 				// Return an error response
 				errorResponse := map[string]interface{}{
 					"error":      errorMessage,
@@ -530,6 +534,6 @@ func simplifyDetections(detections []*Detection) []map[string]interface{} {
 		}
 		simplified = append(simplified, simple)
 	}
-	
+
 	return simplified
 }

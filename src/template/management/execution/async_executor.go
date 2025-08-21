@@ -255,7 +255,7 @@ func (p *advancedWorkPool) adjustWorkerCount() {
 		addCount := max(1, p.activeWorkers/4)
 		// Don't exceed max workers
 		addCount = min(addCount, p.maxWorkers-p.activeWorkers)
-		
+
 		for i := 0; i < addCount; i++ {
 			p.workerWg.Add(1)
 			p.activeWorkers++
@@ -269,7 +269,7 @@ func (p *advancedWorkPool) adjustWorkerCount() {
 		removeCount := max(1, p.activeWorkers/10)
 		// Don't go below min workers
 		removeCount = min(removeCount, p.activeWorkers-p.minWorkers)
-		
+
 		// Signal workers to stop
 		for i := 0; i < removeCount; i++ {
 			select {
@@ -527,16 +527,16 @@ func (e *AsyncTemplateExecutor) GetExecutionStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"total_tasks":          e.stats.TotalTasks,
-		"completed_tasks":      e.stats.CompletedTasks,
-		"failed_tasks":         e.stats.FailedTasks,
-		"cached_results":       e.stats.CachedResults,
-		"queued_tasks":         e.stats.QueuedTasks,
-		"avg_execution_time":   avgExecutionTime,
-		"avg_queue_time":       e.stats.AverageQueueTime,
-		"active_workers":       e.workerPool.activeWorkers,
-		"min_workers":          e.workerPool.minWorkers,
-		"max_workers":          e.workerPool.maxWorkers,
+		"total_tasks":        e.stats.TotalTasks,
+		"completed_tasks":    e.stats.CompletedTasks,
+		"failed_tasks":       e.stats.FailedTasks,
+		"cached_results":     e.stats.CachedResults,
+		"queued_tasks":       e.stats.QueuedTasks,
+		"avg_execution_time": avgExecutionTime,
+		"avg_queue_time":     e.stats.AverageQueueTime,
+		"active_workers":     e.workerPool.activeWorkers,
+		"min_workers":        e.workerPool.minWorkers,
+		"max_workers":        e.workerPool.maxWorkers,
 	}
 }
 

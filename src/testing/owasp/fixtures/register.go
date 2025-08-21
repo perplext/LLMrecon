@@ -2,7 +2,7 @@
 package fixtures
 
 import (
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // GetAllFixtures returns all test fixtures for all OWASP LLM vulnerabilities

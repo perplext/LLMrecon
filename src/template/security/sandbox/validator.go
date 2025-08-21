@@ -63,11 +63,11 @@ type ValidationOptions struct {
 // DefaultValidationOptions returns the default validation options
 func DefaultValidationOptions() *ValidationOptions {
 	return &ValidationOptions{
-		Level:              ValidationLevelStandard,
-		CustomChecks:       []SecurityCheck{},
-		IgnorePatterns:     []*regexp.Regexp{},
-		AllowedFunctions:   []string{},
-		AllowedPackages:    []string{},
+		Level:            ValidationLevelStandard,
+		CustomChecks:     []SecurityCheck{},
+		IgnorePatterns:   []*regexp.Regexp{},
+		AllowedFunctions: []string{},
+		AllowedPackages:  []string{},
 		DisallowedFunctions: []string{
 			"os.Exit",
 			"syscall",
@@ -98,7 +98,7 @@ func NewTemplateValidator(verifier security.TemplateVerifier, options *Validatio
 	if options == nil {
 		options = DefaultValidationOptions()
 	}
-	
+
 	return &TemplateValidator{
 		verifier: verifier,
 		options:  options,
@@ -108,32 +108,32 @@ func NewTemplateValidator(verifier security.TemplateVerifier, options *Validatio
 // Validate validates a template
 func (v *TemplateValidator) Validate(ctx context.Context, template *format.Template) ([]*security.SecurityIssue, error) {
 	var allIssues []*security.SecurityIssue
-	
+
 	// Skip direct security verification since interface only has VerifyTemplateFile
 	// Perform validation through other means if needed
-	
+
 	// Perform syntax validation
 	syntaxIssues, err := v.validateSyntax(template)
 	if err != nil {
 		return nil, fmt.Errorf("syntax validation failed: %w", err)
 	}
-	
+
 	allIssues = append(allIssues, syntaxIssues...)
-	
+
 	// Perform semantic validation
 	semanticIssues, err := v.validateSemantics(template)
 	if err != nil {
 		return nil, fmt.Errorf("semantic validation failed: %w", err)
 	}
-	
+
 	allIssues = append(allIssues, semanticIssues...)
-	
+
 	// Perform custom checks
 	for _, check := range v.options.CustomChecks {
 		customIssues := check.Check(template, v.options.SecurityOptions)
 		allIssues = append(allIssues, customIssues...)
 	}
-	
+
 	return allIssues, nil
 }
 
@@ -144,16 +144,16 @@ func (v *TemplateValidator) ValidateFile(ctx context.Context, templatePath strin
 	if err != nil {
 		return nil, fmt.Errorf("failed to read template file: %w", err)
 	}
-	
+
 	// Parse the template
 	template, err := format.ParseTemplate(content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
-	
+
 	// Set template path
 	template.Path = templatePath
-	
+
 	// Validate the template
 	return v.Validate(ctx, template)
 }
@@ -161,7 +161,7 @@ func (v *TemplateValidator) ValidateFile(ctx context.Context, templatePath strin
 // validateSyntax validates the syntax of a template
 func (v *TemplateValidator) validateSyntax(template *format.Template) ([]*security.SecurityIssue, error) {
 	var issues []*security.SecurityIssue
-	
+
 	if len(template.Content) == 0 {
 		issues = append(issues, &security.SecurityIssue{
 			Type:        security.TemplateFormatError,
@@ -170,7 +170,7 @@ func (v *TemplateValidator) validateSyntax(template *format.Template) ([]*securi
 			Remediation: "Provide content for the template",
 		})
 	}
-	
+
 	// Check for balanced braces, parentheses, and brackets
 	if !hasBalancedDelimiters(string(template.Content)) {
 		issues = append(issues, &security.SecurityIssue{
@@ -181,7 +181,7 @@ func (v *TemplateValidator) validateSyntax(template *format.Template) ([]*securi
 			Context:     string(template.Content),
 		})
 	}
-	
+
 	// Check for line length
 	lines := strings.Split(string(template.Content), "\n")
 	for i, line := range lines {
@@ -196,14 +196,14 @@ func (v *TemplateValidator) validateSyntax(template *format.Template) ([]*securi
 			})
 		}
 	}
-	
+
 	return issues, nil
 }
 
 // validateSemantics validates the semantics of a template
 func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*security.SecurityIssue, error) {
 	var issues []*security.SecurityIssue
-	
+
 	// Check for disallowed functions
 	for _, disallowedFunc := range v.options.DisallowedFunctions {
 		pattern := fmt.Sprintf(`\b%s\b`, regexp.QuoteMeta(disallowedFunc))
@@ -211,7 +211,7 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 		if err != nil {
 			continue
 		}
-		
+
 		if re.MatchString(string(template.Content)) {
 			issues = append(issues, &security.SecurityIssue{
 				Type:        security.InsecurePattern,
@@ -222,7 +222,7 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 			})
 		}
 	}
-	
+
 	// Check for disallowed packages
 	for _, disallowedPkg := range v.options.DisallowedPackages {
 		pattern := fmt.Sprintf(`\b%s\b`, regexp.QuoteMeta(disallowedPkg))
@@ -230,7 +230,7 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 		if err != nil {
 			continue
 		}
-		
+
 		if re.MatchString(string(template.Content)) {
 			issues = append(issues, &security.SecurityIssue{
 				Type:        security.InsecurePattern,
@@ -241,7 +241,7 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 			})
 		}
 	}
-	
+
 	// Check for input validation if required
 	if v.options.RequireValidation {
 		// Look for common validation patterns
@@ -253,7 +253,7 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 			`sanitize`,
 			`escape`,
 		}
-		
+
 		hasValidation := false
 		for _, pattern := range validationPatterns {
 			if strings.Contains(strings.ToLower(string(template.Content)), pattern) {
@@ -261,7 +261,7 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 				break
 			}
 		}
-		
+
 		if !hasValidation {
 			issues = append(issues, &security.SecurityIssue{
 				Type:        security.MissingValidation,
@@ -272,7 +272,7 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 			})
 		}
 	}
-	
+
 	// Check for comments if required
 	if v.options.RequireComments {
 		// Look for comment patterns
@@ -281,7 +281,7 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 			`/*`,
 			`#`,
 		}
-		
+
 		hasComments := false
 		for _, pattern := range commentPatterns {
 			if strings.Contains(string(template.Content), pattern) {
@@ -289,7 +289,7 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 				break
 			}
 		}
-		
+
 		if !hasComments {
 			issues = append(issues, &security.SecurityIssue{
 				Type:        security.TemplateFormatError,
@@ -300,14 +300,14 @@ func (v *TemplateValidator) validateSemantics(template *format.Template) ([]*sec
 			})
 		}
 	}
-	
+
 	return issues, nil
 }
 
 // hasBalancedDelimiters checks if a string has balanced delimiters
 func hasBalancedDelimiters(s string) bool {
 	var stack []rune
-	
+
 	for _, c := range s {
 		switch c {
 		case '(', '[', '{':
@@ -329,7 +329,6 @@ func hasBalancedDelimiters(s string) bool {
 			stack = stack[:len(stack)-1]
 		}
 	}
-	
+
 	return len(stack) == 0
 }
-	

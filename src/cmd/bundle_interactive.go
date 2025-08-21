@@ -518,7 +518,7 @@ func interactiveGenerateReport() error {
 	// TODO: Execute actual report generation when reporting commands are implemented
 
 	return nil
-	
+
 }
 
 func interactiveExportByCategory() error {
@@ -590,6 +590,6 @@ func interactiveExportByCategory() error {
 	color.Cyan("Output: %s", outputDir)
 
 	// TODO: Execute actual export when category export is implemented
-	
+
 	return nil
 }

@@ -200,7 +200,7 @@ func (l *AuditLoggerImpl) logToFile(log *models.AuditLog) error {
 			log.UserID,
 			log.Action,
 			log.Resource,
-				log.ResourceID,
+			log.ResourceID,
 			log.Description)
 	}
 
@@ -209,7 +209,11 @@ func (l *AuditLoggerImpl) logToFile(log *models.AuditLog) error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	if _, err := file.WriteString(logStr + "\n"); err != nil {
 		return err

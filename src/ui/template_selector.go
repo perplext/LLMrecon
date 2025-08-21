@@ -55,7 +55,7 @@ func (ts *TemplateSelector) SelectTemplates() ([]Template, error) {
 	}
 
 	ts.terminal.Header("Interactive Template Selection")
-	
+
 	for {
 		// Show main menu
 		options := []string{
@@ -117,7 +117,7 @@ func (ts *TemplateSelector) SelectTemplates() ([]Template, error) {
 				return selected, nil
 			}
 		}
-		
+
 		fmt.Println()
 	}
 }
@@ -125,7 +125,7 @@ func (ts *TemplateSelector) SelectTemplates() ([]Template, error) {
 // browseTemplates allows browsing and selecting templates
 func (ts *TemplateSelector) browseTemplates() error {
 	filtered := ts.getFilteredTemplates()
-	
+
 	if len(filtered) == 0 {
 		ts.terminal.Warning("No templates match current filters")
 		return nil
@@ -145,11 +145,11 @@ func (ts *TemplateSelector) browseTemplates() error {
 	sort.Strings(categories)
 
 	ts.terminal.Info("Found %d templates in %d categories", len(filtered), len(categories))
-	
+
 	for _, category := range categories {
 		templates := categorized[category]
 		ts.terminal.Section(fmt.Sprintf("%s (%d templates)", category, len(templates)))
-		
+
 		// Create template list for selection
 		templateNames := make([]string, len(templates))
 		for i, tmpl := range templates {
@@ -157,15 +157,15 @@ func (ts *TemplateSelector) browseTemplates() error {
 			if ts.isSelected(tmpl.ID) {
 				selected = " [SELECTED]"
 			}
-			
+
 			severityBadge := ts.formatSeverity(tmpl.Severity)
-			templateNames[i] = fmt.Sprintf("%s %s%s\n   %s", 
+			templateNames[i] = fmt.Sprintf("%s %s%s\n   %s",
 				severityBadge, tmpl.Name, selected, tmpl.Description)
 		}
 
 		// Multi-select templates
 		selected, err := ts.terminal.MultiSelect(
-			fmt.Sprintf("Select templates from %s:", category), 
+			fmt.Sprintf("Select templates from %s:", category),
 			templateNames,
 		)
 		if err != nil {
@@ -290,7 +290,7 @@ func (ts *TemplateSelector) searchTemplates() error {
 	}
 
 	ts.filters.Search = strings.TrimSpace(search)
-	
+
 	if ts.filters.Search == "" {
 		ts.terminal.Info("Search filter cleared")
 	} else {
@@ -326,9 +326,9 @@ func (ts *TemplateSelector) quickSelectOWASP() error {
 	for _, idx := range selected {
 		category := fmt.Sprintf("LLM%02d", idx+1)
 		for _, tmpl := range ts.templates {
-			if strings.Contains(tmpl.Category, category) || 
-			   strings.Contains(tmpl.ID, strings.ToLower(category)) ||
-			   ts.hasTag(tmpl, fmt.Sprintf("owasp-llm-%02d", idx+1)) {
+			if strings.Contains(tmpl.Category, category) ||
+				strings.Contains(tmpl.ID, strings.ToLower(category)) ||
+				ts.hasTag(tmpl, fmt.Sprintf("owasp-llm-%02d", idx+1)) {
 				ts.selectTemplate(tmpl)
 				selectedCount++
 			}
@@ -342,7 +342,7 @@ func (ts *TemplateSelector) quickSelectOWASP() error {
 // getFilteredTemplates returns templates matching current filters
 func (ts *TemplateSelector) getFilteredTemplates() []Template {
 	filtered := make([]Template, 0)
-	
+
 	for _, tmpl := range ts.templates {
 		// Category filter
 		if len(ts.filters.Categories) > 0 {
@@ -390,8 +390,8 @@ func (ts *TemplateSelector) getFilteredTemplates() []Template {
 		if ts.filters.Search != "" {
 			search := strings.ToLower(ts.filters.Search)
 			if !strings.Contains(strings.ToLower(tmpl.Name), search) &&
-			   !strings.Contains(strings.ToLower(tmpl.Description), search) &&
-			   !strings.Contains(strings.ToLower(tmpl.ID), search) {
+				!strings.Contains(strings.ToLower(tmpl.Description), search) &&
+				!strings.Contains(strings.ToLower(tmpl.ID), search) {
 				continue
 			}
 		}
@@ -437,14 +437,14 @@ func (ts *TemplateSelector) getSelectedTemplates() []Template {
 
 func (ts *TemplateSelector) viewSelectedTemplates() {
 	selected := ts.getSelectedTemplates()
-	
+
 	if len(selected) == 0 {
 		ts.terminal.Warning("No templates selected yet")
 		return
 	}
 
 	ts.terminal.Header(fmt.Sprintf("Selected Templates (%d)", len(selected)))
-	
+
 	// Group by category
 	categorized := make(map[string][]Template)
 	for _, tmpl := range selected {
@@ -492,11 +492,11 @@ func (ts *TemplateSelector) hasTag(tmpl Template, tag string) bool {
 
 // TemplateBrowser provides advanced template browsing
 type TemplateBrowser struct {
-	selector     *TemplateSelector
-	currentView  string
-	sortBy       string
-	groupBy      string
-	showDetails  bool
+	selector    *TemplateSelector
+	currentView string
+	sortBy      string
+	groupBy     string
+	showDetails bool
 }
 
 // NewTemplateBrowser creates a new template browser
@@ -515,7 +515,7 @@ func (tb *TemplateBrowser) Browse() error {
 	for {
 		tb.selector.terminal.Header("Template Browser")
 		tb.showCurrentView()
-		
+
 		options := []string{
 			"Change view (current: " + tb.currentView + ")",
 			"Sort templates (by: " + tb.sortBy + ")",
@@ -550,7 +550,7 @@ func (tb *TemplateBrowser) Browse() error {
 // showCurrentView displays templates in the current view
 func (tb *TemplateBrowser) showCurrentView() {
 	templates := tb.selector.getFilteredTemplates()
-	
+
 	switch tb.currentView {
 	case "list":
 		tb.showListView(templates)
@@ -565,25 +565,25 @@ func (tb *TemplateBrowser) showCurrentView() {
 func (tb *TemplateBrowser) showListView(templates []Template) {
 	// Sort templates
 	tb.sortTemplates(templates)
-	
+
 	// Group templates
 	grouped := tb.groupTemplates(templates)
-	
+
 	for group, tmpls := range grouped {
 		tb.selector.terminal.Section(fmt.Sprintf("%s (%d)", group, len(tmpls)))
-		
+
 		for _, tmpl := range tmpls {
 			selected := ""
 			if tb.selector.isSelected(tmpl.ID) {
 				selected = " ✓"
 			}
-			
-			tb.selector.terminal.Print("  %s %s%s", 
+
+			tb.selector.terminal.Print("  %s %s%s",
 				tb.selector.formatSeverity(tmpl.Severity),
 				tmpl.Name,
 				selected,
 			)
-			
+
 			if tb.showDetails {
 				tb.selector.terminal.Print("    %s", tmpl.Description)
 				if len(tmpl.Tags) > 0 {
@@ -598,21 +598,21 @@ func (tb *TemplateBrowser) showListView(templates []Template) {
 func (tb *TemplateBrowser) showGridView(templates []Template) {
 	// Implementation would show templates in a grid format
 	tb.selector.terminal.Info("Grid view showing %d templates", len(templates))
-	
+
 	// Show summary counts by category and severity
 	categoryCounts := make(map[string]int)
 	severityCounts := make(map[string]int)
-	
+
 	for _, tmpl := range templates {
 		categoryCounts[tmpl.Category]++
 		severityCounts[tmpl.Severity]++
 	}
-	
+
 	tb.selector.terminal.Print("\nBy Category:")
 	for cat, count := range categoryCounts {
 		tb.selector.terminal.Print("  %s: %d", cat, count)
 	}
-	
+
 	tb.selector.terminal.Print("\nBy Severity:")
 	for sev, count := range severityCounts {
 		tb.selector.terminal.Print("  %s: %d", tb.selector.formatSeverity(sev), count)
@@ -623,21 +623,21 @@ func (tb *TemplateBrowser) showGridView(templates []Template) {
 func (tb *TemplateBrowser) showTreeView(templates []Template) {
 	// Build tree structure
 	tree := make(map[string]map[string][]Template)
-	
+
 	for _, tmpl := range templates {
 		if tree[tmpl.Category] == nil {
 			tree[tmpl.Category] = make(map[string][]Template)
 		}
 		tree[tmpl.Category][tmpl.Severity] = append(tree[tmpl.Category][tmpl.Severity], tmpl)
 	}
-	
+
 	// Display tree
 	for category, severities := range tree {
 		tb.selector.terminal.Print("%s %s", "📁", category)
-		
+
 		for severity, tmpls := range severities {
 			tb.selector.terminal.Print("  %s %s (%d)", "📂", tb.selector.formatSeverity(severity), len(tmpls))
-			
+
 			if tb.showDetails {
 				for _, tmpl := range tmpls {
 					selected := ""
@@ -689,7 +689,7 @@ func (tb *TemplateBrowser) sortTemplates(templates []Template) {
 
 func (tb *TemplateBrowser) groupTemplates(templates []Template) map[string][]Template {
 	grouped := make(map[string][]Template)
-	
+
 	for _, tmpl := range templates {
 		var key string
 		switch tb.groupBy {
@@ -704,10 +704,10 @@ func (tb *TemplateBrowser) groupTemplates(templates []Template) map[string][]Tem
 		default:
 			key = tmpl.Category
 		}
-		
+
 		grouped[key] = append(grouped[key], tmpl)
 	}
-	
+
 	return grouped
 }
 

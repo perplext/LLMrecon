@@ -23,19 +23,19 @@ func NewMiniDashboard(terminal *Terminal) *MiniDashboard {
 // ShowQuickStatus displays a quick status overview
 func (md *MiniDashboard) ShowQuickStatus() {
 	md.terminal.Clear()
-	
+
 	// Header
 	md.terminal.HeaderBox("Quick Status Overview")
-	
+
 	// System Status
 	md.showSystemStatus()
-	
+
 	// Recent Activity
 	md.showRecentActivity()
-	
+
 	// Active Scans
 	md.showActiveScans()
-	
+
 	// Alerts
 	md.showAlerts()
 }
@@ -44,12 +44,12 @@ func (md *MiniDashboard) ShowQuickStatus() {
 func (md *MiniDashboard) ShowScanProgress(scan *ActiveScan) {
 	// Clear previous line and move cursor up
 	fmt.Print("\033[1A\033[2K")
-	
+
 	// Progress bar
 	width := 40
 	filled := (scan.Progress * width) / 100
 	bar := strings.Repeat("█", filled) + strings.Repeat("░", width-filled)
-	
+
 	// Status line
 	status := fmt.Sprintf(
 		"[%s] %s %d%% | Tests: %d/%d | Findings: %d | ETA: %s",
@@ -61,7 +61,7 @@ func (md *MiniDashboard) ShowScanProgress(scan *ActiveScan) {
 		scan.FindingsCount,
 		scan.ETA,
 	)
-	
+
 	// Color based on status
 	switch scan.Status {
 	case "Running":
@@ -78,14 +78,14 @@ func (md *MiniDashboard) ShowScanProgress(scan *ActiveScan) {
 // ShowCompactResults displays scan results in a compact format
 func (md *MiniDashboard) ShowCompactResults(results *CompactResults) {
 	md.terminal.Section("Scan Complete: " + results.ScanID)
-	
+
 	// Summary line
 	summary := fmt.Sprintf(
 		"Duration: %s | Tests: %d | ",
 		results.Duration,
 		results.TotalTests,
 	)
-	
+
 	// Vulnerability counts with colors
 	vulnCounts := []string{}
 	if results.Critical > 0 {
@@ -100,15 +100,15 @@ func (md *MiniDashboard) ShowCompactResults(results *CompactResults) {
 	if results.Low > 0 {
 		vulnCounts = append(vulnCounts, md.style.Success.Render(fmt.Sprintf("%d Low", results.Low)))
 	}
-	
+
 	if len(vulnCounts) > 0 {
 		summary += "Vulnerabilities: " + strings.Join(vulnCounts, ", ")
 	} else {
 		summary += md.style.Success.Render("No vulnerabilities found")
 	}
-	
+
 	fmt.Println(summary)
-	
+
 	// Quick actions
 	fmt.Println("\nQuick Actions:")
 	fmt.Println("  • View full report: LLMrecon report view " + results.ScanID)
@@ -126,10 +126,10 @@ func (md *MiniDashboard) ShowLiveMetrics() {
 		SystemLoad:        0.72,
 		MemoryUsage:       62.3,
 	}
-	
+
 	// Create sparkline for RPS
 	sparkline := md.createSparkline([]float64{120, 135, 142, 138, 145, 149, 145})
-	
+
 	md.terminal.Box("Live System Metrics",
 		fmt.Sprintf(`Active Scans: %d | Queued: %d
 RPS: %.1f %s
@@ -148,18 +148,18 @@ Latency: %dms | Load: %.2f | Memory: %.1f%%`,
 // ShowTestMatrix displays a test coverage matrix
 func (md *MiniDashboard) ShowTestMatrix(matrix *TestMatrix) {
 	md.terminal.Section("Test Coverage Matrix")
-	
+
 	// Header
 	fmt.Print("         ")
 	for _, target := range matrix.Targets {
 		fmt.Printf("%-10s ", truncate(target, 10))
 	}
 	fmt.Println()
-	
+
 	// Rows
 	for _, category := range matrix.Categories {
 		fmt.Printf("%-8s ", truncate(category.Name, 8))
-		
+
 		for _, target := range matrix.Targets {
 			coverage := matrix.GetCoverage(category.Name, target)
 			cell := md.getCoverageCell(coverage)
@@ -167,7 +167,7 @@ func (md *MiniDashboard) ShowTestMatrix(matrix *TestMatrix) {
 		}
 		fmt.Println()
 	}
-	
+
 	// Legend
 	fmt.Println("\nLegend: " +
 		md.style.Success.Render("█ >90%") + " " +
@@ -185,9 +185,9 @@ func (md *MiniDashboard) showSystemStatus() {
 		QueueStatus:    "Degraded",
 		LastCheck:      time.Now(),
 	}
-	
+
 	md.terminal.Subsection("System Status")
-	
+
 	statuses := []struct {
 		Name   string
 		Status string
@@ -196,11 +196,11 @@ func (md *MiniDashboard) showSystemStatus() {
 		{"Database", status.DatabaseStatus},
 		{"Queue", status.QueueStatus},
 	}
-	
+
 	for _, s := range statuses {
 		icon := "✅"
 		style := md.style.Success
-		
+
 		switch s.Status {
 		case "Degraded":
 			icon = "⚠️"
@@ -209,26 +209,26 @@ func (md *MiniDashboard) showSystemStatus() {
 			icon = "❌"
 			style = md.style.Critical
 		}
-		
+
 		fmt.Printf("%s %s: %s\n", icon, s.Name, style.Render(s.Status))
 	}
-	
+
 	fmt.Printf("\nLast check: %s\n", status.LastCheck.Format("15:04:05"))
 }
 
 func (md *MiniDashboard) showRecentActivity() {
 	md.terminal.Subsection("Recent Activity")
-	
+
 	activities := []Activity{
 		{Time: time.Now().Add(-2 * time.Minute), Type: "scan_completed", User: "alice", Details: "OWASP scan on api.example.com"},
 		{Time: time.Now().Add(-15 * time.Minute), Type: "template_created", User: "bob", Details: "New prompt injection template"},
 		{Time: time.Now().Add(-1 * time.Hour), Type: "vulnerability_found", User: "system", Details: "Critical: Data exposure in LLM03"},
 	}
-	
+
 	for _, activity := range activities[:3] {
 		icon := md.getActivityIcon(activity.Type)
 		timeStr := md.formatRelativeTime(activity.Time)
-		
+
 		fmt.Printf("%s %s %s - %s\n",
 			icon,
 			md.style.Info.Render(timeStr),
@@ -240,24 +240,24 @@ func (md *MiniDashboard) showRecentActivity() {
 
 func (md *MiniDashboard) showActiveScans() {
 	md.terminal.Subsection("Active Scans")
-	
+
 	scans := []ActiveScan{
 		{ID: "scan-001", Target: "api.prod.example.com", Progress: 72, Status: "Running", FindingsCount: 3},
 		{ID: "scan-002", Target: "chat.example.com", Progress: 45, Status: "Running", FindingsCount: 1},
 		{ID: "scan-003", Target: "llm.staging.example.com", Progress: 15, Status: "Initializing", FindingsCount: 0},
 	}
-	
+
 	if len(scans) == 0 {
 		fmt.Println("No active scans")
 		return
 	}
-	
+
 	for _, scan := range scans {
 		// Mini progress bar
 		width := 20
 		filled := (scan.Progress * width) / 100
 		bar := strings.Repeat("▰", filled) + strings.Repeat("▱", width-filled)
-		
+
 		fmt.Printf("%s [%s] %d%% - %s (%d findings)\n",
 			scan.ID,
 			bar,
@@ -270,34 +270,34 @@ func (md *MiniDashboard) showActiveScans() {
 
 func (md *MiniDashboard) showAlerts() {
 	md.terminal.Subsection("Alerts")
-	
+
 	alerts := []Alert{
 		{Level: "critical", Message: "High error rate detected in scan engine", Count: 15},
 		{Level: "warning", Message: "API rate limit approaching threshold", Count: 1},
 		{Level: "info", Message: "New templates available for download", Count: 3},
 	}
-	
+
 	hasAlerts := false
 	for _, alert := range alerts {
 		if alert.Level == "critical" || alert.Level == "warning" {
 			hasAlerts = true
 			icon := "⚠️"
 			style := md.style.Warning
-			
+
 			if alert.Level == "critical" {
 				icon = "🚨"
 				style = md.style.Critical
 			}
-			
+
 			message := alert.Message
 			if alert.Count > 1 {
 				message += fmt.Sprintf(" (×%d)", alert.Count)
 			}
-			
+
 			fmt.Printf("%s %s\n", icon, style.Render(message))
 		}
 	}
-	
+
 	if !hasAlerts {
 		fmt.Println(md.style.Success.Render("✅ No active alerts"))
 	}
@@ -307,7 +307,7 @@ func (md *MiniDashboard) createSparkline(values []float64) string {
 	if len(values) == 0 {
 		return ""
 	}
-	
+
 	// Find min and max
 	min, max := values[0], values[0]
 	for _, v := range values {
@@ -318,17 +318,17 @@ func (md *MiniDashboard) createSparkline(values []float64) string {
 			max = v
 		}
 	}
-	
+
 	// Normalize and create sparkline
 	sparkChars := []string{"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
 	sparkline := ""
-	
+
 	for _, v := range values {
 		normalized := (v - min) / (max - min)
 		charIndex := int(normalized * float64(len(sparkChars)-1))
 		sparkline += sparkChars[charIndex]
 	}
-	
+
 	return sparkline
 }
 
@@ -336,14 +336,14 @@ func (md *MiniDashboard) getCoverageCell(coverage float64) string {
 	if coverage < 0 {
 		return md.style.Info.Render("    ░    ")
 	}
-	
+
 	style := md.style.Critical
 	if coverage >= 90 {
 		style = md.style.Success
 	} else if coverage >= 50 {
 		style = md.style.Warning
 	}
-	
+
 	return style.Render(fmt.Sprintf("  %3.0f%%  ", coverage))
 }
 
@@ -366,7 +366,7 @@ func (md *MiniDashboard) getActivityIcon(activityType string) string {
 
 func (md *MiniDashboard) formatRelativeTime(t time.Time) string {
 	diff := time.Since(t)
-	
+
 	if diff < time.Minute {
 		return "just now"
 	} else if diff < time.Hour {

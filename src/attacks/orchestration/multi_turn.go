@@ -41,22 +41,22 @@ type AttackStrategy interface {
 
 // MultiTurnOrchestrator coordinates complex multi-turn attacks
 type MultiTurnOrchestrator struct {
-	injector         *injection.AdvancedInjector
-	jailbreaker      *jailbreak.JailbreakEngine
-	payloadGen       *payloads.PayloadGenerator
-	strategies       map[string]AttackStrategy
-	activeSessions   map[string]*ConversationState
-	config           OrchestratorConfig
-	mu               sync.RWMutex
+	injector       *injection.AdvancedInjector
+	jailbreaker    *jailbreak.JailbreakEngine
+	payloadGen     *payloads.PayloadGenerator
+	strategies     map[string]AttackStrategy
+	activeSessions map[string]*ConversationState
+	config         OrchestratorConfig
+	mu             sync.RWMutex
 }
 
 // OrchestratorConfig configures the orchestrator
 type OrchestratorConfig struct {
-	MaxTurns          int
-	TurnTimeout       time.Duration
-	ParallelSessions  int
+	MaxTurns           int
+	TurnTimeout        time.Duration
+	ParallelSessions   int
 	AdaptiveStrategies bool
-	MemoryRetention   bool
+	MemoryRetention    bool
 }
 
 // NewMultiTurnOrchestrator creates a new orchestrator
@@ -211,7 +211,7 @@ func (o *MultiTurnOrchestrator) adaptPrompt(prompt string, state *ConversationSt
 
 	// Analyze previous responses
 	successRate := state.SuccessMetrics["extraction_rate"]
-	
+
 	if successRate < 0.3 {
 		// Low success - try more aggressive approach
 		// Use a simple jailbreak technique
@@ -223,7 +223,7 @@ func (o *MultiTurnOrchestrator) adaptPrompt(prompt string, state *ConversationSt
 	} else if successRate > 0.7 {
 		// High success - maintain approach but add complexity
 		constraints := payloads.PayloadConstraints{
-			MaxLength: 1000,
+			MaxLength:        1000,
 			TargetComplexity: 0.5,
 		}
 		payload, err := o.payloadGen.GeneratePayload(context.Background(), prompt, constraints)
@@ -395,7 +395,7 @@ func (s *SemanticDriftAttack) ShouldContinue(state *ConversationState) bool {
 func (s *SemanticDriftAttack) ExtractInfo(response string, state *ConversationState) error {
 	driftLevel := float64(state.TurnCount) * s.driftRate
 	state.SuccessMetrics["drift_level"] = driftLevel
-	
+
 	if driftLevel > 0.7 && contains(response, "misuse") {
 		state.ExtractedInfo["drift_successful"] = true
 	}
@@ -427,7 +427,7 @@ func (o *MultiTurnOrchestrator) updateState(state *ConversationState, prompt, re
 func (o *MultiTurnOrchestrator) recordError(state *ConversationState, err error) {
 	state.mu.Lock()
 	defer state.mu.Unlock()
-	
+
 	if state.ExtractedInfo["errors"] == nil {
 		state.ExtractedInfo["errors"] = []error{}
 	}
@@ -437,11 +437,11 @@ func (o *MultiTurnOrchestrator) recordError(state *ConversationState, err error)
 func (o *MultiTurnOrchestrator) finalizeSession(state *ConversationState) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
-	
+
 	delete(o.activeSessions, state.ID)
-	
+
 	// Log session results
-	fmt.Printf("Session %s completed. Turns: %d, Extracted: %d items\n", 
+	fmt.Printf("Session %s completed. Turns: %d, Extracted: %d items\n",
 		state.ID, state.TurnCount, len(state.ExtractedInfo))
 }
 

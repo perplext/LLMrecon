@@ -2,13 +2,13 @@
 package mfa
 
 import (
-	"time"
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/base64"
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 )
 
 // GenerateRandomSecret generates a random secret for TOTP
@@ -31,7 +31,7 @@ func GenerateRandomSecret(length int) (string, error) {
 func GenerateRandomCode(length int) (string, error) {
 	// Define the maximum value for each digit (10 for digits 0-9)
 	max := big.NewInt(10)
-	
+
 	// Build the code digit by digit
 	var codeBuilder strings.Builder
 	for i := 0; i < length; i++ {
@@ -40,11 +40,11 @@ func GenerateRandomCode(length int) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		
+
 		// Append the digit to the code
 		codeBuilder.WriteString(fmt.Sprintf("%d", n.Int64()))
 	}
-	
+
 	return codeBuilder.String(), nil
 }
 
@@ -56,14 +56,14 @@ func GenerateBackupCode() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Encode as base64
 	code := base64.StdEncoding.EncodeToString(bytes)
 	// Take first 10 characters and remove special characters
 	code = strings.ReplaceAll(code[:10], "+", "A")
 	code = strings.ReplaceAll(code, "/", "B")
 	code = strings.ReplaceAll(code, "=", "C")
-	
+
 	// Format as XXXX-XXXX-XX
 	return fmt.Sprintf("%s-%s-%s", code[:4], code[4:8], code[8:10]), nil
 }
@@ -81,19 +81,19 @@ func IsBackupCodeValid(inputCode string, storedCodes []MFABackupCode) (bool, int
 	// Normalize input code
 	normalizedInput := strings.ReplaceAll(inputCode, "-", "")
 	normalizedInput = strings.ToUpper(normalizedInput)
-	
+
 	// Check against stored codes
 	for i, code := range storedCodes {
 		if !code.Used {
 			normalizedStored := strings.ReplaceAll(code.Code, "-", "")
 			normalizedStored = strings.ToUpper(normalizedStored)
-			
+
 			if normalizedInput == normalizedStored {
 				return true, i
 			}
 		}
 	}
-	
+
 	return false, -1
 }
 
@@ -111,7 +111,7 @@ func FormatPhoneNumber(phoneNumber string) string {
 		}
 		return -1
 	}, phoneNumber)
-	
+
 	// Format based on length
 	switch len(digits) {
 	case 10: // US number without country code
@@ -139,20 +139,20 @@ func MaskPhoneNumber(phoneNumber string) string {
 		}
 		return -1
 	}, phoneNumber)
-	
+
 	// Mask based on length
 	if len(digits) >= 10 {
 		// Keep country code and last 4 digits
 		lastFour := digits[len(digits)-4:]
 		return fmt.Sprintf("********%s", lastFour)
 	}
-	
+
 	// For shorter numbers, mask all but the last 2
 	if len(digits) > 2 {
 		lastTwo := digits[len(digits)-2:]
 		return fmt.Sprintf("%s**", lastTwo)
 	}
-	
+
 	// For very short numbers, just return ***
 	return "***"
 }

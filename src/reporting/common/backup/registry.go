@@ -14,6 +14,7 @@ type FormatterRegistry struct {
 	formatters map[ReportFormat]FormatterCreator
 	mu         sync.RWMutex
 }
+
 // NewFormatterRegistry creates a new formatter registry
 func NewFormatterRegistry() *FormatterRegistry {
 	return &FormatterRegistry{
@@ -42,7 +43,7 @@ func (r *FormatterRegistry) CreateFormatter(format ReportFormat, options map[str
 	if !ok {
 		return nil, fmt.Errorf("unsupported report format: %s", format)
 	}
-	
+
 	return creator(options)
 }
 

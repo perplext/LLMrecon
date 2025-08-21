@@ -206,7 +206,11 @@ func FetchCertificatePin(hostname string, port int) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to %s:%d: %w", hostname, port, err)
 	}
-	defer func() { if err := conn.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Get the peer certificates
 	certs := conn.ConnectionState().PeerCertificates

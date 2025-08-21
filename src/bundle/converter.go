@@ -6,8 +6,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/audit/trail"
 )
@@ -146,7 +146,7 @@ This offline bundle contains templates and modules for LLM red teaming.
 ## Usage
 
 See the documentation directory for usage instructions.
-`, bundle.Manifest.Name, bundle.Manifest.Description, bundle.Manifest.Version, 
+`, bundle.Manifest.Name, bundle.Manifest.Description, bundle.Manifest.Version,
 		bundle.Manifest.BundleType, bundle.Manifest.CreatedAt.Format(time.RFC3339),
 		bundle.Manifest.Author.Name, bundle.Manifest.Author.Email)
 
@@ -200,7 +200,7 @@ See the documentation directory for usage instructions.
 				"original_version":   bundle.Manifest.Version,
 			},
 		}
-		
+
 		if err := c.AuditTrail.Log(nil, auditLog); err != nil {
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
@@ -242,8 +242,8 @@ func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *Offlin
 			if err != nil {
 				return fmt.Errorf("failed to add compliance mappings for template %s: %w", item.ID, err)
 			}
-			
-			fmt.Fprintf(c.Logger, "Added compliance mappings for template %s: OWASP categories: %v, ISO controls: %v\n", 
+
+			fmt.Fprintf(c.Logger, "Added compliance mappings for template %s: OWASP categories: %v, ISO controls: %v\n",
 				item.ID, owaspCategories, isoControls)
 		}
 	}
@@ -257,70 +257,70 @@ func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *Offlin
 // detectOwaspCategories analyzes template content and detects relevant OWASP LLM Top 10 categories
 func detectOwaspCategories(templateContent string) []string {
 	categories := []string{}
-	
+
 	// Simple keyword-based detection for demonstration purposes
 	// In a real implementation, this would use more sophisticated analysis
-	
+
 	// LLM01: Prompt Injection
 	if containsKeywords(templateContent, "prompt injection", "input validation", "sanitize input", "user input") {
 		categories = append(categories, "LLM01:PromptInjection")
 	}
-	
+
 	// LLM02: Insecure Output
 	if containsKeywords(templateContent, "output validation", "validate response", "harmful output", "dangerous output") {
 		categories = append(categories, "LLM02:InsecureOutput")
 	}
-	
+
 	// LLM06: Sensitive Information Disclosure
 	if containsKeywords(templateContent, "sensitive information", "personal data", "pii", "confidential") {
 		categories = append(categories, "LLM06:SensitiveInformationDisclosure")
 	}
-	
+
 	// LLM07: Insecure Plugin Design
 	if containsKeywords(templateContent, "plugin", "extension", "module integration", "third-party") {
 		categories = append(categories, "LLM07:InsecurePluginDesign")
 	}
-	
+
 	// LLM08: Excessive Agency
 	if containsKeywords(templateContent, "autonomous", "agency", "decision making", "authority") {
 		categories = append(categories, "LLM08:ExcessiveAgency")
 	}
-	
+
 	// LLM09: Overreliance
 	if containsKeywords(templateContent, "verification", "human review", "oversight", "check accuracy") {
 		categories = append(categories, "LLM09:Overreliance")
 	}
-	
+
 	return categories
 }
 
 // detectISOControls analyzes template content and detects relevant ISO/IEC 42001 controls
 func detectISOControls(templateContent string) []string {
 	controls := []string{}
-	
+
 	// Simple keyword-based detection for demonstration purposes
 	// In a real implementation, this would use more sophisticated analysis
-	
+
 	// 42001:8.2.3 - Risk assessment
 	if containsKeywords(templateContent, "risk assessment", "risk analysis", "threat model") {
 		controls = append(controls, "42001:8.2.3")
 	}
-	
+
 	// 42001:8.2.4 - Risk treatment
 	if containsKeywords(templateContent, "risk mitigation", "risk treatment", "control implementation") {
 		controls = append(controls, "42001:8.2.4")
 	}
-	
+
 	// 42001:9.2 - Internal audit
 	if containsKeywords(templateContent, "audit", "review", "assessment", "evaluation") {
 		controls = append(controls, "42001:9.2")
 	}
-	
+
 	// 42001:10.1 - Nonconformity and corrective action
 	if containsKeywords(templateContent, "nonconformity", "corrective action", "remediation", "fix") {
 		controls = append(controls, "42001:10.1")
 	}
-	
+
 	return controls
 }
 

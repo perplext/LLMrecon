@@ -60,4 +60,3 @@ type TemplateRegistry interface {
 	FindByTag(tag string) []*Template
 	FindByTags(tags []string) []*Template
 }
-

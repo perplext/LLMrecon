@@ -8,25 +8,25 @@ import (
 type VersionInfo struct {
 	// ID is the unique identifier for the template or module
 	ID string
-	
+
 	// Version is the semantic version
 	Version *SemVersion
-	
+
 	// CreatedAt is the creation timestamp
 	CreatedAt time.Time
-	
+
 	// UpdatedAt is the last update timestamp
 	UpdatedAt time.Time
-	
+
 	// Author is the author of the template or module
 	Author string
-	
+
 	// Description is a description of the template or module
 	Description string
-	
+
 	// Tags are tags associated with the template or module
 	Tags []string
-	
+
 	// Metadata is additional metadata for the template or module
 	Metadata map[string]interface{}
 }
@@ -37,9 +37,9 @@ func NewVersionInfo(id string, version string, author string, description string
 	if err != nil {
 		return nil, err
 	}
-	
+
 	now := time.Now()
-	
+
 	return &VersionInfo{
 		ID:          id,
 		Version:     semver,
@@ -85,10 +85,10 @@ func (v *VersionInfo) UpdateVersion(version string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	v.Version = semver
 	v.UpdatedAt = time.Now()
-	
+
 	return nil
 }
 

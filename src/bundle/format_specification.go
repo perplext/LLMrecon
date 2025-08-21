@@ -96,11 +96,11 @@ func DefaultOfflineBundleFormat() *OfflineBundleFormat {
 					"type": "string",
 				},
 				"created_at": map[string]interface{}{
-					"type": "string",
+					"type":   "string",
 					"format": "date-time",
 				},
 				"author": map[string]interface{}{
-					"type": "object",
+					"type":     "object",
 					"required": []string{"name", "email"},
 					"properties": map[string]interface{}{
 						"name": map[string]interface{}{
@@ -120,7 +120,7 @@ func DefaultOfflineBundleFormat() *OfflineBundleFormat {
 				"content": map[string]interface{}{
 					"type": "array",
 					"items": map[string]interface{}{
-						"type": "object",
+						"type":     "object",
 						"required": []string{"path", "type", "checksum"},
 						"properties": map[string]interface{}{
 							"path": map[string]interface{}{
@@ -154,7 +154,7 @@ func DefaultOfflineBundleFormat() *OfflineBundleFormat {
 					},
 				},
 				"checksums": map[string]interface{}{
-					"type": "object",
+					"type":     "object",
 					"required": []string{"manifest", "content"},
 					"properties": map[string]interface{}{
 						"manifest": map[string]interface{}{
@@ -169,7 +169,7 @@ func DefaultOfflineBundleFormat() *OfflineBundleFormat {
 					},
 				},
 				"compatibility": map[string]interface{}{
-					"type": "object",
+					"type":     "object",
 					"required": []string{"min_version"},
 					"properties": map[string]interface{}{
 						"min_version": map[string]interface{}{
@@ -221,14 +221,14 @@ func DefaultOfflineBundleFormat() *OfflineBundleFormat {
 				"changelog": map[string]interface{}{
 					"type": "array",
 					"items": map[string]interface{}{
-						"type": "object",
+						"type":     "object",
 						"required": []string{"version", "date", "changes"},
 						"properties": map[string]interface{}{
 							"version": map[string]interface{}{
 								"type": "string",
 							},
 							"date": map[string]interface{}{
-								"type": "string",
+								"type":   "string",
 								"format": "date-time",
 							},
 							"changes": map[string]interface{}{
@@ -322,10 +322,10 @@ func CreateOfflineBundle(manifest EnhancedBundleManifest, contentDir, outputPath
 
 	// Create offline bundle
 	offlineBundle := &OfflineBundle{
-		Bundle:          *bundle,
+		Bundle:           *bundle,
 		EnhancedManifest: manifest,
-		Format:          DefaultOfflineBundleFormat(),
-		IsIncremental:   manifest.IsIncremental,
+		Format:           DefaultOfflineBundleFormat(),
+		IsIncremental:    manifest.IsIncremental,
 	}
 
 	return offlineBundle, nil
@@ -390,14 +390,14 @@ func ValidateOfflineBundle(bundle *OfflineBundle, level ValidationLevel, publicK
 
 	// Perform enhanced validation for offline bundles
 	enhancedResult := &ValidationResult{
-		Valid:      true,
-		IsValid:    true,
-		Level:      level,
-		Message:    "Offline bundle validation successful",
-		Errors:     []string{},
-		Warnings:   []string{},
-		Details:    make(map[string]interface{}),
-		Timestamp:  time.Now().UTC(),
+		Valid:     true,
+		IsValid:   true,
+		Level:     level,
+		Message:   "Offline bundle validation successful",
+		Errors:    []string{},
+		Warnings:  []string{},
+		Details:   make(map[string]interface{}),
+		Timestamp: time.Now().UTC(),
 	}
 
 	// Validate required directories
@@ -422,8 +422,8 @@ func ValidateOfflineBundle(bundle *OfflineBundle, level ValidationLevel, publicK
 					enhancedResult.Valid = false
 					enhancedResult.IsValid = false
 					enhancedResult.Message = "Offline bundle validation failed"
-					enhancedResult.Errors = append(enhancedResult.Errors, 
-						fmt.Sprintf("Content ID %s referenced in OWASP LLM Top 10 mapping for category %s does not exist", 
+					enhancedResult.Errors = append(enhancedResult.Errors,
+						fmt.Sprintf("Content ID %s referenced in OWASP LLM Top 10 mapping for category %s does not exist",
 							contentID, category))
 				}
 			}
@@ -439,8 +439,8 @@ func ValidateOfflineBundle(bundle *OfflineBundle, level ValidationLevel, publicK
 					enhancedResult.Valid = false
 					enhancedResult.IsValid = false
 					enhancedResult.Message = "Offline bundle validation failed"
-					enhancedResult.Errors = append(enhancedResult.Errors, 
-						fmt.Sprintf("Content ID %s referenced in ISO/IEC 42001 mapping for control %s does not exist", 
+					enhancedResult.Errors = append(enhancedResult.Errors,
+						fmt.Sprintf("Content ID %s referenced in ISO/IEC 42001 mapping for control %s does not exist",
 							contentID, control))
 				}
 			}
@@ -470,13 +470,13 @@ func ValidateBundle(bundle Bundle, level ValidationLevel, publicKey ed25519.Publ
 	}
 
 	// If signature validation is requested and a public key is provided, validate the signature
-	if (level == BasicValidation || level == StandardValidation || level == StrictValidation || level == SignatureValidationLevel) && 
+	if (level == BasicValidation || level == StandardValidation || level == StrictValidation || level == SignatureValidationLevel) &&
 		publicKey != nil {
 		sigResult, err := validator.ValidateSignature(&bundle, publicKey)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// If signature validation failed, update the result
 		if !sigResult.Valid {
 			result.Valid = false
@@ -490,9 +490,9 @@ func ValidateBundle(bundle Bundle, level ValidationLevel, publicKey ed25519.Publ
 }
 
 // CreateIncrementalBundle creates an incremental bundle based on a base bundle
-func CreateIncrementalBundle(baseBundle *OfflineBundle, newManifest EnhancedBundleManifest, 
+func CreateIncrementalBundle(baseBundle *OfflineBundle, newManifest EnhancedBundleManifest,
 	contentDir, outputPath string) (*OfflineBundle, error) {
-	
+
 	// Set incremental flag and base version
 	newManifest.IsIncremental = true
 	newManifest.BaseVersion = baseBundle.EnhancedManifest.Version
@@ -530,17 +530,17 @@ func MergeIncrementalBundle(baseBundle, incrementalBundle *OfflineBundle, output
 
 	// Merge content items
 	contentMap := make(map[string]ContentItem)
-	
+
 	// Add base bundle content items
 	for _, item := range baseBundle.Manifest.Content {
 		contentMap[item.ID] = item
 	}
-	
+
 	// Add or replace with incremental bundle content items
 	for _, item := range incrementalBundle.Manifest.Content {
 		contentMap[item.ID] = item
 	}
-	
+
 	// Convert map back to slice
 	mergedManifest.Content = make([]ContentItem, 0, len(contentMap))
 	for _, item := range contentMap {
@@ -556,7 +556,7 @@ func MergeIncrementalBundle(baseBundle, incrementalBundle *OfflineBundle, output
 			mergedManifest.Compliance.OwaspLLMTop10[category] = contentIDs
 		}
 	}
-	
+
 	if incrementalBundle.EnhancedManifest.Compliance.ISOIEC42001 != nil {
 		if mergedManifest.Compliance.ISOIEC42001 == nil {
 			mergedManifest.Compliance.ISOIEC42001 = make(map[string][]string)
@@ -580,13 +580,13 @@ func MergeIncrementalBundle(baseBundle, incrementalBundle *OfflineBundle, output
 	for _, item := range baseBundle.Manifest.Content {
 		srcPath := filepath.Join(baseBundle.BundlePath, item.Path)
 		dstPath := filepath.Join(tempDir, item.Path)
-		
+
 		// Create parent directories
 		err = os.MkdirAll(filepath.Dir(dstPath), 0700)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create directory for %s: %w", item.Path, err)
 		}
-		
+
 		// Copy file
 		err = copyFile(srcPath, dstPath)
 		if err != nil {
@@ -598,13 +598,13 @@ func MergeIncrementalBundle(baseBundle, incrementalBundle *OfflineBundle, output
 	for _, item := range incrementalBundle.Manifest.Content {
 		srcPath := filepath.Join(incrementalBundle.BundlePath, item.Path)
 		dstPath := filepath.Join(tempDir, item.Path)
-		
+
 		// Create parent directories
 		err = os.MkdirAll(filepath.Dir(dstPath), 0700)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create directory for %s: %w", item.Path, err)
 		}
-		
+
 		// Copy file
 		err = copyFile(srcPath, dstPath)
 		if err != nil {
@@ -624,7 +624,7 @@ func MergeIncrementalBundle(baseBundle, incrementalBundle *OfflineBundle, output
 // GetComplianceMappings returns the compliance mappings for a bundle
 func (b *OfflineBundle) GetComplianceMappings() []ComplianceMapping {
 	mappings := make([]ComplianceMapping, 0)
-	
+
 	// Process OWASP LLM Top 10 mappings
 	for category, contentIDs := range b.EnhancedManifest.Compliance.OwaspLLMTop10 {
 		for _, contentID := range contentIDs {
@@ -636,7 +636,7 @@ func (b *OfflineBundle) GetComplianceMappings() []ComplianceMapping {
 					break
 				}
 			}
-			
+
 			// Create new mapping if it doesn't exist
 			if mapping == nil {
 				mappings = append(mappings, ComplianceMapping{
@@ -644,12 +644,12 @@ func (b *OfflineBundle) GetComplianceMappings() []ComplianceMapping {
 				})
 				mapping = &mappings[len(mappings)-1]
 			}
-			
+
 			// Add OWASP category
 			mapping.OwaspLLMCategories = append(mapping.OwaspLLMCategories, category)
 		}
 	}
-	
+
 	// Process ISO/IEC 42001 mappings
 	for control, contentIDs := range b.EnhancedManifest.Compliance.ISOIEC42001 {
 		for _, contentID := range contentIDs {
@@ -661,7 +661,7 @@ func (b *OfflineBundle) GetComplianceMappings() []ComplianceMapping {
 					break
 				}
 			}
-			
+
 			// Create new mapping if it doesn't exist
 			if mapping == nil {
 				mappings = append(mappings, ComplianceMapping{
@@ -669,12 +669,12 @@ func (b *OfflineBundle) GetComplianceMappings() []ComplianceMapping {
 				})
 				mapping = &mappings[len(mappings)-1]
 			}
-			
+
 			// Add ISO/IEC control
 			mapping.ISOIECControls = append(mapping.ISOIECControls, control)
 		}
 	}
-	
+
 	return mappings
 }
 
@@ -684,13 +684,13 @@ func (b *OfflineBundle) AddComplianceMapping(mapping ComplianceMapping) error {
 	if b.GetContentItem(mapping.ContentID) == nil {
 		return fmt.Errorf("content ID %s does not exist", mapping.ContentID)
 	}
-	
+
 	// Add OWASP LLM Top 10 mappings
 	for _, category := range mapping.OwaspLLMCategories {
 		if b.EnhancedManifest.Compliance.OwaspLLMTop10 == nil {
 			b.EnhancedManifest.Compliance.OwaspLLMTop10 = make(map[string][]string)
 		}
-		
+
 		// Check if content ID is already mapped to this category
 		exists := false
 		for _, id := range b.EnhancedManifest.Compliance.OwaspLLMTop10[category] {
@@ -699,20 +699,20 @@ func (b *OfflineBundle) AddComplianceMapping(mapping ComplianceMapping) error {
 				break
 			}
 		}
-		
+
 		// Add mapping if it doesn't exist
 		if !exists {
 			b.EnhancedManifest.Compliance.OwaspLLMTop10[category] = append(
 				b.EnhancedManifest.Compliance.OwaspLLMTop10[category], mapping.ContentID)
 		}
 	}
-	
+
 	// Add ISO/IEC 42001 mappings
 	for _, control := range mapping.ISOIECControls {
 		if b.EnhancedManifest.Compliance.ISOIEC42001 == nil {
 			b.EnhancedManifest.Compliance.ISOIEC42001 = make(map[string][]string)
 		}
-		
+
 		// Check if content ID is already mapped to this control
 		exists := false
 		for _, id := range b.EnhancedManifest.Compliance.ISOIEC42001[control] {
@@ -721,14 +721,14 @@ func (b *OfflineBundle) AddComplianceMapping(mapping ComplianceMapping) error {
 				break
 			}
 		}
-		
+
 		// Add mapping if it doesn't exist
 		if !exists {
 			b.EnhancedManifest.Compliance.ISOIEC42001[control] = append(
 				b.EnhancedManifest.Compliance.ISOIEC42001[control], mapping.ContentID)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -739,7 +739,7 @@ func (b *OfflineBundle) AddChangelogEntry(version string, changes []string) {
 		Date:    time.Now().UTC(),
 		Changes: changes,
 	}
-	
+
 	b.EnhancedManifest.Changelog = append(b.EnhancedManifest.Changelog, entry)
 }
 
@@ -748,7 +748,7 @@ func (b *OfflineBundle) GetDocumentationPath(docType string) (string, error) {
 	if path, ok := b.EnhancedManifest.Documentation[docType]; ok {
 		return filepath.Join(b.BundlePath, path), nil
 	}
-	
+
 	return "", fmt.Errorf("documentation type %s not found", docType)
 }
 
@@ -757,8 +757,6 @@ func (b *OfflineBundle) AddDocumentation(docType, path string) {
 	if b.EnhancedManifest.Documentation == nil {
 		b.EnhancedManifest.Documentation = make(map[string]string)
 	}
-	
+
 	b.EnhancedManifest.Documentation[docType] = path
 }
-
-	

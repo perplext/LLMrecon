@@ -17,10 +17,10 @@ type AuditIntegration struct {
 	auditLogger *audit.CredentialAuditLogger
 	// originalMethods stores the original methods of the manager
 	originalMethods struct {
-		getCredential     func(id string) (*Credential, error)
-		storeCredential   func(cred *Credential) error
-		deleteCredential  func(id string) error
-		rotateCredential  func(id string, newValue string) error
+		getCredential    func(id string) (*Credential, error)
+		storeCredential  func(cred *Credential) error
+		deleteCredential func(id string) error
+		rotateCredential func(id string, newValue string) error
 		getAPIKey        func(provider core.ProviderType) (string, error)
 		setAPIKey        func(provider core.ProviderType, apiKey string, description string) error
 	}
@@ -32,7 +32,7 @@ func NewAuditIntegration(manager *CredentialManager, auditLogger *audit.Credenti
 		manager:     manager,
 		auditLogger: auditLogger,
 	}
-	
+
 	// Store original methods
 	integration.originalMethods.getCredential = manager.GetCredential
 	integration.originalMethods.storeCredential = manager.StoreCredential
@@ -40,7 +40,7 @@ func NewAuditIntegration(manager *CredentialManager, auditLogger *audit.Credenti
 	integration.originalMethods.rotateCredential = manager.RotateCredential
 	integration.originalMethods.getAPIKey = manager.GetAPIKey
 	integration.originalMethods.setAPIKey = manager.SetAPIKey
-	
+
 	return integration
 }
 
@@ -49,7 +49,7 @@ func (a *AuditIntegration) WrapManager() {
 	// Since we can't directly replace methods on the manager struct,
 	// we'll create a proxy struct that wraps the original methods
 	// and use that for all credential operations
-	
+
 	// The proxy methods will be called from the manager's methods
 	// when they are accessed through the DefaultManager or other instances
 }
@@ -84,7 +84,7 @@ func (a *AuditIntegration) DeleteCredential(id string) error {
 		a.auditLogger.LogCredentialError(id, "", "delete", err)
 		return err
 	}
-	
+
 	err = a.originalMethods.deleteCredential(id)
 	if err != nil {
 		a.auditLogger.LogCredentialError(id, cred.Service, "delete", err)
@@ -102,7 +102,7 @@ func (a *AuditIntegration) RotateCredential(id string, newValue string) error {
 		a.auditLogger.LogCredentialError(id, "", "rotate", err)
 		return err
 	}
-	
+
 	err = a.originalMethods.rotateCredential(id, newValue)
 	if err != nil {
 		a.auditLogger.LogCredentialError(id, cred.Service, "rotate", err)
@@ -119,14 +119,14 @@ func (a *AuditIntegration) GetAPIKey(provider core.ProviderType) (string, error)
 		a.auditLogger.LogCredentialError("", string(provider), "get_api_key", err)
 		return apiKey, err
 	}
-	
+
 	// Find credential ID for the API key
 	creds, _ := a.manager.ListCredentialsByService(string(provider))
 	credID := ""
 	if len(creds) > 0 {
 		credID = creds[0].ID
 	}
-	
+
 	a.auditLogger.LogCredentialAccess(credID, string(provider), "get_api_key")
 	return apiKey, nil
 }
@@ -138,14 +138,14 @@ func (a *AuditIntegration) SetAPIKey(provider core.ProviderType, apiKey string, 
 		a.auditLogger.LogCredentialError("", string(provider), "set_api_key", err)
 		return err
 	}
-	
+
 	// Find credential ID for the API key
 	creds, _ := a.manager.ListCredentialsByService(string(provider))
 	credID := ""
 	if len(creds) > 0 {
 		credID = creds[0].ID
 	}
-	
+
 	a.auditLogger.LogCredentialAccess(credID, string(provider), "set_api_key")
 	return nil
 }
@@ -253,7 +253,7 @@ func (a *AuditIntegration) GetCredentialsWithAnomalousAccess(threshold int) ([]*
 
 		if isAnomalous {
 			anomalous = append(anomalous, cred)
-			
+
 			// Log alert
 			a.auditLogger.LogAlert(
 				fmt.Sprintf("Anomalous access pattern detected for credential %s", cred.ID),
@@ -271,7 +271,6 @@ func (a *AuditIntegration) GetCredentialsWithAnomalousAccess(threshold int) ([]*
 
 	return anomalous, nil
 }
-	
 
 // GetUnusedCredentials returns credentials that haven't been accessed in the specified duration
 func (a *AuditIntegration) GetUnusedCredentials(days int) ([]*Credential, error) {
@@ -280,10 +279,10 @@ func (a *AuditIntegration) GetUnusedCredentials(days int) ([]*Credential, error)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list credentials: %w", err)
 	}
-	
+
 	// Calculate the cutoff time
 	cutoffTime := time.Now().AddDate(0, 0, -days)
-	
+
 	// Check each credential's last access time
 	unusedCreds := make([]*Credential, 0)
 	for _, cred := range creds {
@@ -297,18 +296,18 @@ func (a *AuditIntegration) GetUnusedCredentials(days int) ([]*Credential, error)
 			unusedCreds = append(unusedCreds, cred)
 			continue
 		}
-		
+
 		// If no access events, it's unused
 		if len(events) == 0 {
 			unusedCreds = append(unusedCreds, cred)
 			continue
 		}
-		
+
 		// Check if the most recent access is before the cutoff time
 		latestEvent := events[0] // Assuming events are returned in reverse chronological order
 		if latestEvent.Timestamp.Before(cutoffTime) {
 			unusedCreds = append(unusedCreds, cred)
-			
+
 			// Log alert for unused credential
 			a.auditLogger.LogAlert(
 				fmt.Sprintf("Credential %s hasn't been used in %d days", cred.ID, days),
@@ -317,11 +316,11 @@ func (a *AuditIntegration) GetUnusedCredentials(days int) ([]*Credential, error)
 					"credential_id": cred.ID,
 					"service":       cred.Service,
 					"days_unused":   fmt.Sprintf("%d", days),
-					"last_access":  latestEvent.Timestamp.Format(time.RFC3339),
+					"last_access":   latestEvent.Timestamp.Format(time.RFC3339),
 				},
 			)
 		}
 	}
-	
+
 	return unusedCreds, nil
 }

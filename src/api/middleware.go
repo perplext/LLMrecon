@@ -44,14 +44,14 @@ func (rl *RateLimiter) GetLimiter(key string) *rate.Limiter {
 	rl.mu.RLock()
 	limiter, exists := rl.limiters[key]
 	rl.mu.RUnlock()
-	
+
 	if !exists {
 		limiter = rate.NewLimiter(rate.Every(time.Minute/time.Duration(rl.rate)), rl.burst)
 		rl.mu.Lock()
 		rl.limiters[key] = limiter
 		rl.mu.Unlock()
 	}
-	
+
 	return limiter
 }
 
@@ -62,15 +62,15 @@ var globalRateLimiter *RateLimiter
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		
+
 		// Generate request ID
 		requestID := generateRequestID()
 		ctx := context.WithValue(r.Context(), contextKeyRequestID, requestID)
 		r = r.WithContext(ctx)
-		
+
 		// Wrap response writer to capture status
 		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-		
+
 		// Log request
 		log.Info().
 			Str("request_id", requestID).
@@ -78,10 +78,10 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			Str("path", r.URL.Path).
 			Str("remote_addr", r.RemoteAddr).
 			Msg("API request started")
-		
+
 		// Process request
 		next.ServeHTTP(wrapped, r)
-		
+
 		// Log response
 		duration := time.Since(start)
 		log.Info().
@@ -102,13 +102,13 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
 		w.Header().Set("Access-Control-Max-Age", "3600")
-		
+
 		// Handle preflight requests
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -129,24 +129,24 @@ func (s *Server) authMiddleware(config *Config) func(http.Handler) http.Handler 
 				next.ServeHTTP(w, r)
 				return
 			}
-			
+
 			// Extract API key from header or query parameter
 			apiKey := extractAPIKey(r)
 			if apiKey == "" {
 				writeError(w, http.StatusUnauthorized, NewAPIError(ErrCodeUnauthorized, "Missing API key"))
 				return
 			}
-			
+
 			// Validate API key
 			if !isValidAPIKey(apiKey, config.APIKeys) {
 				writeError(w, http.StatusUnauthorized, NewAPIError(ErrCodeUnauthorized, "Invalid API key"))
 				return
 			}
-			
+
 			// Add API key to context
 			ctx := context.WithValue(r.Context(), contextKeyAPIKey, apiKey)
 			r = r.WithContext(ctx)
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -158,29 +158,29 @@ func (s *Server) rateLimitMiddleware(config *Config) func(http.Handler) http.Han
 	if globalRateLimiter == nil {
 		globalRateLimiter = NewRateLimiter(config.RateLimit)
 	}
-	
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !config.EnableRateLimit {
 				next.ServeHTTP(w, r)
 				return
 			}
-			
+
 			// Get API key from context
 			apiKey, ok := r.Context().Value(contextKeyAPIKey).(string)
 			if !ok {
 				apiKey = "anonymous"
 			}
-			
+
 			// Get limiter for this API key
 			limiter := globalRateLimiter.GetLimiter(apiKey)
-			
+
 			// Check rate limit
 			if !limiter.Allow() {
 				writeError(w, http.StatusTooManyRequests, NewAPIError(ErrCodeRateLimited, "Rate limit exceeded"))
 				return
 			}
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -196,17 +196,17 @@ func extractAPIKey(r *http.Request) string {
 			return parts[1]
 		}
 	}
-	
+
 	// Check X-API-Key header
 	if key := r.Header.Get("X-API-Key"); key != "" {
 		return key
 	}
-	
+
 	// Check query parameter (for convenience, but less secure)
 	if key := r.URL.Query().Get("api_key"); key != "" {
 		return key
 	}
-	
+
 	return ""
 }
 
@@ -282,7 +282,7 @@ func writeSuccessWithMeta(w http.ResponseWriter, data interface{}, meta *Meta) {
 		meta = &Meta{}
 	}
 	meta.Version = APIVersion
-	
+
 	response := Response{
 		Success: true,
 		Data:    data,
@@ -314,17 +314,17 @@ func paginate(page, perPage, total int) (offset, limit int) {
 	if perPage > 100 {
 		perPage = 100
 	}
-	
+
 	offset = (page - 1) * perPage
 	limit = perPage
-	
+
 	if offset >= total {
 		offset = total
 		limit = 0
 	} else if offset+limit > total {
 		limit = total - offset
 	}
-	
+
 	return offset, limit
 }
 

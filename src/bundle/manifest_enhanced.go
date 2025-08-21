@@ -149,7 +149,7 @@ func (g *EnhancedManifestGenerator) scanBundleContents() error {
 		default:
 			contentType = ContentType(contentTypeStr)
 		}
-		
+
 		item := &ContentItem{
 			Path:     relPath,
 			Type:     contentType,
@@ -219,7 +219,11 @@ func (g *EnhancedManifestGenerator) calculateChecksums(path string) (map[string]
 	if err != nil {
 		return nil, err
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	checksums := make(map[string]string)
 
@@ -245,7 +249,7 @@ func (g *EnhancedManifestGenerator) extractMetadata() {
 
 	for _, item := range g.contentItems {
 		fullPath := filepath.Join(g.bundlePath, item.Path)
-		
+
 		for _, extractor := range extractors {
 			if extractor.Supports(fullPath) {
 				metadata, err := extractor.Extract(fullPath)
@@ -253,7 +257,7 @@ func (g *EnhancedManifestGenerator) extractMetadata() {
 					g.errors = append(g.errors, fmt.Errorf("metadata extraction failed for %s: %w", item.Path, err))
 					continue
 				}
-				
+
 				// Merge extracted metadata
 				if item.Metadata == nil {
 					item.Metadata = make(map[string]interface{})
@@ -261,12 +265,12 @@ func (g *EnhancedManifestGenerator) extractMetadata() {
 				for k, v := range metadata {
 					item.Metadata[k] = v
 				}
-				
+
 				// Set version if found
 				if version, ok := metadata["version"].(string); ok {
 					item.Version = version
 				}
-				
+
 				break
 			}
 		}
@@ -305,7 +309,7 @@ func (g *EnhancedManifestGenerator) resolveDependencies() {
 // analyzeTemplateDependencies finds dependencies in templates
 func (g *EnhancedManifestGenerator) analyzeTemplateDependencies(item *ContentItem) []string {
 	deps := []string{}
-	
+
 	// Read template file
 	fullPath := filepath.Join(g.bundlePath, item.Path)
 	data, err := os.ReadFile(filepath.Clean(fullPath))
@@ -314,7 +318,7 @@ func (g *EnhancedManifestGenerator) analyzeTemplateDependencies(item *ContentIte
 	}
 
 	content := string(data)
-	
+
 	// Look for references to other templates
 	if strings.Contains(content, "template:") || strings.Contains(content, "workflow:") {
 		// Simple pattern matching for demonstration
@@ -373,7 +377,7 @@ func (g *EnhancedManifestGenerator) buildManifest() *BundleManifest {
 		Content:         convertContentItems(g.contentItems),
 		Metadata:        g.metadata,
 		Checksums: Checksums{
-			Content:   make(map[string]string),
+			Content: make(map[string]string),
 		},
 	}
 
@@ -557,7 +561,7 @@ func (e *ModuleMetadataExtractor) Supports(path string) bool {
 
 func (e *ModuleMetadataExtractor) Extract(path string) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	
+
 	// Check for companion metadata file
 	metadataPath := path + ".metadata.json"
 	if data, err := os.ReadFile(filepath.Clean(metadataPath)); err == nil {
@@ -567,7 +571,7 @@ func (e *ModuleMetadataExtractor) Extract(path string) (map[string]interface{}, 
 	// Extract from filename
 	base := filepath.Base(path)
 	metadata["filename"] = base
-	
+
 	// Extract module type from path
 	if strings.Contains(path, "providers") {
 		metadata["moduleType"] = "provider"
@@ -588,7 +592,7 @@ func (e *DocumentationMetadataExtractor) Supports(path string) bool {
 
 func (e *DocumentationMetadataExtractor) Extract(path string) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	
+
 	// Extract title from markdown files
 	if strings.HasSuffix(path, ".md") {
 		data, err := os.ReadFile(filepath.Clean(path))
@@ -604,7 +608,7 @@ func (e *DocumentationMetadataExtractor) Extract(path string) (map[string]interf
 	}
 
 	metadata["docType"] = strings.TrimPrefix(filepath.Ext(path), ".")
-	
+
 	return metadata, nil
 }
 
@@ -675,7 +679,7 @@ func GenerateComparisonReport(oldManifest, newManifest *BundleManifest) *Manifes
 		}
 	}
 
-	comparison.Summary.TotalChanges = comparison.Summary.AddedCount + 
+	comparison.Summary.TotalChanges = comparison.Summary.AddedCount +
 		comparison.Summary.RemovedCount + comparison.Summary.ModifiedCount
 
 	return comparison
@@ -685,10 +689,10 @@ func GenerateComparisonReport(oldManifest, newManifest *BundleManifest) *Manifes
 
 // ManifestComparison contains the comparison results
 type ManifestComparison struct {
-	OldVersion string             `json:"oldVersion"`
-	NewVersion string             `json:"newVersion"`
-	Changes    ManifestChanges    `json:"changes"`
-	Summary    ComparisonSummary  `json:"summary"`
+	OldVersion string            `json:"oldVersion"`
+	NewVersion string            `json:"newVersion"`
+	Changes    ManifestChanges   `json:"changes"`
+	Summary    ComparisonSummary `json:"summary"`
 }
 
 // ManifestChanges contains lists of changes

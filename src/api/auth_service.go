@@ -17,11 +17,11 @@ import (
 // Authentication errors
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrTokenExpired      = errors.New("token expired")
-	ErrTokenInvalid      = errors.New("token invalid")
-	ErrAPIKeyNotFound    = errors.New("API key not found")
-	ErrAPIKeyExpired     = errors.New("API key expired")
-	ErrAPIKeyRevoked     = errors.New("API key revoked")
+	ErrTokenExpired       = errors.New("token expired")
+	ErrTokenInvalid       = errors.New("token invalid")
+	ErrAPIKeyNotFound     = errors.New("API key not found")
+	ErrAPIKeyExpired      = errors.New("API key expired")
+	ErrAPIKeyRevoked      = errors.New("API key revoked")
 )
 
 // AuthService handles authentication operations
@@ -31,14 +31,14 @@ type AuthService interface {
 	ValidateJWT(token string) (*JWTClaims, error)
 	ValidateToken(token string) (*User, error)
 	RefreshJWT(token string) (string, error)
-	
+
 	// API key operations
 	CreateAPIKey(request CreateAPIKeyRequest) (*APIKey, error)
 	GetAPIKey(keyID string) (*APIKey, error)
 	ListAPIKeys(filter APIKeyFilter) ([]APIKey, error)
 	RevokeAPIKey(keyID string) error
 	ValidateAPIKey(key string) (*APIKey, error)
-	
+
 	// User authentication
 	Authenticate(username, password string) (*User, error)
 	CreateUser(request CreateUserRequest) (*User, error)
@@ -77,7 +77,7 @@ type JWTClaims struct {
 type APIKey struct {
 	ID          string            `json:"id"`
 	Key         string            `json:"key,omitempty"` // Only returned on creation
-	KeyHash     string            `json:"-"`              // Never exposed
+	KeyHash     string            `json:"-"`             // Never exposed
 	Name        string            `json:"name"`
 	Description string            `json:"description,omitempty"`
 	Scopes      []string          `json:"scopes"`
@@ -115,7 +115,7 @@ type CreateAPIKeyRequest struct {
 
 // APIKeyFilter represents API key filter criteria
 type APIKeyFilter struct {
-	Active   *bool
+	Active      *bool
 	ExpiredOnly bool
 	RevokedOnly bool
 }
@@ -134,11 +134,11 @@ func (s *AuthServiceImpl) GenerateJWT(userID string, claims map[string]interface
 	s.mu.RLock()
 	user, exists := s.users[userID]
 	s.mu.RUnlock()
-	
+
 	if !exists {
 		return "", errors.New("user not found")
 	}
-	
+
 	now := time.Now()
 	jwtClaims := JWTClaims{
 		UserID:   user.ID,
@@ -153,7 +153,7 @@ func (s *AuthServiceImpl) GenerateJWT(userID string, claims map[string]interface
 			Subject:   userID,
 		},
 	}
-	
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims)
 	return token.SignedString(s.jwtSecret)
 }
@@ -166,15 +166,15 @@ func (s *AuthServiceImpl) ValidateJWT(tokenString string) (*JWTClaims, error) {
 		}
 		return s.jwtSecret, nil
 	})
-	
+
 	if err != nil {
 		return nil, ErrTokenInvalid
 	}
-	
+
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
 		return claims, nil
 	}
-	
+
 	return nil, ErrTokenInvalid
 }
 
@@ -184,7 +184,7 @@ func (s *AuthServiceImpl) RefreshJWT(tokenString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Generate new token with same claims but new expiration
 	return s.GenerateJWT(claims.UserID, claims.Extra)
 }
@@ -195,15 +195,15 @@ func (s *AuthServiceImpl) ValidateToken(tokenString string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	s.mu.RLock()
 	user, exists := s.users[claims.UserID]
 	s.mu.RUnlock()
-	
+
 	if !exists {
 		return nil, errors.New("user not found")
 	}
-	
+
 	// Return copy
 	result := *user
 	return &result, nil
@@ -217,26 +217,26 @@ func (s *AuthServiceImpl) CreateAPIKey(request CreateAPIKeyRequest) (*APIKey, er
 		return nil, fmt.Errorf("failed to generate API key: %w", err)
 	}
 	key := base64.URLEncoding.EncodeToString(keyBytes)
-	
+
 	// Hash the key for storage
 	keyHash, err := bcrypt.GenerateFromPassword([]byte(key), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash API key: %w", err)
 	}
-	
+
 	// Calculate expiration
 	var expiresAt *time.Time
 	if request.ExpiresIn > 0 {
 		exp := time.Now().AddDate(0, 0, request.ExpiresIn)
 		expiresAt = &exp
 	}
-	
+
 	// Default rate limit
 	rateLimit := request.RateLimit
 	if rateLimit <= 0 {
 		rateLimit = 60 // 60 requests per minute
 	}
-	
+
 	apiKey := &APIKey{
 		ID:          generateID(),
 		Key:         key, // Will be removed before storage
@@ -250,11 +250,11 @@ func (s *AuthServiceImpl) CreateAPIKey(request CreateAPIKeyRequest) (*APIKey, er
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	
+
 	s.mu.Lock()
 	s.apiKeys[apiKey.ID] = apiKey
 	s.mu.Unlock()
-	
+
 	// Return copy with key included (only time it's exposed)
 	result := *apiKey
 	return &result, nil
@@ -265,11 +265,11 @@ func (s *AuthServiceImpl) GetAPIKey(keyID string) (*APIKey, error) {
 	s.mu.RLock()
 	apiKey, exists := s.apiKeys[keyID]
 	s.mu.RUnlock()
-	
+
 	if !exists {
 		return nil, ErrAPIKeyNotFound
 	}
-	
+
 	// Return copy without key
 	result := *apiKey
 	result.Key = ""
@@ -280,10 +280,10 @@ func (s *AuthServiceImpl) GetAPIKey(keyID string) (*APIKey, error) {
 func (s *AuthServiceImpl) ListAPIKeys(filter APIKeyFilter) ([]APIKey, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	var results []APIKey
 	now := time.Now()
-	
+
 	for _, apiKey := range s.apiKeys {
 		// Apply filters
 		if filter.Active != nil {
@@ -292,21 +292,21 @@ func (s *AuthServiceImpl) ListAPIKeys(filter APIKeyFilter) ([]APIKey, error) {
 				continue
 			}
 		}
-		
+
 		if filter.ExpiredOnly && (apiKey.ExpiresAt == nil || apiKey.ExpiresAt.After(now)) {
 			continue
 		}
-		
+
 		if filter.RevokedOnly && apiKey.RevokedAt == nil {
 			continue
 		}
-		
+
 		// Return copy without key
 		result := *apiKey
 		result.Key = ""
 		results = append(results, result)
 	}
-	
+
 	return results, nil
 }
 
@@ -314,16 +314,16 @@ func (s *AuthServiceImpl) ListAPIKeys(filter APIKeyFilter) ([]APIKey, error) {
 func (s *AuthServiceImpl) RevokeAPIKey(keyID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	apiKey, exists := s.apiKeys[keyID]
 	if !exists {
 		return ErrAPIKeyNotFound
 	}
-	
+
 	now := time.Now()
 	apiKey.RevokedAt = &now
 	apiKey.UpdatedAt = now
-	
+
 	return nil
 }
 
@@ -331,10 +331,10 @@ func (s *AuthServiceImpl) RevokeAPIKey(keyID string) error {
 func (s *AuthServiceImpl) ValidateAPIKey(key string) (*APIKey, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	// Normalize the key
 	key = normalizeAPIKey(key)
-	
+
 	// Check all API keys
 	for _, apiKey := range s.apiKeys {
 		// Compare using bcrypt
@@ -343,23 +343,23 @@ func (s *AuthServiceImpl) ValidateAPIKey(key string) (*APIKey, error) {
 			if apiKey.RevokedAt != nil {
 				return nil, ErrAPIKeyRevoked
 			}
-			
+
 			// Check if expired
 			if apiKey.ExpiresAt != nil && apiKey.ExpiresAt.Before(time.Now()) {
 				return nil, ErrAPIKeyExpired
 			}
-			
+
 			// Update last used
 			now := time.Now()
 			apiKey.LastUsedAt = &now
-			
+
 			// Return copy without key
 			result := *apiKey
 			result.Key = ""
 			return &result, nil
 		}
 	}
-	
+
 	return nil, ErrInvalidCredentials
 }
 
@@ -367,7 +367,7 @@ func (s *AuthServiceImpl) ValidateAPIKey(key string) (*APIKey, error) {
 func (s *AuthServiceImpl) Authenticate(username, password string) (*User, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	// Find user by username
 	var user *User
 	for _, u := range s.users {
@@ -376,21 +376,21 @@ func (s *AuthServiceImpl) Authenticate(username, password string) (*User, error)
 			break
 		}
 	}
-	
+
 	if user == nil {
 		return nil, ErrInvalidCredentials
 	}
-	
+
 	// Check password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return nil, ErrInvalidCredentials
 	}
-	
+
 	// Check if active
 	if !user.Active {
 		return nil, errors.New("user account is inactive")
 	}
-	
+
 	// Return copy
 	result := *user
 	return &result, nil
@@ -403,13 +403,13 @@ func (s *AuthServiceImpl) CreateUser(request CreateUserRequest) (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
-	
+
 	// Default role
 	role := request.Role
 	if role == "" {
 		role = "user"
 	}
-	
+
 	user := &User{
 		ID:           generateID(),
 		Username:     request.Username,
@@ -421,9 +421,9 @@ func (s *AuthServiceImpl) CreateUser(request CreateUserRequest) (*User, error) {
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
-	
+
 	s.mu.Lock()
-	
+
 	// Check if username already exists
 	for _, u := range s.users {
 		if u.Username == user.Username {
@@ -431,10 +431,10 @@ func (s *AuthServiceImpl) CreateUser(request CreateUserRequest) (*User, error) {
 			return nil, errors.New("username already exists")
 		}
 	}
-	
+
 	s.users[user.ID] = user
 	s.mu.Unlock()
-	
+
 	// Return copy
 	result := *user
 	return &result, nil
@@ -444,26 +444,26 @@ func (s *AuthServiceImpl) CreateUser(request CreateUserRequest) (*User, error) {
 func (s *AuthServiceImpl) UpdatePassword(userID, oldPassword, newPassword string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	user, exists := s.users[userID]
 	if !exists {
 		return errors.New("user not found")
 	}
-	
+
 	// Verify old password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(oldPassword)); err != nil {
 		return ErrInvalidCredentials
 	}
-	
+
 	// Hash new password
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
-	
+
 	user.PasswordHash = string(passwordHash)
 	user.UpdatedAt = time.Now()
-	
+
 	return nil
 }
 

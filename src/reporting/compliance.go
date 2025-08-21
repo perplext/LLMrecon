@@ -17,17 +17,17 @@ func NewOWASPComplianceProvider() *OWASPComplianceProvider {
 	provider := &OWASPComplianceProvider{
 		mappings: make(map[string]ComplianceMapping),
 	}
-	
+
 	// Initialize mappings
 	provider.initializeMappings()
-	
+
 	return provider
 }
 
 // GetMappings returns compliance mappings for a test result
 func (p *OWASPComplianceProvider) GetMappings(ctx context.Context, testResult *TestResult) ([]ComplianceMapping, error) {
 	var mappings []ComplianceMapping
-	
+
 	// Check tags for OWASP mappings
 	for _, tag := range testResult.Tags {
 		// Look for tags with owasp: prefix
@@ -38,7 +38,7 @@ func (p *OWASPComplianceProvider) GetMappings(ctx context.Context, testResult *T
 			}
 		}
 	}
-	
+
 	// Check metadata for OWASP mappings
 	if testResult.Metadata != nil {
 		if owaspIDs, ok := testResult.Metadata["owasp_ids"].([]interface{}); ok {
@@ -51,7 +51,7 @@ func (p *OWASPComplianceProvider) GetMappings(ctx context.Context, testResult *T
 			}
 		}
 	}
-	
+
 	return mappings, nil
 }
 
@@ -147,17 +147,17 @@ func NewISOComplianceProvider() *ISOComplianceProvider {
 	provider := &ISOComplianceProvider{
 		mappings: make(map[string]ComplianceMapping),
 	}
-	
+
 	// Initialize mappings
 	provider.initializeMappings()
-	
+
 	return provider
 }
 
 // GetMappings returns compliance mappings for a test result
 func (p *ISOComplianceProvider) GetMappings(ctx context.Context, testResult *TestResult) ([]ComplianceMapping, error) {
 	var mappings []ComplianceMapping
-	
+
 	// Check tags for ISO mappings
 	for _, tag := range testResult.Tags {
 		// Look for tags with iso: prefix
@@ -168,7 +168,7 @@ func (p *ISOComplianceProvider) GetMappings(ctx context.Context, testResult *Tes
 			}
 		}
 	}
-	
+
 	// Check metadata for ISO mappings
 	if testResult.Metadata != nil {
 		if isoIDs, ok := testResult.Metadata["iso_ids"].([]interface{}); ok {
@@ -181,7 +181,7 @@ func (p *ISOComplianceProvider) GetMappings(ctx context.Context, testResult *Tes
 			}
 		}
 	}
-	
+
 	return mappings, nil
 }
 
@@ -296,7 +296,7 @@ func NewCustomComplianceProvider(mappings map[string]ComplianceMapping) *CustomC
 // GetMappings returns compliance mappings for a test result
 func (p *CustomComplianceProvider) GetMappings(ctx context.Context, testResult *TestResult) ([]ComplianceMapping, error) {
 	var mappings []ComplianceMapping
-	
+
 	// Check tags for custom mappings
 	for _, tag := range testResult.Tags {
 		// Look for tags with custom: prefix
@@ -307,7 +307,7 @@ func (p *CustomComplianceProvider) GetMappings(ctx context.Context, testResult *
 			}
 		}
 	}
-	
+
 	// Check metadata for custom mappings
 	if testResult.Metadata != nil {
 		if customIDs, ok := testResult.Metadata["custom_ids"].([]interface{}); ok {
@@ -320,7 +320,7 @@ func (p *CustomComplianceProvider) GetMappings(ctx context.Context, testResult *
 			}
 		}
 	}
-	
+
 	return mappings, nil
 }
 

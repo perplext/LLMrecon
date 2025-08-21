@@ -84,11 +84,11 @@ func convertModelsAuditLogToAuditEvent(log *models.AuditLog) *AuditEvent {
 		Description: log.Description,
 		IPAddress:   log.IPAddress,
 		UserAgent:   log.UserAgent,
-		Severity:    "info",        // Default severity
+		Severity:    "info", // Default severity
 		Status:      log.Status,
-		SessionID:   "",            // Not available in models.AuditLog
+		SessionID:   "", // Not available in models.AuditLog
 		Details:     log.Metadata,
-		Changes:     nil,           // Not available in models.AuditLog
+		Changes:     nil, // Not available in models.AuditLog
 		Metadata:    log.Metadata,
 	}
 }
@@ -105,7 +105,7 @@ func convertAuditEventToModelsAuditLog(event *AuditEvent) *models.AuditLog {
 		Username:     event.Username,
 		Action:       event.Action,
 		Resource:     event.Resource,
-		ResourceType: "",              // Not available in AuditEvent
+		ResourceType: "", // Not available in AuditEvent
 		ResourceID:   event.ResourceID,
 		Status:       event.Status,
 		Description:  event.Description,

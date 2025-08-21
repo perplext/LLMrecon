@@ -90,7 +90,7 @@ func (f *Factory) CreateSessionStore() (interfaces.SessionStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Wrap it with the adapter
 	return adapter.NewSessionStoreAdapter(sqlStore), nil
 }
@@ -102,7 +102,7 @@ func (f *Factory) CreateAuditStore() (interfaces.AuditLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Wrap it with the adapter
 	return adapter.NewAuditStoreAdapter(sqlStore), nil
 }
@@ -114,7 +114,7 @@ func (f *Factory) CreateIncidentStore() (interfaces.IncidentStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Wrap it with the adapter
 	return adapter.NewIncidentStoreAdapter(sqlStore), nil
 }
@@ -126,7 +126,7 @@ func (f *Factory) CreateVulnerabilityStore() (interfaces.VulnerabilityStore, err
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Wrap it with the adapter
 	return adapter.NewVulnerabilityStoreAdapter(sqlStore), nil
 }

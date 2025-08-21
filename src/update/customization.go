@@ -64,7 +64,7 @@ func (m *CustomizationManager) DetectCustomizations() error {
 	if err != nil {
 		return fmt.Errorf("failed to detect customizations: %w", err)
 	}
-	
+
 	// Register detected customizations
 	for _, custom := range customizations {
 		if err := m.Registry.Register(custom); err != nil {
@@ -78,7 +78,7 @@ func (m *CustomizationManager) DetectCustomizations() error {
 func (m *CustomizationManager) PreserveCustomizations() error {
 	// Get all registered customizations
 	customizations := m.Registry.GetCustomizations()
-	
+
 	// Preserve each customization
 	for _, custom := range customizations {
 		if err := m.Preserver.PreserveCustomization(custom); err != nil {
@@ -93,7 +93,7 @@ func (m *CustomizationManager) PreserveCustomizations() error {
 func (m *CustomizationManager) ReapplyCustomizations(updatedTemplates, updatedModules []string) error {
 	// Get all registered customizations
 	customizations := m.Registry.GetCustomizations()
-	
+
 	// Restore each customization
 	for _, custom := range customizations {
 		if err := m.Preserver.RestoreCustomization(custom); err != nil {

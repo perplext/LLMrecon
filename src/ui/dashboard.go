@@ -10,24 +10,24 @@ import (
 
 // Dashboard provides a comprehensive view of scan results
 type Dashboard struct {
-	terminal     *Terminal
-	style        *DashboardStyle
-	refreshRate  time.Duration
-	widgets      []Widget
-	layout       *Layout
+	terminal    *Terminal
+	style       *DashboardStyle
+	refreshRate time.Duration
+	widgets     []Widget
+	layout      *Layout
 }
 
 // DashboardStyle defines the visual styling for the dashboard
 type DashboardStyle struct {
-	Border      lipgloss.Style
-	Title       lipgloss.Style
-	Widget      lipgloss.Style
-	Metric      lipgloss.Style
-	Chart       lipgloss.Style
-	Critical    lipgloss.Style
-	Warning     lipgloss.Style
-	Success     lipgloss.Style
-	Info        lipgloss.Style
+	Border   lipgloss.Style
+	Title    lipgloss.Style
+	Widget   lipgloss.Style
+	Metric   lipgloss.Style
+	Chart    lipgloss.Style
+	Critical lipgloss.Style
+	Warning  lipgloss.Style
+	Success  lipgloss.Style
+	Info     lipgloss.Style
 }
 
 // Widget represents a dashboard component
@@ -92,7 +92,7 @@ func newDashboardStyle() *DashboardStyle {
 func (d *Dashboard) ScanDashboard(scanID string) error {
 	// Clear screen
 	d.terminal.Clear()
-	
+
 	// Create widgets
 	d.widgets = []Widget{
 		NewScanOverviewWidget(d.style),
@@ -102,26 +102,26 @@ func (d *Dashboard) ScanDashboard(scanID string) error {
 		NewPerformanceMetricsWidget(d.style),
 		NewComplianceStatusWidget(d.style),
 	}
-	
+
 	// Define layout
 	d.layout.Rows = []Row{
-		{Widgets: []Widget{d.widgets[0]}, Heights: []int{8}},           // Overview
+		{Widgets: []Widget{d.widgets[0]}, Heights: []int{8}},                    // Overview
 		{Widgets: []Widget{d.widgets[1], d.widgets[2]}, Heights: []int{10, 10}}, // Charts
-		{Widgets: []Widget{d.widgets[3]}, Heights: []int{12}},          // Findings
+		{Widgets: []Widget{d.widgets[3]}, Heights: []int{12}},                   // Findings
 		{Widgets: []Widget{d.widgets[4], d.widgets[5]}, Heights: []int{8, 8}},   // Metrics
 	}
-	
+
 	// Render loop
 	ticker := time.NewTicker(d.refreshRate)
 	defer ticker.Stop()
-	
+
 	for {
 		// Update widget data
 		d.updateWidgets(scanID)
-		
+
 		// Render dashboard
 		d.render()
-		
+
 		// Check for user input
 		select {
 		case <-ticker.C:
@@ -140,19 +140,19 @@ func (d *Dashboard) ScanDashboard(scanID string) error {
 // render displays the complete dashboard
 func (d *Dashboard) render() {
 	d.terminal.Clear()
-	
+
 	// Dashboard header
 	header := d.style.Title.Render("🛡️  LLMrecon Security Dashboard")
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 	headerLine := fmt.Sprintf("%s %s", header, d.style.Info.Render(timestamp))
 	fmt.Println(headerLine)
 	fmt.Println(strings.Repeat("─", 80))
-	
+
 	// Render rows
 	for _, row := range d.layout.Rows {
 		d.renderRow(row)
 	}
-	
+
 	// Footer
 	fmt.Println(strings.Repeat("─", 80))
 	fmt.Println(d.style.Info.Render("Press 'q' to exit | Auto-refresh: " + d.refreshRate.String()))
@@ -164,22 +164,22 @@ func (d *Dashboard) renderRow(row Row) {
 	widgetCount := len(row.Widgets)
 	totalWidth := 80 // Terminal width
 	widgetWidth := totalWidth / widgetCount
-	
+
 	// Render each widget
 	renderedWidgets := []string{}
 	maxHeight := 0
-	
+
 	for i, widget := range row.Widgets {
 		height := row.Heights[i]
 		rendered := widget.Render(widgetWidth-2, height)
 		renderedWidgets = append(renderedWidgets, rendered)
-		
+
 		lines := strings.Split(rendered, "\n")
 		if len(lines) > maxHeight {
 			maxHeight = len(lines)
 		}
 	}
-	
+
 	// Print side by side
 	for lineIdx := 0; lineIdx < maxHeight; lineIdx++ {
 		line := ""
@@ -200,7 +200,7 @@ func (d *Dashboard) renderRow(row Row) {
 func (d *Dashboard) updateWidgets(scanID string) {
 	// In a real implementation, this would fetch live data
 	// For now, we'll use mock data
-	
+
 	scanData := &ScanData{
 		ID:          scanID,
 		Status:      "Running",
@@ -216,7 +216,7 @@ func (d *Dashboard) updateWidgets(scanID string) {
 			{Severity: "Low", Category: "Configuration", Count: 12},
 		},
 	}
-	
+
 	// Update each widget
 	for _, widget := range d.widgets {
 		widget.Update(scanData)
@@ -249,12 +249,12 @@ func (w *ScanOverviewWidget) Render(width, height int) string {
 	if w.data == nil {
 		return "No data"
 	}
-	
+
 	box := w.style.Border.Width(width).Height(height)
-	
+
 	content := fmt.Sprintf(
 		"%s\n\n%s %s\n%s %d%%\n%s %s\n%s %d/%d\n%s %d",
-		w.style.Title.Render("📊 " + w.GetTitle()),
+		w.style.Title.Render("📊 "+w.GetTitle()),
 		w.style.Info.Render("Status:"),
 		w.getStatusStyle(w.data.Status).Render(w.data.Status),
 		w.style.Info.Render("Progress:"),
@@ -267,7 +267,7 @@ func (w *ScanOverviewWidget) Render(width, height int) string {
 		w.style.Info.Render("Findings:"),
 		w.getTotalFindings(),
 	)
-	
+
 	return box.Render(content)
 }
 
@@ -316,11 +316,11 @@ func (w *VulnerabilityChartWidget) Render(width, height int) string {
 	if w.data == nil {
 		return "No data"
 	}
-	
+
 	box := w.style.Border.Width(width).Height(height)
-	
-	content := w.style.Title.Render("🔍 " + w.GetTitle()) + "\n\n"
-	
+
+	content := w.style.Title.Render("🔍 "+w.GetTitle()) + "\n\n"
+
 	// Create bar chart
 	maxCount := 0
 	for _, f := range w.data.Findings {
@@ -328,27 +328,27 @@ func (w *VulnerabilityChartWidget) Render(width, height int) string {
 			maxCount = f.Count
 		}
 	}
-	
+
 	barWidth := width - 20
 	for _, f := range w.data.Findings {
 		bar := w.renderBar(f, maxCount, barWidth)
 		content += bar + "\n"
 	}
-	
+
 	return box.Render(content)
 }
 
 func (w *VulnerabilityChartWidget) renderBar(finding Finding, maxCount, maxWidth int) string {
 	label := fmt.Sprintf("%-8s", finding.Severity)
-	
+
 	barLength := 0
 	if maxCount > 0 {
 		barLength = (finding.Count * maxWidth) / maxCount
 	}
-	
+
 	bar := strings.Repeat("█", barLength)
 	count := fmt.Sprintf(" %d", finding.Count)
-	
+
 	style := w.style.Info
 	switch finding.Severity {
 	case "Critical":
@@ -360,7 +360,7 @@ func (w *VulnerabilityChartWidget) renderBar(finding Finding, maxCount, maxWidth
 	case "Low":
 		style = w.style.Success
 	}
-	
+
 	return style.Render(label + bar + count)
 }
 
@@ -388,22 +388,22 @@ func (w *TestProgressWidget) Render(width, height int) string {
 	if w.data == nil {
 		return "No data"
 	}
-	
+
 	box := w.style.Border.Width(width).Height(height)
-	
-	content := w.style.Title.Render("⚡ " + w.GetTitle()) + "\n\n"
-	
+
+	content := w.style.Title.Render("⚡ "+w.GetTitle()) + "\n\n"
+
 	// Progress bar
 	progress := w.data.Progress
 	barWidth := width - 10
 	filled := (progress * barWidth) / 100
 	empty := barWidth - filled
-	
+
 	progressBar := w.style.Success.Render(strings.Repeat("█", filled)) +
 		w.style.Info.Render(strings.Repeat("░", empty))
-	
+
 	content += fmt.Sprintf("%s %d%%\n\n", progressBar, progress)
-	
+
 	// Test statistics
 	content += fmt.Sprintf(
 		"%s %d\n%s %d\n%s %d\n%s %d",
@@ -416,7 +416,7 @@ func (w *TestProgressWidget) Render(width, height int) string {
 		w.style.Warning.Render("Pending:"),
 		w.data.TestsTotal-w.data.TestsPassed-w.data.TestsFailed,
 	)
-	
+
 	return box.Render(content)
 }
 
@@ -463,12 +463,12 @@ func (w *RecentFindingsWidget) Update(data interface{}) {
 
 func (w *RecentFindingsWidget) Render(width, height int) string {
 	box := w.style.Border.Width(width).Height(height)
-	
-	content := w.style.Title.Render("🚨 " + w.GetTitle()) + "\n\n"
-	
+
+	content := w.style.Title.Render("🚨 "+w.GetTitle()) + "\n\n"
+
 	for _, finding := range w.findings {
 		timeStr := finding.Time.Format("15:04:05")
-		
+
 		severityStyle := w.style.Info
 		icon := "ℹ"
 		switch finding.Severity {
@@ -485,7 +485,7 @@ func (w *RecentFindingsWidget) Render(width, height int) string {
 			severityStyle = w.style.Success
 			icon = "🟢"
 		}
-		
+
 		content += fmt.Sprintf(
 			"%s %s %s %s\n  %s\n  %s\n\n",
 			w.style.Info.Render(timeStr),
@@ -496,7 +496,7 @@ func (w *RecentFindingsWidget) Render(width, height int) string {
 			w.style.Info.Render("Test: "+finding.TestCase),
 		)
 	}
-	
+
 	return box.Render(content)
 }
 
@@ -529,11 +529,11 @@ func (w *PerformanceMetricsWidget) Render(width, height int) string {
 	if w.metrics == nil {
 		return "No data"
 	}
-	
+
 	box := w.style.Border.Width(width).Height(height)
-	
-	content := w.style.Title.Render("📈 " + w.GetTitle()) + "\n\n"
-	
+
+	content := w.style.Title.Render("📈 "+w.GetTitle()) + "\n\n"
+
 	content += fmt.Sprintf(
 		"%s %.1f req/s\n%s %dms\n%s %dms\n%s %.1f%%\n%s %s",
 		w.style.Info.Render("Requests/sec:"),
@@ -547,7 +547,7 @@ func (w *PerformanceMetricsWidget) Render(width, height int) string {
 		w.style.Info.Render("Throughput:"),
 		w.metrics.Throughput,
 	)
-	
+
 	return box.Render(content)
 }
 
@@ -576,12 +576,12 @@ func (w *ComplianceStatusWidget) Update(data interface{}) {
 
 func (w *ComplianceStatusWidget) Render(width, height int) string {
 	box := w.style.Border.Width(width).Height(height)
-	
-	content := w.style.Title.Render("📋 " + w.GetTitle()) + "\n\n"
-	
+
+	content := w.style.Title.Render("📋 "+w.GetTitle()) + "\n\n"
+
 	for standard, status := range w.compliance {
 		passRate := float64(status.Passed) / float64(status.Tested) * 100
-		
+
 		statusStyle := w.style.Success
 		if passRate < 100 {
 			statusStyle = w.style.Warning
@@ -589,7 +589,7 @@ func (w *ComplianceStatusWidget) Render(width, height int) string {
 		if passRate < 80 {
 			statusStyle = w.style.Critical
 		}
-		
+
 		content += fmt.Sprintf(
 			"%s: %s (%.0f%%)\n",
 			w.style.Info.Render(standard),
@@ -597,7 +597,7 @@ func (w *ComplianceStatusWidget) Render(width, height int) string {
 			passRate,
 		)
 	}
-	
+
 	return box.Render(content)
 }
 
@@ -648,34 +648,34 @@ type ComplianceStatus struct {
 // SummaryDashboard displays a summary of completed scan results
 func (d *Dashboard) SummaryDashboard(scanResults *ScanResults) error {
 	d.terminal.Clear()
-	
+
 	// Header
 	d.terminal.HeaderBox("Scan Results Summary - " + scanResults.ID)
-	
+
 	// Executive Summary
 	d.showExecutiveSummary(scanResults)
-	
+
 	// Vulnerability Breakdown
 	d.showVulnerabilityBreakdown(scanResults)
-	
+
 	// Top Risks
 	d.showTopRisks(scanResults)
-	
+
 	// Compliance Mapping
 	d.showComplianceMapping(scanResults)
-	
+
 	// Recommendations
 	d.showRecommendations(scanResults)
-	
+
 	// Export Options
 	d.showExportOptions(scanResults)
-	
+
 	return nil
 }
 
 func (d *Dashboard) showExecutiveSummary(results *ScanResults) {
 	d.terminal.Section("Executive Summary")
-	
+
 	summary := fmt.Sprintf(
 		`Scan Duration: %s
 Total Tests: %d
@@ -688,13 +688,13 @@ Compliance: %s`,
 		results.RiskScore,
 		results.ComplianceStatus,
 	)
-	
+
 	d.terminal.Box("Overview", summary)
 }
 
 func (d *Dashboard) showVulnerabilityBreakdown(results *ScanResults) {
 	d.terminal.Section("Vulnerability Breakdown")
-	
+
 	// Create visual representation
 	for _, vuln := range results.Vulnerabilities {
 		bar := strings.Repeat("█", vuln.Count)
@@ -710,7 +710,7 @@ func (d *Dashboard) showVulnerabilityBreakdown(results *ScanResults) {
 
 func (d *Dashboard) showTopRisks(results *ScanResults) {
 	d.terminal.Section("Top Security Risks")
-	
+
 	for i, risk := range results.TopRisks[:min(5, len(results.TopRisks))] {
 		d.terminal.Printf("%d. %s%s%s\n   Impact: %s | Likelihood: %s\n   %s\n\n",
 			i+1,
@@ -726,11 +726,11 @@ func (d *Dashboard) showTopRisks(results *ScanResults) {
 
 func (d *Dashboard) showComplianceMapping(results *ScanResults) {
 	d.terminal.Section("Compliance Mapping")
-	
+
 	table := [][]string{
 		{"Standard", "Coverage", "Pass Rate", "Status"},
 	}
-	
+
 	for _, comp := range results.ComplianceResults {
 		status := "✅ Compliant"
 		if comp.PassRate < 100 {
@@ -739,7 +739,7 @@ func (d *Dashboard) showComplianceMapping(results *ScanResults) {
 		if comp.PassRate < 80 {
 			status = "❌ Non-compliant"
 		}
-		
+
 		table = append(table, []string{
 			comp.Standard,
 			fmt.Sprintf("%.0f%%", comp.Coverage),
@@ -747,13 +747,13 @@ func (d *Dashboard) showComplianceMapping(results *ScanResults) {
 			status,
 		})
 	}
-	
+
 	d.terminal.Table(table)
 }
 
 func (d *Dashboard) showRecommendations(results *ScanResults) {
 	d.terminal.Section("Key Recommendations")
-	
+
 	for i, rec := range results.Recommendations[:min(5, len(results.Recommendations))] {
 		d.terminal.Printf("%d. %s%s%s\n   Priority: %s | Effort: %s\n\n",
 			i+1,
@@ -768,7 +768,7 @@ func (d *Dashboard) showRecommendations(results *ScanResults) {
 
 func (d *Dashboard) showExportOptions(results *ScanResults) {
 	d.terminal.Section("Export Options")
-	
+
 	options := []string{
 		"1. Generate PDF Report",
 		"2. Export as JSON",
@@ -777,7 +777,7 @@ func (d *Dashboard) showExportOptions(results *ScanResults) {
 		"5. Export to JIRA/GitHub Issues",
 		"6. Return to Main Menu",
 	}
-	
+
 	for _, opt := range options {
 		d.terminal.Info(opt)
 	}

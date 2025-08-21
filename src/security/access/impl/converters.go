@@ -25,7 +25,7 @@ func (c *DefaultConverter) ToModelUser(legacyUser interface{}) (*models.User, er
 	if legacyUser == nil {
 		return nil, errors.New("legacy user is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	// In a real implementation, we would use reflection or type assertions
 	// to convert the legacy User to a models.User
@@ -40,7 +40,7 @@ func (c *DefaultConverter) FromModelUser(user *models.User) (interface{}, error)
 	if user == nil {
 		return nil, errors.New("user is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	// In a real implementation, we would create a new instance of the legacy User
 	// and populate it with values from the models.User
@@ -52,7 +52,7 @@ func (c *DefaultConverter) ToModelIncident(legacyIncident interface{}) (*models.
 	if legacyIncident == nil {
 		return nil, errors.New("legacy incident is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	return &models.SecurityIncident{
 		ID:     "placeholder-id",
@@ -66,7 +66,7 @@ func (c *DefaultConverter) FromModelIncident(incident *models.SecurityIncident) 
 	if incident == nil {
 		return nil, errors.New("incident is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	return incident, nil
 }
@@ -76,7 +76,7 @@ func (c *DefaultConverter) ToModelVulnerability(legacyVulnerability interface{})
 	if legacyVulnerability == nil {
 		return nil, errors.New("legacy vulnerability is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	return &models.Vulnerability{
 		ID:     "placeholder-id",
@@ -90,7 +90,7 @@ func (c *DefaultConverter) FromModelVulnerability(vulnerability *models.Vulnerab
 	if vulnerability == nil {
 		return nil, errors.New("vulnerability is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	return vulnerability, nil
 }
@@ -100,7 +100,7 @@ func (c *DefaultConverter) ToModelSession(legacySession interface{}) (*models.Se
 	if legacySession == nil {
 		return nil, errors.New("legacy session is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	return &models.Session{
 		ID:     "placeholder-id",
@@ -113,7 +113,7 @@ func (c *DefaultConverter) FromModelSession(session *models.Session) (interface{
 	if session == nil {
 		return nil, errors.New("session is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	return session, nil
 }
@@ -123,7 +123,7 @@ func (c *DefaultConverter) ToModelAuditLog(legacyAuditLog interface{}) (*models.
 	if legacyAuditLog == nil {
 		return nil, errors.New("legacy audit log is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	return &models.AuditLog{
 		ID:          "placeholder-id",
@@ -137,7 +137,7 @@ func (c *DefaultConverter) FromModelAuditLog(log *models.AuditLog) (interface{},
 	if log == nil {
 		return nil, errors.New("audit log is nil")
 	}
-	
+
 	// This is a placeholder implementation
 	return log, nil
 }

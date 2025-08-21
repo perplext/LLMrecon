@@ -212,12 +212,12 @@ func (m *LoggingMiddleware) LogRequest(ctx context.Context, providerType core.Pr
 
 	// Create a log entry
 	entry := &LogEntry{
-		Timestamp:     time.Now(),
-		Level:         LogLevelInfo,
-		ProviderType:  providerType,
-		Operation:     operation,
-		RequestID:     requestID,
-		Request:       request,
+		Timestamp:      time.Now(),
+		Level:          LogLevelInfo,
+		ProviderType:   providerType,
+		Operation:      operation,
+		RequestID:      requestID,
+		Request:        request,
 		AdditionalInfo: additionalInfo,
 	}
 
@@ -237,14 +237,14 @@ func (m *LoggingMiddleware) LogResponse(ctx context.Context, providerType core.P
 
 	// Create a log entry
 	entry := &LogEntry{
-		Timestamp:     time.Now(),
-		Level:         level,
-		ProviderType:  providerType,
-		Operation:     operation,
-		RequestID:     requestID,
-		Request:       request,
-		Response:      response,
-		Duration:      duration,
+		Timestamp:      time.Now(),
+		Level:          level,
+		ProviderType:   providerType,
+		Operation:      operation,
+		RequestID:      requestID,
+		Request:        request,
+		Response:       response,
+		Duration:       duration,
 		AdditionalInfo: additionalInfo,
 	}
 

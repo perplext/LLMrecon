@@ -87,7 +87,7 @@ func (l *OptimizedTemplateLoader) LoadTemplateWithTimeout(ctx context.Context, s
 	// Create a context with timeout
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	
+
 	// Call the regular LoadTemplate with the timeout context
 	return l.LoadTemplate(ctxWithTimeout, source, sourceType)
 }
@@ -97,7 +97,7 @@ func (l *OptimizedTemplateLoader) LoadTemplatesWithTimeout(ctx context.Context, 
 	// Create a context with timeout
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	
+
 	// Call the regular LoadTemplates with the timeout context
 	return l.LoadTemplates(ctxWithTimeout, source, sourceType)
 }
@@ -142,21 +142,21 @@ func (l *OptimizedTemplateLoader) LoadTemplate(ctx context.Context, source strin
 
 	// Load the first template
 	template, err := l.loadTemplateByID(ctx, sourceIndex.TemplateIDs[0], sourceIndex)
-	
+
 	l.statsMutex.Lock()
 	if err != nil {
 		l.stats.LoadErrors++
 	}
 	l.stats.TotalLoadTime += time.Since(startTime)
 	l.statsMutex.Unlock()
-	
+
 	return template, err
 }
 
 // LoadTemplates loads multiple templates from a source
 func (l *OptimizedTemplateLoader) LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error) {
 	startTime := time.Now()
-	
+
 	// Check if source is indexed
 	sourceKey := fmt.Sprintf("%s:%s", sourceType, source)
 	l.indexMutex.RLock()
@@ -234,7 +234,7 @@ func (l *OptimizedTemplateLoader) LoadTemplates(ctx context.Context, source stri
 // indexSource indexes a template source
 func (l *OptimizedTemplateLoader) indexSource(ctx context.Context, source string, sourceType string) error {
 	sourceKey := fmt.Sprintf("%s:%s", sourceType, source)
-	
+
 	// Create a new source index
 	sourceIndex := &SourceIndex{
 		Type:        sourceType,
@@ -342,9 +342,9 @@ func (l *OptimizedTemplateLoader) indexRepository(ctx context.Context, repoURL s
 	// Get repository options
 	options := make(map[string]interface{})
 	options["repo_url"] = repoURL
-	
+
 	var repoConfig *repository.Config
-	
+
 	if repoType == string(interfaces.GitHubSource) {
 		repoConfig = &repository.Config{
 			Type: repository.GitHub,
@@ -526,7 +526,7 @@ func (l *OptimizedTemplateLoader) ClearCache() {
 // ClearSourceIndex clears the source index for a specific source
 func (l *OptimizedTemplateLoader) ClearSourceIndex(source string, sourceType string) {
 	sourceKey := fmt.Sprintf("%s:%s", sourceType, source)
-	
+
 	l.indexMutex.Lock()
 	delete(l.indexedSources, sourceKey)
 	l.indexMutex.Unlock()
@@ -550,4 +550,3 @@ func (l *OptimizedTemplateLoader) SetConcurrencyLimit(limit int) {
 }
 
 // isTemplateFile function is already defined in loader.go
-

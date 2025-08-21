@@ -21,7 +21,7 @@ var (
 
 // MFABoundaryEnforcer enforces MFA boundaries for requests
 type MFABoundaryEnforcer struct {
-	mfaManager MFAManager
+	mfaManager     MFAManager
 	sessionManager interfaces.SessionStore
 }
 
@@ -37,20 +37,20 @@ func NewMFABoundaryEnforcer(mfaManager MFAManager, sessionManager interfaces.Ses
 func (e *MFABoundaryEnforcer) RequireMFA(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		
+
 		// Get session from context
 		session, err := getSessionFromContext(ctx)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		
+
 		// Check if MFA is completed
 		if !session.MFACompleted {
 			http.Error(w, "MFA required", http.StatusForbidden)
 			return
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -59,14 +59,14 @@ func (e *MFABoundaryEnforcer) RequireMFA(next http.Handler) http.Handler {
 func (e *MFABoundaryEnforcer) RequireMFAForUser(userID string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		
+
 		// Get session from context
 		session, err := getSessionFromContext(ctx)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		
+
 		// Check if this is the target user
 		if session.UserID == userID {
 			// Check if MFA is completed
@@ -75,7 +75,7 @@ func (e *MFABoundaryEnforcer) RequireMFAForUser(userID string, next http.Handler
 				return
 			}
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -84,21 +84,21 @@ func (e *MFABoundaryEnforcer) RequireMFAForUser(userID string, next http.Handler
 func (e *MFABoundaryEnforcer) RequireMFAForRoles(roles []string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		
+
 		// Get session from context
 		session, err := getSessionFromContext(ctx)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		
+
 		// Get user roles (this would need to be implemented based on your user store)
 		userRoles, err := getUserRoles(ctx, session.UserID)
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		
+
 		// Check if user has any of the specified roles
 		requiresMFA := false
 		for _, role := range roles {
@@ -107,13 +107,13 @@ func (e *MFABoundaryEnforcer) RequireMFAForRoles(roles []string, next http.Handl
 				break
 			}
 		}
-		
+
 		// If user has a role that requires MFA, check if MFA is completed
 		if requiresMFA && !session.MFACompleted {
 			http.Error(w, "MFA required", http.StatusForbidden)
 			return
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -125,12 +125,12 @@ func getSessionFromContext(ctx context.Context) (*interfaces.Session, error) {
 	if sessionValue == nil {
 		return nil, errors.New("no session in context")
 	}
-	
+
 	session, ok := sessionValue.(*interfaces.Session)
 	if !ok {
 		return nil, errors.New("invalid session type in context")
 	}
-	
+
 	return session, nil
 }
 

@@ -1,17 +1,15 @@
 // Package api provides API protection mechanisms for the LLMrecon tool.
 package api
 
-
-
 import (
-	"io"
-	"time"
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -59,12 +57,12 @@ type SecureLoggerConfig struct {
 // DefaultSecureLoggerConfig returns the default secure logger configuration
 func DefaultSecureLoggerConfig() *SecureLoggerConfig {
 	return &SecureLoggerConfig{
-		Level:           LogLevelInfo,
-		LogRequests:     true,
-		LogResponses:    true,
-		LogHeaders:      true,
-		LogBodies:       true,
-		MaxBodySize:     10 * 1024, // 10KB
+		Level:        LogLevelInfo,
+		LogRequests:  true,
+		LogResponses: true,
+		LogHeaders:   true,
+		LogBodies:    true,
+		MaxBodySize:  10 * 1024, // 10KB
 		SensitiveHeaders: []string{
 			"Authorization",
 			"Cookie",
@@ -86,14 +84,14 @@ func DefaultSecureLoggerConfig() *SecureLoggerConfig {
 			"cvv",
 		},
 		SensitivePatterns: []string{
-			`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`,                           // Email
-			`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`,                                               // US Phone
-			`\b\d{3}[-.]?\d{2}[-.]?\d{4}\b`,                                               // SSN
-			`\b(?:\d[ -]*?){13,16}\b`,                                                     // Credit Card
-			`\b[A-Za-z0-9]{24,}\b`,                                                        // API Key
-			`\bsk-[A-Za-z0-9]{24,}\b`,                                                     // OpenAI API Key
-			`\b(?:Bearer|bearer|BEARER)\s+[A-Za-z0-9\-._~+/]+=*\b`,                        // Bearer Token
-			`\b(?:eyJ|ey0)[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\b`,            // JWT
+			`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`,                              // Email
+			`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`,                                                   // US Phone
+			`\b\d{3}[-.]?\d{2}[-.]?\d{4}\b`,                                                   // SSN
+			`\b(?:\d[ -]*?){13,16}\b`,                                                         // Credit Card
+			`\b[A-Za-z0-9]{24,}\b`,                                                            // API Key
+			`\bsk-[A-Za-z0-9]{24,}\b`,                                                         // OpenAI API Key
+			`\b(?:Bearer|bearer|BEARER)\s+[A-Za-z0-9\-._~+/]+=*\b`,                            // Bearer Token
+			`\b(?:eyJ|ey0)[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\b`,                // JWT
 			`\b[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}\b`, // UUID
 		},
 		RedactionString: "[REDACTED]",

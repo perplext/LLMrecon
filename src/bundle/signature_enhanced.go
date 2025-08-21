@@ -62,13 +62,13 @@ type SigningKey struct {
 
 // VerificationResult contains the result of signature verification
 type VerificationResult struct {
-	Valid      bool                   `json:"valid"`
-	Timestamp  time.Time              `json:"timestamp"`
-	KeyID      string                 `json:"keyId"`
-	Signer     string                 `json:"signer"`
-	Errors     []string               `json:"errors,omitempty"`
-	Warnings   []string               `json:"warnings,omitempty"`
-	Details    map[string]interface{} `json:"details"`
+	Valid     bool                   `json:"valid"`
+	Timestamp time.Time              `json:"timestamp"`
+	KeyID     string                 `json:"keyId"`
+	Signer    string                 `json:"signer"`
+	Errors    []string               `json:"errors,omitempty"`
+	Warnings  []string               `json:"warnings,omitempty"`
+	Details   map[string]interface{} `json:"details"`
 }
 
 // Signer handles bundle signing operations
@@ -186,7 +186,11 @@ func (s *Signer) hashFile(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	h := sha256.New()
 	if _, err := io.Copy(h, file); err != nil {
@@ -199,7 +203,7 @@ func (s *Signer) hashFile(path string) (string, error) {
 // saveManifest saves the content manifest
 func (s *Signer) saveManifest(bundlePath string, manifest *ContentManifest) error {
 	manifestPath := filepath.Join(bundlePath, "signatures", "manifest.json")
-	
+
 	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(manifestPath), 0700); err != nil {
 		return err
@@ -350,7 +354,7 @@ func GenerateSigningKeyPair(keyID string) (*SigningKey, error) {
 // SaveSignature saves a signature to the bundle
 func SaveSignature(bundlePath string, sig *BundleSignature) error {
 	sigPath := filepath.Join(bundlePath, "signatures", "bundle.sig")
-	
+
 	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(sigPath), 0700); err != nil {
 		return fmt.Errorf("failed to create signatures directory: %w", err)

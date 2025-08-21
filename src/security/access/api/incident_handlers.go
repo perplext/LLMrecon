@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
 
 // CreateIncidentRequest represents a request to create a new security incident

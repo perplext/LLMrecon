@@ -271,7 +271,7 @@ func (r *S3Repository) GetFile(ctx context.Context, path string) (io.ReadCloser,
 	}
 
 	// Create full object key
-		key := path
+	key := path
 	if r.prefix != "" {
 		key = r.prefix + "/" + path
 	}
@@ -281,7 +281,11 @@ func (r *S3Repository) GetFile(ctx context.Context, path string) (io.ReadCloser,
 
 	// Fetch and write content in a goroutine
 	go func() {
-		defer func() { if err := pw.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := pw.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Use WithRetry for the operation
 		err := r.WithRetry(ctx, func() error {
@@ -293,7 +297,11 @@ func (r *S3Repository) GetFile(ctx context.Context, path string) (io.ReadCloser,
 			if err != nil {
 				return err
 			}
-			defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					fmt.Printf("Failed to close: %v\n", err)
+				}
+			}()
 
 			// Copy content to pipe
 			_, err = io.Copy(pw, resp.Body)
@@ -322,7 +330,7 @@ func (r *S3Repository) GetFile(ctx context.Context, path string) (io.ReadCloser,
 // FileExists checks if a file exists in the S3 repository
 func (r *S3Repository) FileExists(ctx context.Context, path string) (bool, error) {
 	// Log file existence check operation
-		if r.auditLogger != nil {
+	if r.auditLogger != nil {
 		r.auditLogger.LogRepositoryFileExists(ctx, r.config.URL, path)
 	}
 

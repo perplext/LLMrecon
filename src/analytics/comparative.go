@@ -9,11 +9,11 @@ import (
 
 // ComparativeAnalyzer performs comparative analysis between different metrics, time periods, or datasets
 type ComparativeAnalyzer struct {
-	config          *Config
-	storage         DataStorage
-	trendAnalyzer   *TrendAnalyzer
-	historicalData  *HistoricalDataManager
-	logger          Logger
+	config         *Config
+	storage        DataStorage
+	trendAnalyzer  *TrendAnalyzer
+	historicalData *HistoricalDataManager
+	logger         Logger
 }
 
 // Note: ComparisonResult is defined in types.go
@@ -33,30 +33,30 @@ type ComparisonDataset struct {
 
 // ComparisonStatistics contains statistical comparison results
 type ComparisonStatistics struct {
-	MeanDifference       float64 `json:"mean_difference"`
-	MeanDifferencePercent float64 `json:"mean_difference_percent"`
-	MedianDifference     float64 `json:"median_difference"`
-	StandardDeviationRatio float64 `json:"standard_deviation_ratio"`
-	CorrelationCoefficient float64 `json:"correlation_coefficient"`
-	PValue               float64 `json:"p_value"`
-	StatisticalSignificance string `json:"statistical_significance"`
-	EffectSize           float64 `json:"effect_size"`
-	EffectSizeInterpretation string `json:"effect_size_interpretation"`
+	MeanDifference           float64 `json:"mean_difference"`
+	MeanDifferencePercent    float64 `json:"mean_difference_percent"`
+	MedianDifference         float64 `json:"median_difference"`
+	StandardDeviationRatio   float64 `json:"standard_deviation_ratio"`
+	CorrelationCoefficient   float64 `json:"correlation_coefficient"`
+	PValue                   float64 `json:"p_value"`
+	StatisticalSignificance  string  `json:"statistical_significance"`
+	EffectSize               float64 `json:"effect_size"`
+	EffectSizeInterpretation string  `json:"effect_size_interpretation"`
 }
 
 // BasicStatistics contains basic statistical measures
 type BasicStatistics struct {
-	Count            int     `json:"count"`
-	Mean             float64 `json:"mean"`
-	Median           float64 `json:"median"`
+	Count             int     `json:"count"`
+	Mean              float64 `json:"mean"`
+	Median            float64 `json:"median"`
 	StandardDeviation float64 `json:"standard_deviation"`
-	Min              float64 `json:"min"`
-	Max              float64 `json:"max"`
-	Q1               float64 `json:"q1"`
-	Q3               float64 `json:"q3"`
-	Variance         float64 `json:"variance"`
-	Skewness         float64 `json:"skewness"`
-	Kurtosis         float64 `json:"kurtosis"`
+	Min               float64 `json:"min"`
+	Max               float64 `json:"max"`
+	Q1                float64 `json:"q1"`
+	Q3                float64 `json:"q3"`
+	Variance          float64 `json:"variance"`
+	Skewness          float64 `json:"skewness"`
+	Kurtosis          float64 `json:"kurtosis"`
 }
 
 // ComparisonInsight represents an insight from comparative analysis
@@ -94,39 +94,39 @@ func NewComparativeAnalyzer(config *Config, storage DataStorage, trendAnalyzer *
 
 // CompareTimePeriods compares metrics across different time periods
 func (ca *ComparativeAnalyzer) CompareTimePeriods(ctx context.Context, metricName string, baselineRange, comparisonRange TimeWindow) (*ComparisonResult, error) {
-	ca.logger.Info("Starting time period comparison", 
-		"metric", metricName, 
-		"baseline", baselineRange, 
+	ca.logger.Info("Starting time period comparison",
+		"metric", metricName,
+		"baseline", baselineRange,
 		"comparison", comparisonRange)
-	
+
 	// Get data for both periods
 	baselineData, err := ca.historicalData.GetHistoricalData(ctx, metricName, baselineRange)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get baseline data: %w", err)
 	}
-	
+
 	comparisonData, err := ca.historicalData.GetHistoricalData(ctx, metricName, comparisonRange)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get comparison data: %w", err)
 	}
-	
+
 	if len(baselineData) == 0 || len(comparisonData) == 0 {
 		return nil, fmt.Errorf("insufficient data for comparison")
 	}
-	
+
 	// Create datasets
 	baselineDataset := ca.createDataset("Baseline Period", metricName, baselineRange, baselineData)
 	comparisonDataset := ca.createDataset("Comparison Period", metricName, comparisonRange, comparisonData)
-	
+
 	// Calculate statistics
 	stats := ca.calculateStatistics(baselineData, comparisonData)
-	
+
 	// Generate insights
 	insights := ca.generateTimePeriodInsights(baselineDataset, comparisonDataset, stats)
-	
+
 	// Generate recommendations
 	recommendations := ca.generateTimePeriodRecommendations(stats, insights)
-	
+
 	return &ComparisonResult{
 		ComparisonType:    ComparisonTypeTimePeriod,
 		BaselineDataset:   baselineDataset,
@@ -140,35 +140,35 @@ func (ca *ComparativeAnalyzer) CompareTimePeriods(ctx context.Context, metricNam
 
 // CompareMetrics compares different metrics over the same time period
 func (ca *ComparativeAnalyzer) CompareMetrics(ctx context.Context, baselineMetric, comparisonMetric string, timeRange TimeWindow) (*ComparisonResult, error) {
-	ca.logger.Info("Starting metrics comparison", 
-		"baseline", baselineMetric, 
-		"comparison", comparisonMetric, 
+	ca.logger.Info("Starting metrics comparison",
+		"baseline", baselineMetric,
+		"comparison", comparisonMetric,
 		"timeRange", timeRange)
-	
+
 	// Get data for both metrics
 	baselineData, err := ca.storage.GetMetricsByNameAndTimeRange(ctx, baselineMetric, timeRange.Start, timeRange.End)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get baseline metric data: %w", err)
 	}
-	
+
 	comparisonData, err := ca.storage.GetMetricsByNameAndTimeRange(ctx, comparisonMetric, timeRange.Start, timeRange.End)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get comparison metric data: %w", err)
 	}
-	
+
 	// Create datasets
 	baselineDataset := ca.createDataset(baselineMetric, baselineMetric, timeRange, baselineData)
 	comparisonDataset := ca.createDataset(comparisonMetric, comparisonMetric, timeRange, comparisonData)
-	
+
 	// Calculate statistics
 	stats := ca.calculateStatistics(baselineData, comparisonData)
-	
+
 	// Generate insights
 	insights := ca.generateMetricsInsights(baselineDataset, comparisonDataset, stats)
-	
+
 	// Generate recommendations
 	recommendations := ca.generateMetricsRecommendations(stats, insights)
-	
+
 	return &ComparisonResult{
 		ComparisonType:    ComparisonTypeMetrics,
 		BaselineDataset:   baselineDataset,
@@ -182,33 +182,33 @@ func (ca *ComparativeAnalyzer) CompareMetrics(ctx context.Context, baselineMetri
 
 // CompareAgainstBaseline compares current metrics against established baselines
 func (ca *ComparativeAnalyzer) CompareAgainstBaseline(ctx context.Context, metricName string, currentRange TimeWindow, baselineValue float64) (*ComparisonResult, error) {
-	ca.logger.Info("Starting baseline comparison", 
-		"metric", metricName, 
-		"timeRange", currentRange, 
+	ca.logger.Info("Starting baseline comparison",
+		"metric", metricName,
+		"timeRange", currentRange,
 		"baseline", baselineValue)
-	
+
 	// Get current data
 	currentData, err := ca.storage.GetMetricsByNameAndTimeRange(ctx, metricName, currentRange.Start, currentRange.End)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current data: %w", err)
 	}
-	
+
 	// Create synthetic baseline data
 	baselineData := ca.createSyntheticBaseline(baselineValue, len(currentData))
-	
+
 	// Create datasets
 	baselineDataset := ca.createDataset("Baseline", metricName, currentRange, baselineData)
 	comparisonDataset := ca.createDataset("Current", metricName, currentRange, currentData)
-	
+
 	// Calculate statistics
 	stats := ca.calculateStatistics(baselineData, currentData)
-	
+
 	// Generate insights
 	insights := ca.generateBaselineInsights(baselineDataset, comparisonDataset, stats, baselineValue)
-	
+
 	// Generate recommendations
 	recommendations := ca.generateBaselineRecommendations(stats, insights, baselineValue)
-	
+
 	return &ComparisonResult{
 		ComparisonType:    ComparisonTypeBaseline,
 		BaselineDataset:   baselineDataset,
@@ -222,39 +222,39 @@ func (ca *ComparativeAnalyzer) CompareAgainstBaseline(ctx context.Context, metri
 
 // CompareAnomalyPatterns compares anomaly patterns between different time periods
 func (ca *ComparativeAnalyzer) CompareAnomalyPatterns(ctx context.Context, metricName string, baselineRange, comparisonRange TimeWindow) (*ComparisonResult, error) {
-	ca.logger.Info("Starting anomaly pattern comparison", 
-		"metric", metricName, 
-		"baseline", baselineRange, 
+	ca.logger.Info("Starting anomaly pattern comparison",
+		"metric", metricName,
+		"baseline", baselineRange,
 		"comparison", comparisonRange)
-	
+
 	// Get anomalies for both periods
 	baselineAnomalies, err := ca.trendAnalyzer.DetectAnomalies(ctx, metricName, baselineRange)
 	if err != nil {
 		return nil, fmt.Errorf("failed to detect baseline anomalies: %w", err)
 	}
-	
+
 	comparisonAnomalies, err := ca.trendAnalyzer.DetectAnomalies(ctx, metricName, comparisonRange)
 	if err != nil {
 		return nil, fmt.Errorf("failed to detect comparison anomalies: %w", err)
 	}
-	
+
 	// Convert anomalies to metrics for comparison
 	baselineData := ca.anomaliesToMetrics(baselineAnomalies)
 	comparisonData := ca.anomaliesToMetrics(comparisonAnomalies)
-	
+
 	// Create datasets
 	baselineDataset := ca.createDataset("Baseline Anomalies", metricName, baselineRange, baselineData)
 	comparisonDataset := ca.createDataset("Comparison Anomalies", metricName, comparisonRange, comparisonData)
-	
+
 	// Calculate statistics
 	stats := ca.calculateStatistics(baselineData, comparisonData)
-	
+
 	// Generate insights
 	insights := ca.generateAnomalyInsights(baselineAnomalies, comparisonAnomalies, stats)
-	
+
 	// Generate recommendations
 	recommendations := ca.generateAnomalyRecommendations(insights)
-	
+
 	return &ComparisonResult{
 		ComparisonType:    ComparisonTypeAnomalyPattern,
 		BaselineDataset:   baselineDataset,
@@ -270,7 +270,7 @@ func (ca *ComparativeAnalyzer) CompareAnomalyPatterns(ctx context.Context, metri
 
 func (ca *ComparativeAnalyzer) createDataset(name, metricName string, timeRange TimeWindow, data []Metric) ComparisonDataset {
 	stats := ca.calculateBasicStatistics(data)
-	
+
 	return ComparisonDataset{
 		Name:        name,
 		Description: fmt.Sprintf("Dataset for %s over %s", metricName, timeRange.Duration),
@@ -289,12 +289,12 @@ func (ca *ComparativeAnalyzer) calculateBasicStatistics(data []Metric) BasicStat
 	if len(data) == 0 {
 		return BasicStatistics{}
 	}
-	
+
 	values := make([]float64, len(data))
 	for i, metric := range data {
 		values[i] = metric.Value
 	}
-	
+
 	// Calculate basic statistics
 	mean := average(values)
 	median := ca.calculateMedian(values)
@@ -302,15 +302,15 @@ func (ca *ComparativeAnalyzer) calculateBasicStatistics(data []Metric) BasicStat
 	minVal := min(values)
 	maxVal := max(values)
 	variance := stdDev * stdDev
-	
+
 	// Calculate quartiles
 	q1 := ca.calculatePercentile(values, 0.25)
 	q3 := ca.calculatePercentile(values, 0.75)
-	
+
 	// Calculate skewness and kurtosis (simplified)
 	skewness := ca.calculateSkewness(values, mean, stdDev)
 	kurtosis := ca.calculateKurtosis(values, mean, stdDev)
-	
+
 	return BasicStatistics{
 		Count:             len(values),
 		Mean:              mean,
@@ -329,34 +329,34 @@ func (ca *ComparativeAnalyzer) calculateBasicStatistics(data []Metric) BasicStat
 func (ca *ComparativeAnalyzer) calculateStatistics(baselineData, comparisonData []Metric) ComparisonStatistics {
 	baselineValues := ca.extractValues(baselineData)
 	comparisonValues := ca.extractValues(comparisonData)
-	
+
 	baselineMean := average(baselineValues)
 	comparisonMean := average(comparisonValues)
-	
+
 	meanDiff := comparisonMean - baselineMean
 	meanDiffPercent := 0.0
 	if baselineMean != 0 {
 		meanDiffPercent = (meanDiff / baselineMean) * 100
 	}
-	
+
 	baselineMedian := ca.calculateMedian(baselineValues)
 	comparisonMedian := ca.calculateMedian(comparisonValues)
 	medianDiff := comparisonMedian - baselineMedian
-	
+
 	baselineStdDev := standardDeviation(baselineValues)
 	comparisonStdDev := standardDeviation(comparisonValues)
 	stdDevRatio := 1.0
 	if baselineStdDev != 0 {
 		stdDevRatio = comparisonStdDev / baselineStdDev
 	}
-	
+
 	// Calculate correlation (simplified)
 	correlation := ca.calculateCorrelation(baselineValues, comparisonValues)
-	
+
 	// Calculate effect size (Cohen's d)
 	effectSize := ca.calculateCohenD(baselineValues, comparisonValues)
 	effectSizeInterpretation := ca.interpretEffectSize(effectSize)
-	
+
 	// Mock p-value and significance
 	pValue := 0.05
 	significance := "significant"
@@ -364,7 +364,7 @@ func (ca *ComparativeAnalyzer) calculateStatistics(baselineData, comparisonData 
 		significance = "not_significant"
 		pValue = 0.15
 	}
-	
+
 	return ComparisonStatistics{
 		MeanDifference:           meanDiff,
 		MeanDifferencePercent:    meanDiffPercent,
@@ -380,19 +380,19 @@ func (ca *ComparativeAnalyzer) calculateStatistics(baselineData, comparisonData 
 
 func (ca *ComparativeAnalyzer) generateTimePeriodInsights(baseline, comparison ComparisonDataset, stats ComparisonStatistics) []ComparisonInsight {
 	var insights []ComparisonInsight
-	
+
 	// Performance trend insight
 	if math.Abs(stats.MeanDifferencePercent) > 10 {
 		severity := "medium"
 		if math.Abs(stats.MeanDifferencePercent) > 25 {
 			severity = "high"
 		}
-		
+
 		direction := "improved"
 		if stats.MeanDifferencePercent < 0 {
 			direction = "degraded"
 		}
-		
+
 		insights = append(insights, ComparisonInsight{
 			Type:        InsightTypePerformance,
 			Severity:    severity,
@@ -402,7 +402,7 @@ func (ca *ComparativeAnalyzer) generateTimePeriodInsights(baseline, comparison C
 			Confidence:  0.8,
 		})
 	}
-	
+
 	// Volatility insight
 	if stats.StandardDeviationRatio > 1.5 {
 		insights = append(insights, ComparisonInsight{
@@ -414,38 +414,38 @@ func (ca *ComparativeAnalyzer) generateTimePeriodInsights(baseline, comparison C
 			Confidence:  0.7,
 		})
 	}
-	
+
 	return insights
 }
 
 func (ca *ComparativeAnalyzer) generateTimePeriodRecommendations(stats ComparisonStatistics, insights []ComparisonInsight) []string {
 	var recommendations []string
-	
+
 	if math.Abs(stats.MeanDifferencePercent) > 20 {
 		recommendations = append(recommendations, "Investigate the root cause of significant performance changes")
 	}
-	
+
 	if stats.StandardDeviationRatio > 2 {
 		recommendations = append(recommendations, "Consider implementing additional monitoring to understand volatility patterns")
 	}
-	
+
 	if stats.StatisticalSignificance == "significant" {
 		recommendations = append(recommendations, "The observed differences are statistically significant and warrant attention")
 	}
-	
+
 	return recommendations
 }
 
 func (ca *ComparativeAnalyzer) generateMetricsInsights(baseline, comparison ComparisonDataset, stats ComparisonStatistics) []ComparisonInsight {
 	var insights []ComparisonInsight
-	
+
 	// Correlation insight
 	if math.Abs(stats.CorrelationCoefficient) > 0.7 {
 		corrType := "positive"
 		if stats.CorrelationCoefficient < 0 {
 			corrType = "negative"
 		}
-		
+
 		insights = append(insights, ComparisonInsight{
 			Type:        InsightTypePattern,
 			Severity:    "medium",
@@ -455,30 +455,30 @@ func (ca *ComparativeAnalyzer) generateMetricsInsights(baseline, comparison Comp
 			Confidence:  0.85,
 		})
 	}
-	
+
 	return insights
 }
 
 func (ca *ComparativeAnalyzer) generateMetricsRecommendations(stats ComparisonStatistics, insights []ComparisonInsight) []string {
 	var recommendations []string
-	
+
 	if math.Abs(stats.CorrelationCoefficient) > 0.8 {
 		recommendations = append(recommendations, "Consider using one metric as a predictor for the other due to strong correlation")
 	}
-	
+
 	return recommendations
 }
 
 func (ca *ComparativeAnalyzer) generateBaselineInsights(baseline, comparison ComparisonDataset, stats ComparisonStatistics, baselineValue float64) []ComparisonInsight {
 	var insights []ComparisonInsight
-	
+
 	// Baseline deviation insight
 	if math.Abs(stats.MeanDifferencePercent) > 15 {
 		severity := "high"
 		if math.Abs(stats.MeanDifferencePercent) < 25 {
 			severity = "medium"
 		}
-		
+
 		insights = append(insights, ComparisonInsight{
 			Type:        InsightTypePerformance,
 			Severity:    severity,
@@ -488,37 +488,37 @@ func (ca *ComparativeAnalyzer) generateBaselineInsights(baseline, comparison Com
 			Confidence:  0.9,
 		})
 	}
-	
+
 	return insights
 }
 
 func (ca *ComparativeAnalyzer) generateBaselineRecommendations(stats ComparisonStatistics, insights []ComparisonInsight, baselineValue float64) []string {
 	var recommendations []string
-	
+
 	if math.Abs(stats.MeanDifferencePercent) > 20 {
 		recommendations = append(recommendations, "Consider updating the baseline value or investigating the cause of deviation")
 	}
-	
+
 	return recommendations
 }
 
 func (ca *ComparativeAnalyzer) generateAnomalyInsights(baselineAnomalies, comparisonAnomalies []AnomalyPoint, stats ComparisonStatistics) []ComparisonInsight {
 	var insights []ComparisonInsight
-	
+
 	// Anomaly frequency insight
 	frequencyChange := float64(len(comparisonAnomalies)-len(baselineAnomalies)) / float64(len(baselineAnomalies)) * 100
-	
+
 	if math.Abs(frequencyChange) > 50 {
 		severity := "high"
 		if math.Abs(frequencyChange) < 100 {
 			severity = "medium"
 		}
-		
+
 		direction := "increased"
 		if frequencyChange < 0 {
 			direction = "decreased"
 		}
-		
+
 		insights = append(insights, ComparisonInsight{
 			Type:        InsightTypeAnomaly,
 			Severity:    severity,
@@ -528,20 +528,20 @@ func (ca *ComparativeAnalyzer) generateAnomalyInsights(baselineAnomalies, compar
 			Confidence:  0.8,
 		})
 	}
-	
+
 	return insights
 }
 
 func (ca *ComparativeAnalyzer) generateAnomalyRecommendations(insights []ComparisonInsight) []string {
 	var recommendations []string
-	
+
 	for _, insight := range insights {
 		if insight.Type == InsightTypeAnomaly && insight.Severity == "high" {
 			recommendations = append(recommendations, "Investigate the cause of anomaly pattern changes")
 			break
 		}
 	}
-	
+
 	return recommendations
 }
 
@@ -580,7 +580,7 @@ func (ca *ComparativeAnalyzer) anomaliesToMetrics(anomalies []AnomalyPoint) []Me
 func (ca *ComparativeAnalyzer) calculateMedian(values []float64) float64 {
 	sorted := make([]float64, len(values))
 	copy(sorted, values)
-	
+
 	// Simple bubble sort
 	for i := 0; i < len(sorted); i++ {
 		for j := 0; j < len(sorted)-1-i; j++ {
@@ -589,7 +589,7 @@ func (ca *ComparativeAnalyzer) calculateMedian(values []float64) float64 {
 			}
 		}
 	}
-	
+
 	n := len(sorted)
 	if n%2 == 0 {
 		return (sorted[n/2-1] + sorted[n/2]) / 2
@@ -600,7 +600,7 @@ func (ca *ComparativeAnalyzer) calculateMedian(values []float64) float64 {
 func (ca *ComparativeAnalyzer) calculatePercentile(values []float64, p float64) float64 {
 	sorted := make([]float64, len(values))
 	copy(sorted, values)
-	
+
 	// Simple sort (same as median)
 	for i := 0; i < len(sorted); i++ {
 		for j := 0; j < len(sorted)-1-i; j++ {
@@ -609,15 +609,15 @@ func (ca *ComparativeAnalyzer) calculatePercentile(values []float64, p float64) 
 			}
 		}
 	}
-	
+
 	index := p * float64(len(sorted)-1)
 	lower := int(index)
 	upper := lower + 1
-	
+
 	if upper >= len(sorted) {
 		return sorted[len(sorted)-1]
 	}
-	
+
 	weight := index - float64(lower)
 	return sorted[lower]*(1-weight) + sorted[upper]*weight
 }
@@ -626,12 +626,12 @@ func (ca *ComparativeAnalyzer) calculateSkewness(values []float64, mean, stdDev 
 	if stdDev == 0 || len(values) < 3 {
 		return 0
 	}
-	
+
 	sum := 0.0
 	for _, value := range values {
 		sum += math.Pow((value-mean)/stdDev, 3)
 	}
-	
+
 	n := float64(len(values))
 	return (n / ((n - 1) * (n - 2))) * sum
 }
@@ -640,12 +640,12 @@ func (ca *ComparativeAnalyzer) calculateKurtosis(values []float64, mean, stdDev 
 	if stdDev == 0 || len(values) < 4 {
 		return 0
 	}
-	
+
 	sum := 0.0
 	for _, value := range values {
 		sum += math.Pow((value-mean)/stdDev, 4)
 	}
-	
+
 	n := float64(len(values))
 	return ((n*(n+1))/((n-1)*(n-2)*(n-3)))*sum - (3*(n-1)*(n-1))/((n-2)*(n-3))
 }
@@ -654,12 +654,12 @@ func (ca *ComparativeAnalyzer) calculateCorrelation(x, y []float64) float64 {
 	if len(x) != len(y) || len(x) < 2 {
 		return 0
 	}
-	
+
 	meanX := average(x)
 	meanY := average(y)
-	
+
 	var sumXY, sumX2, sumY2 float64
-	
+
 	for i := 0; i < len(x); i++ {
 		dx := x[i] - meanX
 		dy := y[i] - meanY
@@ -667,11 +667,11 @@ func (ca *ComparativeAnalyzer) calculateCorrelation(x, y []float64) float64 {
 		sumX2 += dx * dx
 		sumY2 += dy * dy
 	}
-	
+
 	if sumX2 == 0 || sumY2 == 0 {
 		return 0
 	}
-	
+
 	return sumXY / math.Sqrt(sumX2*sumY2)
 }
 
@@ -679,19 +679,19 @@ func (ca *ComparativeAnalyzer) calculateCohenD(x, y []float64) float64 {
 	if len(x) == 0 || len(y) == 0 {
 		return 0
 	}
-	
+
 	meanX := average(x)
 	meanY := average(y)
 	stdX := standardDeviation(x)
 	stdY := standardDeviation(y)
-	
+
 	// Pooled standard deviation
 	pooledStd := math.Sqrt(((float64(len(x))-1)*stdX*stdX + (float64(len(y))-1)*stdY*stdY) / (float64(len(x)) + float64(len(y)) - 2))
-	
+
 	if pooledStd == 0 {
 		return 0
 	}
-	
+
 	return (meanY - meanX) / pooledStd
 }
 

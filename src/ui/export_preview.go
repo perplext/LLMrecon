@@ -27,7 +27,7 @@ func NewExportPreview(terminal *Terminal) *ExportPreview {
 func (ep *ExportPreview) ShowFormatSelection(data interface{}) (string, error) {
 	ep.terminal.Clear()
 	ep.terminal.HeaderBox("Export Format Selection")
-	
+
 	formats := []ExportFormat{
 		{
 			ID:          "json",
@@ -86,40 +86,40 @@ func (ep *ExportPreview) ShowFormatSelection(data interface{}) (string, error) {
 			Features:    []string{"Issue tracking", "Workflow integration", "Team collaboration"},
 		},
 	}
-	
+
 	// Display format options
 	for i, format := range formats {
 		ep.terminal.Subsection(fmt.Sprintf("%d. %s", i+1, format.Name))
 		ep.terminal.Info(format.Description)
-		
+
 		if len(format.Features) > 0 {
 			ep.terminal.Muted("Features: " + strings.Join(format.Features, " • "))
 		}
-		
+
 		fmt.Println()
 	}
-	
+
 	// Format selection
 	choice, err := ep.terminal.Select("Select export format:", ep.getFormatNames(formats))
 	if err != nil {
 		return "", err
 	}
-	
+
 	selectedFormat := formats[choice]
-	
+
 	// Show preview
 	ep.ShowPreview(selectedFormat.Name, data)
-	
+
 	// Confirm selection
-	confirm, err := ep.terminal.Confirm("Export in " + selectedFormat.Name + " format?", true)
+	confirm, err := ep.terminal.Confirm("Export in "+selectedFormat.Name+" format?", true)
 	if err != nil {
 		return "", err
 	}
-	
+
 	if !confirm {
 		return ep.ShowFormatSelection(data) // Recursive call to reselect
 	}
-	
+
 	return selectedFormat.ID, nil
 }
 
@@ -129,20 +129,20 @@ func (ep *ExportPreview) ShowPreview(formatID string, data interface{}) error {
 	if format == nil {
 		return fmt.Errorf("unknown format: %s", formatID)
 	}
-	
+
 	ep.terminal.Clear()
 	ep.terminal.HeaderBox("Preview: " + format.Name + " Export")
-	
+
 	// Generate preview based on format
 	preview := ep.generatePreview(format, data)
-	
+
 	// Display preview in a scrollable box
 	ep.terminal.Section("Format Preview")
 	ep.displayPreview(preview, format)
-	
+
 	// Show export options
 	ep.showExportOptions(format)
-	
+
 	return nil
 }
 
@@ -150,7 +150,7 @@ func (ep *ExportPreview) ShowPreview(formatID string, data interface{}) error {
 func (ep *ExportPreview) generatePreview(format *ExportFormat, data interface{}) string {
 	// Sample data for preview
 	sampleData := ep.getSampleData(data)
-	
+
 	switch format.ID {
 	case "json":
 		return ep.generateJSONPreview(sampleData)
@@ -181,10 +181,10 @@ func (ep *ExportPreview) generateJSONPreview(data *SampleReportData) string {
 			"id":        data.ID,
 			"timestamp": data.Timestamp,
 			"summary": map[string]interface{}{
-				"total_tests":         data.TotalTests,
-				"vulnerabilities":     data.VulnerabilityCount,
-				"risk_score":          data.RiskScore,
-				"compliance_status":   data.ComplianceStatus,
+				"total_tests":       data.TotalTests,
+				"vulnerabilities":   data.VulnerabilityCount,
+				"risk_score":        data.RiskScore,
+				"compliance_status": data.ComplianceStatus,
 			},
 			"vulnerabilities": []map[string]interface{}{
 				{
@@ -204,7 +204,7 @@ func (ep *ExportPreview) generateJSONPreview(data *SampleReportData) string {
 			},
 		},
 	}
-	
+
 	jsonBytes, _ := json.MarshalIndent(preview, "", "  ")
 	return string(jsonBytes)
 }
@@ -219,23 +219,23 @@ func (ep *ExportPreview) generateYAMLPreview(data *SampleReportData) string {
 				"template_set":    "owasp-llm-v1",
 			},
 			"summary": map[string]interface{}{
-				"duration":      "15m32s",
-				"total_tests":   data.TotalTests,
-				"passed":        120,
-				"failed":        30,
-				"error_rate":    "2.5%",
+				"duration":    "15m32s",
+				"total_tests": data.TotalTests,
+				"passed":      120,
+				"failed":      30,
+				"error_rate":  "2.5%",
 			},
 			"findings": []map[string]interface{}{
 				{
-					"severity":     "critical",
-					"type":         "prompt_injection",
-					"confidence":   "high",
-					"remediation":  "Implement input validation and context boundaries",
+					"severity":    "critical",
+					"type":        "prompt_injection",
+					"confidence":  "high",
+					"remediation": "Implement input validation and context boundaries",
 				},
 			},
 		},
 	}
-	
+
 	yamlBytes, _ := yaml.Marshal(preview)
 	return string(yamlBytes)
 }
@@ -543,7 +543,7 @@ Attachments:
 func (ep *ExportPreview) displayPreview(preview string, format *ExportFormat) {
 	lines := strings.Split(preview, "\n")
 	maxLines := 30 // Maximum lines to show in preview
-	
+
 	if len(lines) > maxLines {
 		// Show truncated preview
 		for i := 0; i < maxLines-3; i++ {
@@ -583,20 +583,20 @@ func (ep *ExportPreview) formatPreviewLine(line string, format *ExportFormat) st
 func (ep *ExportPreview) highlightJSON(line string) string {
 	// Simple JSON syntax highlighting
 	line = strings.ReplaceAll(line, `"`, ep.style.Success.Render(`"`))
-	
+
 	// Highlight numbers
 	for _, num := range []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"} {
 		if strings.Contains(line, num) && !strings.Contains(line, `"`+num) {
 			line = strings.ReplaceAll(line, num, ep.style.Warning.Render(num))
 		}
 	}
-	
+
 	// Highlight keywords
 	keywords := []string{"true", "false", "null"}
 	for _, kw := range keywords {
 		line = strings.ReplaceAll(line, kw, ep.style.Info.Render(kw))
 	}
-	
+
 	return line
 }
 
@@ -616,7 +616,7 @@ func (ep *ExportPreview) highlightMarkdown(line string) string {
 	if strings.HasPrefix(line, "#") {
 		return ep.style.Title.Render(line)
 	}
-	
+
 	// Bold text
 	if strings.Contains(line, "**") {
 		// Simple bold highlighting
@@ -631,7 +631,7 @@ func (ep *ExportPreview) highlightMarkdown(line string) string {
 		}
 		return result
 	}
-	
+
 	return line
 }
 
@@ -650,7 +650,7 @@ func (ep *ExportPreview) highlightCSV(line string) string {
 	if strings.HasPrefix(line, `"ID"`) {
 		return ep.style.Title.Render(line)
 	}
-	
+
 	// Highlight severity column
 	if strings.Contains(line, `"Critical"`) {
 		line = strings.ReplaceAll(line, `"Critical"`, ep.style.Critical.Render(`"Critical"`))
@@ -658,7 +658,7 @@ func (ep *ExportPreview) highlightCSV(line string) string {
 	if strings.Contains(line, `"High"`) {
 		line = strings.ReplaceAll(line, `"High"`, ep.style.Warning.Render(`"High"`))
 	}
-	
+
 	return line
 }
 
@@ -666,20 +666,20 @@ func (ep *ExportPreview) highlightCSV(line string) string {
 
 func (ep *ExportPreview) showExportOptions(format *ExportFormat) {
 	ep.terminal.Section("Export Options")
-	
+
 	options := ep.getFormatOptions(format)
-	
+
 	for _, opt := range options {
 		ep.terminal.Info(fmt.Sprintf("• %s: %s", opt.Name, opt.Description))
 		if opt.Default != "" {
 			ep.terminal.Muted("  Default: " + opt.Default)
 		}
 	}
-	
+
 	// File size estimate
 	ep.terminal.Subsection("Estimated File Size")
 	ep.terminal.Info(ep.estimateFileSize(format))
-	
+
 	// Compatibility notes
 	if len(format.Compatible) > 0 {
 		ep.terminal.Subsection("Compatible With")
@@ -724,7 +724,7 @@ func (ep *ExportPreview) estimateFileSize(format *ExportFormat) string {
 		"sarif":    "~200 KB",
 		"jira":     "N/A (API call)",
 	}
-	
+
 	if size, ok := sizes[format.ID]; ok {
 		return size
 	}
@@ -752,7 +752,7 @@ func (ep *ExportPreview) getFormatByID(id string) *ExportFormat {
 		{ID: "sarif", Name: "SARIF"},
 		{ID: "jira", Name: "JIRA Issues"},
 	}
-	
+
 	for _, f := range formats {
 		if f.ID == id {
 			return &f
@@ -778,7 +778,7 @@ func (ep *ExportPreview) getSampleData(data interface{}) *SampleReportData {
 func (ep *ExportPreview) ShowComparisonPreview(formats []string, data interface{}) error {
 	ep.terminal.Clear()
 	ep.terminal.HeaderBox("Export Format Comparison")
-	
+
 	// Generate previews for each format
 	previews := make(map[string]string)
 	for _, formatID := range formats {
@@ -787,7 +787,7 @@ func (ep *ExportPreview) ShowComparisonPreview(formats []string, data interface{
 			previews[formatID] = ep.generatePreview(format, data)
 		}
 	}
-	
+
 	// Display side by side (simplified for 2 formats)
 	if len(formats) == 2 {
 		ep.showSideBySide(formats[0], formats[1], previews)
@@ -806,43 +806,43 @@ func (ep *ExportPreview) ShowComparisonPreview(formats []string, data interface{
 			fmt.Println()
 		}
 	}
-	
+
 	return nil
 }
 
 func (ep *ExportPreview) showSideBySide(format1, format2 string, previews map[string]string) {
 	f1 := ep.getFormatByID(format1)
 	f2 := ep.getFormatByID(format2)
-	
+
 	lines1 := strings.Split(previews[format1], "\n")
 	lines2 := strings.Split(previews[format2], "\n")
-	
+
 	maxLines := max(len(lines1), len(lines2))
 	if maxLines > 20 {
 		maxLines = 20
 	}
-	
+
 	// Headers
-	fmt.Printf("%-40s | %-40s\n", 
+	fmt.Printf("%-40s | %-40s\n",
 		ep.style.Title.Render(f1.Name),
 		ep.style.Title.Render(f2.Name))
 	fmt.Println(strings.Repeat("─", 81))
-	
+
 	// Content
 	for i := 0; i < maxLines; i++ {
 		line1 := ""
 		line2 := ""
-		
+
 		if i < len(lines1) {
 			line1 = truncate(lines1[i], 40)
 		}
 		if i < len(lines2) {
 			line2 = truncate(lines2[i], 40)
 		}
-		
+
 		fmt.Printf("%-40s | %-40s\n", line1, line2)
 	}
-	
+
 	if maxLines < max(len(lines1), len(lines2)) {
 		fmt.Printf("%-40s | %-40s\n",
 			ep.style.Info.Render("... (truncated)"),
@@ -856,8 +856,6 @@ func max(a, b int) int {
 	}
 	return b
 }
-
-
 
 // Data structures
 
@@ -884,6 +882,3 @@ type SampleReportData struct {
 	RiskScore          float64
 	ComplianceStatus   string
 }
-
-
-

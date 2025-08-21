@@ -41,8 +41,8 @@ const (
 
 // Publisher represents the publisher of an update package
 type Publisher struct {
-	Name       string `json:"name"`
-	URL        string `json:"url"`
+	Name        string `json:"name"`
+	URL         string `json:"url"`
 	PublicKeyID string `json:"public_key_id"`
 }
 
@@ -58,13 +58,13 @@ type BinaryComponentInfo struct {
 
 // TemplatesComponent represents the templates component in an update package
 type TemplatesComponentInfo struct {
-	Version      string   `json:"version"`
-	MinVersion   string   `json:"min_version"`
-	Required     bool     `json:"required"`
-	ChangelogURL string   `json:"changelog_url"`
-	Checksum     string   `json:"checksum"`
-	Categories   []string `json:"categories"`
-	TemplateCount int     `json:"template_count"`
+	Version       string   `json:"version"`
+	MinVersion    string   `json:"min_version"`
+	Required      bool     `json:"required"`
+	ChangelogURL  string   `json:"changelog_url"`
+	Checksum      string   `json:"checksum"`
+	Categories    []string `json:"categories"`
+	TemplateCount int      `json:"template_count"`
 }
 
 // ModuleDependency represents a dependency for a module
@@ -75,13 +75,13 @@ type ModuleDependency struct {
 
 // ModuleComponent represents a module component in an update package
 type ModuleComponentInfo struct {
-	ID           string            `json:"id"`
-	Name         string            `json:"name"`
-	Version      string            `json:"version"`
-	MinVersion   string            `json:"min_version"`
-	Required     bool              `json:"required"`
-	ChangelogURL string            `json:"changelog_url"`
-	Checksum     string            `json:"checksum"`
+	ID           string             `json:"id"`
+	Name         string             `json:"name"`
+	Version      string             `json:"version"`
+	MinVersion   string             `json:"min_version"`
+	Required     bool               `json:"required"`
+	ChangelogURL string             `json:"changelog_url"`
+	Checksum     string             `json:"checksum"`
 	Dependencies []ModuleDependency `json:"dependencies"`
 }
 
@@ -125,15 +125,15 @@ type Components struct {
 
 // PackageManifest represents the manifest of an update package
 type PackageManifest struct {
-	SchemaVersion string       `json:"schema_version"`
-	PackageID     string       `json:"package_id"`
-	PackageType   PackageType  `json:"package_type"`
-	CreatedAt     time.Time    `json:"created_at"`
-	ExpiresAt     time.Time    `json:"expires_at"`
-	Publisher     Publisher    `json:"publisher"`
-	Components    Components   `json:"components"`
+	SchemaVersion string        `json:"schema_version"`
+	PackageID     string        `json:"package_id"`
+	PackageType   PackageType   `json:"package_type"`
+	CreatedAt     time.Time     `json:"created_at"`
+	ExpiresAt     time.Time     `json:"expires_at"`
+	Publisher     Publisher     `json:"publisher"`
+	Components    Components    `json:"components"`
 	Compliance    ComplianceMap `json:"compliance"`
-	Signature     string       `json:"signature"`
+	Signature     string        `json:"signature"`
 }
 
 // Use shared UpdatePackage from types.go
@@ -191,7 +191,11 @@ func (p *UpdatePackage) readManifest() error {
 	if err != nil {
 		return fmt.Errorf("failed to open manifest.json: %w", err)
 	}
-	defer func() { if err := rc.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Read manifest file
 	manifestData, err := io.ReadAll(rc)
 	if err != nil {
@@ -299,9 +303,9 @@ func (p *UpdatePackage) verifyComponentChecksums() error {
 		// Verify binary patch checksums
 		for _, patch := range p.Manifest.Components.Patches.Binary {
 			for platform, checksum := range patch.Checksums {
-				patchPath := fmt.Sprintf("patches/binary/%s/%s-%s.patch", 
+				patchPath := fmt.Sprintf("patches/binary/%s/%s-%s.patch",
 					platform, patch.FromVersion, patch.ToVersion)
-				
+
 				err := p.verifyFileChecksum(patchPath, checksum)
 				if err != nil {
 					return fmt.Errorf("failed to verify binary patch checksum for %s: %w", platform, err)
@@ -311,9 +315,9 @@ func (p *UpdatePackage) verifyComponentChecksums() error {
 
 		// Verify templates patch checksums
 		for _, patch := range p.Manifest.Components.Patches.Templates {
-			patchPath := fmt.Sprintf("patches/templates/%s-%s.patch", 
+			patchPath := fmt.Sprintf("patches/templates/%s-%s.patch",
 				patch.FromVersion, patch.ToVersion)
-			
+
 			err := p.verifyFileChecksum(patchPath, patch.Checksum)
 			if err != nil {
 				return fmt.Errorf("failed to verify templates patch checksum: %w", err)
@@ -322,9 +326,9 @@ func (p *UpdatePackage) verifyComponentChecksums() error {
 
 		// Verify module patch checksums
 		for _, patch := range p.Manifest.Components.Patches.Modules {
-			patchPath := fmt.Sprintf("patches/modules/%s/%s-%s.patch", 
+			patchPath := fmt.Sprintf("patches/modules/%s/%s-%s.patch",
 				patch.ID, patch.FromVersion, patch.ToVersion)
-			
+
 			err := p.verifyFileChecksum(patchPath, patch.Checksum)
 			if err != nil {
 				return fmt.Errorf("failed to verify module patch checksum for %s: %w", patch.ID, err)
@@ -355,7 +359,11 @@ func (p *UpdatePackage) verifyFileChecksum(path, expectedChecksum string) error 
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := rc.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Calculate checksum
 	hash := sha256.New()
@@ -575,14 +583,22 @@ func (p *UpdatePackage) ExtractFile(filePath, destPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := src.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := src.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create destination file
 	dest, err := os.Create(destPath)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer func() { if err := dest.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := dest.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Copy file contents
 	if _, err := io.Copy(dest, src); err != nil {
@@ -724,11 +740,19 @@ func CreatePackage(manifestPath, outputPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
 	}
-	defer func() { if err := outputFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := outputFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create zip writer
 	zipWriter := zip.NewWriter(outputFile)
-	defer func() { if err := zipWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := zipWriter.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Add manifest
 	manifestWriter, err := zipWriter.Create("manifest.json")

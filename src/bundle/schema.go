@@ -1,13 +1,13 @@
 package bundle
 
 import (
-	"os"
-	"path/filepath"
-	"time"
-	"strings"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -20,7 +20,7 @@ type SchemaValidator struct {
 // NewSchemaValidator creates a new schema validator with the specified schema path
 func NewSchemaValidator(schemaPath string) (*SchemaValidator, error) {
 	// Check if the schema file exists
-	    if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
+	if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("schema file not found: %s", schemaPath)
 	}
 
@@ -41,15 +41,15 @@ func NewDefaultSchemaValidator() (*SchemaValidator, error) {
 	}
 
 	execDir := filepath.Dir(execPath)
-		schemaPath := filepath.Join(execDir, "..", "schemas", "bundle-manifest-schema.json")
+	schemaPath := filepath.Join(execDir, "..", "schemas", "bundle-manifest-schema.json")
 	// Prevent path traversal
-	    if strings.Contains(schemaPath, "..") {
-		        return nil, fmt.Errorf("path traversal detected")
+	if strings.Contains(schemaPath, "..") {
+		return nil, fmt.Errorf("path traversal detected")
 	}
-	    schemaPath = filepath.Clean(schemaPath)
+	schemaPath = filepath.Clean(schemaPath)
 
 	// Check if the schema file exists at the default location
-	    if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
+	if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
 		// Try to find the schema in the current working directory
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -57,7 +57,7 @@ func NewDefaultSchemaValidator() (*SchemaValidator, error) {
 		}
 
 		schemaPath = filepath.Join(cwd, "schemas", "bundle-manifest-schema.json")
-		    if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
+		if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
 			return nil, fmt.Errorf("schema file not found at default locations")
 		}
 	}

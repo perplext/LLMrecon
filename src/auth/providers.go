@@ -39,7 +39,7 @@ func (p *GitHubAuthProvider) authenticateBasic(ctx context.Context, creds *Crede
 	if creds.Token != "" {
 		return p.authenticateToken(ctx, creds)
 	}
-	
+
 	return false, fmt.Errorf("GitHub no longer supports basic authentication for API access")
 }
 
@@ -50,24 +50,28 @@ func (p *GitHubAuthProvider) authenticateToken(ctx context.Context, creds *Crede
 	if err != nil {
 		return false, err
 	}
-	
+
 	// Add authorization header
 	req.Header.Set("Authorization", "token "+creds.Token)
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	
+
 	// Send request
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		return false, fmt.Errorf("GitHub API returned status code %d", resp.StatusCode)
 	}
-	
+
 	return true, nil
 }
 
@@ -77,7 +81,7 @@ func (p *GitHubAuthProvider) authenticateOAuth(ctx context.Context, creds *Crede
 	if creds.Token != "" {
 		return p.authenticateToken(ctx, creds)
 	}
-	
+
 	// If no token, need to get one using the authorization code flow
 	// This would typically be handled by a web application
 	return false, fmt.Errorf("OAuth authentication requires a token")
@@ -89,19 +93,19 @@ func (p *GitHubAuthProvider) RefreshToken(ctx context.Context, creds *Credential
 	if creds.Type != OAuthAuth {
 		return fmt.Errorf("only OAuth tokens can be refreshed")
 	}
-	
+
 	// Check if refresh token is available
 	if creds.RefreshToken == "" {
 		return fmt.Errorf("no refresh token available")
 	}
-	
+
 	// Create request
 	data := url.Values{}
 	data.Set("client_id", creds.ClientID)
 	data.Set("client_secret", creds.ClientSecret)
 	data.Set("refresh_token", creds.RefreshToken)
 	data.Set("grant_type", "refresh_token")
-	
+
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -111,24 +115,28 @@ func (p *GitHubAuthProvider) RefreshToken(ctx context.Context, creds *Credential
 	if err != nil {
 		return err
 	}
-	
+
 	// Set headers
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
-	
+
 	// Send request
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("GitHub API returned status code %d", resp.StatusCode)
 	}
-	
+
 	// Parse response
 	var tokenResp struct {
 		AccessToken  string `json:"access_token"`
@@ -136,22 +144,22 @@ func (p *GitHubAuthProvider) RefreshToken(ctx context.Context, creds *Credential
 		ExpiresIn    int    `json:"expires_in"`
 		TokenType    string `json:"token_type"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
 		return err
 	}
-	
+
 	// Update credentials
 	creds.Token = tokenResp.AccessToken
 	if tokenResp.RefreshToken != "" {
 		creds.RefreshToken = tokenResp.RefreshToken
 	}
-	
+
 	// Set expiry time
 	if tokenResp.ExpiresIn > 0 {
 		creds.TokenExpiry = time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
 	}
-	
+
 	return nil
 }
 
@@ -184,23 +192,27 @@ func (p *GitLabAuthProvider) authenticateBasic(ctx context.Context, creds *Crede
 	if err != nil {
 		return false, err
 	}
-	
+
 	// Add authorization header
 	req.SetBasicAuth(creds.Username, creds.Password)
-	
+
 	// Send request
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		return false, fmt.Errorf("GitLab API returned status code %d", resp.StatusCode)
 	}
-	
+
 	return true, nil
 }
 
@@ -211,23 +223,27 @@ func (p *GitLabAuthProvider) authenticateToken(ctx context.Context, creds *Crede
 	if err != nil {
 		return false, err
 	}
-	
+
 	// Add authorization header
 	req.Header.Set("Authorization", "Bearer "+creds.Token)
-	
+
 	// Send request
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		return false, fmt.Errorf("GitLab API returned status code %d", resp.StatusCode)
 	}
-	
+
 	return true, nil
 }
 
@@ -237,7 +253,7 @@ func (p *GitLabAuthProvider) authenticateOAuth(ctx context.Context, creds *Crede
 	if creds.Token != "" {
 		return p.authenticateToken(ctx, creds)
 	}
-	
+
 	// If no token, need to get one using the authorization code flow
 	// This would typically be handled by a web application
 	return false, fmt.Errorf("OAuth authentication requires a token")
@@ -249,19 +265,19 @@ func (p *GitLabAuthProvider) RefreshToken(ctx context.Context, creds *Credential
 	if creds.Type != OAuthAuth {
 		return fmt.Errorf("only OAuth tokens can be refreshed")
 	}
-	
+
 	// Check if refresh token is available
 	if creds.RefreshToken == "" {
 		return fmt.Errorf("no refresh token available")
 	}
-	
+
 	// Create request
 	data := url.Values{}
 	data.Set("client_id", creds.ClientID)
 	data.Set("client_secret", creds.ClientSecret)
 	data.Set("refresh_token", creds.RefreshToken)
 	data.Set("grant_type", "refresh_token")
-	
+
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -271,23 +287,27 @@ func (p *GitLabAuthProvider) RefreshToken(ctx context.Context, creds *Credential
 	if err != nil {
 		return err
 	}
-	
+
 	// Set headers
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	
+
 	// Send request
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("GitLab API returned status code %d", resp.StatusCode)
 	}
-	
+
 	// Parse response
 	var tokenResp struct {
 		AccessToken  string `json:"access_token"`
@@ -295,22 +315,22 @@ func (p *GitLabAuthProvider) RefreshToken(ctx context.Context, creds *Credential
 		ExpiresIn    int    `json:"expires_in"`
 		TokenType    string `json:"token_type"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
 		return err
 	}
-	
+
 	// Update credentials
 	creds.Token = tokenResp.AccessToken
 	if tokenResp.RefreshToken != "" {
 		creds.RefreshToken = tokenResp.RefreshToken
 	}
-	
+
 	// Set expiry time
 	if tokenResp.ExpiresIn > 0 {
 		creds.TokenExpiry = time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
 	}
-	
+
 	return nil
 }
 

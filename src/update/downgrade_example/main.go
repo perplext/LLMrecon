@@ -35,7 +35,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize key store: %v", err)
 	}
-	defer func() { if err := keyStore.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := keyStore.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Initialize downgrade protection
 	log.Println("Initializing downgrade protection...")
 	dp, err := update.NewDowngradeProtection(policyPath, keyStore)
@@ -282,10 +286,10 @@ func demonstrateUpdatePackageValidation(dp *update.DowngradeProtection) {
 	validPkg := &update.UpdatePackage{
 		PackagePath: os.TempDir(),
 		Manifest: update.PackageManifest{
-			Signature: "valid-signature",
+			Signature:     "valid-signature",
 			SchemaVersion: "1.0",
-			PackageID: "example-package",
-			PackageType: update.FullPackage,
+			PackageID:     "example-package",
+			PackageType:   update.FullPackage,
 		},
 	}
 
@@ -314,10 +318,10 @@ func demonstrateUpdatePackageValidation(dp *update.DowngradeProtection) {
 func demonstratePolicyEnforcement(dp *update.DowngradeProtection) {
 	// Create options with values below the minimum requirements
 	options := &update.ConnectionSecurityOptions{
-		MinTLSVersion:          tls.VersionTLS10,
+		MinTLSVersion:            tls.VersionTLS10,
 		EnableCertificatePinning: false,
-		CheckRevocation:        false,
-		CipherSuites:           []uint16{tls.TLS_RSA_WITH_RC4_128_SHA}, // Weak cipher suite
+		CheckRevocation:          false,
+		CipherSuites:             []uint16{tls.TLS_RSA_WITH_RC4_128_SHA}, // Weak cipher suite
 	}
 
 	// Display original options
@@ -355,7 +359,7 @@ func demonstrateSecureClientCreation(dp *update.DowngradeProtection) {
 
 	// Display retry configuration
 	retryConfig := client.GetRetryConfig()
-	log.Printf("Retry configuration: MaxRetries=%d, InitialDelay=%v", 
+	log.Printf("Retry configuration: MaxRetries=%d, InitialDelay=%v",
 		retryConfig.MaxRetries, retryConfig.InitialDelay)
 }
 
@@ -373,7 +377,7 @@ func demonstratePolicyUpdate(dp *update.DowngradeProtection) {
 	// Update allowed signature algorithms
 	log.Println("Updating allowed signature algorithms to Ed25519 and ECDSA only...")
 	err = dp.UpdateAllowedSignatureAlgorithms([]update.SignatureAlgorithm{
-		update.Ed25519Algorithm, 
+		update.Ed25519Algorithm,
 		update.ECDSAAlgorithm,
 	})
 	if err != nil {

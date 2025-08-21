@@ -11,26 +11,26 @@ type MFAManager interface {
 	GetMFASettings(ctx context.Context, userID string) (*MFASettings, error)
 	EnableMFA(ctx context.Context, userID string, method MFAMethod) (*MFASettings, error)
 	DisableMFA(ctx context.Context, userID string) error
-	
+
 	// TOTP methods
 	SetupTOTP(ctx context.Context, userID string, username string) (*TOTPConfig, error)
 	VerifyTOTPSetup(ctx context.Context, userID string, code string) error
-	
+
 	// Backup code methods
 	GenerateBackupCodes(ctx context.Context, userID string) ([]MFABackupCode, error)
-	
+
 	// WebAuthn methods
 	SetupWebAuthn(ctx context.Context, userID string, username string, displayName string) (map[string]interface{}, error)
 	VerifyWebAuthnSetup(ctx context.Context, userID string, attestationResponse string) error
 	InitiateWebAuthnVerification(ctx context.Context, userID string) (map[string]interface{}, error)
 	VerifyWebAuthnAssertion(ctx context.Context, userID string, assertionResponse string) (bool, error)
-	
+
 	// SMS methods
 	SetupSMS(ctx context.Context, userID string, phoneNumber string) error
 	VerifySMSSetup(ctx context.Context, userID string, code string) error
 	InitiateSMSVerification(ctx context.Context, userID string) error
 	VerifySMSCode(ctx context.Context, userID string, code string) (bool, error)
-	
+
 	// General MFA methods
 	VerifyMFA(ctx context.Context, userID string, method MFAMethod, code string) (bool, error)
 	ValidateMFASettings(ctx context.Context, userID string) (bool, []string, error)
@@ -80,8 +80,3 @@ type MFAMethodSettings struct {
 	Status MFAStatus
 	// Additional method-specific settings can be added here
 }
-
-
-
-
-

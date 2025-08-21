@@ -12,8 +12,8 @@ type ISO42001Standard struct {
 	Version     string
 	Description string
 	Clauses     []Clause
-
 }
+
 // Clause represents a clause in ISO 42001
 type Clause struct {
 	ID           string        `json:"id"`
@@ -22,8 +22,8 @@ type Clause struct {
 	Description  string        `json:"description"`
 	Controls     []Control     `json:"controls"`
 	Requirements []Requirement `json:"requirements"`
-
 }
+
 // Control represents a control within a clause
 type Control struct {
 	ID              string                 `json:"id"`
@@ -36,16 +36,16 @@ type Control struct {
 	Gaps            []Gap                  `json:"gaps"`
 	Recommendations []string               `json:"recommendations"`
 	Metadata        map[string]interface{} `json:"metadata"`
-
 }
+
 // Requirement represents a specific requirement
 type Requirement struct {
 	ID          string `json:"id"`
 	Description string `json:"description"`
 	Mandatory   bool   `json:"mandatory"`
 	Verifiable  bool   `json:"verifiable"`
-
 }
+
 // ImplementationStatus represents the status of control implementation
 type ImplementationStatus struct {
 	Status         string    `json:"status"` // not_implemented, partial, implemented, verified
@@ -54,8 +54,8 @@ type ImplementationStatus struct {
 	AssessedBy     string    `json:"assessedBy"`
 	EffectiveDate  time.Time `json:"effectiveDate"`
 	ExpirationDate time.Time `json:"expirationDate,omitempty"`
-
 }
+
 // Evidence represents evidence for control implementation
 type Evidence struct {
 	ID          string                 `json:"id"`
@@ -66,8 +66,8 @@ type Evidence struct {
 	Date        time.Time              `json:"date"`
 	Status      string                 `json:"status"`
 	Metadata    map[string]interface{} `json:"metadata"`
-
 }
+
 // Gap represents a compliance gap
 type Gap struct {
 	ID          string    `json:"id"`
@@ -78,16 +78,17 @@ type Gap struct {
 	Status      string    `json:"status"` // open, in_progress, closed
 
 }
+
 // ComplianceReport represents a compliance assessment report
 type ComplianceReport struct {
-	Standard          string                      `json:"standard"`
-	AssessmentDate    time.Time                   `json:"assessmentDate"`
+	Standard          string                       `json:"standard"`
+	AssessmentDate    time.Time                    `json:"assessmentDate"`
 	Results           map[string]*AssessmentResult `json:"results"`
-	OverallCompliance float64                     `json:"overallCompliance"`
-	Recommendations   []Recommendation            `json:"recommendations"`
-	ExecutiveSummary  string                      `json:"executiveSummary"`
-
+	OverallCompliance float64                      `json:"overallCompliance"`
+	Recommendations   []Recommendation             `json:"recommendations"`
+	ExecutiveSummary  string                       `json:"executiveSummary"`
 }
+
 // Recommendation represents a compliance recommendation
 type Recommendation struct {
 	ID          string   `json:"id"`
@@ -107,16 +108,16 @@ type ISO42001Summary struct {
 	HighGaps             int `json:"highGaps"`
 	MediumGaps           int `json:"mediumGaps"`
 	LowGaps              int `json:"lowGaps"`
-
 }
+
 // ISO42001Compliance provides ISO 42001 compliance checking
 type ISO42001Compliance struct {
 	standard         *ISO42001Standard
 	controls         map[string]*Control
 	evidenceStore    EvidenceStore
 	assessmentEngine AssessmentEngine
-
 }
+
 // EvidenceStore interface for storing and retrieving evidence
 type EvidenceStore interface {
 	Store(evidence Evidence) error
@@ -138,20 +139,20 @@ type Finding struct {
 	Impact      string    `json:"impact"`
 	ControlID   string    `json:"controlId"`
 	Timestamp   time.Time `json:"timestamp"`
-
 }
+
 // AssessmentResult represents the result of a control assessment
 type AssessmentResult struct {
-	ControlID        string                 `json:"controlId"`
-	Status           string                 `json:"status"`
-	ComplianceScore  float64                `json:"complianceScore"`
-	Findings         []Finding              `json:"findings"`
-	Recommendations  []string               `json:"recommendations"`
-	AssessmentDate   time.Time              `json:"assessmentDate"`
-	NextReviewDate   time.Time              `json:"nextReviewDate"`
-	Details          map[string]interface{} `json:"details"`
-
+	ControlID       string                 `json:"controlId"`
+	Status          string                 `json:"status"`
+	ComplianceScore float64                `json:"complianceScore"`
+	Findings        []Finding              `json:"findings"`
+	Recommendations []string               `json:"recommendations"`
+	AssessmentDate  time.Time              `json:"assessmentDate"`
+	NextReviewDate  time.Time              `json:"nextReviewDate"`
+	Details         map[string]interface{} `json:"details"`
 }
+
 // NewISO42001Compliance creates a new ISO 42001 compliance checker
 func NewISO42001Compliance() *ISO42001Compliance {
 	return &ISO42001Compliance{
@@ -329,7 +330,7 @@ func (iso *ISO42001Compliance) assessOrganizationalControl(control *Control, res
 func (iso *ISO42001Compliance) assessDocumentationControl(control *Control, result *AssessmentResult) {
 	// Check for required documentation
 	docs := iso.filterEvidence(result.ControlID, "document")
-	
+
 	// Check document currency
 	for _, doc := range docs {
 		if time.Since(doc.Date) > 365*24*time.Hour {
@@ -376,7 +377,7 @@ func (iso *ISO42001Compliance) generateExecutiveSummary(results map[string]*Asse
 		"Total controls assessed: %d, Compliant: %d, Partial: %d, Non-compliant: %d. "+
 		"Critical gaps: %d, High risk gaps: %d.",
 		iso.calculateOverallCompliance(results),
-		summary.TotalControls, summary.CompliantControls, 
+		summary.TotalControls, summary.CompliantControls,
 		summary.PartialControls, summary.NonCompliantControls,
 		summary.CriticalGaps, summary.HighGaps)
 }
@@ -384,14 +385,14 @@ func (iso *ISO42001Compliance) generateExecutiveSummary(results map[string]*Asse
 // generateSummary generates a compliance summary
 func (iso *ISO42001Compliance) generateSummary(results map[string]*AssessmentResult) ISO42001Summary {
 	summary := ISO42001Summary{
-		TotalControls:      len(results),
-		CompliantControls:  0,
-		PartialControls:    0,
+		TotalControls:        len(results),
+		CompliantControls:    0,
+		PartialControls:      0,
 		NonCompliantControls: 0,
-		CriticalGaps:       0,
-		HighGaps:           0,
-		MediumGaps:         0,
-		LowGaps:            0,
+		CriticalGaps:         0,
+		HighGaps:             0,
+		MediumGaps:           0,
+		LowGaps:              0,
 	}
 
 	for _, result := range results {
@@ -617,7 +618,7 @@ func (iso *ISO42001Compliance) findLatestEvidence(controlID, evidenceType string
 	if len(evidence) == 0 {
 		return nil
 	}
-	
+
 	latest := &evidence[0]
 	for i := 1; i < len(evidence); i++ {
 		if evidence[i].Date.After(latest.Date) {
@@ -632,7 +633,7 @@ func (iso *ISO42001Compliance) calculatePriority(result *AssessmentResult) strin
 	if result.ComplianceScore < 50 {
 		return "critical"
 	}
-	
+
 	criticalCount := 0
 	highCount := 0
 	for _, finding := range result.Findings {
@@ -643,7 +644,7 @@ func (iso *ISO42001Compliance) calculatePriority(result *AssessmentResult) strin
 			highCount++
 		}
 	}
-	
+
 	if criticalCount > 0 {
 		return "critical"
 	} else if highCount > 2 {
@@ -658,11 +659,11 @@ func (iso *ISO42001Compliance) calculateDueDate(priority string) time.Time {
 	now := time.Now()
 	switch priority {
 	case "critical":
-		return now.AddDate(0, 0, 30)  // 30 days
+		return now.AddDate(0, 0, 30) // 30 days
 	case "high":
-		return now.AddDate(0, 0, 60)  // 60 days
+		return now.AddDate(0, 0, 60) // 60 days
 	case "medium":
-		return now.AddDate(0, 0, 90)  // 90 days
+		return now.AddDate(0, 0, 90) // 90 days
 	default:
 		return now.AddDate(0, 0, 180) // 180 days
 	}
@@ -688,7 +689,7 @@ func sortRecommendationsByPriority(recommendations []Recommendation) {
 		"medium":   2,
 		"low":      3,
 	}
-	
+
 	// Simple bubble sort for demonstration
 	for i := 0; i < len(recommendations); i++ {
 		for j := i + 1; j < len(recommendations); j++ {
@@ -715,7 +716,7 @@ func (iso *ISO42001Compliance) ExportReport(report *ComplianceReport, format str
 func (iso *ISO42001Compliance) generateTextSummary(report *ComplianceReport) []byte {
 	// Generate summary from results
 	summaryData := iso.generateSummary(report.Results)
-	
+
 	summary := fmt.Sprintf(`ISO/IEC 42001:2023 Compliance Report
 ====================================
 Assessment Date: %s
@@ -731,7 +732,7 @@ Critical Gaps: %d
 High Priority Recommendations: %d
 
 Top Recommendations:
-`, 
+`,
 		report.AssessmentDate.Format("2006-01-02"),
 		report.OverallCompliance,
 		summaryData.TotalControls,
@@ -752,4 +753,3 @@ Top Recommendations:
 
 	return []byte(summary)
 }
-

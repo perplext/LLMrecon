@@ -24,7 +24,7 @@ const (
 	SymmetricKey KeyType = "symmetric"
 	// CertificateKey represents a certificate with private key
 	CertificateKey KeyType = "certificate"
-	
+
 	// Alternative constants used in other files
 	KeyTypeRSA KeyType = "rsa"
 	KeyTypeAES KeyType = "aes"
@@ -120,61 +120,61 @@ type Key struct {
 type KeyStore interface {
 	// StoreKey stores a key in the key store
 	StoreKey(key *Key) error
-	
+
 	// GetKey retrieves a key by ID
 	GetKey(id string) (*Key, error)
-	
+
 	// GetKeyMetadata retrieves key metadata by ID
 	GetKeyMetadata(id string) (*KeyMetadata, error)
-	
+
 	// DeleteKey deletes a key by ID
 	DeleteKey(id string) error
-	
+
 	// ListKeys lists all keys in the key store
 	ListKeys() ([]*KeyMetadata, error)
-	
+
 	// ListKeysByType lists keys of a specific type
 	ListKeysByType(keyType KeyType) ([]*KeyMetadata, error)
-	
+
 	// ListKeysByUsage lists keys with a specific usage
 	ListKeysByUsage(usage KeyUsage) ([]*KeyMetadata, error)
-	
+
 	// ListKeysByTag lists keys with a specific tag
 	ListKeysByTag(tag string) ([]*KeyMetadata, error)
-	
+
 	// RotateKey rotates a key by generating a new key and updating references
 	RotateKey(id string) (*Key, error)
-	
+
 	// ExportKey exports a key in the specified format
 	ExportKey(id string, format string, includePrivate bool) ([]byte, error)
-	
+
 	// ImportKey imports a key from the specified format
 	ImportKey(keyData []byte, format string, metadata *KeyMetadata) (*Key, error)
-	
+
 	// GenerateKey generates a new key with the specified parameters
 	GenerateKey(keyType KeyType, algorithm string, metadata *KeyMetadata) (*Key, error)
-	
+
 	// GetRSAPrivateKey gets an RSA private key by ID
 	GetRSAPrivateKey(id string) (*rsa.PrivateKey, error)
-	
+
 	// GetRSAPublicKey gets an RSA public key by ID
 	GetRSAPublicKey(id string) (*rsa.PublicKey, error)
-	
+
 	// GetECDSAPrivateKey gets an ECDSA private key by ID
 	GetECDSAPrivateKey(id string) (*ecdsa.PrivateKey, error)
-	
+
 	// GetECDSAPublicKey gets an ECDSA public key by ID
 	GetECDSAPublicKey(id string) (*ecdsa.PublicKey, error)
-	
+
 	// GetEd25519PrivateKey gets an Ed25519 private key by ID
 	GetEd25519PrivateKey(id string) (ed25519.PrivateKey, error)
-	
+
 	// GetEd25519PublicKey gets an Ed25519 public key by ID
 	GetEd25519PublicKey(id string) (ed25519.PublicKey, error)
-	
+
 	// GetCertificate gets a certificate by ID
 	GetCertificate(id string) (*x509.Certificate, error)
-	
+
 	// Close closes the key store
 	Close() error
 }
@@ -183,19 +183,19 @@ type KeyStore interface {
 type KeyStoreOptions struct {
 	// StoragePath is the path to the key store
 	StoragePath string
-	
+
 	// Passphrase is used to derive the encryption key
 	Passphrase string
-	
+
 	// HSMConfig contains configuration for HSM integration
 	HSMConfig *HSMConfig
-	
+
 	// AutoSave determines whether to automatically save after changes
 	AutoSave bool
-	
+
 	// RotationCheckInterval is how often to check for keys that need rotation
 	RotationCheckInterval time.Duration
-	
+
 	// AlertCallback is called when a key needs rotation
 	AlertCallback func(key *KeyMetadata, daysUntilExpiration int)
 }
@@ -204,22 +204,22 @@ type KeyStoreOptions struct {
 type HSMConfig struct {
 	// Enabled indicates whether HSM integration is enabled
 	Enabled bool
-	
+
 	// Provider is the HSM provider (e.g., "pkcs11", "cng", "kms")
 	Provider string
-	
+
 	// LibraryPath is the path to the HSM library
 	LibraryPath string
-	
+
 	// SlotID is the HSM slot ID
 	SlotID uint
-	
+
 	// TokenLabel is the HSM token label
 	TokenLabel string
-	
+
 	// PIN is the HSM PIN
 	PIN string
-	
+
 	// KeyLabel is the prefix for key labels in the HSM
 	KeyLabel string
 }
@@ -228,13 +228,13 @@ type HSMConfig struct {
 type KeyRotationPolicy struct {
 	// Enabled indicates whether automatic rotation is enabled
 	Enabled bool
-	
+
 	// IntervalDays is the number of days between rotations
 	IntervalDays int
-	
+
 	// LastRotation is the timestamp of the last rotation
 	LastRotation time.Time
-	
+
 	// WarningDays is the number of days before expiration to start showing warnings
 	WarningDays int
 }

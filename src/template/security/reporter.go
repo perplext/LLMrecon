@@ -199,7 +199,7 @@ func (r *DefaultTemplateSecurityReporter) ConvertToTestResults(report *Verificat
 			Severity:    common.Medium,
 			Category:    "template_security",
 			Status:      getComplianceStatus(report.Summary.ComplianceStatus["OWASP LLM Top 10"]),
-			Details:     fmt.Sprintf("Total templates: %d, Passed: %d, Failed: %d, Compliance: %.2f%%",
+			Details: fmt.Sprintf("Total templates: %d, Passed: %d, Failed: %d, Compliance: %.2f%%",
 				report.Summary.TotalTemplates,
 				report.Summary.PassedTemplates,
 				report.Summary.FailedTemplates,

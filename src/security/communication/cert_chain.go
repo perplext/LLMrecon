@@ -44,8 +44,8 @@ type CRLInfo struct {
 	LastUpdated time.Time
 	NextUpdate  time.Time
 	URL         string
-
 }
+
 // TrustChainManager manages certificate trust chains and validation
 type TrustChainManager struct {
 	// Root certificates (trusted anchors)

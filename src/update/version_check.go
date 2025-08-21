@@ -18,18 +18,18 @@ import (
 
 // VersionCheckRequest represents a request to check for updates
 type VersionCheckRequest struct {
-	ClientID        string                     `json:"clientId"`
-	CurrentVersions map[string]string          `json:"currentVersions"`
-	Components      []string                   `json:"components"`
-	Timestamp       time.Time                  `json:"timestamp"`
-	Signature       string                     `json:"signature,omitempty"`
+	ClientID        string            `json:"clientId"`
+	CurrentVersions map[string]string `json:"currentVersions"`
+	Components      []string          `json:"components"`
+	Timestamp       time.Time         `json:"timestamp"`
+	Signature       string            `json:"signature,omitempty"`
 }
 
 // VersionCheckResponse represents a response from the version check API
 type VersionCheckResponse struct {
-	Versions        map[string]DetailedVersionInfo     `json:"versions"`
-	ServerTimestamp time.Time                  `json:"serverTimestamp"`
-	Signature       string                     `json:"signature,omitempty"`
+	Versions        map[string]DetailedVersionInfo `json:"versions"`
+	ServerTimestamp time.Time                      `json:"serverTimestamp"`
+	Signature       string                         `json:"signature,omitempty"`
 }
 
 // DetailedVersionInfo contains detailed information about a specific version
@@ -58,12 +58,12 @@ type VersionCheckService struct {
 // NewVersionCheckService creates a new VersionCheckService
 func NewVersionCheckService(baseURL, clientID string, secretKey []byte, currentVersions map[string]version.Version) *VersionCheckService {
 	return &VersionCheckService{
-		BaseURL:    baseURL,
-		HTTPClient: &http.Client{Timeout: 30 * time.Second},
-		ClientID:   clientID,
-		SecretKey:  secretKey,
+		BaseURL:         baseURL,
+		HTTPClient:      &http.Client{Timeout: 30 * time.Second},
+		ClientID:        clientID,
+		SecretKey:       secretKey,
 		CurrentVersions: currentVersions,
-		MaxClockSkew: 5 * time.Minute,
+		MaxClockSkew:    5 * time.Minute,
 	}
 }
 
@@ -168,7 +168,11 @@ func (s *VersionCheckService) sendVersionCheckRequest(ctx context.Context, req V
 	if err != nil {
 		return resp, fmt.Errorf("failed to send HTTP request: %w", err)
 	}
-	defer func() { if err := httpResp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := httpResp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Check status code
 	if httpResp.StatusCode != http.StatusOK {
 		return resp, fmt.Errorf("HTTP request failed with status: %d", httpResp.StatusCode)

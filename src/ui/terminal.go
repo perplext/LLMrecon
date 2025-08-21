@@ -604,7 +604,7 @@ func (t *Terminal) ReadKey() string {
 		}
 		return string(rune(b[0]))
 	}
-	
+
 	// Fallback for non-terminal input
 	var input string
 	_, err := fmt.Fscanln(t.input, &input)
@@ -624,36 +624,36 @@ func (t *Terminal) Box(title, content string) {
 
 	lines := strings.Split(content, "\n")
 	maxWidth := len(title)
-	
+
 	// Find the maximum line width
 	for _, line := range lines {
 		if len(line) > maxWidth {
 			maxWidth = len(line)
 		}
 	}
-	
+
 	// Ensure minimum width and add padding
 	maxWidth += 4
 	if maxWidth < 20 {
 		maxWidth = 20
 	}
-	
+
 	border := strings.Repeat("─", maxWidth-2)
-	
+
 	if t.colorOutput {
 		boxColor := color.New(color.FgCyan).SprintFunc()
 		titleColor := color.New(color.FgCyan, color.Bold).SprintFunc()
-		
+
 		// Top border with title
 		fmt.Fprintf(t.output, "%s\n", boxColor("┌─"+border+"─┐"))
 		fmt.Fprintf(t.output, "%s %s %s\n", boxColor("│"), titleColor(fmt.Sprintf("%-*s", maxWidth-4, title)), boxColor("│"))
 		fmt.Fprintf(t.output, "%s\n", boxColor("├─"+border+"─┤"))
-		
+
 		// Content lines
 		for _, line := range lines {
 			fmt.Fprintf(t.output, "%s %-*s %s\n", boxColor("│"), maxWidth-4, line, boxColor("│"))
 		}
-		
+
 		// Bottom border
 		fmt.Fprintf(t.output, "%s\n", boxColor("└─"+border+"─┘"))
 	} else {
@@ -661,16 +661,16 @@ func (t *Terminal) Box(title, content string) {
 		fmt.Fprintf(t.output, "┌─%s─┐\n", border)
 		fmt.Fprintf(t.output, "│ %-*s │\n", maxWidth-4, title)
 		fmt.Fprintf(t.output, "├─%s─┤\n", border)
-		
+
 		// Content lines
 		for _, line := range lines {
 			fmt.Fprintf(t.output, "│ %-*s │\n", maxWidth-4, line)
 		}
-		
+
 		// Bottom border
 		fmt.Fprintf(t.output, "└─%s─┘\n", border)
 	}
-	
+
 	t.lastLines = len(lines) + 4
 }
 
@@ -683,9 +683,9 @@ func (t *Terminal) HeaderBox(title string) {
 	if width < 20 {
 		width = 20
 	}
-	
+
 	border := strings.Repeat("─", width-2)
-	
+
 	if t.colorOutput {
 		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
 		fmt.Fprintf(t.output, "\n%s\n", headerColor("┌─"+border+"─┐"))
@@ -696,7 +696,7 @@ func (t *Terminal) HeaderBox(title string) {
 		fmt.Fprintf(t.output, "│ %-*s │\n", width-4, title)
 		fmt.Fprintf(t.output, "└─%s─┘\n\n", border)
 	}
-	
+
 	t.lastLines = 5
 }
 

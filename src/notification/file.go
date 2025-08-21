@@ -142,7 +142,11 @@ func (f *FileChannel) Deliver(notification *Notification) error {
 	if err != nil {
 		return fmt.Errorf("failed to open notification log file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write the notification to the file
 	if _, err := file.Write(data); err != nil {

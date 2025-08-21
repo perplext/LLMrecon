@@ -294,11 +294,11 @@ func (m *MockMFAManager) VerifyMFA(ctx context.Context, userID string, method MF
 			m.mu.RUnlock()
 			m.mu.Lock()
 			defer m.mu.Unlock()
-			
+
 			codes := m.backupCodes[userID]
 			codes[index].Used = true
 			m.backupCodes[userID] = codes
-			
+
 			return true, nil
 		}
 		return false, nil
@@ -336,9 +336,9 @@ func (m *MockMFAManager) VerifySMSCode(ctx context.Context, userID string, code 
 	m.mu.RUnlock()
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	delete(m.smsCodes, userID)
-	
+
 	return true, nil
 }
 
@@ -438,21 +438,21 @@ func (m *MockMFAManager) VerifyTOTPCode(userID, secret, code string) (bool, erro
 // VerifyBackupCode verifies a backup code for testing
 func (m *MockMFAManager) VerifyBackupCode(userID, code string) (bool, error) {
 	m.mu.RLock()
-	
+
 	codes := m.backupCodes[userID]
 	valid, index := IsBackupCodeValid(code, codes)
-	
+
 	m.mu.RUnlock()
-	
+
 	if valid {
 		m.mu.Lock()
 		defer m.mu.Unlock()
-		
+
 		codes := m.backupCodes[userID]
 		codes[index].Used = true
 		m.backupCodes[userID] = codes
 	}
-	
+
 	return valid, nil
 }
 

@@ -23,11 +23,11 @@ type ModelExtractor struct {
 
 // ExtractorConfig configures the extractor
 type ExtractorConfig struct {
-	ProbeTimeout      time.Duration
-	MaxProbesPerType  int
-	ParallelProbes    int
-	AdaptiveProbing   bool
-	StealthMode       bool
+	ProbeTimeout     time.Duration
+	MaxProbesPerType int
+	ParallelProbes   int
+	AdaptiveProbing  bool
+	StealthMode      bool
 }
 
 // Probe represents a model probing technique
@@ -82,8 +82,8 @@ func (me *ModelExtractor) registerDefaultProbes() {
 	me.RegisterProbe(&ArchitectureProbe{
 		patterns: map[string][]string{
 			"transformer": {"attention", "transformer", "BERT", "GPT"},
-			"rnn":        {"LSTM", "GRU", "recurrent"},
-			"cnn":        {"convolution", "CNN", "filters"},
+			"rnn":         {"LSTM", "GRU", "recurrent"},
+			"cnn":         {"convolution", "CNN", "filters"},
 		},
 	})
 
@@ -244,11 +244,11 @@ type ModelFingerprinter struct {
 
 // ModelProfile represents a known model profile
 type ModelProfile struct {
-	Family       string
-	Version      string
-	Fingerprint  string
-	Behaviors    []string
-	KnownVulns   []string
+	Family      string
+	Version     string
+	Fingerprint string
+	Behaviors   []string
+	KnownVulns  []string
 }
 
 // NewModelFingerprinter creates a new fingerprinter
@@ -331,7 +331,7 @@ func (mf *ModelFingerprinter) GenerateFingerprint(results map[string][]ProbeResu
 // analyzeResponseStyle analyzes response patterns
 func (mf *ModelFingerprinter) analyzeResponseStyle(results map[string][]ProbeResult) []string {
 	styles := []string{}
-	
+
 	// Analyze response lengths
 	avgLength := 0.0
 	count := 0
@@ -341,7 +341,7 @@ func (mf *ModelFingerprinter) analyzeResponseStyle(results map[string][]ProbeRes
 			count++
 		}
 	}
-	
+
 	if count > 0 {
 		avgLength /= float64(count)
 		if avgLength > 500 {
@@ -409,7 +409,7 @@ func (pe *ParameterExtractor) EstimateParameters(results map[string][]ProbeResul
 	})
 
 	median := estimates[len(estimates)/2]
-	
+
 	// Calculate confidence based on variance
 	variance := calculateVariance(estimates)
 	confidence := 1.0 - (variance / float64(median))
@@ -451,7 +451,7 @@ func (ce *ComplexityEstimator) Estimate(results []ProbeResult) int64 {
 	}
 
 	avgComplexity := totalComplexity / float64(len(results))
-	
+
 	// Map complexity to parameter count (rough approximation)
 	// Based on empirical observations
 	if avgComplexity < 50 {
@@ -471,7 +471,7 @@ func (ce *ComplexityEstimator) calculateComplexity(text string) float64 {
 	// Simple complexity metrics
 	words := strings.Fields(text)
 	sentences := strings.Split(text, ".")
-	
+
 	if len(sentences) == 0 {
 		return 0
 	}
@@ -481,9 +481,9 @@ func (ce *ComplexityEstimator) calculateComplexity(text string) float64 {
 	for _, word := range words {
 		uniqueWords[strings.ToLower(word)] = true
 	}
-	
+
 	vocabularyDiversity := float64(len(uniqueWords)) / float64(len(words))
-	
+
 	return avgWordsPerSentence * vocabularyDiversity * 100
 }
 
@@ -495,9 +495,9 @@ type BehaviorMapper struct {
 
 // BehaviorPattern represents a behavioral pattern
 type BehaviorPattern struct {
-	Name        string
-	Indicators  []string
-	Confidence  float64
+	Name         string
+	Indicators   []string
+	Confidence   float64
 	Implications []string
 }
 
@@ -516,20 +516,20 @@ func NewBehaviorMapper() *BehaviorMapper {
 // loadPatterns loads known behavior patterns
 func (bm *BehaviorMapper) loadPatterns() {
 	bm.patterns["safety_focused"] = BehaviorPattern{
-		Name:       "Safety-Focused",
-		Indicators: []string{"I cannot", "I shouldn't", "unsafe", "harmful"},
+		Name:         "Safety-Focused",
+		Indicators:   []string{"I cannot", "I shouldn't", "unsafe", "harmful"},
 		Implications: []string{"strong_safety_training", "constitutional_ai"},
 	}
 
 	bm.patterns["helpful_assistant"] = BehaviorPattern{
-		Name:       "Helpful Assistant",
-		Indicators: []string{"I'd be happy to", "Let me help", "Here's how"},
+		Name:         "Helpful Assistant",
+		Indicators:   []string{"I'd be happy to", "Let me help", "Here's how"},
 		Implications: []string{"instruction_tuned", "rlhf_trained"},
 	}
 
 	bm.patterns["analytical"] = BehaviorPattern{
-		Name:       "Analytical",
-		Indicators: []string{"Let's analyze", "Consider", "On one hand"},
+		Name:         "Analytical",
+		Indicators:   []string{"Let's analyze", "Consider", "On one hand"},
 		Implications: []string{"reasoning_focused", "chain_of_thought"},
 	}
 }
@@ -537,10 +537,10 @@ func (bm *BehaviorMapper) loadPatterns() {
 // MapBehavior creates behavior profile from results
 func (bm *BehaviorMapper) MapBehavior(results map[string][]ProbeResult) BehaviorProfile {
 	profile := BehaviorProfile{
-		Patterns:    []string{},
-		Traits:      []string{},
-		Weaknesses:  []string{},
-		Strengths:   []string{},
+		Patterns:   []string{},
+		Traits:     []string{},
+		Weaknesses: []string{},
+		Strengths:  []string{},
 	}
 
 	// Analyze all responses
@@ -565,7 +565,7 @@ func (bm *BehaviorMapper) MapBehavior(results map[string][]ProbeResult) Behavior
 			}
 		}
 
-		confidence := float64(matches) / float64(len(allResponses) * len(pattern.Indicators))
+		confidence := float64(matches) / float64(len(allResponses)*len(pattern.Indicators))
 		if confidence > 0.1 { // Threshold for pattern detection
 			profile.Patterns = append(profile.Patterns, pattern.Name)
 			profile.Traits = append(profile.Traits, pattern.Implications...)
@@ -798,7 +798,7 @@ func (pp *ParameterProbe) Analyze(results []ProbeResult) ModelInfo {
 	}
 
 	avgLength := totalLength / len(results)
-	
+
 	// Rough parameter estimation based on response quality
 	if avgLength < 100 {
 		info.ParameterCount = 1_000_000_000 // 1B
@@ -929,7 +929,7 @@ func (ve *VocabularyEstimator) Estimate(results []ProbeResult) int64 {
 	}
 
 	vocabSize := len(tokens)
-	
+
 	// Map vocabulary size to parameter count
 	if vocabSize < 1000 {
 		return 1_000_000_000 // 1B

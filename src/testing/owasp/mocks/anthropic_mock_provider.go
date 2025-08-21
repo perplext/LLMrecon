@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // AnthropicMockProvider is a mock implementation of the Anthropic provider
@@ -29,16 +29,16 @@ func NewAnthropicMockProvider() *AnthropicMockProvider {
 			CompletionTokens: 60,
 			TotalTokens:      180,
 		},
-		VulnerableResponses:   make(map[string]string),
+		VulnerableResponses:    make(map[string]string),
 		VulnerabilityBehaviors: make(map[types.VulnerabilityType]*VulnerabilityBehavior),
 	}
 
 	// Set up Anthropic-specific models
 	base := NewBaseMockProviderImpl(config)
-	
+
 	// Configure Anthropic-specific behavior for vulnerabilities
 	setupAnthropicVulnerabilityBehaviors(base)
-	
+
 	return &AnthropicMockProvider{
 		BaseMockProviderImpl: base,
 	}
@@ -66,7 +66,7 @@ func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Severity: core.SeverityHigh,
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "prompt_injection",
-			"model_specific": "anthropic_claude",
+			"model_specific":     "anthropic_claude",
 		},
 	})
 
@@ -86,7 +86,7 @@ func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		},
 		Severity: core.SeverityMedium,
 		Metadata: map[string]interface{}{
-			"vulnerability_type": "training_data_poisoning",
+			"vulnerability_type":   "training_data_poisoning",
 			"detection_capability": "anthropic_constitutional_ai",
 		},
 	})
@@ -110,7 +110,7 @@ func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "model_dos",
 			"resource_limits": map[string]interface{}{
-				"max_tokens": 100000,
+				"max_tokens":          100000,
 				"max_processing_time": "30s",
 			},
 		},
@@ -133,7 +133,7 @@ func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		},
 		Severity: core.SeverityLow,
 		Metadata: map[string]interface{}{
-			"vulnerability_type": "overreliance",
+			"vulnerability_type":                 "overreliance",
 			"anthropic_constitutional_principle": "Avoid giving advice in domains requiring professional expertise",
 		},
 	})
@@ -279,14 +279,14 @@ func (p *AnthropicMockProvider) estimateTokenCountForMessages(messages []core.Ch
 		case "system":
 			tokenCount += 7 // "\n\nSystem: "
 		}
-		
+
 		// Estimate tokens in content
 		tokenCount += p.estimateTokenCount(msg.Content)
 	}
-	
+
 	// Add tokens for conversation format
 	tokenCount += 2
-	
+
 	return tokenCount
 }
 
@@ -296,7 +296,7 @@ func (p *AnthropicMockProvider) estimateTokenCount(text string) int {
 	if text == "" {
 		return 0
 	}
-	
+
 	// Anthropic's Claude models use a different tokenizer than OpenAI
 	// This is a simplified approximation
 	// Claude tends to have slightly more tokens per character than GPT models

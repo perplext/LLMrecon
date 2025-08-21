@@ -4,7 +4,7 @@ package compliance
 import (
 	"context"
 
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // ComplianceServiceImpl implements the ComplianceService interface

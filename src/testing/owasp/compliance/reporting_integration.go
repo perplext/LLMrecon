@@ -7,7 +7,7 @@ import (
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 	"github.com/perplext/LLMrecon/src/template/security"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // ReportingIntegration handles the integration between compliance mapping and reporting
@@ -86,7 +86,7 @@ func (ri *ReportingIntegration) ConvertToTestResults(report *ComplianceReport) [
 			Severity:    common.Medium,
 			Category:    "compliance",
 			Status:      status,
-			Details:     fmt.Sprintf("Compliance: %.2f%%, Requirements Met: %d/%d",
+			Details: fmt.Sprintf("Compliance: %.2f%%, Requirements Met: %d/%d",
 				standardResult.CompliancePercentage,
 				standardResult.RequirementsMet,
 				standardResult.TotalRequirements),
@@ -158,12 +158,12 @@ func (ri *ReportingIntegration) VerifyTemplateSecurityAndCompliance(ctx context.
 
 	// Create template compliance result
 	result := &TemplateComplianceResult{
-		TemplatePath:        templatePath,
-		TemplateID:          verificationResult.TemplateID,
-		TemplateName:        verificationResult.TemplateName,
-		SecurityResult:      verificationResult,
-		ComplianceReport:    complianceReport,
-		OverallCompliance:   true,
+		TemplatePath:         templatePath,
+		TemplateID:           verificationResult.TemplateID,
+		TemplateName:         verificationResult.TemplateName,
+		SecurityResult:       verificationResult,
+		ComplianceReport:     complianceReport,
+		OverallCompliance:    true,
 		ComplianceByStandard: make(map[string]bool),
 	}
 
@@ -171,7 +171,7 @@ func (ri *ReportingIntegration) VerifyTemplateSecurityAndCompliance(ctx context.
 	for _, standardResult := range complianceReport.StandardResults {
 		compliant := standardResult.CompliancePercentage >= 80.0
 		result.ComplianceByStandard[string(standardResult.Standard)] = compliant
-		
+
 		if !compliant {
 			result.OverallCompliance = false
 		}
@@ -182,13 +182,13 @@ func (ri *ReportingIntegration) VerifyTemplateSecurityAndCompliance(ctx context.
 
 // TemplateComplianceResult represents the combined result of template security verification and compliance mapping
 type TemplateComplianceResult struct {
-	TemplatePath         string                 `json:"template_path"`
-	TemplateID           string                 `json:"template_id"`
-	TemplateName         string                 `json:"template_name"`
+	TemplatePath         string                       `json:"template_path"`
+	TemplateID           string                       `json:"template_id"`
+	TemplateName         string                       `json:"template_name"`
 	SecurityResult       *security.VerificationResult `json:"security_result"`
-	ComplianceReport     *ComplianceReport      `json:"compliance_report"`
-	OverallCompliance    bool                   `json:"overall_compliance"`
-	ComplianceByStandard map[string]bool        `json:"compliance_by_standard"`
+	ComplianceReport     *ComplianceReport            `json:"compliance_report"`
+	OverallCompliance    bool                         `json:"overall_compliance"`
+	ComplianceByStandard map[string]bool              `json:"compliance_by_standard"`
 }
 
 // ConvertTemplateComplianceToTestResults converts a template compliance result to test results
@@ -216,17 +216,17 @@ func (ri *ReportingIntegration) ConvertTemplateComplianceToTestResults(result *T
 		Severity:    common.High,
 		Category:    "template_compliance",
 		Status:      status,
-		Details:     fmt.Sprintf("Template: %s, Security: %t, Compliance: %t",
+		Details: fmt.Sprintf("Template: %s, Security: %t, Compliance: %t",
 			result.TemplateName,
 			result.SecurityResult.Passed,
 			result.OverallCompliance),
 		RawData: result,
 		Metadata: map[string]interface{}{
-			"template_id":          result.TemplateID,
-			"template_name":        result.TemplateName,
-			"security_passed":      result.SecurityResult.Passed,
-			"security_score":       result.SecurityResult.Score,
-			"overall_compliance":   result.OverallCompliance,
+			"template_id":            result.TemplateID,
+			"template_name":          result.TemplateName,
+			"security_passed":        result.SecurityResult.Passed,
+			"security_score":         result.SecurityResult.Score,
+			"overall_compliance":     result.OverallCompliance,
 			"compliance_by_standard": result.ComplianceByStandard,
 		},
 	}

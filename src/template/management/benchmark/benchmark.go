@@ -144,7 +144,7 @@ func RunBenchmarkSuite(ctx context.Context, manager types.TemplateManager, sourc
 		}
 		templates = append(templates, loadedTemplates...)
 	}
-	
+
 	// Execute templates benchmark
 	if len(templates) > 0 {
 		result, err := TemplateExecuteBenchmark(ctx, manager.GetExecutor(), templates, options, 3)

@@ -122,7 +122,7 @@ var templateCreateCmd = &cobra.Command{
 			Test: &format.TemplateTest{
 				Prompt:     "Add your test prompt here",
 				Expected:   "Describe the expected behavior here",
-				Detection: &format.TemplateDetection{},
+				Detection:  &format.TemplateDetection{},
 				Variations: make([]*format.TemplateVariation, 0),
 			},
 		}

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
 
 // LoginRequest represents a login request
@@ -18,13 +18,13 @@ type LoginRequest struct {
 
 // LoginResponse represents a login response
 type LoginResponse struct {
-	UserID       string `json:"user_id"`
-	Username     string `json:"username"`
-	Email        string `json:"email"`
-	Token        string `json:"token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresAt    int64  `json:"expires_at"`
-	MFARequired  bool   `json:"mfa_required"`
+	UserID       string   `json:"user_id"`
+	Username     string   `json:"username"`
+	Email        string   `json:"email"`
+	Token        string   `json:"token"`
+	RefreshToken string   `json:"refresh_token"`
+	ExpiresAt    int64    `json:"expires_at"`
+	MFARequired  bool     `json:"mfa_required"`
 	MFAMethods   []string `json:"mfa_methods,omitempty"`
 }
 

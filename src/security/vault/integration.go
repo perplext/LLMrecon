@@ -9,8 +9,8 @@ import (
 	"sync"
 
 	"github.com/perplext/LLMrecon/src/config"
-	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 	"github.com/perplext/LLMrecon/src/provider/core"
+	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 )
 
 // ConfigIntegration integrates the secure vault with the existing configuration system
@@ -192,13 +192,13 @@ func InitDefaultIntegration(configDir string, passphrase string, auditLogger *se
 
 	// Initialize credential manager
 	if err := InitDefaultManager(ManagerOptions{
-		ConfigDir:            configDir,
-		Passphrase:           passphrase,
-		EnvPrefix:            "LLMRT",
-		AuditLogger:          auditLogger,
-		AutoSave:             true,
+		ConfigDir:             configDir,
+		Passphrase:            passphrase,
+		EnvPrefix:             "LLMRT",
+		AuditLogger:           auditLogger,
+		AutoSave:              true,
 		RotationCheckInterval: 24 * 60 * 60 * 1000000000, // 24 hours
-		InstallGitHook:       true,
+		InstallGitHook:        true,
 	}); err != nil {
 		return fmt.Errorf("failed to initialize credential manager: %w", err)
 	}

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/perplext/LLMrecon/src/audit/trail"
+	"github.com/perplext/LLMrecon/src/bundle"
 )
 
 // OfflineBundleRepository implements the Repository interface for offline bundles
@@ -71,16 +71,16 @@ func (r *OfflineBundleRepository) Connect(ctx context.Context) error {
 	// Log audit event
 	if r.auditTrail != nil {
 		auditLog := &trail.AuditLog{
-			ID:          uuid.New().String(),
-			Timestamp:   time.Now(),
-			Level:       trail.LogLevelInfo,
-			Operation:   trail.OperationRead,
-			Component:   "offline_bundle_repository",
-			Resource:    "offline_bundle",
-			ResourceID:  offlineBundle.EnhancedManifest.BundleID,
-			Message:     fmt.Sprintf("Connected to offline bundle: %s", offlineBundle.EnhancedManifest.Name),
-			Status:      "success",
-			IPAddress:   "",
+			ID:         uuid.New().String(),
+			Timestamp:  time.Now(),
+			Level:      trail.LogLevelInfo,
+			Operation:  trail.OperationRead,
+			Component:  "offline_bundle_repository",
+			Resource:   "offline_bundle",
+			ResourceID: offlineBundle.EnhancedManifest.BundleID,
+			Message:    fmt.Sprintf("Connected to offline bundle: %s", offlineBundle.EnhancedManifest.Name),
+			Status:     "success",
+			IPAddress:  "",
 		}
 
 		if err := r.auditTrail.Log(context.Background(), auditLog); err != nil {
@@ -160,16 +160,16 @@ func (r *OfflineBundleRepository) GetFile(ctx context.Context, path string) ([]b
 	// Log audit event
 	if r.auditTrail != nil {
 		auditLog := &trail.AuditLog{
-			ID:          uuid.New().String(),
-			Timestamp:   time.Now(),
-			Level:       trail.LogLevelInfo,
-			Operation:   trail.OperationRead,
-			Component:   "offline_bundle_repository",
-			Resource:    "file",
-			ResourceID:  contentItem.ID,
-			Message:     fmt.Sprintf("Retrieved file from offline bundle: %s", path),
-			Status:      "success",
-			IPAddress:   "",
+			ID:         uuid.New().String(),
+			Timestamp:  time.Now(),
+			Level:      trail.LogLevelInfo,
+			Operation:  trail.OperationRead,
+			Component:  "offline_bundle_repository",
+			Resource:   "file",
+			ResourceID: contentItem.ID,
+			Message:    fmt.Sprintf("Retrieved file from offline bundle: %s", path),
+			Status:     "success",
+			IPAddress:  "",
 		}
 
 		if err := r.auditTrail.Log(context.Background(), auditLog); err != nil {

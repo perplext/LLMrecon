@@ -221,7 +221,7 @@ func (r *TemplateRegistry) SetMetadata(id string, metadata map[string]interface{
 
 	// Convert map[string]interface{} to TemplateMetadata
 	templateMetadata := &TemplateMetadata{}
-	
+
 	// Set fields from map if they exist
 	if val, ok := metadata["registeredAt"]; ok {
 		if t, ok := val.(time.Time); ok {
@@ -230,31 +230,31 @@ func (r *TemplateRegistry) SetMetadata(id string, metadata map[string]interface{
 	} else {
 		templateMetadata.RegisteredAt = time.Now()
 	}
-	
+
 	if val, ok := metadata["lastUsedAt"]; ok {
 		if t, ok := val.(time.Time); ok {
 			templateMetadata.LastUsedAt = t
 		}
 	}
-	
+
 	if val, ok := metadata["usageCount"]; ok {
 		if count, ok := val.(int); ok {
 			templateMetadata.UsageCount = count
 		}
 	}
-	
+
 	if val, ok := metadata["tags"]; ok {
 		if tags, ok := val.([]string); ok {
 			templateMetadata.Tags = tags
 		}
 	}
-	
+
 	if val, ok := metadata["source"]; ok {
 		if source, ok := val.(string); ok {
 			templateMetadata.Source = source
 		}
 	}
-	
+
 	if val, ok := metadata["path"]; ok {
 		if path, ok := val.(string); ok {
 			templateMetadata.Path = path
@@ -277,7 +277,7 @@ func (r *TemplateRegistry) FindByTag(tag string) []*format.Template {
 	var templates []*format.Template
 	for id, template := range r.templates {
 		found := false
-		
+
 		// Check metadata tags first
 		r.metadataMutex.RLock()
 		metadata, ok := r.metadata[id]
@@ -292,7 +292,7 @@ func (r *TemplateRegistry) FindByTag(tag string) []*format.Template {
 				}
 			}
 		}
-		
+
 		// Also check template.Info.Tags if not already found and available
 		if !found && template != nil && template.Info != nil && template.Info.Tags != nil {
 			for _, t := range template.Info.Tags {
@@ -315,16 +315,16 @@ func (r *TemplateRegistry) FindByTags(tags []string) []*format.Template {
 	var templates []*format.Template
 	for id, template := range r.templates {
 		var allTemplateTags []string
-		
+
 		// Collect tags from metadata
 		r.metadataMutex.RLock()
 		metadata, ok := r.metadata[id]
 		r.metadataMutex.RUnlock()
-		
+
 		if ok {
 			allTemplateTags = append(allTemplateTags, metadata.Tags...)
 		}
-		
+
 		// Collect tags from template.Info.Tags
 		if template != nil && template.Info != nil && template.Info.Tags != nil {
 			allTemplateTags = append(allTemplateTags, template.Info.Tags...)

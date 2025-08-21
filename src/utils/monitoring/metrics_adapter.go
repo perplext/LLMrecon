@@ -2,7 +2,7 @@ package monitoring
 
 // MetricsManagerAdapter adapts the existing MetricsManager to implement the MetricsManagerInterface
 type MetricsManagerAdapter struct {
-	manager interface{
+	manager interface {
 		RegisterGauge(name, description string, labels map[string]string) *Metric
 		IncrementCounter(name string, value float64) error
 		SetGauge(name string, value float64) error
@@ -41,7 +41,7 @@ func (a *MetricsManagerAdapter) RecordGauge(name string, value interface{}, tags
 		// Default to 0 if conversion not possible
 		floatValue = 0
 	}
-	
+
 	return a.manager.SetGauge(name, floatValue)
 }
 

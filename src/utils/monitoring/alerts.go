@@ -78,10 +78,10 @@ type LogAlertHandler struct {
 
 // HandleAlert logs the alert
 func (h *LogAlertHandler) HandleAlert(alert *Alert) {
-	h.Logger.Printf("[%s] %s: %s (value: %.2f)", 
-		alert.Rule.Severity, 
-		alert.ID, 
-		alert.Message, 
+	h.Logger.Printf("[%s] %s: %s (value: %.2f)",
+		alert.Rule.Severity,
+		alert.ID,
+		alert.Message,
 		alert.Value)
 }
 
@@ -110,10 +110,10 @@ func NewAlertManager(metricsManager *MetricsManager) *AlertManager {
 		handlers:       make([]AlertHandler, 0),
 		alertIDCounter: 0,
 	}
-	
+
 	// Subscribe to metric updates
 	metricsManager.Subscribe(manager)
-	
+
 	return manager
 }
 
@@ -121,7 +121,7 @@ func NewAlertManager(metricsManager *MetricsManager) *AlertManager {
 func (m *AlertManager) AddRule(rule *AlertRule) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	m.rules[rule.Name] = rule
 }
 
@@ -129,7 +129,7 @@ func (m *AlertManager) AddRule(rule *AlertRule) {
 func (m *AlertManager) RemoveRule(ruleName string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	delete(m.rules, ruleName)
 }
 
@@ -137,7 +137,7 @@ func (m *AlertManager) RemoveRule(ruleName string) {
 func (m *AlertManager) GetRule(ruleName string) (*AlertRule, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	rule, ok := m.rules[ruleName]
 	return rule, ok
 }
@@ -146,12 +146,12 @@ func (m *AlertManager) GetRule(ruleName string) (*AlertRule, bool) {
 func (m *AlertManager) GetAllRules() []*AlertRule {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	rules := make([]*AlertRule, 0, len(m.rules))
 	for _, rule := range m.rules {
 		rules = append(rules, rule)
 	}
-	
+
 	return rules
 }
 
@@ -159,7 +159,7 @@ func (m *AlertManager) GetAllRules() []*AlertRule {
 func (m *AlertManager) AddHandler(handler AlertHandler) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	m.handlers = append(m.handlers, handler)
 }
 
@@ -167,7 +167,7 @@ func (m *AlertManager) AddHandler(handler AlertHandler) {
 func (m *AlertManager) OnMetricUpdate(metric *Metric) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	// Check all rules that apply to this metric
 	for _, rule := range m.rules {
 		if rule.MetricName == metric.Name && rule.Active {
@@ -209,7 +209,7 @@ func (m *AlertManager) generateAlert(rule *AlertRule, value float64) {
 	// Generate a unique ID for the alert
 	m.alertIDCounter++
 	alertID := fmt.Sprintf("alert-%d", m.alertIDCounter)
-	
+
 	// Create the alert
 	alert := &Alert{
 		ID:           alertID,
@@ -219,10 +219,10 @@ func (m *AlertManager) generateAlert(rule *AlertRule, value float64) {
 		Message:      fmt.Sprintf("%s: %s %s %.2f", rule.Name, rule.MetricName, rule.Operator, rule.Threshold),
 		Acknowledged: false,
 	}
-	
+
 	// Add the alert to the active alerts
 	m.activeAlerts[alertID] = alert
-	
+
 	// Notify all handlers
 	for _, handler := range m.handlers {
 		handler.HandleAlert(alert)
@@ -233,12 +233,12 @@ func (m *AlertManager) generateAlert(rule *AlertRule, value float64) {
 func (m *AlertManager) GetActiveAlerts() []*Alert {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	alerts := make([]*Alert, 0, len(m.activeAlerts))
 	for _, alert := range m.activeAlerts {
 		alerts = append(alerts, alert)
 	}
-	
+
 	return alerts
 }
 
@@ -246,7 +246,7 @@ func (m *AlertManager) GetActiveAlerts() []*Alert {
 func (m *AlertManager) GetAlert(alertID string) (*Alert, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	alert, ok := m.activeAlerts[alertID]
 	return alert, ok
 }
@@ -255,16 +255,16 @@ func (m *AlertManager) GetAlert(alertID string) (*Alert, bool) {
 func (m *AlertManager) AcknowledgeAlert(alertID, acknowledgedBy string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	alert, ok := m.activeAlerts[alertID]
 	if !ok {
 		return fmt.Errorf("alert not found: %s", alertID)
 	}
-	
+
 	alert.Acknowledged = true
 	alert.AcknowledgedBy = acknowledgedBy
 	alert.AcknowledgedAt = time.Now()
-	
+
 	return nil
 }
 
@@ -272,14 +272,14 @@ func (m *AlertManager) AcknowledgeAlert(alertID, acknowledgedBy string) error {
 func (m *AlertManager) ResolveAlert(alertID string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	_, ok := m.activeAlerts[alertID]
 	if !ok {
 		return fmt.Errorf("alert not found: %s", alertID)
 	}
-	
+
 	delete(m.activeAlerts, alertID)
-	
+
 	return nil
 }
 
@@ -288,61 +288,61 @@ func (m *AlertManager) AddMemoryAlertRules(heapAllocWarningMB, heapAllocCritical
 	// Convert MB to bytes
 	heapAllocWarningBytes := heapAllocWarningMB * 1024 * 1024
 	heapAllocCriticalBytes := heapAllocCriticalMB * 1024 * 1024
-	
+
 	// Add heap allocation warning rule
 	m.AddRule(&AlertRule{
-		Name:         "heap-alloc-warning",
-		Description:  "Heap allocation exceeds warning threshold",
-		MetricName:   "system.memory.heap_alloc",
-		Threshold:    heapAllocWarningBytes,
-		Operator:     ">",
-		Severity:     WarningSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "heap-alloc-warning",
+		Description:   "Heap allocation exceeds warning threshold",
+		MetricName:    "system.memory.heap_alloc",
+		Threshold:     heapAllocWarningBytes,
+		Operator:      ">",
+		Severity:      WarningSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
-	
+
 	// Add heap allocation critical rule
 	m.AddRule(&AlertRule{
-		Name:         "heap-alloc-critical",
-		Description:  "Heap allocation exceeds critical threshold",
-		MetricName:   "system.memory.heap_alloc",
-		Threshold:    heapAllocCriticalBytes,
-		Operator:     ">",
-		Severity:     CriticalSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "heap-alloc-critical",
+		Description:   "Heap allocation exceeds critical threshold",
+		MetricName:    "system.memory.heap_alloc",
+		Threshold:     heapAllocCriticalBytes,
+		Operator:      ">",
+		Severity:      CriticalSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
-	
+
 	// Add GC CPU fraction warning rule
 	m.AddRule(&AlertRule{
-		Name:         "gc-cpu-fraction-warning",
-		Description:  "GC CPU fraction exceeds warning threshold",
-		MetricName:   "system.gc.cpu_fraction",
-		Threshold:    0.1, // 10% of CPU time spent on GC
-		Operator:     ">",
-		Severity:     WarningSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "gc-cpu-fraction-warning",
+		Description:   "GC CPU fraction exceeds warning threshold",
+		MetricName:    "system.gc.cpu_fraction",
+		Threshold:     0.1, // 10% of CPU time spent on GC
+		Operator:      ">",
+		Severity:      WarningSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
-	
+
 	// Add GC CPU fraction critical rule
 	m.AddRule(&AlertRule{
-		Name:         "gc-cpu-fraction-critical",
-		Description:  "GC CPU fraction exceeds critical threshold",
-		MetricName:   "system.gc.cpu_fraction",
-		Threshold:    0.25, // 25% of CPU time spent on GC
-		Operator:     ">",
-		Severity:     CriticalSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "gc-cpu-fraction-critical",
+		Description:   "GC CPU fraction exceeds critical threshold",
+		MetricName:    "system.gc.cpu_fraction",
+		Threshold:     0.25, // 25% of CPU time spent on GC
+		Operator:      ">",
+		Severity:      CriticalSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
 }
 
@@ -350,30 +350,30 @@ func (m *AlertManager) AddMemoryAlertRules(heapAllocWarningMB, heapAllocCritical
 func (m *AlertManager) AddResourcePoolAlertRules(poolUtilizationWarning, poolUtilizationCritical float64, cooldown time.Duration) {
 	// Add pool utilization warning rule
 	m.AddRule(&AlertRule{
-		Name:         "pool-utilization-warning",
-		Description:  "Resource pool utilization exceeds warning threshold",
-		MetricName:   "resource.pool.utilization",
-		Threshold:    poolUtilizationWarning,
-		Operator:     ">",
-		Severity:     WarningSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "pool-utilization-warning",
+		Description:   "Resource pool utilization exceeds warning threshold",
+		MetricName:    "resource.pool.utilization",
+		Threshold:     poolUtilizationWarning,
+		Operator:      ">",
+		Severity:      WarningSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
-	
+
 	// Add pool utilization critical rule
 	m.AddRule(&AlertRule{
-		Name:         "pool-utilization-critical",
-		Description:  "Resource pool utilization exceeds critical threshold",
-		MetricName:   "resource.pool.utilization",
-		Threshold:    poolUtilizationCritical,
-		Operator:     ">",
-		Severity:     CriticalSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "pool-utilization-critical",
+		Description:   "Resource pool utilization exceeds critical threshold",
+		MetricName:    "resource.pool.utilization",
+		Threshold:     poolUtilizationCritical,
+		Operator:      ">",
+		Severity:      CriticalSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
 }
 
@@ -381,58 +381,58 @@ func (m *AlertManager) AddResourcePoolAlertRules(poolUtilizationWarning, poolUti
 func (m *AlertManager) AddConcurrencyAlertRules(queueUtilizationWarning, queueUtilizationCritical float64, cooldown time.Duration) {
 	// Add queue utilization warning rule
 	m.AddRule(&AlertRule{
-		Name:         "queue-utilization-warning",
-		Description:  "Task queue utilization exceeds warning threshold",
-		MetricName:   "concurrency.queue.utilization",
-		Threshold:    queueUtilizationWarning,
-		Operator:     ">",
-		Severity:     WarningSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "queue-utilization-warning",
+		Description:   "Task queue utilization exceeds warning threshold",
+		MetricName:    "concurrency.queue.utilization",
+		Threshold:     queueUtilizationWarning,
+		Operator:      ">",
+		Severity:      WarningSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
-	
+
 	// Add queue utilization critical rule
 	m.AddRule(&AlertRule{
-		Name:         "queue-utilization-critical",
-		Description:  "Task queue utilization exceeds critical threshold",
-		MetricName:   "concurrency.queue.utilization",
-		Threshold:    queueUtilizationCritical,
-		Operator:     ">",
-		Severity:     CriticalSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "queue-utilization-critical",
+		Description:   "Task queue utilization exceeds critical threshold",
+		MetricName:    "concurrency.queue.utilization",
+		Threshold:     queueUtilizationCritical,
+		Operator:      ">",
+		Severity:      CriticalSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
-	
+
 	// Add worker utilization warning rule
 	m.AddRule(&AlertRule{
-		Name:         "worker-utilization-warning",
-		Description:  "Worker utilization exceeds warning threshold",
-		MetricName:   "concurrency.worker.utilization",
-		Threshold:    0.8, // 80% worker utilization
-		Operator:     ">",
-		Severity:     WarningSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "worker-utilization-warning",
+		Description:   "Worker utilization exceeds warning threshold",
+		MetricName:    "concurrency.worker.utilization",
+		Threshold:     0.8, // 80% worker utilization
+		Operator:      ">",
+		Severity:      WarningSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
-	
+
 	// Add worker utilization critical rule
 	m.AddRule(&AlertRule{
-		Name:         "worker-utilization-critical",
-		Description:  "Worker utilization exceeds critical threshold",
-		MetricName:   "concurrency.worker.utilization",
-		Threshold:    0.95, // 95% worker utilization
-		Operator:     ">",
-		Severity:     CriticalSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "worker-utilization-critical",
+		Description:   "Worker utilization exceeds critical threshold",
+		MetricName:    "concurrency.worker.utilization",
+		Threshold:     0.95, // 95% worker utilization
+		Operator:      ">",
+		Severity:      CriticalSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
 }
 
@@ -440,29 +440,29 @@ func (m *AlertManager) AddConcurrencyAlertRules(queueUtilizationWarning, queueUt
 func (m *AlertManager) AddExecutionTimeAlertRules(executionTimeWarningMs, executionTimeCriticalMs float64, cooldown time.Duration) {
 	// Add execution time warning rule
 	m.AddRule(&AlertRule{
-		Name:         "execution-time-warning",
-		Description:  "Template execution time exceeds warning threshold",
-		MetricName:   "template.execution.time",
-		Threshold:    executionTimeWarningMs,
-		Operator:     ">",
-		Severity:     WarningSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "execution-time-warning",
+		Description:   "Template execution time exceeds warning threshold",
+		MetricName:    "template.execution.time",
+		Threshold:     executionTimeWarningMs,
+		Operator:      ">",
+		Severity:      WarningSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
-	
+
 	// Add execution time critical rule
 	m.AddRule(&AlertRule{
-		Name:         "execution-time-critical",
-		Description:  "Template execution time exceeds critical threshold",
-		MetricName:   "template.execution.time",
-		Threshold:    executionTimeCriticalMs,
-		Operator:     ">",
-		Severity:     CriticalSeverity,
-		Duration:     time.Minute,
-		Cooldown:     cooldown,
+		Name:          "execution-time-critical",
+		Description:   "Template execution time exceeds critical threshold",
+		MetricName:    "template.execution.time",
+		Threshold:     executionTimeCriticalMs,
+		Operator:      ">",
+		Severity:      CriticalSeverity,
+		Duration:      time.Minute,
+		Cooldown:      cooldown,
 		LastTriggered: time.Time{},
-		Active:       true,
+		Active:        true,
 	})
 }

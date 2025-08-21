@@ -36,7 +36,7 @@ func (a *TemplateCacheAdapter) Set(key string, template interfaces.Template, ttl
 	if !ok {
 		return // Skip if not the right type
 	}
-	
+
 	if ttl > 0 {
 		a.cache.SetWithTTL(key, formatTemplate, ttl)
 	} else {

@@ -117,7 +117,7 @@ func copyPath(src, dst string) error {
 		// Copy directory
 		return copyDir(src, dst)
 	}
-	
+
 	// Copy file
 	return copyFile(src, dst)
 }
@@ -128,13 +128,21 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := srcFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := srcFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	dstFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer func() { if err := dstFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := dstFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	_, err = io.Copy(dstFile, srcFile)
 	if err != nil {
@@ -192,11 +200,19 @@ func createZipFromDir(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := zipFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := zipFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create zip writer
 	zipWriter := zip.NewWriter(zipFile)
-	defer func() { if err := zipWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := zipWriter.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Walk the directory
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -241,7 +257,11 @@ func createZipFromDir(src, dst string) error {
 		if err != nil {
 			return err
 		}
-		defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := file.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Copy file contents to zip
 		_, err = io.Copy(writer, file)
@@ -256,7 +276,11 @@ func ExtractBundle(bundlePath, outputDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open bundle: %w", err)
 	}
-	defer func() { if err := reader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := reader.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create output directory if it doesn't exist
 	err = os.MkdirAll(outputDir, 0700)
@@ -300,14 +324,22 @@ func extractFile(file *zip.File, outputDir string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := rc.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create the file
 	outFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 	if err != nil {
 		return err
 	}
-	defer func() { if err := outFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := outFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Copy the file
 	_, err = io.Copy(outFile, rc)

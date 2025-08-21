@@ -604,12 +604,12 @@ func (p *PipelineExecutor) GetPipelineStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"total_tasks":      p.stats.TotalTasks,
-		"completed_tasks":  p.stats.CompletedTasks,
-		"failed_tasks":     p.stats.FailedTasks,
-		"stage_tasks":      p.stats.StageTasks,
-		"stage_failures":   p.stats.StageFailures,
-		"avg_duration":     avgDuration,
+		"total_tasks":         p.stats.TotalTasks,
+		"completed_tasks":     p.stats.CompletedTasks,
+		"failed_tasks":        p.stats.FailedTasks,
+		"stage_tasks":         p.stats.StageTasks,
+		"stage_failures":      p.stats.StageFailures,
+		"avg_duration":        avgDuration,
 		"avg_stage_durations": avgStageDurations,
 	}
 }

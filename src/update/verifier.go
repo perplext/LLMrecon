@@ -20,8 +20,8 @@ import (
 
 // Verifier handles cryptographic verification of updates
 type Verifier struct {
-	config     *UpdaterConfig
-	logger     Logger
+	config      *UpdaterConfig
+	logger      Logger
 	trustedKeys map[string]*rsa.PublicKey
 }
 
@@ -32,10 +32,10 @@ func NewVerifier(config *UpdaterConfig, logger Logger) *Verifier {
 		logger:      logger,
 		trustedKeys: make(map[string]*rsa.PublicKey),
 	}
-	
+
 	// Load trusted keys
 	verifier.loadTrustedKeys()
-	
+
 	return verifier
 }
 
@@ -52,7 +52,7 @@ type FileVerificationResult struct {
 // VerifyFile verifies a file's integrity and authenticity
 func (v *Verifier) VerifyFile(filePath, expectedChecksum, signatureURL string) error {
 	v.logger.Debug(fmt.Sprintf("Verifying file: %s", filePath))
-	
+
 	// Verify checksum if provided
 	if expectedChecksum != "" {
 		if err := v.verifyChecksum(filePath, expectedChecksum); err != nil {
@@ -60,7 +60,7 @@ func (v *Verifier) VerifyFile(filePath, expectedChecksum, signatureURL string) e
 		}
 		v.logger.Debug("Checksum verification passed")
 	}
-	
+
 	// Verify signature if URL provided and verification is enabled
 	if signatureURL != "" && v.config.VerifySignatures {
 		if err := v.verifySignature(filePath, signatureURL); err != nil {
@@ -68,7 +68,7 @@ func (v *Verifier) VerifyFile(filePath, expectedChecksum, signatureURL string) e
 		}
 		v.logger.Debug("Signature verification passed")
 	}
-	
+
 	return nil
 }
 
@@ -77,10 +77,10 @@ func (v *Verifier) verifyChecksum(filePath, expectedChecksum string) error {
 	// Determine hash algorithm based on checksum length
 	var hasher hash.Hash
 	var algorithm string
-	
+
 	expectedChecksum = strings.ToLower(expectedChecksum)
 	checksumLength := len(expectedChecksum)
-	
+
 	switch checksumLength {
 	case 32: // MD5
 		hasher = sha256.New()
@@ -97,29 +97,33 @@ func (v *Verifier) verifyChecksum(filePath, expectedChecksum string) error {
 	default:
 		return fmt.Errorf("unsupported checksum format (length: %d)", checksumLength)
 	}
-	
+
 	v.logger.Debug(fmt.Sprintf("Using %s algorithm for checksum verification", algorithm))
-	
+
 	// Open file
 	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	// Calculate hash
 	if _, err := io.Copy(hasher, file); err != nil {
 		return fmt.Errorf("failed to calculate hash: %w", err)
 	}
-	
+
 	// Get computed checksum
 	computedChecksum := hex.EncodeToString(hasher.Sum(nil))
-	
+
 	// Compare checksums
 	if computedChecksum != expectedChecksum {
 		return fmt.Errorf("checksum mismatch: expected %s, got %s", expectedChecksum, computedChecksum)
 	}
-	
+
 	return nil
 }
 
@@ -130,18 +134,18 @@ func (v *Verifier) verifySignature(filePath, signatureURL string) error {
 	if err != nil {
 		return fmt.Errorf("failed to download signature: %w", err)
 	}
-	
+
 	// Calculate file hash
 	fileHash, err := v.calculateFileHash(filePath, crypto.SHA256)
 	if err != nil {
 		return fmt.Errorf("failed to calculate file hash: %w", err)
 	}
-	
+
 	// Try to verify with each trusted key
 	var lastError error
 	for keyID, publicKey := range v.trustedKeys {
 		v.logger.Debug(fmt.Sprintf("Trying verification with key: %s", keyID))
-		
+
 		err := rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, fileHash, signature)
 		if err == nil {
 			v.logger.Debug(fmt.Sprintf("Signature verified with key: %s", keyID))
@@ -149,11 +153,11 @@ func (v *Verifier) verifySignature(filePath, signatureURL string) error {
 		}
 		lastError = err
 	}
-	
+
 	if len(v.trustedKeys) == 0 {
 		return fmt.Errorf("no trusted keys loaded")
 	}
-	
+
 	return fmt.Errorf("signature verification failed with all keys: %w", lastError)
 }
 
@@ -163,24 +167,28 @@ func (v *Verifier) downloadSignature(signatureURL string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to download signature: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("signature download failed: %d %s", resp.StatusCode, resp.Status)
 	}
-	
+
 	signatureData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read signature: %w", err)
 	}
-	
+
 	// Try to decode as base64 if it's text
 	if v.isTextData(signatureData) {
 		if decoded, err := base64.StdEncoding.DecodeString(string(signatureData)); err == nil {
 			return decoded, nil
 		}
 	}
-	
+
 	return signatureData, nil
 }
 
@@ -190,8 +198,12 @@ func (v *Verifier) calculateFileHash(filePath string, hashType crypto.Hash) ([]b
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	var hasher hash.Hash
 	switch hashType {
 	case crypto.SHA256:
@@ -203,11 +215,11 @@ func (v *Verifier) calculateFileHash(filePath string, hashType crypto.Hash) ([]b
 	default:
 		return nil, fmt.Errorf("unsupported hash type: %v", hashType)
 	}
-	
+
 	if _, err := io.Copy(hasher, file); err != nil {
 		return nil, fmt.Errorf("failed to calculate hash: %w", err)
 	}
-	
+
 	return hasher.Sum(nil), nil
 }
 
@@ -222,7 +234,7 @@ func (v *Verifier) loadTrustedKeys() {
 			v.logger.Error(fmt.Sprintf("Failed to parse trusted key: %s", keyData), err)
 		}
 	}
-	
+
 	// Load default embedded keys
 	v.loadEmbeddedKeys()
 }
@@ -233,7 +245,7 @@ func (v *Verifier) parsePublicKey(keyData string) (*rsa.PublicKey, string, error
 	if strings.Contains(keyData, "BEGIN") {
 		return v.parsePEMKey(keyData)
 	}
-	
+
 	// Handle base64 encoded key
 	if decoded, err := base64.StdEncoding.DecodeString(keyData); err == nil {
 		if key, err := x509.ParsePKCS1PublicKey(decoded); err == nil {
@@ -241,7 +253,7 @@ func (v *Verifier) parsePublicKey(keyData string) (*rsa.PublicKey, string, error
 			return key, keyID, nil
 		}
 	}
-	
+
 	// Handle hex encoded key
 	if decoded, err := hex.DecodeString(keyData); err == nil {
 		if key, err := x509.ParsePKCS1PublicKey(decoded); err == nil {
@@ -249,7 +261,7 @@ func (v *Verifier) parsePublicKey(keyData string) (*rsa.PublicKey, string, error
 			return key, keyID, nil
 		}
 	}
-	
+
 	return nil, "", fmt.Errorf("unsupported key format")
 }
 
@@ -259,10 +271,10 @@ func (v *Verifier) parsePEMKey(keyData string) (*rsa.PublicKey, string, error) {
 	if block == nil {
 		return nil, "", fmt.Errorf("failed to decode PEM block")
 	}
-	
+
 	var publicKey *rsa.PublicKey
 	var err error
-	
+
 	switch block.Type {
 	case "RSA PUBLIC KEY":
 		publicKey, err = x509.ParsePKCS1PublicKey(block.Bytes)
@@ -279,11 +291,11 @@ func (v *Verifier) parsePEMKey(keyData string) (*rsa.PublicKey, string, error) {
 	default:
 		return nil, "", fmt.Errorf("unsupported PEM block type: %s", block.Type)
 	}
-	
+
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to parse public key: %w", err)
 	}
-	
+
 	keyID := v.calculateKeyID(publicKey)
 	return publicKey, keyID, nil
 }
@@ -295,7 +307,7 @@ func (v *Verifier) calculateKeyID(key *rsa.PublicKey) string {
 	if err != nil {
 		return "unknown"
 	}
-	
+
 	// Calculate SHA256 hash
 	hash := sha256.Sum256(derBytes)
 	return hex.EncodeToString(hash[:8]) // Use first 8 bytes as ID
@@ -305,14 +317,14 @@ func (v *Verifier) calculateKeyID(key *rsa.PublicKey) string {
 func (v *Verifier) loadEmbeddedKeys() {
 	// These would be the official LLMrecon public keys
 	// In a real implementation, these would be embedded at build time
-	
+
 	defaultKeys := []string{
 		// Official LLMrecon signing key (example)
 		`-----BEGIN RSA PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890...
 -----END RSA PUBLIC KEY-----`,
 	}
-	
+
 	for _, keyData := range defaultKeys {
 		if key, keyID, err := v.parsePublicKey(keyData); err == nil {
 			if _, exists := v.trustedKeys[keyID]; !exists {
@@ -328,7 +340,7 @@ func (v *Verifier) isTextData(data []byte) bool {
 	if len(data) == 0 {
 		return false
 	}
-	
+
 	// Check if all bytes are printable ASCII
 	for _, b := range data {
 		if b < 32 || b > 126 {
@@ -343,13 +355,13 @@ func (v *Verifier) VerifyBundle(bundlePath string) (*FileVerificationResult, err
 	result := &FileVerificationResult{
 		Algorithm: "SHA256",
 	}
-	
+
 	// Check if bundle exists
 	if _, err := os.Stat(bundlePath); os.IsNotExist(err) {
 		result.Error = fmt.Errorf("bundle file not found: %s", bundlePath)
 		return result, result.Error
 	}
-	
+
 	// Look for checksum file
 	checksumPath := bundlePath + ".sha256"
 	if _, err := os.Stat(checksumPath); err == nil {
@@ -358,7 +370,7 @@ func (v *Verifier) VerifyBundle(bundlePath string) (*FileVerificationResult, err
 			result.Error = fmt.Errorf("failed to read checksum file: %w", err)
 			return result, result.Error
 		}
-		
+
 		checksumStr := strings.TrimSpace(string(checksum))
 		if err := v.verifyChecksum(bundlePath, checksumStr); err != nil {
 			result.Error = err
@@ -366,7 +378,7 @@ func (v *Verifier) VerifyBundle(bundlePath string) (*FileVerificationResult, err
 		}
 		result.ChecksumValid = true
 	}
-	
+
 	// Look for signature file
 	signaturePath := bundlePath + ".sig"
 	if _, err := os.Stat(signaturePath); err == nil && v.config.VerifySignatures {
@@ -376,7 +388,7 @@ func (v *Verifier) VerifyBundle(bundlePath string) (*FileVerificationResult, err
 		}
 		result.SignatureValid = true
 	}
-	
+
 	result.Verified = result.ChecksumValid || result.SignatureValid
 	return result, nil
 }
@@ -385,27 +397,27 @@ func (v *Verifier) VerifyBundle(bundlePath string) (*FileVerificationResult, err
 func (v *Verifier) verifyBundleSignature(bundlePath, signaturePath string) error {
 	signature, err := os.ReadFile(filepath.Clean(signaturePath))
 	if err != nil {
-			return fmt.Errorf("failed to read signature file: %w", err)
+		return fmt.Errorf("failed to read signature file: %w", err)
 	}
-	
+
 	// Try to decode as base64 if it's text
 	if v.isTextData(signature) {
 		if decoded, err := base64.StdEncoding.DecodeString(string(signature)); err == nil {
 			signature = decoded
 		}
 	}
-	
+
 	// Calculate bundle hash
 	fileHash, err := v.calculateFileHash(bundlePath, crypto.SHA256)
 	if err != nil {
 		return fmt.Errorf("failed to calculate bundle hash: %w", err)
 	}
-	
+
 	// Try to verify with each trusted key
 	var lastError error
 	for keyID, publicKey := range v.trustedKeys {
 		v.logger.Debug(fmt.Sprintf("Trying bundle verification with key: %s", keyID))
-		
+
 		err := rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, fileHash, signature)
 		if err == nil {
 			v.logger.Debug(fmt.Sprintf("Bundle signature verified with key: %s", keyID))
@@ -413,11 +425,11 @@ func (v *Verifier) verifyBundleSignature(bundlePath, signaturePath string) error
 		}
 		lastError = err
 	}
-	
+
 	if len(v.trustedKeys) == 0 {
 		return fmt.Errorf("no trusted keys loaded")
 	}
-	
+
 	return fmt.Errorf("bundle signature verification failed with all keys: %w", lastError)
 }
 
@@ -425,7 +437,7 @@ func (v *Verifier) verifyBundleSignature(bundlePath, signaturePath string) error
 func (v *Verifier) CreateChecksum(filePath string, algorithm string) error {
 	var hasher hash.Hash
 	var extension string
-	
+
 	switch strings.ToUpper(algorithm) {
 	case "MD5":
 		hasher = sha256.New()
@@ -442,28 +454,32 @@ func (v *Verifier) CreateChecksum(filePath string, algorithm string) error {
 	default:
 		return fmt.Errorf("unsupported algorithm: %s", algorithm)
 	}
-	
+
 	// Calculate hash
 	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	if _, err := io.Copy(hasher, file); err != nil {
 		return fmt.Errorf("failed to calculate hash: %w", err)
 	}
-	
+
 	checksum := hex.EncodeToString(hasher.Sum(nil))
-	
+
 	// Write checksum file
 	checksumPath := filePath + extension
 	checksumContent := fmt.Sprintf("%s  %s\n", checksum, filepath.Base(filePath))
-	
+
 	if err := os.WriteFile(filepath.Clean(checksumPath), []byte(checksumContent), 0600); err != nil {
 		return fmt.Errorf("failed to write checksum file: %w", err)
 	}
-	
+
 	v.logger.Info(fmt.Sprintf("Created %s checksum: %s", algorithm, checksumPath))
 	return nil
 }
@@ -474,7 +490,7 @@ func (v *Verifier) AddTrustedKey(keyData string) error {
 	if err != nil {
 		return fmt.Errorf("failed to parse public key: %w", err)
 	}
-	
+
 	v.trustedKeys[keyID] = key
 	v.logger.Info(fmt.Sprintf("Added trusted key: %s", keyID))
 	return nil
@@ -485,7 +501,7 @@ func (v *Verifier) RemoveTrustedKey(keyID string) error {
 	if _, exists := v.trustedKeys[keyID]; !exists {
 		return fmt.Errorf("key not found: %s", keyID)
 	}
-	
+
 	delete(v.trustedKeys, keyID)
 	v.logger.Info(fmt.Sprintf("Removed trusted key: %s", keyID))
 	return nil
@@ -506,12 +522,12 @@ func (v *Verifier) GetKeyInfo(keyID string) (*KeyInfo, error) {
 	if !exists {
 		return nil, fmt.Errorf("key not found: %s", keyID)
 	}
-	
+
 	return &KeyInfo{
-		ID:       keyID,
-		KeySize:  key.Size() * 8, // Convert bytes to bits
+		ID:        keyID,
+		KeySize:   key.Size() * 8, // Convert bytes to bits
 		Algorithm: "RSA",
-		Usage:    "signature verification",
+		Usage:     "signature verification",
 	}, nil
 }
 

@@ -15,11 +15,12 @@ type AuditLoggerAdapter struct {
 	legacyStore interface{}
 	converter   AuditLogConverter
 }
+
 // AuditLogConverter converts between legacy and new audit log models
 type AuditLogConverter interface {
 	// ToModelAuditLog converts a legacy audit log to a model audit log
 	ToModelAuditLog(legacyAuditLog interface{}) (*models.AuditLog, error)
-	
+
 	// FromModelAuditLog converts a model audit log to a legacy audit log
 	FromModelAuditLog(log *models.AuditLog) (interface{}, error)
 }
@@ -39,14 +40,14 @@ func (a *AuditLoggerAdapter) LogEvent(ctx context.Context, event *models.AuditLo
 	if err != nil {
 		return err
 	}
-	
+
 	// Call the legacy store's LogAudit method
 	if store, ok := a.legacyStore.(interface {
 		LogAudit(ctx context.Context, log interface{}) error
 	}); ok {
 		return store.LogAudit(ctx, legacyLog)
 	}
-	
+
 	return errors.New("legacy store does not implement LogAudit")
 }
 
@@ -60,11 +61,11 @@ func (a *AuditLoggerAdapter) GetEventByID(ctx context.Context, id string) (*mode
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy audit log to a model audit log
 		return a.converter.ToModelAuditLog(legacyLog)
 	}
-	
+
 	return nil, errors.New("legacy store does not implement GetEventByID")
 }
 
@@ -78,7 +79,7 @@ func (a *AuditLoggerAdapter) QueryEvents(ctx context.Context, filter map[string]
 		if err != nil {
 			return nil, 0, err
 		}
-		
+
 		// Convert the legacy audit logs to model audit logs
 		modelLogs := make([]*models.AuditLog, 0, len(legacyLogs))
 		for _, legacyLog := range legacyLogs {
@@ -88,10 +89,10 @@ func (a *AuditLoggerAdapter) QueryEvents(ctx context.Context, filter map[string]
 			}
 			modelLogs = append(modelLogs, modelLog)
 		}
-		
+
 		return modelLogs, total, nil
 	}
-	
+
 	// Fall back to GetAuditLogs if QueryEvents is not implemented
 	return a.GetAuditLogs(ctx, filter, offset, limit)
 }
@@ -106,7 +107,7 @@ func (a *AuditLoggerAdapter) GetAuditLogs(ctx context.Context, filter map[string
 		if err != nil {
 			return nil, 0, err
 		}
-		
+
 		// Convert the legacy audit logs to model audit logs
 		modelLogs := make([]*models.AuditLog, 0, len(legacyLogs))
 		for _, legacyLog := range legacyLogs {
@@ -116,10 +117,10 @@ func (a *AuditLoggerAdapter) GetAuditLogs(ctx context.Context, filter map[string
 			}
 			modelLogs = append(modelLogs, modelLog)
 		}
-		
+
 		return modelLogs, total, nil
 	}
-	
+
 	return nil, 0, errors.New("legacy store does not implement GetAuditLogs")
 }
 
@@ -131,13 +132,13 @@ func (a *AuditLoggerAdapter) ExportEvents(ctx context.Context, filter map[string
 	}); ok {
 		return store.ExportEvents(ctx, filter, format)
 	}
-	
+
 	// If the legacy store doesn't support exporting, try to get the events and export them manually
 	events, _, err := a.GetAuditLogs(ctx, filter, 0, 1000) // Get up to 1000 events
 	if err != nil {
 		return "", err
 	}
-	
+
 	// In a real implementation, we would format the events according to the requested format
 	// and write them to a temporary file, then return the path to that file.
 	// For this example, we'll just create a placeholder filename that indicates the number of events
@@ -152,7 +153,7 @@ func (a *AuditLoggerAdapter) Close() error {
 	}); ok {
 		return store.Close()
 	}
-	
+
 	return nil
 }
 
@@ -161,11 +162,12 @@ type IncidentStoreAdapter struct {
 	legacyStore interface{}
 	converter   IncidentConverter
 }
+
 // IncidentConverter converts between legacy and new incident models
 type IncidentConverter interface {
 	// ToModelIncident converts a legacy incident to a model incident
 	ToModelIncident(legacyIncident interface{}) (*models.SecurityIncident, error)
-	
+
 	// FromModelIncident converts a model incident to a legacy incident
 	FromModelIncident(incident *models.SecurityIncident) (interface{}, error)
 }
@@ -185,14 +187,14 @@ func (s *IncidentStoreAdapter) CreateIncident(ctx context.Context, incident *mod
 	if err != nil {
 		return err
 	}
-	
+
 	// Call the legacy store's CreateIncident method
 	if store, ok := s.legacyStore.(interface {
 		CreateIncident(ctx context.Context, incident interface{}) error
 	}); ok {
 		return store.CreateIncident(ctx, legacyIncident)
 	}
-	
+
 	return errors.New("legacy store does not implement CreateIncident")
 }
 
@@ -206,11 +208,11 @@ func (s *IncidentStoreAdapter) GetIncidentByID(ctx context.Context, incidentID s
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy incident to a model incident
 		return s.converter.ToModelIncident(legacyIncident)
 	}
-	
+
 	return nil, errors.New("legacy store does not implement GetIncidentByID")
 }
 
@@ -221,14 +223,14 @@ func (s *IncidentStoreAdapter) UpdateIncident(ctx context.Context, incident *mod
 	if err != nil {
 		return err
 	}
-	
+
 	// Call the legacy store's UpdateIncident method
 	if store, ok := s.legacyStore.(interface {
 		UpdateIncident(ctx context.Context, incident interface{}) error
 	}); ok {
 		return store.UpdateIncident(ctx, legacyIncident)
 	}
-	
+
 	return errors.New("legacy store does not implement UpdateIncident")
 }
 
@@ -240,7 +242,7 @@ func (s *IncidentStoreAdapter) DeleteIncident(ctx context.Context, id string) er
 	}); ok {
 		return store.DeleteIncident(ctx, id)
 	}
-	
+
 	return errors.New("legacy store does not implement DeleteIncident")
 }
 
@@ -254,7 +256,7 @@ func (s *IncidentStoreAdapter) ListIncidents(ctx context.Context, filter map[str
 		if err != nil {
 			return nil, 0, err
 		}
-		
+
 		// Convert the legacy incidents to model incidents
 		incidents := make([]*models.SecurityIncident, len(legacyIncidents))
 		for i, legacyIncident := range legacyIncidents {
@@ -264,10 +266,10 @@ func (s *IncidentStoreAdapter) ListIncidents(ctx context.Context, filter map[str
 			}
 			incidents[i] = incident
 		}
-		
+
 		return incidents, total, nil
 	}
-	
+
 	return nil, 0, errors.New("legacy store does not implement ListIncidents")
 }
 
@@ -279,7 +281,7 @@ func (s *IncidentStoreAdapter) Close() error {
 	}); ok {
 		return store.Close()
 	}
-	
+
 	return nil
 }
 
@@ -288,11 +290,12 @@ type VulnerabilityStoreAdapter struct {
 	legacyStore interface{}
 	converter   VulnerabilityConverter
 }
+
 // VulnerabilityConverter converts between legacy and new vulnerability models
 type VulnerabilityConverter interface {
 	// ToModelVulnerability converts a legacy vulnerability to a model vulnerability
 	ToModelVulnerability(legacyVulnerability interface{}) (*models.Vulnerability, error)
-	
+
 	// FromModelVulnerability converts a model vulnerability to a legacy vulnerability
 	FromModelVulnerability(vulnerability *models.Vulnerability) (interface{}, error)
 }
@@ -312,14 +315,14 @@ func (s *VulnerabilityStoreAdapter) CreateVulnerability(ctx context.Context, vul
 	if err != nil {
 		return err
 	}
-	
+
 	// Call the legacy store's CreateVulnerability method
 	if store, ok := s.legacyStore.(interface {
 		CreateVulnerability(ctx context.Context, vulnerability interface{}) error
 	}); ok {
 		return store.CreateVulnerability(ctx, legacyVulnerability)
 	}
-	
+
 	return errors.New("legacy store does not implement CreateVulnerability")
 }
 
@@ -333,11 +336,11 @@ func (s *VulnerabilityStoreAdapter) GetVulnerabilityByID(ctx context.Context, vu
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy vulnerability to a model vulnerability
 		return s.converter.ToModelVulnerability(legacyVulnerability)
 	}
-	
+
 	return nil, errors.New("legacy store does not implement GetVulnerabilityByID")
 }
 
@@ -348,14 +351,14 @@ func (s *VulnerabilityStoreAdapter) UpdateVulnerability(ctx context.Context, vul
 	if err != nil {
 		return err
 	}
-	
+
 	// Call the legacy store's UpdateVulnerability method
 	if store, ok := s.legacyStore.(interface {
 		UpdateVulnerability(ctx context.Context, vulnerability interface{}) error
 	}); ok {
 		return store.UpdateVulnerability(ctx, legacyVulnerability)
 	}
-	
+
 	return errors.New("legacy store does not implement UpdateVulnerability")
 }
 
@@ -367,7 +370,7 @@ func (s *VulnerabilityStoreAdapter) DeleteVulnerability(ctx context.Context, id 
 	}); ok {
 		return store.DeleteVulnerability(ctx, id)
 	}
-	
+
 	return errors.New("legacy store does not implement DeleteVulnerability")
 }
 
@@ -381,16 +384,16 @@ func (s *VulnerabilityStoreAdapter) GetVulnerabilityByCVE(ctx context.Context, c
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy vulnerability to a model vulnerability
 		vulnerability, err := s.converter.ToModelVulnerability(legacyVulnerability)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		return vulnerability, nil
 	}
-	
+
 	return nil, errors.New("legacy store does not implement GetVulnerabilityByCVE")
 }
 
@@ -404,7 +407,7 @@ func (s *VulnerabilityStoreAdapter) ListVulnerabilities(ctx context.Context, fil
 		if err != nil {
 			return nil, 0, err
 		}
-		
+
 		// Convert the legacy vulnerabilities to model vulnerabilities
 		vulnerabilities := make([]*models.Vulnerability, len(legacyVulnerabilities))
 		for i, legacyVulnerability := range legacyVulnerabilities {
@@ -414,10 +417,10 @@ func (s *VulnerabilityStoreAdapter) ListVulnerabilities(ctx context.Context, fil
 			}
 			vulnerabilities[i] = vulnerability
 		}
-		
+
 		return vulnerabilities, total, nil
 	}
-	
+
 	return nil, 0, errors.New("legacy store does not implement ListVulnerabilities")
 }
 
@@ -429,7 +432,7 @@ func (s *VulnerabilityStoreAdapter) Close() error {
 	}); ok {
 		return store.Close()
 	}
-	
+
 	// If no Close method, return nil (no-op)
 	return nil
 }

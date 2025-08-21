@@ -15,16 +15,16 @@ type OWASPLLMCategory string
 
 // OWASP LLM Top 10 categories
 const (
-	PromptInjection             OWASPLLMCategory = "LLM01"
-	InsecureOutputHandling      OWASPLLMCategory = "LLM02"
-	TrainingDataPoisoning       OWASPLLMCategory = "LLM03"
-	ModelDenialOfService        OWASPLLMCategory = "LLM04"
-	SupplyChainVulnerabilities  OWASPLLMCategory = "LLM05"
-	SensitiveInfoDisclosure     OWASPLLMCategory = "LLM06"
-	InsecurePluginDesign        OWASPLLMCategory = "LLM07"
-	ExcessiveAgency             OWASPLLMCategory = "LLM08"
-	Overreliance                OWASPLLMCategory = "LLM09"
-	ModelTheft                  OWASPLLMCategory = "LLM10"
+	PromptInjection            OWASPLLMCategory = "LLM01"
+	InsecureOutputHandling     OWASPLLMCategory = "LLM02"
+	TrainingDataPoisoning      OWASPLLMCategory = "LLM03"
+	ModelDenialOfService       OWASPLLMCategory = "LLM04"
+	SupplyChainVulnerabilities OWASPLLMCategory = "LLM05"
+	SensitiveInfoDisclosure    OWASPLLMCategory = "LLM06"
+	InsecurePluginDesign       OWASPLLMCategory = "LLM07"
+	ExcessiveAgency            OWASPLLMCategory = "LLM08"
+	Overreliance               OWASPLLMCategory = "LLM09"
+	ModelTheft                 OWASPLLMCategory = "LLM10"
 )
 
 // OWASPLLMSubcategory represents a subcategory within an OWASP LLM Top 10 category
@@ -33,20 +33,20 @@ type OWASPLLMSubcategory string
 // OWASP LLM Top 10 subcategories
 const (
 	// LLM01 subcategories
-	DirectInjection    OWASPLLMSubcategory = "direct-injection"
-	IndirectInjection  OWASPLLMSubcategory = "indirect-injection"
-	Jailbreaking       OWASPLLMSubcategory = "jailbreaking"
+	DirectInjection   OWASPLLMSubcategory = "direct-injection"
+	IndirectInjection OWASPLLMSubcategory = "indirect-injection"
+	Jailbreaking      OWASPLLMSubcategory = "jailbreaking"
 
 	// LLM02 subcategories
-	XSS               OWASPLLMSubcategory = "xss"
-	SSRF              OWASPLLMSubcategory = "ssrf"
-	CommandInjection  OWASPLLMSubcategory = "command-injection"
-	SQLInjection      OWASPLLMSubcategory = "sql-injection"
+	XSS              OWASPLLMSubcategory = "xss"
+	SSRF             OWASPLLMSubcategory = "ssrf"
+	CommandInjection OWASPLLMSubcategory = "command-injection"
+	SQLInjection     OWASPLLMSubcategory = "sql-injection"
 
 	// LLM03 subcategories
-	DataPoisoning     OWASPLLMSubcategory = "data-poisoning"
-	BackdoorAttacks   OWASPLLMSubcategory = "backdoor-attacks"
-	BiasInjection     OWASPLLMSubcategory = "bias-injection"
+	DataPoisoning   OWASPLLMSubcategory = "data-poisoning"
+	BackdoorAttacks OWASPLLMSubcategory = "backdoor-attacks"
+	BiasInjection   OWASPLLMSubcategory = "bias-injection"
 
 	// LLM04 subcategories
 	ResourceExhaustion      OWASPLLMSubcategory = "resource-exhaustion"
@@ -64,9 +64,9 @@ const (
 	PIIDisclosure          OWASPLLMSubcategory = "pii-disclosure"
 
 	// LLM07 subcategories
-	PluginEscalation    OWASPLLMSubcategory = "plugin-escalation"
-	UnauthorizedAccess  OWASPLLMSubcategory = "unauthorized-access"
-	DataLeakage         OWASPLLMSubcategory = "data-leakage"
+	PluginEscalation   OWASPLLMSubcategory = "plugin-escalation"
+	UnauthorizedAccess OWASPLLMSubcategory = "unauthorized-access"
+	DataLeakage        OWASPLLMSubcategory = "data-leakage"
 
 	// LLM08 subcategories
 	UnauthorizedActions OWASPLLMSubcategory = "unauthorized-actions"
@@ -74,13 +74,13 @@ const (
 	PrivilegeEscalation OWASPLLMSubcategory = "privilege-escalation"
 
 	// LLM09 subcategories
-	HallucinationAcceptance     OWASPLLMSubcategory = "hallucination-acceptance"
-	UnverifiedRecommendations   OWASPLLMSubcategory = "unverified-recommendations"
-	CriticalDecisionDelegation  OWASPLLMSubcategory = "critical-decision-delegation"
+	HallucinationAcceptance    OWASPLLMSubcategory = "hallucination-acceptance"
+	UnverifiedRecommendations  OWASPLLMSubcategory = "unverified-recommendations"
+	CriticalDecisionDelegation OWASPLLMSubcategory = "critical-decision-delegation"
 
 	// LLM10 subcategories
-	ModelExtraction      OWASPLLMSubcategory = "model-extraction"
-	WeightStealing       OWASPLLMSubcategory = "weight-stealing"
+	ModelExtraction       OWASPLLMSubcategory = "model-extraction"
+	WeightStealing        OWASPLLMSubcategory = "weight-stealing"
 	ArchitectureInference OWASPLLMSubcategory = "architecture-inference"
 )
 
@@ -89,9 +89,9 @@ type CoverageLevel string
 
 // Coverage levels
 const (
-	BasicCoverage        CoverageLevel = "basic"
+	BasicCoverage         CoverageLevel = "basic"
 	ComprehensiveCoverage CoverageLevel = "comprehensive"
-	AdvancedCoverage     CoverageLevel = "advanced"
+	AdvancedCoverage      CoverageLevel = "advanced"
 )
 
 // OWASPLLMMapping represents a mapping to an OWASP LLM Top 10 category and subcategory
@@ -103,15 +103,15 @@ type OWASPLLMMapping struct {
 
 // ComplianceMapping represents the compliance mappings for a template
 type ComplianceMapping struct {
-	OWASPLLM []OWASPLLMMapping         `json:"owasp-llm,omitempty"`
-	Other    map[string]interface{}    `json:"-"`
+	OWASPLLM []OWASPLLMMapping      `json:"owasp-llm,omitempty"`
+	Other    map[string]interface{} `json:"-"`
 }
 
 // CategoryInfo contains information about an OWASP LLM category
 type CategoryInfo struct {
-	ID          OWASPLLMCategory
-	Name        string
-	Description string
+	ID            OWASPLLMCategory
+	Name          string
+	Description   string
 	Subcategories []SubcategoryInfo
 }
 
@@ -124,13 +124,13 @@ type SubcategoryInfo struct {
 
 // CategoryCoverage represents the coverage for a category
 type CategoryCoverage struct {
-	Category           OWASPLLMCategory
-	Name               string
-	Status             string // "full", "partial", "not_covered"
-	TemplatesCount     int
+	Category             OWASPLLMCategory
+	Name                 string
+	Status               string // "full", "partial", "not_covered"
+	TemplatesCount       int
 	SubcategoriesCovered int
 	SubcategoriesTotal   int
-	Templates          []TemplateSummary
+	Templates            []TemplateSummary
 	MissingSubcategories []OWASPLLMSubcategory
 }
 
@@ -144,12 +144,12 @@ type TemplateSummary struct {
 
 // OWASPComplianceReport represents an OWASP LLM compliance report
 type OWASPComplianceReport struct {
-	ReportID     string             `json:"report_id"`
-	GeneratedAt  string             `json:"generated_at"`
-	Framework    string             `json:"framework"`
-	Summary      ComplianceSummary  `json:"summary"`
-	Categories   []CategoryCoverage `json:"categories"`
-	Gaps         []ComplianceGap    `json:"gaps"`
+	ReportID    string             `json:"report_id"`
+	GeneratedAt string             `json:"generated_at"`
+	Framework   string             `json:"framework"`
+	Summary     ComplianceSummary  `json:"summary"`
+	Categories  []CategoryCoverage `json:"categories"`
+	Gaps        []ComplianceGap    `json:"gaps"`
 }
 
 // ComplianceSummary provides a summary of compliance status
@@ -163,11 +163,11 @@ type ComplianceSummary struct {
 
 // ComplianceGap represents a gap in compliance coverage
 type ComplianceGap struct {
-	Category            OWASPLLMCategory      `json:"category"`
-	Name                string                `json:"name"`
-	Status              string                `json:"status"`
+	Category             OWASPLLMCategory      `json:"category"`
+	Name                 string                `json:"name"`
+	Status               string                `json:"status"`
 	MissingSubcategories []OWASPLLMSubcategory `json:"missing_subcategories"`
-	Recommendation      string                `json:"recommendation"`
+	Recommendation       string                `json:"recommendation"`
 }
 
 // OWASPLLMValidator validates OWASP LLM compliance mappings
@@ -408,9 +408,9 @@ func (v *OWASPLLMValidator) GenerateComplianceReport(templates []interface{}, re
 		// Identify gaps
 		if coverage.Status != "full" {
 			gap := ComplianceGap{
-				Category:            coverage.Category,
-				Name:                coverage.Name,
-				Status:              coverage.Status,
+				Category:             coverage.Category,
+				Name:                 coverage.Name,
+				Status:               coverage.Status,
 				MissingSubcategories: coverage.MissingSubcategories,
 			}
 
@@ -436,7 +436,7 @@ func (v *OWASPLLMValidator) GenerateComplianceReport(templates []interface{}, re
 
 	// Calculate compliance score
 	categoryScore := float64(categoriesCovered) / float64(len(v.categories)) * 100
-	
+
 	// Calculate subcategory coverage
 	var totalSubcategories, coveredSubcategories int
 	for _, coverage := range categoryCoverage {
@@ -444,14 +444,14 @@ func (v *OWASPLLMValidator) GenerateComplianceReport(templates []interface{}, re
 		coveredSubcategories += coverage.SubcategoriesCovered
 	}
 	subcategoryScore := float64(coveredSubcategories) / float64(totalSubcategories) * 100
-	
+
 	// Assume template depth is 100% for simplicity
 	// In a real implementation, this would be calculated based on the number and quality of templates
 	templateDepthScore := 100.0
-	
+
 	// Calculate overall compliance score
 	complianceScore := (categoryScore * 0.5) + (subcategoryScore * 0.3) + (templateDepthScore * 0.2)
-	
+
 	// Update report summary
 	report.Summary = ComplianceSummary{
 		TotalCategories:   len(v.categories),
@@ -460,16 +460,16 @@ func (v *OWASPLLMValidator) GenerateComplianceReport(templates []interface{}, re
 		ComplianceScore:   complianceScore,
 		GapsIdentified:    len(gaps),
 	}
-	
+
 	report.Gaps = gaps
-	
+
 	return report, nil
 }
 
 // initializeCategories initializes the OWASP LLM category information
 func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 	categories := make(map[OWASPLLMCategory]CategoryInfo)
-	
+
 	// LLM01: Prompt Injection
 	categories[PromptInjection] = CategoryInfo{
 		ID:          PromptInjection,
@@ -481,7 +481,7 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: Jailbreaking, Name: "Jailbreaking", Description: "Bypassing LLM safeguards and restrictions"},
 		},
 	}
-	
+
 	// LLM02: Insecure Output Handling
 	categories[InsecureOutputHandling] = CategoryInfo{
 		ID:          InsecureOutputHandling,
@@ -494,7 +494,7 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: SQLInjection, Name: "SQL Injection", Description: "SQL injection vulnerabilities in LLM outputs"},
 		},
 	}
-	
+
 	// LLM03: Training Data Poisoning
 	categories[TrainingDataPoisoning] = CategoryInfo{
 		ID:          TrainingDataPoisoning,
@@ -506,7 +506,7 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: BiasInjection, Name: "Bias Injection", Description: "Injecting bias into the model through training data"},
 		},
 	}
-	
+
 	// LLM04: Model Denial of Service
 	categories[ModelDenialOfService] = CategoryInfo{
 		ID:          ModelDenialOfService,
@@ -518,7 +518,7 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: ContextWindowSaturation, Name: "Context Window Saturation", Description: "Saturating the context window with irrelevant information"},
 		},
 	}
-	
+
 	// LLM05: Supply Chain Vulnerabilities
 	categories[SupplyChainVulnerabilities] = CategoryInfo{
 		ID:          SupplyChainVulnerabilities,
@@ -530,7 +530,7 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: IntegrationVulnerabilities, Name: "Integration Vulnerabilities", Description: "Vulnerabilities in integrating LLMs with other systems"},
 		},
 	}
-	
+
 	// LLM06: Sensitive Information Disclosure
 	categories[SensitiveInfoDisclosure] = CategoryInfo{
 		ID:          SensitiveInfoDisclosure,
@@ -542,7 +542,7 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: PIIDisclosure, Name: "PII Disclosure", Description: "Disclosing personally identifiable information"},
 		},
 	}
-	
+
 	// LLM07: Insecure Plugin Design
 	categories[InsecurePluginDesign] = CategoryInfo{
 		ID:          InsecurePluginDesign,
@@ -554,7 +554,7 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: DataLeakage, Name: "Data Leakage", Description: "Leaking data through plugin interactions"},
 		},
 	}
-	
+
 	// LLM08: Excessive Agency
 	categories[ExcessiveAgency] = CategoryInfo{
 		ID:          ExcessiveAgency,
@@ -566,7 +566,7 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: PrivilegeEscalation, Name: "Privilege Escalation", Description: "LLM escalating privileges beyond intended limits"},
 		},
 	}
-	
+
 	// LLM09: Overreliance
 	categories[Overreliance] = CategoryInfo{
 		ID:          Overreliance,
@@ -578,7 +578,7 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: CriticalDecisionDelegation, Name: "Critical Decision Delegation", Description: "Delegating critical decisions to LLMs without oversight"},
 		},
 	}
-	
+
 	// LLM10: Model Theft
 	categories[ModelTheft] = CategoryInfo{
 		ID:          ModelTheft,
@@ -590,6 +590,6 @@ func initializeCategories() map[OWASPLLMCategory]CategoryInfo {
 			{ID: ArchitectureInference, Name: "Architecture Inference", Description: "Inferring model architecture through black-box access"},
 		},
 	}
-	
+
 	return categories
 }

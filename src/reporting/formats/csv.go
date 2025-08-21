@@ -26,7 +26,7 @@ func (f *CSVFormatter) FormatReport(results api.TestResults, writer io.Writer) e
 	if err != nil {
 		return err
 	}
-	
+
 	_, err = writer.Write(data)
 	return err
 }
@@ -46,7 +46,7 @@ func NewCSVFormatter(delimiter rune, includeHeaders bool) *CSVFormatter {
 func (f *CSVFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
 	// We're using interface{} types now, so we don't need to check the specific types
 	report := reportInterface
-	
+
 	// Just ensure we have a valid report object
 	if report == nil {
 		return nil, fmt.Errorf("report cannot be nil")
@@ -79,7 +79,7 @@ func (f *CSVFormatter) Format(ctx context.Context, reportInterface interface{}, 
 	if err := writer.Write(row); err != nil {
 		return nil, fmt.Errorf("failed to write row: %w", err)
 	}
-	
+
 	// Flush the writer
 	writer.Flush()
 	if err := writer.Error(); err != nil {

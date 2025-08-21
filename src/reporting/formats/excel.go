@@ -39,7 +39,7 @@ func (f *ExcelFormatter) FormatReport(results api.TestResults, writer io.Writer)
 	// Add title
 	excel.SetCellValue(summarySheet, "A1", "Test Results Report")
 	excel.MergeCell(summarySheet, "A1", "D1")
-	
+
 	// Add generation timestamp
 	excel.SetCellValue(summarySheet, "A2", fmt.Sprintf("Generated: %s", time.Now().Format(time.RFC3339)))
 	excel.MergeCell(summarySheet, "A2", "D2")
@@ -101,13 +101,13 @@ func (f *ExcelFormatter) Format(ctx context.Context, reportInterface interface{}
 
 	// Create a buffer to hold the Excel data
 	buf := &bytes.Buffer{}
-	
+
 	// Use the FormatReport method to write to the buffer
 	err := f.FormatReport(results, buf)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return buf.Bytes(), nil
 }
 
@@ -134,7 +134,11 @@ func (f *ExcelFormatter) WriteToFile(ctx context.Context, reportInterface interf
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", filePath, err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Format and write the report
 	if err := f.FormatReport(results, file); err != nil {
@@ -150,17 +154,17 @@ func sanitizeSheetName(name string) string {
 	if len(name) > 31 {
 		name = name[:31]
 	}
-	
+
 	// Excel sheet names cannot contain these characters: : \ / ? * [ ]
 	invalidChars := []string{":", "\\", "/", "?", "*", "[", "]"}
 	for _, char := range invalidChars {
 		name = strings.ReplaceAll(name, char, "_")
 	}
-	
+
 	// Excel sheet names cannot be empty
 	if name == "" {
 		name = "Sheet"
 	}
-	
+
 	return name
 }

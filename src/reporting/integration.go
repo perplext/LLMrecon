@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/reporting/common"
+	"github.com/perplext/LLMrecon/src/security/access/common"
 	"github.com/perplext/LLMrecon/src/template/management/types"
 )
 
@@ -38,7 +38,7 @@ func (c *TemplateResultConverter) ConvertToTestSuite(ctx context.Context, result
 		EndTime:     results[len(results)-1].EndTime,
 		Duration:    calculateTotalDuration(results),
 		Results:     make([]*TestResult, 0, len(results)),
-		Metadata:    map[string]interface{}{
+		Metadata: map[string]interface{}{
 			"template_count": len(results),
 		},
 	}
@@ -246,4 +246,3 @@ func (s *BatchReportingService) GenerateReport(ctx context.Context, suites []*Te
 
 	return data, nil
 }
-

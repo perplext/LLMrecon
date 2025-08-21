@@ -2,10 +2,10 @@
 package trail
 
 import (
-	"encoding/json"
-	"time"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
+	"time"
 )
 
 // LogLevel represents the severity level of a log entry
@@ -58,85 +58,85 @@ const (
 type AuditLog struct {
 	// ID is a unique identifier for the log entry
 	ID string `json:"id"`
-	
+
 	// Timestamp is the time when the event occurred (with timezone)
 	Timestamp time.Time `json:"timestamp"`
-	
+
 	// Level is the severity level of the log entry
 	Level LogLevel `json:"level"`
-	
+
 	// Operation is the type of operation being performed
 	Operation OperationType `json:"operation"`
-	
+
 	// Component is the system component affected
 	Component string `json:"component"`
-	
+
 	// SubComponent is a more specific part of the component
 	SubComponent string `json:"sub_component,omitempty"`
-	
+
 	// User is the user or process that performed the operation
 	User string `json:"user,omitempty"`
-	
+
 	// UserID is the unique identifier of the user
 	UserID string `json:"user_id,omitempty"`
-	
+
 	// SessionID is the session identifier
 	SessionID string `json:"session_id,omitempty"`
-	
+
 	// RequestID is used to correlate multiple log entries for a single request
 	RequestID string `json:"request_id,omitempty"`
-	
+
 	// TraceID is used for distributed tracing
 	TraceID string `json:"trace_id,omitempty"`
-	
+
 	// IPAddress is the IP address where the operation originated
 	IPAddress string `json:"ip_address,omitempty"`
-	
+
 	// UserAgent is the user agent that performed the operation
 	UserAgent string `json:"user_agent,omitempty"`
-	
+
 	// Resource is the resource being operated on
 	Resource string `json:"resource,omitempty"`
-	
+
 	// ResourceID is the identifier of the resource
 	ResourceID string `json:"resource_id,omitempty"`
-	
+
 	// Action is the specific action being performed
 	Action string `json:"action,omitempty"`
-	
+
 	// Status is the result status of the operation
 	Status string `json:"status"`
-	
+
 	// StatusCode is a numeric status code
 	StatusCode int `json:"status_code,omitempty"`
-	
+
 	// Message is a human-readable description of the event
 	Message string `json:"message"`
-	
+
 	// ErrorCode is the error code if the operation failed
 	ErrorCode string `json:"error_code,omitempty"`
-	
+
 	// ErrorMessage is the error message if the operation failed
 	ErrorMessage string `json:"error_message,omitempty"`
-	
+
 	// Duration is the duration of the operation in milliseconds
 	Duration int64 `json:"duration,omitempty"`
-	
+
 	// Version contains version information
 	Version *VersionInfo `json:"version,omitempty"`
-	
+
 	// Changes contains details about what changed
 	Changes *ChangeInfo `json:"changes,omitempty"`
-	
+
 	// Verification contains verification results
 	Verification *VerificationInfo `json:"verification,omitempty"`
-	
+
 	// Metadata contains additional contextual information
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	
+
 	// Tags for categorizing and filtering logs
 	Tags []string `json:"tags,omitempty"`
-	
+
 	// Signature is a cryptographic signature for tamper evidence
 	Signature string `json:"signature,omitempty"`
 }
@@ -145,10 +145,10 @@ type AuditLog struct {
 type VersionInfo struct {
 	// Previous is the previous version
 	Previous string `json:"previous,omitempty"`
-	
+
 	// Current is the current version
 	Current string `json:"current,omitempty"`
-	
+
 	// ChangeType describes the type of version change
 	ChangeType string `json:"change_type,omitempty"`
 }
@@ -157,13 +157,13 @@ type VersionInfo struct {
 type ChangeInfo struct {
 	// Before contains the state before the change
 	Before map[string]interface{} `json:"before,omitempty"`
-	
+
 	// After contains the state after the change
 	After map[string]interface{} `json:"after,omitempty"`
-	
+
 	// Fields lists the specific fields that changed
 	Fields []string `json:"fields,omitempty"`
-	
+
 	// Summary provides a human-readable summary of the changes
 	Summary string `json:"summary,omitempty"`
 }
@@ -172,10 +172,10 @@ type ChangeInfo struct {
 type VerificationInfo struct {
 	// Success indicates if verification was successful
 	Success bool `json:"success"`
-	
+
 	// Method is the verification method used
 	Method string `json:"method,omitempty"`
-	
+
 	// Details contains additional verification details
 	Details map[string]interface{} `json:"details,omitempty"`
 }

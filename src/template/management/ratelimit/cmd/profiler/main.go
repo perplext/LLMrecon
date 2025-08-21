@@ -91,7 +91,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create CPU profile: %v", err)
 		}
-		defer func() { if err := cpuFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := cpuFile.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 		if err := pprof.StartCPUProfile(cpuFile); err != nil {
 			log.Fatalf("Could not start CPU profile: %v", err)
 		}

@@ -10,7 +10,7 @@ import (
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/fixtures"
 	"github.com/perplext/LLMrecon/src/testing/owasp/mocks"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // RunMockProviderExample demonstrates how to use mock providers for OWASP testing

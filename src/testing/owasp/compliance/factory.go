@@ -47,15 +47,14 @@ func (f *ComplianceServiceFactory) GetCustomService(name string) (ComplianceServ
 func (f *ComplianceServiceFactory) GetAllServices() map[string]ComplianceService {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
-	
+
 	// Create a copy of the services map to avoid concurrent access issues
 	services := make(map[string]ComplianceService)
 	services["default"] = f.defaultService
-	
+
 	for name, service := range f.customServices {
 		services[name] = service
 	}
-	
+
 	return services
 }
-	

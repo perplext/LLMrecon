@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
 
 // Response is a standard API response format
@@ -217,7 +217,7 @@ func (m *LoggingMiddleware) Middleware(next http.Handler) http.Handler {
 
 		// Log the request
 		duration := time.Since(start)
-		
+
 		// Get user ID if available
 		var userID string
 		if user, ok := r.Context().Value("user").(*access.User); ok {

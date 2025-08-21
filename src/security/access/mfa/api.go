@@ -11,7 +11,7 @@ import (
 
 // MFAHandler handles MFA-related API requests
 type MFAHandler struct {
-	mfaManager MFAManager
+	mfaManager   MFAManager
 	sessionStore interfaces.SessionStore
 }
 
@@ -48,8 +48,8 @@ func (h *MFAHandler) SetupTOTPHandler(w http.ResponseWriter, r *http.Request) {
 	// Return TOTP configuration
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"secret":   totpConfig.Secret,
-		"qr_code":  totpConfig.QRCodeURL,
+		"secret":  totpConfig.Secret,
+		"qr_code": totpConfig.QRCodeURL,
 	})
 }
 

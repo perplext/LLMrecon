@@ -11,6 +11,7 @@ type FormatterFactory struct {
 	formatters map[ReportFormat]FormatterCreator
 	mu         sync.RWMutex
 }
+
 // NewFormatterFactory creates a new formatter factory
 func NewFormatterFactory() *FormatterFactory {
 	return &FormatterFactory{
@@ -33,7 +34,7 @@ func (f *FormatterFactory) CreateFormatter(format ReportFormat, options map[stri
 	if !ok {
 		return nil, fmt.Errorf("unsupported report format: %s", format)
 	}
-	
+
 	return creator(options)
 }
 
@@ -50,7 +51,7 @@ func (f *FormatterFactory) CreateDefaultReportGenerator(generator ReportGenerato
 		PDFFormat,
 		HTMLFormat,
 	}
-	
+
 	for _, format := range formats {
 		formatter, err := f.CreateFormatter(format, nil)
 		if err != nil {
@@ -58,6 +59,6 @@ func (f *FormatterFactory) CreateDefaultReportGenerator(generator ReportGenerato
 		}
 		generator.RegisterFormatter(formatter)
 	}
-	
+
 	return nil
 }

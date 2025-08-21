@@ -117,8 +117,8 @@ func DefaultManagerConfig() *ManagerConfig {
 		WorkerIdleTimeout:  30 * time.Second,
 		TaskTimeout:        5 * time.Minute,
 		EnableAutoScaling:  true,
-		ScaleUpThreshold:   0.8,  // 80% utilization
-		ScaleDownThreshold: 0.2,  // 20% utilization
+		ScaleUpThreshold:   0.8, // 80% utilization
+		ScaleDownThreshold: 0.2, // 20% utilization
 		ScaleCheckInterval: 10 * time.Second,
 		ScaleUpStep:        numCPU,
 		ScaleDownStep:      numCPU / 2,
@@ -152,10 +152,10 @@ func NewConcurrencyManager(config *ManagerConfig) (*ConcurrencyManager, error) {
 	}
 
 	manager := &ConcurrencyManager{
-		config:        config,
-		taskQueue:     make(chan Task, config.QueueSize),
-		stopChan:      make(chan struct{}),
-		stats:         &ConcurrencyStats{},
+		config:         config,
+		taskQueue:      make(chan Task, config.QueueSize),
+		stopChan:       make(chan struct{}),
+		stats:          &ConcurrencyStats{},
 		lastAdjustment: time.Now(),
 	}
 
@@ -428,19 +428,19 @@ func (m *ConcurrencyManager) GetStats() *ConcurrencyStats {
 
 	// Create a copy of the stats
 	stats := &ConcurrencyStats{
-		ActiveWorkers:      atomic.LoadInt32(&m.stats.ActiveWorkers),
-		PendingTasks:       atomic.LoadInt32(&m.stats.PendingTasks),
-		CompletedTasks:     atomic.LoadInt64(&m.stats.CompletedTasks),
-		FailedTasks:        atomic.LoadInt64(&m.stats.FailedTasks),
-		TotalTasks:         atomic.LoadInt64(&m.stats.TotalTasks),
+		ActiveWorkers:       atomic.LoadInt32(&m.stats.ActiveWorkers),
+		PendingTasks:        atomic.LoadInt32(&m.stats.PendingTasks),
+		CompletedTasks:      atomic.LoadInt64(&m.stats.CompletedTasks),
+		FailedTasks:         atomic.LoadInt64(&m.stats.FailedTasks),
+		TotalTasks:          atomic.LoadInt64(&m.stats.TotalTasks),
 		AverageTaskDuration: m.stats.AverageTaskDuration,
-		MaxTaskDuration:    m.stats.MaxTaskDuration,
-		MinTaskDuration:    m.stats.MinTaskDuration,
-		TotalTaskDuration:  m.stats.TotalTaskDuration,
-		QueuedTasks:        int32(len(m.taskQueue)),
+		MaxTaskDuration:     m.stats.MaxTaskDuration,
+		MinTaskDuration:     m.stats.MinTaskDuration,
+		TotalTaskDuration:   m.stats.TotalTaskDuration,
+		QueuedTasks:         int32(len(m.taskQueue)),
 		WorkerScalingEvents: m.stats.WorkerScalingEvents,
-		LastScaleUpTime:    m.stats.LastScaleUpTime,
-		LastScaleDownTime:  m.stats.LastScaleDownTime,
+		LastScaleUpTime:     m.stats.LastScaleUpTime,
+		LastScaleDownTime:   m.stats.LastScaleDownTime,
 	}
 
 	return stats

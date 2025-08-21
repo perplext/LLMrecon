@@ -23,7 +23,7 @@ func (c *ModelConverter) ToModelUser(legacyUser interface{}) (*models.User, erro
 	if legacyUser == nil {
 		return nil, errors.New("legacy user is nil")
 	}
-	
+
 	return &models.User{
 		ID:       "placeholder-id",
 		Username: "placeholder-username",
@@ -38,7 +38,7 @@ func (c *ModelConverter) FromModelUser(user *models.User) (interface{}, error) {
 	if user == nil {
 		return nil, errors.New("user is nil")
 	}
-	
+
 	return user, nil
 }
 
@@ -48,7 +48,7 @@ func (c *ModelConverter) ToModelIncident(legacyIncident interface{}) (*models.Se
 	if legacyIncident == nil {
 		return nil, errors.New("legacy incident is nil")
 	}
-	
+
 	return &models.SecurityIncident{
 		ID:     "placeholder-id",
 		Title:  "placeholder-title",
@@ -62,7 +62,7 @@ func (c *ModelConverter) FromModelIncident(incident *models.SecurityIncident) (i
 	if incident == nil {
 		return nil, errors.New("incident is nil")
 	}
-	
+
 	return incident, nil
 }
 
@@ -72,7 +72,7 @@ func (c *ModelConverter) ToModelVulnerability(legacyVulnerability interface{}) (
 	if legacyVulnerability == nil {
 		return nil, errors.New("legacy vulnerability is nil")
 	}
-	
+
 	return &models.Vulnerability{
 		ID:     "placeholder-id",
 		Title:  "placeholder-title",
@@ -86,7 +86,7 @@ func (c *ModelConverter) FromModelVulnerability(vulnerability *models.Vulnerabil
 	if vulnerability == nil {
 		return nil, errors.New("vulnerability is nil")
 	}
-	
+
 	return vulnerability, nil
 }
 
@@ -96,7 +96,7 @@ func (c *ModelConverter) ToModelSession(legacySession interface{}) (*models.Sess
 	if legacySession == nil {
 		return nil, errors.New("legacy session is nil")
 	}
-	
+
 	return &models.Session{
 		ID:     "placeholder-id",
 		UserID: "placeholder-user-id",
@@ -109,7 +109,7 @@ func (c *ModelConverter) FromModelSession(session *models.Session) (interface{},
 	if session == nil {
 		return nil, errors.New("session is nil")
 	}
-	
+
 	return session, nil
 }
 
@@ -119,7 +119,7 @@ func (c *ModelConverter) ToModelAuditLog(legacyAuditLog interface{}) (*models.Au
 	if legacyAuditLog == nil {
 		return nil, errors.New("legacy audit log is nil")
 	}
-	
+
 	return &models.AuditLog{
 		ID:          "placeholder-id",
 		Action:      string(models.AuditActionRead),
@@ -133,7 +133,7 @@ func (c *ModelConverter) FromModelAuditLog(log *models.AuditLog) (interface{}, e
 	if log == nil {
 		return nil, errors.New("audit log is nil")
 	}
-	
+
 	return log, nil
 }
 

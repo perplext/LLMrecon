@@ -17,7 +17,6 @@ import (
 	"github.com/perplext/LLMrecon/src/template/management/types"
 )
 
-
 const (
 	// FileSource indicates the template is from a file
 	FileSource = interfaces.FileSource
@@ -48,16 +47,6 @@ const (
 	// StatusFailed indicates the template execution has failed
 	StatusFailed = interfaces.StatusFailed
 )
-
-
-
-
-
-
-
-
-
-
 
 // TemplateManagerOptions contains options for the template manager
 type TemplateManagerOptions struct {
@@ -115,13 +104,13 @@ func NewTemplateManager(options *TemplateManagerOptions) (*DefaultTemplateManage
 	}
 
 	manager := &DefaultTemplateManager{
-		loaders:           options.Loaders,
-		parser:            options.Parser,
-		executor:          options.Executor,
-		reporter:          options.Reporter,
-		cache:             options.Cache,
-		registry:          options.Registry,
-		preExecutionHooks: options.PreExecutionHooks,
+		loaders:            options.Loaders,
+		parser:             options.Parser,
+		executor:           options.Executor,
+		reporter:           options.Reporter,
+		cache:              options.Cache,
+		registry:           options.Registry,
+		preExecutionHooks:  options.PreExecutionHooks,
 		postExecutionHooks: options.PostExecutionHooks,
 	}
 	return manager, nil
@@ -245,7 +234,7 @@ func (m *DefaultTemplateManager) GetCategories() ([]string, error) {
 			}
 		}
 	}
-	
+
 	result := make([]string, 0, len(categories))
 	for category := range categories {
 		result = append(result, category)
@@ -387,10 +376,10 @@ func (m *DefaultTemplateManager) ExecuteTemplates(ctx context.Context, templateI
 			// Don't fail the entire batch, just record the error
 			result = &types.TemplateResult{
 				TemplateID: templateID,
-				Error:     err,
-				Status:    types.StatusFailed,
-				StartTime: time.Now(),
-				EndTime:   time.Now(),
+				Error:      err,
+				Status:     types.StatusFailed,
+				StartTime:  time.Now(),
+				EndTime:    time.Now(),
 			}
 		}
 
@@ -443,10 +432,10 @@ func (m *DefaultTemplateManager) ExecuteBatch(ctx context.Context, templates []*
 			// Don't fail the entire batch, just record the error
 			result = &types.TemplateResult{
 				TemplateID: template.ID,
-				Error:     err,
-				Status:    types.StatusFailed,
-				StartTime: time.Now(),
-				EndTime:   time.Now(),
+				Error:      err,
+				Status:     types.StatusFailed,
+				StartTime:  time.Now(),
+				EndTime:    time.Now(),
 			}
 		}
 		results = append(results, result)
@@ -501,5 +490,3 @@ func (m *DefaultTemplateManager) GenerateReport(results []*types.TemplateResult,
 
 	return report, nil
 }
-
-

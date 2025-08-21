@@ -97,7 +97,7 @@ func NewUpdateTransaction(packageID, sessionDir, backupDir string, logger io.Wri
 // Begin begins the transaction
 func (t *UpdateTransaction) Begin() error {
 	// Log transaction start
-	fmt.Fprintf(t.Logger, "[%s] Beginning update transaction %s for package %s\n", 
+	fmt.Fprintf(t.Logger, "[%s] Beginning update transaction %s for package %s\n",
 		time.Now().Format(time.RFC3339), t.ID, t.PackageID)
 
 	// Update status
@@ -125,7 +125,7 @@ func (t *UpdateTransaction) AddOperation(component TransactionComponent, compone
 // ExecuteOperation executes an operation in the transaction
 func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *UpdateOperation) error {
 	// Log operation start
-	fmt.Fprintf(t.Logger, "[%s] Executing operation: %s %s\n", 
+	fmt.Fprintf(t.Logger, "[%s] Executing operation: %s %s\n",
 		time.Now().Format(time.RFC3339), operation.Component, operation.ComponentID)
 
 	// Update status
@@ -140,7 +140,7 @@ func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *Upd
 		return operation.Error
 	}
 
-		// Create backup
+	// Create backup
 	if _, err := os.Stat(operation.DestinationPath); err == nil {
 		// Destination exists, create backup
 		if err := copyDir(operation.DestinationPath, operation.BackupPath); err != nil {
@@ -182,7 +182,7 @@ func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *Upd
 	operation.Timestamp = time.Now()
 
 	// Log operation success
-	fmt.Fprintf(t.Logger, "[%s] Operation completed successfully: %s %s\n", 
+	fmt.Fprintf(t.Logger, "[%s] Operation completed successfully: %s %s\n",
 		time.Now().Format(time.RFC3339), operation.Component, operation.ComponentID)
 
 	return nil
@@ -191,7 +191,7 @@ func (t *UpdateTransaction) ExecuteOperation(ctx context.Context, operation *Upd
 // Commit commits the transaction
 func (t *UpdateTransaction) Commit() error {
 	// Log transaction commit
-	fmt.Fprintf(t.Logger, "[%s] Committing update transaction %s\n", 
+	fmt.Fprintf(t.Logger, "[%s] Committing update transaction %s\n",
 		time.Now().Format(time.RFC3339), t.ID)
 
 	// Update status
@@ -199,7 +199,7 @@ func (t *UpdateTransaction) Commit() error {
 	t.EndTime = time.Now()
 
 	// Log transaction success
-	fmt.Fprintf(t.Logger, "[%s] Update transaction %s committed successfully\n", 
+	fmt.Fprintf(t.Logger, "[%s] Update transaction %s committed successfully\n",
 		time.Now().Format(time.RFC3339), t.ID)
 
 	return nil
@@ -208,33 +208,33 @@ func (t *UpdateTransaction) Commit() error {
 // Rollback rolls back the transaction
 func (t *UpdateTransaction) Rollback() error {
 	// Log transaction rollback
-	fmt.Fprintf(t.Logger, "[%s] Rolling back update transaction %s\n", 
+	fmt.Fprintf(t.Logger, "[%s] Rolling back update transaction %s\n",
 		time.Now().Format(time.RFC3339), t.ID)
 
 	// Rollback operations in reverse order
 	for i := len(t.Operations) - 1; i >= 0; i-- {
 		operation := t.Operations[i]
-	
+
 		// Skip operations that weren't executed
 		if operation.Status != TransactionCommitted && operation.Status != TransactionInProgress {
 			continue
 		}
 
 		// Log operation rollback
-		fmt.Fprintf(t.Logger, "[%s] Rolling back operation: %s %s\n", 
+		fmt.Fprintf(t.Logger, "[%s] Rolling back operation: %s %s\n",
 			time.Now().Format(time.RFC3339), operation.Component, operation.ComponentID)
 
 		// Check if backup exists
 		if _, err := os.Stat(operation.BackupPath); os.IsNotExist(err) {
 			// No backup, remove destination
 			if err := os.RemoveAll(operation.DestinationPath); err != nil {
-				fmt.Fprintf(t.Logger, "[%s] Warning: Failed to remove destination during rollback: %v\n", 
+				fmt.Fprintf(t.Logger, "[%s] Warning: Failed to remove destination during rollback: %v\n",
 					time.Now().Format(time.RFC3339), err)
 			}
 		} else {
 			// Restore from backup
 			if err := replaceDir(operation.BackupPath, operation.DestinationPath); err != nil {
-				fmt.Fprintf(t.Logger, "[%s] Warning: Failed to restore from backup during rollback: %v\n", 
+				fmt.Fprintf(t.Logger, "[%s] Warning: Failed to restore from backup during rollback: %v\n",
 					time.Now().Format(time.RFC3339), err)
 			}
 		}
@@ -249,7 +249,7 @@ func (t *UpdateTransaction) Rollback() error {
 	t.EndTime = time.Now()
 
 	// Log transaction rollback success
-	fmt.Fprintf(t.Logger, "[%s] Update transaction %s rolled back successfully\n", 
+	fmt.Fprintf(t.Logger, "[%s] Update transaction %s rolled back successfully\n",
 		time.Now().Format(time.RFC3339), t.ID)
 
 	return nil
@@ -303,16 +303,16 @@ func (t *UpdateTransaction) GetSummary() map[string]interface{} {
 
 	// Create summary
 	return map[string]interface{}{
-		"id":              t.ID,
-		"package_id":      t.PackageID,
-		"status":          t.Status,
-		"start_time":      t.StartTime,
-		"end_time":        t.EndTime,
-		"duration":        t.EndTime.Sub(t.StartTime).String(),
-		"operation_count": len(t.Operations),
-		"status_counts":   statusCounts,
+		"id":               t.ID,
+		"package_id":       t.PackageID,
+		"status":           t.Status,
+		"start_time":       t.StartTime,
+		"end_time":         t.EndTime,
+		"duration":         t.EndTime.Sub(t.StartTime).String(),
+		"operation_count":  len(t.Operations),
+		"status_counts":    statusCounts,
 		"component_counts": componentCounts,
-		"failed":          t.HasFailedOperations(),
+		"failed":           t.HasFailedOperations(),
 	}
 }
 

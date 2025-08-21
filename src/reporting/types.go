@@ -5,7 +5,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/reporting/common"
+	"github.com/perplext/LLMrecon/src/security/access/common"
 )
 
 // ReportFormat represents the format of a report

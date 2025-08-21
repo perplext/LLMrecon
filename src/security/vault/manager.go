@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 	"github.com/perplext/LLMrecon/src/provider/core"
+	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 )
 
 // CredentialManager manages credentials for the application
@@ -72,23 +72,23 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 	// Create secure vault
 	vaultPath := filepath.Join(configDir, "credentials.vault")
 	vault, err := NewSecureVault(vaultPath, VaultOptions{
-		Passphrase:           options.Passphrase,
-		AuditLogger:          options.AuditLogger,
-		AutoSave:             options.AutoSave,
+		Passphrase:            options.Passphrase,
+		AuditLogger:           options.AuditLogger,
+		AutoSave:              options.AutoSave,
 		RotationCheckInterval: options.RotationCheckInterval,
 		AlertCallback: func(credential *Credential, daysUntilExpiration int) {
 			// Log alert about credential rotation
 			if options.AuditLogger != nil {
 				options.AuditLogger.LogAlert(
-					fmt.Sprintf("Credential '%s' for service '%s' needs rotation in %d days", 
-						credential.Name, 
-						credential.Service, 
+					fmt.Sprintf("Credential '%s' for service '%s' needs rotation in %d days",
+						credential.Name,
+						credential.Service,
 						daysUntilExpiration),
 					"credential_rotation",
 					map[string]string{
-						"credential_id":        credential.ID,
-						"credential_name":      credential.Name,
-						"service":              credential.Service,
+						"credential_id":         credential.ID,
+						"credential_name":       credential.Name,
+						"service":               credential.Service,
 						"days_until_expiration": fmt.Sprintf("%d", daysUntilExpiration),
 					},
 				)
@@ -101,9 +101,9 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 
 	// Create manager
 	manager := &CredentialManager{
-		vault:               vault,
-		envPrefix:           envPrefix,
-		configDir:           configDir,
+		vault:                vault,
+		envPrefix:            envPrefix,
+		configDir:            configDir,
 		serviceToProviderMap: make(map[string]core.ProviderType),
 		providerToServiceMap: make(map[core.ProviderType]string),
 	}
@@ -119,7 +119,7 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 		} else {
 			err = manager.InstallGitHook()
 		}
-		
+
 		if err != nil {
 			fmt.Printf("Warning: Failed to install git hook: %v\n", err)
 		} else {
@@ -140,11 +140,11 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 func (m *CredentialManager) initServiceMappings() {
 	// Map service names to provider types
 	m.serviceToProviderMap = map[string]core.ProviderType{
-		"openai":   core.OpenAIProvider,
-		"anthropic": core.AnthropicProvider,
+		"openai":       core.OpenAIProvider,
+		"anthropic":    core.AnthropicProvider,
 		"azure-openai": core.AzureOpenAIProvider,
-		"huggingface": core.HuggingFaceProvider,
-		"local": core.LocalProvider,
+		"huggingface":  core.HuggingFaceProvider,
+		"local":        core.LocalProvider,
 	}
 
 	// Create reverse mapping
@@ -163,7 +163,7 @@ func (m *CredentialManager) InstallGitHookInDir(customDir string) error {
 	// Find git directory
 	var gitDir string
 	var err error
-	
+
 	if customDir != "" {
 		// Use the custom directory for testing
 		gitDir = filepath.Join(customDir, ".git")
@@ -178,10 +178,10 @@ func (m *CredentialManager) InstallGitHookInDir(customDir string) error {
 			return fmt.Errorf("failed to find git directory: %w", err)
 		}
 	}
-	
+
 	// Create pre-commit hook
 	hookPath := filepath.Join(gitDir, "hooks", "pre-commit")
-	
+
 	// Check if hook already exists
 	if _, err := os.Stat(hookPath); err == nil {
 		// Read existing hook
@@ -377,8 +377,8 @@ func (m *CredentialManager) SetAPIKey(providerType core.ProviderType, apiKey str
 		UpdatedAt:   time.Now(),
 		RotationPolicy: &RotationPolicy{
 			Enabled:      true,
-			IntervalDays: 90,  // Default to 90-day rotation
-			WarningDays:  14,  // Warn 14 days before expiration
+			IntervalDays: 90, // Default to 90-day rotation
+			WarningDays:  14, // Warn 14 days before expiration
 			LastRotation: time.Now(),
 		},
 	}

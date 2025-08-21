@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
 
 // APIConfig contains configuration for the API server
@@ -39,12 +39,12 @@ type APIConfig struct {
 // DefaultAPIConfig returns a default API configuration
 func DefaultAPIConfig() *APIConfig {
 	return &APIConfig{
-		Port:               8080,
-		BasePath:           "/api/v1",
-		EnableCORS:         true,
-		AllowedOrigins:     []string{"*"},
-		EnableRateLimit:    true,
-		RateLimitPerMinute: 60,
+		Port:                 8080,
+		BasePath:             "/api/v1",
+		EnableCORS:           true,
+		AllowedOrigins:       []string{"*"},
+		EnableRateLimit:      true,
+		RateLimitPerMinute:   60,
 		EnableRequestLogging: true,
 	}
 }
@@ -64,9 +64,9 @@ type Server struct {
 	accessManager access.AccessControlManager
 
 	// Middleware
-	authMiddleware   *AuthMiddleware
-	rbacMiddleware   *RBACMiddleware
-	loggingMiddleware *LoggingMiddleware
+	authMiddleware      *AuthMiddleware
+	rbacMiddleware      *RBACMiddleware
+	loggingMiddleware   *LoggingMiddleware
 	rateLimitMiddleware *RateLimitMiddleware
 }
 
@@ -137,7 +137,7 @@ func (s *Server) registerRoutes() {
 	authRouter.HandleFunc("/refresh", s.handleRefreshToken).Methods("POST")
 	authRouter.HandleFunc("/status", s.handleAuthStatus).Methods("GET")
 	authRouter.HandleFunc("/mfa/verify", s.handleMFAVerify).Methods("POST")
-	
+
 	// User routes (require authentication)
 	userRouter := api.PathPrefix("/users").Subrouter()
 	userRouter.Use(s.authMiddleware.Middleware)
@@ -150,7 +150,7 @@ func (s *Server) registerRoutes() {
 	userRouter.HandleFunc("/{id}/lock", s.handleLockUser).Methods("POST")
 	userRouter.HandleFunc("/{id}/unlock", s.handleUnlockUser).Methods("POST")
 	userRouter.HandleFunc("/{id}/mfa", s.handleManageUserMFA).Methods("PUT")
-	
+
 	// Role routes (require authentication and admin permission)
 	roleRouter := api.PathPrefix("/roles").Subrouter()
 	roleRouter.Use(s.authMiddleware.Middleware)
@@ -161,14 +161,14 @@ func (s *Server) registerRoutes() {
 	roleRouter.HandleFunc("/{name}", s.handleDeleteRole).Methods("DELETE")
 	roleRouter.HandleFunc("/{name}/permissions", s.handleAddPermission).Methods("POST")
 	roleRouter.HandleFunc("/{name}/permissions/{permission}", s.handleRemovePermission).Methods("DELETE")
-	
+
 	// Audit routes (require authentication and audit permission)
 	auditRouter := api.PathPrefix("/audit").Subrouter()
 	auditRouter.Use(s.authMiddleware.Middleware)
 	auditRouter.HandleFunc("", s.handleListAuditLogs).Methods("GET")
 	auditRouter.HandleFunc("/{id}", s.handleGetAuditLog).Methods("GET")
 	auditRouter.HandleFunc("/export", s.handleExportAuditLogs).Methods("GET")
-	
+
 	// Security incident routes (require authentication)
 	incidentRouter := api.PathPrefix("/incidents").Subrouter()
 	incidentRouter.Use(s.authMiddleware.Middleware)
@@ -177,7 +177,7 @@ func (s *Server) registerRoutes() {
 	incidentRouter.HandleFunc("/{id}", s.handleGetIncident).Methods("GET")
 	incidentRouter.HandleFunc("/{id}", s.handleUpdateIncident).Methods("PUT")
 	incidentRouter.HandleFunc("/{id}", s.handleDeleteIncident).Methods("DELETE")
-	
+
 	// Vulnerability routes (require authentication)
 	vulnRouter := api.PathPrefix("/vulnerabilities").Subrouter()
 	vulnRouter.Use(s.authMiddleware.Middleware)
@@ -186,7 +186,7 @@ func (s *Server) registerRoutes() {
 	vulnRouter.HandleFunc("/{id}", s.handleGetVulnerability).Methods("GET")
 	vulnRouter.HandleFunc("/{id}", s.handleUpdateVulnerability).Methods("PUT")
 	vulnRouter.HandleFunc("/{id}", s.handleDeleteVulnerability).Methods("DELETE")
-	
+
 	// Health check route (no authentication required)
 	api.HandleFunc("/health", s.handleHealthCheck).Methods("GET")
 }
@@ -198,13 +198,13 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		
+
 		// Handle preflight requests
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		
+
 		// Call the next handler
 		next.ServeHTTP(w, r)
 	})

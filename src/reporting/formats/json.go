@@ -23,7 +23,7 @@ func (f *JSONFormatter) FormatReport(results api.TestResults, writer io.Writer) 
 	if err != nil {
 		return err
 	}
-	
+
 	_, err = writer.Write(data)
 	return err
 }
@@ -39,7 +39,7 @@ func NewJSONFormatter(pretty bool) *JSONFormatter {
 func (f *JSONFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
 	// We're using interface{} types now, so we don't need to check the specific types
 	report := reportInterface
-	
+
 	// Just ensure we have a valid report object
 	if report == nil {
 		return nil, fmt.Errorf("report cannot be nil")
@@ -96,7 +96,7 @@ func (f *JSONLFormatter) FormatReport(results api.TestResults, writer io.Writer)
 	if err != nil {
 		return err
 	}
-	
+
 	_, err = writer.Write(data)
 	return err
 }
@@ -110,18 +110,18 @@ func NewJSONLFormatter() *JSONLFormatter {
 func (f *JSONLFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
 	// We're using interface{} types now, so we don't need to check the specific types
 	report := reportInterface
-	
+
 	// Just ensure we have a valid report object
 	if report == nil {
 		return nil, fmt.Errorf("report cannot be nil")
 	}
-	
+
 	// Simply marshal the report to JSON
 	data, err := json.Marshal(report)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal report to JSON: %w", err)
 	}
-	
+
 	return data, nil
 }
 

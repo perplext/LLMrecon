@@ -28,8 +28,8 @@ type ReportingSystem struct {
 func NewReportingSystem(config *ProtectionConfig) *ReportingSystem {
 	// Create default reporting config if not specified
 	reportingConfig := &ReportingConfig{
-		ReportingInterval: time.Hour, // Report every hour by default
-		MaxReportHistory:  1000,      // Keep up to 1000 reports in memory
+		ReportingInterval:  time.Hour, // Report every hour by default
+		MaxReportHistory:   1000,      // Keep up to 1000 reports in memory
 		EnableLocalStorage: true,
 		LocalStoragePath:   "reports",
 	}
@@ -205,7 +205,7 @@ func (r *ReportingSystem) ReportDetections(ctx context.Context, result *Protecti
 		if detection.Location != nil {
 			example = detection.Location.Context
 		}
-		
+
 		report := &InjectionReport{
 			ReportID:      uuid.New().String(),
 			DetectionType: detection.Type,

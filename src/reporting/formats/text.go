@@ -45,19 +45,19 @@ func (f *TextFormatter) FormatReport(results api.TestResults, writer io.Writer) 
 		buf.WriteString(fmt.Sprintf("   Status: %s\n", result.Status))
 		buf.WriteString(fmt.Sprintf("   Severity: %s\n", result.Severity))
 		buf.WriteString(fmt.Sprintf("   Category: %s\n", result.Category))
-		
+
 		if result.Description != "" {
 			buf.WriteString(fmt.Sprintf("   Description: %s\n", result.Description))
 		}
-		
+
 		if result.Details != "" {
 			buf.WriteString(fmt.Sprintf("   Details: %s\n", result.Details))
 		}
-		
+
 		if f.detailed && result.RawData != nil {
 			buf.WriteString(fmt.Sprintf("   Raw Data: %v\n", result.RawData))
 		}
-		
+
 		buf.WriteString("\n")
 	}
 
@@ -72,16 +72,16 @@ func (f *TextFormatter) Format(ctx context.Context, reportInterface interface{},
 	if !ok {
 		return nil, fmt.Errorf("expected api.TestResults, got %T", reportInterface)
 	}
-	
+
 	// Create a buffer to hold the text data
 	buf := &bytes.Buffer{}
-	
+
 	// Use the FormatReport method to write to the buffer
 	err := f.FormatReport(results, buf)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return buf.Bytes(), nil
 }
 
@@ -107,7 +107,11 @@ func (f *TextFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", filePath, err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Format and write the report
 	if err := f.FormatReport(results, file); err != nil {
@@ -116,5 +120,3 @@ func (f *TextFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 
 	return nil
 }
-
-

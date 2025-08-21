@@ -142,7 +142,11 @@ func CalculateFileChecksum(filePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Calculate checksum
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
@@ -200,13 +204,13 @@ func UpdateBundleChecksums(bundle *Bundle) error {
 // VerifyBundleChecksums verifies all checksums in a bundle
 func VerifyBundleChecksums(bundle *Bundle) (*ValidationResult, error) {
 	result := &ValidationResult{
-		Valid:     true,
-		IsValid:   true,
-		Level:     ChecksumValidationLevel,
-		Message:   "All checksums are valid",
-		Errors:    []string{},
-		Warnings:  []string{},
-		Details:   make(map[string]interface{}),
+		Valid:    true,
+		IsValid:  true,
+		Level:    ChecksumValidationLevel,
+		Message:  "All checksums are valid",
+		Errors:   []string{},
+		Warnings: []string{},
+		Details:  make(map[string]interface{}),
 	}
 	// Verify checksums for all content items
 	for _, item := range bundle.Manifest.Content {
@@ -313,13 +317,13 @@ func VerifyBundle(bundle *Bundle, publicKey []byte) (*ValidationResult, error) {
 
 	// Create validation result
 	result := &ValidationResult{
-		Valid:     true,
-		IsValid:   true,
-		Level:     SignatureValidationLevel,
-		Message:   "Bundle signature is valid",
-		Errors:    []string{},
-		Warnings:  []string{},
-		Details:   make(map[string]interface{}),
+		Valid:    true,
+		IsValid:  true,
+		Level:    SignatureValidationLevel,
+		Message:  "Bundle signature is valid",
+		Errors:   []string{},
+		Warnings: []string{},
+		Details:  make(map[string]interface{}),
 	}
 
 	// Verify signature

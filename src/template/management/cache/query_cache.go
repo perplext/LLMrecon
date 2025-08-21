@@ -115,22 +115,22 @@ func (c *QueryCache) Get(query string) (interface{}, bool) {
 	// Update position in eviction list (mark as recently used)
 	c.mutex.Lock()
 	c.updateEntryPosition(queryHash)
-	
+
 	// Update access statistics
 	entry.AccessCount++
 	entry.LastAccessed = time.Now()
-	
+
 	// If adaptive TTL is enabled, extend TTL based on access count
 	if c.adaptiveTTL {
 		c.extendTTL(entry)
 	}
-	
+
 	// Get the value (decompress if needed)
 	value := entry.Value
 	if entry.Compressed {
 		value = c.decompress(value)
 	}
-	
+
 	c.mutex.Unlock()
 
 	c.stats.Hits++
@@ -177,7 +177,7 @@ func (c *QueryCache) SetWithTTL(query string, value interface{}, ttl time.Durati
 		oldEntry := c.cache[queryHash]
 		c.currentSize -= oldEntry.Size
 		c.currentSize += size
-		
+
 		c.evictionList.MoveToFront(elem)
 		c.cache[queryHash] = entry
 		elem.Value = queryHash
@@ -255,17 +255,17 @@ func (c *QueryCache) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"hits":              c.stats.Hits,
-		"misses":            c.stats.Misses,
-		"evictions":         c.stats.Evictions,
-		"expirations":       c.stats.Expirations,
-		"total_lookups":     c.stats.TotalLookups,
-		"hit_ratio":         hitRatio,
-		"current_size":      c.currentSize,
-		"max_size":          c.maxSize,
-		"entry_count":       len(c.cache),
-		"compression":       c.enableCompression,
-		"adaptive_ttl":      c.adaptiveTTL,
+		"hits":               c.stats.Hits,
+		"misses":             c.stats.Misses,
+		"evictions":          c.stats.Evictions,
+		"expirations":        c.stats.Expirations,
+		"total_lookups":      c.stats.TotalLookups,
+		"hit_ratio":          hitRatio,
+		"current_size":       c.currentSize,
+		"max_size":           c.maxSize,
+		"entry_count":        len(c.cache),
+		"compression":        c.enableCompression,
+		"adaptive_ttl":       c.adaptiveTTL,
 		"memory_usage_bytes": c.currentSize,
 	}
 }

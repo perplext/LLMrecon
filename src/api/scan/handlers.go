@@ -15,8 +15,8 @@ import (
 type Handler struct {
 	service  *Service
 	validate *validator.Validate
-
 }
+
 // NewHandler creates a new scan handler
 func NewHandler(service *Service) *Handler {
 	return &Handler{
@@ -24,7 +24,7 @@ func NewHandler(service *Service) *Handler {
 		validate: validator.New(),
 	}
 
-// RegisterRoutes registers the scan API routes with the given router
+	// RegisterRoutes registers the scan API routes with the given router
 }
 func (h *Handler) RegisterRoutes(mux *http.ServeMux, middleware func(http.Handler) http.Handler) {
 	// Scan config endpoints
@@ -101,7 +101,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux, middleware func(http.Handle
 		}
 	})))
 
-// listScanConfigs handles requests to list scan configurations
+	// listScanConfigs handles requests to list scan configurations
 }
 func (h *Handler) listScanConfigs(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
@@ -121,7 +121,7 @@ func (h *Handler) listScanConfigs(w http.ResponseWriter, r *http.Request) {
 		Data:       configs,
 	})
 
-// createScanConfig handles requests to create a new scan configuration
+	// createScanConfig handles requests to create a new scan configuration
 }
 func (h *Handler) createScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
@@ -150,7 +150,7 @@ func (h *Handler) createScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Respond with the created config
 	h.respondWithJSON(w, http.StatusCreated, config)
 
-// getScanConfig handles requests to get a scan configuration by ID
+	// getScanConfig handles requests to get a scan configuration by ID
 }
 func (h *Handler) getScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
@@ -170,7 +170,7 @@ func (h *Handler) getScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Respond with the config
 	h.respondWithJSON(w, http.StatusOK, config)
 
-// updateScanConfig handles requests to update a scan configuration
+	// updateScanConfig handles requests to update a scan configuration
 }
 func (h *Handler) updateScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
@@ -195,7 +195,7 @@ func (h *Handler) updateScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Respond with the updated config
 	h.respondWithJSON(w, http.StatusOK, config)
 
-// deleteScanConfig handles requests to delete a scan configuration
+	// deleteScanConfig handles requests to delete a scan configuration
 }
 func (h *Handler) deleteScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
@@ -214,7 +214,7 @@ func (h *Handler) deleteScanConfig(w http.ResponseWriter, r *http.Request) {
 	// Respond with success
 	w.WriteHeader(http.StatusNoContent)
 
-// listScans handles requests to list scans
+	// listScans handles requests to list scans
 }
 func (h *Handler) listScans(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
@@ -234,7 +234,7 @@ func (h *Handler) listScans(w http.ResponseWriter, r *http.Request) {
 		Data:       scans,
 	})
 
-// createScan handles requests to create a new scan
+	// createScan handles requests to create a new scan
 }
 func (h *Handler) createScan(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
@@ -264,7 +264,7 @@ func (h *Handler) createScan(w http.ResponseWriter, r *http.Request) {
 	// Respond with the created scan
 	h.respondWithJSON(w, http.StatusAccepted, scan)
 
-// getScan handles requests to get a scan by ID
+	// getScan handles requests to get a scan by ID
 }
 func (h *Handler) getScan(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
@@ -283,7 +283,7 @@ func (h *Handler) getScan(w http.ResponseWriter, r *http.Request) {
 	// Respond with the scan
 	h.respondWithJSON(w, http.StatusOK, scan)
 
-// cancelScan handles requests to cancel a running scan
+	// cancelScan handles requests to cancel a running scan
 }
 func (h *Handler) cancelScan(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
@@ -304,7 +304,7 @@ func (h *Handler) cancelScan(w http.ResponseWriter, r *http.Request) {
 	// Respond with the updated scan
 	h.respondWithJSON(w, http.StatusOK, scan)
 
-// getScanResults handles requests to get the results for a scan
+	// getScanResults handles requests to get the results for a scan
 }
 func (h *Handler) getScanResults(w http.ResponseWriter, r *http.Request) {
 	// Get ID from path
@@ -331,7 +331,7 @@ func (h *Handler) getScanResults(w http.ResponseWriter, r *http.Request) {
 		Data:       results,
 	})
 
-// respondWithJSON writes a JSON response
+	// respondWithJSON writes a JSON response
 }
 func (h *Handler) respondWithJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -344,7 +344,7 @@ func (h *Handler) respondWithJSON(w http.ResponseWriter, status int, data interf
 		// fmt.Printf("Error encoding JSON response: %v\n", err)
 	}
 
-// respondWithError writes an error response
+	// respondWithError writes an error response
 }
 func (h *Handler) respondWithError(w http.ResponseWriter, status int, message string, err error) {
 	// In a real implementation, we would log the error
@@ -359,9 +359,9 @@ func (h *Handler) respondWithError(w http.ResponseWriter, status int, message st
 	// Write response
 	h.respondWithJSON(w, status, response)
 
-// Helper functions
+	// Helper functions
 
-// getPaginationParams extracts pagination parameters from the request
+	// getPaginationParams extracts pagination parameters from the request
 }
 func getPaginationParams(r *http.Request) (int, int) {
 	// Get page parameter
@@ -384,7 +384,7 @@ func getPaginationParams(r *http.Request) (int, int) {
 
 	return page, pageSize
 
-// getFilterParams extracts filter parameters from the request
+	// getFilterParams extracts filter parameters from the request
 }
 func getFilterParams(r *http.Request) FilterParams {
 	return FilterParams{

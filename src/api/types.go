@@ -65,11 +65,11 @@ type Scan struct {
 type ScanStatus string
 
 const (
-	ScanStatusPending    ScanStatus = "pending"
-	ScanStatusRunning    ScanStatus = "running"
-	ScanStatusCompleted  ScanStatus = "completed"
-	ScanStatusFailed     ScanStatus = "failed"
-	ScanStatusCancelled  ScanStatus = "cancelled"
+	ScanStatusPending   ScanStatus = "pending"
+	ScanStatusRunning   ScanStatus = "running"
+	ScanStatusCompleted ScanStatus = "completed"
+	ScanStatusFailed    ScanStatus = "failed"
+	ScanStatusCancelled ScanStatus = "cancelled"
 )
 
 // ScanTarget defines what is being scanned
@@ -100,14 +100,14 @@ type ScanResults struct {
 
 // ResultSummary provides high-level scan results
 type ResultSummary struct {
-	TotalTests       int            `json:"total_tests"`
-	Passed           int            `json:"passed"`
-	Failed           int            `json:"failed"`
-	Errors           int            `json:"errors"`
-	Skipped          int            `json:"skipped"`
-	SeverityCount    map[string]int `json:"severity_count"`
-	CategoryCount    map[string]int `json:"category_count"`
-	ComplianceScore  float64        `json:"compliance_score"`
+	TotalTests      int            `json:"total_tests"`
+	Passed          int            `json:"passed"`
+	Failed          int            `json:"failed"`
+	Errors          int            `json:"errors"`
+	Skipped         int            `json:"skipped"`
+	SeverityCount   map[string]int `json:"severity_count"`
+	CategoryCount   map[string]int `json:"category_count"`
+	ComplianceScore float64        `json:"compliance_score"`
 }
 
 // Finding represents a security issue discovered
@@ -144,31 +144,31 @@ type TemplateExecution struct {
 
 // Template represents a security test template
 type Template struct {
-	ID           string                 `json:"id"`
-	Name         string                 `json:"name"`
-	Description  string                 `json:"description"`
-	Category     string                 `json:"category"`
-	Severity     string                 `json:"severity"`
-	Author       string                 `json:"author,omitempty"`
-	Version      string                 `json:"version"`
-	Tags         []string               `json:"tags,omitempty"`
-	References   []string               `json:"references,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-	LastUpdated  time.Time              `json:"last_updated"`
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Category    string                 `json:"category"`
+	Severity    string                 `json:"severity"`
+	Author      string                 `json:"author,omitempty"`
+	Version     string                 `json:"version"`
+	Tags        []string               `json:"tags,omitempty"`
+	References  []string               `json:"references,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	LastUpdated time.Time              `json:"last_updated"`
 }
 
 // Module represents a provider module
 type Module struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Type         string    `json:"type"`
-	Version      string    `json:"version"`
-	Description  string    `json:"description"`
-	Provider     string    `json:"provider"`
-	Status       string    `json:"status"`
-	Capabilities []string  `json:"capabilities,omitempty"`
+	ID           string       `json:"id"`
+	Name         string       `json:"name"`
+	Type         string       `json:"type"`
+	Version      string       `json:"version"`
+	Description  string       `json:"description"`
+	Provider     string       `json:"provider"`
+	Status       string       `json:"status"`
+	Capabilities []string     `json:"capabilities,omitempty"`
 	Config       ModuleConfig `json:"config,omitempty"`
-	LoadedAt     time.Time `json:"loaded_at"`
+	LoadedAt     time.Time    `json:"loaded_at"`
 }
 
 // ModuleConfig contains module configuration
@@ -188,11 +188,11 @@ type VersionInfo struct {
 
 // ComponentVersion represents version details for a component
 type ComponentVersion struct {
-	Current        string    `json:"current"`
-	Latest         string    `json:"latest,omitempty"`
-	UpdateAvailable bool     `json:"update_available"`
-	ReleaseDate    time.Time `json:"release_date,omitempty"`
-	Changelog      string    `json:"changelog_url,omitempty"`
+	Current         string    `json:"current"`
+	Latest          string    `json:"latest,omitempty"`
+	UpdateAvailable bool      `json:"update_available"`
+	ReleaseDate     time.Time `json:"release_date,omitempty"`
+	Changelog       string    `json:"changelog_url,omitempty"`
 }
 
 // UpdateRequest represents an update operation request
@@ -204,18 +204,18 @@ type UpdateRequest struct {
 
 // UpdateResponse contains update operation results
 type UpdateResponse struct {
-	Status   string          `json:"status"`
-	Updates  []UpdateResult  `json:"updates"`
-	Messages []string        `json:"messages,omitempty"`
+	Status   string         `json:"status"`
+	Updates  []UpdateResult `json:"updates"`
+	Messages []string       `json:"messages,omitempty"`
 }
 
 // UpdateResult represents the result of updating a component
 type UpdateResult struct {
-	Component   string `json:"component"`
-	OldVersion  string `json:"old_version"`
-	NewVersion  string `json:"new_version"`
-	Status      string `json:"status"`
-	Message     string `json:"message,omitempty"`
+	Component  string `json:"component"`
+	OldVersion string `json:"old_version"`
+	NewVersion string `json:"new_version"`
+	Status     string `json:"status"`
+	Message    string `json:"message,omitempty"`
 }
 
 // CreateScanRequest represents a request to create a new scan
@@ -228,11 +228,11 @@ type CreateScanRequest struct {
 
 // ListScansRequest represents scan listing parameters
 type ListScansRequest struct {
-	Status   ScanStatus `json:"status,omitempty"`
-	Page     int        `json:"page,omitempty"`
-	PerPage  int        `json:"per_page,omitempty"`
-	SortBy   string     `json:"sort_by,omitempty"`
-	OrderBy  string     `json:"order_by,omitempty"`
+	Status  ScanStatus `json:"status,omitempty"`
+	Page    int        `json:"page,omitempty"`
+	PerPage int        `json:"per_page,omitempty"`
+	SortBy  string     `json:"sort_by,omitempty"`
+	OrderBy string     `json:"order_by,omitempty"`
 }
 
 // ListTemplatesRequest represents template listing parameters
@@ -325,28 +325,28 @@ type ImportBundleRequest struct {
 
 // BundleOperationResult represents the result of a bundle operation
 type BundleOperationResult struct {
-	BundleID   string            `json:"bundle_id,omitempty"`
-	Status     string            `json:"status"`
-	Message    string            `json:"message,omitempty"`
-	Templates  []string          `json:"templates,omitempty"`
-	Modules    []string          `json:"modules,omitempty"`
-	Conflicts  []string          `json:"conflicts,omitempty"`
-	Errors     []string          `json:"errors,omitempty"`
-	Metadata   map[string]string `json:"metadata,omitempty"`
+	BundleID  string            `json:"bundle_id,omitempty"`
+	Status    string            `json:"status"`
+	Message   string            `json:"message,omitempty"`
+	Templates []string          `json:"templates,omitempty"`
+	Modules   []string          `json:"modules,omitempty"`
+	Conflicts []string          `json:"conflicts,omitempty"`
+	Errors    []string          `json:"errors,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
 }
 
 // Compliance types for API operations
 
 // ComplianceReportRequest represents a request to generate a compliance report
 type ComplianceReportRequest struct {
-	Framework    string   `json:"framework"`     // "owasp", "iso42001", "nist"
-	ScanIDs      []string `json:"scan_ids,omitempty"`
-	DateFrom     *time.Time `json:"date_from,omitempty"`
-	DateTo       *time.Time `json:"date_to,omitempty"`
-	Format       string   `json:"format,omitempty"` // "json", "pdf", "html", "csv"
-	IncludePassed bool    `json:"include_passed,omitempty"`
-	IncludeFailed bool    `json:"include_failed,omitempty"`
-	IncludeSkipped bool   `json:"include_skipped,omitempty"`
+	Framework      string     `json:"framework"` // "owasp", "iso42001", "nist"
+	ScanIDs        []string   `json:"scan_ids,omitempty"`
+	DateFrom       *time.Time `json:"date_from,omitempty"`
+	DateTo         *time.Time `json:"date_to,omitempty"`
+	Format         string     `json:"format,omitempty"` // "json", "pdf", "html", "csv"
+	IncludePassed  bool       `json:"include_passed,omitempty"`
+	IncludeFailed  bool       `json:"include_failed,omitempty"`
+	IncludeSkipped bool       `json:"include_skipped,omitempty"`
 }
 
 // ComplianceReport represents a compliance report
@@ -378,13 +378,13 @@ type ComplianceSummary struct {
 
 // ComplianceResult represents the compliance status of a specific control
 type ComplianceResult struct {
-	ControlID    string                 `json:"control_id"`
-	ControlName  string                 `json:"control_name"`
-	Description  string                 `json:"description"`
-	Status       string                 `json:"status"` // "compliant", "non-compliant", "not-applicable"
-	Evidence     []ComplianceEvidence   `json:"evidence,omitempty"`
-	Recommendations []string             `json:"recommendations,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	ControlID       string                 `json:"control_id"`
+	ControlName     string                 `json:"control_name"`
+	Description     string                 `json:"description"`
+	Status          string                 `json:"status"` // "compliant", "non-compliant", "not-applicable"
+	Evidence        []ComplianceEvidence   `json:"evidence,omitempty"`
+	Recommendations []string               `json:"recommendations,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ComplianceEvidence represents evidence supporting a compliance result

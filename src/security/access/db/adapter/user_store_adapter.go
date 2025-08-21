@@ -30,13 +30,13 @@ func (a *UserStoreAdapter) Close() error {
 func (a *UserStoreAdapter) CreateUser(ctx context.Context, user *models.User) error {
 	// Convert domain user to interface user
 	interfaceUser := converters.ModelUserToInterfaceUser(user)
-	
+
 	// Create user in store
 	err := a.store.CreateUser(ctx, interfaceUser)
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -47,10 +47,10 @@ func (a *UserStoreAdapter) GetUserByID(ctx context.Context, id string) (*models.
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert interface user to domain user
 	user := converters.InterfaceUserToModelUser(interfaceUser)
-	
+
 	return user, nil
 }
 
@@ -61,10 +61,10 @@ func (a *UserStoreAdapter) GetUserByUsername(ctx context.Context, username strin
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert interface user to domain user
 	user := converters.InterfaceUserToModelUser(interfaceUser)
-	
+
 	return user, nil
 }
 
@@ -75,10 +75,10 @@ func (a *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*m
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert interface user to domain user
 	user := converters.InterfaceUserToModelUser(interfaceUser)
-	
+
 	return user, nil
 }
 
@@ -86,13 +86,13 @@ func (a *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*m
 func (a *UserStoreAdapter) UpdateUser(ctx context.Context, user *models.User) error {
 	// Convert domain user to interface user
 	interfaceUser := converters.ModelUserToInterfaceUser(user)
-	
+
 	// Update user in store
 	err := a.store.UpdateUser(ctx, interfaceUser)
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 

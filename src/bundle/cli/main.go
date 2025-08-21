@@ -16,7 +16,7 @@ func RunOfflineBundleCLI() {
 		TamperEvident:       true,
 		RedactSensitiveInfo: true,
 	}
-	
+
 	auditTrailManager, err := trail.NewAuditTrailManager(auditConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Failed to create audit trail manager: %v\n", err)

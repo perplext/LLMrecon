@@ -9,28 +9,28 @@ import (
 type Role struct {
 	// Unique identifier for the role
 	ID string `json:"id"`
-	
+
 	// Human-readable name for the role
 	Name string `json:"name"`
-	
+
 	// Description of the role
 	Description string `json:"description"`
-	
+
 	// Permissions assigned to this role
 	Permissions []string `json:"permissions"`
-	
+
 	// Parent roles in the role hierarchy
 	ParentRoles []string `json:"parent_roles"`
-	
+
 	// Whether the role is a system role (cannot be deleted)
 	SystemRole bool `json:"system_role"`
-	
+
 	// Time when the role was created
 	CreatedAt time.Time `json:"created_at"`
-	
+
 	// Time when the role was last updated
 	UpdatedAt time.Time `json:"updated_at"`
-	
+
 	// Additional metadata for the role
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
@@ -39,28 +39,28 @@ type Role struct {
 type Permission struct {
 	// Unique identifier for the permission
 	ID string `json:"id"`
-	
+
 	// Human-readable name for the permission
 	Name string `json:"name"`
-	
+
 	// Description of the permission
 	Description string `json:"description"`
-	
+
 	// Resource type this permission applies to
 	ResourceType string `json:"resource_type"`
-	
+
 	// Action this permission allows
 	Action string `json:"action"`
-	
+
 	// Whether this is a system permission (cannot be deleted)
 	SystemPermission bool `json:"system_permission"`
-	
+
 	// Time when the permission was created
 	CreatedAt time.Time `json:"created_at"`
-	
+
 	// Time when the permission was last updated
 	UpdatedAt time.Time `json:"updated_at"`
-	
+
 	// Additional metadata for the permission
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
@@ -69,16 +69,16 @@ type Permission struct {
 type UserRole struct {
 	// User ID
 	UserID string `json:"user_id"`
-	
+
 	// Role ID
 	RoleID string `json:"role_id"`
-	
+
 	// Time when the role was assigned
 	AssignedAt time.Time `json:"assigned_at"`
-	
+
 	// User who assigned the role
 	AssignedBy string `json:"assigned_by,omitempty"`
-	
+
 	// Expiration time for the role assignment (if any)
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
 }
@@ -87,16 +87,16 @@ type UserRole struct {
 type UserPermission struct {
 	// User ID
 	UserID string `json:"user_id"`
-	
+
 	// Permission ID
 	PermissionID string `json:"permission_id"`
-	
+
 	// Time when the permission was assigned
 	AssignedAt time.Time `json:"assigned_at"`
-	
+
 	// User who assigned the permission
 	AssignedBy string `json:"assigned_by,omitempty"`
-	
+
 	// Expiration time for the permission assignment (if any)
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
 }
@@ -136,7 +136,7 @@ func NewPermission(id, name, description, resourceType, action string) *Permissi
 // DefaultRoles returns the default system roles
 func DefaultRoles() []Role {
 	now := time.Now()
-	
+
 	// Admin role
 	adminRole := Role{
 		ID:          "admin",
@@ -163,7 +163,7 @@ func DefaultRoles() []Role {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
-	
+
 	// Manager role
 	managerRole := Role{
 		ID:          "manager",
@@ -188,7 +188,7 @@ func DefaultRoles() []Role {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
-	
+
 	// User role
 	userRole := Role{
 		ID:          "user",
@@ -208,7 +208,7 @@ func DefaultRoles() []Role {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
-	
+
 	// Guest role
 	guestRole := Role{
 		ID:          "guest",
@@ -222,7 +222,7 @@ func DefaultRoles() []Role {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
-	
+
 	// Security Auditor role
 	securityAuditorRole := Role{
 		ID:          "security_auditor",
@@ -242,7 +242,7 @@ func DefaultRoles() []Role {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
-	
+
 	// Security Administrator role
 	securityAdminRole := Role{
 		ID:          "security_admin",
@@ -262,7 +262,7 @@ func DefaultRoles() []Role {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
-	
+
 	return []Role{
 		adminRole,
 		managerRole,
@@ -276,7 +276,7 @@ func DefaultRoles() []Role {
 // DefaultPermissions returns the default system permissions
 func DefaultPermissions() []Permission {
 	now := time.Now()
-	
+
 	return []Permission{
 		{
 			ID:               "system.admin",

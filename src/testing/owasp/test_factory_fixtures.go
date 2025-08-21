@@ -3,7 +3,7 @@ package owasp
 
 import (
 	"github.com/perplext/LLMrecon/src/testing/owasp/fixtures"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // FixtureBasedTestCaseFactory is an implementation of the TestCaseFactory interface that uses test fixtures
@@ -72,28 +72,27 @@ func (f *FixtureBasedTestCaseFactory) CreateTestCasesForVulnerability(vulnerabil
 // CreateTestSuite creates a test suite with all test cases
 func (f *FixtureBasedTestCaseFactory) CreateTestSuite(id string, name string, description string) *types.TestSuite {
 	testCases := fixtures.GetAllTestCases()
-	
+
 	testSuite := &types.TestSuite{
 		ID:          id,
 		Name:        name,
 		Description: description,
 		TestCases:   testCases,
 	}
-	
+
 	return testSuite
 }
 
 // CreateTestSuiteForVulnerability creates a test suite for a specific vulnerability type
 func (f *FixtureBasedTestCaseFactory) CreateTestSuiteForVulnerability(id string, name string, description string, vulnerabilityType types.VulnerabilityType) *types.TestSuite {
 	testCases := fixtures.GetTestCasesByVulnerabilityType(vulnerabilityType)
-	
+
 	testSuite := &types.TestSuite{
 		ID:          id,
 		Name:        name,
 		Description: description,
 		TestCases:   testCases,
 	}
-	
+
 	return testSuite
 }
-

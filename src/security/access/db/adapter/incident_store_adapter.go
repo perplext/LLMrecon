@@ -28,19 +28,19 @@ type IncidentEvent struct {
 type IncidentStore interface {
 	// CreateIncident creates a new security incident
 	CreateIncident(ctx context.Context, incident *IncidentEvent) error
-	
+
 	// GetIncidentByID retrieves a security incident by ID
 	GetIncidentByID(ctx context.Context, id string) (*IncidentEvent, error)
-	
+
 	// UpdateIncident updates an existing security incident
 	UpdateIncident(ctx context.Context, incident *IncidentEvent) error
-	
+
 	// DeleteIncident deletes a security incident
 	DeleteIncident(ctx context.Context, id string) error
-	
+
 	// ListIncidents lists security incidents with optional filtering
 	ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*IncidentEvent, int, error)
-	
+
 	// Close closes the incident store
 	Close() error
 }

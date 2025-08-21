@@ -62,8 +62,8 @@ func NewSchemaValidator(jsonSchemaPath, yamlSchemaPath string) (*SchemaValidator
 	}
 
 	return &SchemaValidator{
-		jsonSchema: jsonSchema,
-		yamlSchema: yamlSchema,
+		jsonSchema:       jsonSchema,
+		yamlSchema:       yamlSchema,
 		customValidators: make(map[string]func(interface{}) error),
 	}, nil
 }
@@ -77,7 +77,7 @@ func (v *SchemaValidator) AddCustomValidator(field string, validator func(interf
 func (v *SchemaValidator) ValidateSchema(data interface{}) error {
 	// Convert data to map for validation
 	var templateMap map[string]interface{}
-	
+
 	switch d := data.(type) {
 	case map[string]interface{}:
 		templateMap = d

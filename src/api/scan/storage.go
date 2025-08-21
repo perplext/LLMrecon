@@ -44,19 +44,19 @@ type Storage interface {
 // MemoryStorage implements the Storage interface using in-memory storage
 // This is primarily for testing and development purposes
 type MemoryStorage struct {
-	configs      map[string]*ScanConfig
-	scans        map[string]*Scan
-	results      map[string]*ScanResult
+	configs       map[string]*ScanConfig
+	scans         map[string]*Scan
+	results       map[string]*ScanResult
 	resultsByScan map[string][]*ScanResult
-	mu           sync.RWMutex
+	mu            sync.RWMutex
 }
 
 // NewMemoryStorage creates a new MemoryStorage instance
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
-		configs:      make(map[string]*ScanConfig),
-		scans:        make(map[string]*Scan),
-		results:      make(map[string]*ScanResult),
+		configs:       make(map[string]*ScanConfig),
+		scans:         make(map[string]*Scan),
+		results:       make(map[string]*ScanResult),
 		resultsByScan: make(map[string][]*ScanResult),
 	}
 }

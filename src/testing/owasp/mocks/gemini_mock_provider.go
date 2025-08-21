@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // GeminiMockProvider is a mock implementation of the Google Gemini provider
@@ -29,16 +29,16 @@ func NewGeminiMockProvider() *GeminiMockProvider {
 			CompletionTokens: 55,
 			TotalTokens:      165,
 		},
-		VulnerableResponses:   make(map[string]string),
+		VulnerableResponses:    make(map[string]string),
 		VulnerabilityBehaviors: make(map[types.VulnerabilityType]*VulnerabilityBehavior),
 	}
 
 	// Set up Gemini-specific models
 	base := NewBaseMockProviderImpl(config)
-	
+
 	// Configure Gemini-specific behavior for vulnerabilities
 	setupGeminiVulnerabilityBehaviors(base)
-	
+
 	return &GeminiMockProvider{
 		BaseMockProviderImpl: base,
 	}
@@ -64,8 +64,8 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Severity: core.SeverityMedium,
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "prompt_injection",
-			"model_specific": "gemini_pro",
-			"resistance_level": "medium",
+			"model_specific":     "gemini_pro",
+			"resistance_level":   "medium",
 		},
 	})
 
@@ -87,7 +87,7 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		},
 		Severity: core.SeverityMedium,
 		Metadata: map[string]interface{}{
-			"vulnerability_type": "supply_chain",
+			"vulnerability_type":  "supply_chain",
 			"affected_components": []string{"libraries", "APIs", "packages", "dependencies"},
 		},
 	})
@@ -110,7 +110,7 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Severity: core.SeverityHigh,
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "insecure_plugin_design",
-			"security_concerns": []string{"input validation", "permission model", "authentication", "data handling"},
+			"security_concerns":  []string{"input validation", "permission model", "authentication", "data handling"},
 		},
 	})
 
@@ -132,7 +132,7 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		},
 		Severity: core.SeverityMedium,
 		Metadata: map[string]interface{}{
-			"vulnerability_type": "model_theft",
+			"vulnerability_type":   "model_theft",
 			"detection_capability": "query pattern analysis",
 		},
 	})
@@ -269,14 +269,14 @@ func (p *GeminiMockProvider) estimateTokenCountForMessages(messages []core.ChatM
 		case "system":
 			tokenCount += 4
 		}
-		
+
 		// Estimate tokens in content
 		tokenCount += p.estimateTokenCount(msg.Content)
 	}
-	
+
 	// Add tokens for conversation format
 	tokenCount += 3
-	
+
 	return tokenCount
 }
 
@@ -286,7 +286,7 @@ func (p *GeminiMockProvider) estimateTokenCount(text string) int {
 	if text == "" {
 		return 0
 	}
-	
+
 	// Gemini's tokenization is similar to OpenAI but with some differences
 	// This is a simplified approximation
 	words := strings.Fields(text)

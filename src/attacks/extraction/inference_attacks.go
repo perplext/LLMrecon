@@ -13,21 +13,21 @@ import (
 
 // InferenceAttacker performs model inference attacks
 type InferenceAttacker struct {
-	attacks       []InferenceAttack
-	analyzer      *ResponseAnalyzer
-	comparator    *ModelComparator
-	attributor    *AttributionEngine
-	config        InferenceConfig
-	mu            sync.RWMutex
+	attacks    []InferenceAttack
+	analyzer   *ResponseAnalyzer
+	comparator *ModelComparator
+	attributor *AttributionEngine
+	config     InferenceConfig
+	mu         sync.RWMutex
 }
 
 // InferenceConfig configures inference attacks
 type InferenceConfig struct {
-	MaxQueries          int
-	QueryTimeout        time.Duration
-	ParallelQueries     int
-	PrecisionThreshold  float64
-	StealthMode         bool
+	MaxQueries         int
+	QueryTimeout       time.Duration
+	ParallelQueries    int
+	PrecisionThreshold float64
+	StealthMode        bool
 }
 
 // InferenceAttack defines an inference attack method
@@ -39,39 +39,39 @@ type InferenceAttack interface {
 
 // Query represents an inference query
 type Query struct {
-	ID        string
-	Type      QueryType
-	Content   string
-	Variants  []string
-	Metadata  map[string]interface{}
+	ID       string
+	Type     QueryType
+	Content  string
+	Variants []string
+	Metadata map[string]interface{}
 }
 
 // QueryType defines the type of inference query
 type QueryType string
 
 const (
-	QueryTypeArchitecture   QueryType = "architecture"
-	QueryTypeTraining       QueryType = "training"
-	QueryTypeCapability     QueryType = "capability"
-	QueryTypeVulnerability  QueryType = "vulnerability"
+	QueryTypeArchitecture  QueryType = "architecture"
+	QueryTypeTraining      QueryType = "training"
+	QueryTypeCapability    QueryType = "capability"
+	QueryTypeVulnerability QueryType = "vulnerability"
 )
 
 // InferenceResult contains inference attack results
 type InferenceResult struct {
-	QueryID      string
-	AttackType   string
-	Findings     []Finding
-	Confidence   float64
-	Evidence     []Evidence
-	Timestamp    time.Time
+	QueryID    string
+	AttackType string
+	Findings   []Finding
+	Confidence float64
+	Evidence   []Evidence
+	Timestamp  time.Time
 }
 
 // Finding represents a discovered property
 type Finding struct {
-	Property    string
-	Value       interface{}
-	Confidence  float64
-	Supporting  []string
+	Property   string
+	Value      interface{}
+	Confidence float64
+	Supporting []string
 }
 
 // Evidence represents supporting evidence
@@ -94,11 +94,11 @@ type Vulnerability struct {
 // NewInferenceAttacker creates an inference attacker
 func NewInferenceAttacker(config InferenceConfig) *InferenceAttacker {
 	ia := &InferenceAttacker{
-		config:      config,
-		attacks:     []InferenceAttack{},
-		analyzer:    NewResponseAnalyzer(),
-		comparator:  NewModelComparator(),
-		attributor:  NewAttributionEngine(),
+		config:     config,
+		attacks:    []InferenceAttack{},
+		analyzer:   NewResponseAnalyzer(),
+		comparator: NewModelComparator(),
+		attributor: NewAttributionEngine(),
 	}
 
 	// Register inference attacks
@@ -277,10 +277,10 @@ type ParameterRange struct {
 
 // Capability represents an inferred capability
 type Capability struct {
-	Name        string
-	Level       string // basic, intermediate, advanced
-	Confidence  float64
-	Examples    []string
+	Name       string
+	Level      string // basic, intermediate, advanced
+	Confidence float64
+	Examples   []string
 }
 
 // ResponseAnalyzer analyzes model responses
@@ -323,16 +323,16 @@ func (t *TimingAttack) Execute(target interface{}, query Query) (InferenceResult
 	// Measure timing for each operation type
 	for _, op := range t.operations {
 		prompts := t.generatePrompts(op)
-		
+
 		for i := 0; i < t.measurements; i++ {
 			prompt := prompts[i%len(prompts)]
 			start := time.Now()
-			
+
 			// Execute query
 			if err := executeQuery(target, prompt); err != nil {
 				return InferenceResult{}, fmt.Errorf("operation failed: %w", err)
 			}
-			
+
 			elapsed := time.Since(start)
 			timings[op] = append(timings[op], elapsed)
 		}
@@ -552,10 +552,10 @@ func (c *ConfidenceCalibrationAttack) Execute(target interface{}, query Query) (
 		// Ask for confidence
 		confQuery := fmt.Sprintf("%s\nOn a scale of 0-100, how confident are you in your answer?", cq.Question)
 		response := executeQueryStr(target, confQuery)
-		
+
 		// Extract confidence (simplified)
 		extractedConfidence := c.extractConfidence(response)
-		
+
 		calibrationResults = append(calibrationResults, CalibrationResult{
 			Query:              cq.Question,
 			ExpectedConfidence: cq.ExpectedConfidence,
@@ -684,12 +684,12 @@ func (b *BoundaryProbingAttack) RequiredQueries() int {
 
 func (b *BoundaryProbingAttack) probeContextLength(target interface{}, sizes []int) *Finding {
 	maxHandled := 0
-	
+
 	for _, size := range sizes {
 		// Generate text of specific length
 		text := strings.Repeat("a ", size/2)
 		prompt := fmt.Sprintf("Summarize this text: %s", text)
-		
+
 		response := executeQueryStr(target, prompt)
 		if len(response) > 10 { // Arbitrary threshold for valid response
 			maxHandled = size
@@ -710,11 +710,11 @@ func (b *BoundaryProbingAttack) probeContextLength(target interface{}, sizes []i
 
 func (b *BoundaryProbingAttack) probeTokenVocabulary(target interface{}, tokens []string) *Finding {
 	recognized := 0
-	
+
 	for _, token := range tokens {
 		prompt := fmt.Sprintf("Define the token: %s", token)
 		response := executeQueryStr(target, prompt)
-		
+
 		if !strings.Contains(response, "unknown") && !strings.Contains(response, "not recognized") {
 			recognized++
 		}
@@ -732,7 +732,7 @@ func (b *BoundaryProbingAttack) probeTokenVocabulary(target interface{}, tokens 
 
 func (b *BoundaryProbingAttack) probeLanguageSupport(target interface{}, languages []string) *Finding {
 	supported := []string{}
-	
+
 	greetings := map[string]string{
 		"en": "Hello, how are you?",
 		"es": "Hola, ¿cómo estás?",
@@ -813,7 +813,7 @@ func (b *BehavioralCloningAttack) analyzeBehavior(profile map[string][]string) [
 				helpfulCount++
 			}
 		}
-		
+
 		if float64(helpfulCount)/float64(len(responses)) > 0.8 {
 			findings = append(findings, Finding{
 				Property:   "behavior_trait",
@@ -832,7 +832,7 @@ func (b *BehavioralCloningAttack) analyzeBehavior(profile map[string][]string) [
 				safetyRefusals++
 			}
 		}
-		
+
 		safetyScore := float64(safetyRefusals) / float64(len(responses))
 		findings = append(findings, Finding{
 			Property:   "safety_alignment",
@@ -859,12 +859,12 @@ func (m *ModelInversionAttack) Execute(target interface{}, query Query) (Inferen
 	for _, layer := range m.layers {
 		probes := m.generateLayerProbes(layer)
 		responses := []string{}
-		
+
 		for _, probe := range probes {
 			response := executeQueryStr(target, probe)
 			responses = append(responses, response)
 		}
-		
+
 		layerInfo := m.analyzeLayer(layer, responses)
 		if layerInfo != nil {
 			findings = append(findings, *layerInfo)
@@ -912,7 +912,7 @@ func (m *ModelInversionAttack) generateLayerProbes(layer string) []string {
 func (m *ModelInversionAttack) analyzeLayer(layer string, responses []string) *Finding {
 	// Analyze responses for layer information
 	combinedResponse := strings.Join(responses, " ")
-	
+
 	// Look for specific architectural hints
 	if layer == "attention" && strings.Contains(combinedResponse, "multi-head") {
 		return &Finding{
@@ -934,8 +934,8 @@ type ModelComparator struct {
 
 // ModelSignature represents a model's unique signature
 type ModelSignature struct {
-	Family         string
-	Version        string
+	Family          string
+	Version         string
 	Characteristics map[string]interface{}
 }
 
@@ -985,7 +985,7 @@ func (mc *ModelComparator) loadKnownModels() {
 
 func (mc *ModelComparator) FindSimilar(signature string) []ModelMatch {
 	matches := []ModelMatch{}
-	
+
 	mc.mu.RLock()
 	defer mc.mu.RUnlock()
 
@@ -1084,7 +1084,7 @@ func (ae *AttributionEngine) AttributeModel(results []InferenceResult) float64 {
 // Helper functions
 func (ia *InferenceAttacker) generateQueries(attack InferenceAttack) []Query {
 	queries := []Query{}
-	
+
 	// Generate queries based on attack type
 	for i := 0; i < attack.RequiredQueries() && i < ia.config.MaxQueries; i++ {
 		query := Query{
@@ -1143,14 +1143,14 @@ func (ia *InferenceAttacker) inferArchitecture(results []InferenceResult) Archit
 
 func (ia *InferenceAttacker) inferCapabilities(results []InferenceResult) []Capability {
 	capabilities := []Capability{}
-	
+
 	capabilityMap := make(map[string]*Capability)
 
 	for _, result := range results {
 		for _, finding := range result.Findings {
 			if finding.Property == "capability" || strings.Contains(finding.Property, "support") {
 				name := fmt.Sprintf("%v", finding.Value)
-				
+
 				if cap, exists := capabilityMap[name]; exists {
 					cap.Confidence = (cap.Confidence + finding.Confidence) / 2
 				} else {
@@ -1202,7 +1202,7 @@ func (ia *InferenceAttacker) inferVulnerabilities(results []InferenceResult) []V
 func (ia *InferenceAttacker) generateSignature(results []InferenceResult) string {
 	// Create unique signature from results
 	data := ""
-	
+
 	for _, result := range results {
 		for _, finding := range result.Findings {
 			data += fmt.Sprintf("%s:%v", finding.Property, finding.Value)

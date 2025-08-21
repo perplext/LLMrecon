@@ -11,19 +11,19 @@ import (
 type BaseRepository struct {
 	// config is the repository configuration
 	config *Config
-	
+
 	// connected indicates if the repository is connected
 	connected bool
-	
+
 	// connectionMutex protects the connected flag
 	connectionMutex sync.RWMutex
-	
+
 	// lastError is the last error that occurred
 	lastError error
-	
+
 	// lastErrorTime is the time the last error occurred
 	lastErrorTime time.Time
-	
+
 	// connectionPool is a pool of connections to the repository
 	connectionPool chan struct{}
 }
@@ -35,7 +35,7 @@ func NewBaseRepository(config *Config) *BaseRepository {
 	for i := 0; i < config.MaxConnections; i++ {
 		pool <- struct{}{}
 	}
-	
+
 	return &BaseRepository{
 		config:         config,
 		connected:      false,
@@ -110,7 +110,7 @@ func (r *BaseRepository) ReleaseConnection() {
 // WithRetry executes a function with retry logic
 func (r *BaseRepository) WithRetry(ctx context.Context, operation func() error) error {
 	var err error
-	
+
 	for attempt := 0; attempt <= r.config.RetryCount; attempt++ {
 		// Execute the operation
 		err = operation()
@@ -118,17 +118,17 @@ func (r *BaseRepository) WithRetry(ctx context.Context, operation func() error) 
 			// Operation succeeded
 			return nil
 		}
-		
+
 		// Check if context is canceled
 		if ctx.Err() != nil {
 			return fmt.Errorf("operation canceled: %w", ctx.Err())
 		}
-		
+
 		// If this was the last attempt, return the error
 		if attempt == r.config.RetryCount {
 			break
 		}
-		
+
 		// Wait before retrying
 		select {
 		case <-time.After(r.config.RetryDelay):
@@ -138,7 +138,7 @@ func (r *BaseRepository) WithRetry(ctx context.Context, operation func() error) 
 			return fmt.Errorf("operation canceled while waiting to retry: %w", ctx.Err())
 		}
 	}
-	
+
 	return fmt.Errorf("operation failed after %d attempts: %w", r.config.RetryCount+1, err)
 }
 

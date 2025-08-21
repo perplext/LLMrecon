@@ -12,37 +12,37 @@ import (
 
 // ProgressEvent represents a progress update
 type ProgressEvent struct {
-	Stage           ProgressStage          // Current stage of operation
-	Operation       string                 // Current operation description
-	Current         int64                  // Current progress value
-	Total           int64                  // Total expected value
-	Percentage      float64                // Percentage complete (0-100)
-	BytesProcessed  int64                  // Bytes processed so far
-	BytesTotal      int64                  // Total bytes to process
-	ItemsProcessed  int                    // Number of items processed
-	ItemsTotal      int                    // Total number of items
-	TimeElapsed     time.Duration          // Time elapsed since start
-	TimeRemaining   time.Duration          // Estimated time remaining
-	Speed           float64                // Processing speed (bytes/sec)
-	CurrentFile     string                 // Current file being processed
-	Error           error                  // Error if any
-	Metadata        map[string]interface{} // Additional metadata
+	Stage          ProgressStage          // Current stage of operation
+	Operation      string                 // Current operation description
+	Current        int64                  // Current progress value
+	Total          int64                  // Total expected value
+	Percentage     float64                // Percentage complete (0-100)
+	BytesProcessed int64                  // Bytes processed so far
+	BytesTotal     int64                  // Total bytes to process
+	ItemsProcessed int                    // Number of items processed
+	ItemsTotal     int                    // Total number of items
+	TimeElapsed    time.Duration          // Time elapsed since start
+	TimeRemaining  time.Duration          // Estimated time remaining
+	Speed          float64                // Processing speed (bytes/sec)
+	CurrentFile    string                 // Current file being processed
+	Error          error                  // Error if any
+	Metadata       map[string]interface{} // Additional metadata
 }
 
 // ProgressStage represents different stages of bundle operations
 type ProgressStage string
 
 const (
-	StageInitializing   ProgressStage = "initializing"
-	StageValidating     ProgressStage = "validating"
-	StageCollecting     ProgressStage = "collecting"
-	StageCompressing    ProgressStage = "compressing"
-	StageEncrypting     ProgressStage = "encrypting"
-	StageWriting        ProgressStage = "writing"
-	StageVerifying      ProgressStage = "verifying"
-	StageFinalizing     ProgressStage = "finalizing"
-	StageCompleted      ProgressStage = "completed"
-	StageFailed         ProgressStage = "failed"
+	StageInitializing ProgressStage = "initializing"
+	StageValidating   ProgressStage = "validating"
+	StageCollecting   ProgressStage = "collecting"
+	StageCompressing  ProgressStage = "compressing"
+	StageEncrypting   ProgressStage = "encrypting"
+	StageWriting      ProgressStage = "writing"
+	StageVerifying    ProgressStage = "verifying"
+	StageFinalizing   ProgressStage = "finalizing"
+	StageCompleted    ProgressStage = "completed"
+	StageFailed       ProgressStage = "failed"
 )
 
 // ProgressHandler is a callback for progress updates
@@ -50,22 +50,22 @@ type ProgressHandler func(event ProgressEvent)
 
 // ProgressTracker tracks progress of bundle operations
 type ProgressTracker struct {
-	mu              sync.RWMutex
-	stage           ProgressStage
-	operation       string
-	startTime       time.Time
-	lastUpdate      time.Time
-	bytesProcessed  int64
-	bytesTotal      int64
-	itemsProcessed  int32
-	itemsTotal      int32
-	currentFile     string
-	handlers        []ProgressHandler
-	updateInterval  time.Duration
-	ctx             context.Context
-	cancel          context.CancelFunc
-	done            chan struct{}
-	metadata        map[string]interface{}
+	mu             sync.RWMutex
+	stage          ProgressStage
+	operation      string
+	startTime      time.Time
+	lastUpdate     time.Time
+	bytesProcessed int64
+	bytesTotal     int64
+	itemsProcessed int32
+	itemsTotal     int32
+	currentFile    string
+	handlers       []ProgressHandler
+	updateInterval time.Duration
+	ctx            context.Context
+	cancel         context.CancelFunc
+	done           chan struct{}
+	metadata       map[string]interface{}
 }
 
 // NewProgressTracker creates a new progress tracker
@@ -73,9 +73,9 @@ func NewProgressTracker(ctx context.Context) *ProgressTracker {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	
+
 	trackerCtx, cancel := context.WithCancel(ctx)
-	
+
 	p := &ProgressTracker{
 		stage:          StageInitializing,
 		startTime:      time.Now(),
@@ -87,10 +87,10 @@ func NewProgressTracker(ctx context.Context) *ProgressTracker {
 		done:           make(chan struct{}),
 		metadata:       make(map[string]interface{}),
 	}
-	
+
 	// Start background updater
 	go p.backgroundUpdater()
-	
+
 	return p
 }
 
@@ -107,7 +107,7 @@ func (p *ProgressTracker) SetStage(stage ProgressStage, operation string) {
 	p.stage = stage
 	p.operation = operation
 	p.mu.Unlock()
-	
+
 	p.sendUpdate()
 }
 
@@ -117,7 +117,7 @@ func (p *ProgressTracker) SetTotal(bytes int64, items int) {
 	p.bytesTotal = bytes
 	atomic.StoreInt32(&p.itemsTotal, int32(items))
 	p.mu.Unlock()
-	
+
 	p.sendUpdate()
 }
 
@@ -150,11 +150,11 @@ func (p *ProgressTracker) Fail(err error) {
 	p.mu.Lock()
 	p.stage = StageFailed
 	p.mu.Unlock()
-	
+
 	event := p.createEvent()
 	event.Error = err
 	p.notifyHandlers(event)
-	
+
 	p.Close()
 }
 
@@ -164,7 +164,7 @@ func (p *ProgressTracker) Complete() {
 	p.stage = StageCompleted
 	p.operation = "Bundle operation completed successfully"
 	p.mu.Unlock()
-	
+
 	p.sendUpdate()
 	p.Close()
 }
@@ -178,10 +178,10 @@ func (p *ProgressTracker) Close() {
 // backgroundUpdater sends periodic updates
 func (p *ProgressTracker) backgroundUpdater() {
 	defer close(p.done)
-	
+
 	ticker := time.NewTicker(p.updateInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-p.ctx.Done():
@@ -197,11 +197,11 @@ func (p *ProgressTracker) sendUpdate() {
 	if time.Since(p.lastUpdate) < p.updateInterval/2 {
 		return // Rate limit updates
 	}
-	
+
 	p.mu.Lock()
 	p.lastUpdate = time.Now()
 	p.mu.Unlock()
-	
+
 	event := p.createEvent()
 	p.notifyHandlers(event)
 }
@@ -210,37 +210,37 @@ func (p *ProgressTracker) sendUpdate() {
 func (p *ProgressTracker) createEvent() ProgressEvent {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	
+
 	bytesProcessed := atomic.LoadInt64(&p.bytesProcessed)
 	itemsProcessed := atomic.LoadInt32(&p.itemsProcessed)
 	itemsTotal := atomic.LoadInt32(&p.itemsTotal)
-	
+
 	elapsed := time.Since(p.startTime)
-	
+
 	var percentage float64
 	if p.bytesTotal > 0 {
 		percentage = float64(bytesProcessed) / float64(p.bytesTotal) * 100
 	} else if itemsTotal > 0 {
 		percentage = float64(itemsProcessed) / float64(itemsTotal) * 100
 	}
-	
+
 	var speed float64
 	if elapsed.Seconds() > 0 {
 		speed = float64(bytesProcessed) / elapsed.Seconds()
 	}
-	
+
 	var remaining time.Duration
 	if speed > 0 && p.bytesTotal > bytesProcessed {
 		remainingBytes := p.bytesTotal - bytesProcessed
 		remaining = time.Duration(float64(remainingBytes)/speed) * time.Second
 	}
-	
+
 	// Copy metadata to avoid race conditions
 	metadata := make(map[string]interface{})
 	for k, v := range p.metadata {
 		metadata[k] = v
 	}
-	
+
 	return ProgressEvent{
 		Stage:          p.stage,
 		Operation:      p.operation,
@@ -265,7 +265,7 @@ func (p *ProgressTracker) notifyHandlers(event ProgressEvent) {
 	handlers := make([]ProgressHandler, len(p.handlers))
 	copy(handlers, p.handlers)
 	p.mu.RUnlock()
-	
+
 	for _, handler := range handlers {
 		handler(event)
 	}
@@ -324,19 +324,19 @@ func (pw *ProgressWriter) Write(p []byte) (n int, err error) {
 // ConsoleProgressHandler creates a console progress handler
 func ConsoleProgressHandler() ProgressHandler {
 	var lastPercentage int
-	
+
 	return func(event ProgressEvent) {
 		percentage := int(event.Percentage)
-		
+
 		// Only update if percentage changed or important stage change
-		if percentage == lastPercentage && 
-			event.Stage != StageCompleted && 
+		if percentage == lastPercentage &&
+			event.Stage != StageCompleted &&
 			event.Stage != StageFailed {
 			return
 		}
-		
+
 		lastPercentage = percentage
-		
+
 		// Clear line and print progress
 		fmt.Printf("\r\033[K[%s] %s: %d%% (%s/%s) - %s",
 			event.Stage,
@@ -346,7 +346,7 @@ func ConsoleProgressHandler() ProgressHandler {
 			formatBytes(event.BytesTotal),
 			formatDuration(event.TimeRemaining),
 		)
-		
+
 		// Print newline on completion or failure
 		if event.Stage == StageCompleted || event.Stage == StageFailed {
 			fmt.Println()
@@ -360,7 +360,7 @@ func ConsoleProgressHandler() ProgressHandler {
 // JSONProgressHandler creates a JSON progress handler
 func JSONProgressHandler(writer io.Writer) ProgressHandler {
 	encoder := json.NewEncoder(writer)
-	
+
 	return func(event ProgressEvent) {
 		// Create a simplified event for JSON encoding
 		jsonEvent := map[string]interface{}{
@@ -377,11 +377,11 @@ func JSONProgressHandler(writer io.Writer) ProgressHandler {
 			"current_file":    event.CurrentFile,
 			"metadata":        event.Metadata,
 		}
-		
+
 		if event.Error != nil {
 			jsonEvent["error"] = event.Error.Error()
 		}
-		
+
 		_ = encoder.Encode(jsonEvent) // Best effort logging, ignore errors
 	}
 }
@@ -407,7 +407,7 @@ func formatDuration(d time.Duration) string {
 	if d == 0 {
 		return "complete"
 	}
-	
+
 	if d < time.Minute {
 		return fmt.Sprintf("%ds remaining", int(d.Seconds()))
 	}

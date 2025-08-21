@@ -44,6 +44,7 @@ type TestResult struct {
 	RawData     interface{}            `json:"raw_data,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
+
 // TestResults is a collection of test results
 type TestResults []*TestResult
 
@@ -65,6 +66,7 @@ type FormatterRegistry struct {
 	formatters map[ReportFormat]FormatterCreator
 	mu         sync.RWMutex
 }
+
 // FormatterFactory is a factory for creating formatters
 type FormatterFactory struct {
 	formatters map[ReportFormat]FormatterCreator

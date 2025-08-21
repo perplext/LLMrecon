@@ -24,16 +24,16 @@ func main() {
 	}
 	keyStorePath := filepath.Join(homeDir, ".LLMrecon", "keystore", "keys.json")
 	keyStoreDir := filepath.Dir(keyStorePath)
-	
+
 	if err := os.MkdirAll(keyStoreDir, 0700); err != nil {
 		log.Fatalf("Failed to create key store directory: %v", err)
 	}
 
 	// Create key store options
 	options := keystore.KeyStoreOptions{
-		StoragePath:          keyStorePath,
-		Passphrase:           "example-passphrase", // In production, use a secure passphrase
-		AutoSave:             true,
+		StoragePath:           keyStorePath,
+		Passphrase:            "example-passphrase", // In production, use a secure passphrase
+		AutoSave:              true,
 		RotationCheckInterval: time.Hour * 24, // Check for rotation daily
 		AlertCallback: func(key *keystore.KeyMetadata, daysUntilExpiration int) {
 			log.Printf("Key %s (%s) will expire in %d days", key.Name, key.ID, daysUntilExpiration)
@@ -45,7 +45,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create key store: %v", err)
 	}
-	defer func() { if err := ks.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := ks.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Generate RSA signing key
 	rsaKey, err := generateRSASigningKey(ks)

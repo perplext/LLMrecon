@@ -111,7 +111,7 @@ type SecurityIncidentConfig struct {
 }
 
 // VulnerabilityConfig defines vulnerability management settings
-type VulnerabilityConfig struct{
+type VulnerabilityConfig struct {
 	// EnableVulnerabilityTracking enables vulnerability tracking
 	EnableVulnerabilityTracking bool `json:"enable_vulnerability_tracking"`
 

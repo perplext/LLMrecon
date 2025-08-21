@@ -4,7 +4,7 @@ package mocks
 import (
 	"crypto/rand"
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"math/big"
 	"strings"
 	"time"

@@ -4,11 +4,9 @@ package owasp
 import (
 	"github.com/perplext/LLMrecon/src/template/security"
 	"github.com/perplext/LLMrecon/src/testing/owasp/compliance"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
-
-
 
 // testFactoryAdapter adapts TestCaseFactory to TestFactory interface
 type testFactoryAdapter struct {
@@ -55,10 +53,10 @@ func (a *testFactoryAdapter) GetComplianceService() (interface{}, error) {
 func RegisterFixtureBasedTestFactory() {
 	// Create a new fixture-based test factory
 	fixtureFactory := NewFixtureBasedTestCaseFactory()
-	
+
 	// Create adapter to convert TestCaseFactory to TestFactory
 	adapter := &testFactoryAdapter{factory: fixtureFactory}
-	
+
 	// Register it as the default test factory
 	types.SetDefaultTestFactory(adapter)
 }
@@ -75,33 +73,33 @@ func NewDefaultTestingEnvironment() *TestingEnvironment {
 	reportGenerator := NewDefaultReportGenerator()
 	testRunner := NewDefaultTestRunner(detectionEngine, reportGenerator)
 	testFactory := NewFixtureBasedTestCaseFactory()
-	
+
 	// Create compliance components
 	complianceMapper := compliance.NewBaseComplianceMapper()
 	complianceReporter := compliance.NewComplianceReporter(complianceMapper)
 	_ = complianceReporter // Suppress unused variable warning
 	complianceService := compliance.NewComplianceService()
-	
+
 	// Create template security verifier
 	templateVerifier := security.NewTemplateVerifier()
-	
+
 	// Create reporting integration
 	reportingIntegration := compliance.NewReportingIntegration(complianceService, templateVerifier)
-	
+
 	// Create a new testing environment
 	return &TestingEnvironment{
-		TestRunner:          testRunner,
-		ReportGenerator:     reportGenerator,
-		TestCaseFactory:     testFactory,
+		TestRunner:           testRunner,
+		ReportGenerator:      reportGenerator,
+		TestCaseFactory:      testFactory,
 		ReportingIntegration: reportingIntegration,
 	}
 }
 
 // TestingEnvironment encapsulates all components needed for OWASP testing
 type TestingEnvironment struct {
-	TestRunner          types.TestRunner
-	ReportGenerator     types.ReportGenerator
-	TestCaseFactory     types.TestCaseFactory
+	TestRunner           types.TestRunner
+	ReportGenerator      types.ReportGenerator
+	TestCaseFactory      types.TestCaseFactory
 	ReportingIntegration *compliance.ReportingIntegration
 }
 

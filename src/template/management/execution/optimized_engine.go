@@ -217,8 +217,8 @@ func (e *OptimizedTemplateExecutor) Execute(ctx context.Context, template *forma
 			Status:       string(interfaces.StatusCompleted),
 			Response:     cachedResponse,
 			EndTime:      time.Now(),
-			Details:      map[string]interface{}{
-				"provider": providerName,
+			Details: map[string]interface{}{
+				"provider":   providerName,
 				"from_cache": true,
 			},
 		}
@@ -292,7 +292,7 @@ func (e *OptimizedTemplateExecutor) ExecuteBatch(ctx context.Context, templates 
 	// Execute templates concurrently using work pool
 	for i, template := range templates {
 		i, template := i, template // Create local variables for closure
-		
+
 		// Submit work to pool
 		e.workPool.wg.Add(1)
 		e.workPool.workers <- func() {
@@ -333,7 +333,7 @@ func (e *OptimizedTemplateExecutor) ExecuteBatch(ctx context.Context, templates 
 	// Track total execution time
 	totalTime := time.Since(startTime)
 	e.stats.TotalExecutionTime += time.Duration(totalTime.Milliseconds())
-	
+
 	// Return results
 	return results, lastError
 }

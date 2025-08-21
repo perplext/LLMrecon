@@ -21,13 +21,13 @@ import (
 
 // Server represents the API server
 type Server struct {
-	server                  *http.Server
-	mux                     *http.ServeMux
-	scanSvc                 *scan.Service
-	scanHdlr                *scan.Handler
-	securityManager         *security.SecurityManager
+	server                     *http.Server
+	mux                        *http.ServeMux
+	scanSvc                    *scan.Service
+	scanHdlr                   *scan.Handler
+	securityManager            *security.SecurityManager
 	promptProtectionMiddleware *prompt.PromptProtectionMiddleware
-	config                  *ServerConfig
+	config                     *ServerConfig
 }
 
 // ServerConfig represents the configuration for the API server
@@ -49,9 +49,9 @@ type ServerConfig struct {
 // DefaultServerConfig returns the default server configuration
 func DefaultServerConfig() *ServerConfig {
 	return &ServerConfig{
-		Address:               ":8080",
-		UseTLS:                false,
-		SecurityConfig:        security.DefaultSecurityConfig(),
+		Address:                ":8080",
+		UseTLS:                 false,
+		SecurityConfig:         security.DefaultSecurityConfig(),
 		PromptProtectionConfig: prompt.DefaultProtectionConfig(),
 	}
 }
@@ -110,13 +110,13 @@ func NewServer(config *ServerConfig) (*Server, error) {
 	scanHdlr := scan.NewHandler(scanSvc)
 
 	return &Server{
-		server:                  server,
-		mux:                     mux,
-		scanSvc:                 scanSvc,
-		scanHdlr:                scanHdlr,
-		securityManager:         securityManager,
+		server:                     server,
+		mux:                        mux,
+		scanSvc:                    scanSvc,
+		scanHdlr:                   scanHdlr,
+		securityManager:            securityManager,
 		promptProtectionMiddleware: promptProtectionMiddleware,
-		config:                  config,
+		config:                     config,
 	}, nil
 }
 
@@ -209,7 +209,7 @@ func (s *Server) registerSecurityRoutes() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		
+
 		// Get anomalies
 		anomalies := s.securityManager.GetAnomalyDetector().GetAnomalies()
 
@@ -218,9 +218,9 @@ func (s *Server) registerSecurityRoutes() {
 
 		// Create response
 		response := map[string]interface{}{
-			"anomalies": anomalies,
+			"anomalies":        anomalies,
 			"rate_limit_stats": rateLimitStats,
-			"timestamp": time.Now(),
+			"timestamp":        time.Now(),
 		}
 
 		// Write response
@@ -268,11 +268,11 @@ func (s *Server) withMiddleware(next http.Handler) http.Handler {
 				// Return a 500 error
 			}
 		}()
-		
+
 		// Call the next handler
 		handler.ServeHTTP(w, r)
 	})
-	
+
 	handler = handlerWithErrorHandling
 
 	// Apply request ID and client IP middleware (innermost, executed first)

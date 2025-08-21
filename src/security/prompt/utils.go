@@ -13,12 +13,12 @@ func getContextWithSize(text string, start, end int, contextSize int) string {
 	if contextStart < 0 {
 		contextStart = 0
 	}
-	
+
 	contextEnd := end + contextSize
 	if contextEnd > len(text) {
 		contextEnd = len(text)
 	}
-	
+
 	return text[contextStart:contextEnd]
 }
 

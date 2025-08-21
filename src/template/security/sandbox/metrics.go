@@ -14,19 +14,19 @@ type MetricsCollector struct {
 	mutex sync.RWMutex
 
 	// Validation metrics
-	validationCount      int64
-	validationErrors     int64
-	validationTime       time.Duration
-	issuesByType         map[security.SecurityIssueType]int64
-	issuesBySeverity     map[common.SeverityLevel]int64
-	templatesByRisk      map[RiskCategory]int64
+	validationCount       int64
+	validationErrors      int64
+	validationTime        time.Duration
+	issuesByType          map[security.SecurityIssueType]int64
+	issuesBySeverity      map[common.SeverityLevel]int64
+	templatesByRisk       map[RiskCategory]int64
 	averageValidationTime time.Duration
 
 	// Execution metrics
-	executionCount      int64
-	executionErrors     int64
-	executionTime       time.Duration
-	resourceUsage       ResourceUsage
+	executionCount       int64
+	executionErrors      int64
+	executionTime        time.Duration
+	resourceUsage        ResourceUsage
 	averageExecutionTime time.Duration
 	averageResourceUsage ResourceUsage
 
@@ -72,13 +72,13 @@ const (
 // NewMetricsCollector creates a new metrics collector
 func NewMetricsCollector() *MetricsCollector {
 	return &MetricsCollector{
-		mutex:               sync.RWMutex{},
-		issuesByType:        make(map[security.SecurityIssueType]int64),
-		issuesBySeverity:    make(map[common.SeverityLevel]int64),
-		templatesByRisk:     make(map[RiskCategory]int64),
-		resourceUsage:       ResourceUsage{},
+		mutex:                sync.RWMutex{},
+		issuesByType:         make(map[security.SecurityIssueType]int64),
+		issuesBySeverity:     make(map[common.SeverityLevel]int64),
+		templatesByRisk:      make(map[RiskCategory]int64),
+		resourceUsage:        ResourceUsage{},
 		averageResourceUsage: ResourceUsage{},
-		alerts:              []Alert{},
+		alerts:               []Alert{},
 	}
 }
 
@@ -289,4 +289,3 @@ func (m *MetricsCollector) ResetMetrics() {
 	m.pendingTemplates = 0
 	m.deprecatedTemplates = 0
 }
-

@@ -4,10 +4,10 @@ package bundle
 import (
 	"context"
 	"encoding/json"
-	"path/filepath"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -437,5 +437,3 @@ func (m *DefaultRollbackManager) DeleteRollbackPoint(ctx context.Context, rollba
 	// Delete backup
 	return m.BackupManager.DeleteBackup(ctx, rollbackPointPath)
 }
-
-

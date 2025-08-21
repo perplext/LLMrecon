@@ -10,15 +10,15 @@ import (
 
 // DistributedExecutor manages distributed attack execution
 type DistributedExecutor struct {
-	coordinator     *Coordinator
-	nodeManager     *NodeManager
-	taskDistributor *TaskDistributor
-	loadBalancer    *LoadBalancer
+	coordinator      *Coordinator
+	nodeManager      *NodeManager
+	taskDistributor  *TaskDistributor
+	loadBalancer     *LoadBalancer
 	resultAggregator *ResultAggregator
-	config          DistributedConfig
-	nodes           map[string]*Node
-	activeTasks     map[string]*DistributedTask
-	mu              sync.RWMutex
+	config           DistributedConfig
+	nodes            map[string]*Node
+	activeTasks      map[string]*DistributedTask
+	mu               sync.RWMutex
 }
 
 // DistributedConfig configures distributed execution
@@ -37,10 +37,10 @@ type DistributedConfig struct {
 type PartitionStrategy string
 
 const (
-	PartitionRoundRobin  PartitionStrategy = "round_robin"
-	PartitionHash        PartitionStrategy = "hash"
-	PartitionRange       PartitionStrategy = "range"
-	PartitionDynamic     PartitionStrategy = "dynamic"
+	PartitionRoundRobin PartitionStrategy = "round_robin"
+	PartitionHash       PartitionStrategy = "hash"
+	PartitionRange      PartitionStrategy = "range"
+	PartitionDynamic    PartitionStrategy = "dynamic"
 )
 
 // LoadBalancingPolicy defines load distribution
@@ -48,9 +48,9 @@ type LoadBalancingPolicy string
 
 const (
 	LoadBalanceLeastConnections LoadBalancingPolicy = "least_connections"
-	LoadBalanceRoundRobin      LoadBalancingPolicy = "round_robin"
-	LoadBalanceWeighted        LoadBalancingPolicy = "weighted"
-	LoadBalanceAdaptive        LoadBalancingPolicy = "adaptive"
+	LoadBalanceRoundRobin       LoadBalancingPolicy = "round_robin"
+	LoadBalanceWeighted         LoadBalancingPolicy = "weighted"
+	LoadBalanceAdaptive         LoadBalancingPolicy = "adaptive"
 )
 
 // Node represents a distributed worker node
@@ -69,53 +69,53 @@ type Node struct {
 type NodeStatus string
 
 const (
-	NodeStatusActive      NodeStatus = "active"
-	NodeStatusDraining    NodeStatus = "draining"
-	NodeStatusUnhealthy   NodeStatus = "unhealthy"
-	NodeStatusOffline     NodeStatus = "offline"
+	NodeStatusActive    NodeStatus = "active"
+	NodeStatusDraining  NodeStatus = "draining"
+	NodeStatusUnhealthy NodeStatus = "unhealthy"
+	NodeStatusOffline   NodeStatus = "offline"
 )
 
 // NodeCapacity defines node resources
 type NodeCapacity struct {
-	CPU             int
-	Memory          int64
-	MaxConcurrency  int
+	CPU              int
+	Memory           int64
+	MaxConcurrency   int
 	NetworkBandwidth int64
-	Specializations []string
+	Specializations  []string
 }
 
 // NodeLoad tracks current usage
 type NodeLoad struct {
-	CPUUsage        float64
-	MemoryUsage     int64
-	ActiveTasks     int32
-	TasksCompleted  int64
-	AverageLatency  time.Duration
+	CPUUsage       float64
+	MemoryUsage    int64
+	ActiveTasks    int32
+	TasksCompleted int64
+	AverageLatency time.Duration
 }
 
 // DistributedTask represents a distributed task
 type DistributedTask struct {
-	ID              string
-	Type            TaskType
-	Payload         interface{}
-	Partitions      []TaskPartition
-	Status          TaskStatus
-	AssignedNodes   []string
-	StartTime       time.Time
-	Deadline        time.Time
-	RetryCount      int
-	Results         map[string]*PartitionResult
-	mu              sync.RWMutex
+	ID            string
+	Type          TaskType
+	Payload       interface{}
+	Partitions    []TaskPartition
+	Status        TaskStatus
+	AssignedNodes []string
+	StartTime     time.Time
+	Deadline      time.Time
+	RetryCount    int
+	Results       map[string]*PartitionResult
+	mu            sync.RWMutex
 }
 
 // TaskType categorizes distributed tasks
 type TaskType string
 
 const (
-	TaskTypeMassiveScan    TaskType = "massive_scan"
-	TaskTypeParallelAttack TaskType = "parallel_attack"
+	TaskTypeMassiveScan      TaskType = "massive_scan"
+	TaskTypeParallelAttack   TaskType = "parallel_attack"
 	TaskTypeDistributedChain TaskType = "distributed_chain"
-	TaskTypeBatchAnalysis  TaskType = "batch_analysis"
+	TaskTypeBatchAnalysis    TaskType = "batch_analysis"
 )
 
 // TaskStatus tracks task execution
@@ -271,30 +271,30 @@ type DistributedRequest struct {
 
 // DistributedResult contains aggregated results
 type DistributedResult struct {
-	TaskID         string
-	Success        bool
-	TotalPartitions int
+	TaskID              string
+	Success             bool
+	TotalPartitions     int
 	CompletedPartitions int
-	FailedPartitions int
-	AggregatedData interface{}
-	ExecutionTime  time.Duration
-	NodeMetrics    map[string]*NodeMetrics
+	FailedPartitions    int
+	AggregatedData      interface{}
+	ExecutionTime       time.Duration
+	NodeMetrics         map[string]*NodeMetrics
 }
 
 // NodeMetrics tracks node performance
 type NodeMetrics struct {
-	NodeID          string
-	TasksProcessed  int
-	AverageLatency  time.Duration
-	ErrorRate       float64
-	ResourceUsage   ResourceUsage
+	NodeID         string
+	TasksProcessed int
+	AverageLatency time.Duration
+	ErrorRate      float64
+	ResourceUsage  ResourceUsage
 }
 
 // ResourceUsage tracks resource consumption
 type ResourceUsage struct {
-	CPUPercent    float64
-	MemoryMB      int64
-	NetworkMBps   float64
+	CPUPercent  float64
+	MemoryMB    int64
+	NetworkMBps float64
 }
 
 // partitionTask splits task into partitions
@@ -377,11 +377,11 @@ func (de *DistributedExecutor) distributePartitions(ctx context.Context, task *D
 	for partitionID, nodeID := range assignments {
 		node := de.nodes[nodeID]
 		partition := de.findPartition(task, partitionID)
-		
+
 		if partition != nil && node != nil {
 			partition.AssignedTo = nodeID
 			partition.Status = PartitionAssigned
-			
+
 			// Send partition to node
 			if err := de.sendPartitionToNode(ctx, partition, node); err != nil {
 				return err
@@ -406,13 +406,13 @@ func (de *DistributedExecutor) executeAndAggregate(ctx context.Context, task *Di
 		wg.Add(1)
 		go func(p TaskPartition) {
 			defer wg.Done()
-			
+
 			result, err := de.waitForPartitionResult(ctx, &p, task.Deadline)
 			if err != nil {
 				errorChan <- err
 				return
 			}
-			
+
 			resultChan <- result
 		}(partition)
 	}
@@ -437,13 +437,13 @@ func (de *DistributedExecutor) executeAndAggregate(ctx context.Context, task *Di
 				return de.aggregateResults(task, partitionResults)
 			}
 			partitionResults = append(partitionResults, result)
-			
+
 		case err := <-errorChan:
 			errors = append(errors, err)
-			
+
 		case <-ctx.Done():
 			return nil, ctx.Err()
-			
+
 		case <-time.After(task.Deadline.Sub(time.Now())):
 			return nil, fmt.Errorf("task deadline exceeded")
 		}
@@ -452,10 +452,10 @@ func (de *DistributedExecutor) executeAndAggregate(ctx context.Context, task *Di
 
 // Coordinator manages distributed coordination
 type Coordinator struct {
-	consensus      *ConsensusManager
-	stateManager   *StateManager
-	lockManager    *DistributedLockManager
-	mu             sync.RWMutex
+	consensus    *ConsensusManager
+	stateManager *StateManager
+	lockManager  *DistributedLockManager
+	mu           sync.RWMutex
 }
 
 // ConsensusManager handles distributed consensus
@@ -485,24 +485,24 @@ const (
 
 // StateManager manages distributed state
 type StateManager struct {
-	state      map[string]interface{}
-	version    int64
-	replicas   map[string]*StateReplica
-	mu         sync.RWMutex
+	state    map[string]interface{}
+	version  int64
+	replicas map[string]*StateReplica
+	mu       sync.RWMutex
 }
 
 // StateReplica represents state replica
 type StateReplica struct {
-	NodeID      string
-	Version     int64
-	LastSync    time.Time
-	Consistent  bool
+	NodeID     string
+	Version    int64
+	LastSync   time.Time
+	Consistent bool
 }
 
 // DistributedLockManager manages distributed locks
 type DistributedLockManager struct {
-	locks      map[string]*DistributedLock
-	mu         sync.RWMutex
+	locks map[string]*DistributedLock
+	mu    sync.RWMutex
 }
 
 // DistributedLock represents a distributed lock
@@ -525,36 +525,36 @@ func NewCoordinator() *Coordinator {
 
 // NodeManager manages worker nodes
 type NodeManager struct {
-	nodes          map[string]*Node
-	nodeGroups     map[string]*NodeGroup
-	healthChecker  *HealthChecker
+	nodes           map[string]*Node
+	nodeGroups      map[string]*NodeGroup
+	healthChecker   *HealthChecker
 	capacityTracker *CapacityTracker
-	config         DistributedConfig
-	mu             sync.RWMutex
+	config          DistributedConfig
+	mu              sync.RWMutex
 }
 
 // NodeGroup represents a group of nodes
 type NodeGroup struct {
-	ID              string
-	Name            string
-	Nodes           []string
-	Specialization  string
-	LoadBalancer    *LoadBalancer
+	ID             string
+	Name           string
+	Nodes          []string
+	Specialization string
+	LoadBalancer   *LoadBalancer
 }
 
 // HealthChecker monitors node health
 type HealthChecker struct {
-	checks         map[string]*HealthCheck
-	mu             sync.RWMutex
+	checks map[string]*HealthCheck
+	mu     sync.RWMutex
 }
 
 // HealthCheck represents a health check
 type HealthCheck struct {
-	NodeID          string
-	LastCheck       time.Time
-	Status          HealthStatus
-	ResponseTime    time.Duration
-	FailureCount    int
+	NodeID           string
+	LastCheck        time.Time
+	Status           HealthStatus
+	ResponseTime     time.Duration
+	FailureCount     int
 	ConsecutiveFails int
 }
 
@@ -570,17 +570,17 @@ const (
 
 // CapacityTracker tracks node capacity
 type CapacityTracker struct {
-	nodeCapacity   map[string]*TrackedCapacity
-	mu             sync.RWMutex
+	nodeCapacity map[string]*TrackedCapacity
+	mu           sync.RWMutex
 }
 
 // TrackedCapacity tracks node resource usage
 type TrackedCapacity struct {
-	NodeID          string
-	TotalCapacity   NodeCapacity
-	UsedCapacity    NodeCapacity
+	NodeID           string
+	TotalCapacity    NodeCapacity
+	UsedCapacity     NodeCapacity
 	ReservedCapacity NodeCapacity
-	UpdatedAt       time.Time
+	UpdatedAt        time.Time
 }
 
 // NewNodeManager creates node manager
@@ -606,9 +606,9 @@ func (nm *NodeManager) AddNode(node *Node) {
 
 // TaskDistributor distributes tasks across nodes
 type TaskDistributor struct {
-	strategy       PartitionStrategy
-	partitioner    Partitioner
-	mu             sync.RWMutex
+	strategy    PartitionStrategy
+	partitioner Partitioner
+	mu          sync.RWMutex
 }
 
 // Partitioner defines partitioning interface
@@ -638,10 +638,10 @@ func NewTaskDistributor(strategy PartitionStrategy) *TaskDistributor {
 
 // LoadBalancer distributes load across nodes
 type LoadBalancer struct {
-	policy         LoadBalancingPolicy
-	nodeWeights    map[string]float64
-	currentIndex   int32
-	mu             sync.RWMutex
+	policy       LoadBalancingPolicy
+	nodeWeights  map[string]float64
+	currentIndex int32
+	mu           sync.RWMutex
 }
 
 // NewLoadBalancer creates load balancer
@@ -701,8 +701,8 @@ func (lb *LoadBalancer) assignLeastConnections(partitions []TaskPartition, nodes
 
 // ResultAggregator aggregates distributed results
 type ResultAggregator struct {
-	strategies     map[TaskType]AggregationStrategy
-	mu             sync.RWMutex
+	strategies map[TaskType]AggregationStrategy
+	mu         sync.RWMutex
 }
 
 // AggregationStrategy defines result aggregation
@@ -790,7 +790,7 @@ func (de *DistributedExecutor) autoScalingLoop() {
 
 	for range ticker.C {
 		metrics := de.collectMetrics()
-		
+
 		if de.shouldScaleUp(metrics) {
 			de.scaleUp()
 		} else if de.shouldScaleDown(metrics) {
@@ -827,23 +827,23 @@ func (de *DistributedExecutor) collectMetrics() *SystemMetrics {
 	}
 
 	return &SystemMetrics{
-		NodeCount:        nodeCount,
-		TotalCapacity:    totalCapacity,
-		CurrentLoad:      totalLoad,
-		Utilization:      utilization,
-		AverageLatency:   avgLatency,
-		PendingTasks:     len(de.activeTasks),
+		NodeCount:      nodeCount,
+		TotalCapacity:  totalCapacity,
+		CurrentLoad:    totalLoad,
+		Utilization:    utilization,
+		AverageLatency: avgLatency,
+		PendingTasks:   len(de.activeTasks),
 	}
 }
 
 // SystemMetrics tracks system-wide metrics
 type SystemMetrics struct {
-	NodeCount        int
-	TotalCapacity    int
-	CurrentLoad      int32
-	Utilization      float64
-	AverageLatency   time.Duration
-	PendingTasks     int
+	NodeCount      int
+	TotalCapacity  int
+	CurrentLoad    int32
+	Utilization    float64
+	AverageLatency time.Duration
+	PendingTasks   int
 }
 
 // shouldScaleUp determines if scaling up needed
@@ -920,7 +920,7 @@ func (de *DistributedExecutor) sendPartitionToNode(ctx context.Context, partitio
 func (de *DistributedExecutor) waitForPartitionResult(ctx context.Context, partition *TaskPartition, deadline time.Time) (*PartitionResult, error) {
 	// Wait for partition to complete
 	// This would monitor actual execution
-	
+
 	// Simulated result
 	return &PartitionResult{
 		PartitionID:   partition.ID,
@@ -1039,7 +1039,7 @@ func NewHealthChecker() *HealthChecker {
 func (hc *HealthChecker) RegisterNode(node *Node) {
 	hc.mu.Lock()
 	defer hc.mu.Unlock()
-	
+
 	hc.checks[node.ID] = &HealthCheck{
 		NodeID:    node.ID,
 		LastCheck: time.Now(),
@@ -1056,7 +1056,7 @@ func NewCapacityTracker() *CapacityTracker {
 func (ct *CapacityTracker) TrackNode(node *Node) {
 	ct.mu.Lock()
 	defer ct.mu.Unlock()
-	
+
 	ct.nodeCapacity[node.ID] = &TrackedCapacity{
 		NodeID:        node.ID,
 		TotalCapacity: node.Capacity,
@@ -1077,7 +1077,7 @@ func (lb *LoadBalancer) assignWeighted(partitions []TaskPartition, nodes []*Node
 		// Select node based on weight
 		r := randFloat64() * totalWeight
 		cumulative := float64(0)
-		
+
 		for _, node := range nodes {
 			cumulative += lb.nodeWeights[node.ID]
 			if r < cumulative {

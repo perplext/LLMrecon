@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	auditTrail "github.com/perplext/LLMrecon/src/audit/trail"
-	securityAuditTrail "github.com/perplext/LLMrecon/src/security/access/audit/trail"
 	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/perplext/LLMrecon/src/repository"
+	securityAuditTrail "github.com/perplext/LLMrecon/src/security/access/audit/trail"
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/loaders"
 )

@@ -1117,7 +1117,7 @@ func NewMetadataEncoder() *MetadataEncoder         { return &MetadataEncoder{} }
 
 // Method implementations for placeholder types
 func (i *ImagePayloadEncoder) EncodeInImage(img image.Image, payload string) string { return "" }
-func (a *AudioEncoder) GenerateUltrasonic(payload string) []byte                   { return []byte{} }
+func (a *AudioEncoder) GenerateUltrasonic(payload string) []byte                    { return []byte{} }
 
 // secureRandomInt generates a cryptographically secure random integer
 func secureRandomInt(max int) (int, error) {

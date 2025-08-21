@@ -13,55 +13,55 @@ import (
 
 // AdaptiveSystem learns and improves attack strategies
 type AdaptiveSystem struct {
-	learner         *ReinforcementLearner
-	predictor       *SuccessPredictor
-	optimizer       *StrategyOptimizer
-	knowledge       *KnowledgeBase
-	feedback        *FeedbackProcessor
-	evolution       *EvolutionEngine
-	config          AdaptiveConfig
-	activeLearning  map[string]*LearningSession
-	mu              sync.RWMutex
+	learner        *ReinforcementLearner
+	predictor      *SuccessPredictor
+	optimizer      *StrategyOptimizer
+	knowledge      *KnowledgeBase
+	feedback       *FeedbackProcessor
+	evolution      *EvolutionEngine
+	config         AdaptiveConfig
+	activeLearning map[string]*LearningSession
+	mu             sync.RWMutex
 }
 
 // AdaptiveConfig configures the adaptive system
 type AdaptiveConfig struct {
-	LearningRate         float64
-	ExplorationRate      float64
-	MemorySize           int
-	UpdateFrequency      time.Duration
-	EvolutionEnabled     bool
-	PredictionEnabled    bool
-	AutoOptimization     bool
+	LearningRate      float64
+	ExplorationRate   float64
+	MemorySize        int
+	UpdateFrequency   time.Duration
+	EvolutionEnabled  bool
+	PredictionEnabled bool
+	AutoOptimization  bool
 }
 
 // LearningSession represents active learning
 type LearningSession struct {
-	ID              string
-	StartTime       time.Time
-	Episodes        []Episode
-	CurrentPolicy   *Policy
-	Metrics         LearningMetrics
-	Status          SessionStatus
-	mu              sync.RWMutex
+	ID            string
+	StartTime     time.Time
+	Episodes      []Episode
+	CurrentPolicy *Policy
+	Metrics       LearningMetrics
+	Status        SessionStatus
+	mu            sync.RWMutex
 }
 
 // Episode represents a learning episode
 type Episode struct {
-	ID          string
-	Actions     []Action
-	Rewards     []float64
-	States      []State
-	Outcome     Outcome
-	Timestamp   time.Time
+	ID        string
+	Actions   []Action
+	Rewards   []float64
+	States    []State
+	Outcome   Outcome
+	Timestamp time.Time
 }
 
 // Action represents an attack action
 type Action struct {
-	Type        ActionType
-	Exploit     string
-	Parameters  map[string]interface{}
-	Confidence  float64
+	Type       ActionType
+	Exploit    string
+	Parameters map[string]interface{}
+	Confidence float64
 }
 
 // ActionType categorizes actions
@@ -77,10 +77,10 @@ const (
 
 // State represents system state
 type State struct {
-	ModelResponse   string
-	SecurityLevel   float64
-	SuccessRate     float64
-	Features        map[string]float64
+	ModelResponse string
+	SecurityLevel float64
+	SuccessRate   float64
+	Features      map[string]float64
 }
 
 // Outcome represents episode outcome
@@ -102,29 +102,29 @@ type Policy struct {
 
 // PolicyPerformance tracks policy metrics
 type PolicyPerformance struct {
-	SuccessRate     float64
-	AverageReward   float64
-	ExploitCount    int
-	LastUpdated     time.Time
+	SuccessRate   float64
+	AverageReward float64
+	ExploitCount  int
+	LastUpdated   time.Time
 }
 
 // SessionStatus represents learning status
 type SessionStatus string
 
 const (
-	SessionActive    SessionStatus = "active"
-	SessionPaused    SessionStatus = "paused"
-	SessionComplete  SessionStatus = "complete"
-	SessionFailed    SessionStatus = "failed"
+	SessionActive   SessionStatus = "active"
+	SessionPaused   SessionStatus = "paused"
+	SessionComplete SessionStatus = "complete"
+	SessionFailed   SessionStatus = "failed"
 )
 
 // LearningMetrics tracks learning progress
 type LearningMetrics struct {
-	TotalEpisodes       int
-	SuccessfulEpisodes  int
-	AverageReward       float64
-	LearningCurve       []float64
-	ConvergenceRate     float64
+	TotalEpisodes      int
+	SuccessfulEpisodes int
+	AverageReward      float64
+	LearningCurve      []float64
+	ConvergenceRate    float64
 }
 
 // NewAdaptiveSystem creates an adaptive learning system
@@ -591,17 +591,17 @@ func (rl *ReinforcementLearner) actionToString(action Action) string {
 
 // SuccessPredictor predicts attack success
 type SuccessPredictor struct {
-	model      *PredictionModel
-	features   []Feature
-	history    []PredictionRecord
-	mu         sync.RWMutex
+	model    *PredictionModel
+	features []Feature
+	history  []PredictionRecord
+	mu       sync.RWMutex
 }
 
 // PredictionModel represents the ML model
 type PredictionModel struct {
-	Weights    map[string]float64
-	Bias       float64
-	Accuracy   float64
+	Weights     map[string]float64
+	Bias        float64
+	Accuracy    float64
 	LastTrained time.Time
 }
 
@@ -799,18 +799,18 @@ type StrategyComponent struct {
 type ComponentType string
 
 const (
-	ComponentTechnique ComponentType = "technique"
-	ComponentTiming    ComponentType = "timing"
-	ComponentTarget    ComponentType = "target"
+	ComponentTechnique  ComponentType = "technique"
+	ComponentTiming     ComponentType = "timing"
+	ComponentTarget     ComponentType = "target"
 	ComponentAdaptation ComponentType = "adaptation"
 )
 
 // StrategyPerformance tracks strategy metrics
 type StrategyPerformance struct {
-	SuccessRate    float64
-	AverageTime    time.Duration
-	ResourceUsage  float64
-	LastOptimized  time.Time
+	SuccessRate   float64
+	AverageTime   time.Duration
+	ResourceUsage float64
+	LastOptimized time.Time
 }
 
 // NewStrategyOptimizer creates optimizer
@@ -896,11 +896,11 @@ type Feedback struct {
 
 // KnowledgeBase stores learned knowledge
 type KnowledgeBase struct {
-	policies     map[string]*Policy
-	strategies   map[string]*Strategy
-	patterns     []Pattern
-	exploits     map[string]*ExploitKnowledge
-	mu           sync.RWMutex
+	policies   map[string]*Policy
+	strategies map[string]*Strategy
+	patterns   []Pattern
+	exploits   map[string]*ExploitKnowledge
+	mu         sync.RWMutex
 }
 
 // Pattern represents learned pattern
@@ -918,9 +918,9 @@ type PatternType string
 
 const (
 	PatternVulnerability PatternType = "vulnerability"
-	PatternDefense      PatternType = "defense"
-	PatternBehavior     PatternType = "behavior"
-	PatternChain        PatternType = "chain"
+	PatternDefense       PatternType = "defense"
+	PatternBehavior      PatternType = "behavior"
+	PatternChain         PatternType = "chain"
 )
 
 // Condition for pattern matching
@@ -940,12 +940,12 @@ const (
 
 // ExploitKnowledge stores exploit information
 type ExploitKnowledge struct {
-	ExploitID        string
-	Technique        string
-	SuccessRate      float64
+	ExploitID         string
+	Technique         string
+	SuccessRate       float64
 	OptimalConditions map[string]interface{}
-	Counters         []string
-	LastUpdated      time.Time
+	Counters          []string
+	LastUpdated       time.Time
 }
 
 // NewKnowledgeBase creates knowledge base
@@ -1170,10 +1170,10 @@ type EvolutionEngine struct {
 
 // Individual in population
 type Individual struct {
-	ID       string
-	Genome   Genome
-	Fitness  float64
-	Age      int
+	ID      string
+	Genome  Genome
+	Fitness float64
+	Age     int
 }
 
 // Genome represents strategy encoding
@@ -1572,8 +1572,8 @@ func (as *AdaptiveSystem) calculateOutcome(episode Episode) Outcome {
 	}
 
 	return Outcome{
-		Success: totalReward > 0,
-		Reward:  totalReward,
+		Success:         totalReward > 0,
+		Reward:          totalReward,
 		Vulnerabilities: []string{}, // Would extract from episode
 		Insights:        []string{}, // Would derive insights
 	}

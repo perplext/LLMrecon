@@ -78,32 +78,32 @@ type ValidationResult struct {
 
 // Author represents the author of a bundle
 type Author struct {
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	URL     string `json:"url,omitempty"`
-	KeyID   string `json:"key_id,omitempty"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	URL   string `json:"url,omitempty"`
+	KeyID string `json:"key_id,omitempty"`
 }
 
 // ContentItem represents an item in a bundle
 type ContentItem struct {
-	Path        string                 `json:"path"`
-	Type        ContentType            `json:"type"`
-	ID          string                 `json:"id,omitempty"`
-	Version     string                 `json:"version,omitempty"`
-	Description string                 `json:"description,omitempty"`
-	Checksum    string                 `json:"checksum"`
+	Path        string      `json:"path"`
+	Type        ContentType `json:"type"`
+	ID          string      `json:"id,omitempty"`
+	Version     string      `json:"version,omitempty"`
+	Description string      `json:"description,omitempty"`
+	Checksum    string      `json:"checksum"`
 	// BundleID is the ID of the bundle this item belongs to
-	BundleID    string                 `json:"bundle_id,omitempty"`
+	BundleID string `json:"bundle_id,omitempty"`
 	// Metadata stores additional metadata for the item
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// Size is the file size in bytes
-	Size        int64                  `json:"size,omitempty"`
+	Size int64 `json:"size,omitempty"`
 }
 
 // Checksums contains checksums for bundle components
 type Checksums struct {
-	Manifest  string            `json:"manifest"`
-	Content   map[string]string `json:"content"`
+	Manifest string            `json:"manifest"`
+	Content  map[string]string `json:"content"`
 }
 
 // BundleChecksums is an alias for Checksums for compatibility
@@ -115,10 +115,10 @@ type BundleChecksums struct {
 
 // Compatibility represents compatibility information for a bundle
 type Compatibility struct {
-	MinVersion    string   `json:"min_version"`
-	MaxVersion    string   `json:"max_version,omitempty"`
-	Dependencies  []string `json:"dependencies,omitempty"`
-	Incompatible  []string `json:"incompatible,omitempty"`
+	MinVersion   string   `json:"min_version"`
+	MaxVersion   string   `json:"max_version,omitempty"`
+	Dependencies []string `json:"dependencies,omitempty"`
+	Incompatible []string `json:"incompatible,omitempty"`
 }
 
 // BundleManifest represents the manifest of a bundle
@@ -143,9 +143,9 @@ type BundleManifest struct {
 
 // Bundle represents a bundle for import/export
 type Bundle struct {
-	Manifest    BundleManifest
-	BundlePath  string
-	IsVerified  bool
+	Manifest   BundleManifest
+	BundlePath string
+	IsVerified bool
 }
 
 // BundleValidator defines the interface for bundle validation

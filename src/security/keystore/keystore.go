@@ -531,14 +531,14 @@ func calculateKeyFingerprint(keyData []byte) (string, error) {
 func (ks *FileKeyStore) GenerateKey(keyType KeyType, algorithm string, metadata *KeyMetadata) (*Key, error) {
 	// This is a placeholder implementation
 	// In a real implementation, this would generate actual cryptographic keys
-	
+
 	if metadata == nil {
 		return nil, errors.New("metadata cannot be nil")
 	}
-	
+
 	// Create key material based on type
 	var material KeyMaterial
-	
+
 	switch keyType {
 	case RSAKey:
 		// Generate RSA key material (placeholder)
@@ -557,18 +557,18 @@ func (ks *FileKeyStore) GenerateKey(keyType KeyType, algorithm string, metadata 
 	default:
 		return nil, fmt.Errorf("unsupported key type: %s", keyType)
 	}
-	
+
 	// Create key
 	key := &Key{
 		Metadata: *metadata,
 		Material: material,
 	}
-	
+
 	// Store the key
 	if err := ks.StoreKey(key); err != nil {
 		return nil, fmt.Errorf("failed to store generated key: %w", err)
 	}
-	
+
 	return key, nil
 }
 

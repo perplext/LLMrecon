@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
 
 // CreateRoleRequest represents a request to create a new role

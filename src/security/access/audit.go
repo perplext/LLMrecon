@@ -306,7 +306,11 @@ func (l *FileAuditLogger) GetAuditLogs(ctx context.Context, filter map[string]in
 		}
 		return nil, 0, fmt.Errorf("failed to open audit log file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read logs
 	logs := make([]*AuditLog, 0)
@@ -390,7 +394,11 @@ func (l *FileAuditLogger) GetAuditLogByID(ctx context.Context, id string) (*Audi
 		}
 		return nil, fmt.Errorf("failed to open audit log file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read logs and find the one with matching ID
 	decoder := json.NewDecoder(file)

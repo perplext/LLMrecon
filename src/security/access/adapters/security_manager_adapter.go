@@ -84,7 +84,7 @@ func (a *SecurityManagerAdapter) UpdateVulnerabilityStatus(ctx context.Context, 
 	if err != nil {
 		return err
 	}
-	
+
 	vulnerability.Status = status
 	return a.UpdateVulnerability(ctx, vulnerability)
 }

@@ -53,14 +53,14 @@ type ReleaseAsset struct {
 
 // GeneralUpdateManifest represents metadata about updates
 type GeneralUpdateManifest struct {
-	Version     string            `json:"version"`
-	Components  []ComponentInfo   `json:"components"`
-	Checksums   map[string]string `json:"checksums"`
-	Signatures  map[string]string `json:"signatures"`
-	Timestamp   time.Time         `json:"timestamp"`
-	MinVersion  string            `json:"min_version"`
-	MaxVersion  string            `json:"max_version"`
-	ChangelogURL string           `json:"changelog_url"`
+	Version      string            `json:"version"`
+	Components   []ComponentInfo   `json:"components"`
+	Checksums    map[string]string `json:"checksums"`
+	Signatures   map[string]string `json:"signatures"`
+	Timestamp    time.Time         `json:"timestamp"`
+	MinVersion   string            `json:"min_version"`
+	MaxVersion   string            `json:"max_version"`
+	ChangelogURL string            `json:"changelog_url"`
 }
 
 // ComponentInfo represents information about a component
@@ -77,13 +77,13 @@ type ComponentInfo struct {
 
 // Bundle represents an offline update bundle
 type Bundle struct {
-	Metadata     BundleMetadata    `json:"metadata"`
-	Components   []ComponentInfo   `json:"components"`
-	Checksums    map[string]string `json:"checksums"`
-	Signatures   map[string]string `json:"signatures"`
-	CreatedBy    string            `json:"created_by"`
-	CreatedAt    time.Time         `json:"created_at"`
-	ExpiresAt    *time.Time        `json:"expires_at,omitempty"`
+	Metadata   BundleMetadata    `json:"metadata"`
+	Components []ComponentInfo   `json:"components"`
+	Checksums  map[string]string `json:"checksums"`
+	Signatures map[string]string `json:"signatures"`
+	CreatedBy  string            `json:"created_by"`
+	CreatedAt  time.Time         `json:"created_at"`
+	ExpiresAt  *time.Time        `json:"expires_at,omitempty"`
 }
 
 // BundleMetadata contains metadata about a bundle
@@ -116,20 +116,20 @@ type TemplateInfo struct {
 
 // ModuleInfo represents information about a provider module
 type ModuleInfo struct {
-	Name            string            `json:"name"`
-	Version         string            `json:"version"`
-	Provider        string            `json:"provider"`
-	Author          string            `json:"author"`
-	Description     string            `json:"description"`
-	Capabilities    []string          `json:"capabilities"`
-	Dependencies    []string          `json:"dependencies"`
-	MinToolVersion  string            `json:"min_tool_version"`
-	MaxToolVersion  string            `json:"max_tool_version"`
-	Metadata        map[string]string `json:"metadata"`
-	FilePath        string            `json:"file_path"`
-	Size            int64             `json:"size"`
-	Checksum        string            `json:"checksum"`
-	LastUpdated     time.Time         `json:"last_updated"`
+	Name           string            `json:"name"`
+	Version        string            `json:"version"`
+	Provider       string            `json:"provider"`
+	Author         string            `json:"author"`
+	Description    string            `json:"description"`
+	Capabilities   []string          `json:"capabilities"`
+	Dependencies   []string          `json:"dependencies"`
+	MinToolVersion string            `json:"min_tool_version"`
+	MaxToolVersion string            `json:"max_tool_version"`
+	Metadata       map[string]string `json:"metadata"`
+	FilePath       string            `json:"file_path"`
+	Size           int64             `json:"size"`
+	Checksum       string            `json:"checksum"`
+	LastUpdated    time.Time         `json:"last_updated"`
 }
 
 // UpdateProgress represents progress of an update operation
@@ -169,18 +169,18 @@ func (e *UpdateError) Unwrap() error {
 
 // UpdateOptions represents options for update operations
 type UpdateOptions struct {
-	Components       []string
-	ForceUpdate      bool
-	SkipVerification bool
-	SkipBackup       bool
-	DryRun           bool
-	Verbose          bool
-	AutoConfirm      bool
+	Components        []string
+	ForceUpdate       bool
+	SkipVerification  bool
+	SkipBackup        bool
+	DryRun            bool
+	Verbose           bool
+	AutoConfirm       bool
 	IncludePrerelease bool
-	MaxRetries       int
-	Timeout          time.Duration
-	ProgressCallback func(*UpdateProgress)
-	ErrorCallback    func(*UpdateError) bool // Return true to continue
+	MaxRetries        int
+	Timeout           time.Duration
+	ProgressCallback  func(*UpdateProgress)
+	ErrorCallback     func(*UpdateError) bool // Return true to continue
 }
 
 // ChangelogEntry represents an entry in a changelog
@@ -207,28 +207,28 @@ type Changelog struct {
 
 // RepositoryStatus represents the status of a repository
 type RepositoryStatus struct {
-	Name         string    `json:"name"`
-	URL          string    `json:"url"`
-	Type         string    `json:"type"`
-	Available    bool      `json:"available"`
-	LastChecked  time.Time `json:"last_checked"`
-	LastUpdated  time.Time `json:"last_updated"`
-	ItemCount    int       `json:"item_count"`
-	TotalSize    int64     `json:"total_size"`
-	Error        string    `json:"error,omitempty"`
-	Version      string    `json:"version"`
+	Name        string    `json:"name"`
+	URL         string    `json:"url"`
+	Type        string    `json:"type"`
+	Available   bool      `json:"available"`
+	LastChecked time.Time `json:"last_checked"`
+	LastUpdated time.Time `json:"last_updated"`
+	ItemCount   int       `json:"item_count"`
+	TotalSize   int64     `json:"total_size"`
+	Error       string    `json:"error,omitempty"`
+	Version     string    `json:"version"`
 }
 
 // UpdateStatistics represents statistics about updates
 type UpdateStatistics struct {
-	TotalUpdates        int           `json:"total_updates"`
-	SuccessfulUpdates   int           `json:"successful_updates"`
-	FailedUpdates       int           `json:"failed_updates"`
-	LastUpdateTime      time.Time     `json:"last_update_time"`
-	AverageUpdateTime   time.Duration `json:"average_update_time"`
-	TotalDownloadSize   int64         `json:"total_download_size"`
-	UpdatesByComponent  map[string]int `json:"updates_by_component"`
-	ErrorsByType        map[string]int `json:"errors_by_type"`
+	TotalUpdates       int            `json:"total_updates"`
+	SuccessfulUpdates  int            `json:"successful_updates"`
+	FailedUpdates      int            `json:"failed_updates"`
+	LastUpdateTime     time.Time      `json:"last_update_time"`
+	AverageUpdateTime  time.Duration  `json:"average_update_time"`
+	TotalDownloadSize  int64          `json:"total_download_size"`
+	UpdatesByComponent map[string]int `json:"updates_by_component"`
+	ErrorsByType       map[string]int `json:"errors_by_type"`
 }
 
 // Constants for update operations
@@ -237,43 +237,43 @@ const (
 	BinaryUpdateComponent    = "binary"
 	TemplatesUpdateComponent = "templates"
 	ModuleUpdateComponent    = "module"
-	
+
 	// Update types
 	UpdateTypeFull        = "full"
 	UpdateTypeIncremental = "incremental"
 	UpdateTypeSecurity    = "security"
-	
+
 	// Bundle types
 	BundleTypeFull      = "full"
 	BundleTypeTemplates = "templates"
 	BundleTypeModules   = "modules"
 	BundleTypeMixed     = "mixed"
-	
+
 	// Operations
-	OperationCheck     = "check"
-	OperationDownload  = "download"
-	OperationVerify    = "verify"
-	OperationInstall   = "install"
-	OperationBackup    = "backup"
-	OperationRollback  = "rollback"
-	
+	OperationCheck    = "check"
+	OperationDownload = "download"
+	OperationVerify   = "verify"
+	OperationInstall  = "install"
+	OperationBackup   = "backup"
+	OperationRollback = "rollback"
+
 	// Error types
-	ErrorTypeNetwork      = "network"
-	ErrorTypeVerification = "verification"
-	ErrorTypePermission   = "permission"
+	ErrorTypeNetwork       = "network"
+	ErrorTypeVerification  = "verification"
+	ErrorTypePermission    = "permission"
 	ErrorTypeCompatibility = "compatibility"
-	ErrorTypeCorruption   = "corruption"
-	ErrorTypeTimeout      = "timeout"
+	ErrorTypeCorruption    = "corruption"
+	ErrorTypeTimeout       = "timeout"
 )
 
 // Update status constants
 const (
-	StatusPending    = "pending"
-	StatusRunning    = "running"
-	StatusCompleted  = "completed"
-	StatusFailed     = "failed"
-	StatusCancelled  = "cancelled"
-	StatusSkipped    = "skipped"
+	StatusPending   = "pending"
+	StatusRunning   = "running"
+	StatusCompleted = "completed"
+	StatusFailed    = "failed"
+	StatusCancelled = "cancelled"
+	StatusSkipped   = "skipped"
 )
 
 // Priority levels for updates
@@ -291,7 +291,7 @@ const (
 	PlatformDarwin  = "darwin"
 	PlatformWindows = "windows"
 	PlatformFreeBSD = "freebsd"
-	
+
 	ArchAMD64 = "amd64"
 	ArchARM64 = "arm64"
 	Arch386   = "386"
@@ -361,16 +361,16 @@ type UpdaterConfig struct {
 	// Template update settings
 	TemplateUpdateEnabled bool
 	TemplateRepos         []RepositoryConfig
-	
+
 	// Module update settings
 	ModuleUpdateEnabled bool
 	ModuleRepos         []RepositoryConfig
-	
+
 	// Security settings
 	VerifySignatures     bool
 	TrustedKeys          []string
 	ChecksumVerification bool
-	
+
 	// General settings
 	AutoUpdate          bool
 	UpdateCheckInterval time.Duration

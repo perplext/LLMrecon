@@ -205,7 +205,7 @@ func (v *DefaultBundleValidator) ValidateManifest(manifest *BundleManifest) (*Va
 	// Update result status
 	result.Valid = len(result.Errors) == 0
 	result.IsValid = result.Valid
-	
+
 	if !result.Valid {
 		result.Message = "Manifest validation failed"
 		if len(result.Errors) > 0 {
@@ -333,14 +333,14 @@ func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationR
 	// Calculate manifest checksum
 	manifestHash := calculateHash(manifestData)
 	if bundle.Manifest.Checksums.Manifest != "" && manifestHash != bundle.Manifest.Checksums.Manifest {
-		result.Errors = append(result.Errors, fmt.Sprintf("Manifest checksum mismatch: expected %s, got %s", 
+		result.Errors = append(result.Errors, fmt.Sprintf("Manifest checksum mismatch: expected %s, got %s",
 			bundle.Manifest.Checksums.Manifest, manifestHash))
 	}
 
 	// Validate content checksums
 	for _, item := range bundle.Manifest.Content {
 		itemPath := filepath.Join(bundle.BundlePath, item.Path)
-		
+
 		// Check if item exists
 		if _, err := os.Stat(itemPath); os.IsNotExist(err) {
 			result.Errors = append(result.Errors, fmt.Sprintf("Content item not found: %s", item.Path))
@@ -374,7 +374,7 @@ func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationR
 
 		// Compare checksums
 		if itemHash != item.Checksum {
-			result.Errors = append(result.Errors, fmt.Sprintf("Checksum mismatch for %s: expected %s, got %s", 
+			result.Errors = append(result.Errors, fmt.Sprintf("Checksum mismatch for %s: expected %s, got %s",
 				item.Path, item.Checksum, itemHash))
 		}
 	}
@@ -382,7 +382,7 @@ func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationR
 	// Update result status
 	result.Valid = len(result.Errors) == 0
 	result.IsValid = result.Valid
-	
+
 	if !result.Valid {
 		result.Message = "Checksum validation failed"
 		if len(result.Errors) > 0 {
@@ -395,18 +395,18 @@ func (v *DefaultBundleValidator) ValidateChecksums(bundle *Bundle) (*ValidationR
 	if len(result.Warnings) > 0 {
 		result.Message = fmt.Sprintf("Checksum validation successful with %d warnings", len(result.Warnings))
 	}
-	
+
 	return result, nil
 }
 
 // ValidateCompatibility validates bundle compatibility with current versions
 func (v *DefaultBundleValidator) ValidateCompatibility(bundle *Bundle, currentVersions map[string]*version.SemVersion) (*ValidationResult, error) {
 	result := &ValidationResult{
-		Valid:   true,
-		IsValid: true,
-		Level:   "compatibility",
-		Message: "Compatibility validation successful",
-		Errors:  []string{},
+		Valid:    true,
+		IsValid:  true,
+		Level:    "compatibility",
+		Message:  "Compatibility validation successful",
+		Errors:   []string{},
 		Warnings: []string{},
 	}
 
@@ -421,7 +421,7 @@ func (v *DefaultBundleValidator) ValidateCompatibility(bundle *Bundle, currentVe
 				result.Warnings = append(result.Warnings, "Core version not found in current versions")
 			} else {
 				if coreVersion.Compare(minVersion) < 0 {
-					result.Errors = append(result.Errors, fmt.Sprintf("Bundle requires minimum version %s, but current version is %s", 
+					result.Errors = append(result.Errors, fmt.Sprintf("Bundle requires minimum version %s, but current version is %s",
 						bundle.Manifest.Compatibility.MinVersion, coreVersion.String()))
 				}
 			}
@@ -439,7 +439,7 @@ func (v *DefaultBundleValidator) ValidateCompatibility(bundle *Bundle, currentVe
 				result.Warnings = append(result.Warnings, "Core version not found in current versions")
 			} else {
 				if coreVersion.Compare(maxVersion) > 0 {
-					result.Errors = append(result.Errors, fmt.Sprintf("Bundle supports maximum version %s, but current version is %s", 
+					result.Errors = append(result.Errors, fmt.Sprintf("Bundle supports maximum version %s, but current version is %s",
 						bundle.Manifest.Compatibility.MaxVersion, coreVersion.String()))
 				}
 			}
@@ -468,12 +468,10 @@ func (v *DefaultBundleValidator) ValidateCompatibility(bundle *Bundle, currentVe
 		}
 
 		if currentVersion.Compare(depVersion) < 0 {
-			result.Errors = append(result.Errors, fmt.Sprintf("Bundle requires %s version %s, but current version is %s", 
+			result.Errors = append(result.Errors, fmt.Sprintf("Bundle requires %s version %s, but current version is %s",
 				depName, parts[1], currentVersion.String()))
 		}
 	}
-
-
 
 	// Check incompatibilities
 	for _, incomp := range bundle.Manifest.Compatibility.Incompatible {
@@ -499,7 +497,7 @@ func (v *DefaultBundleValidator) ValidateCompatibility(bundle *Bundle, currentVe
 
 		// Check version incompatibility
 		if currentVersion.Compare(incompVersion) == 0 {
-			result.Errors = append(result.Errors, fmt.Sprintf("Bundle is incompatible with %s version %s", 
+			result.Errors = append(result.Errors, fmt.Sprintf("Bundle is incompatible with %s version %s",
 				incompName, parts[1]))
 		}
 	}
@@ -552,7 +550,7 @@ func calculateDirectoryHash(dirPath string) (string, error) {
 		if err != nil {
 			return err
 		}
-		
+
 		// Add path and file mode to hash
 		fmt.Fprintf(h, "%s:%d:", relPath, info.Mode())
 

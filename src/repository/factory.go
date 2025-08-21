@@ -31,7 +31,7 @@ func (f *Factory) Create(config *Config) (Repository, error) {
 	if !exists {
 		return nil, fmt.Errorf("unsupported repository type: %s", config.Type)
 	}
-	
+
 	return creator(config)
 }
 

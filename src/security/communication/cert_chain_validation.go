@@ -2,7 +2,6 @@
 package communication
 
 import (
-	"time"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -11,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
+	"time"
 )
 
 // ValidateCertificate validates a certificate and returns certificate information
@@ -61,12 +61,12 @@ func (m *TrustChainManager) ValidateCertificate(cert *x509.Certificate) (*Certif
 	if err != nil {
 		certInfo.Status = CertStatusUntrusted
 		certInfo.ValidationError = fmt.Errorf("certificate verification failed: %w", err)
-		
+
 		// Cache the result
 		m.mu.Lock()
 		m.certInfoCache[key] = certInfo
 		m.mu.Unlock()
-		
+
 		return certInfo, certInfo.ValidationError
 	}
 
@@ -80,12 +80,12 @@ func (m *TrustChainManager) ValidateCertificate(cert *x509.Certificate) (*Certif
 	if now.Before(cert.NotBefore) || now.After(cert.NotAfter) {
 		certInfo.Status = CertStatusExpired
 		certInfo.ValidationError = fmt.Errorf("certificate is expired or not yet valid")
-		
+
 		// Cache the result
 		m.mu.Lock()
 		m.certInfoCache[key] = certInfo
 		m.mu.Unlock()
-		
+
 		return certInfo, certInfo.ValidationError
 	}
 
@@ -98,12 +98,12 @@ func (m *TrustChainManager) ValidateCertificate(cert *x509.Certificate) (*Certif
 		} else if isRevoked {
 			certInfo.Status = CertStatusRevoked
 			certInfo.ValidationError = fmt.Errorf("certificate is revoked")
-			
+
 			// Cache the result
 			m.mu.Lock()
 			m.certInfoCache[key] = certInfo
 			m.mu.Unlock()
-			
+
 			return certInfo, certInfo.ValidationError
 		}
 	}
@@ -204,7 +204,11 @@ func (m *TrustChainManager) fetchCRL(url string) (*pkix.CertificateList, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch CRL: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to fetch CRL: status code %d", resp.StatusCode)
@@ -240,18 +244,17 @@ func (m *TrustChainManager) GetTrustedCertificates() []*x509.Certificate {
 	defer m.mu.RUnlock()
 
 	certs := make([]*x509.Certificate, 0, len(m.rootCerts)+len(m.intermediateCerts))
-	
+
 	for _, cert := range m.rootCerts {
 		certs = append(certs, cert)
 	}
-	
+
 	for _, cert := range m.intermediateCerts {
 		certs = append(certs, cert)
 	}
-	
+
 	return certs
 }
-
 
 // ClearCRLCache clears the CRL cache
 func (m *TrustChainManager) ClearCRLCache() {

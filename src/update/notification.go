@@ -85,16 +85,16 @@ func (h *ConsoleNotificationHandler) HandleNotification(notification *Notificati
 	}
 
 	// Write notification to console
-	fmt.Fprintf(h.Writer, "[%s] [%s] %s", 
+	fmt.Fprintf(h.Writer, "[%s] [%s] %s",
 		notification.Timestamp.Format(time.RFC3339),
 		typePrefix,
 		notification.Message)
-	
+
 	// Include transaction ID if provided
 	if notification.TransactionID != "" {
 		fmt.Fprintf(h.Writer, " (Transaction: %s)", notification.TransactionID)
 	}
-	
+
 	// End line
 	fmt.Fprintln(h.Writer)
 

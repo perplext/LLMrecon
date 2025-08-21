@@ -11,10 +11,10 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"path/filepath"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 // SignatureGenerator handles the generation of digital signatures
@@ -47,7 +47,7 @@ func NewSignatureGenerator(privateKeyData string) (*SignatureGenerator, error) {
 	// First try Ed25519
 	if len(privateKeyBytes) == ed25519.PrivateKeySize {
 		return &SignatureGenerator{
-			Algorithm: Ed25519Algorithm,
+			Algorithm:  Ed25519Algorithm,
 			PrivateKey: ed25519.PrivateKey(privateKeyBytes),
 		}, nil
 	}
@@ -79,7 +79,7 @@ func parsePrivateKeyFromPEM(block *pem.Block) (*SignatureGenerator, error) {
 			return nil, fmt.Errorf("failed to parse PKCS#1 private key: %w", err)
 		}
 		return &SignatureGenerator{
-			Algorithm: RSAAlgorithm,
+			Algorithm:  RSAAlgorithm,
 			PrivateKey: privKey,
 		}, nil
 
@@ -90,7 +90,7 @@ func parsePrivateKeyFromPEM(block *pem.Block) (*SignatureGenerator, error) {
 			return nil, fmt.Errorf("failed to parse SEC1 private key: %w", err)
 		}
 		return &SignatureGenerator{
-			Algorithm: ECDSAAlgorithm,
+			Algorithm:  ECDSAAlgorithm,
 			PrivateKey: privKey,
 		}, nil
 
@@ -104,17 +104,17 @@ func createGeneratorFromParsedKey(privKey interface{}) (*SignatureGenerator, err
 	switch key := privKey.(type) {
 	case *rsa.PrivateKey:
 		return &SignatureGenerator{
-			Algorithm: RSAAlgorithm,
+			Algorithm:  RSAAlgorithm,
 			PrivateKey: key,
 		}, nil
 	case *ecdsa.PrivateKey:
 		return &SignatureGenerator{
-			Algorithm: ECDSAAlgorithm,
+			Algorithm:  ECDSAAlgorithm,
 			PrivateKey: key,
 		}, nil
 	case ed25519.PrivateKey:
 		return &SignatureGenerator{
-			Algorithm: Ed25519Algorithm,
+			Algorithm:  Ed25519Algorithm,
 			PrivateKey: key,
 		}, nil
 	default:
@@ -339,7 +339,11 @@ func CalculateChecksum(filePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Calculate the SHA-256 hash
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {

@@ -71,11 +71,11 @@ func NewTemplateProfiler(templateManager types.TemplateManager, config *Template
 				MaxSamples:         1000,
 				Tags:               make(map[string]string),
 			},
-			EnableDetailedProfiling:   false,
+			EnableDetailedProfiling:    false,
 			EnableContinuousMonitoring: false,
-			MonitoringInterval:        5 * time.Minute,
-			BaselineFilePath:          "template_baseline.json",
-			ReportFilePath:            "template_profile.txt",
+			MonitoringInterval:         5 * time.Minute,
+			BaselineFilePath:           "template_baseline.json",
+			ReportFilePath:             "template_profile.txt",
 		}
 	}
 
@@ -374,7 +374,11 @@ func (p *TemplateProfiler) saveBaseline() error {
 	if err != nil {
 		return fmt.Errorf("failed to create baseline file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write header
 	fmt.Fprintf(file, "Template Performance Baseline - %s\n", time.Now().Format(time.RFC3339))
@@ -449,7 +453,11 @@ func (p *TemplateProfiler) SaveComparisonReport(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create comparison report file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write header
 	fmt.Fprintf(file, "Template Performance Comparison - %s\n", time.Now().Format(time.RFC3339))
@@ -552,7 +560,6 @@ func (p *TemplateProfiler) startContinuousMonitoring() {
 		}
 	}
 }
-
 
 // getStatusString returns a status string based on a condition
 func getStatusString(condition bool) string {

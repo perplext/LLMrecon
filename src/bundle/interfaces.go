@@ -4,7 +4,6 @@ import (
 	"time"
 )
 
-
 // Manager interface for bundle operations
 type Manager interface {
 	ListBundles() ([]Info, error)
@@ -62,12 +61,12 @@ type ImportRequest struct {
 
 // OperationResult represents the result of a bundle operation
 type OperationResult struct {
-	BundleID   string            `json:"bundle_id,omitempty"`
-	Status     string            `json:"status"`
-	Message    string            `json:"message,omitempty"`
-	Templates  []string          `json:"templates,omitempty"`
-	Modules    []string          `json:"modules,omitempty"`
-	Conflicts  []string          `json:"conflicts,omitempty"`
-	Errors     []string          `json:"errors,omitempty"`
-	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+	BundleID  string                 `json:"bundle_id,omitempty"`
+	Status    string                 `json:"status"`
+	Message   string                 `json:"message,omitempty"`
+	Templates []string               `json:"templates,omitempty"`
+	Modules   []string               `json:"modules,omitempty"`
+	Conflicts []string               `json:"conflicts,omitempty"`
+	Errors    []string               `json:"errors,omitempty"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }

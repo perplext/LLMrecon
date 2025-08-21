@@ -405,7 +405,6 @@ func parseTemplateFromContent(filePath string, content []byte) (*format.Template
 	return &template, nil
 }
 
-
 // ClearCache clears the template cache
 func (l *TemplateLoader) ClearCache() {
 	l.cacheMutex.Lock()

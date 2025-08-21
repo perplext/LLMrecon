@@ -18,17 +18,17 @@ type MetricsCollector struct {
 	hooks       []CollectionHook
 	logger      Logger
 	mu          sync.RWMutex
-	
+
 	// Real-time metrics
-	activeScans    map[string]*ScanTracker
-	systemMetrics  *SystemMetrics
-	metricsBuffer  chan Metric
-	
+	activeScans   map[string]*ScanTracker
+	systemMetrics *SystemMetrics
+	metricsBuffer chan Metric
+
 	// Collection state
 	enabled       bool
 	batchSize     int
 	flushInterval time.Duration
-	
+
 	// Context for graceful shutdown
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -72,29 +72,29 @@ type ScanTracker struct {
 
 // SystemMetrics tracks system-level performance metrics
 type SystemMetrics struct {
-	CPUUsage      float64
-	MemoryUsage   int64
-	DiskUsage     int64
-	NetworkIO     NetworkStats
-	ProcessCount  int
-	ThreadCount   int
-	LastUpdated   time.Time
-	mu            sync.RWMutex
+	CPUUsage     float64
+	MemoryUsage  int64
+	DiskUsage    int64
+	NetworkIO    NetworkStats
+	ProcessCount int
+	ThreadCount  int
+	LastUpdated  time.Time
+	mu           sync.RWMutex
 }
 
 // NetworkStats tracks network I/O statistics
 type NetworkStats struct {
-	BytesSent     int64
-	BytesReceived int64
-	PacketsSent   int64
+	BytesSent       int64
+	BytesReceived   int64
+	PacketsSent     int64
 	PacketsReceived int64
-	Connections   int
+	Connections     int
 }
 
 // NewMetricsCollector creates a new metrics collector
 func NewMetricsCollector(config *Config, storage DataStorage, logger Logger) *MetricsCollector {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	collector := &MetricsCollector{
 		config:        config,
 		storage:       storage,
@@ -111,16 +111,16 @@ func NewMetricsCollector(config *Config, storage DataStorage, logger Logger) *Me
 		ctx:           ctx,
 		cancel:        cancel,
 	}
-	
+
 	// Register default processors
 	collector.registerDefaultProcessors()
 	collector.registerDefaultAggregators()
-	
+
 	// Start background workers
 	if collector.enabled {
 		collector.startWorkers()
 	}
-	
+
 	return collector
 }
 
@@ -129,17 +129,17 @@ func (mc *MetricsCollector) StartScanTracking(scanID, target string, templates [
 	if !mc.enabled {
 		return nil
 	}
-	
+
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
-	
+
 	// Run pre-collection hooks
 	for _, hook := range mc.hooks {
 		if err := hook.PreCollection(mc.ctx, scanID); err != nil {
 			mc.logger.Warn(fmt.Sprintf("Pre-collection hook failed for scanID %s: %v", scanID, err))
 		}
 	}
-	
+
 	tracker := &ScanTracker{
 		ScanID:        scanID,
 		StartTime:     time.Now(),
@@ -148,14 +148,14 @@ func (mc *MetricsCollector) StartScanTracking(scanID, target string, templates [
 		CurrentPhase:  "initialization",
 		Metrics:       make([]Metric, 0),
 	}
-	
+
 	mc.activeScans[scanID] = tracker
-	
+
 	// Emit scan started metric
 	metric := Metric{
-		Name:      "scan_started",
-		Value:     1,
-		Unit:      "count",
+		Name:  "scan_started",
+		Value: 1,
+		Unit:  "count",
 		Tags: map[string]string{
 			"scan_id": scanID,
 			"target":  target,
@@ -163,7 +163,7 @@ func (mc *MetricsCollector) StartScanTracking(scanID, target string, templates [
 		Timestamp: time.Now(),
 		Source:    "collector",
 	}
-	
+
 	return mc.collectMetric(metric)
 }
 
@@ -172,14 +172,14 @@ func (mc *MetricsCollector) UpdateScanProgress(scanID string, phase string, test
 	if !mc.enabled {
 		return nil
 	}
-	
+
 	mc.mu.Lock()
 	tracker, exists := mc.activeScans[scanID]
 	if !exists {
 		mc.mu.Unlock()
 		return fmt.Errorf("scan tracker not found for ID: %s", scanID)
 	}
-	
+
 	tracker.mu.Lock()
 	tracker.CurrentPhase = phase
 	tracker.TestsRun = testsRun
@@ -188,12 +188,12 @@ func (mc *MetricsCollector) UpdateScanProgress(scanID string, phase string, test
 	tracker.LastUpdate = time.Now()
 	tracker.mu.Unlock()
 	mc.mu.Unlock()
-	
+
 	// Emit progress metric
 	metric := Metric{
-		Name:      "scan_progress",
-		Value:     float64(testsRun),
-		Unit:      "count",
+		Name:  "scan_progress",
+		Value: float64(testsRun),
+		Unit:  "count",
 		Tags: map[string]string{
 			"scan_id": scanID,
 			"phase":   phase,
@@ -201,7 +201,7 @@ func (mc *MetricsCollector) UpdateScanProgress(scanID string, phase string, test
 		Timestamp: time.Now(),
 		Source:    "collector",
 	}
-	
+
 	return mc.collectMetric(metric)
 }
 
@@ -210,35 +210,35 @@ func (mc *MetricsCollector) FinishScanTracking(scanID string, result *ScanResult
 	if !mc.enabled {
 		return nil
 	}
-	
+
 	mc.mu.Lock()
 	tracker, exists := mc.activeScans[scanID]
 	if !exists {
 		mc.mu.Unlock()
 		return fmt.Errorf("scan tracker not found for ID: %s", scanID)
 	}
-	
+
 	duration := time.Since(tracker.StartTime)
 	delete(mc.activeScans, scanID)
 	mc.mu.Unlock()
-	
+
 	// Generate completion metrics
 	metrics := mc.generateScanCompletionMetrics(scanID, tracker, result, duration)
-	
+
 	// Collect all metrics
 	for _, metric := range metrics {
 		if err := mc.collectMetric(metric); err != nil {
 			mc.logger.Error("Failed to collect scan completion metric", err)
 		}
 	}
-	
+
 	// Run post-collection hooks
 	for _, hook := range mc.hooks {
 		if err := hook.PostCollection(mc.ctx, scanID, metrics); err != nil {
 			mc.logger.Warn(fmt.Sprintf("Post-collection hook failed for scanID %s: %v", scanID, err))
 		}
 	}
-	
+
 	return nil
 }
 
@@ -247,7 +247,7 @@ func (mc *MetricsCollector) CollectCustomMetric(name string, value float64, labe
 	if !mc.enabled {
 		return nil
 	}
-	
+
 	metric := Metric{
 		Name:      name,
 		Value:     value,
@@ -256,7 +256,7 @@ func (mc *MetricsCollector) CollectCustomMetric(name string, value float64, labe
 		Timestamp: time.Now(),
 		Source:    "collector",
 	}
-	
+
 	return mc.collectMetric(metric)
 }
 
@@ -264,12 +264,12 @@ func (mc *MetricsCollector) CollectCustomMetric(name string, value float64, labe
 func (mc *MetricsCollector) GetActiveScans() map[string]*ScanTracker {
 	mc.mu.RLock()
 	defer mc.mu.RUnlock()
-	
+
 	result := make(map[string]*ScanTracker)
 	for id, tracker := range mc.activeScans {
 		result[id] = tracker
 	}
-	
+
 	return result
 }
 
@@ -277,7 +277,7 @@ func (mc *MetricsCollector) GetActiveScans() map[string]*ScanTracker {
 func (mc *MetricsCollector) GetSystemMetrics() *SystemMetrics {
 	mc.systemMetrics.mu.RLock()
 	defer mc.systemMetrics.mu.RUnlock()
-	
+
 	return &SystemMetrics{
 		CPUUsage:     mc.systemMetrics.CPUUsage,
 		MemoryUsage:  mc.systemMetrics.MemoryUsage,
@@ -293,7 +293,7 @@ func (mc *MetricsCollector) GetSystemMetrics() *SystemMetrics {
 func (mc *MetricsCollector) RegisterProcessor(processor MetricProcessor) {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
-	
+
 	mc.processors[processor.GetType()] = processor
 	mc.logger.Info(fmt.Sprintf("Registered metric processor: %s", processor.GetType()))
 }
@@ -302,7 +302,7 @@ func (mc *MetricsCollector) RegisterProcessor(processor MetricProcessor) {
 func (mc *MetricsCollector) RegisterAggregator(name string, aggregator MetricAggregator) {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
-	
+
 	mc.aggregators[name] = aggregator
 	mc.logger.Info(fmt.Sprintf("Registered metric aggregator: %s", name))
 }
@@ -311,7 +311,7 @@ func (mc *MetricsCollector) RegisterAggregator(name string, aggregator MetricAgg
 func (mc *MetricsCollector) RegisterHook(hook CollectionHook) {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
-	
+
 	mc.hooks = append(mc.hooks, hook)
 	mc.logger.Info("Registered collection hook")
 }
@@ -319,16 +319,16 @@ func (mc *MetricsCollector) RegisterHook(hook CollectionHook) {
 // Shutdown gracefully shuts down the metrics collector
 func (mc *MetricsCollector) Shutdown(timeout time.Duration) error {
 	mc.logger.Info("Shutting down metrics collector")
-	
+
 	mc.cancel()
-	
+
 	// Wait for workers to finish with timeout
 	done := make(chan struct{})
 	go func() {
 		mc.wg.Wait()
 		close(done)
 	}()
-	
+
 	select {
 	case <-done:
 		mc.logger.Info("Metrics collector shut down successfully")
@@ -354,7 +354,7 @@ func (mc *MetricsCollector) collectMetric(metric Metric) error {
 			}
 		}
 	}
-	
+
 	// Send to buffer for batch processing
 	select {
 	case mc.metricsBuffer <- processedMetric:
@@ -371,11 +371,11 @@ func (mc *MetricsCollector) startWorkers() {
 	// Start metrics processing worker
 	mc.wg.Add(1)
 	go mc.metricsProcessingWorker()
-	
+
 	// Start system metrics collection worker
 	mc.wg.Add(1)
 	go mc.systemMetricsWorker()
-	
+
 	// Start aggregation worker
 	mc.wg.Add(1)
 	go mc.aggregationWorker()
@@ -383,28 +383,28 @@ func (mc *MetricsCollector) startWorkers() {
 
 func (mc *MetricsCollector) metricsProcessingWorker() {
 	defer mc.wg.Done()
-	
+
 	ticker := time.NewTicker(mc.flushInterval)
 	defer ticker.Stop()
-	
+
 	batch := make([]Metric, 0, mc.batchSize)
-	
+
 	for {
 		select {
 		case metric := <-mc.metricsBuffer:
 			batch = append(batch, metric)
-			
+
 			if len(batch) >= mc.batchSize {
 				mc.flushBatch(batch)
 				batch = batch[:0]
 			}
-			
+
 		case <-ticker.C:
 			if len(batch) > 0 {
 				mc.flushBatch(batch)
 				batch = batch[:0]
 			}
-			
+
 		case <-mc.ctx.Done():
 			// Flush remaining metrics
 			if len(batch) > 0 {
@@ -417,10 +417,10 @@ func (mc *MetricsCollector) metricsProcessingWorker() {
 
 func (mc *MetricsCollector) systemMetricsWorker() {
 	defer mc.wg.Done()
-	
+
 	ticker := time.NewTicker(time.Duration(mc.config.Analytics.SystemMetricsInterval) * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -433,10 +433,10 @@ func (mc *MetricsCollector) systemMetricsWorker() {
 
 func (mc *MetricsCollector) aggregationWorker() {
 	defer mc.wg.Done()
-	
+
 	ticker := time.NewTicker(time.Duration(mc.config.Analytics.AggregationInterval) * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -451,7 +451,7 @@ func (mc *MetricsCollector) flushBatch(batch []Metric) {
 	for _, metric := range batch {
 		if err := mc.storage.StoreMetric(&metric); err != nil {
 			mc.logger.Error("Failed to store metric", err)
-			
+
 			// Notify hooks of error
 			for _, hook := range mc.hooks {
 				hook.OnError(mc.ctx, err, "metric_storage")
@@ -465,7 +465,7 @@ func (mc *MetricsCollector) collectSystemMetrics() {
 	// For now, we'll simulate some metrics
 	mc.systemMetrics.mu.Lock()
 	defer mc.systemMetrics.mu.Unlock()
-	
+
 	mc.systemMetrics.CPUUsage = getCurrentCPUUsage()
 	mc.systemMetrics.MemoryUsage = getCurrentMemoryUsage()
 	mc.systemMetrics.DiskUsage = getCurrentDiskUsage()
@@ -473,7 +473,7 @@ func (mc *MetricsCollector) collectSystemMetrics() {
 	mc.systemMetrics.ProcessCount = getCurrentProcessCount()
 	mc.systemMetrics.ThreadCount = getCurrentThreadCount()
 	mc.systemMetrics.LastUpdated = time.Now()
-	
+
 	// Store as metrics
 	systemMetrics := []Metric{
 		{
@@ -493,7 +493,7 @@ func (mc *MetricsCollector) collectSystemMetrics() {
 			Source:    "collector",
 		},
 	}
-	
+
 	for _, metric := range systemMetrics {
 		mc.collectMetric(metric)
 	}
@@ -501,31 +501,31 @@ func (mc *MetricsCollector) collectSystemMetrics() {
 
 func (mc *MetricsCollector) runAggregation() {
 	now := time.Now()
-	
+
 	for name, aggregator := range mc.aggregators {
 		for _, windowSize := range aggregator.GetWindowSizes() {
 			startTime := now.Add(-windowSize)
-			
+
 			// Get metrics for the time window
 			metrics, err := mc.storage.GetMetricsByTimeRange(mc.ctx, startTime, now)
 			if err != nil {
 				mc.logger.Error(fmt.Sprintf("Failed to get metrics for aggregation for aggregator %v with error %v", name, err), fmt.Errorf("error"))
 				continue
 			}
-			
+
 			// Run aggregation
 			window := TimeWindow{
 				Start:    startTime,
 				End:      now,
 				Duration: windowSize,
 			}
-			
+
 			aggregated, err := aggregator.Aggregate(mc.ctx, metrics, window)
 			if err != nil {
 				mc.logger.Error(fmt.Sprintf("Aggregation failed for aggregator %v with error %v", name, err), fmt.Errorf("error"))
 				continue
 			}
-			
+
 			// Store aggregated metric
 			if err := mc.storage.StoreAggregatedMetric(mc.ctx, aggregated); err != nil {
 				mc.logger.Error("Failed to store aggregated metric", err)
@@ -539,7 +539,7 @@ func (mc *MetricsCollector) generateScanCompletionMetrics(scanID string, tracker
 		"scan_id": scanID,
 		"target":  result.Target,
 	}
-	
+
 	metrics := []Metric{
 		{
 			Name:      "scan_completed",
@@ -574,7 +574,7 @@ func (mc *MetricsCollector) generateScanCompletionMetrics(scanID string, tracker
 			Source:    "collector",
 		},
 	}
-	
+
 	return metrics
 }
 
@@ -606,9 +606,9 @@ func calculateSuccessRate(passed, failed int) float64 {
 }
 
 // System metrics functions (would be replaced with actual system calls)
-func getCurrentCPUUsage() float64     { return 45.2 } // Mock implementation
-func getCurrentMemoryUsage() int64    { return 1024 * 1024 * 512 } // Mock: 512MB
-func getCurrentDiskUsage() int64      { return 1024 * 1024 * 1024 * 10 } // Mock: 10GB
+func getCurrentCPUUsage() float64  { return 45.2 }                    // Mock implementation
+func getCurrentMemoryUsage() int64 { return 1024 * 1024 * 512 }       // Mock: 512MB
+func getCurrentDiskUsage() int64   { return 1024 * 1024 * 1024 * 10 } // Mock: 10GB
 func getCurrentNetworkStats() NetworkStats {
 	return NetworkStats{
 		BytesSent:       1024 * 1024,

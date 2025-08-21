@@ -1,13 +1,12 @@
 // Package api provides API protection mechanisms for the LLMrecon tool.
 package api
 
-
 import (
-	"time"
 	"context"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 // AnomalyType represents the type of anomaly
@@ -99,34 +98,34 @@ type AnomalyDetectorConfig struct {
 // DefaultAnomalyDetectorConfig returns the default anomaly detector configuration
 func DefaultAnomalyDetectorConfig() *AnomalyDetectorConfig {
 	return &AnomalyDetectorConfig{
-		Enabled:                  true,
-		WindowSize:               5 * time.Minute,
-		RateSpikeThreshold:       100,
-		UnusualPathThreshold:     10,
-		UnusualMethodThreshold:   5,
+		Enabled:                   true,
+		WindowSize:                5 * time.Minute,
+		RateSpikeThreshold:        100,
+		UnusualPathThreshold:      10,
+		UnusualMethodThreshold:    5,
 		UnusualUserAgentThreshold: 5,
-		UnusualIPThreshold:       10,
-		UnusualPatternThreshold:  10,
-		LearningMode:             true,
-		LearningPeriod:           24 * time.Hour,
+		UnusualIPThreshold:        10,
+		UnusualPatternThreshold:   10,
+		LearningMode:              true,
+		LearningPeriod:            24 * time.Hour,
 	}
 }
 
 // AnomalyDetector implements anomaly detection for API requests
 type AnomalyDetector struct {
-	config           *AnomalyDetectorConfig
-	startTime        time.Time
-	mu               sync.RWMutex
-	pathCounts       map[string]int
-	methodCounts     map[string]int
-	userAgentCounts  map[string]int
-	ipCounts         map[string]int
-	patternCounts    map[string]int
-	requestCounts    []int
-	requestTimes     []time.Time
-	anomalies        []*Anomaly
-	ctx              context.Context
-	cancel           context.CancelFunc
+	config          *AnomalyDetectorConfig
+	startTime       time.Time
+	mu              sync.RWMutex
+	pathCounts      map[string]int
+	methodCounts    map[string]int
+	userAgentCounts map[string]int
+	ipCounts        map[string]int
+	patternCounts   map[string]int
+	requestCounts   []int
+	requestTimes    []time.Time
+	anomalies       []*Anomaly
+	ctx             context.Context
+	cancel          context.CancelFunc
 }
 
 // NewAnomalyDetector creates a new anomaly detector

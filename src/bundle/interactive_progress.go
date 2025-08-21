@@ -347,4 +347,3 @@ func (sp *SpinnerProgress) StopWithMessage(success bool, message string) {
 		color.Red("✗ %s", message)
 	}
 }
-

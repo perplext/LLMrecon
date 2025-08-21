@@ -10,25 +10,25 @@ import (
 // ColorScheme defines colors for different UI elements
 type ColorScheme struct {
 	// Status colors
-	Success   *color.Color
-	Error     *color.Color
-	Warning   *color.Color
-	Info      *color.Color
-	Debug     *color.Color
-	
+	Success *color.Color
+	Error   *color.Color
+	Warning *color.Color
+	Info    *color.Color
+	Debug   *color.Color
+
 	// Severity colors for vulnerabilities
-	Critical  *color.Color
-	High      *color.Color
-	Medium    *color.Color
-	Low       *color.Color
-	
+	Critical *color.Color
+	High     *color.Color
+	Medium   *color.Color
+	Low      *color.Color
+
 	// UI element colors
 	Header    *color.Color
 	Subheader *color.Color
 	Label     *color.Color
 	Value     *color.Color
 	Muted     *color.Color
-	
+
 	// Special colors
 	Highlight *color.Color
 	Link      *color.Color
@@ -45,20 +45,20 @@ func DefaultColorScheme() *ColorScheme {
 		Warning: color.New(color.FgYellow, color.Bold),
 		Info:    color.New(color.FgCyan),
 		Debug:   color.New(color.FgMagenta),
-		
+
 		// Severity colors
 		Critical: color.New(color.FgRed, color.Bold, color.BgWhite),
 		High:     color.New(color.FgRed),
 		Medium:   color.New(color.FgYellow),
 		Low:      color.New(color.FgBlue),
-		
+
 		// UI elements
 		Header:    color.New(color.FgCyan, color.Bold, color.Underline),
 		Subheader: color.New(color.FgCyan, color.Bold),
 		Label:     color.New(color.FgWhite, color.Bold),
 		Value:     color.New(color.FgGreen),
 		Muted:     color.New(color.FgHiBlack),
-		
+
 		// Special
 		Highlight: color.New(color.FgYellow, color.Bold),
 		Link:      color.New(color.FgBlue, color.Underline),
@@ -380,7 +380,7 @@ func RenderBox(title, content string, width int, boxChars *BoxChars, formatter *
 	for _, line := range lines {
 		result.WriteString(boxChars.Vertical)
 		result.WriteString(" ")
-		
+
 		// Pad line to width
 		if len(line) < width-3 {
 			result.WriteString(line)
@@ -388,7 +388,7 @@ func RenderBox(title, content string, width int, boxChars *BoxChars, formatter *
 		} else {
 			result.WriteString(line[:width-3])
 		}
-		
+
 		result.WriteString(" ")
 		result.WriteString(boxChars.Vertical)
 		result.WriteString("\n")
@@ -416,22 +416,22 @@ func RenderSeverityBar(critical, high, medium, low int, width int, formatter *Fo
 	lowWidth := width - criticalWidth - highWidth - mediumWidth
 
 	var bar strings.Builder
-	
+
 	// Critical (red)
 	if criticalWidth > 0 {
 		bar.WriteString(formatter.format(formatter.scheme.Critical, strings.Repeat("█", criticalWidth)))
 	}
-	
+
 	// High (red)
 	if highWidth > 0 {
 		bar.WriteString(formatter.format(formatter.scheme.High, strings.Repeat("█", highWidth)))
 	}
-	
+
 	// Medium (yellow)
 	if mediumWidth > 0 {
 		bar.WriteString(formatter.format(formatter.scheme.Medium, strings.Repeat("█", mediumWidth)))
 	}
-	
+
 	// Low (blue)
 	if lowWidth > 0 {
 		bar.WriteString(formatter.format(formatter.scheme.Low, strings.Repeat("█", lowWidth)))
@@ -448,10 +448,10 @@ func RenderProgressBar(current, total int, width int, formatter *Formatter) stri
 
 	percentage := float64(current) / float64(total)
 	filled := int(percentage * float64(width))
-	
+
 	var bar strings.Builder
 	bar.WriteString("[")
-	
+
 	// Determine color based on percentage
 	var barColor *color.Color
 	if percentage >= 1.0 {
@@ -463,7 +463,7 @@ func RenderProgressBar(current, total int, width int, formatter *Formatter) stri
 	} else {
 		barColor = formatter.scheme.Error
 	}
-	
+
 	// Filled portion
 	if filled > 0 {
 		bar.WriteString(formatter.format(barColor, strings.Repeat("=", filled-1)))
@@ -473,14 +473,14 @@ func RenderProgressBar(current, total int, width int, formatter *Formatter) stri
 			bar.WriteString(formatter.format(barColor, "="))
 		}
 	}
-	
+
 	// Empty portion
 	if filled < width {
 		bar.WriteString(strings.Repeat(" ", width-filled))
 	}
-	
+
 	bar.WriteString("] ")
 	bar.WriteString(formatter.format(barColor, "%.1f%%", percentage*100))
-	
+
 	return bar.String()
 }

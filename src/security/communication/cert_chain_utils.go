@@ -330,4 +330,3 @@ func GetCertificateChainFromFile(filePath string) ([]*x509.Certificate, error) {
 
 	return GetCertificateChainFromPEM(pemData)
 }
-

@@ -131,14 +131,22 @@ func (e *EmailChannel) Deliver(notification *Notification) error {
 		if err != nil {
 			return fmt.Errorf("failed to connect to SMTP server: %w", err)
 		}
-		defer func() { if err := conn.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := conn.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Create SMTP client
 		client, err := smtp.NewClient(conn, e.config.SMTPServer)
 		if err != nil {
 			return fmt.Errorf("failed to create SMTP client: %w", err)
 		}
-		defer func() { if err := client.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := client.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 		// Authenticate if needed
 		if auth != nil {
 			if err := client.Auth(auth); err != nil {

@@ -33,11 +33,11 @@ func NewInMemoryScanStore() *InMemoryScanStore {
 func (s *InMemoryScanStore) Create(scan *Scan) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	if _, exists := s.scans[scan.ID]; exists {
 		return fmt.Errorf("scan with ID %s already exists", scan.ID)
 	}
-	
+
 	s.scans[scan.ID] = scan
 	return nil
 }
@@ -46,12 +46,12 @@ func (s *InMemoryScanStore) Create(scan *Scan) error {
 func (s *InMemoryScanStore) Get(id string) (*Scan, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	scan, exists := s.scans[id]
 	if !exists {
 		return nil, fmt.Errorf("scan not found: %s", id)
 	}
-	
+
 	// Return a copy to prevent external modifications
 	scanCopy := *scan
 	return &scanCopy, nil
@@ -61,11 +61,11 @@ func (s *InMemoryScanStore) Get(id string) (*Scan, error) {
 func (s *InMemoryScanStore) Update(scan *Scan) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	if _, exists := s.scans[scan.ID]; !exists {
 		return fmt.Errorf("scan not found: %s", scan.ID)
 	}
-	
+
 	scan.UpdatedAt = time.Now()
 	s.scans[scan.ID] = scan
 	return nil
@@ -75,11 +75,11 @@ func (s *InMemoryScanStore) Update(scan *Scan) error {
 func (s *InMemoryScanStore) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	if _, exists := s.scans[id]; !exists {
 		return fmt.Errorf("scan not found: %s", id)
 	}
-	
+
 	delete(s.scans, id)
 	return nil
 }
@@ -88,33 +88,33 @@ func (s *InMemoryScanStore) Delete(id string) error {
 func (s *InMemoryScanStore) List(filter ScanFilter) ([]Scan, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	var results []Scan
-	
+
 	for _, scan := range s.scans {
 		// Apply filters
 		if filter.Status != "" && scan.Status != filter.Status {
 			continue
 		}
-		
+
 		if filter.DateFrom != nil && scan.CreatedAt.Before(*filter.DateFrom) {
 			continue
 		}
-		
+
 		if filter.DateTo != nil && scan.CreatedAt.After(*filter.DateTo) {
 			continue
 		}
-		
+
 		// Add to results
 		scanCopy := *scan
 		results = append(results, scanCopy)
-		
+
 		// Check limit
 		if filter.Limit > 0 && len(results) >= filter.Limit {
 			break
 		}
 	}
-	
+
 	return results, nil
 }
 
@@ -122,20 +122,20 @@ func (s *InMemoryScanStore) List(filter ScanFilter) ([]Scan, error) {
 func (s *InMemoryScanStore) CleanupOldScans(olderThan time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	cutoff := time.Now().Add(-olderThan)
 	toDelete := []string{}
-	
+
 	for id, scan := range s.scans {
 		if scan.CreatedAt.Before(cutoff) {
 			toDelete = append(toDelete, id)
 		}
 	}
-	
+
 	for _, id := range toDelete {
 		delete(s.scans, id)
 	}
-	
+
 	return nil
 }
 
@@ -154,23 +154,23 @@ func NewMockScanService() *MockScanService {
 // CreateScan creates a new scan
 func (m *MockScanService) CreateScan(request CreateScanRequest) (*Scan, error) {
 	scan := &Scan{
-		ID:        generateMockToken(),
-		Status:    ScanStatusPending,
-		Target:    request.Target,
-		Templates: request.Templates,
+		ID:         generateMockToken(),
+		Status:     ScanStatusPending,
+		Target:     request.Target,
+		Templates:  request.Templates,
 		Categories: request.Categories,
-		Config:    request.Config,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Config:     request.Config,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
-	
+
 	if err := m.store.Create(scan); err != nil {
 		return nil, err
 	}
-	
+
 	// Simulate scan execution
 	go m.executeScan(scan.ID)
-	
+
 	return scan, nil
 }
 
@@ -190,11 +190,11 @@ func (m *MockScanService) CancelScan(id string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if scan.Status != ScanStatusRunning && scan.Status != ScanStatusPending {
 		return fmt.Errorf("cannot cancel scan in status: %s", scan.Status)
 	}
-	
+
 	scan.Status = ScanStatusCancelled
 	return m.store.Update(scan)
 }
@@ -205,11 +205,11 @@ func (m *MockScanService) GetScanResults(id string) (*ScanResults, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if scan.Status != ScanStatusCompleted {
 		return nil, fmt.Errorf("scan not completed")
 	}
-	
+
 	return scan.Results, nil
 }
 
@@ -221,16 +221,16 @@ func (m *MockScanService) executeScan(id string) {
 	now := time.Now()
 	scan.StartedAt = &now
 	m.store.Update(scan)
-	
+
 	// Simulate scan execution
 	time.Sleep(5 * time.Second)
-	
+
 	// Check if cancelled
 	scan, _ = m.store.Get(id)
 	if scan.Status == ScanStatusCancelled {
 		return
 	}
-	
+
 	// Generate mock results
 	results := &ScanResults{
 		Summary: ResultSummary{
@@ -266,7 +266,7 @@ func (m *MockScanService) executeScan(id string) {
 			},
 		},
 	}
-	
+
 	// Update scan with results
 	scan.Status = ScanStatusCompleted
 	scan.Results = results

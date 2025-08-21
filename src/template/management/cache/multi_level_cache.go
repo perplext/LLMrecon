@@ -472,7 +472,7 @@ func (c *MultiLevelCache) cacheTemplateFragments(templateID string, template *fo
 	// TODO: Implement template fragment caching
 	// The current Template.Content field is []byte, not a structured type
 	// This functionality needs to be redesigned to work with the actual template structure
-	
+
 	// For now, just return without caching fragments
 }
 

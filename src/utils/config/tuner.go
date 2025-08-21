@@ -73,25 +73,25 @@ type TunerConfig struct {
 // DefaultTunerConfig returns default configuration for the tuner
 func DefaultTunerConfig() *TunerConfig {
 	numCPU := runtime.NumCPU()
-	
+
 	return &TunerConfig{
-		WorkerCount:          numCPU,
+		WorkerCount:           numCPU,
 		MaxConcurrentRequests: numCPU * 100,
-		ConnectionPoolSize:   numCPU * 10,
-		KeepAliveTimeout:     60 * time.Second,
-		ReadTimeout:          30 * time.Second,
-		WriteTimeout:         30 * time.Second,
-		IdleTimeout:          120 * time.Second,
-		MaxHeaderBytes:       1 << 20, // 1 MB
-		BufferPoolSize:       1000,
-		TemplateCache:        1000,
-		StaticFileCache:      1000,
-		GzipCompression:      true,
-		CompressionLevel:     6,
-		MaxRequestBodySize:   10 << 20, // 10 MB
-		EnableHTTP2:          true,
-		GCPercent:            100,
-		MaxMemory:            0, // No limit
+		ConnectionPoolSize:    numCPU * 10,
+		KeepAliveTimeout:      60 * time.Second,
+		ReadTimeout:           30 * time.Second,
+		WriteTimeout:          30 * time.Second,
+		IdleTimeout:           120 * time.Second,
+		MaxHeaderBytes:        1 << 20, // 1 MB
+		BufferPoolSize:        1000,
+		TemplateCache:         1000,
+		StaticFileCache:       1000,
+		GzipCompression:       true,
+		CompressionLevel:      6,
+		MaxRequestBodySize:    10 << 20, // 10 MB
+		EnableHTTP2:           true,
+		GCPercent:             100,
+		MaxMemory:             0, // No limit
 	}
 }
 
@@ -109,9 +109,9 @@ func NewConfigTuner(config *TunerConfig, onConfigChange func(*TunerConfig)) (*Co
 	}
 
 	return &ConfigTuner{
-		config:        config,
-		profiler:      profiler,
-		stopChan:      make(chan struct{}),
+		config:         config,
+		profiler:       profiler,
+		stopChan:       make(chan struct{}),
 		onConfigChange: onConfigChange,
 	}, nil
 }
@@ -186,38 +186,38 @@ func (t *ConfigTuner) TuneConfiguration() {
 	// Tune worker count based on CPU count and load
 	numCPU := runtime.NumCPU()
 	numGoroutines := memStats["num_goroutines"].(int)
-	
+
 	if numGoroutines > numCPU*1000 {
 		// Too many goroutines, reduce worker count
 		if t.config.WorkerCount > 1 {
 			t.config.WorkerCount = max(1, t.config.WorkerCount/2)
-			t.recommendations = append(t.recommendations, 
-				fmt.Sprintf("Reduced worker count to %d due to high goroutine count (%d)", 
+			t.recommendations = append(t.recommendations,
+				fmt.Sprintf("Reduced worker count to %d due to high goroutine count (%d)",
 					t.config.WorkerCount, numGoroutines))
 		}
 	} else if numGoroutines < numCPU*10 && t.config.WorkerCount < numCPU*2 {
 		// Few goroutines, increase worker count
 		t.config.WorkerCount = min(numCPU*2, t.config.WorkerCount*2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Increased worker count to %d due to low goroutine count (%d)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Increased worker count to %d due to low goroutine count (%d)",
 				t.config.WorkerCount, numGoroutines))
 	}
 
 	// Tune max concurrent requests based on memory usage
 	heapAllocMB := memStats["heap_alloc_mb"].(float64)
 	heapSysMB := memStats["heap_sys_mb"].(float64)
-	
+
 	if heapAllocMB > 1000 && t.config.MaxConcurrentRequests > numCPU*10 {
 		// High memory usage, reduce max concurrent requests
 		t.config.MaxConcurrentRequests = max(numCPU*10, t.config.MaxConcurrentRequests/2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Reduced max concurrent requests to %d due to high memory usage (%.2f MB)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Reduced max concurrent requests to %d due to high memory usage (%.2f MB)",
 				t.config.MaxConcurrentRequests, heapAllocMB))
 	} else if heapAllocMB < 100 && heapSysMB < 500 && t.config.MaxConcurrentRequests < numCPU*200 {
 		// Low memory usage, increase max concurrent requests
 		t.config.MaxConcurrentRequests = min(numCPU*200, t.config.MaxConcurrentRequests*2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Increased max concurrent requests to %d due to low memory usage (%.2f MB)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Increased max concurrent requests to %d due to low memory usage (%.2f MB)",
 				t.config.MaxConcurrentRequests, heapAllocMB))
 	}
 
@@ -226,18 +226,18 @@ func (t *ConfigTuner) TuneConfiguration() {
 
 	// Tune GC percent based on GC stats
 	gcCPUFraction := gcStats["gc_cpu_fraction"].(float64)
-	
+
 	if gcCPUFraction > 0.1 && t.config.GCPercent > 50 {
 		// GC is taking too much CPU time, increase GC percent
 		t.config.GCPercent = min(1000, t.config.GCPercent*2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Increased GC percent to %d due to high GC CPU usage (%.2f%%)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Increased GC percent to %d due to high GC CPU usage (%.2f%%)",
 				t.config.GCPercent, gcCPUFraction*100))
 	} else if gcCPUFraction < 0.01 && t.config.GCPercent > 25 {
 		// GC is taking very little CPU time, decrease GC percent
 		t.config.GCPercent = max(25, t.config.GCPercent/2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Decreased GC percent to %d due to low GC CPU usage (%.2f%%)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Decreased GC percent to %d due to low GC CPU usage (%.2f%%)",
 				t.config.GCPercent, gcCPUFraction*100))
 	}
 
@@ -245,14 +245,14 @@ func (t *ConfigTuner) TuneConfiguration() {
 	if heapAllocMB > 500 && t.config.BufferPoolSize > 100 {
 		// High memory usage, reduce buffer pool size
 		t.config.BufferPoolSize = max(100, t.config.BufferPoolSize/2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Reduced buffer pool size to %d due to high memory usage (%.2f MB)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Reduced buffer pool size to %d due to high memory usage (%.2f MB)",
 				t.config.BufferPoolSize, heapAllocMB))
 	} else if heapAllocMB < 100 && t.config.BufferPoolSize < 10000 {
 		// Low memory usage, increase buffer pool size
 		t.config.BufferPoolSize = min(10000, t.config.BufferPoolSize*2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Increased buffer pool size to %d due to low memory usage (%.2f MB)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Increased buffer pool size to %d due to low memory usage (%.2f MB)",
 				t.config.BufferPoolSize, heapAllocMB))
 	}
 
@@ -330,7 +330,11 @@ func (t *ConfigTuner) SaveConfigToFile(filename string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	defer func() { if err := f.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write configuration
 	fmt.Fprintf(f, "# Configuration generated by ConfigTuner on %s\n\n", time.Now().Format(time.RFC3339))

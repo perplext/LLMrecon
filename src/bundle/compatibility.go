@@ -11,9 +11,9 @@ import (
 
 // CompatibilityResult contains the result of compatibility checks
 type CompatibilityResult struct {
-	Compatible bool                  `json:"compatible"`
-	Issues     []CompatibilityIssue  `json:"issues"`
-	Warnings   []string              `json:"warnings"`
+	Compatible bool                   `json:"compatible"`
+	Issues     []CompatibilityIssue   `json:"issues"`
+	Warnings   []string               `json:"warnings"`
 	Metadata   map[string]interface{} `json:"metadata"`
 }
 
@@ -57,10 +57,10 @@ type Requirement struct {
 
 // EnvironmentRequirement defines environment requirements
 type EnvironmentRequirement struct {
-	Platforms      []Platform         `json:"platforms"`
-	MinDiskSpace   int64              `json:"minDiskSpace"`
-	MinMemory      int64              `json:"minMemory"`
-	RuntimeDeps    map[string]string  `json:"runtimeDeps"`
+	Platforms    []Platform        `json:"platforms"`
+	MinDiskSpace int64             `json:"minDiskSpace"`
+	MinMemory    int64             `json:"minMemory"`
+	RuntimeDeps  map[string]string `json:"runtimeDeps"`
 }
 
 // Platform defines a supported platform
@@ -185,7 +185,7 @@ func (c *CompatibilityChecker) checkVersionCompatibility(result *CompatibilityRe
 				CanOverride: true,
 			})
 		} else {
-			result.Warnings = append(result.Warnings, 
+			result.Warnings = append(result.Warnings,
 				fmt.Sprintf("Installing prerelease version %s", target))
 		}
 	}
@@ -225,12 +225,12 @@ func (c *CompatibilityChecker) checkVersionCompatibility(result *CompatibilityRe
 func (c *CompatibilityChecker) checkComponentCompatibility(result *CompatibilityResult) error {
 	// This would check installed components against requirements
 	// For now, we'll add a placeholder implementation
-	
+
 	for name, req := range c.config.ComponentRequirements {
 		if req.Required {
 			// Check if component exists and version is compatible
 			// This is a simplified check - real implementation would query installed components
-			result.Warnings = append(result.Warnings, 
+			result.Warnings = append(result.Warnings,
 				fmt.Sprintf("Component '%s' compatibility check pending", name))
 		}
 	}
@@ -352,7 +352,7 @@ func (c *CompatibilityChecker) versionMatches(version, pattern string) bool {
 	pattern = strings.ReplaceAll(pattern, ".", "\\.")
 	pattern = strings.ReplaceAll(pattern, "*", ".*")
 	pattern = "^" + pattern + "$"
-	
+
 	// This is simplified - real implementation would use proper regex
 	return strings.HasPrefix(version, strings.TrimSuffix(pattern, ".*$"))
 }
@@ -374,7 +374,7 @@ func (c *CompatibilityChecker) getDeprecatedFeatures() []DeprecatedFeature {
 func (c *CompatibilityChecker) getBreakingChanges() []BreakingChange {
 	// This would be loaded from a configuration file or database
 	changes := []BreakingChange{}
-	
+
 	// Check for known breaking changes between versions
 	if c.currentVersion.Major == 1 && c.targetVersion.Major == 2 {
 		changes = append(changes, BreakingChange{
@@ -383,7 +383,7 @@ func (c *CompatibilityChecker) getBreakingChanges() []BreakingChange {
 			MigrationGuide: "Run 'llm-redteam migrate templates' to convert existing templates",
 		})
 	}
-	
+
 	return changes
 }
 
@@ -448,8 +448,8 @@ func DefaultCompatibilityConfig() *CompatibilityConfig {
 				{OS: "darwin", Arch: []string{"amd64", "arm64"}},
 				{OS: "windows", Arch: []string{"amd64"}},
 			},
-			MinDiskSpace: 1 * 1024 * 1024 * 1024,  // 1GB
-			MinMemory:    512 * 1024 * 1024,       // 512MB
+			MinDiskSpace: 1 * 1024 * 1024 * 1024, // 1GB
+			MinMemory:    512 * 1024 * 1024,      // 512MB
 		},
 	}
 }

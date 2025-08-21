@@ -16,11 +16,11 @@ import (
 type SecurityHeaders struct {
 	ContentSecurityPolicy   string
 	XContentTypeOptions     string
-	XFrameOptions          string
-	XSSProtection          string
+	XFrameOptions           string
+	XSSProtection           string
 	StrictTransportSecurity string
-	ReferrerPolicy         string
-	PermissionsPolicy      string
+	ReferrerPolicy          string
+	PermissionsPolicy       string
 }
 
 // DefaultSecurityHeaders returns default security headers
@@ -28,11 +28,11 @@ func DefaultSecurityHeaders() SecurityHeaders {
 	return SecurityHeaders{
 		ContentSecurityPolicy:   "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'",
 		XContentTypeOptions:     "nosniff",
-		XFrameOptions:          "DENY",
-		XSSProtection:          "1; mode=block",
+		XFrameOptions:           "DENY",
+		XSSProtection:           "1; mode=block",
 		StrictTransportSecurity: "max-age=31536000; includeSubDomains",
-		ReferrerPolicy:         "strict-origin-when-cross-origin",
-		PermissionsPolicy:      "geolocation=(), microphone=(), camera=()",
+		ReferrerPolicy:          "strict-origin-when-cross-origin",
+		PermissionsPolicy:       "geolocation=(), microphone=(), camera=()",
 	}
 }
 
@@ -62,7 +62,7 @@ func (s *Server) securityHeadersMiddleware(headers SecurityHeaders) func(http.Ha
 			if headers.PermissionsPolicy != "" {
 				w.Header().Set("Permissions-Policy", headers.PermissionsPolicy)
 			}
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -70,9 +70,9 @@ func (s *Server) securityHeadersMiddleware(headers SecurityHeaders) func(http.Ha
 
 // IPWhitelist manages IP whitelisting
 type IPWhitelist struct {
-	allowedIPs map[string]bool
+	allowedIPs   map[string]bool
 	allowedCIDRs []string
-	mu         sync.RWMutex
+	mu           sync.RWMutex
 }
 
 // NewIPWhitelist creates a new IP whitelist
@@ -81,11 +81,11 @@ func NewIPWhitelist(ips []string, cidrs []string) *IPWhitelist {
 		allowedIPs:   make(map[string]bool),
 		allowedCIDRs: cidrs,
 	}
-	
+
 	for _, ip := range ips {
 		whitelist.allowedIPs[ip] = true
 	}
-	
+
 	return whitelist
 }
 
@@ -93,15 +93,15 @@ func NewIPWhitelist(ips []string, cidrs []string) *IPWhitelist {
 func (w *IPWhitelist) IsAllowed(ip string) bool {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	
+
 	// Check exact match
 	if w.allowedIPs[ip] {
 		return true
 	}
-	
+
 	// Check CIDR ranges (simplified - real implementation would parse CIDR)
 	// This is a placeholder for CIDR matching logic
-	
+
 	return false
 }
 
@@ -116,7 +116,7 @@ func (s *Server) ipWhitelistMiddleware(whitelist *IPWhitelist) func(http.Handler
 					return
 				}
 			}
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -141,11 +141,11 @@ type ScopeValidator struct {
 func NewScopeValidator() *ScopeValidator {
 	return &ScopeValidator{
 		requiredScopes: map[string][]string{
-			"/api/v1/scans":     {"scan:write"},
-			"/api/v1/templates": {"template:read"},
-			"/api/v1/modules":   {"module:read"},
-			"/api/v1/update":    {"system:update"},
-			"/api/v1/auth/keys": {"admin"},
+			"/api/v1/scans":      {"scan:write"},
+			"/api/v1/templates":  {"template:read"},
+			"/api/v1/modules":    {"module:read"},
+			"/api/v1/update":     {"system:update"},
+			"/api/v1/auth/keys":  {"admin"},
 			"/api/v1/auth/users": {"admin"},
 		},
 	}
@@ -161,14 +161,14 @@ func scopeValidationMiddleware(validator *ScopeValidator, authService AuthServic
 				next.ServeHTTP(w, r)
 				return
 			}
-			
+
 			// Validate API key and get details
 			apiKey, err := authService.ValidateAPIKey(apiKeyStr)
 			if err != nil {
 				writeError(w, http.StatusUnauthorized, NewAPIError(ErrCodeUnauthorized, "Invalid API key"))
 				return
 			}
-			
+
 			// Check scopes for endpoint
 			path := r.URL.Path
 			requiredScopes, exists := validator.requiredScopes[path]
@@ -181,7 +181,7 @@ func scopeValidationMiddleware(validator *ScopeValidator, authService AuthServic
 					}
 				}
 			}
-			
+
 			if len(requiredScopes) > 0 {
 				hasScope := false
 				for _, required := range requiredScopes {
@@ -195,17 +195,17 @@ func scopeValidationMiddleware(validator *ScopeValidator, authService AuthServic
 						break
 					}
 				}
-				
+
 				if !hasScope {
 					writeError(w, http.StatusForbidden, NewAPIError(ErrCodeForbidden, "Insufficient permissions"))
 					return
 				}
 			}
-			
+
 			// Add API key details to context
 			ctx := context.WithValue(r.Context(), "apiKeyDetails", apiKey)
 			r = r.WithContext(ctx)
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -228,15 +228,15 @@ func auditLoggingMiddleware(logger *AuditLogger) func(http.Handler) http.Handler
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			
+
 			// Wrap response writer to capture status
 			wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-			
+
 			// Extract relevant info
 			requestID := r.Context().Value(contextKeyRequestID).(string)
 			clientIP := getClientIP(r)
 			userAgent := r.UserAgent()
-			
+
 			// Log security event start
 			event := log.Info().
 				Str("event_type", "api_access").
@@ -245,7 +245,7 @@ func auditLoggingMiddleware(logger *AuditLogger) func(http.Handler) http.Handler
 				Str("path", r.URL.Path).
 				Str("client_ip", clientIP).
 				Str("user_agent", userAgent)
-			
+
 			// Add auth info if available
 			if apiKey, ok := r.Context().Value(contextKeyAPIKey).(string); ok {
 				event.Str("api_key", maskAPIKey(apiKey))
@@ -253,12 +253,12 @@ func auditLoggingMiddleware(logger *AuditLogger) func(http.Handler) http.Handler
 			if userID, ok := r.Context().Value("userID").(string); ok {
 				event.Str("user_id", userID)
 			}
-			
+
 			event.Msg("API request initiated")
-			
+
 			// Process request
 			next.ServeHTTP(wrapped, r)
-			
+
 			// Log completion
 			duration := time.Since(start)
 			completion := log.Info().
@@ -266,7 +266,7 @@ func auditLoggingMiddleware(logger *AuditLogger) func(http.Handler) http.Handler
 				Str("request_id", requestID).
 				Int("status", wrapped.statusCode).
 				Dur("duration", duration)
-			
+
 			if wrapped.statusCode >= 400 {
 				completion = log.Warn().
 					Str("event_type", "api_access_failed").
@@ -274,7 +274,7 @@ func auditLoggingMiddleware(logger *AuditLogger) func(http.Handler) http.Handler
 					Int("status", wrapped.statusCode).
 					Dur("duration", duration)
 			}
-			
+
 			completion.Msg("API request completed")
 		})
 	}
@@ -289,18 +289,18 @@ func getClientIP(r *http.Request) string {
 			return strings.TrimSpace(ips[0])
 		}
 	}
-	
+
 	// Check X-Real-IP header
 	if xri := r.Header.Get("X-Real-IP"); xri != "" {
 		return xri
 	}
-	
+
 	// Fall back to RemoteAddr
 	ip := r.RemoteAddr
 	if colon := strings.LastIndex(ip, ":"); colon != -1 {
 		ip = ip[:colon]
 	}
-	
+
 	return ip
 }
 
@@ -318,15 +318,15 @@ func timeoutMiddleware(timeout time.Duration) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(r.Context(), timeout)
 			defer cancel()
-			
+
 			r = r.WithContext(ctx)
-			
+
 			done := make(chan struct{})
 			go func() {
 				next.ServeHTTP(w, r)
 				close(done)
 			}()
-			
+
 			select {
 			case <-done:
 				// Request completed
@@ -346,11 +346,11 @@ func compressionMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		// Wrap response writer with gzip writer
 		w.Header().Set("Content-Encoding", "gzip")
 		// Implementation would use gzip.Writer here
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -362,12 +362,12 @@ func requestIDMiddleware(next http.Handler) http.Handler {
 		if requestID == "" {
 			requestID = generateRequestID()
 		}
-		
+
 		ctx := context.WithValue(r.Context(), contextKeyRequestID, requestID)
 		r = r.WithContext(ctx)
-		
+
 		w.Header().Set("X-Request-ID", requestID)
-		
+
 		next.ServeHTTP(w, r)
 	})
 }

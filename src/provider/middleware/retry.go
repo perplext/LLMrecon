@@ -22,10 +22,10 @@ type RetryMiddleware struct {
 func NewRetryMiddleware(config *core.RetryConfig) *RetryMiddleware {
 	if config == nil {
 		config = &core.RetryConfig{
-			MaxRetries:          3,
-			InitialBackoff:      1 * time.Second,
-			MaxBackoff:          60 * time.Second,
-			BackoffMultiplier:   2.0,
+			MaxRetries:        3,
+			InitialBackoff:    1 * time.Second,
+			MaxBackoff:        60 * time.Second,
+			BackoffMultiplier: 2.0,
 			RetryableStatusCodes: []int{
 				http.StatusTooManyRequests,
 				http.StatusInternalServerError,
@@ -148,32 +148,32 @@ func (m *RetryMiddleware) GetConfig() *core.RetryConfig {
 
 // Secure random number generation helpers
 func randInt(max int) int {
-    n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
-    if err != nil {
-        panic(err)
-    }
-    return int(n.Int64())
+	n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		panic(err)
+	}
+	return int(n.Int64())
 }
 
 func randInt64(max int64) int64 {
-    n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(max))
-    if err != nil {
-        panic(err)
-    }
-    return n.Int64()
+	n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(max))
+	if err != nil {
+		panic(err)
+	}
+	return n.Int64()
 }
 
 func randFloat64() float64 {
-    bytes := make([]byte, 8)
-    if _, err := cryptorand.Read(bytes); err != nil {
-        panic(err)
-    }
-    
-    // Convert bytes to float64 (0.0 to 1.0)
-    n := uint64(0)
-    for i := 0; i < 8; i++ {
-        n = (n << 8) | uint64(bytes[i])
-    }
-    
-    return float64(n) / float64(1<<64)
+	bytes := make([]byte, 8)
+	if _, err := cryptorand.Read(bytes); err != nil {
+		panic(err)
+	}
+
+	// Convert bytes to float64 (0.0 to 1.0)
+	n := uint64(0)
+	for i := 0; i < 8; i++ {
+		n = (n << 8) | uint64(bytes[i])
+	}
+
+	return float64(n) / float64(1<<64)
 }

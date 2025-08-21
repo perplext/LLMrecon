@@ -40,8 +40,8 @@ type OptimizerStats struct {
 // NewTemplateOptimizer creates a new template optimizer
 func NewTemplateOptimizer(minifyEnabled, compressEnabled bool) *TemplateOptimizer {
 	return &TemplateOptimizer{
-		minifyEnabled:    minifyEnabled,
-		compressEnabled:  compressEnabled,
+		minifyEnabled:     minifyEnabled,
+		compressEnabled:   compressEnabled,
 		optimizationStats: OptimizerStats{},
 	}
 }
@@ -57,18 +57,18 @@ func (o *TemplateOptimizer) OptimizeTemplate(template *format.Template) (*format
 
 	// Optimize prompt content
 	originalSize := o.estimateTemplateSize(optimizedTemplate)
-	
+
 	// Apply optimizations
 	if o.minifyEnabled {
 		o.minifyPrompt(&optimizedTemplate.Test.Prompt)
 		o.minifyExpectedBehavior(&optimizedTemplate.Test.Expected)
-		
+
 		// Optimize variations
 		for i := range optimizedTemplate.Test.Variations {
 			o.minifyPrompt(&optimizedTemplate.Test.Variations[i].Prompt)
 		}
 	}
-	
+
 	// Update optimization statistics
 	optimizedSize := o.estimateTemplateSize(optimizedTemplate)
 	o.mutex.Lock()
@@ -135,7 +135,7 @@ func (o *TemplateOptimizer) minifyPrompt(prompt *string) {
 
 	for i, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
-		
+
 		// Check for code block markers
 		if strings.HasPrefix(trimmedLine, "```") {
 			inCodeBlock = !inCodeBlock
@@ -176,16 +176,16 @@ func (o *TemplateOptimizer) minifyExpectedBehavior(expectedBehavior *string) {
 func (o *TemplateOptimizer) compressContent(content string) ([]byte, error) {
 	var buf bytes.Buffer
 	gzipWriter := gzip.NewWriter(&buf)
-	
+
 	_, err := gzipWriter.Write([]byte(content))
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if err := gzipWriter.Close(); err != nil {
 		return nil, err
 	}
-	
+
 	return buf.Bytes(), nil
 }
 
@@ -196,13 +196,17 @@ func (o *TemplateOptimizer) decompressContent(compressed []byte) (string, error)
 	if err != nil {
 		return "", err
 	}
-	defer func() { if err := gzipReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := gzipReader.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	decompressed, err := ioutil.ReadAll(gzipReader)
 	if err != nil {
 		return "", err
 	}
-	
+
 	return string(decompressed), nil
 }
 
@@ -225,14 +229,14 @@ func (o *TemplateOptimizer) estimateTemplateSize(template *format.Template) int 
 func (o *TemplateOptimizer) GetOptimizationStats() map[string]interface{} {
 	o.mutex.RLock()
 	defer o.mutex.RUnlock()
-	
+
 	return map[string]interface{}{
-		"total_optimizations":    o.optimizationStats.TotalOptimizations,
-		"total_bytes_original":   o.optimizationStats.TotalBytesOriginal,
-		"total_bytes_optimized":  o.optimizationStats.TotalBytesOptimized,
-		"compression_ratio":      o.optimizationStats.CompressionRatio,
-		"minify_enabled":         o.minifyEnabled,
-		"compress_enabled":       o.compressEnabled,
+		"total_optimizations":   o.optimizationStats.TotalOptimizations,
+		"total_bytes_original":  o.optimizationStats.TotalBytesOriginal,
+		"total_bytes_optimized": o.optimizationStats.TotalBytesOptimized,
+		"compression_ratio":     o.optimizationStats.CompressionRatio,
+		"minify_enabled":        o.minifyEnabled,
+		"compress_enabled":      o.compressEnabled,
 	}
 }
 

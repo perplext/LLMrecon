@@ -16,12 +16,12 @@ func init() {
 		}
 		return NewJSONFormatter(pretty), nil
 	})
-	
+
 	// Register JSONL formatter
 	api.RegisterFormatter(api.JSONLFormat, func(options map[string]interface{}) (api.ReportFormatter, error) {
 		return NewJSONLFormatter(), nil
 	})
-	
+
 	// Register CSV formatter
 	api.RegisterFormatter(api.CSVFormat, func(options map[string]interface{}) (api.ReportFormatter, error) {
 		delimiter := ','
@@ -32,17 +32,17 @@ func init() {
 				delimiter = rune(delimiterStr[0])
 			}
 		}
-		
+
 		includeHeaders := true
 		if val, ok := options["include_headers"]; ok {
 			if includeHeadersBool, ok := val.(bool); ok {
 				includeHeaders = includeHeadersBool
 			}
 		}
-		
+
 		return NewCSVFormatter(delimiter, includeHeaders), nil
 	})
-	
+
 	// Register Excel formatter
 	api.RegisterFormatter(api.ExcelFormat, func(options map[string]interface{}) (api.ReportFormatter, error) {
 		includeRawData := false
@@ -51,10 +51,10 @@ func init() {
 				includeRawData = includeRawDataBool
 			}
 		}
-		
+
 		return NewExcelFormatter(includeRawData), nil
 	})
-	
+
 	// Register Text formatter
 	api.RegisterFormatter(api.TextFormat, func(options map[string]interface{}) (api.ReportFormatter, error) {
 		detailed := false
@@ -63,10 +63,10 @@ func init() {
 				detailed = detailedBool
 			}
 		}
-		
+
 		return NewTextFormatter(detailed), nil
 	})
-	
+
 	// Register Markdown formatter
 	api.RegisterFormatter(api.MarkdownFormat, func(options map[string]interface{}) (api.ReportFormatter, error) {
 		includeRawData := false
@@ -75,10 +75,10 @@ func init() {
 				includeRawData = includeRawDataBool
 			}
 		}
-		
+
 		return NewMarkdownFormatter(includeRawData), nil
 	})
-	
+
 	// Register PDF formatter
 	api.RegisterFormatter(api.PDFFormat, func(options map[string]interface{}) (api.ReportFormatter, error) {
 		customTemplate := ""
@@ -87,10 +87,10 @@ func init() {
 				customTemplate = templatePath
 			}
 		}
-		
+
 		return NewPDFFormatter(customTemplate), nil
 	})
-	
+
 	// Register HTML formatter
 	api.RegisterFormatter(api.HTMLFormat, func(options map[string]interface{}) (api.ReportFormatter, error) {
 		customTemplate := ""
@@ -101,7 +101,7 @@ func init() {
 				return formatter, err
 			}
 		}
-		
+
 		formatter, err := NewHTMLFormatter()
 		return formatter, err
 	})

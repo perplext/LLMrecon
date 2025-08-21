@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
 
@@ -30,11 +30,11 @@ type DefaultTestRunner struct {
 // NewDefaultTestRunner creates a new default test runner
 func NewDefaultTestRunner(detectionEngine detection.DetectionEngine, reportGenerator types.ReportGenerator) *DefaultTestRunner {
 	return &DefaultTestRunner{
-		DetectionEngine:  detectionEngine,
-		ReportGenerator:  reportGenerator,
-		Concurrency:      5,
-		MaxRetries:       3,
-		RetryDelay:       time.Second * 2,
+		DetectionEngine: detectionEngine,
+		ReportGenerator: reportGenerator,
+		Concurrency:     5,
+		MaxRetries:      3,
+		RetryDelay:      time.Second * 2,
 	}
 }
 
@@ -69,7 +69,7 @@ func (r *DefaultTestRunner) RunTest(ctx context.Context, testCase *types.TestCas
 		if err == nil {
 			break
 		}
-		
+
 		if retry < r.MaxRetries {
 			time.Sleep(r.RetryDelay)
 		}

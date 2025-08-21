@@ -112,22 +112,22 @@ func (c *ResultCache) Get(key string) (*types.TemplateResult, bool) {
 	// Update position in eviction list (mark as recently used)
 	c.mutex.Lock()
 	c.updateEntryPosition(key)
-	
+
 	// Update access statistics
 	entry.AccessCount++
 	entry.LastAccessed = time.Now()
-	
+
 	// If adaptive TTL is enabled, extend TTL based on access count
 	if c.adaptiveTTL {
 		c.extendTTL(entry)
 	}
-	
+
 	// Get the result (decompress if needed)
 	result := entry.Result
 	if entry.Compressed {
 		result = c.decompressResult(entry.Result)
 	}
-	
+
 	c.mutex.Unlock()
 
 	c.stats.Hits++
@@ -175,7 +175,7 @@ func (c *ResultCache) SetWithTTL(key string, result *types.TemplateResult, ttl t
 		oldEntry := c.cache[key]
 		c.currentSize -= oldEntry.Size
 		c.currentSize += size
-		
+
 		c.evictionList.MoveToFront(elem)
 		c.cache[key] = entry
 		elem.Value = key
@@ -250,17 +250,17 @@ func (c *ResultCache) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"hits":              c.stats.Hits,
-		"misses":            c.stats.Misses,
-		"evictions":         c.stats.Evictions,
-		"expirations":       c.stats.Expirations,
-		"total_lookups":     c.stats.TotalLookups,
-		"hit_ratio":         hitRatio,
-		"current_size":      c.currentSize,
-		"max_size":          c.maxSize,
-		"entry_count":       len(c.cache),
-		"compression":       c.enableCompression,
-		"adaptive_ttl":      c.adaptiveTTL,
+		"hits":               c.stats.Hits,
+		"misses":             c.stats.Misses,
+		"evictions":          c.stats.Evictions,
+		"expirations":        c.stats.Expirations,
+		"total_lookups":      c.stats.TotalLookups,
+		"hit_ratio":          hitRatio,
+		"current_size":       c.currentSize,
+		"max_size":           c.maxSize,
+		"entry_count":        len(c.cache),
+		"compression":        c.enableCompression,
+		"adaptive_ttl":       c.adaptiveTTL,
 		"memory_usage_bytes": c.currentSize,
 	}
 }
@@ -380,21 +380,21 @@ func (c *ResultCache) evictIfNeeded() {
 func (c *ResultCache) compressResult(result *types.TemplateResult) *types.TemplateResult {
 	// Create a copy of the result
 	compressedResult := &types.TemplateResult{
-		TemplateID:           result.TemplateID,
-		TemplateName:         result.TemplateName,
-		Description:          result.Description,
-		Status:               result.Status,
-		StartTime:            result.StartTime,
-		EndTime:              result.EndTime,
-		Duration:             result.Duration,
-		Error:                result.Error,
-		Detected:             result.Detected,
-		Score:                result.Score,
-		Details:              result.Details,
-		Tags:                 result.Tags,
-		Metadata:             result.Metadata,
-		Input:                result.Input,
-		Output:               result.Output,
+		TemplateID:   result.TemplateID,
+		TemplateName: result.TemplateName,
+		Description:  result.Description,
+		Status:       result.Status,
+		StartTime:    result.StartTime,
+		EndTime:      result.EndTime,
+		Duration:     result.Duration,
+		Error:        result.Error,
+		Detected:     result.Detected,
+		Score:        result.Score,
+		Details:      result.Details,
+		Tags:         result.Tags,
+		Metadata:     result.Metadata,
+		Input:        result.Input,
+		Output:       result.Output,
 	}
 
 	// Compress the response
@@ -451,21 +451,21 @@ func (c *ResultCache) compressResult(result *types.TemplateResult) *types.Templa
 func (c *ResultCache) decompressResult(result *types.TemplateResult) *types.TemplateResult {
 	// Create a copy of the result
 	decompressedResult := &types.TemplateResult{
-		TemplateID:           result.TemplateID,
-		TemplateName:         result.TemplateName,
-		Description:          result.Description,
-		Status:               result.Status,
-		StartTime:            result.StartTime,
-		EndTime:              result.EndTime,
-		Duration:             result.Duration,
-		Error:                result.Error,
-		Detected:             result.Detected,
-		Score:                result.Score,
-		Details:              result.Details,
-		Tags:                 result.Tags,
-		Metadata:             result.Metadata,
-		Input:                result.Input,
-		Output:               result.Output,
+		TemplateID:   result.TemplateID,
+		TemplateName: result.TemplateName,
+		Description:  result.Description,
+		Status:       result.Status,
+		StartTime:    result.StartTime,
+		EndTime:      result.EndTime,
+		Duration:     result.Duration,
+		Error:        result.Error,
+		Detected:     result.Detected,
+		Score:        result.Score,
+		Details:      result.Details,
+		Tags:         result.Tags,
+		Metadata:     result.Metadata,
+		Input:        result.Input,
+		Output:       result.Output,
 	}
 
 	// Decompress the response
@@ -572,4 +572,3 @@ func estimateResultSize(result *types.TemplateResult) int {
 	size += 100 // Estimate for timestamps, durations, etc.
 	return size
 }
-

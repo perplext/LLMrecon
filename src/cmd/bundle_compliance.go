@@ -79,7 +79,7 @@ func init() {
 
 	// Generate command flags
 	complianceGenerateCmd.Flags().StringVarP(&complianceFormat, "format", "f", "markdown", "Output format (markdown,pdf,html,docx)")
-	complianceGenerateCmd.Flags().StringVarP(&complianceOutput, "output", "o", "./compliance", "Output directory")
+	complianceGenerateCmd.Flags().StringVarP(&complianceOutput, "output", "o", "github.com/perplext/LLMrecon/src/testing/owasp/compliance", "Output directory")
 	complianceGenerateCmd.Flags().StringVar(&complianceFramework, "framework", "all", "Compliance framework (owasp,iso42001,nist,eu-ai,all)")
 	complianceGenerateCmd.Flags().BoolVar(&complianceEvidence, "evidence", true, "Include evidence mappings")
 
@@ -932,7 +932,7 @@ func saveHTMLDocument(doc *ComplianceDocument, filename string) error {
 
 	return os.WriteFile(filepath.Clean(filename), []byte(content.String()), 0600)
 
-// Template generation functions
+	// Template generation functions
 }
 
 func generateOWASPTemplates(outputDir string) error {
@@ -1186,7 +1186,7 @@ Tests ensure:
 - Absence of discriminatory biases
 - Appropriate data handling
 - Compliance with data protection`
-	
+
 }
 
 func generateEvidenceMappings(b *bundle.Bundle, outputDir string) error {

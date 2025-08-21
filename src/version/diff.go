@@ -11,13 +11,13 @@ type DiffType string
 const (
 	// AddedDiff represents an added item
 	AddedDiff DiffType = "added"
-	
+
 	// RemovedDiff represents a removed item
 	RemovedDiff DiffType = "removed"
-	
+
 	// ModifiedDiff represents a modified item
 	ModifiedDiff DiffType = "modified"
-	
+
 	// UnchangedDiff represents an unchanged item
 	UnchangedDiff DiffType = "unchanged"
 )
@@ -26,19 +26,19 @@ const (
 type DiffOptions struct {
 	// IgnoreWhitespace determines if whitespace should be ignored
 	IgnoreWhitespace bool
-	
+
 	// IgnoreCase determines if case should be ignored
 	IgnoreCase bool
-	
+
 	// IgnoreComments determines if comments should be ignored
 	IgnoreComments bool
-	
+
 	// IgnoreFormatting determines if formatting should be ignored
 	IgnoreFormatting bool
-	
+
 	// IncludeUnchanged determines if unchanged items should be included
 	IncludeUnchanged bool
-	
+
 	// MaxContentSize is the maximum content size to read (in bytes)
 	MaxContentSize int64
 }
@@ -59,22 +59,22 @@ func DefaultDiffOptions() *DiffOptions {
 type DiffItem struct {
 	// Type is the type of difference
 	Type DiffType
-	
+
 	// Path is the path to the item
 	Path string
-	
+
 	// OldContent is the old content
 	OldContent string
-	
+
 	// NewContent is the new content
 	NewContent string
-	
+
 	// LineNumber is the line number of the difference
 	LineNumber int
-	
+
 	// LineCount is the number of lines affected
 	LineCount int
-	
+
 	// Metadata is additional metadata for the difference
 	Metadata map[string]interface{}
 }
@@ -118,16 +118,16 @@ func (d *DiffItem) String() string {
 type DiffResult struct {
 	// LocalVersion is the local version
 	LocalVersion *VersionInfo
-	
+
 	// RemoteVersion is the remote version
 	RemoteVersion *VersionInfo
-	
+
 	// Items is the list of diff items
 	Items []*DiffItem
-	
+
 	// Summary is a summary of the differences
 	Summary *DiffSummary
-	
+
 	// DiffTime is the time the diff was performed
 	DiffTime time.Time
 }
@@ -146,7 +146,7 @@ func NewDiffResult(localVersion, remoteVersion *VersionInfo) *DiffResult {
 // AddItem adds a diff item to the result
 func (r *DiffResult) AddItem(item *DiffItem) {
 	r.Items = append(r.Items, item)
-	
+
 	// Update summary
 	switch item.Type {
 	case AddedDiff:
@@ -158,7 +158,7 @@ func (r *DiffResult) AddItem(item *DiffItem) {
 	case UnchangedDiff:
 		r.Summary.Unchanged++
 	}
-	
+
 	r.Summary.Total++
 }
 
@@ -215,16 +215,16 @@ func (r *DiffResult) GetUnchangedItems() []*DiffItem {
 type DiffSummary struct {
 	// Added is the number of added items
 	Added int
-	
+
 	// Removed is the number of removed items
 	Removed int
-	
+
 	// Modified is the number of modified items
 	Modified int
-	
+
 	// Unchanged is the number of unchanged items
 	Unchanged int
-	
+
 	// Total is the total number of items
 	Total int
 }

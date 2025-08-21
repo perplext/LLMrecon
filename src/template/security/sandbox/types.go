@@ -81,10 +81,10 @@ type SandboxOptions struct {
 // DefaultSandboxOptions returns the default sandbox options
 func DefaultSandboxOptions() *SandboxOptions {
 	return &SandboxOptions{
-		Mode:               ModeStandard,
-		ResourceLimits:     DefaultResourceLimits(),
-		AllowedFunctions:   []string{},
-		AllowedPackages:    []string{},
+		Mode:             ModeStandard,
+		ResourceLimits:   DefaultResourceLimits(),
+		AllowedFunctions: []string{},
+		AllowedPackages:  []string{},
 		DisallowedFunctions: []string{
 			"os.Exit",
 			"syscall",
@@ -96,10 +96,10 @@ func DefaultSandboxOptions() *SandboxOptions {
 			"syscall",
 			"unsafe",
 		},
-		TimeoutDuration:    10 * time.Second,
-		EnableLogging:      true,
-		LogDirectory:       "",
-		ValidationOptions:  security.DefaultVerificationOptions(),
+		TimeoutDuration:   10 * time.Second,
+		EnableLogging:     true,
+		LogDirectory:      "",
+		ValidationOptions: security.DefaultVerificationOptions(),
 	}
 }
 
@@ -137,19 +137,19 @@ type ResourceUsage struct {
 type TemplateSandbox interface {
 	// Execute executes a template in the sandbox
 	Execute(ctx context.Context, template *format.Template, options *SandboxOptions) (*ExecutionResult, error)
-	
+
 	// ExecuteFile executes a template file in the sandbox
 	ExecuteFile(ctx context.Context, templatePath string, options *SandboxOptions) (*ExecutionResult, error)
-	
+
 	// Validate validates a template against security rules
 	Validate(ctx context.Context, template *format.Template, options *SandboxOptions) ([]*security.SecurityIssue, error)
-	
+
 	// ValidateFile validates a template file against security rules
 	ValidateFile(ctx context.Context, templatePath string, options *SandboxOptions) ([]*security.SecurityIssue, error)
-	
+
 	// GetAllowList returns the allow list for template execution
 	GetAllowList() *AllowList
-	
+
 	// SetAllowList sets the allow list for template execution
 	SetAllowList(allowList *AllowList)
 }

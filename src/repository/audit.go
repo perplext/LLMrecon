@@ -30,9 +30,9 @@ func NewRepositoryAuditLogger(auditLogger *audit.AuditLogger, repositoryType, re
 	}
 
 	return &RepositoryAuditLogger{
-		AuditLogger:     auditLogger,
-		RepositoryType:  repositoryType,
-		RepositoryURL:   repositoryURL,
+		AuditLogger:    auditLogger,
+		RepositoryType: repositoryType,
+		RepositoryURL:  repositoryURL,
 	}
 }
 
@@ -94,19 +94,19 @@ func (l *RepositoryAuditLogger) LogRepositoryListFiles(ctx context.Context, repo
 	if l.AuditLogger == nil {
 		return
 	}
-	
+
 	details := map[string]interface{}{
 		"repository_type": l.RepositoryType,
 		"repository_url":  repoURL,
 		"operation":       "list_files",
 		"timestamp":       time.Now().Format(time.RFC3339),
 	}
-	
+
 	// Only add pattern if it's not empty
 	if pattern != "" {
 		details["pattern"] = pattern
 	}
-	
+
 	l.AuditLogger.LogEventWithStatus("repository_list_files", "Repository", l.RepositoryURL, "in-progress", details)
 }
 
@@ -257,7 +257,7 @@ func (l *RepositoryAuditLogger) LogRepositoryGetFile(ctx context.Context, repoUR
 	if l.AuditLogger == nil {
 		return
 	}
-	
+
 	l.AuditLogger.LogEventWithStatus("repository_get_file", "Repository", repoURL, "success", map[string]interface{}{
 		"repository_type": l.RepositoryType,
 		"repository_url":  repoURL,
@@ -272,7 +272,7 @@ func (l *RepositoryAuditLogger) LogRepositoryFileExists(ctx context.Context, rep
 	if l.AuditLogger == nil {
 		return
 	}
-	
+
 	l.AuditLogger.LogEventWithStatus("repository_file_exists", "Repository", repoURL, "success", map[string]interface{}{
 		"repository_type": l.RepositoryType,
 		"repository_url":  repoURL,
@@ -287,7 +287,7 @@ func (l *RepositoryAuditLogger) LogRepositoryGetLastModified(ctx context.Context
 	if l.AuditLogger == nil {
 		return
 	}
-	
+
 	l.AuditLogger.LogEventWithStatus("repository_get_last_modified", "Repository", repoURL, "success", map[string]interface{}{
 		"repository_type": l.RepositoryType,
 		"repository_url":  repoURL,
@@ -302,7 +302,7 @@ func (l *RepositoryAuditLogger) LogRepositoryStoreFile(ctx context.Context, repo
 	if l.AuditLogger == nil {
 		return
 	}
-	
+
 	l.AuditLogger.LogEventWithStatus("repository_store_file", "Repository", repoURL, "success", map[string]interface{}{
 		"repository_type": l.RepositoryType,
 		"repository_url":  repoURL,
@@ -317,7 +317,7 @@ func (l *RepositoryAuditLogger) LogRepositoryDeleteFile(ctx context.Context, rep
 	if l.AuditLogger == nil {
 		return
 	}
-	
+
 	l.AuditLogger.LogEventWithStatus("repository_delete_file", "Repository", repoURL, "success", map[string]interface{}{
 		"repository_type": l.RepositoryType,
 		"repository_url":  repoURL,

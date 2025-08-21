@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
 // createExportCommand creates the 'export' command
 func (c *OfflineBundleCLI) createExportCommand() *cobra.Command {
 	var bundlePath, outputPath string

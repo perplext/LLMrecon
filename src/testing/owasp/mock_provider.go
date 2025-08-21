@@ -42,7 +42,7 @@ func NewMockLLMProvider(config *core.ProviderConfig) *MockLLMProviderImpl {
 	}
 
 	baseProvider := core.NewBaseProvider(core.CustomProvider, config)
-	
+
 	// Add default models
 	models := []core.ModelInfo{
 		{
@@ -63,12 +63,12 @@ func NewMockLLMProvider(config *core.ProviderConfig) *MockLLMProviderImpl {
 	baseProvider.SetModels(models)
 
 	return &MockLLMProviderImpl{
-		BaseProvider:       baseProvider,
-		config:             config,
+		BaseProvider:        baseProvider,
+		config:              config,
 		vulnerableResponses: make(map[string]string),
-		defaultResponse:    "This is a default response from the mock LLM provider.",
-		responseDelay:      0,
-		errorRate:          0.0,
+		defaultResponse:     "This is a default response from the mock LLM provider.",
+		responseDelay:       0,
+		errorRate:           0.0,
 	}
 }
 
@@ -396,10 +396,10 @@ func (p *MockLLMProviderImpl) GetAllUsageMetrics() (map[string]*core.UsageMetric
 func (p *MockLLMProviderImpl) GetRateLimitConfig() *core.RateLimitConfig {
 	// Mock implementation - return default rate limit config
 	return &core.RateLimitConfig{
-		RequestsPerMinute:    100,
-		TokensPerMinute:      10000,
+		RequestsPerMinute:     100,
+		TokensPerMinute:       10000,
 		MaxConcurrentRequests: 10,
-		BurstSize:            20,
+		BurstSize:             20,
 	}
 }
 
@@ -457,7 +457,7 @@ func splitIntoChunks(s string, chunkSize int) []string {
 
 	var chunks []string
 	runes := []rune(s)
-	
+
 	for i := 0; i < len(runes); i += chunkSize {
 		end := i + chunkSize
 		if end > len(runes) {
@@ -465,7 +465,7 @@ func splitIntoChunks(s string, chunkSize int) []string {
 		}
 		chunks = append(chunks, string(runes[i:end]))
 	}
-	
+
 	return chunks
 }
 
@@ -503,31 +503,31 @@ func generateMockEmbedding(input string, dimensions int) []float64 {
 
 // Secure random number generation helpers
 func randInt(max int) int {
-    n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
-    if err != nil {
-        panic(err)
-    }
-    return int(n.Int64())
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		panic(err)
+	}
+	return int(n.Int64())
 }
 
 func randInt64(max int64) int64 {
-    n, err := rand.Int(rand.Reader, big.NewInt(max))
-    if err != nil {
-        panic(err)
-    }
-    return n.Int64()
+	n, err := rand.Int(rand.Reader, big.NewInt(max))
+	if err != nil {
+		panic(err)
+	}
+	return n.Int64()
 }
 
 func randFloat64() float64 {
-    bytes := make([]byte, 8)
-    _, err := rand.Read(bytes)
-    if err != nil {
-        panic(err)
-    }
-    // Convert bytes to float64 between 0.0 and 1.0
-    var result uint64
-    for i, b := range bytes {
-        result |= uint64(b) << (8 * uint(i))
-    }
-    return float64(result) / float64(^uint64(0))
+	bytes := make([]byte, 8)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		panic(err)
+	}
+	// Convert bytes to float64 between 0.0 and 1.0
+	var result uint64
+	for i, b := range bytes {
+		result |= uint64(b) << (8 * uint(i))
+	}
+	return float64(result) / float64(^uint64(0))
 }

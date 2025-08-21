@@ -12,13 +12,13 @@ import (
 
 // ProgressManager manages multiple progress indicators
 type ProgressManager struct {
-	bars       map[string]*ProgressBar
-	mu         sync.RWMutex
-	output     io.Writer
-	showETA    bool
-	showRate   bool
-	showBytes  bool
-	width      int
+	bars      map[string]*ProgressBar
+	mu        sync.RWMutex
+	output    io.Writer
+	showETA   bool
+	showRate  bool
+	showBytes bool
+	width     int
 }
 
 // ProgressBar represents an individual progress bar
@@ -102,7 +102,7 @@ func (pm *ProgressManager) CreateProgressBar(id, description string, total int64
 	}
 
 	bar := progressbar.NewOptions64(total, options...)
-	
+
 	pb := &ProgressBar{
 		bar:         bar,
 		description: description,
@@ -191,15 +191,15 @@ type MultiProgress struct {
 
 // Task represents a tracked task
 type Task struct {
-	ID          string
-	Name        string
-	Status      TaskStatus
-	Progress    float64
-	StartTime   time.Time
-	EndTime     *time.Time
-	Details     string
-	SubTasks    []*SubTask
-	Error       error
+	ID        string
+	Name      string
+	Status    TaskStatus
+	Progress  float64
+	StartTime time.Time
+	EndTime   *time.Time
+	Details   string
+	SubTasks  []*SubTask
+	Error     error
 }
 
 // SubTask represents a sub-task
@@ -281,7 +281,7 @@ func (mp *MultiProgress) AddTask(id, name string) *Task {
 	}
 
 	mp.tasks = append(mp.tasks, task)
-	
+
 	// Keep only the most recent tasks
 	if len(mp.tasks) > mp.maxTasks {
 		mp.tasks = mp.tasks[len(mp.tasks)-mp.maxTasks:]
@@ -300,12 +300,12 @@ func (mp *MultiProgress) UpdateTask(id string, status TaskStatus, progress float
 			task.Status = status
 			task.Progress = progress
 			task.Details = details
-			
+
 			if status == TaskCompleted || status == TaskFailed {
 				now := time.Now()
 				task.EndTime = &now
 			}
-			
+
 			return nil
 		}
 	}
@@ -343,29 +343,29 @@ func (mp *MultiProgress) Render() string {
 	for i, task := range mp.tasks {
 		// Task header
 		output.WriteString(fmt.Sprintf("%s %s", task.Status.Symbol(), task.Name))
-		
+
 		// Progress bar for running tasks
 		if task.Status == TaskRunning && task.Progress > 0 {
 			bar := mp.renderProgressBar(task.Progress)
 			output.WriteString(fmt.Sprintf(" %s %.0f%%", bar, task.Progress*100))
 		}
-		
+
 		// Duration for completed tasks
 		if task.EndTime != nil {
 			duration := task.EndTime.Sub(task.StartTime)
 			output.WriteString(fmt.Sprintf(" (%s)", formatDuration(duration)))
 		}
-		
+
 		// Error for failed tasks
 		if task.Status == TaskFailed && task.Error != nil {
 			output.WriteString(fmt.Sprintf(" - Error: %s", task.Error.Error()))
 		}
-		
+
 		// Details if enabled
 		if mp.showDetail && task.Details != "" {
 			output.WriteString(fmt.Sprintf("\n  └─ %s", task.Details))
 		}
-		
+
 		// Sub-tasks if any
 		if len(task.SubTasks) > 0 && mp.showDetail {
 			for j, subTask := range task.SubTasks {
@@ -376,7 +376,7 @@ func (mp *MultiProgress) Render() string {
 				output.WriteString(fmt.Sprintf("\n  %s %s %s", prefix, subTask.Status.Symbol(), subTask.Name))
 			}
 		}
-		
+
 		if i < len(mp.tasks)-1 {
 			output.WriteString("\n")
 		}
@@ -389,7 +389,7 @@ func (mp *MultiProgress) Render() string {
 func (mp *MultiProgress) renderProgressBar(progress float64) string {
 	width := 20
 	filled := int(progress * float64(width))
-	
+
 	bar := "["
 	for i := 0; i < width; i++ {
 		if i < filled {
@@ -401,7 +401,7 @@ func (mp *MultiProgress) renderProgressBar(progress float64) string {
 		}
 	}
 	bar += "]"
-	
+
 	return bar
 }
 
@@ -416,7 +416,7 @@ func formatDuration(d time.Duration) string {
 		secs := int(d.Seconds()) % 60
 		return fmt.Sprintf("%dm%ds", mins, secs)
 	}
-	
+
 	hours := int(d.Hours())
 	mins := int(d.Minutes()) % 60
 	return fmt.Sprintf("%dh%dm", hours, mins)
@@ -434,7 +434,7 @@ func NewSpinner(style []string) *Spinner {
 	if len(style) == 0 {
 		style = DefaultProgressOptions().SpinnerStyle
 	}
-	
+
 	return &Spinner{
 		frames:  style,
 		current: 0,
@@ -445,7 +445,7 @@ func NewSpinner(style []string) *Spinner {
 func (s *Spinner) Next() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	frame := s.frames[s.current]
 	s.current = (s.current + 1) % len(s.frames)
 	return frame

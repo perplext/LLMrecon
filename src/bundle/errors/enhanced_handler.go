@@ -69,10 +69,10 @@ func (h *DefaultErrorHandler) SetRecoveryStrategy(strategy RecoveryStrategy) {
 
 // ErrorMetrics contains error handling metrics
 type ErrorMetrics struct {
-	TotalErrors      int `json:"total_errors"`
-	RecoveredErrors  int `json:"recovered_errors"`
+	TotalErrors       int `json:"total_errors"`
+	RecoveredErrors   int `json:"recovered_errors"`
 	UnrecoveredErrors int `json:"unrecovered_errors"`
-	RetryAttempts    int `json:"retry_attempts"`
+	RetryAttempts     int `json:"retry_attempts"`
 }
 
 // EnhancedErrorHandler provides enhanced error handling capabilities

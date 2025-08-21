@@ -77,13 +77,13 @@ func NewTemplateScorer() *TemplateScorer {
 		&InputValidationFactor{weight: 0.15},
 		&FileSystemAccessFactor{weight: 0.1},
 	}
-	
+
 	// Calculate weight sum
 	var weightSum float64
 	for _, factor := range riskFactors {
 		weightSum += factor.Weight()
 	}
-	
+
 	return &TemplateScorer{
 		riskFactors: riskFactors,
 		weightSum:   weightSum,
@@ -94,13 +94,13 @@ func NewTemplateScorer() *TemplateScorer {
 func (s *TemplateScorer) ScoreTemplate(template *format.Template, issues []*security.SecurityIssue) *RiskScore {
 	var totalScore float64
 	var factors []RiskFactor
-	
+
 	// Evaluate each risk factor
 	for _, factor := range s.riskFactors {
 		score := factor.Evaluate(template, issues)
 		weightedScore := score * factor.Weight()
 		totalScore += weightedScore
-		
+
 		factors = append(factors, RiskFactor{
 			Name:        factor.Name(),
 			Description: factor.Description(),
@@ -108,10 +108,10 @@ func (s *TemplateScorer) ScoreTemplate(template *format.Template, issues []*secu
 			Weight:      factor.Weight(),
 		})
 	}
-	
+
 	// Normalize the score to 0-100
 	normalizedScore := (totalScore / s.weightSum) * 100
-	
+
 	// Determine the risk category
 	var category RiskCategory
 	switch {
@@ -124,7 +124,7 @@ func (s *TemplateScorer) ScoreTemplate(template *format.Template, issues []*secu
 	default:
 		category = RiskCategoryLow
 	}
-	
+
 	return &RiskScore{
 		Score:    normalizedScore,
 		Category: category,
@@ -157,7 +157,7 @@ func (f *SecurityIssuesFactor) Evaluate(template *format.Template, issues []*sec
 	if len(issues) == 0 {
 		return 0
 	}
-	
+
 	// Calculate score based on issue severity
 	var score float64
 	for _, issue := range issues {
@@ -172,7 +172,7 @@ func (f *SecurityIssuesFactor) Evaluate(template *format.Template, issues []*sec
 			score += 0.1
 		}
 	}
-	
+
 	// Normalize score to 0-1 range
 	return math.Min(1.0, score/5.0)
 }
@@ -216,7 +216,7 @@ func (f *DisallowedFunctionsFactor) Evaluate(template *format.Template, issues [
 		"http.Get",
 		"http.Post",
 	}
-	
+
 	// Check for dangerous functions
 	var count int
 	for _, function := range dangerousFunctions {
@@ -225,12 +225,12 @@ func (f *DisallowedFunctionsFactor) Evaluate(template *format.Template, issues [
 		if err != nil {
 			continue
 		}
-		
+
 		if re.MatchString(string(template.Content)) {
 			count++
 		}
 	}
-	
+
 	// Normalize score to 0-1 range
 	return math.Min(1.0, float64(count)/5.0)
 }
@@ -258,15 +258,15 @@ func (f *ComplexityFactor) Weight() float64 {
 // Evaluate evaluates the risk factor for a template
 func (f *ComplexityFactor) Evaluate(template *format.Template, issues []*security.SecurityIssue) float64 {
 	// Calculate complexity based on various factors
-	
+
 	// Line count
 	lineCount := len(strings.Split(string(template.Content), "\n"))
-	
+
 	// Control structure count
 	controlStructures := []string{
 		"if", "else", "for", "while", "switch", "case",
 	}
-	
+
 	var controlCount int
 	for _, structure := range controlStructures {
 		pattern := fmt.Sprintf(`\b%s\b`, regexp.QuoteMeta(structure))
@@ -274,11 +274,11 @@ func (f *ComplexityFactor) Evaluate(template *format.Template, issues []*securit
 		if err != nil {
 			continue
 		}
-		
+
 		matches := re.FindAllString(string(template.Content), -1)
 		controlCount += len(matches)
 	}
-	
+
 	// Function count
 	functionPattern := `\bfunc\b`
 	functionRe, err := regexp.Compile(functionPattern)
@@ -287,10 +287,10 @@ func (f *ComplexityFactor) Evaluate(template *format.Template, issues []*securit
 		matches := functionRe.FindAllString(string(template.Content), -1)
 		functionCount = len(matches)
 	}
-	
+
 	// Calculate complexity score
 	complexityScore := (float64(lineCount) / 100.0) + (float64(controlCount) / 20.0) + (float64(functionCount) / 5.0)
-	
+
 	// Normalize score to 0-1 range
 	return math.Min(1.0, complexityScore)
 }
@@ -326,14 +326,14 @@ func (f *InputValidationFactor) Evaluate(template *format.Template, issues []*se
 		`sanitize`,
 		`escape`,
 	}
-	
+
 	for _, pattern := range validationPatterns {
 		if strings.Contains(strings.ToLower(string(template.Content)), pattern) {
 			// Input validation found, lower risk
 			return 0.2
 		}
 	}
-	
+
 	// No input validation found, higher risk
 	return 0.8
 }
@@ -373,7 +373,7 @@ func (f *FileSystemAccessFactor) Evaluate(template *format.Template, issues []*s
 		`os.MkdirAll`,
 		`filepath`,
 	}
-	
+
 	var count int
 	for _, pattern := range fileSystemPatterns {
 		pattern := fmt.Sprintf(`\b%s\b`, regexp.QuoteMeta(pattern))
@@ -381,12 +381,12 @@ func (f *FileSystemAccessFactor) Evaluate(template *format.Template, issues []*s
 		if err != nil {
 			continue
 		}
-		
+
 		if re.MatchString(string(template.Content)) {
 			count++
 		}
 	}
-	
+
 	// Normalize score to 0-1 range
 	return math.Min(1.0, float64(count)/5.0)
 }

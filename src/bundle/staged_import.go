@@ -114,10 +114,10 @@ func NewStagedImporter(importer BundleImporter) StagedImporter {
 func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, options StagedImportOptions) (*ImportResult, error) {
 	// Initialize status
 	i.Status = &StagedImportStatus{
-		Phase:               ValidationPhase,
-		Progress:            0,
-		Message:             "Starting import",
-		StartTime:           time.Now(),
+		Phase:                 ValidationPhase,
+		Progress:              0,
+		Message:               "Starting import",
+		StartTime:             time.Now(),
 		CurrentPhaseStartTime: time.Now(),
 	}
 
@@ -416,7 +416,7 @@ func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, o
 			i.Status.Error = err
 			result.Message = fmt.Sprintf("Failed to create directory for %s: %s", item.Path, err.Error())
 			result.Errors = append(result.Errors, err.Error())
-			
+
 			// Attempt to restore backup if one was created
 			if i.Status.BackupPath != "" {
 				restoreErr := i.Importer.RestoreBackup(ctx, i.Status.BackupPath, options.TargetDir)
@@ -426,7 +426,7 @@ func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, o
 					result.Warnings = append(result.Warnings, "Restored backup after failed import")
 				}
 			}
-			
+
 			result.EndTime = i.Status.EndTime
 			return result, err
 		}
@@ -439,7 +439,7 @@ func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, o
 			i.Status.Error = err
 			result.Message = fmt.Sprintf("Failed to copy %s: %s", item.Path, err.Error())
 			result.Errors = append(result.Errors, err.Error())
-			
+
 			// Attempt to restore backup if one was created
 			if i.Status.BackupPath != "" {
 				restoreErr := i.Importer.RestoreBackup(ctx, i.Status.BackupPath, options.TargetDir)
@@ -449,7 +449,7 @@ func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, o
 					result.Warnings = append(result.Warnings, "Restored backup after failed import")
 				}
 			}
-			
+
 			result.EndTime = i.Status.EndTime
 			return result, err
 		}
@@ -466,7 +466,7 @@ func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, o
 			i.Status.Error = fmt.Errorf("import cancelled")
 			result.Message = "Import cancelled"
 			result.EndTime = i.Status.EndTime
-			
+
 			// Attempt to restore backup if one was created
 			if i.Status.BackupPath != "" {
 				restoreErr := i.Importer.RestoreBackup(ctx, i.Status.BackupPath, options.TargetDir)
@@ -476,7 +476,7 @@ func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, o
 					result.Warnings = append(result.Warnings, "Restored backup after cancelled import")
 				}
 			}
-			
+
 			return result, i.Status.Error
 		case <-ctx.Done():
 			i.Status.Success = false
@@ -484,7 +484,7 @@ func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, o
 			i.Status.Error = ctx.Err()
 			result.Message = fmt.Sprintf("Import cancelled: %s", ctx.Err())
 			result.EndTime = i.Status.EndTime
-			
+
 			// Attempt to restore backup if one was created
 			if i.Status.BackupPath != "" {
 				restoreErr := i.Importer.RestoreBackup(ctx, i.Status.BackupPath, options.TargetDir)
@@ -494,7 +494,7 @@ func (i *DefaultStagedImporter) Import(ctx context.Context, bundlePath string, o
 					result.Warnings = append(result.Warnings, "Restored backup after cancelled import")
 				}
 			}
-			
+
 			return result, i.Status.Error
 		default:
 			// Continue
@@ -562,7 +562,6 @@ func (i *DefaultStagedImporter) checkForConflicts(ctx context.Context, tempDir, 
 			conflicts = append(conflicts, item.Path)
 		}
 	}
-
 
 	return conflicts, nil
 }

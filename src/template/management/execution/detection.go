@@ -148,32 +148,32 @@ func (e *DefaultDetectionEngine) detectRegexMatch(ctx context.Context, criteria 
 func (e *DefaultDetectionEngine) detectSemanticMatch(ctx context.Context, criteria *format.TemplateDetection, response string) (bool, int, map[string]interface{}, error) {
 	// This is a placeholder implementation
 	// In a real implementation, this would use embeddings or other semantic analysis techniques
-	
+
 	// For now, just use a simple keyword-based approach
 	keywords := strings.Split(criteria.Criteria, ",")
 	matchCount := 0
-	
+
 	for _, keyword := range keywords {
 		keyword = strings.TrimSpace(keyword)
 		if strings.Contains(strings.ToLower(response), strings.ToLower(keyword)) {
 			matchCount++
 		}
 	}
-	
+
 	// Calculate match percentage
 	matchPercentage := 0.0
 	if len(keywords) > 0 {
 		matchPercentage = float64(matchCount) / float64(len(keywords)) * 100
 	}
-	
+
 	// Determine if detected based on match percentage
 	// For semantic matching, we use a threshold of 70%
 	threshold := 70.0
 	detected := matchPercentage >= threshold
-	
+
 	// Calculate score (0-100)
 	score := int(matchPercentage)
-	
+
 	// Create details
 	details := map[string]interface{}{
 		"detection_type":   "semantic_match",
@@ -184,7 +184,7 @@ func (e *DefaultDetectionEngine) detectSemanticMatch(ctx context.Context, criter
 		"keyword_count":    len(keywords),
 		"detected":         detected,
 	}
-	
+
 	return detected, score, details, nil
 }
 
@@ -213,7 +213,7 @@ const (
 // NewCompositeDetectionEngine creates a new composite detection engine
 func NewCompositeDetectionEngine(engines []DetectionEngine, strategy AggregationStrategy) *CompositeDetectionEngine {
 	return &CompositeDetectionEngine{
-		engines:            engines,
+		engines:             engines,
 		aggregationStrategy: strategy,
 	}
 }

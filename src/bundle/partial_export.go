@@ -618,4 +618,3 @@ func generateEntityID(entityType, path string) string {
 	// Generate a unique ID for an entity
 	return fmt.Sprintf("%s:%s", entityType, path)
 }
-

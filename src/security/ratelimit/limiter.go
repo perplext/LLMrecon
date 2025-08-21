@@ -177,11 +177,11 @@ func (rl *APIKeyRateLimiter) Allow(apiKey string) (bool, error) {
 	config, exists := rl.limits[apiKey]
 	if !exists {
 		keyLen := len(apiKey)
-	displayLen := 8
-	if keyLen < displayLen {
-		displayLen = keyLen
-	}
-	return false, fmt.Errorf("API key not configured: %s", apiKey[:displayLen]+"...")
+		displayLen := 8
+		if keyLen < displayLen {
+			displayLen = keyLen
+		}
+		return false, fmt.Errorf("API key not configured: %s", apiKey[:displayLen]+"...")
 	}
 
 	limiter, exists := rl.limiters[apiKey]
@@ -192,4 +192,3 @@ func (rl *APIKeyRateLimiter) Allow(apiKey string) (bool, error) {
 
 	return limiter.Allow(), nil
 }
-

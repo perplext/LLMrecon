@@ -62,15 +62,15 @@ func NewHelpDocManager() (*HelpDocManager, error) {
 		tags:       make(map[string][]*HelpDoc),
 		index:      &HelpIndex{entries: make(map[string][]IndexEntry)},
 	}
-	
+
 	// Load embedded documentation
 	if err := hdm.loadEmbeddedDocs(); err != nil {
 		return nil, fmt.Errorf("failed to load help docs: %w", err)
 	}
-	
+
 	// Build indices
 	hdm.buildIndices()
-	
+
 	return hdm, nil
 }
 
@@ -78,7 +78,7 @@ func NewHelpDocManager() (*HelpDocManager, error) {
 func (hdm *HelpDocManager) loadEmbeddedDocs() error {
 	// Create default help documents if embedded docs don't exist
 	hdm.createDefaultDocs()
-	
+
 	// In a real implementation, this would load from embedded files
 	// For now, we'll use the default docs
 	return nil
@@ -134,7 +134,7 @@ LLMrecon is a comprehensive security testing framework for Large Language Model 
 		},
 		Related: []string{"installation", "configuration", "first-scan"},
 	}
-	
+
 	// Template Guide
 	hdm.docs["template-guide"] = &HelpDoc{
 		Title:    "Template Development Guide",
@@ -189,7 +189,7 @@ Templates support variables and functions for dynamic test generation:
 		},
 		Related: []string{"template-syntax", "template-examples", "template-sharing"},
 	}
-	
+
 	// Security Best Practices
 	hdm.docs["security-practices"] = &HelpDoc{
 		Title:    "Security Best Practices",
@@ -229,7 +229,7 @@ If you find vulnerabilities:
 4. Share learnings with the community`,
 		Related: []string{"authentication", "encryption", "compliance"},
 	}
-	
+
 	// OWASP LLM Top 10
 	hdm.docs["owasp-llm"] = &HelpDoc{
 		Title:    "OWASP LLM Top 10 Testing",
@@ -286,7 +286,7 @@ LLMrecon report --format owasp-compliance
 		},
 		Related: []string{"compliance", "reporting", "templates"},
 	}
-	
+
 	// Troubleshooting
 	hdm.docs["troubleshooting"] = &HelpDoc{
 		Title:    "Troubleshooting Guide",
@@ -344,12 +344,12 @@ func (hdm *HelpDocManager) buildIndices() {
 		if doc.Category != "" {
 			hdm.categories[doc.Category] = append(hdm.categories[doc.Category], doc)
 		}
-		
+
 		// Tag index
 		for _, tag := range doc.Tags {
 			hdm.tags[tag] = append(hdm.tags[tag], doc)
 		}
-		
+
 		// Full-text index
 		hdm.indexDocument(id, doc)
 	}
@@ -359,10 +359,10 @@ func (hdm *HelpDocManager) buildIndices() {
 func (hdm *HelpDocManager) indexDocument(id string, doc *HelpDoc) {
 	// Index title
 	hdm.addToIndex(id, doc.Title, doc.Title, 2.0, "title")
-	
+
 	// Index content
 	hdm.addToIndex(id, doc.Title, doc.Content, 1.0, "content")
-	
+
 	// Index examples
 	for _, ex := range doc.Examples {
 		hdm.addToIndex(id, doc.Title, ex.Description, 1.5, "example")
@@ -378,7 +378,7 @@ func (hdm *HelpDocManager) addToIndex(docID, title, content string, score float6
 		if len(word) < 3 {
 			continue
 		}
-		
+
 		entry := IndexEntry{
 			DocID:    docID,
 			Title:    title,
@@ -386,7 +386,7 @@ func (hdm *HelpDocManager) addToIndex(docID, title, content string, score float6
 			Score:    score,
 			Location: location,
 		}
-		
+
 		hdm.index.entries[word] = append(hdm.index.entries[word], entry)
 	}
 }
@@ -395,7 +395,7 @@ func (hdm *HelpDocManager) addToIndex(docID, title, content string, score float6
 func (hdm *HelpDocManager) Search(query string) []*HelpDoc {
 	results := make(map[string]float64)
 	words := strings.Fields(strings.ToLower(query))
-	
+
 	// Search each word
 	for _, word := range words {
 		if entries, ok := hdm.index.entries[word]; ok {
@@ -404,7 +404,7 @@ func (hdm *HelpDocManager) Search(query string) []*HelpDoc {
 			}
 		}
 	}
-	
+
 	// Sort by score and return documents
 	var docs []*HelpDoc
 	for docID, score := range results {
@@ -412,7 +412,7 @@ func (hdm *HelpDocManager) Search(query string) []*HelpDoc {
 			docs = append(docs, hdm.docs[docID])
 		}
 	}
-	
+
 	return docs
 }
 
@@ -432,14 +432,14 @@ func (hdm *HelpDocManager) GetRelated(docID string) []*HelpDoc {
 	if !ok {
 		return nil
 	}
-	
+
 	var related []*HelpDoc
 	for _, relID := range doc.Related {
 		if relDoc, ok := hdm.docs[relID]; ok {
 			related = append(related, relDoc)
 		}
 	}
-	
+
 	// Also find documents with similar tags
 	for _, tag := range doc.Tags {
 		for _, tagDoc := range hdm.tags[tag] {
@@ -448,7 +448,7 @@ func (hdm *HelpDocManager) GetRelated(docID string) []*HelpDoc {
 			}
 		}
 	}
-	
+
 	return related
 }
 
@@ -458,23 +458,23 @@ func (hdm *HelpDocManager) LoadCustomDocs(dir string) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
 			doc := &HelpDoc{}
 			data, err := fs.ReadFile(helpDocs, path)
 			if err != nil {
 				return err
 			}
-			
+
 			if err := yaml.Unmarshal(data, doc); err != nil {
 				return fmt.Errorf("failed to parse %s: %w", path, err)
 			}
-			
+
 			docID := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 			hdm.docs[docID] = doc
 			hdm.indexDocument(docID, doc)
 		}
-		
+
 		return nil
 	})
 }

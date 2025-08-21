@@ -15,7 +15,6 @@ type Service struct {
 	storage Storage
 }
 
-
 // NewService creates a new scan service
 func NewService(storage Storage) *Service {
 	return &Service{

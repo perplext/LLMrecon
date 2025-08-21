@@ -17,14 +17,8 @@ import (
 	"github.com/perplext/LLMrecon/src/template/management/reporting"
 )
 
-
 // TemplateResult is an alias for the interface type to maintain consistency
 type TemplateResult = interfaces.TemplateResult
-
-
-
-
-
 
 // CreateDefaultManager creates a default template manager with all components
 func CreateDefaultManager(ctx context.Context, options *DefaultManagerOptions) (*Manager, error) {

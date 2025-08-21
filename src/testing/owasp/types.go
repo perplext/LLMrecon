@@ -15,24 +15,24 @@ type VulnerabilityType string
 
 // OWASP Top 10 LLM vulnerability types (simplified naming for internal use)
 const (
-	PromptInjection              VulnerabilityType = "prompt_injection"
-	InsecureOutput               VulnerabilityType = "insecure_output"
-	TrainingDataPoisoning        VulnerabilityType = "training_data_poisoning"
-	ModelDOS                     VulnerabilityType = "model_dos"
-	SupplyChainVulnerabilities   VulnerabilityType = "supply_chain_vulnerabilities"
+	PromptInjection                VulnerabilityType = "prompt_injection"
+	InsecureOutput                 VulnerabilityType = "insecure_output"
+	TrainingDataPoisoning          VulnerabilityType = "training_data_poisoning"
+	ModelDOS                       VulnerabilityType = "model_dos"
+	SupplyChainVulnerabilities     VulnerabilityType = "supply_chain_vulnerabilities"
 	SensitiveInformationDisclosure VulnerabilityType = "sensitive_information_disclosure"
-	InsecurePluginDesign         VulnerabilityType = "insecure_plugin_design"
-	ExcessiveAgency              VulnerabilityType = "excessive_agency"
-	Overreliance                 VulnerabilityType = "overreliance"
-	ModelTheft                   VulnerabilityType = "model_theft"
+	InsecurePluginDesign           VulnerabilityType = "insecure_plugin_design"
+	ExcessiveAgency                VulnerabilityType = "excessive_agency"
+	Overreliance                   VulnerabilityType = "overreliance"
+	ModelTheft                     VulnerabilityType = "model_theft"
 	// Additional vulnerability types
-	InsecureOutputHandling       VulnerabilityType = "insecure_output_handling"
-	SystemPromptLeakage          VulnerabilityType = "system_prompt_leakage"
-	VectorEmbeddingWeaknesses    VulnerabilityType = "vector_embedding_weaknesses"
-	Misinformation               VulnerabilityType = "misinformation"
-	UnboundedConsumption         VulnerabilityType = "unbounded_consumption"
-	ImproperOutputHandling       VulnerabilityType = "improper_output_handling"
-	DataAndModelPoisoning        VulnerabilityType = "data_and_model_poisoning"
+	InsecureOutputHandling    VulnerabilityType = "insecure_output_handling"
+	SystemPromptLeakage       VulnerabilityType = "system_prompt_leakage"
+	VectorEmbeddingWeaknesses VulnerabilityType = "vector_embedding_weaknesses"
+	Misinformation            VulnerabilityType = "misinformation"
+	UnboundedConsumption      VulnerabilityType = "unbounded_consumption"
+	ImproperOutputHandling    VulnerabilityType = "improper_output_handling"
+	DataAndModelPoisoning     VulnerabilityType = "data_and_model_poisoning"
 )
 
 // OWASP Top 10 LLM vulnerabilities (2023-2024)

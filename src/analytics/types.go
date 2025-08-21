@@ -21,18 +21,18 @@ type TimeWindow struct {
 
 // ScanResult represents a scan result for analytics processing
 type ScanResult struct {
-	ID               string            `json:"id"`
-	Timestamp        time.Time         `json:"timestamp"`
-	Duration         time.Duration     `json:"duration"`
-	Target           string            `json:"target"`
-	TemplatesUsed    []string          `json:"templates_used"`
-	TotalTests       int               `json:"total_tests"`
-	PassedTests      int               `json:"passed_tests"`
-	FailedTests      int               `json:"failed_tests"`
-	Vulnerabilities  []Vulnerability   `json:"vulnerabilities"`
-	Metadata         map[string]string `json:"metadata"`
-	Success          bool              `json:"success"`
-	ErrorMessage     string            `json:"error_message,omitempty"`
+	ID              string            `json:"id"`
+	Timestamp       time.Time         `json:"timestamp"`
+	Duration        time.Duration     `json:"duration"`
+	Target          string            `json:"target"`
+	TemplatesUsed   []string          `json:"templates_used"`
+	TotalTests      int               `json:"total_tests"`
+	PassedTests     int               `json:"passed_tests"`
+	FailedTests     int               `json:"failed_tests"`
+	Vulnerabilities []Vulnerability   `json:"vulnerabilities"`
+	Metadata        map[string]string `json:"metadata"`
+	Success         bool              `json:"success"`
+	ErrorMessage    string            `json:"error_message,omitempty"`
 }
 
 // Vulnerability represents a discovered vulnerability
@@ -73,14 +73,14 @@ type AggregatedMetric struct {
 
 // MetricsQuery represents a query for metrics data
 type MetricsQuery struct {
-	TimeRange  TimeRange         `json:"time_range"`
-	Metrics    []string          `json:"metrics"`
-	GroupBy    []string          `json:"group_by"`
-	Filters    map[string]string `json:"filters"`
-	Aggregation string           `json:"aggregation"` // sum, avg, count, max, min
-	Interval   string            `json:"interval"`    // 1h, 1d, 1w, 1m
-	Limit      int               `json:"limit"`
-	Offset     int               `json:"offset"`
+	TimeRange   TimeRange         `json:"time_range"`
+	Metrics     []string          `json:"metrics"`
+	GroupBy     []string          `json:"group_by"`
+	Filters     map[string]string `json:"filters"`
+	Aggregation string            `json:"aggregation"` // sum, avg, count, max, min
+	Interval    string            `json:"interval"`    // 1h, 1d, 1w, 1m
+	Limit       int               `json:"limit"`
+	Offset      int               `json:"offset"`
 }
 
 // MetricsResult represents query results
@@ -127,20 +127,20 @@ type DashboardSummary struct {
 
 // Alert represents a dashboard alert
 type Alert struct {
-	ID          string            `json:"id"`
-	Type        string            `json:"type"` // threshold, anomaly, trend
-	Severity    string            `json:"severity"` // info, warning, error, critical
-	Title       string            `json:"title"`
-	Message     string            `json:"message"`
-	Timestamp   time.Time         `json:"timestamp"`
-	Acknowledged bool             `json:"acknowledged"`
-	Tags        map[string]string `json:"tags"`
-	Actions     []AlertAction     `json:"actions"`
+	ID           string            `json:"id"`
+	Type         string            `json:"type"`     // threshold, anomaly, trend
+	Severity     string            `json:"severity"` // info, warning, error, critical
+	Title        string            `json:"title"`
+	Message      string            `json:"message"`
+	Timestamp    time.Time         `json:"timestamp"`
+	Acknowledged bool              `json:"acknowledged"`
+	Tags         map[string]string `json:"tags"`
+	Actions      []AlertAction     `json:"actions"`
 }
 
 // AlertAction represents an action for an alert
 type AlertAction struct {
-	Type  string `json:"type"`  // dismiss, acknowledge, escalate
+	Type  string `json:"type"` // dismiss, acknowledge, escalate
 	Label string `json:"label"`
 	URL   string `json:"url,omitempty"`
 }
@@ -156,24 +156,24 @@ type TrendParams struct {
 
 // TrendAnalysis represents trend analysis results
 type TrendAnalysis struct {
-	Params      *TrendParams   `json:"params"`
-	Trends      []Trend        `json:"trends"`
-	Summary     TrendSummary   `json:"summary"`
+	Params      *TrendParams    `json:"params"`
+	Trends      []Trend         `json:"trends"`
+	Summary     TrendSummary    `json:"summary"`
 	Forecast    []ForecastPoint `json:"forecast,omitempty"`
-	Anomalies   []Anomaly      `json:"anomalies"`
-	GeneratedAt time.Time      `json:"generated_at"`
+	Anomalies   []Anomaly       `json:"anomalies"`
+	GeneratedAt time.Time       `json:"generated_at"`
 }
 
 // Trend represents a single metric trend
 type Trend struct {
-	Metric      string      `json:"metric"`
-	Direction   string      `json:"direction"` // increasing, decreasing, stable
-	Strength    float64     `json:"strength"`  // 0-1, how strong the trend is
-	Change      float64     `json:"change"`    // percentage change
-	DataPoints  []DataPoint `json:"data_points"`
-	RSquared    float64     `json:"r_squared"` // correlation coefficient
-	Slope       float64     `json:"slope"`
-	Confidence  float64     `json:"confidence"`
+	Metric     string      `json:"metric"`
+	Direction  string      `json:"direction"` // increasing, decreasing, stable
+	Strength   float64     `json:"strength"`  // 0-1, how strong the trend is
+	Change     float64     `json:"change"`    // percentage change
+	DataPoints []DataPoint `json:"data_points"`
+	RSquared   float64     `json:"r_squared"` // correlation coefficient
+	Slope      float64     `json:"slope"`
+	Confidence float64     `json:"confidence"`
 }
 
 // TrendSummary represents overall trend summary
@@ -207,16 +207,16 @@ type Anomaly struct {
 
 // ReportParams represents parameters for report generation
 type ReportParams struct {
-	Type        string            `json:"type"` // summary, detailed, executive, compliance
-	TimeRange   TimeRange         `json:"time_range"`
-	Targets     []string          `json:"targets"`
-	Templates   []string          `json:"templates"`
-	Format      string            `json:"format"` // pdf, html, docx, md
-	Filters     map[string]string `json:"filters"`
-	Sections    []string          `json:"sections"`
-	Template    string            `json:"template_name,omitempty"`
-	Recipients  []string          `json:"recipients,omitempty"`
-	Schedule    string            `json:"schedule,omitempty"` // for recurring reports
+	Type       string            `json:"type"` // summary, detailed, executive, compliance
+	TimeRange  TimeRange         `json:"time_range"`
+	Targets    []string          `json:"targets"`
+	Templates  []string          `json:"templates"`
+	Format     string            `json:"format"` // pdf, html, docx, md
+	Filters    map[string]string `json:"filters"`
+	Sections   []string          `json:"sections"`
+	Template   string            `json:"template_name,omitempty"`
+	Recipients []string          `json:"recipients,omitempty"`
+	Schedule   string            `json:"schedule,omitempty"` // for recurring reports
 }
 
 // Report represents a generated analytics report
@@ -236,48 +236,48 @@ type Report struct {
 
 // ReportSection represents a section within a report
 type ReportSection struct {
-	ID       string      `json:"id"`
-	Title    string      `json:"title"`
-	Type     string      `json:"type"` // text, chart, table, summary
-	Content  interface{} `json:"content"`
-	Order    int         `json:"order"`
-	PageBreak bool       `json:"page_break"`
+	ID        string      `json:"id"`
+	Title     string      `json:"title"`
+	Type      string      `json:"type"` // text, chart, table, summary
+	Content   interface{} `json:"content"`
+	Order     int         `json:"order"`
+	PageBreak bool        `json:"page_break"`
 }
 
 // ComparisonParams represents parameters for comparative analysis
 type ComparisonParams struct {
-	Type        ComparisonType `json:"type"`
-	TimeRanges  []TimeRange    `json:"time_ranges,omitempty"`
-	Targets     []string       `json:"targets,omitempty"`
-	Templates   []string       `json:"templates,omitempty"`
-	Metrics     []string       `json:"metrics"`
-	Filters     map[string]string `json:"filters"`
+	Type       ComparisonType    `json:"type"`
+	TimeRanges []TimeRange       `json:"time_ranges,omitempty"`
+	Targets    []string          `json:"targets,omitempty"`
+	Templates  []string          `json:"templates,omitempty"`
+	Metrics    []string          `json:"metrics"`
+	Filters    map[string]string `json:"filters"`
 }
 
 // ComparisonType represents the type of comparison
 type ComparisonType string
 
 const (
-	ComparisonTypeTimeRange ComparisonType = "time_range"
-	ComparisonTypeTargets   ComparisonType = "targets"
-	ComparisonTypeTemplates ComparisonType = "templates"
-	ComparisonTypeTimePeriod ComparisonType = "time_period"
-	ComparisonTypeMetrics   ComparisonType = "metrics"
-	ComparisonTypeBaseline  ComparisonType = "baseline"
+	ComparisonTypeTimeRange      ComparisonType = "time_range"
+	ComparisonTypeTargets        ComparisonType = "targets"
+	ComparisonTypeTemplates      ComparisonType = "templates"
+	ComparisonTypeTimePeriod     ComparisonType = "time_period"
+	ComparisonTypeMetrics        ComparisonType = "metrics"
+	ComparisonTypeBaseline       ComparisonType = "baseline"
 	ComparisonTypeAnomalyPattern ComparisonType = "anomaly_pattern"
 )
 
 // ComparisonResult represents comparison analysis results
 type ComparisonResult struct {
-	ComparisonType     ComparisonType        `json:"comparison_type"`
-	BaselineDataset    ComparisonDataset     `json:"baseline_dataset"`
-	ComparisonDataset  ComparisonDataset     `json:"comparison_dataset"`
-	Statistics         ComparisonStatistics  `json:"statistics"`
-	Insights           []ComparisonInsight   `json:"insights"`
-	Recommendations    []string              `json:"recommendations"`
-	Comparisons        []Comparison          `json:"comparisons"`
-	Summary            ComparisonSummary     `json:"summary"`
-	GeneratedAt        time.Time             `json:"generated_at"`
+	ComparisonType    ComparisonType       `json:"comparison_type"`
+	BaselineDataset   ComparisonDataset    `json:"baseline_dataset"`
+	ComparisonDataset ComparisonDataset    `json:"comparison_dataset"`
+	Statistics        ComparisonStatistics `json:"statistics"`
+	Insights          []ComparisonInsight  `json:"insights"`
+	Recommendations   []string             `json:"recommendations"`
+	Comparisons       []Comparison         `json:"comparisons"`
+	Summary           ComparisonSummary    `json:"summary"`
+	GeneratedAt       time.Time            `json:"generated_at"`
 }
 
 // Comparison represents a single comparison
@@ -299,7 +299,7 @@ type ComparisonSummary struct {
 
 // ExportParams represents parameters for data export
 type ExportParams struct {
-	Format    string            `json:"format"` // json, csv, excel, xml
+	Format    string            `json:"format"`    // json, csv, excel, xml
 	DataType  string            `json:"data_type"` // metrics, trends, reports
 	TimeRange TimeRange         `json:"time_range"`
 	Metrics   []string          `json:"metrics"`
@@ -309,43 +309,43 @@ type ExportParams struct {
 
 // AnalyticsSummary represents a high-level analytics summary
 type AnalyticsSummary struct {
-	GeneratedAt           time.Time     `json:"generated_at"`
-	TotalScans            int           `json:"total_scans"`
-	TotalVulnerabilities  int           `json:"total_vulnerabilities"`
-	AverageScanDuration   float64       `json:"average_scan_duration"`
-	MedianScanDuration    float64       `json:"median_scan_duration"`
-	SuccessRate           float64       `json:"success_rate"`
-	TrendData             TrendSummary  `json:"trend_data"`
-	StorageStats          StorageStats  `json:"storage_stats"`
-	TopVulnerabilities    []VulnSummary `json:"top_vulnerabilities"`
-	TopTargets            []TargetSummary `json:"top_targets"`
-	RecentActivity        []ActivitySummary `json:"recent_activity"`
+	GeneratedAt          time.Time         `json:"generated_at"`
+	TotalScans           int               `json:"total_scans"`
+	TotalVulnerabilities int               `json:"total_vulnerabilities"`
+	AverageScanDuration  float64           `json:"average_scan_duration"`
+	MedianScanDuration   float64           `json:"median_scan_duration"`
+	SuccessRate          float64           `json:"success_rate"`
+	TrendData            TrendSummary      `json:"trend_data"`
+	StorageStats         StorageStats      `json:"storage_stats"`
+	TopVulnerabilities   []VulnSummary     `json:"top_vulnerabilities"`
+	TopTargets           []TargetSummary   `json:"top_targets"`
+	RecentActivity       []ActivitySummary `json:"recent_activity"`
 }
 
 // StorageStats represents storage statistics
 type StorageStats struct {
-	TotalSize    int64 `json:"total_size"`
-	TotalRecords int64 `json:"total_records"`
+	TotalSize      int64 `json:"total_size"`
+	TotalRecords   int64 `json:"total_records"`
 	CompressedSize int64 `json:"compressed_size,omitempty"`
-	IndexSize    int64 `json:"index_size,omitempty"`
+	IndexSize      int64 `json:"index_size,omitempty"`
 }
 
 // VulnSummary represents a vulnerability summary
 type VulnSummary struct {
-	Type        string  `json:"type"`
-	Count       int     `json:"count"`
-	Severity    string  `json:"severity"`
-	Percentage  float64 `json:"percentage"`
-	Trend       string  `json:"trend"`
+	Type       string  `json:"type"`
+	Count      int     `json:"count"`
+	Severity   string  `json:"severity"`
+	Percentage float64 `json:"percentage"`
+	Trend      string  `json:"trend"`
 }
 
 // TargetSummary represents a target summary
 type TargetSummary struct {
-	Target      string  `json:"target"`
-	ScanCount   int     `json:"scan_count"`
-	VulnCount   int     `json:"vuln_count"`
-	LastScan    time.Time `json:"last_scan"`
-	RiskScore   float64 `json:"risk_score"`
+	Target    string    `json:"target"`
+	ScanCount int       `json:"scan_count"`
+	VulnCount int       `json:"vuln_count"`
+	LastScan  time.Time `json:"last_scan"`
+	RiskScore float64   `json:"risk_score"`
 }
 
 // ActivitySummary represents recent activity summary
@@ -362,20 +362,20 @@ type DataStorage interface {
 	// Lifecycle
 	Initialize() error
 	Close() error
-	
+
 	// Metrics operations
 	StoreMetric(metric *Metric) error
 	StoreScanResult(result *ScanResult) error
 	QueryMetrics(query *MetricsQuery) (*MetricsResult, error)
-	
+
 	// Cleanup operations
 	DeleteRawData(before time.Time) error
 	ArchiveData(before time.Time) error
-	
+
 	// Statistics
 	GetStorageSize() (int64, error)
 	GetRecordCount() (int64, error)
-	
+
 	// Advanced queries
 	GetAggregatedData(query *MetricsQuery) (*MetricsResult, error)
 	GetTimeSeriesData(metric string, timeRange TimeRange) ([]DataPoint, error)
@@ -393,17 +393,17 @@ type ReportGenerator interface {
 
 // Constants for metric names
 const (
-	MetricScanDuration      = "scan_duration"
+	MetricScanDuration       = "scan_duration"
 	MetricVulnerabilityCount = "vulnerability_count"
-	MetricTestCount         = "test_count"
-	MetricSuccessRate       = "success_rate"
-	MetricCriticalVulns     = "critical_vulnerabilities"
-	MetricHighVulns         = "high_vulnerabilities"
-	MetricMediumVulns       = "medium_vulnerabilities"
-	MetricLowVulns          = "low_vulnerabilities"
-	MetricTargetCount       = "target_count"
-	MetricTemplateUsage     = "template_usage"
-	MetricErrorRate         = "error_rate"
+	MetricTestCount          = "test_count"
+	MetricSuccessRate        = "success_rate"
+	MetricCriticalVulns      = "critical_vulnerabilities"
+	MetricHighVulns          = "high_vulnerabilities"
+	MetricMediumVulns        = "medium_vulnerabilities"
+	MetricLowVulns           = "low_vulnerabilities"
+	MetricTargetCount        = "target_count"
+	MetricTemplateUsage      = "template_usage"
+	MetricErrorRate          = "error_rate"
 )
 
 // Constants for metric types (if needed by collector)
@@ -429,12 +429,12 @@ const (
 
 // Constants for chart types
 const (
-	ChartTypeLine = "line"
-	ChartTypeBar  = "bar"
-	ChartTypePie  = "pie"
-	ChartTypeArea = "area"
+	ChartTypeLine     = "line"
+	ChartTypeBar      = "bar"
+	ChartTypePie      = "pie"
+	ChartTypeArea     = "area"
 	ChartTypeDoughnut = "doughnut"
-	ChartTypeScatter = "scatter"
+	ChartTypeScatter  = "scatter"
 )
 
 // Validation functions
@@ -465,15 +465,15 @@ func (mq *MetricsQuery) Validate() error {
 	if err := mq.TimeRange.Validate(); err != nil {
 		return fmt.Errorf("invalid time range: %w", err)
 	}
-	
+
 	if mq.Limit < 0 {
 		return fmt.Errorf("limit cannot be negative")
 	}
-	
+
 	if mq.Offset < 0 {
 		return fmt.Errorf("offset cannot be negative")
 	}
-	
+
 	validAggregations := []string{"sum", "avg", "count", "max", "min"}
 	if mq.Aggregation != "" {
 		found := false
@@ -487,6 +487,6 @@ func (mq *MetricsQuery) Validate() error {
 			return fmt.Errorf("invalid aggregation: %s", mq.Aggregation)
 		}
 	}
-	
+
 	return nil
 }

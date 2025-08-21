@@ -25,7 +25,7 @@ func (lh *LoggingHook) PreCollection(ctx context.Context, scanID string) error {
 }
 
 func (lh *LoggingHook) PostCollection(ctx context.Context, scanID string, metrics []Metric) error {
-	lh.logger.Info("Completed metrics collection", 
+	lh.logger.Info("Completed metrics collection",
 		"scanID", scanID,
 		"metricsCount", len(metrics),
 		"timestamp", time.Now())
@@ -38,9 +38,9 @@ func (lh *LoggingHook) OnError(ctx context.Context, err error, scanID string) {
 
 // NotificationHook sends notifications for important events
 type NotificationHook struct {
-	notifier      Notifier
-	thresholds    map[string]float64
-	enabled       bool
+	notifier   Notifier
+	thresholds map[string]float64
+	enabled    bool
 }
 
 type Notifier interface {
@@ -59,7 +59,7 @@ func (nh *NotificationHook) PreCollection(ctx context.Context, scanID string) er
 	if !nh.enabled {
 		return nil
 	}
-	
+
 	message := fmt.Sprintf("Starting security scan: %s", scanID)
 	return nh.notifier.SendNotification(ctx, message, "info")
 }
@@ -68,18 +68,18 @@ func (nh *NotificationHook) PostCollection(ctx context.Context, scanID string, m
 	if !nh.enabled {
 		return nil
 	}
-	
+
 	// Check for threshold violations
 	for _, metric := range metrics {
 		if threshold, exists := nh.thresholds[metric.Name]; exists {
 			if metric.Value > threshold {
-				message := fmt.Sprintf("Threshold exceeded for %s: %.2f > %.2f (Scan: %s)", 
+				message := fmt.Sprintf("Threshold exceeded for %s: %.2f > %.2f (Scan: %s)",
 					metric.Name, metric.Value, threshold, scanID)
 				nh.notifier.SendNotification(ctx, message, "warning")
 			}
 		}
 	}
-	
+
 	// Send completion notification
 	vulnerabilityCount := nh.countVulnerabilities(metrics)
 	severity := "info"
@@ -89,7 +89,7 @@ func (nh *NotificationHook) PostCollection(ctx context.Context, scanID string, m
 	if vulnerabilityCount > 10 {
 		severity = "critical"
 	}
-	
+
 	message := fmt.Sprintf("Scan completed: %s - Found %d vulnerabilities", scanID, vulnerabilityCount)
 	return nh.notifier.SendNotification(ctx, message, severity)
 }
@@ -98,7 +98,7 @@ func (nh *NotificationHook) OnError(ctx context.Context, err error, scanID strin
 	if !nh.enabled {
 		return
 	}
-	
+
 	message := fmt.Sprintf("Scan error in %s: %v", scanID, err)
 	nh.notifier.SendNotification(ctx, message, "error")
 }
@@ -115,9 +115,9 @@ func (nh *NotificationHook) countVulnerabilities(metrics []Metric) int {
 
 // AuditHook maintains audit trail for compliance
 type AuditHook struct {
-	auditLogger   AuditLogger
-	includeData   bool
-	enabled       bool
+	auditLogger AuditLogger
+	includeData bool
+	enabled     bool
 }
 
 type AuditLogger interface {
@@ -125,13 +125,13 @@ type AuditLogger interface {
 }
 
 type AuditEvent struct {
-	EventID     string                 `json:"event_id"`
-	Timestamp   time.Time              `json:"timestamp"`
-	EventType   string                 `json:"event_type"`
-	ScanID      string                 `json:"scan_id"`
-	UserID      string                 `json:"user_id,omitempty"`
-	Details     map[string]interface{} `json:"details"`
-	Metadata    map[string]interface{} `json:"metadata"`
+	EventID   string                 `json:"event_id"`
+	Timestamp time.Time              `json:"timestamp"`
+	EventType string                 `json:"event_type"`
+	ScanID    string                 `json:"scan_id"`
+	UserID    string                 `json:"user_id,omitempty"`
+	Details   map[string]interface{} `json:"details"`
+	Metadata  map[string]interface{} `json:"metadata"`
 }
 
 func NewAuditHook(auditLogger AuditLogger, includeData bool) *AuditHook {
@@ -146,7 +146,7 @@ func (ah *AuditHook) PreCollection(ctx context.Context, scanID string) error {
 	if !ah.enabled {
 		return nil
 	}
-	
+
 	event := AuditEvent{
 		EventID:   generateAuditID(),
 		Timestamp: time.Now(),
@@ -159,7 +159,7 @@ func (ah *AuditHook) PreCollection(ctx context.Context, scanID string) error {
 			"source": "analytics_collector",
 		},
 	}
-	
+
 	return ah.auditLogger.LogAuditEvent(ctx, event)
 }
 
@@ -167,18 +167,18 @@ func (ah *AuditHook) PostCollection(ctx context.Context, scanID string, metrics 
 	if !ah.enabled {
 		return nil
 	}
-	
+
 	details := map[string]interface{}{
 		"action":        "post_collection",
 		"metrics_count": len(metrics),
 	}
-	
+
 	if ah.includeData {
 		// Include summary of collected metrics
 		metricSummary := ah.summarizeMetrics(metrics)
 		details["metrics_summary"] = metricSummary
 	}
-	
+
 	event := AuditEvent{
 		EventID:   generateAuditID(),
 		Timestamp: time.Now(),
@@ -189,7 +189,7 @@ func (ah *AuditHook) PostCollection(ctx context.Context, scanID string, metrics 
 			"source": "analytics_collector",
 		},
 	}
-	
+
 	return ah.auditLogger.LogAuditEvent(ctx, event)
 }
 
@@ -197,7 +197,7 @@ func (ah *AuditHook) OnError(ctx context.Context, err error, scanID string) {
 	if !ah.enabled {
 		return
 	}
-	
+
 	event := AuditEvent{
 		EventID:   generateAuditID(),
 		Timestamp: time.Now(),
@@ -211,20 +211,20 @@ func (ah *AuditHook) OnError(ctx context.Context, err error, scanID string) {
 			"source": "analytics_collector",
 		},
 	}
-	
+
 	ah.auditLogger.LogAuditEvent(ctx, event)
 }
 
 func (ah *AuditHook) summarizeMetrics(metrics []Metric) map[string]interface{} {
 	summary := make(map[string]interface{})
-	
+
 	// Count by type
 	typeCounts := make(map[string]int)
 	for _, metric := range metrics {
 		typeCounts[string(metric.Type)]++
 	}
 	summary["type_distribution"] = typeCounts
-	
+
 	// Count by name prefix
 	nameCounts := make(map[string]int)
 	for _, metric := range metrics {
@@ -232,7 +232,7 @@ func (ah *AuditHook) summarizeMetrics(metrics []Metric) map[string]interface{} {
 		nameCounts[prefix]++
 	}
 	summary["name_distribution"] = nameCounts
-	
+
 	return summary
 }
 
@@ -258,11 +258,11 @@ func (ph *PerformanceHook) PreCollection(ctx context.Context, scanID string) err
 	if !ph.enabled {
 		return nil
 	}
-	
+
 	ph.mu.Lock()
 	ph.startTimes[scanID] = time.Now()
 	ph.mu.Unlock()
-	
+
 	return nil
 }
 
@@ -270,18 +270,18 @@ func (ph *PerformanceHook) PostCollection(ctx context.Context, scanID string, me
 	if !ph.enabled {
 		return nil
 	}
-	
+
 	ph.mu.Lock()
 	startTime, exists := ph.startTimes[scanID]
 	delete(ph.startTimes, scanID)
 	ph.mu.Unlock()
-	
+
 	if !exists {
 		return nil
 	}
-	
+
 	duration := time.Since(startTime)
-	
+
 	if duration > ph.slowThreshold {
 		ph.performanceLogger.Warn("Slow metrics collection detected",
 			"scanID", scanID,
@@ -289,13 +289,13 @@ func (ph *PerformanceHook) PostCollection(ctx context.Context, scanID string, me
 			"metricsCount", len(metrics),
 			"threshold", ph.slowThreshold)
 	}
-	
+
 	ph.performanceLogger.Debug("Metrics collection performance",
 		"scanID", scanID,
 		"duration", duration,
 		"metricsCount", len(metrics),
 		"metricsPerSecond", float64(len(metrics))/duration.Seconds())
-	
+
 	return nil
 }
 
@@ -303,17 +303,17 @@ func (ph *PerformanceHook) OnError(ctx context.Context, err error, scanID string
 	if !ph.enabled {
 		return
 	}
-	
+
 	ph.mu.Lock()
 	startTime, exists := ph.startTimes[scanID]
 	delete(ph.startTimes, scanID)
 	ph.mu.Unlock()
-	
+
 	duration := time.Duration(0)
 	if exists {
 		duration = time.Since(startTime)
 	}
-	
+
 	ph.performanceLogger.Error("Metrics collection failed",
 		"scanID", scanID,
 		"duration", duration,
@@ -322,9 +322,9 @@ func (ph *PerformanceHook) OnError(ctx context.Context, err error, scanID string
 
 // ComplianceHook ensures compliance with regulations
 type ComplianceHook struct {
-	regulations   []string
-	validator     ComplianceValidator
-	enabled       bool
+	regulations []string
+	validator   ComplianceValidator
+	enabled     bool
 }
 
 type ComplianceValidator interface {
@@ -343,7 +343,7 @@ func (ch *ComplianceHook) PreCollection(ctx context.Context, scanID string) erro
 	if !ch.enabled {
 		return nil
 	}
-	
+
 	// Pre-collection compliance checks can be added here
 	return nil
 }
@@ -352,7 +352,7 @@ func (ch *ComplianceHook) PostCollection(ctx context.Context, scanID string, met
 	if !ch.enabled {
 		return nil
 	}
-	
+
 	return ch.validator.ValidateCompliance(ctx, scanID, metrics, ch.regulations)
 }
 
@@ -372,10 +372,10 @@ type QualityValidator interface {
 }
 
 type ValidationIssue struct {
-	MetricID    string `json:"metric_id"`
-	Issue       string `json:"issue"`
-	Severity    string `json:"severity"`
-	Suggestion  string `json:"suggestion"`
+	MetricID   string `json:"metric_id"`
+	Issue      string `json:"issue"`
+	Severity   string `json:"severity"`
+	Suggestion string `json:"suggestion"`
 }
 
 func NewMetricsValidationHook(validator QualityValidator) *MetricsValidationHook {
@@ -393,18 +393,18 @@ func (mvh *MetricsValidationHook) PostCollection(ctx context.Context, scanID str
 	if !mvh.enabled {
 		return nil
 	}
-	
+
 	issues := mvh.validator.ValidateQuality(ctx, metrics)
-	
+
 	if len(issues) > 0 {
 		// Log validation issues but don't fail the collection
 		for _, issue := range issues {
 			// This would typically use the logger from the collector
-			fmt.Printf("Metrics quality issue: %s - %s (Severity: %s)\n", 
+			fmt.Printf("Metrics quality issue: %s - %s (Severity: %s)\n",
 				issue.MetricID, issue.Issue, issue.Severity)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -422,14 +422,14 @@ func getMetricPrefix(name string) string {
 	if len(name) == 0 {
 		return "unknown"
 	}
-	
+
 	// Extract prefix (first word before underscore)
 	for i, char := range name {
 		if char == '_' {
 			return name[:i]
 		}
 	}
-	
+
 	return name
 }
 
@@ -490,7 +490,7 @@ func (scv *SimpleComplianceValidator) ValidateCompliance(ctx context.Context, sc
 			}
 		}
 	}
-	
+
 	scv.logger.Info("Compliance validation passed", "scanID", scanID, "regulations", regulations)
 	return nil
 }
@@ -526,7 +526,7 @@ func NewSimpleQualityValidator() *SimpleQualityValidator {
 
 func (sqv *SimpleQualityValidator) ValidateQuality(ctx context.Context, metrics []Metric) []ValidationIssue {
 	var issues []ValidationIssue
-	
+
 	for _, metric := range metrics {
 		// Check for missing required fields
 		if metric.Name == "" {
@@ -537,7 +537,7 @@ func (sqv *SimpleQualityValidator) ValidateQuality(ctx context.Context, metrics 
 				Suggestion: "Ensure all metrics have a valid name",
 			})
 		}
-		
+
 		// Check for suspicious values
 		if metric.Value < 0 && !strings.Contains(metric.Name, "delta") {
 			issues = append(issues, ValidationIssue{
@@ -547,7 +547,7 @@ func (sqv *SimpleQualityValidator) ValidateQuality(ctx context.Context, metrics 
 				Suggestion: "Verify that negative values are expected for this metric",
 			})
 		}
-		
+
 		// Check for missing labels on certain metric types
 		if metric.Type == MetricTypeEvent && len(metric.Labels) == 0 {
 			issues = append(issues, ValidationIssue{
@@ -558,7 +558,7 @@ func (sqv *SimpleQualityValidator) ValidateQuality(ctx context.Context, metrics 
 			})
 		}
 	}
-	
+
 	return issues
 }
 
@@ -568,13 +568,13 @@ func containsPII(value string) bool {
 	piiPatterns := []string{
 		"email", "ssn", "social", "credit", "card", "phone", "address",
 	}
-	
+
 	lowerValue := strings.ToLower(value)
 	for _, pattern := range piiPatterns {
 		if strings.Contains(lowerValue, pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }

@@ -12,17 +12,17 @@ type VulnerabilityType string
 
 // OWASP Top 10 for LLM vulnerability types
 const (
-	PromptInjection               VulnerabilityType = "prompt_injection"
-	InsecureOutput                VulnerabilityType = "insecure_output"
-	InsecureOutputHandling        VulnerabilityType = "insecure_output_handling"
-	TrainingDataPoisoning         VulnerabilityType = "training_data_poisoning"
-	ModelDOS                      VulnerabilityType = "model_dos"
-	SupplyChainVulnerabilities    VulnerabilityType = "supply_chain_vulnerabilities"
+	PromptInjection                VulnerabilityType = "prompt_injection"
+	InsecureOutput                 VulnerabilityType = "insecure_output"
+	InsecureOutputHandling         VulnerabilityType = "insecure_output_handling"
+	TrainingDataPoisoning          VulnerabilityType = "training_data_poisoning"
+	ModelDOS                       VulnerabilityType = "model_dos"
+	SupplyChainVulnerabilities     VulnerabilityType = "supply_chain_vulnerabilities"
 	SensitiveInformationDisclosure VulnerabilityType = "sensitive_information_disclosure"
-	InsecurePluginDesign          VulnerabilityType = "insecure_plugin_design"
-	ExcessiveAgency               VulnerabilityType = "excessive_agency"
-	Overreliance                  VulnerabilityType = "overreliance"
-	ModelTheft                    VulnerabilityType = "model_theft"
+	InsecurePluginDesign           VulnerabilityType = "insecure_plugin_design"
+	ExcessiveAgency                VulnerabilityType = "excessive_agency"
+	Overreliance                   VulnerabilityType = "overreliance"
+	ModelTheft                     VulnerabilityType = "model_theft"
 )
 
 // Report formats as string constants
@@ -39,57 +39,57 @@ const (
 
 // TestCase represents a test case for OWASP compliance testing
 type TestCase struct {
-	ID                 string                      `json:"id"`
-	Name               string                      `json:"name"`
-	Description        string                      `json:"description"`
-	VulnerabilityType  VulnerabilityType           `json:"vulnerability_type"`
-	Severity           detection.SeverityLevel     `json:"severity"`
-	Prompt             string                      `json:"prompt"`
-	ExpectedBehavior   string                      `json:"expected_behavior"`
-	DetectionCriteria  []detection.DetectionCriteria `json:"detection_criteria"`
-	Tags               []string                    `json:"tags"`
-	OWASPMapping       string                      `json:"owasp_mapping"`
-	Metadata           map[string]interface{}      `json:"metadata"`
+	ID                string                        `json:"id"`
+	Name              string                        `json:"name"`
+	Description       string                        `json:"description"`
+	VulnerabilityType VulnerabilityType             `json:"vulnerability_type"`
+	Severity          detection.SeverityLevel       `json:"severity"`
+	Prompt            string                        `json:"prompt"`
+	ExpectedBehavior  string                        `json:"expected_behavior"`
+	DetectionCriteria []detection.DetectionCriteria `json:"detection_criteria"`
+	Tags              []string                      `json:"tags"`
+	OWASPMapping      string                        `json:"owasp_mapping"`
+	Metadata          map[string]interface{}        `json:"metadata"`
 }
 
 // TestResult represents the result of a test case execution
 type TestResult struct {
-	TestCase          *TestCase                   `json:"test_case"`
-	Passed            bool                        `json:"passed"`
-	Response          string                      `json:"response"`
-	DetectionResults  []detection.DetectionResult `json:"detection_results"`
-	ExecutionTime     time.Duration               `json:"execution_time"`
-	Timestamp         time.Time                   `json:"timestamp"`
-	Notes             string                      `json:"notes"`
+	TestCase         *TestCase                   `json:"test_case"`
+	Passed           bool                        `json:"passed"`
+	Response         string                      `json:"response"`
+	DetectionResults []detection.DetectionResult `json:"detection_results"`
+	ExecutionTime    time.Duration               `json:"execution_time"`
+	Timestamp        time.Time                   `json:"timestamp"`
+	Notes            string                      `json:"notes"`
 }
 
 // TestSuite represents a collection of test cases
 type TestSuite struct {
-	ID           string       `json:"id"`
-	Name         string       `json:"name"`
-	Description  string       `json:"description"`
-	TestCases    []*TestCase  `json:"test_cases"`
-	Results      []*TestResult `json:"results"`
-	CreatedAt    time.Time    `json:"created_at"`
-	CompletedAt  time.Time    `json:"completed_at"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	Tags         []string     `json:"tags"`
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	TestCases   []*TestCase            `json:"test_cases"`
+	Results     []*TestResult          `json:"results"`
+	CreatedAt   time.Time              `json:"created_at"`
+	CompletedAt time.Time              `json:"completed_at"`
+	Metadata    map[string]interface{} `json:"metadata"`
+	Tags        []string               `json:"tags"`
 }
 
 // ReportOptions represents options for generating a report
 type ReportOptions struct {
-	Format      string                 `json:"format"`
-	OutputPath  string                 `json:"output_path"`
-	Title       string                 `json:"title"`
-	Metadata    map[string]interface{} `json:"metadata"`
+	Format     string                 `json:"format"`
+	OutputPath string                 `json:"output_path"`
+	Title      string                 `json:"title"`
+	Metadata   map[string]interface{} `json:"metadata"`
 }
 
 // Report represents a generated report
 type Report struct {
-	Title       string       `json:"title"`
-	TestSuites  []*TestSuite `json:"test_suites"`
-	Format      string       `json:"format"`
-	GeneratedAt time.Time    `json:"generated_at"`
+	Title       string                 `json:"title"`
+	TestSuites  []*TestSuite           `json:"test_suites"`
+	Format      string                 `json:"format"`
+	GeneratedAt time.Time              `json:"generated_at"`
 	Metadata    map[string]interface{} `json:"metadata"`
 }
 

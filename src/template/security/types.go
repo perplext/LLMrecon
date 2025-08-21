@@ -23,26 +23,26 @@ const (
 
 // SecurityIssue represents a security issue found in a template
 type SecurityIssue struct {
-	ID          string              `json:"id"`
-	Type        SecurityIssueType   `json:"type"`
-	Description string              `json:"description"`
-	Location    string              `json:"location"`
+	ID          string               `json:"id"`
+	Type        SecurityIssueType    `json:"type"`
+	Description string               `json:"description"`
+	Location    string               `json:"location"`
 	Severity    common.SeverityLevel `json:"severity"`
-	Remediation string              `json:"remediation"`
-	Context     string              `json:"context,omitempty"`
-	LineNumber  int                 `json:"line_number,omitempty"`
-	RawData     interface{}         `json:"raw_data,omitempty"`
+	Remediation string               `json:"remediation"`
+	Context     string               `json:"context,omitempty"`
+	LineNumber  int                  `json:"line_number,omitempty"`
+	RawData     interface{}          `json:"raw_data,omitempty"`
 }
 
 // VerificationResult represents the result of a template security verification
 type VerificationResult struct {
-	TemplatePath string          `json:"template_path"`
-	TemplateID   string          `json:"template_id"`
-	TemplateName string          `json:"template_name"`
-	Issues       []*SecurityIssue `json:"issues"`
-	Passed       bool            `json:"passed"`
-	Score        float64         `json:"score"`
-	MaxScore     float64         `json:"max_score"`
+	TemplatePath string                 `json:"template_path"`
+	TemplateID   string                 `json:"template_id"`
+	TemplateName string                 `json:"template_name"`
+	Issues       []*SecurityIssue       `json:"issues"`
+	Passed       bool                   `json:"passed"`
+	Score        float64                `json:"score"`
+	MaxScore     float64                `json:"max_score"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -51,7 +51,7 @@ type VerificationOptions struct {
 	StrictMode         bool                   `json:"strict_mode"`
 	IgnorePatterns     []string               `json:"ignore_patterns,omitempty"`
 	CustomChecks       []string               `json:"custom_checks,omitempty"`
-	SeverityThreshold  common.SeverityLevel    `json:"severity_threshold,omitempty"`
+	SeverityThreshold  common.SeverityLevel   `json:"severity_threshold,omitempty"`
 	IncludeInfo        bool                   `json:"include_info"`
 	TemplateCategories []string               `json:"template_categories,omitempty"`
 	Metadata           map[string]interface{} `json:"metadata,omitempty"`
@@ -127,6 +127,6 @@ func isSeverityHigher(severity1, severity2 common.SeverityLevel) bool {
 		common.Low:      2,
 		common.Info:     1,
 	}
-	
+
 	return severityMap[severity1] > severityMap[severity2]
 }

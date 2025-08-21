@@ -105,7 +105,11 @@ func runVerifyPackage(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open package: %w", err)
 	}
-	defer func() { if err := pkg.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := pkg.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Print package information
 	fmt.Println("Package Information:")
@@ -156,7 +160,11 @@ func runApplyPackage(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open package: %w", err)
 	}
-	defer func() { if err := pkg.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := pkg.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Print package information
 	fmt.Println("Package Information:")

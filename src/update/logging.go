@@ -3,10 +3,10 @@ package update
 
 import (
 	"encoding/json"
-	"path/filepath"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -177,17 +177,17 @@ func (l *UpdateLogger) Log(level LogLevel, component, message string, transactio
 	}
 
 	// Write text log entry
-	fmt.Fprintf(l.Writer, "[%s] [%s] [%s] %s", 
+	fmt.Fprintf(l.Writer, "[%s] [%s] [%s] %s",
 		entry.Timestamp.Format(time.RFC3339),
 		levelPrefix,
 		component,
 		message)
-	
+
 	// Include transaction ID if provided
 	if transactionID != "" {
 		fmt.Fprintf(l.Writer, " (Transaction: %s)", transactionID)
 	}
-	
+
 	// End line
 	fmt.Fprintln(l.Writer)
 
@@ -196,21 +196,21 @@ func (l *UpdateLogger) Log(level LogLevel, component, message string, transactio
 		// Marshal log entry to JSON
 		data, err := json.Marshal(entry)
 		if err != nil {
-			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to marshal log entry to JSON: %v\n", 
+			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to marshal log entry to JSON: %v\n",
 				time.Now().Format(time.RFC3339), err)
 			return
 		}
 
 		// Write JSON log entry
 		if _, err := l.JSONWriter.Write(data); err != nil {
-			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to write JSON log entry: %v\n", 
+			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to write JSON log entry: %v\n",
 				time.Now().Format(time.RFC3339), err)
 			return
 		}
 
 		// Write newline and comma for JSON array
 		if _, err := l.JSONWriter.Write([]byte(",\n")); err != nil {
-			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to write JSON log entry: %v\n", 
+			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to write JSON log entry: %v\n",
 				time.Now().Format(time.RFC3339), err)
 			return
 		}
@@ -284,21 +284,21 @@ func (l *AuditLogger) LogEvent(eventType, component, user, transactionID, packag
 	// Marshal event to JSON
 	data, err := json.Marshal(event)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to marshal audit event to JSON: %v\n", 
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to marshal audit event to JSON: %v\n",
 			time.Now().Format(time.RFC3339), err)
 		return
 	}
 
 	// Write JSON event
 	if _, err := l.Writer.Write(data); err != nil {
-		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to write audit event: %v\n", 
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to write audit event: %v\n",
 			time.Now().Format(time.RFC3339), err)
 		return
 	}
 
 	// Write newline
 	if _, err := l.Writer.Write([]byte("\n")); err != nil {
-		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to write audit event: %v\n", 
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to write audit event: %v\n",
 			time.Now().Format(time.RFC3339), err)
 		return
 	}

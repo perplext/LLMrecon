@@ -9,17 +9,17 @@ import (
 	"net/url"
 	"strings"
 	"time"
-	
+
 	"github.com/xanzy/go-gitlab"
 )
 
 // GitLabRepository implements the Repository interface for GitLab repositories
 type GitLabRepository struct {
 	*BaseRepository
-	
+
 	// client is the GitLab API client
 	client *gitlab.Client
-	
+
 	// projectID is the GitLab project ID or path
 	projectID string
 }
@@ -28,13 +28,13 @@ type GitLabRepository struct {
 func NewGitLabRepository(config *Config) (Repository, error) {
 	// Create base repository
 	base := NewBaseRepository(config)
-	
+
 	// Parse GitLab URL to extract project ID
 	projectID, err := parseGitLabURL(config.URL)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &GitLabRepository{
 		BaseRepository: base,
 		projectID:      projectID,
@@ -48,19 +48,19 @@ func parseGitLabURL(urlStr string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("invalid GitLab URL: %w", err)
 	}
-	
+
 	// Extract path
 	path := parsedURL.Path
-	
+
 	// Remove leading slash
 	path = strings.TrimPrefix(path, "/")
-	
+
 	// Remove .git suffix if present
 	path = strings.TrimSuffix(path, ".git")
-	
+
 	// URL encode the path
 	projectID := url.PathEscape(path)
-	
+
 	return projectID, nil
 }
 
@@ -70,21 +70,21 @@ func (r *GitLabRepository) Connect(ctx context.Context) error {
 	if r.IsConnected() {
 		return nil
 	}
-	
+
 	var err error
-	
+
 	// Create GitLab client options
 	opts := []gitlab.ClientOptionFunc{
 		gitlab.WithBaseURL(getGitLabBaseURL(r.config.URL)),
 	}
-	
+
 	// Add authentication if provided
 	if r.config.Password != "" {
 		// Use token-based authentication
 		// Pass token directly to NewClient instead of using WithToken
 	}
 	// Basic auth is not directly supported in newer gitlab client versions
-	
+
 	// Create GitLab client with token if available
 	if r.config.Password != "" {
 		r.client, err = gitlab.NewClient(r.config.Password, opts...)
@@ -95,17 +95,17 @@ func (r *GitLabRepository) Connect(ctx context.Context) error {
 		r.setLastError(err)
 		return fmt.Errorf("failed to create GitLab client: %w", err)
 	}
-	
+
 	// Test connection by fetching project info
 	_, _, err = r.client.Projects.GetProject(r.projectID, &gitlab.GetProjectOptions{})
 	if err != nil {
 		r.setLastError(err)
 		return fmt.Errorf("failed to connect to GitLab repository: %w", err)
 	}
-	
+
 	// Set connected flag
 	r.setConnected(true)
-	
+
 	return nil
 }
 
@@ -116,20 +116,20 @@ func getGitLabBaseURL(repoURL string) string {
 	if err != nil {
 		return "https://gitlab.com"
 	}
-	
+
 	// Extract scheme and host
 	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
-	
+
 	// If no scheme, use https
 	if parsedURL.Scheme == "" {
 		baseURL = fmt.Sprintf("https://%s", parsedURL.Host)
 	}
-	
+
 	// If no host, use gitlab.com
 	if parsedURL.Host == "" {
 		baseURL = "https://gitlab.com"
 	}
-	
+
 	return baseURL
 }
 
@@ -137,10 +137,10 @@ func getGitLabBaseURL(repoURL string) string {
 func (r *GitLabRepository) Disconnect() error {
 	// Set connected flag to false
 	r.setConnected(false)
-	
+
 	// Clear client
 	r.client = nil
-	
+
 	return nil
 }
 
@@ -150,16 +150,16 @@ func (r *GitLabRepository) ListFiles(ctx context.Context, pattern string) ([]Fil
 	if err := r.Connect(ctx); err != nil {
 		return nil, err
 	}
-	
+
 	// Acquire connection
 	if err := r.AcquireConnection(ctx); err != nil {
 		return nil, err
 	}
 	defer r.ReleaseConnection()
-	
+
 	// Create result slice
-		var result []FileInfo
-	
+	var result []FileInfo
+
 	// Use WithRetry for the operation
 	err := r.WithRetry(ctx, func() error {
 		// Get tree of the repository
@@ -170,21 +170,21 @@ func (r *GitLabRepository) ListFiles(ctx context.Context, pattern string) ([]Fil
 		if err != nil {
 			return err
 		}
-		
+
 		// Process tree items
 		for _, item := range treeItems {
 			// Skip if not matching pattern
 			if pattern != "" && !matchPattern(item.Name, pattern) {
 				continue
 			}
-			
+
 			// Create file info
 			fileInfo := FileInfo{
 				Path:        item.Path,
 				Name:        item.Name,
 				IsDirectory: item.Type == "tree",
 			}
-			
+
 			// Get file details if it's a file
 			if !fileInfo.IsDirectory {
 				// Get file size and last modified time
@@ -193,7 +193,7 @@ func (r *GitLabRepository) ListFiles(ctx context.Context, pattern string) ([]Fil
 				})
 				if err == nil {
 					fileInfo.Size = int64(file.Size)
-					
+
 					// Get last modified time
 					lastModified, err := r.getFileLastModified(ctx, item.Path)
 					if err == nil {
@@ -201,18 +201,18 @@ func (r *GitLabRepository) ListFiles(ctx context.Context, pattern string) ([]Fil
 					}
 				}
 			}
-			
+
 			// Add to result
 			result = append(result, fileInfo)
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return result, nil
 }
 
@@ -222,21 +222,21 @@ func (r *GitLabRepository) GetFile(ctx context.Context, path string) (io.ReadClo
 	if err := r.Connect(ctx); err != nil {
 		return nil, err
 	}
-	
+
 	// Acquire connection
 	if err := r.AcquireConnection(ctx); err != nil {
 		return nil, err
 	}
-	
+
 	// Create a pipe for streaming the content
 	pr, pw := io.Pipe()
-	
+
 	// Fetch and write content in a goroutine
 	go func() {
 		defer r.ReleaseConnection()
-		
+
 		var fetchErr error
-		
+
 		// Use WithRetry for the operation
 		fetchErr = r.WithRetry(ctx, func() error {
 			// Get file content
@@ -246,19 +246,19 @@ func (r *GitLabRepository) GetFile(ctx context.Context, path string) (io.ReadClo
 			if err != nil {
 				return err
 			}
-			
+
 			// Get content from file
 			// The GitLab API returns base64 encoded content in the Content field
 			content, err := base64.StdEncoding.DecodeString(file.Content)
 			if err != nil {
 				return err
 			}
-			
+
 			// Write content to pipe
 			_, err = pw.Write(content)
 			return err
 		})
-		
+
 		// Close pipe with error if any
 		if fetchErr != nil {
 			pw.CloseWithError(fetchErr)
@@ -266,7 +266,7 @@ func (r *GitLabRepository) GetFile(ctx context.Context, path string) (io.ReadClo
 			pw.Close()
 		}
 	}()
-	
+
 	return pr, nil
 }
 
@@ -276,13 +276,13 @@ func (r *GitLabRepository) FileExists(ctx context.Context, path string) (bool, e
 	if err := r.Connect(ctx); err != nil {
 		return false, err
 	}
-	
+
 	// Acquire connection
 	if err := r.AcquireConnection(ctx); err != nil {
 		return false, err
 	}
 	defer r.ReleaseConnection()
-	
+
 	// Use WithRetry for the operation
 	var exists bool
 	err := r.WithRetry(ctx, func() error {
@@ -290,7 +290,7 @@ func (r *GitLabRepository) FileExists(ctx context.Context, path string) (bool, e
 		_, resp, err := r.client.RepositoryFiles.GetFile(r.projectID, path, &gitlab.GetFileOptions{
 			Ref: gitlab.String(r.config.Branch),
 		})
-		
+
 		// Check if file exists
 		if err != nil {
 			if resp != nil && resp.StatusCode == http.StatusNotFound {
@@ -299,15 +299,15 @@ func (r *GitLabRepository) FileExists(ctx context.Context, path string) (bool, e
 			}
 			return err
 		}
-		
+
 		exists = true
 		return nil
 	})
-	
+
 	if err != nil {
 		return false, err
 	}
-	
+
 	return exists, nil
 }
 
@@ -315,26 +315,27 @@ func (r *GitLabRepository) FileExists(ctx context.Context, path string) (bool, e
 func (r *GitLabRepository) GetBranch() string {
 	return r.config.Branch
 }
+
 // GetLastModified gets the last modified time of a file in the GitLab repository
 func (r *GitLabRepository) GetLastModified(ctx context.Context, path string) (time.Time, error) {
 	// Ensure connected
 	if err := r.Connect(ctx); err != nil {
 		return time.Time{}, err
 	}
-	
+
 	// Acquire connection
 	if err := r.AcquireConnection(ctx); err != nil {
 		return time.Time{}, err
 	}
 	defer r.ReleaseConnection()
-	
+
 	return r.getFileLastModified(ctx, path)
 }
 
 // getFileLastModified gets the last modified time of a file (internal implementation)
 func (r *GitLabRepository) getFileLastModified(ctx context.Context, path string) (time.Time, error) {
 	var lastModified time.Time
-	
+
 	// Use WithRetry for the operation
 	err := r.WithRetry(ctx, func() error {
 		// Get commits for the file
@@ -349,20 +350,20 @@ func (r *GitLabRepository) getFileLastModified(ctx context.Context, path string)
 		if err != nil {
 			return err
 		}
-		
+
 		// Check if any commits found
 		if len(commits) == 0 {
 			return fmt.Errorf("no commits found for file: %s", path)
 		}
-		
+
 		// Get last commit date
 		lastModified = *commits[0].CommittedDate
 		return nil
 	})
-	
+
 	if err != nil {
 		return time.Time{}, err
 	}
-	
+
 	return lastModified, nil
 }

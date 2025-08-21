@@ -11,7 +11,6 @@ import (
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
 )
 
-
 // TemplateHook represents a function that can be called before or after template execution
 type TemplateHook func(ctx context.Context, template *format.Template, result *interfaces.TemplateResult) error
 

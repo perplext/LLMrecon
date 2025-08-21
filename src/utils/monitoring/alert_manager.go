@@ -2,13 +2,13 @@ package monitoring
 
 // AlertManagerAdapter adapts the existing AlertManager to implement the AlertManagerInterface
 type AlertManagerAdapter struct {
-	manager interface{
+	manager interface {
 		CheckThreshold(name string, value interface{}, labels map[string]string) error
 	}
 }
 
 // NewAlertManagerAdapter creates a new adapter for AlertManager
-func NewAlertManagerAdapter(manager interface{
+func NewAlertManagerAdapter(manager interface {
 	CheckThreshold(name string, value interface{}, labels map[string]string) error
 }) *AlertManagerAdapter {
 	return &AlertManagerAdapter{

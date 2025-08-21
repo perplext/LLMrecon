@@ -88,13 +88,13 @@ func NewServerConfigTuner(metricsManager *monitoring.MetricsManager, options *Se
 
 	// Create server configuration tuner
 	tuner := &ServerConfigTuner{
-		config:         memConfig,
-		metricsManager: metricsManager,
-		logger:         logger,
-		lastTuneTime:   time.Now(),
-		tuningInterval: options.TuningInterval,
+		config:          memConfig,
+		metricsManager:  metricsManager,
+		logger:          logger,
+		lastTuneTime:    time.Now(),
+		tuningInterval:  options.TuningInterval,
 		autoTuneEnabled: options.AutoTuneEnabled,
-		stopChan:       make(chan struct{}),
+		stopChan:        make(chan struct{}),
 	}
 
 	// Start automatic tuning if enabled
@@ -477,14 +477,14 @@ func (t *ServerConfigTuner) ApplyRecommendations() {
 // GetCurrentConfig returns the current server configuration
 func (t *ServerConfigTuner) GetCurrentConfig() map[string]interface{} {
 	config := make(map[string]interface{})
-	
+
 	config["max_workers"] = t.config.MaxWorkers
 	config["min_workers"] = t.config.MinWorkers
 	config["connection_pool_size"] = t.config.ConnectionPoolSize
 	config["gc_percent"] = t.config.GCPercent
 	config["buffer_pool_size"] = t.config.BufferPoolSize
 	config["max_concurrent_requests"] = t.config.MaxConcurrentRequests
-	
+
 	return config
 }
 
@@ -492,7 +492,7 @@ func (t *ServerConfigTuner) GetCurrentConfig() map[string]interface{} {
 func (t *ServerConfigTuner) SetAutoTuneEnabled(enabled bool) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	
+
 	if enabled && !t.autoTuneEnabled {
 		t.autoTuneEnabled = true
 		t.stopChan = make(chan struct{})
@@ -507,7 +507,6 @@ func (t *ServerConfigTuner) SetAutoTuneEnabled(enabled bool) {
 func (t *ServerConfigTuner) IsAutoTuneEnabled() bool {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	
+
 	return t.autoTuneEnabled
 }
-	

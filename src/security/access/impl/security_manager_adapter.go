@@ -19,13 +19,13 @@ type SecurityManagerAdapter struct {
 type SecurityConverter interface {
 	// ToModelIncident converts a legacy incident to a model incident
 	ToModelIncident(legacyIncident interface{}) (*models.SecurityIncident, error)
-	
+
 	// FromModelIncident converts a model incident to a legacy incident
 	FromModelIncident(incident *models.SecurityIncident) (interface{}, error)
-	
+
 	// ToModelVulnerability converts a legacy vulnerability to a model vulnerability
 	ToModelVulnerability(legacyVulnerability interface{}) (*models.Vulnerability, error)
-	
+
 	// FromModelVulnerability converts a model vulnerability to a legacy vulnerability
 	FromModelVulnerability(vulnerability *models.Vulnerability) (interface{}, error)
 }
@@ -46,7 +46,7 @@ func (a *SecurityManagerAdapter) Initialize(ctx context.Context) error {
 	}); ok {
 		return manager.Initialize(ctx)
 	}
-	
+
 	return nil
 }
 
@@ -68,16 +68,16 @@ func (a *SecurityManagerAdapter) ReportIncident(ctx context.Context, title, desc
 		case models.SecurityIncidentSeverityCritical:
 			legacySeverity = "critical"
 		}
-		
+
 		legacyIncident, err := manager.ReportIncident(ctx, title, description, legacySeverity)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy incident to a model incident
 		return a.converter.ToModelIncident(legacyIncident)
 	}
-	
+
 	// Fallback implementation
 	return &models.SecurityIncident{
 		ID:          "placeholder-id",
@@ -99,11 +99,11 @@ func (a *SecurityManagerAdapter) GetIncident(ctx context.Context, incidentID str
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy incident to a model incident
 		return a.converter.ToModelIncident(legacyIncident)
 	}
-	
+
 	// Fallback implementation
 	return &models.SecurityIncident{
 		ID:     incidentID,
@@ -123,10 +123,10 @@ func (a *SecurityManagerAdapter) UpdateIncident(ctx context.Context, incident *m
 		if err != nil {
 			return err
 		}
-		
+
 		return manager.UpdateIncident(ctx, legacyIncident)
 	}
-	
+
 	// Fallback implementation
 	return nil
 }
@@ -139,7 +139,7 @@ func (a *SecurityManagerAdapter) CloseIncident(ctx context.Context, incidentID, 
 	}); ok {
 		return manager.CloseIncident(ctx, incidentID, resolution)
 	}
-	
+
 	// Fallback implementation
 	return nil
 }
@@ -154,7 +154,7 @@ func (a *SecurityManagerAdapter) ListIncidents(ctx context.Context, filter map[s
 		if err != nil {
 			return nil, 0, err
 		}
-		
+
 		// Convert the legacy incidents to model incidents
 		var incidents []*models.SecurityIncident
 		for _, legacyIncident := range legacyIncidents {
@@ -164,10 +164,10 @@ func (a *SecurityManagerAdapter) ListIncidents(ctx context.Context, filter map[s
 			}
 			incidents = append(incidents, incident)
 		}
-		
+
 		return incidents, total, nil
 	}
-	
+
 	// Fallback implementation
 	return []*models.SecurityIncident{}, 0, nil
 }
@@ -190,16 +190,16 @@ func (a *SecurityManagerAdapter) ReportVulnerability(ctx context.Context, title,
 		case models.VulnerabilitySeverityCritical:
 			legacySeverity = "critical"
 		}
-		
+
 		legacyVulnerability, err := manager.ReportVulnerability(ctx, title, description, legacySeverity)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy vulnerability to a model vulnerability
 		return a.converter.ToModelVulnerability(legacyVulnerability)
 	}
-	
+
 	// Fallback implementation
 	return &models.Vulnerability{
 		ID:          "placeholder-id",
@@ -221,11 +221,11 @@ func (a *SecurityManagerAdapter) GetVulnerability(ctx context.Context, vulnerabi
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy vulnerability to a model vulnerability
 		return a.converter.ToModelVulnerability(legacyVulnerability)
 	}
-	
+
 	// Fallback implementation
 	return &models.Vulnerability{
 		ID:     vulnerabilityID,
@@ -245,10 +245,10 @@ func (a *SecurityManagerAdapter) UpdateVulnerability(ctx context.Context, vulner
 		if err != nil {
 			return err
 		}
-		
+
 		return manager.UpdateVulnerability(ctx, legacyVulnerability)
 	}
-	
+
 	// Fallback implementation
 	return nil
 }
@@ -261,7 +261,7 @@ func (a *SecurityManagerAdapter) MitigateVulnerability(ctx context.Context, vuln
 	}); ok {
 		return manager.MitigateVulnerability(ctx, vulnerabilityID, mitigation)
 	}
-	
+
 	// Fallback implementation
 	return nil
 }
@@ -274,7 +274,7 @@ func (a *SecurityManagerAdapter) ResolveVulnerability(ctx context.Context, vulne
 	}); ok {
 		return manager.ResolveVulnerability(ctx, vulnerabilityID)
 	}
-	
+
 	// Fallback implementation
 	return nil
 }
@@ -289,7 +289,7 @@ func (a *SecurityManagerAdapter) ListVulnerabilities(ctx context.Context, filter
 		if err != nil {
 			return nil, 0, err
 		}
-		
+
 		// Convert the legacy vulnerabilities to model vulnerabilities
 		var vulnerabilities []*models.Vulnerability
 		for _, legacyVulnerability := range legacyVulnerabilities {
@@ -299,10 +299,10 @@ func (a *SecurityManagerAdapter) ListVulnerabilities(ctx context.Context, filter
 			}
 			vulnerabilities = append(vulnerabilities, vulnerability)
 		}
-		
+
 		return vulnerabilities, total, nil
 	}
-	
+
 	// Fallback implementation
 	return []*models.Vulnerability{}, 0, nil
 }
@@ -315,7 +315,7 @@ func (a *SecurityManagerAdapter) Close() error {
 	}); ok {
 		return manager.Close()
 	}
-	
+
 	// Fallback implementation
 	return nil
 }
@@ -327,14 +327,14 @@ func (a *SecurityManagerAdapter) CreateIncident(ctx context.Context, incident *m
 	if err != nil {
 		return err
 	}
-	
+
 	// Call the legacy manager's CreateIncident method if it exists
 	if manager, ok := a.legacyManager.(interface {
 		CreateIncident(ctx context.Context, incident interface{}) error
 	}); ok {
 		return manager.CreateIncident(ctx, legacyIncident)
 	}
-	
+
 	// Fallback implementation - do nothing
 	return nil
 }
@@ -346,14 +346,14 @@ func (a *SecurityManagerAdapter) CreateVulnerability(ctx context.Context, vulner
 	if err != nil {
 		return err
 	}
-	
+
 	// Call the legacy manager's CreateVulnerability method if it exists
 	if manager, ok := a.legacyManager.(interface {
 		CreateVulnerability(ctx context.Context, vulnerability interface{}) error
 	}); ok {
 		return manager.CreateVulnerability(ctx, legacyVulnerability)
 	}
-	
+
 	// Fallback implementation - do nothing
 	return nil
 }
@@ -366,7 +366,7 @@ func (a *SecurityManagerAdapter) DeleteIncident(ctx context.Context, id string) 
 	}); ok {
 		return manager.DeleteIncident(ctx, id)
 	}
-	
+
 	// Fallback implementation - do nothing
 	return nil
 }
@@ -381,11 +381,11 @@ func (a *SecurityManagerAdapter) GetIncidentByID(ctx context.Context, id string)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy incident to a model incident
 		return a.converter.ToModelIncident(legacyIncident)
 	}
-	
+
 	// Fallback implementation
 	return &models.SecurityIncident{
 		ID:     id,
@@ -404,11 +404,11 @@ func (a *SecurityManagerAdapter) GetVulnerabilityByID(ctx context.Context, id st
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert the legacy vulnerability to a model vulnerability
 		return a.converter.ToModelVulnerability(legacyVulnerability)
 	}
-	
+
 	// Fallback implementation
 	return &models.Vulnerability{
 		ID:     id,
@@ -425,7 +425,7 @@ func (a *SecurityManagerAdapter) DeleteVulnerability(ctx context.Context, id str
 	}); ok {
 		return manager.DeleteVulnerability(ctx, id)
 	}
-	
+
 	// Fallback implementation - do nothing
 	return nil
 }
@@ -438,7 +438,7 @@ func (a *SecurityManagerAdapter) UpdateVulnerabilityStatus(ctx context.Context, 
 	}); ok {
 		return manager.UpdateVulnerabilityStatus(ctx, id, status)
 	}
-	
+
 	// Fallback implementation - do nothing
 	return nil
 }

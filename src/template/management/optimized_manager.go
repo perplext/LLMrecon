@@ -283,7 +283,7 @@ func (a *TemplateExecutorAdapter) Execute(ctx context.Context, template interfac
 	if !ok {
 		return nil, fmt.Errorf("template must be of type *format.Template")
 	}
-	
+
 	// Convert data to options map
 	options := make(map[string]interface{})
 	if data != nil {

@@ -22,13 +22,13 @@ type UpdateDownloader struct {
 
 // DownloadProgress represents download progress
 type DownloadProgress struct {
-	URL           string
-	Filename      string
-	TotalBytes    int64
+	URL             string
+	Filename        string
+	TotalBytes      int64
 	DownloadedBytes int64
-	Speed         float64
-	ETA           time.Duration
-	StartTime     time.Time
+	Speed           float64
+	ETA             time.Duration
+	StartTime       time.Time
 }
 
 // ProgressCallback is called during download progress
@@ -39,7 +39,7 @@ func NewUpdateDownloader(config *UpdaterConfig, logger Logger) *UpdateDownloader
 	client := &http.Client{
 		Timeout: config.Timeout,
 	}
-	
+
 	// Configure proxy if specified
 	if config.ProxyURL != "" {
 		if proxyURL, err := url.Parse(config.ProxyURL); err == nil {
@@ -48,7 +48,7 @@ func NewUpdateDownloader(config *UpdaterConfig, logger Logger) *UpdateDownloader
 			}
 		}
 	}
-	
+
 	return &UpdateDownloader{
 		config: config,
 		client: client,
@@ -68,40 +68,40 @@ func (d *UpdateDownloader) DownloadFileWithProgress(ctx context.Context, url, fi
 	if err := os.MkdirAll(tempDir, 0700); err != nil {
 		return "", fmt.Errorf("failed to create temp directory: %w", err)
 	}
-	
+
 	// Create destination file path
 	destPath := filepath.Join(tempDir, filename)
-	
+
 	d.logger.Info(fmt.Sprintf("Downloading %s to %s", url, destPath))
-	
+
 	// Create HTTP request
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("User-Agent", d.config.UserAgent)
-	
+
 	var attempt int
 	for attempt < d.config.MaxRetries {
 		if attempt > 0 {
 			d.logger.Info(fmt.Sprintf("Retry attempt %d/%d", attempt+1, d.config.MaxRetries))
 			time.Sleep(time.Duration(attempt) * time.Second)
 		}
-		
+
 		if err := d.downloadWithRetry(ctx, req, destPath, progressCallback); err != nil {
 			d.logger.Error(fmt.Sprintf("Download attempt %d failed", attempt+1), err)
 			attempt++
 			continue
 		}
-		
+
 		break
 	}
-	
+
 	if attempt >= d.config.MaxRetries {
 		return "", fmt.Errorf("download failed after %d attempts", d.config.MaxRetries)
 	}
-	
+
 	d.logger.Info(fmt.Sprintf("Successfully downloaded %s", filename))
 	return destPath, nil
 }
@@ -113,12 +113,16 @@ func (d *UpdateDownloader) downloadWithRetry(ctx context.Context, req *http.Requ
 	if err != nil {
 		return fmt.Errorf("HTTP request failed: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("HTTP error: %d %s", resp.StatusCode, resp.Status)
 	}
-	
+
 	// Get content length
 	contentLength := resp.ContentLength
 	if contentLengthStr := resp.Header.Get("Content-Length"); contentLengthStr != "" {
@@ -126,23 +130,27 @@ func (d *UpdateDownloader) downloadWithRetry(ctx context.Context, req *http.Requ
 			contentLength = cl
 		}
 	}
-	
+
 	// Create destination file
 	destFile, err := os.Create(destPath)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := destFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	// Setup progress tracking
 	progress := &DownloadProgress{
-		URL:           req.URL.String(),
-		Filename:      filepath.Base(destPath),
-		TotalBytes:    contentLength,
+		URL:             req.URL.String(),
+		Filename:        filepath.Base(destPath),
+		TotalBytes:      contentLength,
 		DownloadedBytes: 0,
-		StartTime:     time.Now(),
+		StartTime:       time.Now(),
 	}
-	
+
 	// Create progress reader
 	reader := &progressReader{
 		reader:   resp.Body,
@@ -150,20 +158,20 @@ func (d *UpdateDownloader) downloadWithRetry(ctx context.Context, req *http.Requ
 		callback: progressCallback,
 		logger:   d.logger,
 	}
-	
+
 	// Copy with progress
 	_, err = io.Copy(destFile, reader)
 	if err != nil {
 		os.Remove(destPath) // Clean up on error
 		return fmt.Errorf("failed to download file: %w", err)
 	}
-	
+
 	// Final progress callback
 	if progressCallback != nil {
 		progress.DownloadedBytes = progress.TotalBytes
 		progressCallback(progress)
 	}
-	
+
 	return nil
 }
 
@@ -173,15 +181,15 @@ func (d *UpdateDownloader) DownloadFileToPath(ctx context.Context, url, destPath
 	if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
-	
+
 	// Create HTTP request
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("User-Agent", d.config.UserAgent)
-	
+
 	return d.downloadWithRetry(ctx, req, destPath, progressCallback)
 }
 
@@ -193,7 +201,7 @@ func (d *UpdateDownloader) DownloadArchive(ctx context.Context, url, destDir str
 		return fmt.Errorf("failed to download archive: %w", err)
 	}
 	defer os.Remove(tempFile)
-	
+
 	// Extract archive
 	return d.extractArchive(tempFile, destDir)
 }
@@ -202,7 +210,7 @@ func (d *UpdateDownloader) DownloadArchive(ctx context.Context, url, destDir str
 func (d *UpdateDownloader) extractArchive(archivePath, destDir string) error {
 	// Determine archive type from extension
 	ext := strings.ToLower(filepath.Ext(archivePath))
-	
+
 	switch ext {
 	case ".zip":
 		return d.extractZip(archivePath, destDir)
@@ -233,26 +241,30 @@ func (d *UpdateDownloader) GetFileSize(ctx context.Context, url string) (int64, 
 	if err != nil {
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("User-Agent", d.config.UserAgent)
-	
+
 	resp, err := d.client.Do(req)
 	if err != nil {
 		return 0, fmt.Errorf("HTTP request failed: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	if resp.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf("HTTP error: %d %s", resp.StatusCode, resp.Status)
 	}
-	
+
 	contentLength := resp.ContentLength
 	if contentLengthStr := resp.Header.Get("Content-Length"); contentLengthStr != "" {
 		if cl, err := strconv.ParseInt(contentLengthStr, 10, 64); err == nil {
 			contentLength = cl
 		}
 	}
-	
+
 	return contentLength, nil
 }
 
@@ -262,11 +274,11 @@ func (d *UpdateDownloader) VerifyFileSize(filePath string, expectedSize int64) e
 	if err != nil {
 		return fmt.Errorf("failed to stat file: %w", err)
 	}
-	
+
 	if info.Size() != expectedSize {
 		return fmt.Errorf("file size mismatch: expected %d, got %d", expectedSize, info.Size())
 	}
-	
+
 	return nil
 }
 
@@ -276,7 +288,7 @@ func (d *UpdateDownloader) CleanupTempFiles() error {
 	if err := os.RemoveAll(tempDir); err != nil {
 		return fmt.Errorf("failed to cleanup temp directory: %w", err)
 	}
-	
+
 	d.logger.Info("Cleaned up temporary download files")
 	return nil
 }
@@ -293,21 +305,21 @@ type progressReader struct {
 // Read implements io.Reader
 func (pr *progressReader) Read(p []byte) (int, error) {
 	n, err := pr.reader.Read(p)
-	
+
 	if n > 0 {
 		pr.progress.DownloadedBytes += int64(n)
-		
+
 		// Calculate speed and ETA
 		elapsed := time.Since(pr.progress.StartTime)
 		if elapsed > 0 {
 			pr.progress.Speed = float64(pr.progress.DownloadedBytes) / elapsed.Seconds()
-			
+
 			if pr.progress.TotalBytes > 0 && pr.progress.Speed > 0 {
 				remaining := pr.progress.TotalBytes - pr.progress.DownloadedBytes
 				pr.progress.ETA = time.Duration(float64(remaining)/pr.progress.Speed) * time.Second
 			}
 		}
-		
+
 		// Call progress callback (throttled to avoid spam)
 		now := time.Now()
 		if pr.callback != nil && (now.Sub(pr.lastUpdate) > time.Second || err != nil) {
@@ -315,30 +327,30 @@ func (pr *progressReader) Read(p []byte) (int, error) {
 			pr.lastUpdate = now
 		}
 	}
-	
+
 	return n, err
 }
 
 // DownloadStats represents download statistics
 type DownloadStats struct {
-	TotalDownloads   int
-	TotalBytes       int64
+	TotalDownloads      int
+	TotalBytes          int64
 	SuccessfulDownloads int
-	FailedDownloads  int
-	AverageSpeed     float64
-	TotalTime        time.Duration
+	FailedDownloads     int
+	AverageSpeed        float64
+	TotalTime           time.Duration
 }
 
 // GetDownloadStats returns download statistics
 func (d *UpdateDownloader) GetDownloadStats() *DownloadStats {
 	// Implementation would track statistics
 	return &DownloadStats{
-		TotalDownloads:   0,
-		TotalBytes:       0,
+		TotalDownloads:      0,
+		TotalBytes:          0,
 		SuccessfulDownloads: 0,
-		FailedDownloads:  0,
-		AverageSpeed:     0,
-		TotalTime:        0,
+		FailedDownloads:     0,
+		AverageSpeed:        0,
+		TotalTime:           0,
 	}
 }
 

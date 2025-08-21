@@ -11,15 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/reporting/common"
+	"github.com/perplext/LLMrecon/src/security/access/common"
 )
 
 // Add type definitions that are missing
 type SecurityReport struct {
-	Metadata   ReportMetadata   `json:"metadata"`
-	Summary    SecurityReportSummary    `json:"summary"`
-	Findings   []Finding        `json:"findings"`
-	Statistics ReportStatistics `json:"statistics"`
+	Metadata   ReportMetadata               `json:"metadata"`
+	Summary    SecurityReportSummary        `json:"summary"`
+	Findings   []Finding                    `json:"findings"`
+	Statistics ReportStatistics             `json:"statistics"`
 	Compliance map[string]*ComplianceStatus `json:"compliance,omitempty"`
 }
 
@@ -32,10 +32,10 @@ type ReportMetadata struct {
 }
 
 type SecurityReportSummary struct {
-	TotalFindings     int                `json:"total_findings"`
-	RiskScore         float64            `json:"risk_score"`
-	SeverityBreakdown map[string]int     `json:"severity_breakdown"`
-	CategoryBreakdown map[string]int     `json:"category_breakdown"`
+	TotalFindings     int            `json:"total_findings"`
+	RiskScore         float64        `json:"risk_score"`
+	SeverityBreakdown map[string]int `json:"severity_breakdown"`
+	CategoryBreakdown map[string]int `json:"category_breakdown"`
 }
 
 type Finding struct {
@@ -237,8 +237,8 @@ func (r *MultiFormatRenderer) matchesFilter(finding Finding, filter ReportFilter
 
 	// Check date range
 	if filter.DateRange != nil {
-		if finding.Timestamp.Before(filter.DateRange.Start) || 
-		   finding.Timestamp.After(filter.DateRange.End) {
+		if finding.Timestamp.Before(filter.DateRange.Start) ||
+			finding.Timestamp.After(filter.DateRange.End) {
 			return false
 		}
 	}
@@ -339,8 +339,8 @@ func (r *CSVRenderer) Render(report *SecurityReport, options RenderOptions) ([]b
 
 	// Write headers
 	headers := []string{
-		"ID", "Timestamp", "Category", "Subcategory", "Severity", 
-		"Confidence", "Title", "Description", "OWASP_Mapping", 
+		"ID", "Timestamp", "Category", "Subcategory", "Severity",
+		"Confidence", "Title", "Description", "OWASP_Mapping",
 		"Remediation", "References",
 	}
 	if err := writer.Write(headers); err != nil {
@@ -405,7 +405,7 @@ func (r *HTMLRenderer) Render(report *SecurityReport, options RenderOptions) ([]
 
 	var buf bytes.Buffer
 	data := r.prepareTemplateData(report, options)
-	
+
 	if err := tmpl.Execute(&buf, data); err != nil {
 		return nil, fmt.Errorf("template execution failed: %w", err)
 	}
@@ -494,7 +494,7 @@ type MarkdownRenderer struct{}
 // Render renders a report as Markdown
 func (r *MarkdownRenderer) Render(report *SecurityReport, options RenderOptions) ([]byte, error) {
 	var buf bytes.Buffer
-	
+
 	// Write header
 	fmt.Fprintf(&buf, "# %s\n\n", report.Metadata.Title)
 	fmt.Fprintf(&buf, "**Report ID:** %s  \n", report.Metadata.ID)
@@ -515,7 +515,7 @@ func (r *MarkdownRenderer) Render(report *SecurityReport, options RenderOptions)
 
 	// Write findings
 	fmt.Fprintf(&buf, "## Findings\n\n")
-	
+
 	// Sort findings by severity
 	findings := make([]Finding, len(report.Findings))
 	copy(findings, report.Findings)
@@ -531,9 +531,9 @@ func (r *MarkdownRenderer) Render(report *SecurityReport, options RenderOptions)
 			fmt.Fprintf(&buf, "**OWASP:** %s  \n", strings.Join(finding.OWASPMapping, ", "))
 		}
 		fmt.Fprintf(&buf, "**Confidence:** %.0f%%  \n\n", finding.Confidence*100)
-		
+
 		fmt.Fprintf(&buf, "**Description:**  \n%s\n\n", finding.Description)
-		
+
 		if finding.Evidence.Request != "" || finding.Evidence.Response != "" {
 			fmt.Fprintf(&buf, "**Evidence:**  \n")
 			if finding.Evidence.Request != "" {
@@ -544,7 +544,7 @@ func (r *MarkdownRenderer) Render(report *SecurityReport, options RenderOptions)
 			}
 			fmt.Fprintf(&buf, "\n")
 		}
-		
+
 		if finding.Remediation.Summary != "" {
 			fmt.Fprintf(&buf, "**Remediation:**  \n%s\n\n", finding.Remediation.Summary)
 			if len(finding.Remediation.Steps) > 0 {
@@ -554,7 +554,7 @@ func (r *MarkdownRenderer) Render(report *SecurityReport, options RenderOptions)
 				fmt.Fprintf(&buf, "\n")
 			}
 		}
-		
+
 		if len(finding.References) > 0 {
 			fmt.Fprintf(&buf, "**References:**  \n")
 			for _, ref := range finding.References {
@@ -562,7 +562,7 @@ func (r *MarkdownRenderer) Render(report *SecurityReport, options RenderOptions)
 			}
 			fmt.Fprintf(&buf, "\n")
 		}
-		
+
 		fmt.Fprintf(&buf, "---\n\n")
 	}
 
@@ -752,14 +752,14 @@ func (rb *ReportBuilder) calculateStatistics(findings []Finding) ReportStatistic
 	for _, finding := range findings {
 		categoryMap[finding.Category]++
 	}
-	
+
 	for cat, count := range categoryMap {
 		stats.TopCategories = append(stats.TopCategories, CategoryCount{
 			Category: cat,
 			Count:    count,
 		})
 	}
-	
+
 	sort.Slice(stats.TopCategories, func(i, j int) bool {
 		return stats.TopCategories[i].Count > stats.TopCategories[j].Count
 	})

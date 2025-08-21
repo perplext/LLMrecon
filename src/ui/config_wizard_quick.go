@@ -14,7 +14,7 @@ func (qs *QuickSetup) basicSetup() error {
 	// Select one provider
 	providers := []string{"OpenAI", "Anthropic", "Google PaLM", "Local Model"}
 	choice, _ := qs.wizard.terminal.Select("Select your LLM provider:", providers)
-	
+
 	provider := ProviderConfig{
 		Name:    providers[choice],
 		Enabled: true,
@@ -28,21 +28,21 @@ func (qs *QuickSetup) basicSetup() error {
 		apiKey, _ := qs.wizard.promptAPIKey("OpenAI")
 		provider.APIKey = apiKey
 		provider.Model = "gpt-3.5-turbo"
-		
+
 	case 1: // Anthropic
 		provider.Type = "anthropic"
 		provider.Endpoint = "https://api.anthropic.com/v1"
 		apiKey, _ := qs.wizard.promptAPIKey("Anthropic")
 		provider.APIKey = apiKey
 		provider.Model = "claude-3-sonnet-20240229"
-		
+
 	case 2: // Google
 		provider.Type = "google"
 		provider.Endpoint = "https://generativelanguage.googleapis.com/v1"
 		apiKey, _ := qs.wizard.promptAPIKey("Google")
 		provider.APIKey = apiKey
 		provider.Model = "gemini-pro"
-		
+
 	case 3: // Local
 		provider.Type = "local"
 		endpoint, _ := qs.wizard.terminal.Prompt("Local model endpoint (default: https://localhost:8443): ")
@@ -104,7 +104,7 @@ func (qs *QuickSetup) professionalSetup() error {
 
 	// Multiple providers
 	qs.wizard.terminal.Info("Let's configure multiple providers for flexibility.")
-	
+
 	// OpenAI
 	openai := ProviderConfig{
 		Name:     "OpenAI",
@@ -118,10 +118,10 @@ func (qs *QuickSetup) professionalSetup() error {
 			"top_p":       0.95,
 		},
 	}
-	
+
 	apiKey, _ := qs.wizard.promptAPIKey("OpenAI")
 	openai.APIKey = apiKey
-	
+
 	// Anthropic
 	anthropic := ProviderConfig{
 		Name:     "Anthropic",
@@ -135,7 +135,7 @@ func (qs *QuickSetup) professionalSetup() error {
 			"top_k":       40,
 		},
 	}
-	
+
 	apiKey2, _ := qs.wizard.promptAPIKey("Anthropic")
 	anthropic.APIKey = apiKey2
 
@@ -203,11 +203,11 @@ func (qs *QuickSetup) enterpriseSetup() error {
 			Endpoint: "https://api.openai.com/v1",
 			Model:    "gpt-4-turbo-preview",
 			Settings: map[string]interface{}{
-				"temperature":        0.3,
-				"max_tokens":         8192,
-				"top_p":              0.95,
-				"frequency_penalty":  0.0,
-				"presence_penalty":   0.0,
+				"temperature":       0.3,
+				"max_tokens":        8192,
+				"top_p":             0.95,
+				"frequency_penalty": 0.0,
+				"presence_penalty":  0.0,
 			},
 		},
 		{
@@ -275,7 +275,7 @@ func (qs *QuickSetup) enterpriseSetup() error {
 
 	// Enterprise security
 	proxyURL, _ := qs.wizard.terminal.Prompt("Corporate proxy URL (leave empty if none): ")
-	
+
 	qs.wizard.config.Security = SecurityConfig{
 		APIKeyStorage: "keychain",
 		EncryptKeys:   true,
@@ -487,7 +487,7 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 
 	// Show next steps
 	qs.wizard.terminal.Section("Next Steps")
-	
+
 	switch preset {
 	case "basic":
 		qs.wizard.terminal.List([]string{
@@ -495,7 +495,7 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 			"Download templates with 'LLMrecon template update'",
 			"Start your first scan with 'LLMrecon scan <target>'",
 		}, true)
-		
+
 	case "professional":
 		qs.wizard.terminal.List([]string{
 			"Review and customize templates in ./templates",
@@ -503,7 +503,7 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 			"Configure webhook notifications for findings",
 			"Explore advanced scanning options",
 		}, true)
-		
+
 	case "enterprise":
 		qs.wizard.terminal.List([]string{
 			"Configure LDAP/SSO integration for team access",
@@ -512,7 +512,7 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 			"Review security policies and procedures",
 			"Schedule training for security team",
 		}, true)
-		
+
 	case "development":
 		qs.wizard.terminal.List([]string{
 			"Create custom templates in ./dev-templates",
@@ -520,7 +520,7 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 			"Use mock providers for testing",
 			"Contribute improvements back to the project",
 		}, true)
-		
+
 	case "cicd":
 		qs.wizard.terminal.List([]string{
 			"Add security scanning to your CI pipeline",
@@ -532,4 +532,3 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 
 	return nil
 }
-

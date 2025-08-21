@@ -220,7 +220,11 @@ func (p *Profiler) Stop() error {
 		if err != nil {
 			return fmt.Errorf("failed to create memory profile file: %w", err)
 		}
-		defer func() { if err := f.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := f.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 		runtime.GC() // Get up-to-date statistics
 		if err := pprof.WriteHeapProfile(f); err != nil {
 			return fmt.Errorf("failed to write memory profile: %w", err)
@@ -424,7 +428,11 @@ func (p *Profiler) SaveReport(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create report file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write report header
 	fmt.Fprintf(file, "Profiling Report - %s\n", report["timestamp"])
@@ -475,7 +483,11 @@ func (p *Profiler) CaptureMemoryProfile(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create memory profile file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Run garbage collection to get up-to-date statistics
 	runtime.GC()
 	// Write heap profile
@@ -493,7 +505,11 @@ func (p *Profiler) CaptureCPUProfile(filePath string, duration time.Duration) er
 	if err != nil {
 		return fmt.Errorf("failed to create CPU profile file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Start CPU profiling
 	if err := pprof.StartCPUProfile(file); err != nil {
