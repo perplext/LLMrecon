@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/access"
 )
@@ -57,6 +58,7 @@ func NewAuthMiddleware(accessManager access.AccessControlManager) *AuthMiddlewar
 	return &AuthMiddleware{
 		accessManager: accessManager,
 	}
+}
 
 // Middleware is the HTTP middleware function for authentication
 func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
@@ -125,6 +127,7 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 		// Call the next handler with the updated context
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
 
 // RBACMiddleware handles role-based access control for API requests
 type RBACMiddleware struct {
@@ -136,6 +139,7 @@ func NewRBACMiddleware(accessManager access.AccessControlManager) *RBACMiddlewar
 	return &RBACMiddleware{
 		accessManager: accessManager,
 	}
+}
 
 // RequirePermission returns a middleware function that requires a specific permission
 func (m *RBACMiddleware) RequirePermission(permission access.Permission) func(http.Handler) http.Handler {
@@ -159,6 +163,7 @@ func (m *RBACMiddleware) RequirePermission(permission access.Permission) func(ht
 			next.ServeHTTP(w, r)
 		})
 	}
+}
 
 // RequireRole returns a middleware function that requires a specific role
 func (m *RBACMiddleware) RequireRole(role string) func(http.Handler) http.Handler {
@@ -182,6 +187,7 @@ func (m *RBACMiddleware) RequireRole(role string) func(http.Handler) http.Handle
 			next.ServeHTTP(w, r)
 		})
 	}
+}
 
 // LoggingMiddleware handles logging of API requests
 type LoggingMiddleware struct {
@@ -193,6 +199,7 @@ func NewLoggingMiddleware(accessManager access.AccessControlManager) *LoggingMid
 	return &LoggingMiddleware{
 		accessManager: accessManager,
 	}
+}
 
 // Middleware is the HTTP middleware function for logging
 func (m *LoggingMiddleware) Middleware(next http.Handler) http.Handler {
@@ -258,16 +265,19 @@ func (m *LoggingMiddleware) Middleware(next http.Handler) http.Handler {
 			duration.Milliseconds(),
 		)
 	})
+}
 
 // responseWriter is a wrapper for http.ResponseWriter that captures the status code
 type responseWriter struct {
 	http.ResponseWriter
 	statusCode int
+}
 
 // WriteHeader captures the status code and calls the underlying ResponseWriter
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
+}
 
 // RateLimitMiddleware handles rate limiting for API requests
 type RateLimitMiddleware struct {
@@ -285,11 +295,13 @@ type RateLimitMiddleware struct {
 
 	// stopCleanup is a channel to signal the cleanup goroutine to stop
 	stopCleanup chan struct{}
+}
 
 // ipRequestInfo tracks request information for an IP address
 type ipRequestInfo struct {
 	count     int
 	timestamp time.Time
+}
 
 // NewRateLimitMiddleware creates a new rate limit middleware
 func NewRateLimitMiddleware(requestsPerMinute int) *RateLimitMiddleware {
@@ -304,10 +316,12 @@ func NewRateLimitMiddleware(requestsPerMinute int) *RateLimitMiddleware {
 	go m.cleanup()
 
 	return m
+}
 
 // Stop stops the cleanup goroutine
 func (m *RateLimitMiddleware) Stop() {
 	close(m.stopCleanup)
+}
 
 // cleanup periodically removes expired entries from the ipRequests map
 func (m *RateLimitMiddleware) cleanup() {
@@ -330,6 +344,7 @@ func (m *RateLimitMiddleware) cleanup() {
 			return
 		}
 	}
+}
 
 // Middleware is the HTTP middleware function for rate limiting
 func (m *RateLimitMiddleware) Middleware(next http.Handler) http.Handler {
@@ -364,6 +379,7 @@ func (m *RateLimitMiddleware) Middleware(next http.Handler) http.Handler {
 		// Call the next handler
 		next.ServeHTTP(w, r)
 	})
+}
 
 // getClientIP extracts the client IP address from the request
 func getClientIP(r *http.Request) string {
@@ -387,16 +403,5 @@ func getClientIP(r *http.Request) string {
 		// If SplitHostPort fails, return the whole RemoteAddr
 		return r.RemoteAddr
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return ip
 }

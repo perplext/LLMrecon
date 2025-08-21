@@ -68,6 +68,7 @@ func NewAuditLogger(auditStore AuditStore, config *AuditLoggerConfig) *AuditLogg
 		auditStore: auditStore,
 		config:     config,
 	}
+}
 
 // Initialize initializes the audit logger
 func (l *AuditLoggerImpl) Initialize(ctx context.Context) error {
@@ -95,6 +96,7 @@ func (l *AuditLoggerImpl) Initialize(ctx context.Context) error {
 
 	l.initialized = true
 	return nil
+}
 
 // LogAudit logs an audit event
 func (l *AuditLoggerImpl) LogAudit(ctx context.Context, log *models.AuditLog) error {
