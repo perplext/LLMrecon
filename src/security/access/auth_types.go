@@ -8,3 +8,4 @@ type LoginResult struct {
 	User         *models.User    `json:"user"`
 	Session      *models.Session `json:"session"`
 	Token        string          `json:"token,omitempty"`         // Convenience field, same as Session.Token
+}

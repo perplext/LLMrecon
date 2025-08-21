@@ -2,6 +2,7 @@
 package access
 
 import (
+	"time"
 )
 
 // AccessControlConfig represents the configuration for the access control system
@@ -35,6 +36,7 @@ type AccessControlConfig struct {
 
 	// RolePermissions maps roles to their permissions
 	RolePermissions map[string][]string `json:"role_permissions,omitempty"`
+}
 
 // PasswordPolicy defines password requirements
 type PasswordPolicy struct {
@@ -64,6 +66,7 @@ type PasswordPolicy struct {
 
 	// LockoutDuration is the duration of account lockout in minutes
 	LockoutDuration int `json:"lockout_duration"`
+}
 
 // SessionPolicy defines session management settings
 type SessionPolicy struct {
@@ -87,6 +90,7 @@ type SessionPolicy struct {
 
 	// CleanupInterval is the interval for cleaning up expired sessions in minutes
 	CleanupInterval int `json:"cleanup_interval"`
+}
 
 // SecurityIncidentConfig defines security incident management settings
 type SecurityIncidentConfig struct {
@@ -104,9 +108,10 @@ type SecurityIncidentConfig struct {
 
 	// ResponseTimeoutMinutes is the maximum response time for incidents in minutes
 	ResponseTimeoutMinutes int `json:"response_timeout_minutes"`
+}
 
 // VulnerabilityConfig defines vulnerability management settings
-type VulnerabilityConfig struct {
+type VulnerabilityConfig struct{
 	// EnableVulnerabilityTracking enables vulnerability tracking
 	EnableVulnerabilityTracking bool `json:"enable_vulnerability_tracking"`
 
@@ -121,6 +126,7 @@ type VulnerabilityConfig struct {
 
 	// RemediationDeadlineDays is the number of days to remediate vulnerabilities
 	RemediationDeadlineDays map[string]int `json:"remediation_deadline_days"`
+}
 
 // SecurityIncident represents a security incident
 type SecurityIncident struct {
@@ -136,6 +142,7 @@ type SecurityIncident struct {
 	ReportedBy  string                 `json:"reported_by,omitempty"`
 	AuditLogIDs []string               `json:"audit_log_ids,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // IncidentStatus represents the status of a security incident
 type IncidentStatus string
@@ -165,6 +172,7 @@ type Vulnerability struct {
 	CVE             string                 `json:"cve,omitempty"`
 	RemediationPlan string                 `json:"remediation_plan,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // VulnerabilityStatus represents the status of a vulnerability
 type VulnerabilityStatus string
@@ -241,6 +249,7 @@ func DefaultAccessControlConfigV2() *AccessControlConfig {
 			},
 		},
 	}
+}
 
 // RBACConfigSettings defines RBAC-specific configuration settings
 type RBACConfigSettings struct {
@@ -254,3 +263,5 @@ type RBACConfigSettings struct {
 	StrictHierarchy bool `json:"strict_hierarchy"`
 
 	// AllowDirectPermissions allows direct permission assignments to users
+	AllowDirectPermissions bool `json:"allow_direct_permissions"`
+}
