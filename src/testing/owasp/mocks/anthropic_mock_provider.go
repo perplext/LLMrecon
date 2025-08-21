@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/types"
@@ -41,6 +42,7 @@ func NewAnthropicMockProvider() *AnthropicMockProvider {
 	return &AnthropicMockProvider{
 		BaseMockProviderImpl: base,
 	}
+}
 
 // setupAnthropicVulnerabilityBehaviors configures Anthropic-specific vulnerability behaviors
 func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
@@ -135,6 +137,7 @@ func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"anthropic_constitutional_principle": "Avoid giving advice in domains requiring professional expertise",
 		},
 	})
+}
 
 // ChatCompletion overrides the base implementation to add Anthropic-specific behavior
 func (p *AnthropicMockProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -173,6 +176,7 @@ func (p *AnthropicMockProvider) ChatCompletion(ctx context.Context, request *cor
 
 	// Fall back to the base implementation
 	return p.BaseMockProviderImpl.ChatCompletion(ctx, request)
+}
 
 // shouldSimulateConstitutionalAI checks if constitutional AI behavior should be simulated
 func (p *AnthropicMockProvider) shouldSimulateConstitutionalAI(request *core.ChatCompletionRequest) bool {
@@ -201,6 +205,7 @@ func (p *AnthropicMockProvider) shouldSimulateConstitutionalAI(request *core.Cha
 	}
 
 	return false
+}
 
 // shouldHandleSystemPromptDifferently checks if system prompts should be handled differently
 func (p *AnthropicMockProvider) shouldHandleSystemPromptDifferently(request *core.ChatCompletionRequest) bool {
@@ -211,6 +216,7 @@ func (p *AnthropicMockProvider) shouldHandleSystemPromptDifferently(request *cor
 		}
 	}
 	return false
+}
 
 // convertSystemPromptsToHumanFormat converts system prompts to Anthropic's human format
 func (p *AnthropicMockProvider) convertSystemPromptsToHumanFormat(messages []core.ChatMessage) []core.ChatMessage {
@@ -257,6 +263,7 @@ func (p *AnthropicMockProvider) convertSystemPromptsToHumanFormat(messages []cor
 	}
 
 	return convertedMessages
+}
 
 // estimateTokenCountForMessages estimates the token count for a list of chat messages
 func (p *AnthropicMockProvider) estimateTokenCountForMessages(messages []core.ChatMessage) int {
@@ -281,6 +288,7 @@ func (p *AnthropicMockProvider) estimateTokenCountForMessages(messages []core.Ch
 	tokenCount += 2
 	
 	return tokenCount
+}
 
 // estimateTokenCount estimates the token count for a text
 // Anthropic-specific implementation
@@ -292,10 +300,7 @@ func (p *AnthropicMockProvider) estimateTokenCount(text string) int {
 	// Anthropic's Claude models use a different tokenizer than OpenAI
 	// This is a simplified approximation
 	// Claude tends to have slightly more tokens per character than GPT models
-}
-}
-}
-}
-}
-}
+	words := strings.Fields(text)
+	// Rough estimate: 1.3 tokens per word for Claude models
+	return int(float64(len(words)) * 1.3)
 }
