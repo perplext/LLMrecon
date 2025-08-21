@@ -19,6 +19,7 @@ type TrainingDataPoisoningValidator struct {
 	maliciousContentPatterns []*regexp.Regexp
 	// adversarialExamplePatterns contains patterns for detecting adversarial examples
 	adversarialExamplePatterns []*regexp.Regexp
+}
 
 // NewTrainingDataPoisoningValidator creates a new training data poisoning validator
 func NewTrainingDataPoisoningValidator() *TrainingDataPoisoningValidator {
@@ -58,11 +59,12 @@ func NewTrainingDataPoisoningValidator() *TrainingDataPoisoningValidator {
 	}
 
 	return &TrainingDataPoisoningValidator{
-		BaseValidator:             baseValidator,
-		poisoningPatterns:         poisoningPatterns,
-		maliciousContentPatterns:  maliciousContentPatterns,
+		BaseValidator:              baseValidator,
+		poisoningPatterns:          poisoningPatterns,
+		maliciousContentPatterns:   maliciousContentPatterns,
 		adversarialExamplePatterns: adversarialExamplePatterns,
 	}
+}
 
 // ValidatePrompt validates a prompt for training data poisoning vulnerabilities
 func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -77,12 +79,12 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 		if matches := pattern.FindAllStringIndex(prompt, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(prompt), end+50)
 				context := prompt[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.TrainingDataPoisoning,
@@ -90,10 +92,10 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 					"Detected potential training data poisoning attempt",
 					detection.Medium,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement safeguards to prevent training data poisoning attempts, such as filtering out prompts that attempt to manipulate the model's training data")
-				
+
 				results = append(results, result)
 			}
 		}
@@ -106,12 +108,12 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 			if len(results) > 0 {
 				for _, match := range matches {
 					start, end := match[0], match[1]
-					
+
 					// Get context around the match
 					contextStart := max(0, start-50)
 					contextEnd := min(len(prompt), end+50)
 					context := prompt[contextStart:contextEnd]
-					
+
 					result := CreateValidationResult(
 						true,
 						types.TrainingDataPoisoning,
@@ -119,10 +121,10 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 						"Detected potential training data poisoning with malicious content",
 						detection.High,
 					)
-					
+
 					result.SetLocation(start, end, context)
 					result.SetRemediation("Implement content filtering to detect and block malicious content in prompts that could be used for training data poisoning")
-					
+
 					results = append(results, result)
 				}
 			}
@@ -134,12 +136,12 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 		if matches := pattern.FindAllStringIndex(prompt, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(prompt), end+50)
 				context := prompt[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.TrainingDataPoisoning,
@@ -147,10 +149,10 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 					"Detected potential adversarial example for training data poisoning",
 					detection.High,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement adversarial training and robust model evaluation to detect and mitigate adversarial examples")
-				
+
 				results = append(results, result)
 			}
 		}
@@ -161,14 +163,14 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 		// Check for repeated content that might be an attempt to reinforce poisoning
 		lines := strings.Split(prompt, "\n")
 		lineCount := make(map[string]int)
-		
+
 		for _, line := range lines {
 			trimmedLine := strings.TrimSpace(line)
 			if len(trimmedLine) > 10 { // Only consider non-trivial lines
 				lineCount[trimmedLine]++
 			}
 		}
-		
+
 		for _, count := range lineCount {
 			if count > 3 { // If a line is repeated more than 3 times
 				result := CreateValidationResult(
@@ -178,9 +180,9 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 					"Detected repeated content that might be an attempt at training data poisoning",
 					detection.Medium,
 				)
-				
+
 				result.SetRemediation("Implement detection for repeated content that might be attempting to reinforce malicious training data")
-				
+
 				results = append(results, result)
 				break // Only add this result once
 			}
@@ -188,6 +190,7 @@ func (v *TrainingDataPoisoningValidator) ValidatePrompt(ctx context.Context, pro
 	}
 
 	return results, nil
+}
 
 // ValidateResponse validates a response for training data poisoning vulnerabilities
 func (v *TrainingDataPoisoningValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -210,12 +213,12 @@ func (v *TrainingDataPoisoningValidator) ValidateResponse(ctx context.Context, r
 		if idx := strings.Index(strings.ToLower(response), strings.ToLower(indicator)); idx >= 0 {
 			start := idx
 			end := idx + len(indicator)
-			
+
 			// Get context around the match
 			contextStart := max(0, start-50)
 			contextEnd := min(len(response), end+50)
 			context := response[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.TrainingDataPoisoning,
@@ -223,10 +226,10 @@ func (v *TrainingDataPoisoningValidator) ValidateResponse(ctx context.Context, r
 				"Response suggests the model might be susceptible to training data poisoning",
 				detection.Medium,
 			)
-			
+
 			result.SetLocation(start, end, context)
 			result.SetRemediation("Ensure the model does not indicate that it's learning or storing information from user interactions")
-			
+
 			results = append(results, result)
 		}
 	}
@@ -236,12 +239,12 @@ func (v *TrainingDataPoisoningValidator) ValidateResponse(ctx context.Context, r
 		if matches := pattern.FindAllStringIndex(response, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(response), end+50)
 				context := response[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.TrainingDataPoisoning,
@@ -249,12 +252,14 @@ func (v *TrainingDataPoisoningValidator) ValidateResponse(ctx context.Context, r
 					"Response contains potentially malicious content that might be a result of training data poisoning",
 					detection.High,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement content filtering for responses to detect and block potentially malicious content")
-				
+
 				results = append(results, result)
 			}
 		}
 	}
 
+	return results, nil
+}

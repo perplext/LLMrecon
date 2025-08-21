@@ -21,6 +21,7 @@ type SupplyChainValidator struct {
 	externalAPIPatterns []*regexp.Regexp
 	// untrustedSourcePatterns contains patterns for detecting references to untrusted sources
 	untrustedSourcePatterns []*regexp.Regexp
+}
 
 // NewSupplyChainValidator creates a new supply chain validator
 func NewSupplyChainValidator() *SupplyChainValidator {
@@ -63,12 +64,13 @@ func NewSupplyChainValidator() *SupplyChainValidator {
 	}
 
 	return &SupplyChainValidator{
-		BaseValidator:            baseValidator,
+		BaseValidator:             baseValidator,
 		thirdPartyContentPatterns: thirdPartyContentPatterns,
 		dependencyPatterns:        dependencyPatterns,
 		externalAPIPatterns:       externalAPIPatterns,
 		untrustedSourcePatterns:   untrustedSourcePatterns,
 	}
+}
 
 // ValidatePrompt validates a prompt for supply chain vulnerabilities
 func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -83,12 +85,12 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 		if matches := pattern.FindAllStringIndex(prompt, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(prompt), end+50)
 				context := prompt[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.SupplyChainVulnerabilities,
@@ -96,10 +98,10 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 					"Detected reference to third-party content that might introduce supply chain vulnerabilities",
 					detection.Medium,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement validation and verification of third-party content before use")
-				
+
 				results = append(results, result)
 			}
 		}
@@ -110,12 +112,12 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 		if matches := pattern.FindAllStringIndex(prompt, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(prompt), end+50)
 				context := prompt[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.SupplyChainVulnerabilities,
@@ -123,10 +125,10 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 					"Detected reference to dependencies that might introduce supply chain vulnerabilities",
 					detection.Medium,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement dependency scanning and verification to ensure security")
-				
+
 				results = append(results, result)
 			}
 		}
@@ -137,12 +139,12 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 		if matches := pattern.FindAllStringIndex(prompt, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(prompt), end+50)
 				context := prompt[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.SupplyChainVulnerabilities,
@@ -150,10 +152,10 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 					"Detected reference to external APIs that might introduce supply chain vulnerabilities",
 					detection.High,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement API security controls and validation for external services")
-				
+
 				results = append(results, result)
 			}
 		}
@@ -164,12 +166,12 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 		if matches := pattern.FindAllStringIndex(prompt, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(prompt), end+50)
 				context := prompt[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.SupplyChainVulnerabilities,
@@ -177,10 +179,10 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 					"Detected reference to untrusted sources that might introduce supply chain vulnerabilities",
 					detection.High,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement source verification and validation before using content from untrusted sources")
-				
+
 				results = append(results, result)
 			}
 		}
@@ -192,22 +194,22 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 		for _, match := range matches {
 			start, end := match[0], match[1]
 			url := prompt[start:end]
-			
+
 			// Check if URL contains suspicious patterns
 			suspiciousPatterns := []string{
 				"bit.ly", "tinyurl", "goo.gl", "t.co", // URL shorteners
-				".tk", ".ml", ".ga", ".cf", ".gq",     // Free domains often used for malicious purposes
-				"download", "update", "patch",         // Keywords often used in malicious URLs
-				"free", "crack", "hack",               // Keywords often used in malicious URLs
+				".tk", ".ml", ".ga", ".cf", ".gq", // Free domains often used for malicious purposes
+				"download", "update", "patch", // Keywords often used in malicious URLs
+				"free", "crack", "hack", // Keywords often used in malicious URLs
 			}
-			
+
 			for _, pattern := range suspiciousPatterns {
 				if strings.Contains(strings.ToLower(url), pattern) {
 					// Get context around the match
 					contextStart := max(0, start-50)
 					contextEnd := min(len(prompt), end+50)
 					context := prompt[contextStart:contextEnd]
-					
+
 					result := CreateValidationResult(
 						true,
 						types.SupplyChainVulnerabilities,
@@ -215,11 +217,11 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 						"Detected potentially malicious URL that might introduce supply chain vulnerabilities",
 						detection.High,
 					)
-					
+
 					result.SetLocation(start, end, context)
 					result.SetRemediation("Implement URL scanning and validation before accessing external resources")
 					result.AddRawData("suspicious_url", url)
-					
+
 					results = append(results, result)
 					break
 				}
@@ -228,6 +230,7 @@ func (v *SupplyChainValidator) ValidatePrompt(ctx context.Context, prompt string
 	}
 
 	return results, nil
+}
 
 // ValidateResponse validates a response for supply chain vulnerabilities
 func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -242,12 +245,12 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 		if matches := pattern.FindAllStringIndex(response, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(response), end+50)
 				context := response[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.SupplyChainVulnerabilities,
@@ -255,10 +258,10 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 					"Response recommends using third-party content that might introduce supply chain vulnerabilities",
 					detection.Medium,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement response filtering to avoid recommending potentially insecure third-party content")
-				
+
 				results = append(results, result)
 			}
 		}
@@ -269,12 +272,12 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 		if matches := pattern.FindAllStringIndex(response, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(response), end+50)
 				context := response[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.SupplyChainVulnerabilities,
@@ -282,10 +285,10 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 					"Response recommends using dependencies that might introduce supply chain vulnerabilities",
 					detection.Medium,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement response filtering to ensure recommended dependencies are secure and verified")
-				
+
 				results = append(results, result)
 			}
 		}
@@ -296,12 +299,12 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 		if matches := pattern.FindAllStringIndex(response, -1); len(matches) > 0 {
 			for _, match := range matches {
 				start, end := match[0], match[1]
-				
+
 				// Get context around the match
 				contextStart := max(0, start-50)
 				contextEnd := min(len(response), end+50)
 				context := response[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.SupplyChainVulnerabilities,
@@ -309,10 +312,10 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 					"Response recommends using external APIs that might introduce supply chain vulnerabilities",
 					detection.High,
 				)
-				
+
 				result.SetLocation(start, end, context)
 				result.SetRemediation("Implement response filtering to ensure recommended APIs are secure and verified")
-				
+
 				results = append(results, result)
 			}
 		}
@@ -324,22 +327,22 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 		for _, match := range matches {
 			start, end := match[0], match[1]
 			url := response[start:end]
-			
+
 			// Check if URL contains suspicious patterns
 			suspiciousPatterns := []string{
 				"bit.ly", "tinyurl", "goo.gl", "t.co", // URL shorteners
-				".tk", ".ml", ".ga", ".cf", ".gq",     // Free domains often used for malicious purposes
-				"download", "update", "patch",         // Keywords often used in malicious URLs
-				"free", "crack", "hack",               // Keywords often used in malicious URLs
+				".tk", ".ml", ".ga", ".cf", ".gq", // Free domains often used for malicious purposes
+				"download", "update", "patch", // Keywords often used in malicious URLs
+				"free", "crack", "hack", // Keywords often used in malicious URLs
 			}
-			
+
 			for _, pattern := range suspiciousPatterns {
 				if strings.Contains(strings.ToLower(url), pattern) {
 					// Get context around the match
 					contextStart := max(0, start-50)
 					contextEnd := min(len(response), end+50)
 					context := response[contextStart:contextEnd]
-					
+
 					result := CreateValidationResult(
 						true,
 						types.SupplyChainVulnerabilities,
@@ -347,11 +350,11 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 						"Response contains potentially malicious URL that might introduce supply chain vulnerabilities",
 						detection.High,
 					)
-					
+
 					result.SetLocation(start, end, context)
 					result.SetRemediation("Implement URL scanning and validation in responses to avoid recommending potentially malicious resources")
 					result.AddRawData("suspicious_url", url)
-					
+
 					results = append(results, result)
 					break
 				}
@@ -359,3 +362,5 @@ func (v *SupplyChainValidator) ValidateResponse(ctx context.Context, response st
 		}
 	}
 
+	return results, nil
+}
