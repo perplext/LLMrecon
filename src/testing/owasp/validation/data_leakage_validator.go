@@ -21,6 +21,7 @@ type DataLeakageValidator struct {
 	trainingDataPatterns []*regexp.Regexp
 	// leakageIndicators contains keywords that might indicate data leakage
 	leakageIndicators []string
+}
 
 // NewDataLeakageValidator creates a new data leakage validator
 func NewDataLeakageValidator() *DataLeakageValidator {
@@ -111,6 +112,7 @@ func NewDataLeakageValidator() *DataLeakageValidator {
 		trainingDataPatterns:  trainingDataPatterns,
 		leakageIndicators:     leakageIndicators,
 	}
+}
 
 // ValidatePrompt validates a prompt for data leakage vulnerabilities
 func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -219,6 +221,7 @@ func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string
 	}
 
 	return results, nil
+}
 
 // ValidateResponse validates a response for data leakage vulnerabilities
 func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -343,4 +346,7 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 			results = append(results, result)
 		}
 	}
+
+	return results, nil
+}
 
