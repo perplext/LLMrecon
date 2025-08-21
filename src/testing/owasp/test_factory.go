@@ -12,6 +12,7 @@ import (
 type DefaultTestCaseFactory struct {
 	builder TestCaseBuilder
 	typesBuilder types.TestCaseBuilder
+}
 
 // We'll implement the types.TestCaseFactory interface methods separately
 
@@ -21,6 +22,7 @@ func NewDefaultTestCaseFactory() *DefaultTestCaseFactory {
 		builder: NewTestCaseBuilder(),
 		typesBuilder: types.NewTestCaseBuilder(),
 	}
+}
 
 // convertToTypesTestCase converts a local TestCase to types.TestCase
 func convertToTypesTestCase(ltc *TestCase) *types.TestCase {
@@ -37,6 +39,7 @@ func convertToTypesTestCase(ltc *TestCase) *types.TestCase {
 		OWASPMapping:      ltc.OWASPMapping,
 		Metadata:          ltc.Metadata,
 	}
+}
 
 // convertToTypesTestCases converts a slice of local TestCase to types.TestCase
 func convertToTypesTestCases(localTestCases []*TestCase) []*types.TestCase {
@@ -45,10 +48,12 @@ func convertToTypesTestCases(localTestCases []*TestCase) []*types.TestCase {
 		testCases = append(testCases, convertToTypesTestCase(ltc))
 	}
 	return testCases
+}
 
 // CreatePromptInjectionTestCases creates test cases for prompt injection that implement the types.TestCase interface
 func (f *DefaultTestCaseFactory) CreatePromptInjectionTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalPromptInjectionTestCases())
+}
 
 // CreateOriginalPromptInjectionTestCases creates test cases for prompt injection
 func (f *DefaultTestCaseFactory) CreateOriginalPromptInjectionTestCases() []*TestCase {
@@ -135,10 +140,12 @@ func (f *DefaultTestCaseFactory) CreateOriginalPromptInjectionTestCases() []*Tes
 	testCases = append(testCases, indirectInjectionCase)
 
 	return testCases
+}
 
 // CreateInsecureOutputHandlingTestCases creates test cases for insecure output handling
 func (f *DefaultTestCaseFactory) CreateInsecureOutputHandlingTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalInsecureOutputHandlingTestCases())
+}
 
 // CreateOriginalInsecureOutputHandlingTestCases creates test cases for insecure output handling
 func (f *DefaultTestCaseFactory) CreateOriginalInsecureOutputHandlingTestCases() []*TestCase {
@@ -229,10 +236,12 @@ func (f *DefaultTestCaseFactory) CreateOriginalInsecureOutputHandlingTestCases()
 	testCases = append(testCases, insecureCodeCase)
 
 	return testCases
+}
 
 // CreateSensitiveInfoDisclosureTestCases creates test cases for sensitive information disclosure
 func (f *DefaultTestCaseFactory) CreateSensitiveInfoDisclosureTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalSensitiveInfoDisclosureTestCases())
+}
 
 // CreateOriginalSensitiveInfoDisclosureTestCases creates test cases for sensitive information disclosure
 func (f *DefaultTestCaseFactory) CreateOriginalSensitiveInfoDisclosureTestCases() []*TestCase {
@@ -327,10 +336,12 @@ func (f *DefaultTestCaseFactory) CreateOriginalSensitiveInfoDisclosureTestCases(
 	testCases = append(testCases, trainingDataDisclosureCase)
 
 	return testCases
+}
 
 // CreateModelDoSTestCases creates test cases for model denial of service
 func (f *DefaultTestCaseFactory) CreateModelDoSTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalModelDoSTestCases())
+}
 
 // CreateOriginalModelDoSTestCases creates test cases for model denial of service
 func (f *DefaultTestCaseFactory) CreateOriginalModelDoSTestCases() []*TestCase {
@@ -402,10 +413,12 @@ func (f *DefaultTestCaseFactory) CreateOriginalModelDoSTestCases() []*TestCase {
 	testCases = append(testCases, recursivePromptCase)
 
 	return testCases
+}
 
 // CreateExcessiveAgencyTestCases creates test cases for excessive agency
 func (f *DefaultTestCaseFactory) CreateExcessiveAgencyTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalExcessiveAgencyTestCases())
+}
 
 // CreateOriginalExcessiveAgencyTestCases creates test cases for excessive agency
 func (f *DefaultTestCaseFactory) CreateOriginalExcessiveAgencyTestCases() []*TestCase {
@@ -472,10 +485,12 @@ func (f *DefaultTestCaseFactory) CreateOriginalExcessiveAgencyTestCases() []*Tes
 	testCases = append(testCases, autonomousDecisionCase)
 
 	return testCases
+}
 
 // CreateOverrelianceTestCases creates test cases for overreliance
 func (f *DefaultTestCaseFactory) CreateOverrelianceTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalOverrelianceTestCases())
+}
 
 // CreateOriginalOverrelianceTestCases creates test cases for overreliance
 func (f *DefaultTestCaseFactory) CreateOriginalOverrelianceTestCases() []*TestCase {
@@ -552,6 +567,7 @@ func (f *DefaultTestCaseFactory) CreateOriginalOverrelianceTestCases() []*TestCa
 	testCases = append(testCases, unverifiedInfoCase)
 
 	return testCases
+}
 
 // CreateTestSuite creates a test suite with all test cases
 func (f *DefaultTestCaseFactory) CreateTestSuite(id string, name string, description string) *types.TestSuite {
@@ -585,45 +601,54 @@ func (f *DefaultTestCaseFactory) CreateTestSuite(id string, name string, descrip
 
 	testSuite, _ := suiteBuilder.Build()
 	return testSuite
+}
 
 // CreateTrainingDataPoisoningTestCases creates test cases for training data poisoning
 func (f *DefaultTestCaseFactory) CreateTrainingDataPoisoningTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalTrainingDataPoisoningTestCases())
+}
 
 // CreateOriginalTrainingDataPoisoningTestCases creates test cases for training data poisoning
 func (f *DefaultTestCaseFactory) CreateOriginalTrainingDataPoisoningTestCases() []*TestCase {
 	// This is a placeholder as training data poisoning is difficult to test directly
 	// In a real implementation, this would require specialized test cases
 	return make([]*TestCase, 0)
+}
 
 // CreateSupplyChainVulnerabilitiesTestCases creates test cases for supply chain vulnerabilities
 func (f *DefaultTestCaseFactory) CreateSupplyChainVulnerabilitiesTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalSupplyChainVulnerabilitiesTestCases())
+}
 
 // CreateOriginalSupplyChainVulnerabilitiesTestCases creates test cases for supply chain vulnerabilities
 func (f *DefaultTestCaseFactory) CreateOriginalSupplyChainVulnerabilitiesTestCases() []*TestCase {
 	// This is a placeholder as supply chain vulnerabilities are difficult to test directly
 	// In a real implementation, this would require specialized test cases
 	return make([]*TestCase, 0)
+}
 
 // CreateInsecurePluginDesignTestCases creates test cases for insecure plugin design
 func (f *DefaultTestCaseFactory) CreateInsecurePluginDesignTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalInsecurePluginDesignTestCases())
+}
 
 // CreateOriginalInsecurePluginDesignTestCases creates test cases for insecure plugin design
 func (f *DefaultTestCaseFactory) CreateOriginalInsecurePluginDesignTestCases() []*TestCase {
 	// This is a placeholder as insecure plugin design is difficult to test directly
 	// In a real implementation, this would require specialized test cases
 	return make([]*TestCase, 0)
+}
 
 // CreateModelTheftTestCases creates test cases for model theft
 func (f *DefaultTestCaseFactory) CreateModelTheftTestCases() []*types.TestCase {
 	return convertToTypesTestCases(f.CreateOriginalModelTheftTestCases())
+}
 
 // CreateOriginalModelTheftTestCases creates test cases for model theft
 func (f *DefaultTestCaseFactory) CreateOriginalModelTheftTestCases() []*TestCase {
 	// Placeholder for model theft test cases
 	return []*TestCase{}
+}
 
 // CreateTestCasesForVulnerability creates test cases for a specific vulnerability type
 func (f *DefaultTestCaseFactory) CreateTestCasesForVulnerability(vulnerabilityType types.VulnerabilityType) ([]*types.TestCase, error) {
@@ -655,4 +680,7 @@ func (f *DefaultTestCaseFactory) CreateTestCasesForVulnerability(vulnerabilityTy
 	default:
 		return nil, fmt.Errorf("unsupported vulnerability type: %s", vulnerabilityType)
 	}
+	
+	return convertToTypesTestCases(localTestCases), nil
+}
 	
