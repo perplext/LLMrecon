@@ -532,6 +532,7 @@ func (h *MFAHandler) handleWebAuthnRegisterComplete(w http.ResponseWriter, r *ht
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
+}
 
 // handleWebAuthnAuthenticateBegin handles the WebAuthn authentication begin endpoint
 func (h *MFAHandler) handleWebAuthnAuthenticateBegin(w http.ResponseWriter, r *http.Request) {
@@ -612,7 +613,7 @@ func (h *MFAHandler) handleWebAuthnAuthenticateComplete(w http.ResponseWriter, r
 	// Send success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
-	
+}
 
 // handleSMSSetup handles the SMS setup endpoint
 func (h *MFAHandler) handleSMSSetup(w http.ResponseWriter, r *http.Request) {
