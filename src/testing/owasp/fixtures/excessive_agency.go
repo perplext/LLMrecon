@@ -179,3 +179,4 @@ func GetExcessiveAgencyFixtures() TestFixtures {
 			LLM08_ExcessiveAgency,
 		),
 	}
+}
