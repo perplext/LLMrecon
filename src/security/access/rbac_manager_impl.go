@@ -3,7 +3,9 @@ package access
 
 import (
 	"context"
+	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -42,6 +44,7 @@ type RoleStore interface {
 
 	// GetAllPermissions gets all permissions
 	GetAllPermissions(ctx context.Context) ([]string, error)
+}
 
 // NewRBACManagerImpl creates a new RBAC manager implementation
 func NewRBACManagerImpl(userManager UserManager, roleStore RoleStore, auditLogger AuditLogger) *RBACManagerImpl {
@@ -50,6 +53,7 @@ func NewRBACManagerImpl(userManager UserManager, roleStore RoleStore, auditLogge
 		roleStore:   roleStore,
 		auditLogger: auditLogger,
 	}
+}
 
 // Initialize initializes the RBAC manager
 func (m *RBACManagerImpl) Initialize(ctx context.Context) error {
@@ -58,6 +62,7 @@ func (m *RBACManagerImpl) Initialize(ctx context.Context) error {
 
 	m.initialized = true
 	return nil
+}
 
 // HasPermission checks if a user has a permission
 func (m *RBACManagerImpl) HasPermission(ctx context.Context, userID string, permission string) (bool, error) {
@@ -85,6 +90,7 @@ func (m *RBACManagerImpl) HasPermission(ctx context.Context, userID string, perm
 	}
 
 	return false, nil
+}
 
 // HasRole checks if a user has a role
 func (m *RBACManagerImpl) HasRole(ctx context.Context, userID string, role string) (bool, error) {
@@ -105,6 +111,7 @@ func (m *RBACManagerImpl) HasRole(ctx context.Context, userID string, role strin
 	}
 
 	return false, nil
+}
 
 // AddRoleToUser adds a role to a user
 func (m *RBACManagerImpl) AddRoleToUser(ctx context.Context, userID string, role string) error {
@@ -139,6 +146,7 @@ func (m *RBACManagerImpl) AddRoleToUser(ctx context.Context, userID string, role
 	}
 
 	return nil
+}
 
 // RemoveRoleFromUser removes a role from a user
 func (m *RBACManagerImpl) RemoveRoleFromUser(ctx context.Context, userID string, role string) error {
@@ -173,6 +181,7 @@ func (m *RBACManagerImpl) RemoveRoleFromUser(ctx context.Context, userID string,
 	}
 
 	return nil
+}
 
 // GetUserRoles gets a user's roles
 func (m *RBACManagerImpl) GetUserRoles(ctx context.Context, userID string) ([]string, error) {
@@ -207,6 +216,8 @@ func (m *RBACManagerImpl) GetUserRoles(ctx context.Context, userID string) ([]st
 	}
 
 	return roles, nil
+}
+
 // GetUserPermissions gets a user's permissions
 func (m *RBACManagerImpl) GetUserPermissions(ctx context.Context, userID string) ([]string, error) {
 	m.mu.RLock()
@@ -259,6 +270,7 @@ func (m *RBACManagerImpl) GetUserPermissions(ctx context.Context, userID string)
 	}
 
 	return permissions, nil
+}
 
 // Close closes the RBAC manager
 func (m *RBACManagerImpl) Close() error {
@@ -267,6 +279,7 @@ func (m *RBACManagerImpl) Close() error {
 
 	m.initialized = false
 	return nil
+}
 
 // InMemoryRoleStore is an in-memory implementation of the RoleStore interface
 type InMemoryRoleStore struct {
@@ -281,6 +294,7 @@ func NewInMemoryRoleStore() *InMemoryRoleStore {
 		userRoles:       make(map[string][]string),
 		rolePermissions: make(map[string][]string),
 	}
+}
 
 // GetUserRoles gets a user's roles
 func (s *InMemoryRoleStore) GetUserRoles(ctx context.Context, userID string) ([]string, error) {
@@ -293,6 +307,7 @@ func (s *InMemoryRoleStore) GetUserRoles(ctx context.Context, userID string) ([]
 	}
 
 	return roles, nil
+}
 
 // AddRoleToUser adds a role to a user
 func (s *InMemoryRoleStore) AddRoleToUser(ctx context.Context, userID, role string) error {
@@ -312,6 +327,7 @@ func (s *InMemoryRoleStore) AddRoleToUser(ctx context.Context, userID, role stri
 	// Add the role to the user
 	s.userRoles[userID] = append(s.userRoles[userID], role)
 	return nil
+}
 
 // RemoveRoleFromUser removes a role from a user
 func (s *InMemoryRoleStore) RemoveRoleFromUser(ctx context.Context, userID, role string) error {
@@ -334,6 +350,7 @@ func (s *InMemoryRoleStore) RemoveRoleFromUser(ctx context.Context, userID, role
 
 	s.userRoles[userID] = newRoles
 	return nil
+}
 
 // GetRolePermissions gets the permissions for a role
 func (s *InMemoryRoleStore) GetRolePermissions(ctx context.Context, role string) ([]string, error) {
@@ -346,6 +363,7 @@ func (s *InMemoryRoleStore) GetRolePermissions(ctx context.Context, role string)
 	}
 
 	return permissions, nil
+}
 
 // AddPermissionToRole adds a permission to a role
 func (s *InMemoryRoleStore) AddPermissionToRole(ctx context.Context, role, permission string) error {
@@ -365,6 +383,7 @@ func (s *InMemoryRoleStore) AddPermissionToRole(ctx context.Context, role, permi
 	// Add the permission to the role
 	s.rolePermissions[role] = append(s.rolePermissions[role], permission)
 	return nil
+}
 
 // RemovePermissionFromRole removes a permission from a role
 func (s *InMemoryRoleStore) RemovePermissionFromRole(ctx context.Context, role, permission string) error {
@@ -387,6 +406,7 @@ func (s *InMemoryRoleStore) RemovePermissionFromRole(ctx context.Context, role, 
 
 	s.rolePermissions[role] = newPermissions
 	return nil
+}
 
 // GetAllRoles gets all roles
 func (s *InMemoryRoleStore) GetAllRoles(ctx context.Context) ([]string, error) {
@@ -399,6 +419,7 @@ func (s *InMemoryRoleStore) GetAllRoles(ctx context.Context) ([]string, error) {
 	}
 
 	return roles, nil
+}
 
 // GetAllPermissions gets all permissions
 func (s *InMemoryRoleStore) GetAllPermissions(ctx context.Context) ([]string, error) {
@@ -418,6 +439,7 @@ func (s *InMemoryRoleStore) GetAllPermissions(ctx context.Context) ([]string, er
 	}
 
 	return permissions, nil
+}
 
 // getRBACUserIDFromContext extracts the user ID from the context
 func getRBACUserIDFromContext(ctx context.Context) string {
@@ -429,20 +451,5 @@ func getRBACUserIDFromContext(ctx context.Context) string {
 		return userID
 	}
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return "system"
 }
