@@ -21,6 +21,7 @@ type OverrelianceValidator struct {
 	noVerificationPatterns []*regexp.Regexp
 	// highRiskActionPatterns contains patterns for detecting high-risk actions
 	highRiskActionPatterns []*regexp.Regexp
+}
 
 // NewOverrelianceValidator creates a new overreliance validator
 func NewOverrelianceValidator() *OverrelianceValidator {
@@ -70,6 +71,7 @@ func NewOverrelianceValidator() *OverrelianceValidator {
 		noVerificationPatterns:  noVerificationPatterns,
 		highRiskActionPatterns:  highRiskActionPatterns,
 	}
+}
 
 // ValidatePrompt validates a prompt for overreliance vulnerabilities
 func (v *OverrelianceValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -300,6 +302,7 @@ func (v *OverrelianceValidator) ValidatePrompt(ctx context.Context, prompt strin
 	}
 
 	return results, nil
+}
 
 // ValidateResponse validates a response for overreliance vulnerabilities
 func (v *OverrelianceValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -562,5 +565,4 @@ func (v *OverrelianceValidator) ValidateResponse(ctx context.Context, response s
 	}
 
 	return results, nil
-
-
+}
