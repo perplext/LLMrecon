@@ -33,6 +33,7 @@ type APIConfig struct {
 
 	// EnableRequestLogging enables logging of all API requests
 	EnableRequestLogging bool
+}
 
 // DefaultAPIConfig returns a default API configuration
 func DefaultAPIConfig() *APIConfig {
@@ -45,6 +46,7 @@ func DefaultAPIConfig() *APIConfig {
 		RateLimitPerMinute: 60,
 		EnableRequestLogging: true,
 	}
+}
 
 // Server is the API server for the access control system
 type Server struct {

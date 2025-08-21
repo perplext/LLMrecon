@@ -19,6 +19,7 @@ type CreateIncidentRequest struct {
 	AffectedResources []string               `json:"affected_resources,omitempty"`
 	Tags              []string               `json:"tags,omitempty"`
 	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // UpdateIncidentRequest represents a request to update a security incident
 type UpdateIncidentRequest struct {

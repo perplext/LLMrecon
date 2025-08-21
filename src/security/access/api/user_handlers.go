@@ -23,6 +23,7 @@ type CreateUserRequest struct {
 	MFAMethods  []common.AuthMethod `json:"mfa_methods,omitempty"`
 	Permissions []string          `json:"permissions,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // UpdateUserRequest represents a request to update a user
 type UpdateUserRequest struct {

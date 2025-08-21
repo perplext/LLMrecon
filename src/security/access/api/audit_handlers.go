@@ -321,4 +321,3 @@ func convertAuditEventToResponse(event *access.AuditEvent) AuditLogResponse {
 		Metadata:   event.Metadata,
 	}
 }
-}

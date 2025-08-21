@@ -16,11 +16,13 @@ type CreateRoleRequest struct {
 	Description string   `json:"description"`
 	Permissions []string `json:"permissions"`
 	ParentRoles []string `json:"parent_roles,omitempty"`
+}
 
 // UpdateRoleRequest represents a request to update a role
 type UpdateRoleRequest struct {
 	Description string   `json:"description,omitempty"`
 	ParentRoles []string `json:"parent_roles,omitempty"`
+}
 
 // AddPermissionRequest represents a request to add a permission to a role
 type AddPermissionRequest struct {

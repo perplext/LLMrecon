@@ -19,12 +19,14 @@ type Response struct {
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 	Error   string      `json:"error,omitempty"`
+}
 
 // WriteJSON writes a JSON response to the HTTP response writer
 func WriteJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	_ = json.NewEncoder(w).Encode(data) // Best effort, headers already sent
+}
 
 // WriteErrorResponse writes an error response to the HTTP response writer
 func WriteErrorResponse(w http.ResponseWriter, statusCode int, message string) {
@@ -33,6 +35,7 @@ func WriteErrorResponse(w http.ResponseWriter, statusCode int, message string) {
 		Error:   message,
 	}
 	WriteJSON(w, statusCode, response)
+}
 
 // WriteSuccessResponse writes a success response to the HTTP response writer
 func WriteSuccessResponse(w http.ResponseWriter, statusCode int, message string, data interface{}) {
@@ -42,6 +45,7 @@ func WriteSuccessResponse(w http.ResponseWriter, statusCode int, message string,
 		Data:    data,
 	}
 	WriteJSON(w, statusCode, response)
+}
 
 // AuthMiddleware handles authentication for API requests
 type AuthMiddleware struct {
