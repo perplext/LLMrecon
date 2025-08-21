@@ -69,6 +69,7 @@ func (s *Server) handleListRoles(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Roles retrieved successfully", roleResponses)
+}
 
 // handleCreateRole handles creating a new role
 func (s *Server) handleCreateRole(w http.ResponseWriter, r *http.Request) {
@@ -424,6 +425,7 @@ func (s *Server) handleRemovePermission(w http.ResponseWriter, r *http.Request) 
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Permission removed from role successfully", convertRoleToResponse(updatedRole))
+}
 
 // convertRoleToResponse converts a role to a response format
 func convertRoleToResponse(role *access.Role) RoleResponse {
@@ -434,9 +436,4 @@ func convertRoleToResponse(role *access.Role) RoleResponse {
 		ParentRoles: role.ParentRoles,
 		IsBuiltIn:   role.IsBuiltIn,
 	}
-}
-}
-}
-}
-}
 }

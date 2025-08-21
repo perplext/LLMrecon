@@ -593,6 +593,7 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User deleted successfully", nil)
+}
 
 // handleResetPassword handles resetting a user's password
 func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
@@ -673,6 +674,7 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Password reset successfully", nil)
+}
 
 // handleLockUser handles locking a user account
 func (s *Server) handleLockUser(w http.ResponseWriter, r *http.Request) {
@@ -743,6 +745,7 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User locked successfully", nil)
+}
 
 // handleUnlockUser handles unlocking a user account
 func (s *Server) handleUnlockUser(w http.ResponseWriter, r *http.Request) {
@@ -807,6 +810,7 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "User unlocked successfully", nil)
+}
 
 // handleManageUserMFA handles managing a user's MFA settings
 func (s *Server) handleManageUserMFA(w http.ResponseWriter, r *http.Request) {
@@ -888,6 +892,7 @@ if !ok {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "MFA settings updated successfully", nil)
+}
 
 // convertUserToResponse converts a user to a response format
 func convertUserToResponse(user interface{}) UserResponse {
@@ -958,10 +963,4 @@ func convertUserToResponse(user interface{}) UserResponse {
 		// Return an empty response if the type is not recognized
 		return UserResponse{}
 	}
-}
-}
-}
-}
-}
-}
 }
