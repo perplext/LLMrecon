@@ -169,3 +169,4 @@ func GetInsecurePluginFixtures() TestFixtures {
 			LLM07_InsecurePluginDesign,
 		),
 	}
+}

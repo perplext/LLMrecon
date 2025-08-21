@@ -174,3 +174,4 @@ func GetModelDoSFixtures() TestFixtures {
 			LLM04_ModelDOS,
 		),
 	}
+}
