@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/perplext/LLMrecon/src/security/access"
@@ -131,6 +132,7 @@ func (s *Server) handleListAuditLogs(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Audit logs retrieved successfully", resp)
+}
 
 // handleGetAuditLog handles retrieving a specific audit log entry
 func (s *Server) handleGetAuditLog(w http.ResponseWriter, r *http.Request) {
@@ -166,6 +168,7 @@ func (s *Server) handleGetAuditLog(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Audit log retrieved successfully", convertAuditEventToResponse(event))
+}
 
 // handleExportAuditLogs handles exporting audit logs to a file
 func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
@@ -250,6 +253,7 @@ func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		exportAuditLogsToJSON(w, events)
 	}
+}
 
 // exportAuditLogsToCSV exports audit logs to CSV format
 func exportAuditLogsToCSV(w http.ResponseWriter, events []*access.AuditEvent) {
@@ -285,6 +289,7 @@ func exportAuditLogsToCSV(w http.ResponseWriter, events []*access.AuditEvent) {
 		}
 		writer.Write(row)
 	}
+}
 
 // exportAuditLogsToJSON exports audit logs to JSON format
 func exportAuditLogsToJSON(w http.ResponseWriter, events []*access.AuditEvent) {
@@ -296,6 +301,7 @@ func exportAuditLogsToJSON(w http.ResponseWriter, events []*access.AuditEvent) {
 
 	// Write JSON
 	_ = json.NewEncoder(w).Encode(eventResponses) // Best effort, headers already sent
+}
 
 // convertAuditEventToResponse converts an audit event to a response format
 func convertAuditEventToResponse(event *access.AuditEvent) AuditLogResponse {
@@ -314,8 +320,5 @@ func convertAuditEventToResponse(event *access.AuditEvent) AuditLogResponse {
 		Details:    event.Details,
 		Metadata:   event.Metadata,
 	}
-}
-}
-}
 }
 }

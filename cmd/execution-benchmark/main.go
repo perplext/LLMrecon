@@ -336,7 +336,7 @@ func generateTemplate(id string, size, numVariables int) (*format.Template, erro
 	template := &format.Template{
 		ID:        id,
 		Variables: make(map[string]interface{}),
-		Info: format.TemplateInfo{
+		Info: &format.TemplateInfo{
 			Name:        fmt.Sprintf("Test Template %s", id),
 			Description: "Generated test template",
 			Version:     "1.0.0",

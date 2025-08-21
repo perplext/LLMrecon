@@ -34,7 +34,20 @@ func DefaultMockFileHandlerOptions() *MockFileHandlerOptions {
 type MockFileHandler struct {
 	options *MockFileHandlerOptions
 	cache   map[string][]byte
+	stats   MockFileHandlerStats
 	mutex   sync.RWMutex
+}
+
+// MockFileHandlerStats represents stats for the mock file handler
+type MockFileHandlerStats struct {
+	FilesServed      int64
+	CacheHits        int64
+	CacheMisses      int64
+	CompressedFiles  int64
+	TotalSize        int64
+	CompressedSize   int64
+	CompressionRatio float64
+	AverageServeTime time.Duration
 }
 
 // NewMockFileHandler creates a new mock file handler
@@ -42,11 +55,35 @@ func NewMockFileHandler(options *MockFileHandlerOptions) *MockFileHandler {
 	return &MockFileHandler{
 		options: options,
 		cache:   make(map[string][]byte),
+		stats: MockFileHandlerStats{
+			FilesServed:      0,
+			CacheHits:        0,
+			CacheMisses:      0,
+			CompressedFiles:  0,
+			TotalSize:        0,
+			CompressedSize:   0,
+			CompressionRatio: 0.0,
+			AverageServeTime: 5 * time.Millisecond,
+		},
 	}
 }
 
 // ServeHTTP implements the http.Handler interface
 func (h *MockFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+	
+	// Update stats
+	h.stats.FilesServed++
+	if h.options.EnableCache {
+		h.stats.CacheHits++
+	} else {
+		h.stats.CacheMisses++
+	}
+	if h.options.EnableCompression {
+		h.stats.CompressedFiles++
+	}
+	
 	// Simple file serving logic for the example
 	filePath := filepath.Join(h.options.RootDir, r.URL.Path)
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -54,6 +91,14 @@ func (h *MockFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.ServeFile(w, r, filePath)
+}
+
+// GetStats returns the current stats
+func (h *MockFileHandler) GetStats() MockFileHandlerStats {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+	
+	return h.stats
 }
 
 // MockMonitoringService is a simplified version of the monitoring service for the example
@@ -357,7 +402,7 @@ func createExampleFiles(dir string, numFiles, fileSize int) {
 	for i := 1; i <= numFiles; i++ {
 		filePath := filepath.Join(dir, fmt.Sprintf("file%d.txt", i))
 		content := generateRandomContent(fileSize)
-		os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644)
+		os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
 	}
 }
 
@@ -438,7 +483,7 @@ th {
     background-color: #f2f2f2;
 }
 `
-	os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
 }
 
 // createJSFile creates a JavaScript file for the example
@@ -481,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	setInterval(updateStats, 2000);
 });
 `
-	os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
 }
 
 // formatBytes formats bytes to a human-readable string (KB, MB, GB)
