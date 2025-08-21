@@ -5,15 +5,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
-	
+
 	"github.com/perplext/LLMrecon/src/security/access"
+	"github.com/perplext/LLMrecon/src/security/access/adapters"
 	"github.com/perplext/LLMrecon/src/security/access/db"
-	"github.com/perplext/LLMrecon/src/security/access/models"
 	"github.com/perplext/LLMrecon/src/security/access/interfaces"
+	"github.com/perplext/LLMrecon/src/security/access/models"
 )
 
 // MockAuditLogger implements the interfaces.AuditLogger interface for testing
@@ -31,6 +35,7 @@ func (m *MockAuditLogger) LogEvent(ctx context.Context, event *interfaces.AuditE
 	}
 	m.Logs = append(m.Logs, event)
 	return nil
+}
 
 // GetEventByID retrieves an audit event by ID
 func (m *MockAuditLogger) GetEventByID(ctx context.Context, id string) (*interfaces.AuditEvent, error) {
@@ -40,51 +45,56 @@ func (m *MockAuditLogger) GetEventByID(ctx context.Context, id string) (*interfa
 		}
 	}
 	return nil, fmt.Errorf("audit event not found: %s", id)
+}
 
 // QueryEvents queries audit events with filtering
 func (m *MockAuditLogger) QueryEvents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*interfaces.AuditEvent, int, error) {
 	// For simplicity in tests, just return all logs without filtering
 	total := len(m.Logs)
-	
+
 	// Apply pagination
 	if offset >= total {
 		return []*interfaces.AuditEvent{}, total, nil
 	}
-	
+
 	end := offset + limit
 	if end > total {
 		end = total
 	}
-	
+
 	return m.Logs[offset:end], total, nil
+}
 
 // ExportEvents exports audit events to a file
 func (m *MockAuditLogger) ExportEvents(ctx context.Context, filter map[string]interface{}, format string) (string, error) {
 	return "exported_audit_logs." + format, nil
+}
 
 // Close closes the audit logger
 func (m *MockAuditLogger) Close() error {
 	return nil
+}
 
 // UserManager defines the interface for user management operations
 type UserManager interface {
 	// CreateUser creates a new user
 	CreateUser(ctx context.Context, user *models.User) error
-	
+
 	// GetUserByID retrieves a user by ID
 	GetUserByID(ctx context.Context, id string) (*models.User, error)
-	
+
 	// GetUserByUsername retrieves a user by username
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
-	
+
 	// UpdateUser updates an existing user
 	UpdateUser(ctx context.Context, user *models.User) error
-	
+
 	// DeleteUser deletes a user
 	DeleteUser(ctx context.Context, id string) error
-	
+
 	// ListUsers lists users with optional filtering
 	ListUsers(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.User, int, error)
+}
 
 // Role represents a role in the system
 type Role struct {
@@ -101,129 +111,136 @@ type Role struct {
 type RBACManager interface {
 	// CreateRole creates a new role
 	CreateRole(ctx context.Context, role *Role) error
-	
+
 	// GetRoleByID retrieves a role by ID
 	GetRoleByID(ctx context.Context, id string) (*Role, error)
-	
+
 	// UpdateRole updates an existing role
 	UpdateRole(ctx context.Context, role *Role) error
-	
+
 	// DeleteRole deletes a role
 	DeleteRole(ctx context.Context, id string) error
-	
+
 	// ListRoles lists roles with optional filtering
 	ListRoles(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*Role, int, error)
-	
+
 	// AssignRoleToUser assigns a role to a user
 	AssignRoleToUser(ctx context.Context, userID, roleID string) error
-	
+
 	// RemoveRoleFromUser removes a role from a user
 	RemoveRoleFromUser(ctx context.Context, userID, roleID string) error
-	
+
 	// GetUserRoles gets the roles assigned to a user
 	GetUserRoles(ctx context.Context, userID string) ([]*Role, error)
-	
+
 	// HasPermission checks if a user has a specific permission
 	HasPermission(ctx context.Context, userID, permission string) (bool, error)
+}
 
 // SessionManager defines the interface for session management operations
 type SessionManager interface {
 	// CreateSession creates a new session
 	CreateSession(ctx context.Context, userID, ipAddress, userAgent string) (*models.Session, error)
-	
+
 	// ValidateSession validates a session token
 	ValidateSession(ctx context.Context, token string) (*models.Session, error)
-	
+
 	// RefreshSession refreshes a session
 	RefreshSession(ctx context.Context, refreshToken string) (*models.Session, error)
-	
+
 	// InvalidateSession invalidates a session
 	InvalidateSession(ctx context.Context, token string) error
-	
+
 	// InvalidateAllUserSessions invalidates all sessions for a user
 	InvalidateAllUserSessions(ctx context.Context, userID string) error
-	
+
 	// GetUserSessions gets all sessions for a user
 	GetUserSessions(ctx context.Context, userID string) ([]*models.Session, error)
+}
 
 // SecurityManager defines the interface for security incident and vulnerability management
 type SecurityManager interface {
 	// CreateIncident creates a new security incident
 	CreateIncident(ctx context.Context, incident *models.SecurityIncident) error
-	
+
 	// GetIncidentByID retrieves a security incident by ID
 	GetIncidentByID(ctx context.Context, id string) (*models.SecurityIncident, error)
-	
+
 	// UpdateIncident updates an existing security incident
 	UpdateIncident(ctx context.Context, incident *models.SecurityIncident) error
-	
+
 	// DeleteIncident deletes a security incident
 	DeleteIncident(ctx context.Context, id string) error
-	
+
 	// ListIncidents lists security incidents with optional filtering
 	ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.SecurityIncident, int, error)
-	
+
 	// CreateVulnerability creates a new vulnerability
 	CreateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error
-	
+
 	// GetVulnerabilityByID retrieves a vulnerability by ID
 	GetVulnerabilityByID(ctx context.Context, id string) (*models.Vulnerability, error)
-	
+
 	// UpdateVulnerability updates an existing vulnerability
 	UpdateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error
-	
+
 	// UpdateVulnerabilityStatus updates the status of a vulnerability
 	UpdateVulnerabilityStatus(ctx context.Context, id string, status models.VulnerabilityStatus) error
-	
+
 	// DeleteVulnerability deletes a vulnerability
 	DeleteVulnerability(ctx context.Context, id string) error
-	
+
 	// ListVulnerabilities lists vulnerabilities with optional filtering
 	ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Vulnerability, int, error)
+}
 
 // BoundaryEnforcer defines the interface for boundary enforcement operations
 type BoundaryEnforcer interface {
 	// EnforceIPRestriction enforces IP restrictions
 	EnforceIPRestriction(ctx context.Context, userID, ipAddress string) (bool, error)
-	
+
 	// EnforceTimeRestriction enforces time restrictions
 	EnforceTimeRestriction(ctx context.Context, userID string) (bool, error)
-	
+
 	// EnforceLocationRestriction enforces location restrictions
 	EnforceLocationRestriction(ctx context.Context, userID, location string) (bool, error)
-	
+
 	// EnforceDeviceRestriction enforces device restrictions
 	EnforceDeviceRestriction(ctx context.Context, userID, deviceID string) (bool, error)
-	
+
 	// EnforceRateLimiting enforces rate limiting
 	EnforceRateLimiting(ctx context.Context, userID, action string) (bool, error)
+}
 
 // AuthManager defines the interface for authentication operations
 type AuthManager interface {
 	// Login authenticates a user
 	Login(ctx context.Context, username, password, ipAddress, userAgent string) (*models.Session, error)
-	
+
 	// Logout logs out a user
 	Logout(ctx context.Context, token string) error
-	
+
 	// VerifyMFA verifies multi-factor authentication
 	VerifyMFA(ctx context.Context, userID, code string) (bool, error)
-	
+
 	// ResetPassword resets a user's password
 	ResetPassword(ctx context.Context, userID, newPassword string) error
-	
+
 	// ChangePassword changes a user's password
 	ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error
+}
 
 // MockUserStore implements the interfaces.UserStore interface for testing
 type MockUserStore struct {
 	users           map[string]*models.User
 	usersByUsername map[string]*models.User
+}
 
 func (m *MockUserStore) CreateUser(ctx context.Context, user *models.User) error {
 	m.users[user.ID] = user
 	m.usersByUsername[user.Username] = user
 	return nil
+}
 
 func (m *MockUserStore) GetUserByID(ctx context.Context, id string) (*models.User, error) {
 	user, ok := m.users[id]
@@ -231,6 +248,7 @@ func (m *MockUserStore) GetUserByID(ctx context.Context, id string) (*models.Use
 		return nil, fmt.Errorf("user not found: %s", id)
 	}
 	return user, nil
+}
 
 func (m *MockUserStore) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	user, ok := m.usersByUsername[username]
@@ -238,6 +256,7 @@ func (m *MockUserStore) GetUserByUsername(ctx context.Context, username string) 
 		return nil, fmt.Errorf("user not found: %s", username)
 	}
 	return user, nil
+}
 
 func (m *MockUserStore) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	for _, user := range m.users {
@@ -246,11 +265,13 @@ func (m *MockUserStore) GetUserByEmail(ctx context.Context, email string) (*mode
 		}
 	}
 	return nil, fmt.Errorf("user not found with email: %s", email)
+}
 
 func (m *MockUserStore) UpdateUser(ctx context.Context, user *models.User) error {
 	m.users[user.ID] = user
 	m.usersByUsername[user.Username] = user
 	return nil
+}
 
 func (m *MockUserStore) DeleteUser(ctx context.Context, id string) error {
 	user, ok := m.users[id]
@@ -260,6 +281,7 @@ func (m *MockUserStore) DeleteUser(ctx context.Context, id string) error {
 	delete(m.usersByUsername, user.Username)
 	delete(m.users, id)
 	return nil
+}
 
 func (m *MockUserStore) ListUsers(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.User, int, error) {
 	users := make([]*models.User, 0, len(m.users))
@@ -279,9 +301,11 @@ func (m *MockUserStore) ListUsers(ctx context.Context, filter map[string]interfa
 	}
 
 	return users[offset:end], total, nil
+}
 
 func (m *MockUserStore) Close() error {
 	return nil
+}
 
 // MockSessionStore implements the interfaces.SessionStore interface for testing
 type MockSessionStore struct {
@@ -291,6 +315,7 @@ type MockSessionStore struct {
 func (m *MockSessionStore) CreateSession(ctx context.Context, session *models.Session) error {
 	m.sessions[session.ID] = session
 	return nil
+}
 
 func (m *MockSessionStore) GetSessionByID(ctx context.Context, id string) (*models.Session, error) {
 	session, ok := m.sessions[id]
@@ -298,6 +323,7 @@ func (m *MockSessionStore) GetSessionByID(ctx context.Context, id string) (*mode
 		return nil, fmt.Errorf("session not found: %s", id)
 	}
 	return session, nil
+}
 
 func (m *MockSessionStore) GetSessionByToken(ctx context.Context, token string) (*models.Session, error) {
 	for _, session := range m.sessions {
@@ -306,6 +332,7 @@ func (m *MockSessionStore) GetSessionByToken(ctx context.Context, token string) 
 		}
 	}
 	return nil, fmt.Errorf("session not found with token: %s", token)
+}
 
 func (m *MockSessionStore) GetSessionByRefreshToken(ctx context.Context, refreshToken string) (*models.Session, error) {
 	for _, session := range m.sessions {
@@ -314,14 +341,17 @@ func (m *MockSessionStore) GetSessionByRefreshToken(ctx context.Context, refresh
 		}
 	}
 	return nil, fmt.Errorf("session not found with refresh token: %s", refreshToken)
+}
 
 func (m *MockSessionStore) UpdateSession(ctx context.Context, session *models.Session) error {
 	m.sessions[session.ID] = session
 	return nil
+}
 
 func (m *MockSessionStore) DeleteSession(ctx context.Context, id string) error {
 	delete(m.sessions, id)
 	return nil
+}
 
 func (m *MockSessionStore) DeleteSessionsByUserID(ctx context.Context, userID string) error {
 	for id, session := range m.sessions {
@@ -330,6 +360,7 @@ func (m *MockSessionStore) DeleteSessionsByUserID(ctx context.Context, userID st
 		}
 	}
 	return nil
+}
 
 func (m *MockSessionStore) ListSessionsByUserID(ctx context.Context, userID string) ([]*models.Session, error) {
 	sessions := make([]*models.Session, 0)
@@ -339,6 +370,7 @@ func (m *MockSessionStore) ListSessionsByUserID(ctx context.Context, userID stri
 		}
 	}
 	return sessions, nil
+}
 
 func (m *MockSessionStore) CleanExpiredSessions(ctx context.Context) (int, error) {
 	count := 0
@@ -350,9 +382,11 @@ func (m *MockSessionStore) CleanExpiredSessions(ctx context.Context) (int, error
 		}
 	}
 	return count, nil
+}
 
 func (m *MockSessionStore) Close() error {
 	return nil
+}
 
 // MockIncidentStore implements the interfaces.IncidentStore interface for testing
 type MockIncidentStore struct {
@@ -362,6 +396,7 @@ type MockIncidentStore struct {
 func (m *MockIncidentStore) CreateIncident(ctx context.Context, incident *models.SecurityIncident) error {
 	m.incidents[incident.ID] = incident
 	return nil
+}
 
 func (m *MockIncidentStore) GetIncidentByID(ctx context.Context, id string) (*models.SecurityIncident, error) {
 	incident, ok := m.incidents[id]
@@ -369,14 +404,17 @@ func (m *MockIncidentStore) GetIncidentByID(ctx context.Context, id string) (*mo
 		return nil, fmt.Errorf("incident not found: %s", id)
 	}
 	return incident, nil
+}
 
 func (m *MockIncidentStore) UpdateIncident(ctx context.Context, incident *models.SecurityIncident) error {
 	m.incidents[incident.ID] = incident
 	return nil
+}
 
 func (m *MockIncidentStore) DeleteIncident(ctx context.Context, id string) error {
 	delete(m.incidents, id)
 	return nil
+}
 
 func (m *MockIncidentStore) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.SecurityIncident, int, error) {
 	incidents := make([]*models.SecurityIncident, 0, len(m.incidents))
@@ -396,9 +434,11 @@ func (m *MockIncidentStore) ListIncidents(ctx context.Context, filter map[string
 	}
 
 	return incidents[offset:end], total, nil
+}
 
 func (m *MockIncidentStore) Close() error {
 	return nil
+}
 
 // MockVulnerabilityStore implements the interfaces.VulnerabilityStore interface for testing
 type MockVulnerabilityStore struct {
@@ -408,6 +448,7 @@ type MockVulnerabilityStore struct {
 func (m *MockVulnerabilityStore) CreateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	m.vulnerabilities[vulnerability.ID] = vulnerability
 	return nil
+}
 
 func (m *MockVulnerabilityStore) GetVulnerabilityByID(ctx context.Context, id string) (*models.Vulnerability, error) {
 	vulnerability, ok := m.vulnerabilities[id]
@@ -415,14 +456,17 @@ func (m *MockVulnerabilityStore) GetVulnerabilityByID(ctx context.Context, id st
 		return nil, fmt.Errorf("vulnerability not found: %s", id)
 	}
 	return vulnerability, nil
+}
 
 func (m *MockVulnerabilityStore) UpdateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	m.vulnerabilities[vulnerability.ID] = vulnerability
 	return nil
+}
 
 func (m *MockVulnerabilityStore) DeleteVulnerability(ctx context.Context, id string) error {
 	delete(m.vulnerabilities, id)
 	return nil
+}
 
 func (m *MockVulnerabilityStore) ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Vulnerability, int, error) {
 	vulnerabilities := make([]*models.Vulnerability, 0, len(m.vulnerabilities))
@@ -442,9 +486,11 @@ func (m *MockVulnerabilityStore) ListVulnerabilities(ctx context.Context, filter
 	}
 
 	return vulnerabilities[offset:end], total, nil
+}
 
 func (m *MockVulnerabilityStore) Close() error {
 	return nil
+}
 
 // MockUserManager implements the UserManager interface for testing
 type MockUserManager struct {
@@ -453,37 +499,44 @@ type MockUserManager struct {
 
 func (m *MockUserManager) CreateUser(ctx context.Context, user *models.User) error {
 	return m.userStore.CreateUser(ctx, user)
+}
 
 func (m *MockUserManager) GetUserByID(ctx context.Context, id string) (*models.User, error) {
 	return m.userStore.GetUserByID(ctx, id)
+}
 
 func (m *MockUserManager) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	return m.userStore.GetUserByUsername(ctx, username)
+}
 
 func (m *MockUserManager) UpdateUser(ctx context.Context, user *models.User) error {
 	return m.userStore.UpdateUser(ctx, user)
+}
 
 func (m *MockUserManager) DeleteUser(ctx context.Context, id string) error {
 	return m.userStore.DeleteUser(ctx, id)
+}
 
 func (m *MockUserManager) ListUsers(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.User, int, error) {
 	return m.userStore.ListUsers(ctx, filter, offset, limit)
+}
 
 // MockRBACManager implements the RBACManager interface for testing
 type MockRBACManager struct {
-	roles map[string]*Role
+	roles     map[string]*Role
 	userRoles map[string][]string
 	// Map of role name to permissions for string-based roles
 	rolePermissions map[string][]string
+}
 
 // NewMockRBACManager creates a new mock RBAC manager
 func NewMockRBACManager() *MockRBACManager {
 	m := &MockRBACManager{
-		roles:          make(map[string]*Role),
-		userRoles:      make(map[string][]string),
+		roles:           make(map[string]*Role),
+		userRoles:       make(map[string][]string),
 		rolePermissions: make(map[string][]string),
 	}
-	
+
 	// Initialize built-in roles with default permissions
 	adminRole := &Role{
 		ID:          "admin",
@@ -496,7 +549,7 @@ func NewMockRBACManager() *MockRBACManager {
 	}
 	m.roles["admin"] = adminRole
 	m.rolePermissions["admin"] = adminRole.Permissions
-	
+
 	managerRole := &Role{
 		ID:          "manager",
 		Name:        "manager",
@@ -508,7 +561,7 @@ func NewMockRBACManager() *MockRBACManager {
 	}
 	m.roles["manager"] = managerRole
 	m.rolePermissions["manager"] = managerRole.Permissions
-	
+
 	userRole := &Role{
 		ID:          "user",
 		Name:        "user",
@@ -520,7 +573,7 @@ func NewMockRBACManager() *MockRBACManager {
 	}
 	m.roles["user"] = userRole
 	m.rolePermissions["user"] = userRole.Permissions
-	
+
 	guestRole := &Role{
 		ID:          "guest",
 		Name:        "guest",
@@ -532,7 +585,7 @@ func NewMockRBACManager() *MockRBACManager {
 	}
 	m.roles["guest"] = guestRole
 	m.rolePermissions["guest"] = guestRole.Permissions
-	
+
 	auditorRole := &Role{
 		ID:          "auditor",
 		Name:        "auditor",
@@ -544,7 +597,7 @@ func NewMockRBACManager() *MockRBACManager {
 	}
 	m.roles["auditor"] = auditorRole
 	m.rolePermissions["auditor"] = auditorRole.Permissions
-	
+
 	operatorRole := &Role{
 		ID:          "operator",
 		Name:        "operator",
@@ -556,7 +609,7 @@ func NewMockRBACManager() *MockRBACManager {
 	}
 	m.roles["operator"] = operatorRole
 	m.rolePermissions["operator"] = operatorRole.Permissions
-	
+
 	automationRole := &Role{
 		ID:          "automation",
 		Name:        "automation",
@@ -568,7 +621,7 @@ func NewMockRBACManager() *MockRBACManager {
 	}
 	m.roles["automation"] = automationRole
 	m.rolePermissions["automation"] = automationRole.Permissions
-	
+
 	readonlyRole := &Role{
 		ID:          "readonly",
 		Name:        "readonly",
@@ -580,8 +633,9 @@ func NewMockRBACManager() *MockRBACManager {
 	}
 	m.roles["readonly"] = readonlyRole
 	m.rolePermissions["readonly"] = readonlyRole.Permissions
-	
+
 	return m
+}
 
 func (m *MockRBACManager) CreateRole(ctx context.Context, role *Role) error {
 	if m.roles == nil {
@@ -589,6 +643,7 @@ func (m *MockRBACManager) CreateRole(ctx context.Context, role *Role) error {
 	}
 	m.roles[role.ID] = role
 	return nil
+}
 
 func (m *MockRBACManager) GetRoleByID(ctx context.Context, id string) (*Role, error) {
 	if m.roles == nil {
@@ -599,6 +654,7 @@ func (m *MockRBACManager) GetRoleByID(ctx context.Context, id string) (*Role, er
 		return nil, fmt.Errorf("role not found: %s", id)
 	}
 	return role, nil
+}
 
 func (m *MockRBACManager) UpdateRole(ctx context.Context, role *Role) error {
 	if m.roles == nil {
@@ -606,6 +662,7 @@ func (m *MockRBACManager) UpdateRole(ctx context.Context, role *Role) error {
 	}
 	m.roles[role.ID] = role
 	return nil
+}
 
 func (m *MockRBACManager) DeleteRole(ctx context.Context, id string) error {
 	if m.roles == nil {
@@ -613,6 +670,7 @@ func (m *MockRBACManager) DeleteRole(ctx context.Context, id string) error {
 	}
 	delete(m.roles, id)
 	return nil
+}
 
 func (m *MockRBACManager) ListRoles(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*Role, int, error) {
 	if m.roles == nil {
@@ -635,6 +693,7 @@ func (m *MockRBACManager) ListRoles(ctx context.Context, filter map[string]inter
 	}
 
 	return roles[offset:end], total, nil
+}
 
 func (m *MockRBACManager) AssignRoleToUser(ctx context.Context, userID, roleID string) error {
 	if m.userRoles == nil {
@@ -642,6 +701,7 @@ func (m *MockRBACManager) AssignRoleToUser(ctx context.Context, userID, roleID s
 	}
 	m.userRoles[userID] = append(m.userRoles[userID], roleID)
 	return nil
+}
 
 func (m *MockRBACManager) RemoveRoleFromUser(ctx context.Context, userID, roleID string) error {
 	if m.userRoles == nil {
@@ -660,6 +720,7 @@ func (m *MockRBACManager) RemoveRoleFromUser(ctx context.Context, userID, roleID
 	}
 	m.userRoles[userID] = newRoles
 	return nil
+}
 
 func (m *MockRBACManager) GetUserRoles(ctx context.Context, userID string) ([]*Role, error) {
 	if m.userRoles == nil {
@@ -682,6 +743,7 @@ func (m *MockRBACManager) GetUserRoles(ctx context.Context, userID string) ([]*R
 	}
 
 	return roles, nil
+}
 
 func (m *MockRBACManager) HasPermission(ctx context.Context, userID, permission string) (bool, error) {
 	// Check if userID is a valid user ID in our system
@@ -689,7 +751,7 @@ func (m *MockRBACManager) HasPermission(ctx context.Context, userID, permission 
 	if !ok {
 		// If not found directly, it might be a User object ID or some other format
 		// For the test environment, we'll check if it matches any known pattern
-		
+
 		// Check if it's a User object ID from the access package
 		// This is a special case for the tests where we're passing a User object
 		// instead of a user ID string
@@ -730,6 +792,7 @@ func (m *MockRBACManager) HasPermission(ctx context.Context, userID, permission 
 	}
 
 	return false, nil
+}
 
 // MockSessionManager implements the SessionManager interface for testing
 type MockSessionManager struct {
@@ -752,6 +815,7 @@ func (m *MockSessionManager) CreateSession(ctx context.Context, userID, ipAddres
 
 	err := m.sessionStore.CreateSession(ctx, session)
 	return session, err
+}
 
 func (m *MockSessionManager) ValidateSession(ctx context.Context, token string) (*models.Session, error) {
 	session, err := m.sessionStore.GetSessionByToken(ctx, token)
@@ -764,7 +828,7 @@ func (m *MockSessionManager) ValidateSession(ctx context.Context, token string) 
 	}
 
 	return session, nil
-	
+}
 
 func (m *MockSessionManager) RefreshSession(ctx context.Context, refreshToken string) (*models.Session, error) {
 	session, err := m.sessionStore.GetSessionByRefreshToken(ctx, refreshToken)
@@ -780,6 +844,7 @@ func (m *MockSessionManager) RefreshSession(ctx context.Context, refreshToken st
 
 	err = m.sessionStore.UpdateSession(ctx, session)
 	return session, err
+}
 
 func (m *MockSessionManager) InvalidateSession(ctx context.Context, token string) error {
 	session, err := m.sessionStore.GetSessionByToken(ctx, token)
@@ -788,17 +853,21 @@ func (m *MockSessionManager) InvalidateSession(ctx context.Context, token string
 	}
 
 	return m.sessionStore.DeleteSession(ctx, session.ID)
+}
 
 func (m *MockSessionManager) InvalidateAllUserSessions(ctx context.Context, userID string) error {
 	return m.sessionStore.DeleteSessionsByUserID(ctx, userID)
+}
 
 func (m *MockSessionManager) GetUserSessions(ctx context.Context, userID string) ([]*models.Session, error) {
 	return m.sessionStore.ListSessionsByUserID(ctx, userID)
+}
 
 // MockSecurityManager implements the SecurityManager interface for testing
-ype MockSecurityManager struct {
+type MockSecurityManager struct {
 	incidentStore      *MockIncidentStore
 	vulnerabilityStore *MockVulnerabilityStore
+}
 
 // UpdateVulnerabilityStatus updates the status of a vulnerability
 func (m *MockSecurityManager) UpdateVulnerabilityStatus(ctx context.Context, id string, status models.VulnerabilityStatus) error {
@@ -812,63 +881,79 @@ func (m *MockSecurityManager) UpdateVulnerabilityStatus(ctx context.Context, id 
 		vulnerability.Metadata = make(map[string]interface{})
 	}
 	vulnerability.Metadata["updated_at"] = time.Now()
-	
+
 	// Set appropriate timestamps based on status
 	if status == models.VulnerabilityStatusResolved {
 		vulnerability.ResolvedAt = time.Now()
 	} else if status == models.VulnerabilityStatusMitigated {
 		vulnerability.MitigatedAt = time.Now()
 	}
-	
+
 	return m.vulnerabilityStore.UpdateVulnerability(ctx, vulnerability)
+}
 
 func (m *MockSecurityManager) CreateIncident(ctx context.Context, incident *models.SecurityIncident) error {
 	return m.incidentStore.CreateIncident(ctx, incident)
+}
 
 func (m *MockSecurityManager) GetIncidentByID(ctx context.Context, id string) (*models.SecurityIncident, error) {
 	return m.incidentStore.GetIncidentByID(ctx, id)
+}
 
 func (m *MockSecurityManager) UpdateIncident(ctx context.Context, incident *models.SecurityIncident) error {
 	return m.incidentStore.UpdateIncident(ctx, incident)
+}
 
 func (m *MockSecurityManager) DeleteIncident(ctx context.Context, id string) error {
 	return m.incidentStore.DeleteIncident(ctx, id)
+}
 
 func (m *MockSecurityManager) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.SecurityIncident, int, error) {
 	return m.incidentStore.ListIncidents(ctx, filter, offset, limit)
+}
 
 func (m *MockSecurityManager) CreateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	return m.vulnerabilityStore.CreateVulnerability(ctx, vulnerability)
+}
 
 func (m *MockSecurityManager) GetVulnerabilityByID(ctx context.Context, id string) (*models.Vulnerability, error) {
 	return m.vulnerabilityStore.GetVulnerabilityByID(ctx, id)
+}
 
 func (m *MockSecurityManager) UpdateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
 	return m.vulnerabilityStore.UpdateVulnerability(ctx, vulnerability)
+}
 
 func (m *MockSecurityManager) DeleteVulnerability(ctx context.Context, id string) error {
 	return m.vulnerabilityStore.DeleteVulnerability(ctx, id)
+}
 
 func (m *MockSecurityManager) ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Vulnerability, int, error) {
 	return m.vulnerabilityStore.ListVulnerabilities(ctx, filter, offset, limit)
+}
 
 // MockBoundaryEnforcer implements the BoundaryEnforcer interface for testing
-type MockBoundaryEnforcer struct {}
+type MockBoundaryEnforcer struct{}
 
 func (m *MockBoundaryEnforcer) EnforceIPRestriction(ctx context.Context, userID, ipAddress string) (bool, error) {
 	return true, nil
+}
 
 func (m *MockBoundaryEnforcer) EnforceTimeRestriction(ctx context.Context, userID string) (bool, error) {
 	return true, nil
+}
 
 func (m *MockBoundaryEnforcer) EnforceLocationRestriction(ctx context.Context, userID, location string) (bool, error) {
 	return true, nil
+}
 
 func (m *MockBoundaryEnforcer) EnforceDeviceRestriction(ctx context.Context, userID, deviceID string) (bool, error) {
 	return true, nil
+}
 
 func (m *MockBoundaryEnforcer) EnforceRateLimiting(ctx context.Context, userID, action string) (bool, error) {
 	return true, nil
+}
 
 // MockAuthManager implements the AuthManager interface for testing
 type MockAuthManager struct{}
@@ -886,18 +971,23 @@ func (m *MockAuthManager) Login(ctx context.Context, username, password, ipAddre
 		MFACompleted: false,
 		CreatedAt:    time.Now(),
 	}, nil
+}
 
 func (m *MockAuthManager) Logout(ctx context.Context, token string) error {
 	return nil
+}
 
 func (m *MockAuthManager) VerifyMFA(ctx context.Context, userID, code string) (bool, error) {
 	return true, nil
+}
 
 func (m *MockAuthManager) ResetPassword(ctx context.Context, userID, newPassword string) error {
 	return nil
+}
 
 func (m *MockAuthManager) ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error {
 	return nil
+}
 
 // TestContext represents a test context with all necessary components
 type TestContext struct {
@@ -913,25 +1003,26 @@ type TestContext struct {
 	DBFilePath string
 
 	// Access control components
-	Manager        *access.DBAccessControlManager
-	AuditLogger    interfaces.AuditLogger
-	AdminPass      string
-	AdminUser      *models.User
-	UserManager    UserManager
-	RBACManager    RBACManager
-	SessionManager SessionManager
-	SecurityManager SecurityManager
+	Manager          *access.DBAccessControlManager
+	AuditLogger      interfaces.AuditLogger
+	AdminPass        string
+	AdminUser        *models.User
+	UserManager      UserManager
+	RBACManager      RBACManager
+	SessionManager   SessionManager
+	SecurityManager  SecurityManager
 	BoundaryEnforcer BoundaryEnforcer
-	AuthManager    AuthManager
+	AuthManager      AuthManager
 
 	// Stores
-	UserStore        interfaces.UserStore
-	SessionStore     interfaces.SessionStore
-	IncidentStore    interfaces.IncidentStore
+	UserStore          interfaces.UserStore
+	SessionStore       interfaces.SessionStore
+	IncidentStore      interfaces.IncidentStore
 	VulnerabilityStore interfaces.VulnerabilityStore
 
 	// Test data
 	TestUsers map[string]*models.User
+}
 
 // NewTestContext creates a new test context with an in-memory database
 func NewTestContext(t *testing.T) *TestContext {
@@ -999,23 +1090,23 @@ func NewTestContext(t *testing.T) *TestContext {
 
 	// Create mock audit logger
 	mockAuditLogger := &MockAuditLogger{Logs: make([]*interfaces.AuditEvent, 0)}
-	
+
 	// Create test context
 	ctx := &TestContext{
-		T:                 t,
-		TempDir:           tempDir,
-		CleanupFn:         cleanupFn,
-		DB:                database,
-		DBFactory:         factory,
-		DBConfig:          dbConfig,
-		DBFilePath:        dbFilePath,
-		Manager:           manager,
-		AuditLogger:       mockAuditLogger,
-		AdminPass:         accessConfig.DefaultAdminPassword,
-		TestUsers:         make(map[string]*models.User),
+		T:           t,
+		TempDir:     tempDir,
+		CleanupFn:   cleanupFn,
+		DB:          database,
+		DBFactory:   factory,
+		DBConfig:    dbConfig,
+		DBFilePath:  dbFilePath,
+		Manager:     manager,
+		AuditLogger: mockAuditLogger,
+		AdminPass:   accessConfig.DefaultAdminPassword,
+		TestUsers:   make(map[string]*models.User),
 	}
-	
-		// Create mock implementations for testing
+
+	// Create mock implementations for testing
 	mockUserStore := &MockUserStore{users: make(map[string]*models.User), usersByUsername: make(map[string]*models.User)}
 	mockSessionStore := &MockSessionStore{sessions: make(map[string]*models.Session)}
 	mockIncidentStore := &MockIncidentStore{incidents: make(map[string]*models.SecurityIncident)}
@@ -1024,39 +1115,40 @@ func NewTestContext(t *testing.T) *TestContext {
 	// Set up the interfaces
 	mockUserManager := &MockUserManager{userStore: mockUserStore}
 	ctx.UserManager = mockUserManager
-	
+
 	// Create a real RBAC manager with adapter instead of the mock
 	roleStore := access.NewInMemoryRoleStore()
 	rbacManager := access.NewRBACManager(mockUserManager, roleStore, mockAuditLogger)
 	ctx.RBACManager = adapters.CreateRBACManagerAdapter(rbacManager)
-	
+
 	ctx.SessionManager = &MockSessionManager{sessionStore: mockSessionStore}
 	ctx.SecurityManager = &MockSecurityManager{incidentStore: mockIncidentStore, vulnerabilityStore: mockVulnerabilityStore}
 	ctx.BoundaryEnforcer = &MockBoundaryEnforcer{}
 	ctx.AuthManager = &MockAuthManager{}
-	
+
 	// Set up the stores
 	ctx.UserStore = mockUserStore
 	ctx.SessionStore = mockSessionStore
 	ctx.IncidentStore = mockIncidentStore
 	ctx.VulnerabilityStore = mockVulnerabilityStore
-	
+
 	// Create admin user
 	ctx.AdminUser, _ = ctx.UserStore.GetUserByUsername(context.Background(), accessConfig.DefaultAdminUsername)
 
 	return ctx
+}
 
 // CreateTestUser creates a test user with the given username, password, email, and roles
 func (c *TestContext) CreateTestUser(username, password, email string, roles []string) *models.User {
 	// Create a new user
 	user := &models.User{
-		ID:         fmt.Sprintf("user-%d", len(c.TestUsers)+1),
-		Username:   username,
-		Email:      email,
-		Roles:      roles,
-		Active:     true,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:        fmt.Sprintf("user-%d", len(c.TestUsers)+1),
+		Username:  username,
+		Email:     email,
+		Roles:     roles,
+		Active:    true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	// Hash the password
@@ -1072,6 +1164,7 @@ func (c *TestContext) CreateTestUser(username, password, email string, roles []s
 	}
 
 	return user
+}
 
 // CreateTestRole creates a test role with the given name, description, and permissions
 func (c *TestContext) CreateTestRole(name, description string, permissions []string) *Role {
@@ -1087,6 +1180,8 @@ func (c *TestContext) CreateTestRole(name, description string, permissions []str
 	}
 
 	return role
+}
+
 // CreateTestVulnerability creates a test vulnerability
 // This is the full signature version
 func (c *TestContext) CreateTestVulnerability(title, description, severity, reportedBy string, affectedSystems []string) *models.Vulnerability {
@@ -1109,30 +1204,33 @@ func (c *TestContext) CreateTestVulnerability(title, description, severity, repo
 	}
 
 	return vulnerability
+}
 
 // CreateTestVulnerabilitySimple creates a test vulnerability with a simpler signature
 // This is for backward compatibility with existing tests
 func (c *TestContext) CreateTestVulnerabilitySimple(title, description, severity, reportedBy string) *models.Vulnerability {
 	return c.CreateTestVulnerability(title, description, severity, reportedBy, []string{})
+}
 
 // GetVulnerabilityByCVE gets a vulnerability by its CVE ID
 func (m *MockSecurityManager) GetVulnerabilityByCVE(ctx context.Context, cve string) (*models.Vulnerability, error) {
 	if m.vulnerabilityStore == nil {
 		return nil, fmt.Errorf("vulnerability store not initialized")
 	}
-	
+
 	vulnerabilities, _, err := m.vulnerabilityStore.ListVulnerabilities(ctx, nil, 0, 1000)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	for _, v := range vulnerabilities {
 		if v.CVE == cve {
 			return v, nil
 		}
 	}
-	
+
 	return nil, fmt.Errorf("vulnerability with CVE %s not found", cve)
+}
 
 // EscalateIncident escalates a security incident
 func (m *MockSecurityManager) EscalateIncident(ctx context.Context, id string, severity models.SecurityIncidentSeverity, reason string) error {
@@ -1140,17 +1238,18 @@ func (m *MockSecurityManager) EscalateIncident(ctx context.Context, id string, s
 	if err != nil {
 		return err
 	}
-	
+
 	incident.Severity = severity
 	incident.Description += "\n\nEscalated: " + reason
-	
+
 	if incident.Metadata == nil {
 		incident.Metadata = make(map[string]interface{})
 	}
 	incident.Metadata["escalated_at"] = time.Now()
 	incident.Metadata["escalation_reason"] = reason
-	
+
 	return m.incidentStore.UpdateIncident(ctx, incident)
+}
 
 // AssignIncident assigns a security incident to a user
 func (m *MockSecurityManager) AssignIncident(ctx context.Context, id string, assigneeID string) error {
@@ -1158,15 +1257,16 @@ func (m *MockSecurityManager) AssignIncident(ctx context.Context, id string, ass
 	if err != nil {
 		return err
 	}
-	
+
 	incident.AssignedTo = assigneeID
-	
+
 	if incident.Metadata == nil {
 		incident.Metadata = make(map[string]interface{})
 	}
 	incident.Metadata["assigned_at"] = time.Now()
-	
+
 	return m.incidentStore.UpdateIncident(ctx, incident)
+}
 
 // AddRemediationPlan adds a remediation plan to a vulnerability
 func (m *MockSecurityManager) AddRemediationPlan(ctx context.Context, id string, plan string) error {
@@ -1174,14 +1274,15 @@ func (m *MockSecurityManager) AddRemediationPlan(ctx context.Context, id string,
 	if err != nil {
 		return err
 	}
-	
+
 	if vulnerability.Metadata == nil {
 		vulnerability.Metadata = make(map[string]interface{})
 	}
 	vulnerability.Metadata["remediation_plan"] = plan
 	vulnerability.Mitigation = plan
-	
+
 	return m.vulnerabilityStore.UpdateVulnerability(ctx, vulnerability)
+}
 
 // MarkVulnerabilityRemediated marks a vulnerability as remediated
 func (m *MockSecurityManager) MarkVulnerabilityRemediated(ctx context.Context, id string, details string) error {
@@ -1189,17 +1290,18 @@ func (m *MockSecurityManager) MarkVulnerabilityRemediated(ctx context.Context, i
 	if err != nil {
 		return err
 	}
-	
+
 	vulnerability.Status = models.VulnerabilityStatusResolved
 	vulnerability.ResolvedAt = time.Now()
-	
+
 	if vulnerability.Metadata == nil {
 		vulnerability.Metadata = make(map[string]interface{})
 	}
 	vulnerability.Metadata["resolution"] = details
 	vulnerability.Metadata["resolved_at"] = time.Now()
-	
+
 	return m.vulnerabilityStore.UpdateVulnerability(ctx, vulnerability)
+}
 
 // WaitForAuditLog waits for an audit log entry with the specified action
 func (c *TestContext) WaitForAuditLog(action string, timeout time.Duration) *interfaces.AuditEvent {
@@ -1213,11 +1315,13 @@ func (c *TestContext) WaitForAuditLog(action string, timeout time.Duration) *int
 	}
 	c.T.Fatalf("Timed out waiting for audit log with action: %s", action)
 	return nil
+}
 
 // LoginUser logs in a test user
 func (c *TestContext) LoginUser(username, password string) (string, error) {
 	// For testing purposes, just return a mock session ID
 	return "mock-session-" + username, nil
+}
 
 // CreateTestIncident creates a test incident
 func (c *TestContext) CreateTestIncident(title, description, severity, reportedBy string) *models.SecurityIncident {
@@ -1230,94 +1334,107 @@ func (c *TestContext) CreateTestIncident(title, description, severity, reportedB
 		ReportedBy:  reportedBy,
 		ReportedAt:  time.Now(),
 	}
-	
+
 	return incident
+}
 
 // WaitForAuditEvent waits for an audit event with the specified action (deprecated, use WaitForAuditLog instead)
 func (c *TestContext) WaitForAuditEvent(action string, timeout time.Duration) *interfaces.AuditEvent {
 	// Create context
 	ctx := context.Background()
-	
+
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		events, _, err := c.AuditLogger.QueryEvents(ctx, map[string]interface{}{"action": action}, 0, 10)
 		if err != nil {
 			c.T.Fatalf("Failed to query audit logs: %v", err)
 		}
-		
+
 		if len(events) > 0 {
 			return events[0]
 		}
-		
+
 		time.Sleep(100 * time.Millisecond)
 	}
-	
+
 	c.T.Fatalf("Timed out waiting for audit event with action: %s", action)
 	return nil
+}
 
 // AssertEqual asserts that two values are equal
 func (c *TestContext) AssertEqual(expected, actual interface{}, message string) {
 	if expected != actual {
 		c.T.Errorf("%s: expected %v, got %v", message, expected, actual)
 	}
+}
 
 // AssertNotEqual asserts that two values are not equal
 func (c *TestContext) AssertNotEqual(expected, actual interface{}, message string) {
 	if expected == actual {
 		c.T.Errorf("%s: expected %v to be different from %v", message, expected, actual)
 	}
+}
 
 // AssertTrue asserts that a condition is true
 func (c *TestContext) AssertTrue(condition bool, message string) {
 	if !condition {
 		c.T.Errorf("%s: expected true, got false", message)
 	}
+}
 
 // AssertFalse asserts that a condition is false
 func (c *TestContext) AssertFalse(condition bool, message string) {
 	if condition {
 		c.T.Errorf("%s: expected false, got true", message)
 	}
+}
 
 // AssertNil asserts that a value is nil
 func (c *TestContext) AssertNil(value interface{}, message string) {
 	if value != nil {
 		c.T.Errorf("%s: expected nil, got %v", message, value)
 	}
+}
 
 // AssertNotNil asserts that a value is not nil
 func (c *TestContext) AssertNotNil(value interface{}, message string) {
 	if value == nil {
 		c.T.Errorf("%s: expected non-nil value", message)
 	}
+}
 
 // AssertError asserts that an error is not nil
 func (c *TestContext) AssertError(err error, message string) {
 	if err == nil {
 		c.T.Errorf("%s: expected error, got nil", message)
 	}
+}
 
 // AssertNoError asserts that an error is nil
 func (c *TestContext) AssertNoError(err error, message string) {
 	if err != nil {
+		c.T.Errorf("%s: expected no error, got %v", message, err)
 	}
+}
 
 // AssertContains asserts that a string contains a substring
 func (c *TestContext) AssertContains(s, substring string, message string) {
 	if !strings.Contains(s, substring) {
 		c.T.Errorf("%s: expected %q to contain %q", message, s, substring)
 	}
+}
 
 // AssertNotContains asserts that a string does not contain a substring
 func (c *TestContext) AssertNotContains(s, substring string, message string) {
 	if strings.Contains(s, substring) {
 		c.T.Errorf("%s: expected %q not to contain %q", message, s, substring)
 	}
+}
 
 // AssertLen asserts that a slice or map has the expected length
 func (c *TestContext) AssertLen(value interface{}, expected int, message string) {
 	var actual int
-	
+
 	switch v := value.(type) {
 	case []interface{}:
 		actual = len(v)
@@ -1338,103 +1455,8 @@ func (c *TestContext) AssertLen(value interface{}, expected int, message string)
 	default:
 		c.T.Fatalf("AssertLen: unsupported type %T", value)
 	}
-	
+
 	if actual != expected {
 		c.T.Errorf("%s: expected length %d, got %d", message, expected, actual)
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }
