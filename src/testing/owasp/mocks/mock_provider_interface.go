@@ -2,11 +2,12 @@
 package mocks
 
 import (
-	"math/big"
 	"crypto/rand"
-	"strings"
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"math/big"
+	"strings"
+	"time"
 )
 
 // MockProviderConfig represents the configuration for a mock provider
@@ -39,6 +40,7 @@ type MockProviderConfig struct {
 	SimulateServerErrors bool
 	// VulnerabilityBehaviors is a map of vulnerability types to behavior configurations
 	VulnerabilityBehaviors map[types.VulnerabilityType]*VulnerabilityBehavior
+}
 
 // VulnerabilityBehavior represents the behavior configuration for a specific vulnerability type
 type VulnerabilityBehavior struct {
@@ -52,6 +54,7 @@ type VulnerabilityBehavior struct {
 	Severity core.SeverityLevel
 	// Metadata is additional metadata for the vulnerability
 	Metadata map[string]interface{}
+}
 
 // MockProvider is the interface that all mock providers must implement
 type MockProvider interface {
@@ -86,23 +89,25 @@ type MockProvider interface {
 	SimulateNetworkErrors(enabled bool)
 	// SimulateServerErrors enables or disables server error simulation
 	SimulateServerErrors(enabled bool)
+}
 
 // BaseMockProvider is a base implementation of the MockProvider interface
 type BaseMockProvider struct {
 	*core.BaseProvider
 	config *MockProviderConfig
+}
 
 // NewBaseMockProvider creates a new base mock provider
 func NewBaseMockProvider(config *MockProviderConfig) *BaseMockProvider {
 	if config == nil {
 		config = &MockProviderConfig{
-			ProviderType:    core.CustomProvider,
-			DefaultModel:    "mock-llm-model",
-			ResponseDelay:   0,
-			ErrorRate:       0.0,
-			TokenUsage:      &core.TokenUsage{PromptTokens: 100, CompletionTokens: 50, TotalTokens: 150},
-			DefaultResponse: "This is a default response from the mock LLM provider.",
-			VulnerableResponses: make(map[string]string),
+			ProviderType:           core.CustomProvider,
+			DefaultModel:           "mock-llm-model",
+			ResponseDelay:          0,
+			ErrorRate:              0.0,
+			TokenUsage:             &core.TokenUsage{PromptTokens: 100, CompletionTokens: 50, TotalTokens: 150},
+			DefaultResponse:        "This is a default response from the mock LLM provider.",
+			VulnerableResponses:    make(map[string]string),
 			VulnerabilityBehaviors: make(map[types.VulnerabilityType]*VulnerabilityBehavior),
 		}
 	}
@@ -113,11 +118,12 @@ func NewBaseMockProvider(config *MockProviderConfig) *BaseMockProvider {
 	}
 
 	baseProvider := core.NewBaseProvider(config.ProviderType, providerConfig)
-	
+
 	return &BaseMockProvider{
 		BaseProvider: baseProvider,
 		config:       config,
 	}
+}
 
 // Helper function to create a standard set of mock models for a provider
 func CreateStandardMockModels(providerType core.ProviderType) []core.ModelInfo {
@@ -155,6 +161,7 @@ func CreateStandardMockModels(providerType core.ProviderType) []core.ModelInfo {
 			Description:  "Vulnerable mock model for " + string(providerType) + " (prone to exploitation)",
 		},
 	}
+}
 
 // Helper function to extract test case ID from request metadata or messages
 func ExtractTestCaseID(request *core.ChatCompletionRequest) string {
@@ -164,7 +171,7 @@ func ExtractTestCaseID(request *core.ChatCompletionRequest) string {
 			return id
 		}
 	}
-	
+
 	// If not found in metadata, try to extract from the messages
 	if len(request.Messages) > 0 {
 		lastMessage := request.Messages[len(request.Messages)-1]
@@ -173,62 +180,71 @@ func ExtractTestCaseID(request *core.ChatCompletionRequest) string {
 		// This is a simple implementation and can be enhanced for more sophisticated extraction
 		return ""
 	}
-	
+
 	return ""
+}
 
 // Helper function to determine if a message triggers a vulnerability
 func MessageTriggerVulnerability(message string, behavior *VulnerabilityBehavior) bool {
 	if behavior == nil || !behavior.Enabled || len(behavior.TriggerPhrases) == 0 {
 		return false
 	}
-	
+
 	// Check if any trigger phrase is in the message
 	for _, phrase := range behavior.TriggerPhrases {
 		if phrase != "" && contains(message, phrase) {
 			return true
 		}
 	}
-	
+
 	return false
+}
 
 // Helper function to check if a string contains a substring (case-insensitive)
 func contains(s, substr string) bool {
 	s, substr = strings.ToLower(s), strings.ToLower(substr)
 	return strings.Contains(s, substr)
+}
 
 // Helper function to get a random response pattern from a vulnerability behavior
 func GetRandomResponsePattern(behavior *VulnerabilityBehavior) string {
 	if behavior == nil || !behavior.Enabled || len(behavior.ResponsePatterns) == 0 {
 		return ""
 	}
-	
+
 	// Get a random response pattern
 	index := randInt(len(behavior.ResponsePatterns))
 	return behavior.ResponsePatterns[index]
+}
 
 // secureRandomInt generates a cryptographically secure random integer
 func secureRandomInt(max int) (int, error) {
-    nBig, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
-    if err != nil {
-        return 0, err
-    }
-    return int(nBig.Int64()), nil
+	nBig, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		return 0, err
+	}
+	return int(nBig.Int64()), nil
+}
 
 // Secure random number generation helpers
 func randInt(max int) int {
-    n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
-    if err != nil {
-        panic(err)
-    }
-    return int(n.Int64())
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		panic(err)
+	}
+	return int(n.Int64())
+}
 
 func randInt64(max int64) int64 {
-    n, err := rand.Int(rand.Reader, big.NewInt(max))
-    if err != nil {
-        panic(err)
-    }
-    return n.Int64()
+	n, err := rand.Int(rand.Reader, big.NewInt(max))
+	if err != nil {
+		panic(err)
+	}
+	return n.Int64()
+}
 
 func randFloat64() float64 {
-    bytes := make([]byte, 8)
-    rand.Read(bytes)
+	bytes := make([]byte, 8)
+	rand.Read(bytes)
+	return float64(bytes[0]) / 255.0
+}
