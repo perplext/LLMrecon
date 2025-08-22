@@ -495,7 +495,9 @@ func (tc *TimingChannel) encodeToTiming(data []byte) []time.Duration {
 
 	for _, b := range data {
 		for i := 0; i < 8; i++ {
-			bit := (b >> uint(7-i)) & 0x01
+			// Safe conversion: 7-i is always >= 0 since i < 8
+			shift := uint(7 - i)
+			bit := (b >> shift) & 0x01
 			if bit == 1 {
 				pattern = append(pattern, tc.precision*2)
 			} else {
