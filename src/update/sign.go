@@ -12,6 +12,9 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 )
 
 // SignatureGenerator handles the generation of digital signatures
@@ -20,6 +23,7 @@ type SignatureGenerator struct {
 	Algorithm SignatureAlgorithm
 	// PrivateKey is the private key used for signing
 	PrivateKey interface{}
+}
 
 // NewSignatureGenerator creates a new SignatureGenerator with the given private key
 func NewSignatureGenerator(privateKeyData string) (*SignatureGenerator, error) {
@@ -43,7 +47,7 @@ func NewSignatureGenerator(privateKeyData string) (*SignatureGenerator, error) {
 	// First try Ed25519
 	if len(privateKeyBytes) == ed25519.PrivateKeySize {
 		return &SignatureGenerator{
-			Algorithm: Ed25519Algorithm,
+			Algorithm:  Ed25519Algorithm,
 			PrivateKey: ed25519.PrivateKey(privateKeyBytes),
 		}, nil
 	}
@@ -55,6 +59,7 @@ func NewSignatureGenerator(privateKeyData string) (*SignatureGenerator, error) {
 	}
 
 	return nil, fmt.Errorf("unsupported private key format")
+}
 
 // parsePrivateKeyFromPEM parses a private key from a PEM block
 func parsePrivateKeyFromPEM(block *pem.Block) (*SignatureGenerator, error) {
@@ -74,7 +79,7 @@ func parsePrivateKeyFromPEM(block *pem.Block) (*SignatureGenerator, error) {
 			return nil, fmt.Errorf("failed to parse PKCS#1 private key: %w", err)
 		}
 		return &SignatureGenerator{
-			Algorithm: RSAAlgorithm,
+			Algorithm:  RSAAlgorithm,
 			PrivateKey: privKey,
 		}, nil
 
@@ -85,35 +90,37 @@ func parsePrivateKeyFromPEM(block *pem.Block) (*SignatureGenerator, error) {
 			return nil, fmt.Errorf("failed to parse SEC1 private key: %w", err)
 		}
 		return &SignatureGenerator{
-			Algorithm: ECDSAAlgorithm,
+			Algorithm:  ECDSAAlgorithm,
 			PrivateKey: privKey,
 		}, nil
 
 	default:
 		return nil, fmt.Errorf("unsupported PEM block type: %s", block.Type)
 	}
+}
 
 // createGeneratorFromParsedKey creates a SignatureGenerator from a parsed private key
 func createGeneratorFromParsedKey(privKey interface{}) (*SignatureGenerator, error) {
 	switch key := privKey.(type) {
 	case *rsa.PrivateKey:
 		return &SignatureGenerator{
-			Algorithm: RSAAlgorithm,
+			Algorithm:  RSAAlgorithm,
 			PrivateKey: key,
 		}, nil
 	case *ecdsa.PrivateKey:
 		return &SignatureGenerator{
-			Algorithm: ECDSAAlgorithm,
+			Algorithm:  ECDSAAlgorithm,
 			PrivateKey: key,
 		}, nil
 	case ed25519.PrivateKey:
 		return &SignatureGenerator{
-			Algorithm: Ed25519Algorithm,
+			Algorithm:  Ed25519Algorithm,
 			PrivateKey: key,
 		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported private key type: %T", privKey)
 	}
+}
 
 // GenerateSignature generates a digital signature for a file
 func (g *SignatureGenerator) GenerateSignature(filePath string) (string, error) {
@@ -163,6 +170,7 @@ func (g *SignatureGenerator) GenerateSignature(filePath string) (string, error) 
 
 	// Encode the signature as base64
 	return base64.StdEncoding.EncodeToString(signature), nil
+}
 
 // GenerateSignatureForData generates a digital signature for the provided data
 func (g *SignatureGenerator) GenerateSignatureForData(data []byte) (string, error) {
@@ -206,6 +214,7 @@ func (g *SignatureGenerator) GenerateSignatureForData(data []byte) (string, erro
 
 	// Encode the signature as base64
 	return base64.StdEncoding.EncodeToString(signature), nil
+}
 
 // GenerateKeyPair generates a new key pair for the specified algorithm
 func GenerateKeyPair(algorithm SignatureAlgorithm) (privateKeyPEM, publicKeyPEM string, err error) {
@@ -219,6 +228,7 @@ func GenerateKeyPair(algorithm SignatureAlgorithm) (privateKeyPEM, publicKeyPEM 
 	default:
 		return "", "", fmt.Errorf("unsupported signature algorithm: %s", algorithm)
 	}
+}
 
 // generateEd25519KeyPair generates a new Ed25519 key pair
 func generateEd25519KeyPair() (privateKeyPEM, publicKeyPEM string, err error) {
@@ -253,6 +263,7 @@ func generateEd25519KeyPair() (privateKeyPEM, publicKeyPEM string, err error) {
 	}))
 
 	return privateKeyPEM, publicKeyPEM, nil
+}
 
 // generateRSAKeyPair generates a new RSA key pair with the specified bit size
 func generateRSAKeyPair(bits int) (privateKeyPEM, publicKeyPEM string, err error) {
@@ -284,6 +295,7 @@ func generateRSAKeyPair(bits int) (privateKeyPEM, publicKeyPEM string, err error
 	}))
 
 	return privateKeyPEM, publicKeyPEM, nil
+}
 
 // generateECDSAKeyPair generates a new ECDSA key pair using P-256 curve
 func generateECDSAKeyPair() (privateKeyPEM, publicKeyPEM string, err error) {
@@ -318,6 +330,7 @@ func generateECDSAKeyPair() (privateKeyPEM, publicKeyPEM string, err error) {
 	}))
 
 	return privateKeyPEM, publicKeyPEM, nil
+}
 
 // CalculateChecksum calculates the SHA-256 checksum of a file
 func CalculateChecksum(filePath string) (string, error) {
@@ -326,7 +339,11 @@ func CalculateChecksum(filePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Calculate the SHA-256 hash
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
@@ -334,3 +351,5 @@ func CalculateChecksum(filePath string) (string, error) {
 	}
 
 	// Get the calculated checksum as hex
+	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
+}

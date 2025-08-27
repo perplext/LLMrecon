@@ -6,7 +6,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/bundle/errors"
 )
@@ -65,6 +69,7 @@ type Conflict struct {
 	ResolutionPath string
 	// Resolved indicates whether the conflict has been resolved
 	Resolved bool
+}
 
 // ConflictResolution represents a resolution for a conflict
 type ConflictResolution struct {
@@ -78,6 +83,7 @@ type ConflictResolution struct {
 	Success bool
 	// Error is the error that occurred during resolution (if any)
 	Error error
+}
 
 // ConflictDetector defines the interface for conflict detection
 type ConflictDetector interface {
@@ -87,6 +93,7 @@ type ConflictDetector interface {
 	DetectContentConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error)
 	// DetectVersionConflicts detects version conflicts between the bundle and the target directory
 	DetectVersionConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error)
+}
 
 // ConflictResolver defines the interface for conflict resolution
 type ConflictResolver interface {
@@ -98,11 +105,13 @@ type ConflictResolver interface {
 	GetDefaultStrategy(conflictType ConflictType) ConflictResolutionStrategy
 	// SetDefaultStrategy sets the default resolution strategy for a conflict type
 	SetDefaultStrategy(conflictType ConflictType, strategy ConflictResolutionStrategy)
+}
 
 // DefaultConflictDetector is the default implementation of ConflictDetector
 type DefaultConflictDetector struct {
 	// Logger is the logger for conflict detection operations
 	Logger io.Writer
+}
 
 // NewConflictDetector creates a new conflict detector
 func NewConflictDetector(logger io.Writer) ConflictDetector {
@@ -112,6 +121,7 @@ func NewConflictDetector(logger io.Writer) ConflictDetector {
 	return &DefaultConflictDetector{
 		Logger: logger,
 	}
+}
 
 // DetectConflicts detects conflicts between the bundle and the target directory
 func (d *DefaultConflictDetector) DetectConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error) {
@@ -120,7 +130,7 @@ func (d *DefaultConflictDetector) DetectConflicts(ctx context.Context, bundle *B
 	// Detect file existence conflicts
 	for _, item := range bundle.Manifest.Content {
 		targetPath := filepath.Join(targetDir, item.Path)
-		
+
 		// Check if the target path exists
 		if _, err := os.Stat(targetPath); err == nil {
 			// Target exists, create a conflict
@@ -153,6 +163,7 @@ func (d *DefaultConflictDetector) DetectConflicts(ctx context.Context, bundle *B
 	conflicts = append(conflicts, versionConflicts...)
 
 	return conflicts, nil
+}
 
 // DetectContentConflicts detects content conflicts between the bundle and the target directory
 func (d *DefaultConflictDetector) DetectContentConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error) {
@@ -161,7 +172,7 @@ func (d *DefaultConflictDetector) DetectContentConflicts(ctx context.Context, bu
 	// Check each content item for content conflicts
 	for _, item := range bundle.Manifest.Content {
 		targetPath := filepath.Join(targetDir, item.Path)
-		
+
 		// Skip if the target doesn't exist
 		if _, err := os.Stat(targetPath); os.IsNotExist(err) {
 			continue
@@ -228,6 +239,8 @@ func (d *DefaultConflictDetector) DetectContentConflicts(ctx context.Context, bu
 	}
 
 	return conflicts, nil
+}
+
 // DetectVersionConflicts detects version conflicts between the bundle and the target directory
 func (d *DefaultConflictDetector) DetectVersionConflicts(ctx context.Context, bundle *Bundle, targetDir string) ([]*Conflict, error) {
 	var conflicts []*Conflict
@@ -240,7 +253,7 @@ func (d *DefaultConflictDetector) DetectVersionConflicts(ctx context.Context, bu
 		}
 
 		targetPath := filepath.Join(targetDir, item.Path)
-		
+
 		// Skip if the target doesn't exist
 		if _, err := os.Stat(targetPath); os.IsNotExist(err) {
 			continue
@@ -270,12 +283,14 @@ func (d *DefaultConflictDetector) DetectVersionConflicts(ctx context.Context, bu
 	}
 
 	return conflicts, nil
+}
 
 // getItemVersion gets the version of an item
 func (d *DefaultConflictDetector) getItemVersion(path string, itemType string) (string, error) {
 	// In a real implementation, this would parse the file to extract version information
 	// For now, we'll just return a mock version
 	return "1.0.0", nil
+}
 
 // DefaultConflictResolver is the default implementation of ConflictResolver
 type DefaultConflictResolver struct {
@@ -287,13 +302,14 @@ type DefaultConflictResolver struct {
 	PromptCallback func(conflict *Conflict) (ConflictResolutionStrategy, error)
 	// AuditLogger is used for logging audit events
 	AuditLogger *errors.AuditLogger
+}
 
 // NewConflictResolver creates a new conflict resolver
 func NewConflictResolver(logger io.Writer, auditLogger *errors.AuditLogger, promptCallback func(conflict *Conflict) (ConflictResolutionStrategy, error)) ConflictResolver {
 	if logger == nil {
 		logger = os.Stdout
 	}
-	
+
 	// Initialize default strategies
 	defaultStrategies := make(map[ConflictType]ConflictResolutionStrategy)
 	defaultStrategies[FileExistsConflict] = OverwriteStrategy
@@ -301,20 +317,21 @@ func NewConflictResolver(logger io.Writer, auditLogger *errors.AuditLogger, prom
 	defaultStrategies[VersionConflict] = PromptStrategy
 	defaultStrategies[DependencyConflict] = PromptStrategy
 	defaultStrategies[PermissionConflict] = OverwriteStrategy
-	
+
 	// If no prompt callback is provided, use a default one that returns the default strategy
 	if promptCallback == nil {
 		promptCallback = func(conflict *Conflict) (ConflictResolutionStrategy, error) {
 			return defaultStrategies[conflict.Type], nil
 		}
 	}
-	
+
 	return &DefaultConflictResolver{
-		Logger:           logger,
+		Logger:            logger,
 		DefaultStrategies: defaultStrategies,
 		PromptCallback:    promptCallback,
 		AuditLogger:       auditLogger,
 	}
+}
 
 // ResolveConflict resolves a single conflict
 func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict *Conflict) (*ConflictResolution, error) {
@@ -369,8 +386,8 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 		r.AuditLogger.LogEvent("conflict_resolution_started", "ConflictResolver", bundleID, map[string]interface{}{
 			"conflict_type": string(conflict.Type),
 			"conflict_path": conflict.Path,
-			"strategy": string(strategy),
-			"operation": "conflict_resolution",
+			"strategy":      string(strategy),
+			"operation":     "conflict_resolution",
 		})
 	}
 
@@ -381,7 +398,7 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 		resolution.Success = true
 		conflict.Resolved = true
 		conflict.ResolutionStrategy = SkipStrategy
-		
+
 		// Log audit event for skipped conflict
 		if r.AuditLogger != nil {
 			r.AuditLogger.LogConflict(bundleID, conflict, SkipStrategy)
@@ -400,7 +417,7 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 		conflict.Resolved = true
 		conflict.ResolutionStrategy = OverwriteStrategy
 		conflict.ResolutionPath = conflict.TargetPath
-		
+
 		// Log audit event for overwrite conflict resolution
 		if r.AuditLogger != nil {
 			r.AuditLogger.LogConflict(bundleID, conflict, OverwriteStrategy)
@@ -425,7 +442,7 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 		conflict.Resolved = true
 		conflict.ResolutionStrategy = MergeStrategy
 		conflict.ResolutionPath = conflict.TargetPath
-		
+
 		// Log audit event for merge conflict resolution
 		if r.AuditLogger != nil {
 			r.AuditLogger.LogConflict(bundleID, conflict, MergeStrategy)
@@ -438,7 +455,7 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 		base := strings.TrimSuffix(conflict.TargetPath, ext)
 		timestamp := time.Now().Format("20060102-150405")
 		newPath := fmt.Sprintf("%s.%s%s", base, timestamp, ext)
-		
+
 		// Copy the source to the new path
 		err := copyPath(conflict.SourcePath, newPath)
 		if err != nil {
@@ -450,7 +467,7 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 		conflict.Resolved = true
 		conflict.ResolutionStrategy = RenameStrategy
 		conflict.ResolutionPath = newPath
-		
+
 		// Log audit event for rename conflict resolution
 		if r.AuditLogger != nil {
 			r.AuditLogger.LogConflict(bundleID, conflict, RenameStrategy)
@@ -462,7 +479,7 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 		ext := filepath.Ext(conflict.TargetPath)
 		base := strings.TrimSuffix(conflict.TargetPath, ext)
 		newPath := fmt.Sprintf("%s.new%s", base, ext)
-		
+
 		// Copy the source to the new path
 		err := copyPath(conflict.SourcePath, newPath)
 		if err != nil {
@@ -474,7 +491,7 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 		conflict.Resolved = true
 		conflict.ResolutionStrategy = KeepBothStrategy
 		conflict.ResolutionPath = newPath
-		
+
 		// Log audit event for keep both conflict resolution
 		if r.AuditLogger != nil {
 			r.AuditLogger.LogConflict(bundleID, conflict, KeepBothStrategy)
@@ -482,16 +499,18 @@ func (r *DefaultConflictResolver) ResolveConflict(ctx context.Context, conflict 
 
 	default:
 		resolution.Error = fmt.Errorf("unknown resolution strategy: %s", strategy)
-		
+
 		// Log audit event for unknown strategy
 		if r.AuditLogger != nil {
 			r.AuditLogger.LogConflict(bundleID, conflict, strategy)
 		}
-		
+
 		return resolution, resolution.Error
 	}
 
 	return resolution, nil
+}
+
 // ResolveConflicts resolves multiple conflicts
 func (r *DefaultConflictResolver) ResolveConflicts(ctx context.Context, conflicts []*Conflict) ([]*ConflictResolution, error) {
 	var resolutions []*ConflictResolution
@@ -502,13 +521,13 @@ func (r *DefaultConflictResolver) ResolveConflicts(ctx context.Context, conflict
 			"operation": "batch_conflict_resolution",
 			"count":     len(conflicts),
 		}
-		
+
 		// Use the first conflict's bundleID if available
 		bundleID := ""
 		if len(conflicts) > 0 && conflicts[0].ContentItem != nil {
 			bundleID = conflicts[0].ContentItem.BundleID
 		}
-		
+
 		r.AuditLogger.LogEvent("batch_conflict_resolution_started", "ConflictResolver", bundleID, details)
 	}
 
@@ -527,49 +546,50 @@ func (r *DefaultConflictResolver) ResolveConflicts(ctx context.Context, conflict
 		for _, err := range errors {
 			errorMessages = append(errorMessages, err.Error())
 		}
-		
+
 		// Log audit event for batch conflict resolution completion with errors
 		if r.AuditLogger != nil {
 			details := map[string]interface{}{
 				"operation":     "batch_conflict_resolution",
-				"total":        len(conflicts),
-				"successful":   len(conflicts) - len(errors),
-				"failed":       len(errors),
-				"error_count":  len(errors),
+				"total":         len(conflicts),
+				"successful":    len(conflicts) - len(errors),
+				"failed":        len(errors),
+				"error_count":   len(errors),
 				"error_details": strings.Join(errorMessages, "; "),
 			}
-			
+
 			// Use the first conflict's bundleID if available
 			bundleID := ""
 			if len(conflicts) > 0 && conflicts[0].ContentItem != nil {
 				bundleID = conflicts[0].ContentItem.BundleID
 			}
-			
+
 			r.AuditLogger.LogEvent("batch_conflict_resolution_completed", "ConflictResolver", bundleID, details)
 		}
-		
+
 		return resolutions, fmt.Errorf("failed to resolve all conflicts: %s", strings.Join(errorMessages, "; "))
 	}
 
 	// Log audit event for successful batch conflict resolution completion
 	if r.AuditLogger != nil {
 		details := map[string]interface{}{
-			"operation":   "batch_conflict_resolution",
+			"operation":  "batch_conflict_resolution",
 			"total":      len(conflicts),
 			"successful": len(conflicts),
 			"failed":     0,
 		}
-		
+
 		// Use the first conflict's bundleID if available
 		bundleID := ""
 		if len(conflicts) > 0 && conflicts[0].ContentItem != nil {
 			bundleID = conflicts[0].ContentItem.BundleID
 		}
-		
+
 		r.AuditLogger.LogEvent("batch_conflict_resolution_completed", "ConflictResolver", bundleID, details)
 	}
-	
+
 	return resolutions, nil
+}
 
 // GetDefaultStrategy gets the default resolution strategy for a conflict type
 func (r *DefaultConflictResolver) GetDefaultStrategy(conflictType ConflictType) ConflictResolutionStrategy {
@@ -578,10 +598,12 @@ func (r *DefaultConflictResolver) GetDefaultStrategy(conflictType ConflictType) 
 		return PromptStrategy
 	}
 	return strategy
+}
 
 // SetDefaultStrategy sets the default resolution strategy for a conflict type
 func (r *DefaultConflictResolver) SetDefaultStrategy(conflictType ConflictType, strategy ConflictResolutionStrategy) {
 	r.DefaultStrategies[conflictType] = strategy
+}
 
 // mergeFiles merges two files and returns the path to the merged file
 func (r *DefaultConflictResolver) mergeFiles(sourcePath, targetPath string) (string, error) {
@@ -602,7 +624,11 @@ func (r *DefaultConflictResolver) mergeFiles(sourcePath, targetPath string) (str
 	if err != nil {
 		return "", fmt.Errorf("failed to create temporary file: %w", err)
 	}
-	defer func() { if err := tempFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := tempFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write a simple merged file
 	_, err = tempFile.WriteString("<<<<<<< SOURCE\n")
@@ -627,6 +653,7 @@ func (r *DefaultConflictResolver) mergeFiles(sourcePath, targetPath string) (str
 	}
 
 	return tempFile.Name(), nil
+}
 
 // calculateFileHash calculates the SHA-256 hash of a file
 func calculateFileHash(path string) (string, error) {
@@ -635,7 +662,11 @@ func calculateFileHash(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create a new hash
 	hash := sha256.New()
@@ -650,3 +681,5 @@ func calculateFileHash(path string) (string, error) {
 	hashBytes := hash.Sum(nil)
 	hashString := hex.EncodeToString(hashBytes)
 
+	return hashString, nil
+}

@@ -12,15 +12,16 @@ type FrameworkInfo struct {
 	MinPluginVersion string
 	// MaxPluginVersion is the maximum plugin version supported
 	MaxPluginVersion string
+}
 
 // GetFrameworkInfo returns information about the framework
-}
 func GetFrameworkInfo() *FrameworkInfo {
 	return &FrameworkInfo{
 		Version:          FrameworkVersion,
 		MinPluginVersion: "0.1.0",
 		MaxPluginVersion: "0.2.0",
 	}
+}
 
 // IsPluginVersionCompatible checks if a plugin version is compatible with the framework
 func IsPluginVersionCompatible(pluginVersion, minFrameworkVersion, maxFrameworkVersion string) (bool, error) {
@@ -29,13 +30,13 @@ func IsPluginVersionCompatible(pluginVersion, minFrameworkVersion, maxFrameworkV
 	if err != nil {
 		return false, err
 	}
-	
+
 	// Parse min framework version
 	minFramework, err := Parse(minFrameworkVersion)
 	if err != nil {
 		return false, err
 	}
-	
+
 	// Parse max framework version if provided
 	var maxFramework *SemVersion
 	if maxFrameworkVersion != "" {
@@ -44,14 +45,15 @@ func IsPluginVersionCompatible(pluginVersion, minFrameworkVersion, maxFrameworkV
 			return false, err
 		}
 	}
-	
+
 	// Check if plugin version is compatible with framework version
 	if plugin.LessThan(minFramework) {
 		return false, nil
 	}
-	
+
 	if maxFramework != nil && plugin.GreaterThan(maxFramework) {
 		return false, nil
 	}
-	
+
+	return true, nil
 }

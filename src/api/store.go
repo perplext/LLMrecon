@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 // ScanStore interface for scan storage
@@ -13,121 +14,130 @@ type ScanStore interface {
 	Delete(id string) error
 	List(filter ScanFilter) ([]Scan, error)
 	CleanupOldScans(olderThan time.Duration) error
+}
 
 // InMemoryScanStore implements ScanStore using in-memory storage
 type InMemoryScanStore struct {
 	mu    sync.RWMutex
 	scans map[string]*Scan
+}
 
 // NewInMemoryScanStore creates a new in-memory scan store
 func NewInMemoryScanStore() *InMemoryScanStore {
 	return &InMemoryScanStore{
 		scans: make(map[string]*Scan),
 	}
+}
 
 // Create creates a new scan
 func (s *InMemoryScanStore) Create(scan *Scan) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	if _, exists := s.scans[scan.ID]; exists {
 		return fmt.Errorf("scan with ID %s already exists", scan.ID)
 	}
-	
+
 	s.scans[scan.ID] = scan
 	return nil
+}
 
 // Get retrieves a scan by ID
 func (s *InMemoryScanStore) Get(id string) (*Scan, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	scan, exists := s.scans[id]
 	if !exists {
 		return nil, fmt.Errorf("scan not found: %s", id)
 	}
-	
+
 	// Return a copy to prevent external modifications
 	scanCopy := *scan
 	return &scanCopy, nil
+}
 
 // Update updates an existing scan
 func (s *InMemoryScanStore) Update(scan *Scan) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	if _, exists := s.scans[scan.ID]; !exists {
 		return fmt.Errorf("scan not found: %s", scan.ID)
 	}
-	
+
 	scan.UpdatedAt = time.Now()
 	s.scans[scan.ID] = scan
 	return nil
+}
 
 // Delete removes a scan
 func (s *InMemoryScanStore) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	if _, exists := s.scans[id]; !exists {
 		return fmt.Errorf("scan not found: %s", id)
 	}
-	
+
 	delete(s.scans, id)
 	return nil
+}
 
 // List returns scans matching the filter
 func (s *InMemoryScanStore) List(filter ScanFilter) ([]Scan, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	var results []Scan
-	
+
 	for _, scan := range s.scans {
 		// Apply filters
 		if filter.Status != "" && scan.Status != filter.Status {
 			continue
 		}
-		
+
 		if filter.DateFrom != nil && scan.CreatedAt.Before(*filter.DateFrom) {
 			continue
 		}
-		
+
 		if filter.DateTo != nil && scan.CreatedAt.After(*filter.DateTo) {
 			continue
 		}
-		
+
 		// Add to results
 		scanCopy := *scan
 		results = append(results, scanCopy)
-		
+
 		// Check limit
 		if filter.Limit > 0 && len(results) >= filter.Limit {
 			break
 		}
 	}
-	
+
 	return results, nil
+}
 
 // CleanupOldScans removes scans older than the specified duration
 func (s *InMemoryScanStore) CleanupOldScans(olderThan time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	cutoff := time.Now().Add(-olderThan)
 	toDelete := []string{}
-	
+
 	for id, scan := range s.scans {
 		if scan.CreatedAt.Before(cutoff) {
 			toDelete = append(toDelete, id)
 		}
 	}
-	
+
 	for _, id := range toDelete {
 		delete(s.scans, id)
 	}
-	
+
 	return nil
+}
 
 // MockScanService implements a mock scan service for testing
 type MockScanService struct {
@@ -139,36 +149,40 @@ func NewMockScanService() *MockScanService {
 	return &MockScanService{
 		store: NewInMemoryScanStore(),
 	}
+}
 
 // CreateScan creates a new scan
 func (m *MockScanService) CreateScan(request CreateScanRequest) (*Scan, error) {
 	scan := &Scan{
-		ID:        generateMockToken(),
-		Status:    ScanStatusPending,
-		Target:    request.Target,
-		Templates: request.Templates,
+		ID:         generateMockToken(),
+		Status:     ScanStatusPending,
+		Target:     request.Target,
+		Templates:  request.Templates,
 		Categories: request.Categories,
-		Config:    request.Config,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Config:     request.Config,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
-	
+
 	if err := m.store.Create(scan); err != nil {
 		return nil, err
 	}
-	
+
 	// Simulate scan execution
 	go m.executeScan(scan.ID)
-	
+
 	return scan, nil
+}
 
 // GetScan retrieves a scan by ID
 func (m *MockScanService) GetScan(id string) (*Scan, error) {
 	return m.store.Get(id)
+}
 
 // ListScans lists all scans
 func (m *MockScanService) ListScans(filter ScanFilter) ([]Scan, error) {
 	return m.store.List(filter)
+}
 
 // CancelScan cancels a running scan
 func (m *MockScanService) CancelScan(id string) error {
@@ -176,25 +190,28 @@ func (m *MockScanService) CancelScan(id string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if scan.Status != ScanStatusRunning && scan.Status != ScanStatusPending {
 		return fmt.Errorf("cannot cancel scan in status: %s", scan.Status)
 	}
-	
+
 	scan.Status = ScanStatusCancelled
 	return m.store.Update(scan)
+}
+
 // GetScanResults retrieves scan results
 func (m *MockScanService) GetScanResults(id string) (*ScanResults, error) {
 	scan, err := m.store.Get(id)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if scan.Status != ScanStatusCompleted {
 		return nil, fmt.Errorf("scan not completed")
 	}
-	
+
 	return scan.Results, nil
+}
 
 // executeScan simulates scan execution
 func (m *MockScanService) executeScan(id string) {
@@ -204,16 +221,16 @@ func (m *MockScanService) executeScan(id string) {
 	now := time.Now()
 	scan.StartedAt = &now
 	m.store.Update(scan)
-	
+
 	// Simulate scan execution
 	time.Sleep(5 * time.Second)
-	
+
 	// Check if cancelled
 	scan, _ = m.store.Get(id)
 	if scan.Status == ScanStatusCancelled {
 		return
 	}
-	
+
 	// Generate mock results
 	results := &ScanResults{
 		Summary: ResultSummary{
@@ -249,7 +266,7 @@ func (m *MockScanService) executeScan(id string) {
 			},
 		},
 	}
-	
+
 	// Update scan with results
 	scan.Status = ScanStatusCompleted
 	scan.Results = results
@@ -257,16 +274,4 @@ func (m *MockScanService) executeScan(id string) {
 	scan.CompletedAt = &completedAt
 	scan.Duration = completedAt.Sub(*scan.StartedAt).String()
 	m.store.Update(scan)
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

@@ -1,11 +1,10 @@
 // Package prompt provides protection against prompt injection and other LLM-specific security threats
 package prompt
 
-
 import (
-	"time"
 	"context"
 	"sync"
+	"time"
 )
 
 // ProtectionLevel defines the level of protection to apply
@@ -50,38 +49,43 @@ type ProtectionConfig struct {
 	SanitizationLevel int
 	// ApprovalThreshold is the risk score threshold for requiring approval
 	ApprovalThreshold float64
+	// RiskThreshold is the risk score threshold for protective actions
+	RiskThreshold float64
 	// ApprovalCallback is called when approval is required
 	ApprovalCallback func(context.Context, *ApprovalRequest) (bool, error)
 	// ReportingCallback is called when a new injection technique is detected
 	ReportingCallback func(context.Context, *InjectionReport) error
 	// MonitoringInterval is the interval for real-time monitoring checks
 	MonitoringInterval time.Duration
+}
 
 // DefaultProtectionConfig returns the default protection configuration
 func DefaultProtectionConfig() *ProtectionConfig {
 	return &ProtectionConfig{
-		Level:                   LevelMedium,
-		EnableContextBoundaries: true,
+		Level:                    LevelMedium,
+		EnableContextBoundaries:  true,
 		EnableJailbreakDetection: true,
 		EnableRealTimeMonitoring: true,
 		EnableContentFiltering:   true,
 		EnableApprovalWorkflow:   false, // Disabled by default as it requires user interaction
 		EnableReportingSystem:    true,
-		MaxPromptLength:          8192,  // 8KB default max prompt length
-		SanitizationLevel:        2,     // Medium sanitization by default
-		ApprovalThreshold:        0.8,   // 80% risk score threshold for approval
+		MaxPromptLength:          8192, // 8KB default max prompt length
+		SanitizationLevel:        2,    // Medium sanitization by default
+		ApprovalThreshold:        0.8,  // 80% risk score threshold for approval
 		MonitoringInterval:       time.Minute * 5,
 	}
+}
 
 // HighSecurityProtectionConfig returns a high-security protection configuration
 func HighSecurityProtectionConfig() *ProtectionConfig {
 	config := DefaultProtectionConfig()
 	config.Level = LevelHigh
-	config.SanitizationLevel = 3      // High sanitization
-	config.ApprovalThreshold = 0.6    // Lower threshold (60%) for requiring approval
+	config.SanitizationLevel = 3   // High sanitization
+	config.ApprovalThreshold = 0.6 // Lower threshold (60%) for requiring approval
 	config.MonitoringInterval = time.Minute
 	config.EnableApprovalWorkflow = true
 	return config
+}
 
 // ProtectionManager manages the prompt injection protection system
 type ProtectionManager struct {
@@ -113,28 +117,28 @@ func NewProtectionManager(config *ProtectionConfig) (*ProtectionManager, error) 
 
 	// Initialize pattern library (always enabled as it's used by other components)
 	patternLibrary = NewInjectionPatternLibrary()
-	
+
 	// Initialize components based on configuration
 	if config.EnableContextBoundaries {
 		contextEnforcer = NewContextBoundaryEnforcer(config)
 	}
-	
+
 	if config.EnableJailbreakDetection {
 		jailbreakDetector = NewJailbreakDetector(config, patternLibrary)
 	}
-	
+
 	if config.EnableRealTimeMonitoring {
 		monitor = NewTemplateMonitor(config, patternLibrary)
 	}
-	
+
 	if config.EnableContentFiltering {
 		contentFilter = NewContentFilter(config)
 	}
-	
+
 	if config.EnableApprovalWorkflow {
 		approvalWorkflow = NewApprovalWorkflow(config)
 	}
-	
+
 	if config.EnableReportingSystem {
 		reportingSystem = NewReportingSystem(config)
 	}
@@ -149,15 +153,16 @@ func NewProtectionManager(config *ProtectionConfig) (*ProtectionManager, error) 
 		approvalWorkflow:  approvalWorkflow,
 		reportingSystem:   reportingSystem,
 	}, nil
+}
 
 // ProtectPrompt protects against prompt injection in user inputs
 func (pm *ProtectionManager) ProtectPrompt(ctx context.Context, prompt string) (string, *ProtectionResult, error) {
 	result := &ProtectionResult{
-		OriginalPrompt: prompt,
+		OriginalPrompt:  prompt,
 		ProtectedPrompt: prompt,
-		Detections: make([]*Detection, 0),
-		RiskScore: 0.0,
-		ActionTaken: ActionNone,
+		Detections:      make([]*Detection, 0),
+		RiskScore:       0.0,
+		ActionTaken:     ActionNone,
 	}
 
 	// Apply context boundary enforcement if enabled
@@ -166,11 +171,11 @@ func (pm *ProtectionManager) ProtectPrompt(ctx context.Context, prompt string) (
 		if err != nil {
 			return prompt, result, err
 		}
-		
+
 		result.ProtectedPrompt = protectedPrompt
 		result.Detections = append(result.Detections, enforcerResult.Detections...)
 		result.RiskScore = max(result.RiskScore, enforcerResult.RiskScore)
-		
+
 		if enforcerResult.ActionTaken != ActionNone {
 			result.ActionTaken = enforcerResult.ActionTaken
 		}
@@ -182,10 +187,10 @@ func (pm *ProtectionManager) ProtectPrompt(ctx context.Context, prompt string) (
 		if err != nil {
 			return result.ProtectedPrompt, result, err
 		}
-		
+
 		result.Detections = append(result.Detections, detectorResult.Detections...)
 		result.RiskScore = max(result.RiskScore, detectorResult.RiskScore)
-		
+
 		if detectorResult.ActionTaken != ActionNone && detectorResult.ActionTaken > result.ActionTaken {
 			result.ActionTaken = detectorResult.ActionTaken
 		}
@@ -197,7 +202,7 @@ func (pm *ProtectionManager) ProtectPrompt(ctx context.Context, prompt string) (
 		if err != nil {
 			return result.ProtectedPrompt, result, err
 		}
-		
+
 		if !approved {
 			result.ProtectedPrompt = ""
 			result.ActionTaken = ActionBlocked
@@ -225,16 +230,17 @@ func (pm *ProtectionManager) ProtectPrompt(ctx context.Context, prompt string) (
 	}
 
 	return result.ProtectedPrompt, result, nil
+}
 
 // ProtectResponse protects against prompt injection in LLM responses
 func (pm *ProtectionManager) ProtectResponse(ctx context.Context, response string, originalPrompt string) (string, *ProtectionResult, error) {
 	result := &ProtectionResult{
-		OriginalPrompt: originalPrompt,
-		OriginalResponse: response,
+		OriginalPrompt:    originalPrompt,
+		OriginalResponse:  response,
 		ProtectedResponse: response,
-		Detections: make([]*Detection, 0),
-		RiskScore: 0.0,
-		ActionTaken: ActionNone,
+		Detections:        make([]*Detection, 0),
+		RiskScore:         0.0,
+		ActionTaken:       ActionNone,
 	}
 
 	// Apply content filtering if enabled
@@ -243,11 +249,11 @@ func (pm *ProtectionManager) ProtectResponse(ctx context.Context, response strin
 		if err != nil {
 			return response, result, err
 		}
-		
+
 		result.ProtectedResponse = filteredResponse
 		result.Detections = append(result.Detections, filterResult.Detections...)
 		result.RiskScore = max(result.RiskScore, filterResult.RiskScore)
-		
+
 		// Set ActionTaken based on filter result or detections
 		if filterResult.ActionTaken != ActionNone {
 			result.ActionTaken = filterResult.ActionTaken
@@ -271,27 +277,19 @@ func (pm *ProtectionManager) ProtectResponse(ctx context.Context, response strin
 	}
 
 	return result.ProtectedResponse, result, nil
+}
 
 // Close closes the protection manager and releases resources
 func (pm *ProtectionManager) Close() error {
 	if pm.monitor != nil {
 		pm.monitor.Stop()
 	}
-	
+
 	if pm.reportingSystem != nil {
 		pm.reportingSystem.Close()
 	}
-	
-	return nil
 
-// Helper function to get the maximum of two float64 values
-func max(a, b float64) float64 {
-	if a > b {
-		return a
-	}
+	return nil
 }
-}
-}
-}
-}
-}
+
+// Use shared max function from utils.go

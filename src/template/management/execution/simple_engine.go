@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 )
@@ -14,6 +15,7 @@ type Engine struct {
 	maxConcurrent int
 	// executionDelay is the simulated execution delay
 	executionDelay time.Duration
+}
 
 // NewEngine creates a new execution engine
 func NewEngine() *Engine {
@@ -21,6 +23,7 @@ func NewEngine() *Engine {
 		maxConcurrent:  10,
 		executionDelay: 10 * time.Millisecond,
 	}
+}
 
 // ExecuteTemplate executes a template
 func (e *Engine) ExecuteTemplate(ctx context.Context, template *format.Template, data interface{}) (string, error) {
@@ -47,31 +50,33 @@ func (e *Engine) ExecuteTemplate(ctx context.Context, template *format.Template,
 	}
 
 	return result, nil
+}
 
 // ExecuteTemplates executes multiple templates
 func (e *Engine) ExecuteTemplates(ctx context.Context, templates []*format.Template, data interface{}) ([]string, error) {
 	results := make([]string, len(templates))
-	
+
 	for i, template := range templates {
 		result, err := e.ExecuteTemplate(ctx, template, data)
 		if err != nil {
 			return results, fmt.Errorf("failed to execute template %s: %w", template.ID, err)
 		}
-		
+
 		results[i] = result
 	}
-	
+
 	return results, nil
+}
 
 // renderTemplate renders a template with data
 func (e *Engine) renderTemplate(template *format.Template, data interface{}) (string, error) {
 	if template == nil || template.Content == nil {
 		return "", fmt.Errorf("template or content is nil")
 	}
-	
+
 	// Get template content
 	content := template.Test.Prompt
-	
+
 	// Replace variables
 	if data != nil {
 		if dataMap, ok := data.(map[string]interface{}); ok {
@@ -83,25 +88,30 @@ func (e *Engine) renderTemplate(template *format.Template, data interface{}) (st
 			}
 		}
 	}
-	
+
 	return content, nil
+}
 
 // SetMaxConcurrent sets the maximum number of concurrent executions
 func (e *Engine) SetMaxConcurrent(max int) {
 	if max > 0 {
 		e.maxConcurrent = max
 	}
+}
 
 // SetExecutionDelay sets the simulated execution delay
 func (e *Engine) SetExecutionDelay(delay time.Duration) {
 	if delay > 0 {
 		e.executionDelay = delay
 	}
+}
 
 // GetMaxConcurrent returns the maximum number of concurrent executions
 func (e *Engine) GetMaxConcurrent() int {
 	return e.maxConcurrent
+}
 
 // GetExecutionDelay returns the simulated execution delay
 func (e *Engine) GetExecutionDelay() time.Duration {
 	return e.executionDelay
+}

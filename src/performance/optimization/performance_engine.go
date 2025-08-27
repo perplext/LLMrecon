@@ -6,33 +6,31 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
-
-	"github.com/perplext/LLMrecon/src/attacks/injection"
-	"github.com/perplext/LLMrecon/src/attacks/orchestration"
+	"time"
 )
 
 // PerformanceEngine optimizes system performance
 type PerformanceEngine struct {
-	profiler        *SystemProfiler
-	optimizer       *ResourceOptimizer
-	scheduler       *TaskScheduler
-	cache           *PerformanceCache
-	monitor         *PerformanceMonitor
-	config          PerformanceConfig
-	metrics         *PerformanceMetrics
+	profiler            *SystemProfiler
+	optimizer           *ResourceOptimizer
+	scheduler           *TaskScheduler
+	cache               *PerformanceCache
+	monitor             *PerformanceMonitor
+	config              PerformanceConfig
+	metrics             *PerformanceMetrics
 	activeOptimizations map[string]*Optimization
-	mu              sync.RWMutex
+	mu                  sync.RWMutex
 }
 
 // PerformanceConfig configures the performance engine
 type PerformanceConfig struct {
-	MaxConcurrency      int
-	MemoryLimit        int64
-	CPUTarget          float64
-	CacheSize          int64
-	OptimizationLevel  OptimizationLevel
-	AutoTuning         bool
-	MetricsInterval    time.Duration
+	MaxConcurrency    int
+	MemoryLimit       int64
+	CPUTarget         float64
+	CacheSize         int64
+	OptimizationLevel OptimizationLevel
+	AutoTuning        bool
+	MetricsInterval   time.Duration
 }
 
 // OptimizationLevel defines optimization aggressiveness
@@ -47,13 +45,13 @@ const (
 
 // Optimization represents an active optimization
 type Optimization struct {
-	ID              string
-	Type            OptimizationType
-	Target          string
-	StartTime       time.Time
-	Status          OptimizationStatus
-	Metrics         OptimizationMetrics
-	Adjustments     []Adjustment
+	ID          string
+	Type        OptimizationType
+	Target      string
+	StartTime   time.Time
+	Status      OptimizationStatus
+	Metrics     OptimizationMetrics
+	Adjustments []Adjustment
 }
 
 // OptimizationType categorizes optimizations
@@ -72,10 +70,10 @@ const (
 type OptimizationStatus string
 
 const (
-	OptStatusActive     OptimizationStatus = "active"
-	OptStatusCompleted  OptimizationStatus = "completed"
-	OptStatusFailed     OptimizationStatus = "failed"
-	OptStatusSuspended  OptimizationStatus = "suspended"
+	OptStatusActive    OptimizationStatus = "active"
+	OptStatusCompleted OptimizationStatus = "completed"
+	OptStatusFailed    OptimizationStatus = "failed"
+	OptStatusSuspended OptimizationStatus = "suspended"
 )
 
 // OptimizationMetrics measures optimization impact
@@ -84,6 +82,7 @@ type OptimizationMetrics struct {
 	CurrentMetrics  SystemMetrics
 	Improvement     float64
 	ResourceSavings ResourceSavings
+}
 
 // SystemMetrics captures system performance
 type SystemMetrics struct {
@@ -104,24 +103,27 @@ type ResourceSavings struct {
 	MemorySaved   int64
 	TimeReduced   time.Duration
 	CostReduction float64
+}
 
 // Adjustment represents a performance adjustment
 type Adjustment struct {
-	Type       string
-	Parameter  string
-	OldValue   interface{}
-	NewValue   interface{}
-	Impact     float64
-	Timestamp  time.Time
+	Type      string
+	Parameter string
+	OldValue  interface{}
+	NewValue  interface{}
+	Impact    float64
+	Timestamp time.Time
+}
 
 // PerformanceMetrics tracks overall performance
 type PerformanceMetrics struct {
-	TotalOptimizations   int64
+	TotalOptimizations      int64
 	SuccessfulOptimizations int64
-	AverageCPUUsage      float64
-	AverageMemoryUsage   int64
-	TotalResourceSavings ResourceSavings
-	mu                   sync.RWMutex
+	AverageCPUUsage         float64
+	AverageMemoryUsage      int64
+	TotalResourceSavings    ResourceSavings
+	mu                      sync.RWMutex
+}
 
 // NewPerformanceEngine creates a performance engine
 func NewPerformanceEngine(config PerformanceConfig) *PerformanceEngine {
@@ -142,6 +144,7 @@ func NewPerformanceEngine(config PerformanceConfig) *PerformanceEngine {
 	}
 
 	return pe
+}
 
 // StartOptimization begins performance optimization
 func (pe *PerformanceEngine) StartOptimization(ctx context.Context, target OptimizationTarget) (*Optimization, error) {
@@ -164,6 +167,7 @@ func (pe *PerformanceEngine) StartOptimization(ctx context.Context, target Optim
 	go pe.runOptimization(ctx, opt, target)
 
 	return opt, nil
+}
 
 // OptimizationTarget defines what to optimize
 type OptimizationTarget struct {
@@ -171,11 +175,13 @@ type OptimizationTarget struct {
 	Name        string
 	Constraints []Constraint
 	Goals       []Goal
+}
 
 // Constraint limits optimization
 type Constraint struct {
 	Type  ConstraintType
 	Value interface{}
+}
 
 // ConstraintType categorizes constraints
 type ConstraintType string
@@ -189,9 +195,9 @@ const (
 
 // Goal defines optimization objective
 type Goal struct {
-	Metric    string
-	Target    float64
-	Priority  int
+	Metric   string
+	Target   float64
+	Priority int
 }
 
 // runOptimization executes optimization
@@ -217,6 +223,7 @@ func (pe *PerformanceEngine) runOptimization(ctx context.Context, opt *Optimizat
 	case OptTypeThroughput:
 		pe.optimizeThroughput(ctx, opt, target)
 	}
+}
 
 // optimizeMemory reduces memory usage
 func (pe *PerformanceEngine) optimizeMemory(ctx context.Context, opt *Optimization, target OptimizationTarget) {
@@ -244,6 +251,7 @@ func (pe *PerformanceEngine) optimizeMemory(ctx context.Context, opt *Optimizati
 
 	// Tune GC
 	pe.tuneGarbageCollector(profile)
+}
 
 // applyMemoryOptimization applies memory optimization
 func (pe *PerformanceEngine) applyMemoryOptimization(opp MemoryOpportunity) *Adjustment {
@@ -259,6 +267,7 @@ func (pe *PerformanceEngine) applyMemoryOptimization(opp MemoryOpportunity) *Adj
 	default:
 		return nil
 	}
+}
 
 // optimizeBufferPools optimizes buffer usage
 func (pe *PerformanceEngine) optimizeBufferPools(opp MemoryOpportunity) *Adjustment {
@@ -276,6 +285,7 @@ func (pe *PerformanceEngine) optimizeBufferPools(opp MemoryOpportunity) *Adjustm
 		Impact:    float64(oldSize-newSize) / float64(oldSize),
 		Timestamp: time.Now(),
 	}
+}
 
 // optimizeCPU reduces CPU usage
 func (pe *PerformanceEngine) optimizeCPU(ctx context.Context, opt *Optimization, target OptimizationTarget) {
@@ -299,6 +309,7 @@ func (pe *PerformanceEngine) optimizeCPU(ctx context.Context, opt *Optimization,
 
 	// Optimize goroutine scheduling
 	pe.optimizeScheduling()
+}
 
 // optimizeHotPath optimizes CPU-intensive code
 func (pe *PerformanceEngine) optimizeHotPath(path HotPath) *Adjustment {
@@ -314,6 +325,7 @@ func (pe *PerformanceEngine) optimizeHotPath(path HotPath) *Adjustment {
 	default:
 		return nil
 	}
+}
 
 // optimizeConcurrency improves concurrent execution
 func (pe *PerformanceEngine) optimizeConcurrency(ctx context.Context, opt *Optimization, target OptimizationTarget) {
@@ -340,6 +352,7 @@ func (pe *PerformanceEngine) optimizeConcurrency(ctx context.Context, opt *Optim
 
 	// Balance load
 	pe.balanceLoad()
+}
 
 // fixConcurrencyIssue resolves concurrency problems
 func (pe *PerformanceEngine) fixConcurrencyIssue(issue ConcurrencyIssue) *Adjustment {
@@ -355,6 +368,7 @@ func (pe *PerformanceEngine) fixConcurrencyIssue(issue ConcurrencyIssue) *Adjust
 	default:
 		return nil
 	}
+}
 
 // optimizeCache improves cache performance
 func (pe *PerformanceEngine) optimizeCache(ctx context.Context, opt *Optimization, target OptimizationTarget) {
@@ -375,6 +389,7 @@ func (pe *PerformanceEngine) optimizeCache(ctx context.Context, opt *Optimizatio
 
 	// Add predictive caching
 	pe.addPredictiveCaching()
+}
 
 // optimizeLatency reduces response time
 func (pe *PerformanceEngine) optimizeLatency(ctx context.Context, opt *Optimization, target OptimizationTarget) {
@@ -401,6 +416,7 @@ func (pe *PerformanceEngine) optimizeLatency(ctx context.Context, opt *Optimizat
 
 	// Add circuit breakers
 	pe.addCircuitBreakers()
+}
 
 // optimizeThroughput increases processing capacity
 func (pe *PerformanceEngine) optimizeThroughput(ctx context.Context, opt *Optimization, target OptimizationTarget) {
@@ -420,14 +436,15 @@ func (pe *PerformanceEngine) optimizeThroughput(ctx context.Context, opt *Optimi
 	if pe.shouldScaleHorizontally(patterns) {
 		pe.prepareHorizontalScaling()
 	}
+}
 
 // SystemProfiler profiles system performance
 type SystemProfiler struct {
-	cpuProfiler    *CPUProfiler
-	memProfiler    *MemoryProfiler
-	concProfiler   *ConcurrencyProfiler
-	ioProfiler     *IOProfiler
-	mu             sync.RWMutex
+	cpuProfiler  *CPUProfiler
+	memProfiler  *MemoryProfiler
+	concProfiler *ConcurrencyProfiler
+	ioProfiler   *IOProfiler
+	mu           sync.RWMutex
 }
 
 // CPUProfile contains CPU profiling data
@@ -439,37 +456,39 @@ type CPUProfile struct {
 
 // CPUSample represents a CPU sample
 type CPUSample struct {
-	Function  string
-	File      string
-	Line      int
-	Time      time.Duration
-	Percent   float64
+	Function string
+	File     string
+	Line     int
+	Time     time.Duration
+	Percent  float64
 }
 
 // FunctionProfile profiles a function
 type FunctionProfile struct {
-	Name            string
-	TotalTime       time.Duration
-	SelfTime        time.Duration
-	CallCount       int64
-	AverageTime     time.Duration
+	Name        string
+	TotalTime   time.Duration
+	SelfTime    time.Duration
+	CallCount   int64
+	AverageTime time.Duration
 }
 
 // MemoryProfile contains memory profiling data
 type MemoryProfile struct {
-	HeapAlloc       uint64
-	HeapInUse       uint64
-	HeapObjects     uint64
-	StackInUse      uint64
-	GCStats         GCStatistics
-	TopAllocations  []AllocationSite
+	HeapAlloc      uint64
+	HeapInUse      uint64
+	HeapObjects    uint64
+	StackInUse     uint64
+	GCStats        GCStatistics
+	TopAllocations []AllocationSite
+}
 
 // GCStatistics tracks garbage collection
 type GCStatistics struct {
-	NumGC           uint32
-	PauseTotal      time.Duration
-	PauseAverage    time.Duration
-	LastGC          time.Time
+	NumGC        uint32
+	PauseTotal   time.Duration
+	PauseAverage time.Duration
+	LastGC       time.Time
+}
 
 // AllocationSite tracks memory allocations
 type AllocationSite struct {
@@ -488,6 +507,7 @@ func NewSystemProfiler() *SystemProfiler {
 		concProfiler: NewConcurrencyProfiler(),
 		ioProfiler:   NewIOProfiler(),
 	}
+}
 
 // ProfileMemory profiles memory usage
 func (sp *SystemProfiler) ProfileMemory() *MemoryProfile {
@@ -496,13 +516,13 @@ func (sp *SystemProfiler) ProfileMemory() *MemoryProfile {
 
 	profile := &MemoryProfile{
 		HeapAlloc:   m.HeapAlloc,
-		HeapInUse:   m.HeapInUse,
+		HeapInUse:   m.HeapInuse,
 		HeapObjects: m.HeapObjects,
-		StackInUse:  m.StackInUse,
+		StackInUse:  m.StackInuse,
 		GCStats: GCStatistics{
-			NumGC:        m.NumGC,
-			PauseTotal:   time.Duration(m.PauseTotalNs),
-			LastGC:       time.Unix(0, int64(m.LastGC)),
+			NumGC:      m.NumGC,
+			PauseTotal: time.Duration(m.PauseTotalNs),
+			LastGC:     time.Unix(0, int64(m.LastGC)),
 		},
 	}
 
@@ -514,22 +534,25 @@ func (sp *SystemProfiler) ProfileMemory() *MemoryProfile {
 	profile.TopAllocations = sp.memProfiler.GetTopAllocations(10)
 
 	return profile
+}
 
 // ProfileCPU profiles CPU usage
 func (sp *SystemProfiler) ProfileCPU() *CPUProfile {
 	return sp.cpuProfiler.Profile(5 * time.Second)
+}
 
 // ProfileConcurrency profiles concurrent execution
 func (sp *SystemProfiler) ProfileConcurrency() *ConcurrencyPatterns {
 	return sp.concProfiler.AnalyzePatterns()
+}
 
 // ResourceOptimizer optimizes resource usage
 type ResourceOptimizer struct {
-	level           OptimizationLevel
-	memoryAnalyzer  *MemoryAnalyzer
-	cpuAnalyzer     *CPUAnalyzer
-	concAnalyzer    *ConcurrencyAnalyzer
-	mu              sync.RWMutex
+	level          OptimizationLevel
+	memoryAnalyzer *MemoryAnalyzer
+	cpuAnalyzer    *CPUAnalyzer
+	concAnalyzer   *ConcurrencyAnalyzer
+	mu             sync.RWMutex
 }
 
 // MemoryOpportunity represents memory optimization
@@ -538,6 +561,7 @@ type MemoryOpportunity struct {
 	Description string
 	Potential   int64 // Bytes that can be saved
 	Risk        RiskLevel
+}
 
 // HotPath represents CPU-intensive code
 type HotPath struct {
@@ -554,22 +578,24 @@ type ConcurrencyIssue struct {
 	Location    string
 	Severity    SeverityLevel
 	Description string
+}
 
 // ConcurrencyPatterns contains concurrency analysis
 type ConcurrencyPatterns struct {
-	GoroutineCount     int
-	ActiveWorkers      int
-	BlockedGoroutines  int
-	ContentionPoints   []ContentionPoint
-	DeadlockRisks      []DeadlockRisk
+	GoroutineCount    int
+	ActiveWorkers     int
+	BlockedGoroutines int
+	ContentionPoints  []ContentionPoint
+	DeadlockRisks     []DeadlockRisk
 }
 
 // ContentionPoint identifies lock contention
 type ContentionPoint struct {
-	Lock         string
-	Waiters      int
-	AverageWait  time.Duration
-	MaxWait      time.Duration
+	Lock        string
+	Waiters     int
+	AverageWait time.Duration
+	MaxWait     time.Duration
+}
 
 // DeadlockRisk identifies potential deadlock
 type DeadlockRisk struct {
@@ -605,6 +631,7 @@ func NewResourceOptimizer(level OptimizationLevel) *ResourceOptimizer {
 		cpuAnalyzer:    NewCPUAnalyzer(),
 		concAnalyzer:   NewConcurrencyAnalyzer(),
 	}
+}
 
 // AnalyzeMemory finds memory optimizations
 func (ro *ResourceOptimizer) AnalyzeMemory(profile *MemoryProfile) []MemoryOpportunity {
@@ -633,15 +660,17 @@ func (ro *ResourceOptimizer) AnalyzeMemory(profile *MemoryProfile) []MemoryOppor
 	}
 
 	return opportunities
+}
 
 // TaskScheduler manages task execution
 type TaskScheduler struct {
-	workers         []*Worker
-	taskQueue       chan Task
-	priorityQueue   *PriorityQueue
-	maxConcurrency  int
-	activeCount     int32
-	mu              sync.RWMutex
+	workers        []*Worker
+	taskQueue      chan Task
+	priorityQueue  *PriorityQueue
+	maxConcurrency int
+	activeCount    int32
+	mu             sync.RWMutex
+}
 
 // Worker executes tasks
 type Worker struct {
@@ -654,26 +683,26 @@ type Worker struct {
 
 // Task represents a schedulable task
 type Task struct {
-	ID          string
-	Type        TaskType
-	Priority    int
-	Payload     interface{}
-	Handler     TaskHandler
-	Timeout     time.Duration
-	StartTime   time.Time
-	EndTime     time.Time
-	Status      TaskStatus
-	Result      interface{}
-	Error       error
+	ID        string
+	Type      TaskType
+	Priority  int
+	Payload   interface{}
+	Handler   TaskHandler
+	Timeout   time.Duration
+	StartTime time.Time
+	EndTime   time.Time
+	Status    TaskStatus
+	Result    interface{}
+	Error     error
 }
 
 // TaskType categorizes tasks
 type TaskType string
 
 const (
-	TaskTypeAttack      TaskType = "attack"
-	TaskTypeScan        TaskType = "scan"
-	TaskTypeAnalysis    TaskType = "analysis"
+	TaskTypeAttack       TaskType = "attack"
+	TaskTypeScan         TaskType = "scan"
+	TaskTypeAnalysis     TaskType = "analysis"
 	TaskTypeOptimization TaskType = "optimization"
 )
 
@@ -715,6 +744,7 @@ func NewTaskScheduler(maxConcurrency int) *TaskScheduler {
 	go ts.dispatch()
 
 	return ts
+}
 
 // ScheduleTask adds task to queue
 func (ts *TaskScheduler) ScheduleTask(task Task) error {
@@ -732,6 +762,7 @@ func (ts *TaskScheduler) ScheduleTask(task Task) error {
 	}
 
 	return nil
+}
 
 // dispatch manages task distribution
 func (ts *TaskScheduler) dispatch() {
@@ -752,6 +783,7 @@ func (ts *TaskScheduler) dispatch() {
 			}
 		}
 	}
+}
 
 // run executes tasks
 func (w *Worker) run() {
@@ -763,6 +795,7 @@ func (w *Worker) run() {
 			return
 		}
 	}
+}
 
 // executeTask runs a single task
 func (w *Worker) executeTask(task Task) {
@@ -801,6 +834,7 @@ func (w *Worker) executeTask(task Task) {
 	w.mu.Lock()
 	w.currentTask = nil
 	w.mu.Unlock()
+}
 
 // PerformanceCache caches performance data
 type PerformanceCache struct {
@@ -815,13 +849,13 @@ type PerformanceCache struct {
 
 // CacheEntry represents cached data
 type CacheEntry struct {
-	Key        string
-	Value      interface{}
-	Size       int64
-	AccessTime time.Time
+	Key         string
+	Value       interface{}
+	Size        int64
+	AccessTime  time.Time
 	AccessCount int64
-	TTL        time.Duration
-	ExpireTime time.Time
+	TTL         time.Duration
+	ExpireTime  time.Time
 }
 
 // CacheStatistics tracks cache performance
@@ -832,6 +866,7 @@ type CacheStatistics struct {
 	MissRate     float64
 	EvictionRate float64
 	AverageAge   time.Duration
+}
 
 // NewPerformanceCache creates cache
 func NewPerformanceCache(maxSize int64) *PerformanceCache {
@@ -840,6 +875,7 @@ func NewPerformanceCache(maxSize int64) *PerformanceCache {
 		lru:     NewLRUList(),
 		maxSize: maxSize,
 	}
+}
 
 // Get retrieves from cache
 func (pc *PerformanceCache) Get(key string) (interface{}, bool) {
@@ -871,6 +907,7 @@ func (pc *PerformanceCache) Get(key string) (interface{}, bool) {
 
 	atomic.AddInt64(&pc.hitCount, 1)
 	return entry.Value, true
+}
 
 // Set stores in cache
 func (pc *PerformanceCache) Set(key string, value interface{}, size int64, ttl time.Duration) {
@@ -907,6 +944,7 @@ func (pc *PerformanceCache) Set(key string, value interface{}, size int64, ttl t
 	pc.cache[key] = entry
 	pc.lru.PushFront(entry)
 	pc.currSize += size
+}
 
 // GetStatistics returns cache stats
 func (pc *PerformanceCache) GetStatistics() *CacheStatistics {
@@ -924,14 +962,15 @@ func (pc *PerformanceCache) GetStatistics() *CacheStatistics {
 		HitRate:  float64(pc.hitCount) / total,
 		MissRate: float64(pc.missCount) / total,
 	}
+}
 
 // PerformanceMonitor monitors system performance
 type PerformanceMonitor struct {
-	metrics     *MetricsCollector
-	alerts      *AlertManager
-	recorder    *MetricsRecorder
-	dashboards  map[string]*Dashboard
-	mu          sync.RWMutex
+	metrics    *MetricsCollector
+	alerts     *AlertManager
+	recorder   *MetricsRecorder
+	dashboards map[string]*Dashboard
+	mu         sync.RWMutex
 }
 
 // MetricsCollector collects performance metrics
@@ -940,16 +979,19 @@ type MetricsCollector struct {
 	gauges     map[string]*Gauge
 	histograms map[string]*Histogram
 	mu         sync.RWMutex
+}
 
 // Counter tracks cumulative values
 type Counter struct {
 	name  string
 	value int64
+}
 
 // Gauge tracks instantaneous values
 type Gauge struct {
 	name  string
 	value float64
+}
 
 // Histogram tracks distributions
 type Histogram struct {
@@ -973,15 +1015,16 @@ type Widget struct {
 	Metric string
 	Title  string
 	Config map[string]interface{}
+}
 
 // WidgetType categorizes widgets
 type WidgetType string
 
 const (
-	WidgetGraph     WidgetType = "graph"
-	WidgetGauge     WidgetType = "gauge"
-	WidgetTable     WidgetType = "table"
-	WidgetSummary   WidgetType = "summary"
+	WidgetGraph   WidgetType = "graph"
+	WidgetGauge   WidgetType = "gauge"
+	WidgetTable   WidgetType = "table"
+	WidgetSummary WidgetType = "summary"
 )
 
 // NewPerformanceMonitor creates monitor
@@ -992,6 +1035,7 @@ func NewPerformanceMonitor() *PerformanceMonitor {
 		recorder:   NewMetricsRecorder(),
 		dashboards: make(map[string]*Dashboard),
 	}
+}
 
 // autoTuningLoop automatically tunes performance
 func (pe *PerformanceEngine) autoTuningLoop() {
@@ -1000,7 +1044,7 @@ func (pe *PerformanceEngine) autoTuningLoop() {
 
 	for range ticker.C {
 		metrics := pe.captureMetrics()
-		
+
 		// Check if tuning needed
 		if pe.needsTuning(metrics) {
 			pe.performAutoTuning(metrics)
@@ -1009,6 +1053,7 @@ func (pe *PerformanceEngine) autoTuningLoop() {
 		// Update monitoring
 		pe.monitor.RecordMetrics(metrics)
 	}
+}
 
 // needsTuning checks if tuning required
 func (pe *PerformanceEngine) needsTuning(metrics SystemMetrics) bool {
@@ -1033,6 +1078,7 @@ func (pe *PerformanceEngine) needsTuning(metrics SystemMetrics) bool {
 	}
 
 	return false
+}
 
 // performAutoTuning applies automatic tuning
 func (pe *PerformanceEngine) performAutoTuning(metrics SystemMetrics) {
@@ -1053,6 +1099,7 @@ func (pe *PerformanceEngine) performAutoTuning(metrics SystemMetrics) {
 
 	// Start optimization
 	pe.StartOptimization(ctx, target)
+}
 
 // identifyBottleneck finds performance bottleneck
 func (pe *PerformanceEngine) identifyBottleneck(metrics SystemMetrics) OptimizationType {
@@ -1078,6 +1125,7 @@ func (pe *PerformanceEngine) identifyBottleneck(metrics SystemMetrics) Optimizat
 
 	// Default to concurrency
 	return OptTypeConcurrency
+}
 
 // captureMetrics captures current metrics
 func (pe *PerformanceEngine) captureMetrics() SystemMetrics {
@@ -1086,7 +1134,7 @@ func (pe *PerformanceEngine) captureMetrics() SystemMetrics {
 
 	return SystemMetrics{
 		CPUUsage:          pe.getCurrentCPUUsage(),
-		MemoryUsage:       int64(m.HeapInUse),
+		MemoryUsage:       int64(m.HeapInuse),
 		GoroutineCount:    runtime.NumGoroutine(),
 		RequestsPerSecond: pe.monitor.GetRequestRate(),
 		AverageLatency:    pe.monitor.GetAverageLatency(),
@@ -1095,12 +1143,14 @@ func (pe *PerformanceEngine) captureMetrics() SystemMetrics {
 		ErrorRate:         pe.monitor.GetErrorRate(),
 		Timestamp:         time.Now(),
 	}
+}
 
 // Helper functions and implementations...
 
 func (pe *PerformanceEngine) getCurrentCPUUsage() float64 {
 	// Simplified CPU usage
 	return 0.5
+}
 
 func (pe *PerformanceEngine) calculateImprovement(opt *Optimization) {
 	before := opt.Metrics.BeforeMetrics
@@ -1118,6 +1168,7 @@ func (pe *PerformanceEngine) calculateImprovement(opt *Optimization) {
 		MemorySaved: before.MemoryUsage - current.MemoryUsage,
 		TimeReduced: before.AverageLatency - current.AverageLatency,
 	}
+}
 
 func (pe *PerformanceEngine) updateGlobalMetrics(opt *Optimization) {
 	pe.metrics.mu.Lock()
@@ -1130,6 +1181,7 @@ func (pe *PerformanceEngine) updateGlobalMetrics(opt *Optimization) {
 
 	pe.metrics.TotalResourceSavings.CPUSaved += opt.Metrics.ResourceSavings.CPUSaved
 	pe.metrics.TotalResourceSavings.MemorySaved += opt.Metrics.ResourceSavings.MemorySaved
+}
 
 // Additional helper types and functions...
 
@@ -1139,198 +1191,142 @@ type LRUList struct {
 
 func NewLRUList() *LRUList {
 	return &LRUList{}
+}
 
 func (l *LRUList) MoveToFront(entry *CacheEntry) {}
-func (l *LRUList) Remove(entry *CacheEntry) {}
-func (l *LRUList) RemoveBack() *CacheEntry { return nil }
-func (l *LRUList) PushFront(entry *CacheEntry) {}
-func (l *LRUList) Len() int { return 0 }
+func (l *LRUList) Remove(entry *CacheEntry)      {}
+func (l *LRUList) RemoveBack() *CacheEntry       { return nil }
+func (l *LRUList) PushFront(entry *CacheEntry)   {}
+func (l *LRUList) Len() int                      { return 0 }
 
 type PriorityQueue struct {
 	items []interface{}
 	mu    sync.Mutex
+}
 
 func NewPriorityQueue() *PriorityQueue {
 	return &PriorityQueue{
 		items: []interface{}{},
 	}
+}
 
 func (pq *PriorityQueue) Push(item interface{}) {
 	pq.mu.Lock()
 	defer pq.mu.Unlock()
 	pq.items = append(pq.items, item)
+}
 
 func (pq *PriorityQueue) Pop() interface{} {
 	pq.mu.Lock()
 	defer pq.mu.Unlock()
-	
+
 	if len(pq.items) == 0 {
 		return nil
 	}
-	
+
 	item := pq.items[0]
 	pq.items = pq.items[1:]
 	return item
+}
 
 // Placeholder implementations for profilers and analyzers
 type CPUProfiler struct{}
-func NewCPUProfiler() *CPUProfiler { return &CPUProfiler{} }
+
+func NewCPUProfiler() *CPUProfiler                                { return &CPUProfiler{} }
 func (c *CPUProfiler) Profile(duration time.Duration) *CPUProfile { return &CPUProfile{} }
 
 type MemoryProfiler struct{}
-func NewMemoryProfiler() *MemoryProfiler { return &MemoryProfiler{} }
+
+func NewMemoryProfiler() *MemoryProfiler                           { return &MemoryProfiler{} }
 func (m *MemoryProfiler) GetTopAllocations(n int) []AllocationSite { return []AllocationSite{} }
 
 type ConcurrencyProfiler struct{}
-func NewConcurrencyProfiler() *ConcurrencyProfiler { return &ConcurrencyProfiler{} }
+
+func NewConcurrencyProfiler() *ConcurrencyProfiler                   { return &ConcurrencyProfiler{} }
 func (c *ConcurrencyProfiler) AnalyzePatterns() *ConcurrencyPatterns { return &ConcurrencyPatterns{} }
 
 type IOProfiler struct{}
+
 func NewIOProfiler() *IOProfiler { return &IOProfiler{} }
 
 type MemoryAnalyzer struct{}
+
 func NewMemoryAnalyzer() *MemoryAnalyzer { return &MemoryAnalyzer{} }
 
 type CPUAnalyzer struct{}
-func NewCPUAnalyzer() *CPUAnalyzer { return &CPUAnalyzer{} }
+
+func NewCPUAnalyzer() *CPUAnalyzer                              { return &CPUAnalyzer{} }
 func (c *CPUAnalyzer) AnalyzeCPU(profile *CPUProfile) []HotPath { return []HotPath{} }
+func (ro *ResourceOptimizer) AnalyzeCPU(profile *CPUProfile) []HotPath {
+	return ro.cpuAnalyzer.AnalyzeCPU(profile)
+}
+func (ro *ResourceOptimizer) AnalyzeConcurrency(patterns *ConcurrencyPatterns) []ConcurrencyIssue {
+	return ro.concAnalyzer.AnalyzeConcurrency(patterns)
+}
 
 type ConcurrencyAnalyzer struct{}
-func NewConcurrencyAnalyzer() *ConcurrencyAnalyzer { return &ConcurrencyAnalyzer{} }
-func (c *ConcurrencyAnalyzer) AnalyzeConcurrency(patterns *ConcurrencyPatterns) []ConcurrencyIssue { return []ConcurrencyIssue{} }
 
-type MetricsCollector struct{}
+func NewConcurrencyAnalyzer() *ConcurrencyAnalyzer { return &ConcurrencyAnalyzer{} }
+func (c *ConcurrencyAnalyzer) AnalyzeConcurrency(patterns *ConcurrencyPatterns) []ConcurrencyIssue {
+	return []ConcurrencyIssue{}
+}
+
 func NewMetricsCollector() *MetricsCollector { return &MetricsCollector{} }
 
 type AlertManager struct{}
+
 func NewAlertManager() *AlertManager { return &AlertManager{} }
 
 type MetricsRecorder struct{}
-func NewMetricsRecorder() *MetricsRecorder { return &MetricsRecorder{} }
+
+func NewMetricsRecorder() *MetricsRecorder                     { return &MetricsRecorder{} }
 func (m *MetricsRecorder) RecordMetrics(metrics SystemMetrics) {}
 
-func (pm *PerformanceMonitor) GetRequestRate() float64 { return 100.0 }
-func (pm *PerformanceMonitor) GetAverageLatency() time.Duration { return 50 * time.Millisecond }
-func (pm *PerformanceMonitor) GetP95Latency() time.Duration { return 100 * time.Millisecond }
-func (pm *PerformanceMonitor) GetP99Latency() time.Duration { return 200 * time.Millisecond }
-func (pm *PerformanceMonitor) GetErrorRate() float64 { return 0.01 }
+func (pm *PerformanceMonitor) GetRequestRate() float64             { return 100.0 }
+func (pm *PerformanceMonitor) GetAverageLatency() time.Duration    { return 50 * time.Millisecond }
+func (pm *PerformanceMonitor) GetP95Latency() time.Duration        { return 100 * time.Millisecond }
+func (pm *PerformanceMonitor) GetP99Latency() time.Duration        { return 200 * time.Millisecond }
+func (pm *PerformanceMonitor) GetErrorRate() float64               { return 0.01 }
 func (pm *PerformanceMonitor) RecordMetrics(metrics SystemMetrics) {}
 
 // Stub implementations for optimization methods
 func (pe *PerformanceEngine) getBufferPoolSize() int64 { return 1024 * 1024 }
-func (pe *PerformanceEngine) calculateOptimalBufferSize(opp MemoryOpportunity) int64 { return 512 * 1024 }
-func (pe *PerformanceEngine) resizeBufferPool(size int64) {}
-func (pe *PerformanceEngine) optimizeObjectPools(opp MemoryOpportunity) *Adjustment { return nil }
-func (pe *PerformanceEngine) optimizeCacheSize(opp MemoryOpportunity) *Adjustment { return nil }
+func (pe *PerformanceEngine) calculateOptimalBufferSize(opp MemoryOpportunity) int64 {
+	return 512 * 1024
+}
+func (pe *PerformanceEngine) resizeBufferPool(size int64)                               {}
+func (pe *PerformanceEngine) optimizeObjectPools(opp MemoryOpportunity) *Adjustment     { return nil }
+func (pe *PerformanceEngine) optimizeCacheSize(opp MemoryOpportunity) *Adjustment       { return nil }
 func (pe *PerformanceEngine) optimizeStringInterning(opp MemoryOpportunity) *Adjustment { return nil }
-func (pe *PerformanceEngine) tuneGarbageCollector(profile *MemoryProfile) {}
-func (pe *PerformanceEngine) optimizeScheduling() {}
-func (pe *PerformanceEngine) optimizeAlgorithm(path HotPath) *Adjustment { return nil }
-func (pe *PerformanceEngine) addParallelization(path HotPath) *Adjustment { return nil }
-func (pe *PerformanceEngine) addVectorization(path HotPath) *Adjustment { return nil }
-func (pe *PerformanceEngine) addResultCaching(path HotPath) *Adjustment { return nil }
-func (pe *PerformanceEngine) optimizeWorkerPools() {}
-func (pe *PerformanceEngine) balanceLoad() {}
-func (pe *PerformanceEngine) reduceContention(issue ConcurrencyIssue) *Adjustment { return nil }
-func (pe *PerformanceEngine) preventDeadlock(issue ConcurrencyIssue) *Adjustment { return nil }
-func (pe *PerformanceEngine) fixRaceCondition(issue ConcurrencyIssue) *Adjustment { return nil }
-func (pe *PerformanceEngine) reduceGoroutines(issue ConcurrencyIssue) *Adjustment { return nil }
-func (pe *PerformanceEngine) improveCacheHitRate(stats *CacheStatistics) {}
-func (pe *PerformanceEngine) reduceCacheEvictions(stats *CacheStatistics) {}
-func (pe *PerformanceEngine) implementCacheWarming() {}
-func (pe *PerformanceEngine) addPredictiveCaching() {}
-func (pe *PerformanceEngine) removeBottleneck(bottleneck interface{}) *Adjustment { return nil }
-func (pe *PerformanceEngine) implementPrioritization() {}
-func (pe *PerformanceEngine) addCircuitBreakers() {}
-func (pe *PerformanceEngine) implementBatching(patterns interface{}) {}
-func (pe *PerformanceEngine) addPipelining() {}
-func (pe *PerformanceEngine) optimizeIO() {}
-func (pe *PerformanceEngine) shouldScaleHorizontally(patterns interface{}) bool { return false }
-func (pe *PerformanceEngine) prepareHorizontalScaling() {}
+func (pe *PerformanceEngine) tuneGarbageCollector(profile *MemoryProfile)               {}
+func (pe *PerformanceEngine) optimizeScheduling()                                       {}
+func (pe *PerformanceEngine) optimizeAlgorithm(path HotPath) *Adjustment                { return nil }
+func (pe *PerformanceEngine) addParallelization(path HotPath) *Adjustment               { return nil }
+func (pe *PerformanceEngine) addVectorization(path HotPath) *Adjustment                 { return nil }
+func (pe *PerformanceEngine) addResultCaching(path HotPath) *Adjustment                 { return nil }
+func (pe *PerformanceEngine) optimizeWorkerPools()                                      {}
+func (pe *PerformanceEngine) balanceLoad()                                              {}
+func (pe *PerformanceEngine) reduceContention(issue ConcurrencyIssue) *Adjustment       { return nil }
+func (pe *PerformanceEngine) preventDeadlock(issue ConcurrencyIssue) *Adjustment        { return nil }
+func (pe *PerformanceEngine) fixRaceCondition(issue ConcurrencyIssue) *Adjustment       { return nil }
+func (pe *PerformanceEngine) reduceGoroutines(issue ConcurrencyIssue) *Adjustment       { return nil }
+func (pe *PerformanceEngine) improveCacheHitRate(stats *CacheStatistics)                {}
+func (pe *PerformanceEngine) reduceCacheEvictions(stats *CacheStatistics)               {}
+func (pe *PerformanceEngine) implementCacheWarming()                                    {}
+func (pe *PerformanceEngine) addPredictiveCaching()                                     {}
+func (pe *PerformanceEngine) removeBottleneck(bottleneck interface{}) *Adjustment       { return nil }
+func (pe *PerformanceEngine) implementPrioritization()                                  {}
+func (pe *PerformanceEngine) addCircuitBreakers()                                       {}
+func (pe *PerformanceEngine) implementBatching(patterns interface{})                    {}
+func (pe *PerformanceEngine) addPipelining()                                            {}
+func (pe *PerformanceEngine) optimizeIO()                                               {}
+func (pe *PerformanceEngine) shouldScaleHorizontally(patterns interface{}) bool         { return false }
+func (pe *PerformanceEngine) prepareHorizontalScaling()                                 {}
 
 func (ro *ResourceOptimizer) FindBottlenecks(paths interface{}) []interface{} { return nil }
-func (sp *SystemProfiler) ProfileRequestPaths() interface{} { return nil }
-func (sp *SystemProfiler) ProfileThroughput() interface{} { return nil }
+func (sp *SystemProfiler) ProfileRequestPaths() interface{}                   { return nil }
+func (sp *SystemProfiler) ProfileThroughput() interface{}                     { return nil }
 
 func generateOptimizationID() string {
 	return fmt.Sprintf("opt_%d", time.Now().UnixNano())
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

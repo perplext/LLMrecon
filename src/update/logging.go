@@ -4,6 +4,10 @@ package update
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 // LogLevel represents the severity level of a log entry
@@ -34,6 +38,7 @@ type LogEntry struct {
 	TransactionID string `json:"transaction_id,omitempty"`
 	// Details contains additional details about the log entry
 	Details map[string]interface{} `json:"details,omitempty"`
+}
 
 // UpdateLogger handles logging for update operations
 type UpdateLogger struct {
@@ -45,6 +50,7 @@ type UpdateLogger struct {
 	MinLevel LogLevel
 	// IncludeDetails determines whether to include details in log output
 	IncludeDetails bool
+}
 
 // LoggerOptions contains options for the UpdateLogger
 type LoggerOptions struct {
@@ -56,6 +62,7 @@ type LoggerOptions struct {
 	MinLevel LogLevel
 	// IncludeDetails determines whether to include details in log output
 	IncludeDetails bool
+}
 
 // NewUpdateLogger creates a new update logger
 func NewUpdateLogger(options *LoggerOptions) *UpdateLogger {
@@ -77,6 +84,7 @@ func NewUpdateLogger(options *LoggerOptions) *UpdateLogger {
 		MinLevel:       minLevel,
 		IncludeDetails: options.IncludeDetails,
 	}
+}
 
 // CreateJSONLogFile creates a JSON log file for the update
 func CreateJSONLogFile(logDir, packageID string) (*os.File, error) {
@@ -99,7 +107,7 @@ func CreateJSONLogFile(logDir, packageID string) (*os.File, error) {
 	}
 
 	return logFile, nil
-	
+}
 
 // CloseJSONLogFile closes a JSON log file
 func CloseJSONLogFile(logFile *os.File) error {
@@ -114,6 +122,7 @@ func CloseJSONLogFile(logFile *os.File) error {
 	}
 
 	return nil
+}
 
 // shouldLog determines whether a log entry should be output based on its level
 func (l *UpdateLogger) shouldLog(level LogLevel) bool {
@@ -129,6 +138,7 @@ func (l *UpdateLogger) shouldLog(level LogLevel) bool {
 	default:
 		return true
 	}
+}
 
 // Log logs a message
 func (l *UpdateLogger) Log(level LogLevel, component, message string, transactionID string, details map[string]interface{}) {
@@ -167,17 +177,17 @@ func (l *UpdateLogger) Log(level LogLevel, component, message string, transactio
 	}
 
 	// Write text log entry
-	fmt.Fprintf(l.Writer, "[%s] [%s] [%s] %s", 
+	fmt.Fprintf(l.Writer, "[%s] [%s] [%s] %s",
 		entry.Timestamp.Format(time.RFC3339),
 		levelPrefix,
 		component,
 		message)
-	
+
 	// Include transaction ID if provided
 	if transactionID != "" {
 		fmt.Fprintf(l.Writer, " (Transaction: %s)", transactionID)
 	}
-	
+
 	// End line
 	fmt.Fprintln(l.Writer)
 
@@ -186,41 +196,46 @@ func (l *UpdateLogger) Log(level LogLevel, component, message string, transactio
 		// Marshal log entry to JSON
 		data, err := json.Marshal(entry)
 		if err != nil {
-			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to marshal log entry to JSON: %v\n", 
+			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to marshal log entry to JSON: %v\n",
 				time.Now().Format(time.RFC3339), err)
 			return
 		}
 
 		// Write JSON log entry
 		if _, err := l.JSONWriter.Write(data); err != nil {
-			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to write JSON log entry: %v\n", 
+			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to write JSON log entry: %v\n",
 				time.Now().Format(time.RFC3339), err)
 			return
 		}
 
 		// Write newline and comma for JSON array
 		if _, err := l.JSONWriter.Write([]byte(",\n")); err != nil {
-			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to write JSON log entry: %v\n", 
+			fmt.Fprintf(l.Writer, "[%s] [ERROR] [Logger] Failed to write JSON log entry: %v\n",
 				time.Now().Format(time.RFC3339), err)
 			return
 		}
 	}
+}
 
 // Debug logs a debug message
 func (l *UpdateLogger) Debug(component, message string, transactionID string, details map[string]interface{}) {
 	l.Log(LogLevelDebug, component, message, transactionID, details)
+}
 
 // Info logs an informational message
 func (l *UpdateLogger) Info(component, message string, transactionID string, details map[string]interface{}) {
 	l.Log(LogLevelInfo, component, message, transactionID, details)
+}
 
 // Warning logs a warning message
 func (l *UpdateLogger) Warning(component, message string, transactionID string, details map[string]interface{}) {
 	l.Log(LogLevelWarning, component, message, transactionID, details)
+}
 
 // Error logs an error message
 func (l *UpdateLogger) Error(component, message string, transactionID string, details map[string]interface{}) {
 	l.Log(LogLevelError, component, message, transactionID, details)
+}
 
 // AuditEvent represents an audit event for the update process
 type AuditEvent struct {
@@ -238,17 +253,21 @@ type AuditEvent struct {
 	PackageID string `json:"package_id,omitempty"`
 	// Details contains additional details about the event
 	Details map[string]interface{} `json:"details,omitempty"`
+}
 
 // AuditLogger handles audit logging for update operations
 type AuditLogger struct {
 	// Writer is the writer for audit log output
 	Writer io.Writer
+}
 
 // NewAuditLogger creates a new audit logger
 func NewAuditLogger(writer io.Writer) *AuditLogger {
 	return &AuditLogger{
 		Writer: writer,
 	}
+}
+
 // LogEvent logs an audit event
 func (l *AuditLogger) LogEvent(eventType, component, user, transactionID, packageID string, details map[string]interface{}) {
 	// Create audit event
@@ -265,21 +284,22 @@ func (l *AuditLogger) LogEvent(eventType, component, user, transactionID, packag
 	// Marshal event to JSON
 	data, err := json.Marshal(event)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to marshal audit event to JSON: %v\n", 
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to marshal audit event to JSON: %v\n",
 			time.Now().Format(time.RFC3339), err)
 		return
 	}
 
 	// Write JSON event
 	if _, err := l.Writer.Write(data); err != nil {
-		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to write audit event: %v\n", 
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to write audit event: %v\n",
 			time.Now().Format(time.RFC3339), err)
 		return
 	}
 
 	// Write newline
 	if _, err := l.Writer.Write([]byte("\n")); err != nil {
-		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to write audit event: %v\n", 
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] [AuditLogger] Failed to write audit event: %v\n",
 			time.Now().Format(time.RFC3339), err)
 		return
 	}
+}

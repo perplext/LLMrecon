@@ -2,17 +2,20 @@
 package config
 
 import (
-	"time"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"github.com/perplext/LLMrecon/src/provider/core"
+	"io"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
-	"github.com/perplext/LLMrecon/src/provider/core"
+	"time"
 )
 
 // ConfigVersion represents a version of the configuration
@@ -23,6 +26,7 @@ type ConfigVersion struct {
 	Timestamp time.Time `json:"timestamp"`
 	// Changes is a description of the changes
 	Changes string `json:"changes,omitempty"`
+}
 
 // ConfigHistory represents the history of configuration changes
 type ConfigHistory struct {
@@ -30,6 +34,7 @@ type ConfigHistory struct {
 	Current int `json:"current"`
 	// Versions is a map of version numbers to versions
 	Versions map[int]ConfigVersion `json:"versions"`
+}
 
 // ConfigManager is responsible for managing provider configurations
 type ConfigManager struct {
@@ -49,6 +54,7 @@ type ConfigManager struct {
 	encryptData func(data []byte) ([]byte, error)
 	// decryptData is a function that decrypts data
 	decryptData func(data []byte) ([]byte, error)
+}
 
 // NewConfigManager creates a new configuration manager
 func NewConfigManager(configFile string, encryptionKey []byte, envVarPrefix string) (*ConfigManager, error) {
@@ -70,7 +76,7 @@ func NewConfigManager(configFile string, encryptionKey []byte, envVarPrefix stri
 	if envVarPrefix == "" {
 		envVarPrefix = "LLM_RED_TEAM"
 	}
-	
+
 	// Ensure encryption key is valid (32 bytes for AES-256)
 	var normalizedKey []byte
 	if len(encryptionKey) > 0 {
@@ -162,6 +168,7 @@ func NewConfigManager(configFile string, encryptionKey []byte, envVarPrefix stri
 		return nil, fmt.Errorf("failed to load configurations from environment variables: %w", err)
 	}
 	return manager, nil
+}
 
 // Load loads configurations from the configuration file
 func (m *ConfigManager) Load() error {
@@ -194,7 +201,7 @@ func (m *ConfigManager) Load() error {
 	// Now acquire the lock to update the configs
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	// Convert string keys to ProviderType
 	m.configs = make(map[core.ProviderType]*core.ProviderConfig)
 	for key, config := range configs {
@@ -202,11 +209,13 @@ func (m *ConfigManager) Load() error {
 	}
 
 	return nil
+}
+
 // Save saves configurations to the configuration file
 func (m *ConfigManager) Save() error {
 	// Make a copy of the configs to avoid holding the lock during I/O operations
 	var configsCopy map[string]*core.ProviderConfig
-	
+
 	// Acquire lock only for reading the configs
 	m.mutex.RLock()
 	// Convert ProviderType keys to string
@@ -240,11 +249,12 @@ func (m *ConfigManager) Save() error {
 	}
 
 	// Write file
-	if err := os.WriteFile(filepath.Clean(m.configFile, data, 0600)); err != nil {
+	if err := os.WriteFile(filepath.Clean(m.configFile), data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
 	return nil
+}
 
 // LoadFromEnv loads configurations from environment variables
 func (m *ConfigManager) LoadFromEnv() error {
@@ -306,7 +316,7 @@ func (m *ConfigManager) LoadFromEnv() error {
 	}
 
 	return nil
-	
+}
 
 // GetConfig returns the configuration for a provider type
 func (m *ConfigManager) GetConfig(providerType core.ProviderType) (*core.ProviderConfig, error) {
@@ -320,15 +330,16 @@ func (m *ConfigManager) GetConfig(providerType core.ProviderType) (*core.Provide
 
 	// Return a copy of the configuration to prevent modification
 	configCopy := *config
-	
+
 	// Decrypt sensitive data if decryption is available
 	if m.decryptData != nil {
 		if err := m.DecryptSensitiveData(&configCopy); err != nil {
 			return nil, fmt.Errorf("failed to decrypt sensitive data: %w", err)
 		}
 	}
-	
+
 	return &configCopy, nil
+}
 
 // SetConfig sets the configuration for a provider type
 func (m *ConfigManager) SetConfig(providerType core.ProviderType, config *core.ProviderConfig) error {
@@ -339,18 +350,18 @@ func (m *ConfigManager) SetConfig(providerType core.ProviderType, config *core.P
 
 	// Create a deep copy of the config to avoid modifying the original
 	configCopy := *config
-	
+
 	// Encrypt sensitive data if encryption is available
 	if m.encryptData != nil {
 		if err := m.EncryptSensitiveData(&configCopy); err != nil {
 			return fmt.Errorf("failed to encrypt sensitive data: %w", err)
 		}
 	}
-	
+
 	// Check if this is a new config or an update and update the configs map
 	var exists bool
 	var existingConfig *core.ProviderConfig
-	
+
 	m.mutex.Lock()
 	existingConfig, exists = m.configs[providerType]
 	m.configs[providerType] = &configCopy
@@ -374,20 +385,21 @@ func (m *ConfigManager) SetConfig(providerType core.ProviderType, config *core.P
 		if existingConfig.Timeout != config.Timeout {
 			changes += fmt.Sprintf(", changed timeout from %v to %v", existingConfig.Timeout, config.Timeout)
 		}
-		if existingConfig.RetryConfig != nil && config.RetryConfig != nil && 
-		   existingConfig.RetryConfig.MaxRetries != config.RetryConfig.MaxRetries {
-			changes += fmt.Sprintf(", changed max retries from %d to %d", 
+		if existingConfig.RetryConfig != nil && config.RetryConfig != nil &&
+			existingConfig.RetryConfig.MaxRetries != config.RetryConfig.MaxRetries {
+			changes += fmt.Sprintf(", changed max retries from %d to %d",
 				existingConfig.RetryConfig.MaxRetries, config.RetryConfig.MaxRetries)
 		}
 	}
 
 	// Add version to history
 	return m.AddConfigVersion(providerType, changes)
+}
 
 // UpdateConfig updates the configuration for a provider type
 func (m *ConfigManager) UpdateConfig(providerType core.ProviderType, updates *core.ProviderConfig) error {
 	m.mutex.Lock()
-	
+
 	// Get existing config
 	config, ok := m.configs[providerType]
 	if !ok {
@@ -508,7 +520,7 @@ func (m *ConfigManager) UpdateConfig(providerType core.ProviderType, updates *co
 
 	// Make a copy of the updated config and store it in the map
 	m.configs[providerType] = config
-	
+
 	// Release the lock before I/O operations
 	m.mutex.Unlock()
 
@@ -519,11 +531,12 @@ func (m *ConfigManager) UpdateConfig(providerType core.ProviderType, updates *co
 
 	// Add version to history
 	return m.AddConfigVersion(providerType, changes)
+}
 
 // DeleteConfig deletes the configuration for a provider type
 func (m *ConfigManager) DeleteConfig(providerType core.ProviderType) error {
 	m.mutex.Lock()
-	
+
 	// Check if config exists
 	_, ok := m.configs[providerType]
 	if !ok {
@@ -533,7 +546,7 @@ func (m *ConfigManager) DeleteConfig(providerType core.ProviderType) error {
 
 	// Delete config
 	delete(m.configs, providerType)
-	
+
 	// Release the lock before I/O operations
 	m.mutex.Unlock()
 
@@ -544,6 +557,7 @@ func (m *ConfigManager) DeleteConfig(providerType core.ProviderType) error {
 
 	// Add version to history
 	return m.AddConfigVersion(providerType, "Configuration deleted")
+}
 
 // GetAllConfigs returns all configurations
 func (m *ConfigManager) GetAllConfigs() map[core.ProviderType]*core.ProviderConfig {
@@ -558,6 +572,7 @@ func (m *ConfigManager) GetAllConfigs() map[core.ProviderType]*core.ProviderConf
 	}
 
 	return configsCopy
+}
 
 // GetAllProviderTypes returns all provider types with configurations
 func (m *ConfigManager) GetAllProviderTypes() []core.ProviderType {
@@ -570,6 +585,7 @@ func (m *ConfigManager) GetAllProviderTypes() []core.ProviderType {
 	}
 
 	return providerTypes
+}
 
 // SetEncryptionKey sets the encryption key
 func (m *ConfigManager) SetEncryptionKey(encryptionKey []byte) {
@@ -577,6 +593,7 @@ func (m *ConfigManager) SetEncryptionKey(encryptionKey []byte) {
 	defer m.mutex.Unlock()
 
 	m.encryptionKey = encryptionKey
+}
 
 // SetConfigFile sets the configuration file path
 func (m *ConfigManager) SetConfigFile(configFile string) {
@@ -584,6 +601,7 @@ func (m *ConfigManager) SetConfigFile(configFile string) {
 	defer m.mutex.Unlock()
 
 	m.configFile = configFile
+}
 
 // SetEnvVarPrefix sets the environment variable prefix
 func (m *ConfigManager) SetEnvVarPrefix(envVarPrefix string) {
@@ -591,6 +609,7 @@ func (m *ConfigManager) SetEnvVarPrefix(envVarPrefix string) {
 	defer m.mutex.Unlock()
 
 	m.envVarPrefix = envVarPrefix
+}
 
 // ValidateConfig validates a provider configuration
 func (m *ConfigManager) ValidateConfig(config *core.ProviderConfig) error {
@@ -619,7 +638,7 @@ func (m *ConfigManager) ValidateConfig(config *core.ProviderConfig) error {
 	}
 
 	return nil
-	
+}
 
 // encrypt encrypts data using AES-GCM encryption
 func encrypt(data []byte, key []byte) ([]byte, error) {
@@ -655,6 +674,7 @@ func encrypt(data []byte, key []byte) ([]byte, error) {
 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
 
 	return ciphertext, nil
+}
 
 // decrypt decrypts data using AES-GCM decryption
 func decrypt(data []byte, key []byte) ([]byte, error) {
@@ -694,3 +714,5 @@ func decrypt(data []byte, key []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to decrypt data: %w", err)
 	}
 
+	return plaintext, nil
+}

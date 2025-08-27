@@ -6,17 +6,18 @@ import (
 	"math"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // ContentFilter filters content for prohibited or sensitive information
 type ContentFilter struct {
-	config        *ProtectionConfig
-	filterConfig  *ContentFilterConfig
+	config            *ProtectionConfig
+	filterConfig      *ContentFilterConfig
 	profanityPatterns []*regexp.Regexp
-	piiPatterns    []*regexp.Regexp
-	codePatterns   []*regexp.Regexp
-	urlPatterns    []*regexp.Regexp
-	customPatterns map[string]*regexp.Regexp
+	piiPatterns       []*regexp.Regexp
+	codePatterns      []*regexp.Regexp
+	urlPatterns       []*regexp.Regexp
+	customPatterns    map[string]*regexp.Regexp
 }
 
 // NewContentFilter creates a new content filter
@@ -50,10 +51,10 @@ func NewContentFilter(config *ProtectionConfig) *ContentFilter {
 		// API keys and tokens
 		regexp.MustCompile(`\b(?:api[_-]?key|access[_-]?token|secret := os.Getenv("SECRET_KEY")']?\b`),
 		regexp.MustCompile(`\b(?:sk|pk)_(?:test|live)_[\w\d]{10,}\b`), // Stripe API keys (relaxed pattern to match test case)
-		regexp.MustCompile(`\bsk_test_1234567890abcdef\b`), // Exact match for test case
-		regexp.MustCompile(`\bgh[pousr]_[A-Za-z0-9_]{16,}\b`), // GitHub tokens
-		regexp.MustCompile(`\b[A-Za-z0-9_]{40}\b`), // Generic 40-char tokens (AWS, etc.)
-		regexp.MustCompile(`\b[A-Za-z0-9_-]{64}\b`), // Generic 64-char tokens
+		regexp.MustCompile(`\bsk_test_1234567890abcdef\b`),            // Exact match for test case
+		regexp.MustCompile(`\bgh[pousr]_[A-Za-z0-9_]{16,}\b`),         // GitHub tokens
+		regexp.MustCompile(`\b[A-Za-z0-9_]{40}\b`),                    // Generic 40-char tokens (AWS, etc.)
+		regexp.MustCompile(`\b[A-Za-z0-9_-]{64}\b`),                   // Generic 64-char tokens
 		// System information patterns
 		regexp.MustCompile(`(?i)\b(?:system prompt|system information|system config|system configuration|internal prompt|prompt template)\b`),
 		// Phone numbers
@@ -88,14 +89,15 @@ func NewContentFilter(config *ProtectionConfig) *ContentFilter {
 	}
 
 	return &ContentFilter{
-		config:          config,
-		filterConfig:    filterConfig,
+		config:            config,
+		filterConfig:      filterConfig,
 		profanityPatterns: profanityPatterns,
-		piiPatterns:     piiPatterns,
-		codePatterns:    codePatterns,
-		urlPatterns:     urlPatterns,
-		customPatterns:  customPatterns,
+		piiPatterns:       piiPatterns,
+		codePatterns:      codePatterns,
+		urlPatterns:       urlPatterns,
+		customPatterns:    customPatterns,
 	}
+}
 
 // FilterContent filters content for sensitive information and returns a ProtectionResult.
 // The filtering process includes:
@@ -103,7 +105,7 @@ func NewContentFilter(config *ProtectionConfig) *ContentFilter {
 // 2. Detecting system information that should not be exposed
 // 3. Masking or redacting detected sensitive content
 // 4. Setting appropriate risk scores and actions based on detections
-// 
+//
 // The returned ProtectionResult contains:
 // - Filtered content with sensitive information masked
 // - List of detections with details about what was found
@@ -111,7 +113,7 @@ func NewContentFilter(config *ProtectionConfig) *ContentFilter {
 // - Action taken (e.g., filtered, blocked) based on configuration
 func (f *ContentFilter) FilterContent(ctx context.Context, content string, originalPrompt string) (string, *ProtectionResult, error) {
 	startTime := time.Now()
-	
+
 	result := &ProtectionResult{
 		OriginalResponse:  content,
 		ProtectedResponse: content,
@@ -120,7 +122,7 @@ func (f *ContentFilter) FilterContent(ctx context.Context, content string, origi
 		ActionTaken:       ActionNone,
 		Timestamp:         startTime,
 	}
-	
+
 	filteredContent := content
 	contentModified := false
 	hasSensitiveInfo := false
@@ -146,7 +148,7 @@ func (f *ContentFilter) FilterContent(ctx context.Context, content string, origi
 			result.Detections = append(result.Detections, detections...)
 			result.RiskScore = math.Max(result.RiskScore, 0.8)
 			hasSensitiveInfo = true
-			
+
 			// Update detection type to sensitive info
 			for _, detection := range detections {
 				detection.Type = DetectionTypeSensitiveInfo
@@ -193,7 +195,7 @@ func (f *ContentFilter) FilterContent(ctx context.Context, content string, origi
 		result.Detections = append(result.Detections, sensitiveDetections...)
 		result.RiskScore = math.Max(result.RiskScore, 0.9)
 		hasSensitiveInfo = true
-		
+
 		// Filter out the sensitive information
 		for _, detection := range sensitiveDetections {
 			if detection.Location != nil {
@@ -208,14 +210,14 @@ func (f *ContentFilter) FilterContent(ctx context.Context, content string, origi
 			}
 		}
 	}
-	
+
 	// Check for system information in the response
 	systemInfoDetections := f.detectSystemInformation(filteredContent)
 	if len(systemInfoDetections) > 0 {
 		result.Detections = append(result.Detections, systemInfoDetections...)
 		result.RiskScore = math.Max(result.RiskScore, 0.95)
 		hasSystemInfo = true
-		
+
 		// Filter out the system information
 		for _, detection := range systemInfoDetections {
 			if detection.Location != nil {
@@ -229,13 +231,13 @@ func (f *ContentFilter) FilterContent(ctx context.Context, content string, origi
 			}
 		}
 	}
-	
+
 	// Check for potential prompt injections in the response
 	injectionDetections := f.detectPromptInjection(filteredContent, originalPrompt)
 	if len(injectionDetections) > 0 {
 		result.Detections = append(result.Detections, injectionDetections...)
 		result.RiskScore = math.Max(result.RiskScore, 0.9)
-		
+
 		// If high risk prompt injection is detected, block the response
 		if result.RiskScore >= 0.9 {
 			filteredContent = "[RESPONSE BLOCKED: Potential security risk detected]"
@@ -250,7 +252,7 @@ func (f *ContentFilter) FilterContent(ctx context.Context, content string, origi
 		contentModified = true
 		result.ActionTaken = ActionBlocked
 	}
-	
+
 	if hasSystemInfo && result.RiskScore >= 0.85 {
 		filteredContent = "[RESPONSE BLOCKED: System information detected]"
 		contentModified = true
@@ -267,6 +269,7 @@ func (f *ContentFilter) FilterContent(ctx context.Context, content string, origi
 
 	result.ProcessingTime = time.Since(startTime)
 	return result.ProtectedResponse, result, nil
+}
 
 // filterProfanity filters profanity from content
 func (f *ContentFilter) filterProfanity(content string) (string, []*Detection) {
@@ -279,7 +282,7 @@ func (f *ContentFilter) filterProfanity(content string) (string, []*Detection) {
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := content[startIndex:endIndex]
-			
+
 			detection := &Detection{
 				Type:        DetectionTypeProhibitedContent,
 				Confidence:  0.9,
@@ -287,15 +290,15 @@ func (f *ContentFilter) filterProfanity(content string) (string, []*Detection) {
 				Location: &DetectionLocation{
 					Start:   startIndex,
 					End:     endIndex,
-					Context: getContext(content, startIndex, endIndex),
+					Context: getContextWithMarkers(content, startIndex, endIndex),
 				},
 				Pattern:     pattern.String(),
 				Remediation: "Filter or remove profanity",
 			}
-			
+
 			detections = append(detections, detection)
 		}
-		
+
 		// Replace profanity with asterisks
 		filteredContent = pattern.ReplaceAllStringFunc(filteredContent, func(match string) string {
 			return maskString(match)
@@ -303,6 +306,7 @@ func (f *ContentFilter) filterProfanity(content string) (string, []*Detection) {
 	}
 
 	return filteredContent, detections
+}
 
 // filterPII filters personally identifiable information from content
 func (f *ContentFilter) filterPII(content string) (string, []*Detection) {
@@ -315,7 +319,7 @@ func (f *ContentFilter) filterPII(content string) (string, []*Detection) {
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := content[startIndex:endIndex]
-			
+
 			detection := &Detection{
 				Type:        DetectionTypeProhibitedContent,
 				Confidence:  0.8,
@@ -323,15 +327,15 @@ func (f *ContentFilter) filterPII(content string) (string, []*Detection) {
 				Location: &DetectionLocation{
 					Start:   startIndex,
 					End:     endIndex,
-					Context: getContext(content, startIndex, endIndex),
+					Context: getContextWithMarkers(content, startIndex, endIndex),
 				},
 				Pattern:     pattern.String(),
 				Remediation: "Filter or remove PII",
 			}
-			
+
 			detections = append(detections, detection)
 		}
-		
+
 		// Replace PII with asterisks
 		filteredContent = pattern.ReplaceAllStringFunc(filteredContent, func(match string) string {
 			return maskString(match)
@@ -339,6 +343,7 @@ func (f *ContentFilter) filterPII(content string) (string, []*Detection) {
 	}
 
 	return filteredContent, detections
+}
 
 // filterCode filters code from content
 func (f *ContentFilter) filterCode(content string) (string, []*Detection) {
@@ -351,7 +356,7 @@ func (f *ContentFilter) filterCode(content string) (string, []*Detection) {
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := content[startIndex:endIndex]
-			
+
 			detection := &Detection{
 				Type:        DetectionTypeProhibitedContent,
 				Confidence:  0.7,
@@ -359,20 +364,21 @@ func (f *ContentFilter) filterCode(content string) (string, []*Detection) {
 				Location: &DetectionLocation{
 					Start:   startIndex,
 					End:     endIndex,
-					Context: getContext(content, startIndex, endIndex),
+					Context: getContextWithMarkers(content, startIndex, endIndex),
 				},
 				Pattern:     pattern.String(),
 				Remediation: "Filter or remove code",
 			}
-			
+
 			detections = append(detections, detection)
 		}
-		
+
 		// Replace code with a placeholder
 		filteredContent = pattern.ReplaceAllString(filteredContent, "[CODE FILTERED]")
 	}
 
 	return filteredContent, detections
+}
 
 // filterURLs filters URLs from content
 func (f *ContentFilter) filterURLs(content string) (string, []*Detection) {
@@ -385,14 +391,14 @@ func (f *ContentFilter) filterURLs(content string) (string, []*Detection) {
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := content[startIndex:endIndex]
-			
+
 			// Check if this is a suspicious URL
 			isSuspicious := f.isSuspiciousURL(matchedText)
 			confidence := 0.7
 			if isSuspicious {
 				confidence = 0.9
 			}
-			
+
 			detection := &Detection{
 				Type:        DetectionTypeProhibitedContent,
 				Confidence:  confidence,
@@ -400,7 +406,7 @@ func (f *ContentFilter) filterURLs(content string) (string, []*Detection) {
 				Location: &DetectionLocation{
 					Start:   startIndex,
 					End:     endIndex,
-					Context: getContext(content, startIndex, endIndex),
+					Context: getContextWithMarkers(content, startIndex, endIndex),
 				},
 				Pattern:     pattern.String(),
 				Remediation: "Filter or remove URLs",
@@ -408,15 +414,16 @@ func (f *ContentFilter) filterURLs(content string) (string, []*Detection) {
 					"is_suspicious": isSuspicious,
 				},
 			}
-			
+
 			detections = append(detections, detection)
 		}
-		
+
 		// Replace URLs with a placeholder
 		filteredContent = pattern.ReplaceAllString(filteredContent, "[URL FILTERED]")
 	}
 
 	return filteredContent, detections
+}
 
 // filterCustom filters content using a custom pattern
 func (f *ContentFilter) filterCustom(content string, name string, pattern *regexp.Regexp) (string, []*Detection) {
@@ -428,7 +435,7 @@ func (f *ContentFilter) filterCustom(content string, name string, pattern *regex
 		startIndex := match[0]
 		endIndex := match[1]
 		matchedText := content[startIndex:endIndex]
-		
+
 		detection := &Detection{
 			Type:        DetectionTypeProhibitedContent,
 			Confidence:  0.8,
@@ -436,7 +443,7 @@ func (f *ContentFilter) filterCustom(content string, name string, pattern *regex
 			Location: &DetectionLocation{
 				Start:   startIndex,
 				End:     endIndex,
-				Context: getContext(content, startIndex, endIndex),
+				Context: getContextWithMarkers(content, startIndex, endIndex),
 			},
 			Pattern:     pattern.String(),
 			Remediation: "Filter or remove matched content",
@@ -444,14 +451,15 @@ func (f *ContentFilter) filterCustom(content string, name string, pattern *regex
 				"filter_name": name,
 			},
 		}
-		
+
 		detections = append(detections, detection)
 	}
-	
+
 	// Replace matches with a placeholder
 	filteredContent = pattern.ReplaceAllString(filteredContent, "[CONTENT FILTERED]")
 
 	return filteredContent, detections
+}
 
 // detectPromptInjection detects potential prompt injections in the response
 func (f *ContentFilter) detectPromptInjection(content string, originalPrompt string) []*Detection {
@@ -471,7 +479,7 @@ func (f *ContentFilter) detectPromptInjection(content string, originalPrompt str
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := content[startIndex:endIndex]
-			
+
 			detection := &Detection{
 				Type:        DetectionTypePromptInjection,
 				Confidence:  0.9,
@@ -479,12 +487,12 @@ func (f *ContentFilter) detectPromptInjection(content string, originalPrompt str
 				Location: &DetectionLocation{
 					Start:   startIndex,
 					End:     endIndex,
-					Context: getContext(content, startIndex, endIndex),
+					Context: getContextWithMarkers(content, startIndex, endIndex),
 				},
 				Pattern:     pattern.String(),
 				Remediation: "Block responses that may leak system prompts",
 			}
-			
+
 			detections = append(detections, detection)
 		}
 	}
@@ -502,7 +510,7 @@ func (f *ContentFilter) detectPromptInjection(content string, originalPrompt str
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := content[startIndex:endIndex]
-			
+
 			detection := &Detection{
 				Type:        DetectionTypeJailbreak,
 				Confidence:  0.95,
@@ -510,62 +518,65 @@ func (f *ContentFilter) detectPromptInjection(content string, originalPrompt str
 				Location: &DetectionLocation{
 					Start:   startIndex,
 					End:     endIndex,
-					Context: getContext(content, startIndex, endIndex),
+					Context: getContextWithMarkers(content, startIndex, endIndex),
 				},
 				Pattern:     pattern.String(),
 				Remediation: "Block responses that indicate successful jailbreaking",
 			}
-			
+
 			detections = append(detections, detection)
 		}
 	}
 
 	return detections
+}
 
 // isSuspiciousURL determines if a URL is suspicious
 func (f *ContentFilter) isSuspiciousURL(url string) bool {
 	url = strings.ToLower(url)
-	
+
 	// Check for suspicious TLDs
 	suspiciousTLDs := []string{
 		".xyz", ".top", ".club", ".vip", ".gq", ".tk", ".ml", ".ga", ".cf",
 	}
-	
+
 	for _, tld := range suspiciousTLDs {
 		if strings.HasSuffix(url, tld) {
 			return true
 		}
 	}
-	
+
 	// Check for suspicious domains
 	suspiciousDomains := []string{
 		"pastebin.com", "paste.ee", "gist.github.com",
 		"0bin.net", "ghostbin.com", "hastebin.com",
 		"tempurl", "shorturl", "tinyurl", "bit.ly", "goo.gl",
 	}
-	
+
 	for _, domain := range suspiciousDomains {
 		if strings.Contains(url, domain) {
 			return true
 		}
 	}
-	
+
 	// Check for IP addresses
 	ipPattern := regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
 	if ipPattern.MatchString(url) {
 		return true
 	}
-	
+
 	return false
+}
 
 // maskString replaces characters in a string with asterisks
 func maskString(s string) string {
 	if len(s) <= 4 {
 		return strings.Repeat("*", len(s))
 	}
-	
+
 	// Keep first and last two characters, mask the rest
 	return s[:2] + strings.Repeat("*", len(s)-4) + s[len(s)-2:]
+}
 
 // detectSensitiveInformation detects API keys, credentials, and other sensitive information in content.
 // It uses a variety of patterns to identify different types of sensitive information including:
@@ -575,30 +586,30 @@ func maskString(s string) string {
 // Returns a list of detections with information about the sensitive content found.
 func (f *ContentFilter) detectSensitiveInformation(content string) []*Detection {
 	detections := make([]*Detection, 0)
-	
+
 	// Use PII patterns to detect sensitive information
 	for _, pattern := range f.piiPatterns {
 		matches := pattern.FindAllStringIndex(content, -1)
 		for _, match := range matches {
 			startIndex := match[0]
 			endIndex := match[1]
-			
+
 			// Check if this is likely to be an API key or sensitive information
 			confidence := 0.7
 			description := "Potential sensitive information detected: " + content[startIndex:endIndex]
-			
+
 			// Check for specific patterns that indicate API keys or credentials
-			if strings.Contains(pattern.String(), "api[_-]?key") || 
-			   strings.Contains(pattern.String(), "access[_-]?token") || 
-			   strings.Contains(pattern.String(), "secret[_-]?key") || 
-			   strings.Contains(pattern.String(), "client[_-]?secret") || 
-			   strings.Contains(pattern.String(), "sk_test") || 
-			   strings.Contains(pattern.String(), "pk_test") || 
-			   strings.Contains(pattern.String(), "gh[pousr]_") {
+			if strings.Contains(pattern.String(), "api[_-]?key") ||
+				strings.Contains(pattern.String(), "access[_-]?token") ||
+				strings.Contains(pattern.String(), "secret[_-]?key") ||
+				strings.Contains(pattern.String(), "client[_-]?secret") ||
+				strings.Contains(pattern.String(), "sk_test") ||
+				strings.Contains(pattern.String(), "pk_test") ||
+				strings.Contains(pattern.String(), "gh[pousr]_") {
 				confidence = 0.95
 				description = "API key or credential detected"
 			}
-			
+
 			detections = append(detections, &Detection{
 				Type:        DetectionTypeSensitiveInfo,
 				Confidence:  confidence,
@@ -606,15 +617,16 @@ func (f *ContentFilter) detectSensitiveInformation(content string) []*Detection 
 				Location: &DetectionLocation{
 					Start:   startIndex,
 					End:     endIndex,
-					Context: getContext(content, startIndex, endIndex),
+					Context: getContextWithMarkers(content, startIndex, endIndex),
 				},
 				Pattern:     pattern.String(),
 				Remediation: "Mask or remove the sensitive information",
 			})
 		}
 	}
-	
+
 	return detections
+}
 
 // detectSystemInformation detects system information in content that should not be exposed.
 // This includes:
@@ -625,7 +637,7 @@ func (f *ContentFilter) detectSensitiveInformation(content string) []*Detection 
 // Returns a list of detections with information about the system information found.
 func (f *ContentFilter) detectSystemInformation(content string) []*Detection {
 	detections := make([]*Detection, 0)
-	
+
 	// Define system information patterns
 	systemPatterns := []*regexp.Regexp{
 		regexp.MustCompile(`(?i)\b(?:system prompt|system information|system config|system configuration|internal prompt|prompt template)\b`),
@@ -633,14 +645,14 @@ func (f *ContentFilter) detectSystemInformation(content string) []*Detection {
 		regexp.MustCompile(`(?i)\b(?:your instructions|your programming|your training|your system prompt)\b`),
 		regexp.MustCompile(`(?i)\b(?:AI capabilities|AI limitations|AI constraints|AI guidelines)\b`),
 	}
-	
+
 	// Check for system information patterns
 	for _, pattern := range systemPatterns {
 		matches := pattern.FindAllStringIndex(content, -1)
 		for _, match := range matches {
 			startIndex := match[0]
 			endIndex := match[1]
-			
+
 			detections = append(detections, &Detection{
 				Type:        DetectionTypeSystemInfo,
 				Confidence:  0.9,
@@ -648,22 +660,41 @@ func (f *ContentFilter) detectSystemInformation(content string) []*Detection {
 				Location: &DetectionLocation{
 					Start:   startIndex,
 					End:     endIndex,
-					Context: getContext(content, startIndex, endIndex),
+					Context: getContextWithMarkers(content, startIndex, endIndex),
 				},
 				Pattern:     pattern.String(),
 				Remediation: "Remove or redact the system information",
 			})
 		}
 	}
-	
+
+	return detections
 }
-}
-}
-}
-}
-}
-}
-}
-}
-}
+
+// getContextWithMarkers extracts context around a detection with markers
+func getContextWithMarkers(content string, start, end int) string {
+	contextSize := 50
+
+	// Calculate context boundaries
+	contextStart := start - contextSize
+	if contextStart < 0 {
+		contextStart = 0
+	}
+
+	contextEnd := end + contextSize
+	if contextEnd > len(content) {
+		contextEnd = len(content)
+	}
+
+	// Extract context
+	context := content[contextStart:contextEnd]
+
+	// Mark the matched portion
+	if start >= contextStart && end <= contextEnd {
+		relativeStart := start - contextStart
+		relativeEnd := end - contextStart
+		context = context[:relativeStart] + ">>>" + context[relativeStart:relativeEnd] + "<<<" + context[relativeEnd:]
+	}
+
+	return context
 }

@@ -9,6 +9,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/keystore"
 )
@@ -21,16 +24,16 @@ func main() {
 	}
 	keyStorePath := filepath.Join(homeDir, ".LLMrecon", "keystore", "keys.json")
 	keyStoreDir := filepath.Dir(keyStorePath)
-	
+
 	if err := os.MkdirAll(keyStoreDir, 0700); err != nil {
 		log.Fatalf("Failed to create key store directory: %v", err)
 	}
 
 	// Create key store options
 	options := keystore.KeyStoreOptions{
-		StoragePath:          keyStorePath,
-		Passphrase:           "example-passphrase", // In production, use a secure passphrase
-		AutoSave:             true,
+		StoragePath:           keyStorePath,
+		Passphrase:            "example-passphrase", // In production, use a secure passphrase
+		AutoSave:              true,
 		RotationCheckInterval: time.Hour * 24, // Check for rotation daily
 		AlertCallback: func(key *keystore.KeyMetadata, daysUntilExpiration int) {
 			log.Printf("Key %s (%s) will expire in %d days", key.Name, key.ID, daysUntilExpiration)
@@ -42,7 +45,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create key store: %v", err)
 	}
-	defer func() { if err := ks.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := ks.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Generate RSA signing key
 	rsaKey, err := generateRSASigningKey(ks)
@@ -78,6 +85,7 @@ func main() {
 	demonstrateKeyExportImport(ks, ecdsaKey.Metadata.ID)
 
 	log.Println("Key store example completed successfully")
+}
 
 // generateRSASigningKey generates an RSA key for digital signatures
 func generateRSASigningKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
@@ -93,6 +101,7 @@ func generateRSASigningKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
 	}
 
 	return ks.GenerateKey(keystore.RSAKey, "RSA-2048", metadata)
+}
 
 // generateECDSASigningKey generates an ECDSA key for digital signatures
 func generateECDSASigningKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
@@ -108,6 +117,7 @@ func generateECDSASigningKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
 	}
 
 	return ks.GenerateKey(keystore.ECDSAKey, "ECDSA-P256", metadata)
+}
 
 // generateSymmetricKey generates a symmetric key for encryption
 func generateSymmetricKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
@@ -122,6 +132,7 @@ func generateSymmetricKey(ks *keystore.FileKeyStore) (*keystore.Key, error) {
 		RotationPeriod:  30, // 30 days
 	}
 	return ks.GenerateKey(keystore.SymmetricKey, "AES-256", metadata)
+}
 
 // listAllKeys lists all keys in the key store
 func listAllKeys(ks *keystore.FileKeyStore) {
@@ -160,6 +171,7 @@ func listAllKeys(ks *keystore.FileKeyStore) {
 		return
 	}
 	log.Printf("Found %d keys with tag 'example'", len(exampleKeys))
+}
 
 // demonstrateRSAKeyUsage demonstrates how to use an RSA key for signing and verification
 func demonstrateRSAKeyUsage(ks *keystore.FileKeyStore, keyID string) {
@@ -197,6 +209,7 @@ func demonstrateRSAKeyUsage(ks *keystore.FileKeyStore, keyID string) {
 		return
 	}
 	log.Println("Signature verified successfully")
+}
 
 // demonstrateKeyRotation demonstrates key rotation
 func demonstrateKeyRotation(ks *keystore.FileKeyStore, keyID string) {
@@ -226,6 +239,7 @@ func demonstrateKeyRotation(ks *keystore.FileKeyStore, keyID string) {
 	for _, key := range keys {
 		log.Printf("  - %s (%s): %s, %s, %s", key.Name, key.ID, key.Type, key.Usage, key.Algorithm)
 	}
+}
 
 // demonstrateKeyExportImport demonstrates key export and import
 func demonstrateKeyExportImport(ks *keystore.FileKeyStore, keyID string) {
@@ -276,3 +290,4 @@ func demonstrateKeyExportImport(ks *keystore.FileKeyStore, keyID string) {
 	for _, key := range keys {
 		log.Printf("  - %s (%s): %s, %s, %s", key.Name, key.ID, key.Type, key.Usage, key.Algorithm)
 	}
+}

@@ -3,6 +3,7 @@ package notification
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/update"
 )
@@ -17,6 +18,7 @@ func NewUpdateNotifier(manager *NotificationManager) *UpdateNotifier {
 	return &UpdateNotifier{
 		manager: manager,
 	}
+}
 
 // NotifyAvailableUpdate creates and delivers a notification for an available update
 func (n *UpdateNotifier) NotifyAvailableUpdate(ctx context.Context, versionInfo *update.UpdateVersionInfo) error {
@@ -45,8 +47,8 @@ func (n *UpdateNotifier) NotifyAvailableUpdate(ctx context.Context, versionInfo 
 	notification, err := n.manager.CreateNotification(
 		UpdateAvailable,
 		fmt.Sprintf("Update Available: %s", versionInfo.LatestVersion),
-		fmt.Sprintf("A new version of the LLMreconing Tool is available. You are currently using version %s, and version %s is now available.", 
-			versionInfo.CurrentVersion, 
+		fmt.Sprintf("A new version of the LLMreconing Tool is available. You are currently using version %s, and version %s is now available.",
+			versionInfo.CurrentVersion,
 			versionInfo.LatestVersion),
 		severity,
 		false,
@@ -69,6 +71,7 @@ func (n *UpdateNotifier) NotifyAvailableUpdate(ctx context.Context, versionInfo 
 	}
 
 	return nil
+}
 
 // NotifyRequiredUpdate creates and delivers a notification for a required update
 func (n *UpdateNotifier) NotifyRequiredUpdate(ctx context.Context, versionInfo *update.UpdateVersionInfo) error {
@@ -98,8 +101,8 @@ func (n *UpdateNotifier) NotifyRequiredUpdate(ctx context.Context, versionInfo *
 	notification, err := n.manager.CreateNotification(
 		UpdateRequired,
 		fmt.Sprintf("Required Update: %s", versionInfo.LatestVersion),
-		fmt.Sprintf("A required update for the LLMreconing Tool is available. You must update from version %s to version %s to continue using the tool.", 
-			versionInfo.CurrentVersion, 
+		fmt.Sprintf("A required update for the LLMreconing Tool is available. You must update from version %s to version %s to continue using the tool.",
+			versionInfo.CurrentVersion,
 			versionInfo.LatestVersion),
 		severity,
 		true,
@@ -122,6 +125,7 @@ func (n *UpdateNotifier) NotifyRequiredUpdate(ctx context.Context, versionInfo *
 	}
 
 	return nil
+}
 
 // NotifySecurityUpdate creates and delivers a notification for a security update
 func (n *UpdateNotifier) NotifySecurityUpdate(ctx context.Context, versionInfo *update.UpdateVersionInfo, details string) error {
@@ -145,8 +149,8 @@ func (n *UpdateNotifier) NotifySecurityUpdate(ctx context.Context, versionInfo *
 	notification, err := n.manager.CreateNotification(
 		SecurityUpdate,
 		fmt.Sprintf("Security Update: %s", versionInfo.LatestVersion),
-		fmt.Sprintf("A security update for the LLMreconing Tool is available. It is strongly recommended to update from version %s to version %s.\n\n%s", 
-			versionInfo.CurrentVersion, 
+		fmt.Sprintf("A security update for the LLMreconing Tool is available. It is strongly recommended to update from version %s to version %s.\n\n%s",
+			versionInfo.CurrentVersion,
 			versionInfo.LatestVersion,
 			details),
 		Critical,
@@ -169,6 +173,8 @@ func (n *UpdateNotifier) NotifySecurityUpdate(ctx context.Context, versionInfo *
 	}
 
 	return nil
+}
+
 // NotifyUpdateSuccess creates and delivers a notification for a successful update
 func (n *UpdateNotifier) NotifyUpdateSuccess(ctx context.Context, fromVersion, toVersion string) error {
 	// Create metadata for the notification
@@ -182,8 +188,8 @@ func (n *UpdateNotifier) NotifyUpdateSuccess(ctx context.Context, fromVersion, t
 	notification, err := n.manager.CreateNotification(
 		UpdateAvailable,
 		"Update Successful",
-		fmt.Sprintf("The LLMreconing Tool has been successfully updated from version %s to version %s.", 
-			fromVersion, 
+		fmt.Sprintf("The LLMreconing Tool has been successfully updated from version %s to version %s.",
+			fromVersion,
 			toVersion),
 		Info,
 		false,
@@ -199,6 +205,8 @@ func (n *UpdateNotifier) NotifyUpdateSuccess(ctx context.Context, fromVersion, t
 	}
 
 	return nil
+}
+
 // NotifyUpdateFailure creates and delivers a notification for a failed update
 func (n *UpdateNotifier) NotifyUpdateFailure(ctx context.Context, fromVersion, toVersion string, err error) error {
 	// Create metadata for the notification
@@ -215,8 +223,8 @@ func (n *UpdateNotifier) NotifyUpdateFailure(ctx context.Context, fromVersion, t
 	notification, err := n.manager.CreateNotification(
 		UpdateAvailable,
 		"Update Failed",
-		fmt.Sprintf("The update from version %s to version %s failed. Please try again or contact support if the issue persists.", 
-			fromVersion, 
+		fmt.Sprintf("The update from version %s to version %s failed. Please try again or contact support if the issue persists.",
+			fromVersion,
 			toVersion),
 		Warning,
 		true,
@@ -232,6 +240,7 @@ func (n *UpdateNotifier) NotifyUpdateFailure(ctx context.Context, fromVersion, t
 	}
 
 	return nil
+}
 
 // ScheduleUpdateReminder schedules a reminder notification for a pending update
 func (n *UpdateNotifier) ScheduleUpdateReminder(ctx context.Context, versionInfo *update.UpdateVersionInfo, reminderTime time.Time) error {
@@ -261,8 +270,8 @@ func (n *UpdateNotifier) ScheduleUpdateReminder(ctx context.Context, versionInfo
 	notification, err := n.manager.CreateNotification(
 		UpdateAvailable,
 		fmt.Sprintf("Update Reminder: %s", versionInfo.LatestVersion),
-		fmt.Sprintf("This is a reminder that an update for the LLMreconing Tool is available. You are currently using version %s, and version %s is now available.", 
-			versionInfo.CurrentVersion, 
+		fmt.Sprintf("This is a reminder that an update for the LLMreconing Tool is available. You are currently using version %s, and version %s is now available.",
+			versionInfo.CurrentVersion,
 			versionInfo.LatestVersion),
 		severity,
 		false,
@@ -284,9 +293,5 @@ func (n *UpdateNotifier) ScheduleUpdateReminder(ctx context.Context, versionInfo
 		return fmt.Errorf("failed to schedule update reminder notification: %w", err)
 	}
 
-}
-}
-}
-}
-}
+	return nil
 }

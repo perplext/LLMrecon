@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
 
@@ -23,6 +23,7 @@ type InsecureOutputValidator struct {
 	sensitiveDataPatterns []*regexp.Regexp
 	// insecureCodePatterns contains regex patterns for detecting insecure code patterns
 	insecureCodePatterns []*regexp.Regexp
+}
 
 // NewInsecureOutputValidator creates a new insecure output validator
 func NewInsecureOutputValidator() *InsecureOutputValidator {
@@ -114,13 +115,14 @@ func NewInsecureOutputValidator() *InsecureOutputValidator {
 	}
 
 	return &InsecureOutputValidator{
-		BaseValidator:           baseValidator,
-		xssPatterns:             xssPatterns,
-		sqlInjectionPatterns:    sqlInjectionPatterns,
+		BaseValidator:            baseValidator,
+		xssPatterns:              xssPatterns,
+		sqlInjectionPatterns:     sqlInjectionPatterns,
 		commandInjectionPatterns: commandInjectionPatterns,
-		sensitiveDataPatterns:   sensitiveDataPatterns,
-		insecureCodePatterns:    insecureCodePatterns,
+		sensitiveDataPatterns:    sensitiveDataPatterns,
+		insecureCodePatterns:     insecureCodePatterns,
 	}
+}
 
 // ValidatePrompt validates a prompt for insecure output handling vulnerabilities
 func (v *InsecureOutputValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -151,12 +153,12 @@ func (v *InsecureOutputValidator) ValidatePrompt(ctx context.Context, prompt str
 			index := strings.Index(strings.ToLower(prompt), strings.ToLower(indicator))
 			startIndex := index
 			endIndex := index + len(indicator)
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(prompt), endIndex+20)
 			context := prompt[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.InsecureOutputHandling,
@@ -167,12 +169,13 @@ func (v *InsecureOutputValidator) ValidatePrompt(ctx context.Context, prompt str
 			result.SetLocation(startIndex, endIndex, context)
 			result.SetRemediation("Ensure that the generated content is properly sanitized before use. Consider implementing output validation and encoding.")
 			result.AddRawData("indicator", indicator)
-			
+
 			results = append(results, result)
 		}
 	}
 
 	return results, nil
+}
 
 // ValidateResponse validates a response for insecure output handling vulnerabilities
 func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -189,12 +192,12 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := response[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(response), endIndex+20)
 			context := response[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.InsecureOutputHandling,
@@ -206,7 +209,7 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 			result.SetRemediation("Sanitize the output by using appropriate encoding functions or libraries. Consider implementing a Content Security Policy (CSP).")
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -218,12 +221,12 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := response[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(response), endIndex+20)
 			context := response[contextStart:contextEnd]
-			
+
 			// Only flag if not in a code block or example context
 			if !isInCodeBlock(response, startIndex) {
 				result := CreateValidationResult(
@@ -237,7 +240,7 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 				result.SetRemediation("Use parameterized queries or prepared statements instead of dynamic SQL. Implement proper input validation and sanitization.")
 				result.AddRawData("pattern", pattern.String())
 				result.AddRawData("matched_text", matchedText)
-				
+
 				results = append(results, result)
 			}
 		}
@@ -250,12 +253,12 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := response[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(response), endIndex+20)
 			context := response[contextStart:contextEnd]
-			
+
 			// Only flag if not in a code block or example context
 			if !isInCodeBlock(response, startIndex) {
 				result := CreateValidationResult(
@@ -269,7 +272,7 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 				result.SetRemediation("Avoid using shell commands with user input. Use safer alternatives like library functions. Implement proper input validation and sanitization.")
 				result.AddRawData("pattern", pattern.String())
 				result.AddRawData("matched_text", matchedText)
-				
+
 				results = append(results, result)
 			}
 		}
@@ -282,12 +285,12 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := response[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(response), endIndex+20)
 			context := response[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.InsecureOutputHandling,
@@ -299,7 +302,7 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 			result.SetRemediation("Avoid including sensitive data in responses. Use placeholders or redact sensitive information.")
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -311,12 +314,12 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := response[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(response), endIndex+20)
 			context := response[contextStart:contextEnd]
-			
+
 			// Check if this is in a code block
 			if isInCodeBlock(response, startIndex) {
 				result := CreateValidationResult(
@@ -330,13 +333,14 @@ func (v *InsecureOutputValidator) ValidateResponse(ctx context.Context, response
 				result.SetRemediation("Use secure coding practices. Avoid using insecure functions and methods. Implement proper input validation and sanitization.")
 				result.AddRawData("pattern", pattern.String())
 				result.AddRawData("matched_text", matchedText)
-				
+
 				results = append(results, result)
 			}
 		}
 	}
 
 	return results, nil
+}
 
 // isInCodeBlock checks if a given index is within a code block in the text
 func isInCodeBlock(text string, index int) bool {
@@ -345,7 +349,7 @@ func isInCodeBlock(text string, index int) bool {
 		"```",
 		"~~~",
 	}
-	
+
 	for _, pattern := range codeBlockPatterns {
 		count := 0
 		for i := 0; i < index; i++ {
@@ -354,13 +358,13 @@ func isInCodeBlock(text string, index int) bool {
 				i += len(pattern) - 1
 			}
 		}
-		
+
 		// If count is odd, we're inside a code block
 		if count%2 == 1 {
 			return true
 		}
 	}
-	
+
 	// Check for HTML code tags
 	openTagIndex := strings.LastIndex(text[:index], "<code>")
 	if openTagIndex != -1 {
@@ -369,4 +373,6 @@ func isInCodeBlock(text string, index int) bool {
 			return true
 		}
 	}
-	
+
+	return false
+}

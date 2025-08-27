@@ -1,7 +1,6 @@
 // Package errors provides error handling functionality for bundle operations
 package errors
 
-
 import (
 	"fmt"
 	"io"
@@ -42,19 +41,19 @@ func (l *AuditLogger) LogEventWithStatus(event, component, id, status string, de
 	if l.Writer == nil {
 		return
 	}
-	
+
 	timestamp := time.Now().Format(time.RFC3339)
 	user := l.User
 	if user == "" {
 		user = "system"
 	}
-	
+
 	// Format the details as a string
 	detailsStr := ""
 	for k, v := range details {
 		detailsStr += fmt.Sprintf(" %s=%v", k, v)
 	}
-	
+
 	// Write the audit log entry
 	fmt.Fprintf(l.Writer, "[%s] [%s] [%s] [%s] [%s] [%s]%s\n",
 		timestamp, status, user, component, event, id, detailsStr)

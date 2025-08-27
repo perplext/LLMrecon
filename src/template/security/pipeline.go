@@ -4,7 +4,10 @@ package security
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 )
@@ -20,12 +23,13 @@ type Pipeline struct {
 
 // PipelineConfig represents the configuration for a template security pipeline
 type PipelineConfig struct {
-	TemplateDirectories []string               `json:"template_directories"`
-	OutputDirectory     string                 `json:"output_directory"`
-	VerificationOptions *VerificationOptions   `json:"verification_options"`
-	ReportFormats       []common.ReportFormat  `json:"report_formats"`
-	NotificationConfig  *NotificationConfig    `json:"notification_config,omitempty"`
-	ScheduleConfig      *ScheduleConfig        `json:"schedule_config,omitempty"`
+	TemplateDirectories []string              `json:"template_directories"`
+	OutputDirectory     string                `json:"output_directory"`
+	VerificationOptions *VerificationOptions  `json:"verification_options"`
+	ReportFormats       []common.ReportFormat `json:"report_formats"`
+	NotificationConfig  *NotificationConfig   `json:"notification_config,omitempty"`
+	ScheduleConfig      *ScheduleConfig       `json:"schedule_config,omitempty"`
+}
 
 // NotificationConfig represents the configuration for pipeline notifications
 type NotificationConfig struct {
@@ -58,6 +62,7 @@ func NewPipeline(verifier TemplateVerifier, options *VerificationOptions) *Pipel
 		results:  make([]*VerificationResult, 0),
 		summary:  nil,
 	}
+}
 
 // RunVerification runs the template security verification pipeline
 func (p *Pipeline) RunVerification(ctx context.Context, config *PipelineConfig) error {
@@ -125,14 +130,17 @@ func (p *Pipeline) RunVerification(ctx context.Context, config *PipelineConfig) 
 	}
 
 	return nil
+}
 
 // GetResults returns the verification results
 func (p *Pipeline) GetResults() []*VerificationResult {
 	return p.results
+}
 
 // GetSummary returns the summary of the pipeline results
 func (p *Pipeline) GetSummary() *VerificationSummary {
 	return p.summary
+}
 
 // ConvertToTestResults converts the verification results to test results
 func (p *Pipeline) ConvertToTestResults() []*common.TestResult {
@@ -196,7 +204,7 @@ func (p *Pipeline) ConvertToTestResults() []*common.TestResult {
 			Severity:    common.Medium,
 			Category:    "template_security",
 			Status:      getComplianceStatus(summary.ComplianceStatus["OWASP LLM Top 10"]),
-			Details:     fmt.Sprintf("Total templates: %d, Passed: %d, Failed: %d, Compliance: %.2f%%",
+			Details: fmt.Sprintf("Total templates: %d, Passed: %d, Failed: %d, Compliance: %.2f%%",
 				summary.TotalTemplates,
 				summary.PassedTemplates,
 				summary.FailedTemplates,
@@ -213,6 +221,7 @@ func (p *Pipeline) ConvertToTestResults() []*common.TestResult {
 	}
 
 	return testResults
+}
 
 // generateAndSaveReports generates and saves reports in the specified formats
 func (p *Pipeline) generateAndSaveReports(ctx context.Context, config *PipelineConfig) error {
@@ -240,7 +249,7 @@ func (p *Pipeline) generateAndSaveReports(ctx context.Context, config *PipelineC
 
 		// Save the report to file
 		outputPath := filepath.Join(config.OutputDirectory, fmt.Sprintf("template_security_report.%s", strings.ToLower(string(format))))
-		if err := os.WriteFile(filepath.Clean(outputPath, []byte(formattedReport)), 0600); err != nil {
+		if err := os.WriteFile(filepath.Clean(outputPath), []byte(formattedReport), 0600); err != nil {
 			return fmt.Errorf("failed to save report to file: %w", err)
 		}
 
@@ -248,6 +257,7 @@ func (p *Pipeline) generateAndSaveReports(ctx context.Context, config *PipelineC
 	}
 
 	return nil
+}
 
 // sendNotifications sends notifications about the verification results
 func (p *Pipeline) sendNotifications(config *NotificationConfig) error {
@@ -299,6 +309,7 @@ func (p *Pipeline) sendNotifications(config *NotificationConfig) error {
 	}
 
 	return nil
+}
 
 // RunScheduledVerification runs the template security verification pipeline on a schedule
 func RunScheduledVerification(ctx context.Context, pipeline *Pipeline, config *PipelineConfig) {
@@ -337,15 +348,4 @@ func RunScheduledVerification(ctx context.Context, pipeline *Pipeline, config *P
 			return
 		}
 	}
-
-// getComplianceStatus returns the status string based on compliance
-func getComplianceStatus(compliant bool) string {
-	if compliant {
-		return "passed"
-	}
-}
-}
-}
-}
-}
 }

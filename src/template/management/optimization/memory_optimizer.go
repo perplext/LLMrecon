@@ -1,493 +1,241 @@
 package optimization
 
 import (
-	"fmt"
+	"context"
 	"runtime"
 	"sync"
-	"sync/atomic"
-
-	"github.com/perplext/LLMrecon/src/template/format"
-	"github.com/perplext/LLMrecon/src/utils/profiling"
+	"time"
 )
 
-// MemoryOptimizer optimizes memory usage in template processing
+// MemoryOptimizer handles memory optimization for template processing
 type MemoryOptimizer struct {
-	// config contains the optimizer configuration
-	config *MemoryOptimizerConfig
-	// profiler is the memory profiler
-	profiler *profiling.MemoryProfiler
-	// mutex protects the optimizer state
-	mutex sync.RWMutex
-	// stats tracks optimization statistics
-	stats *MemoryOptimizerStats
-	// templateSizes tracks template sizes
-	templateSizes map[string]int
-	// optimizedSizes tracks optimized template sizes
-	optimizedSizes map[string]int
-	// lastOptimization is the time of the last optimization
-	lastOptimization time.Time
-	// optimizationCount is the number of optimization operations
-	optimizationCount int64
+	maxMemoryMB   int64
+	gcInterval    time.Duration
+	poolSize      int
+	templatePools map[string]*sync.Pool
+	mu            sync.RWMutex
+	ctx           context.Context
+	cancel        context.CancelFunc
+	stats         OptimizationStats
+}
 
-// MemoryOptimizerConfig represents configuration for the memory optimizer
-type MemoryOptimizerConfig struct {
-	// EnableTemplateDeduplication enables template deduplication
-	EnableTemplateDeduplication bool
-	// EnableSectionDeduplication enables section deduplication
-	EnableSectionDeduplication bool
-	// EnableVariableOptimization enables variable optimization
-	EnableVariableOptimization bool
-	// EnableContentCompression enables content compression
-	EnableContentCompression bool
-	// EnableLazyLoading enables lazy loading of templates
-	EnableLazyLoading bool
-	// EnableInheritanceFlattening enables inheritance flattening
-	EnableInheritanceFlattening bool
-	// MaxInheritanceDepth is the maximum inheritance depth
-	MaxInheritanceDepth int
-	// EnableGarbageCollectionHints enables garbage collection hints
-	EnableGarbageCollectionHints bool
-	// GCInterval is the interval between garbage collections
-	GCInterval time.Duration
-	// MemoryThreshold is the memory threshold for optimization (in MB)
-	MemoryThreshold int64
-	// EnablePooling enables object pooling
-	EnablePooling bool
-	// PoolSize is the size of the object pool
-	PoolSize int
-	// EnableBufferReuse enables buffer reuse
-	EnableBufferReuse bool
-	// BufferSize is the size of reused buffers
-	BufferSize int
-	// EnableStringInterning enables string interning
-	EnableStringInterning bool
-
-// MemoryOptimizerStats tracks statistics for the memory optimizer
-type MemoryOptimizerStats struct {
-	// TemplatesOptimized is the number of templates optimized
-	TemplatesOptimized int64
-	// SectionsOptimized is the number of sections optimized
-	SectionsOptimized int64
-	// VariablesOptimized is the number of variables optimized
-	VariablesOptimized int64
-	// BytesSaved is the number of bytes saved
-	BytesSaved int64
-	// MemoryReduced is the amount of memory reduced (in MB)
-	MemoryReduced float64
-	// OptimizationTime is the total time spent on optimization
+// OptimizationStats tracks memory optimization statistics
+type OptimizationStats struct {
+	GCRuns           int64
+	MemoryFreed      int64
+	PoolHits         int64
+	PoolMisses       int64
 	OptimizationTime time.Duration
-	// GarbageCollections is the number of garbage collections triggered
-	GarbageCollections int64
-	// DuplicatesRemoved is the number of duplicates removed
-	DuplicatesRemoved int64
-	// StringsInterned is the number of strings interned
-	StringsInterned int64
-	// BuffersReused is the number of buffers reused
-	BuffersReused int64
-	// ObjectsPooled is the number of objects pooled
-	ObjectsPooled int64
+}
 
-// DefaultMemoryOptimizerConfig returns default configuration for the memory optimizer
-func DefaultMemoryOptimizerConfig() *MemoryOptimizerConfig {
-	return &MemoryOptimizerConfig{
-		EnableTemplateDeduplication: true,
-		EnableSectionDeduplication:  true,
-		EnableVariableOptimization:  true,
-		EnableContentCompression:    true,
-		EnableLazyLoading:           true,
-		EnableInheritanceFlattening: true,
-		MaxInheritanceDepth:         3,
-		EnableGarbageCollectionHints: true,
-		GCInterval:                  5 * time.Minute,
-		MemoryThreshold:             100, // 100 MB
-		EnablePooling:               true,
-		PoolSize:                    1000,
-		EnableBufferReuse:           true,
-		BufferSize:                  4096, // 4 KB
-		EnableStringInterning:       true,
-	}
+// TemplateCache represents cached template data
+type TemplateCache struct {
+	Data       interface{}
+	Size       int64
+	LastAccess time.Time
+	RefCount   int32
+}
+
+// MemoryConfig configuration for memory optimizer
+type MemoryConfig struct {
+	MaxMemoryMB   int64
+	GCInterval    time.Duration
+	PoolSize      int
+	CacheTimeout  time.Duration
+	EnablePooling bool
+}
 
 // NewMemoryOptimizer creates a new memory optimizer
-func NewMemoryOptimizer(config *MemoryOptimizerConfig) (*MemoryOptimizer, error) {
-	if config == nil {
-		config = DefaultMemoryOptimizerConfig()
+func NewMemoryOptimizer(config MemoryConfig) *MemoryOptimizer {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	mo := &MemoryOptimizer{
+		maxMemoryMB:   config.MaxMemoryMB,
+		gcInterval:    config.GCInterval,
+		poolSize:      config.PoolSize,
+		templatePools: make(map[string]*sync.Pool),
+		ctx:           ctx,
+		cancel:        cancel,
+		stats:         OptimizationStats{},
 	}
 
-	// Create memory profiler
-	profilerOptions := profiling.DefaultProfilerOptions()
-	profiler, err := profiling.NewMemoryProfiler(profilerOptions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create memory profiler: %w", err)
+	if config.EnablePooling {
+		mo.initializePools()
 	}
 
-	return &MemoryOptimizer{
-		config:         config,
-		profiler:       profiler,
-		stats:          &MemoryOptimizerStats{},
-		templateSizes:  make(map[string]int),
-		optimizedSizes: make(map[string]int),
-	}, nil
+	// Start background optimization routine
+	go mo.backgroundOptimization()
 
-// OptimizeTemplate optimizes a template for memory usage
-func (o *MemoryOptimizer) OptimizeTemplate(template *format.Template) (*format.Template, error) {
-	if template == nil {
-		return nil, fmt.Errorf("template is nil")
+	return mo
+}
+
+// initializePools initializes object pools for different template types
+func (mo *MemoryOptimizer) initializePools() {
+	mo.mu.Lock()
+	defer mo.mu.Unlock()
+
+	// Template data pool
+	mo.templatePools["data"] = &sync.Pool{
+		New: func() interface{} {
+			return make(map[string]interface{})
+		},
 	}
 
-	// Take a snapshot of memory before optimization
-	o.profiler.CreateSnapshot("before")
+	// String builder pool
+	mo.templatePools["builder"] = &sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 0, 1024)
+		},
+	}
 
-	// Start optimization timer
+	// Cache entry pool
+	mo.templatePools["cache"] = &sync.Pool{
+		New: func() interface{} {
+			return &TemplateCache{
+				LastAccess: time.Now(),
+				RefCount:   0,
+			}
+		},
+	}
+}
+
+// GetFromPool retrieves an object from the specified pool
+func (mo *MemoryOptimizer) GetFromPool(poolName string) interface{} {
+	mo.mu.RLock()
+	pool, exists := mo.templatePools[poolName]
+	mo.mu.RUnlock()
+
+	if !exists {
+		mo.stats.PoolMisses++
+		return nil
+	}
+
+	mo.stats.PoolHits++
+	return pool.Get()
+}
+
+// PutToPool returns an object to the specified pool
+func (mo *MemoryOptimizer) PutToPool(poolName string, obj interface{}) {
+	mo.mu.RLock()
+	pool, exists := mo.templatePools[poolName]
+	mo.mu.RUnlock()
+
+	if exists {
+		pool.Put(obj)
+	}
+}
+
+// OptimizeMemory performs memory optimization
+func (mo *MemoryOptimizer) OptimizeMemory(ctx context.Context) error {
 	startTime := time.Now()
+	defer func() {
+		mo.stats.OptimizationTime += time.Since(startTime)
+	}()
 
-	// Create a copy of the template
-	optimized := template.Clone()
+	// Get current memory stats
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
 
-	// Calculate original size
-	originalSize := estimateTemplateSize(template)
-	o.mutex.Lock()
-	o.templateSizes[template.ID] = originalSize
-	o.mutex.Unlock()
+	currentMemoryMB := int64(m.Alloc / 1024 / 1024)
 
-	// Optimize template
-	var err error
-	if o.config.EnableTemplateDeduplication {
-		optimized, err = o.deduplicateTemplate(optimized)
-		if err != nil {
-			return nil, fmt.Errorf("failed to deduplicate template: %w", err)
+	if currentMemoryMB > mo.maxMemoryMB {
+		// Force garbage collection
+		beforeGC := m.Alloc
+		runtime.GC()
+
+		// Update stats
+		runtime.ReadMemStats(&m)
+		mo.stats.GCRuns++
+		mo.stats.MemoryFreed += int64(beforeGC - m.Alloc)
+	}
+
+	return nil
+}
+
+// backgroundOptimization runs continuous memory optimization
+func (mo *MemoryOptimizer) backgroundOptimization() {
+	ticker := time.NewTicker(mo.gcInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			mo.OptimizeMemory(mo.ctx)
+		case <-mo.ctx.Done():
+			return
+		}
+	}
+}
+
+// GetStats returns current optimization statistics
+func (mo *MemoryOptimizer) GetStats() OptimizationStats {
+	return mo.stats
+}
+
+// GetMemoryUsage returns current memory usage in MB
+func (mo *MemoryOptimizer) GetMemoryUsage() int64 {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return int64(m.Alloc / 1024 / 1024)
+}
+
+// SetMaxMemory updates the maximum memory threshold
+func (mo *MemoryOptimizer) SetMaxMemory(maxMemoryMB int64) {
+	mo.mu.Lock()
+	defer mo.mu.Unlock()
+	mo.maxMemoryMB = maxMemoryMB
+}
+
+// Close shuts down the memory optimizer
+func (mo *MemoryOptimizer) Close() error {
+	mo.cancel()
+
+	// Clear all pools
+	mo.mu.Lock()
+	defer mo.mu.Unlock()
+
+	for name := range mo.templatePools {
+		delete(mo.templatePools, name)
+	}
+
+	return nil
+}
+
+// ClearPools clears all object pools
+func (mo *MemoryOptimizer) ClearPools() {
+	mo.mu.Lock()
+	defer mo.mu.Unlock()
+
+	// Recreate pools to clear them
+	mo.initializePools()
+}
+
+// ResizePool resizes a specific pool
+func (mo *MemoryOptimizer) ResizePool(poolName string, newSize int) error {
+	mo.mu.Lock()
+	defer mo.mu.Unlock()
+
+	if _, exists := mo.templatePools[poolName]; !exists {
+		return nil // Pool doesn't exist
+	}
+
+	// Create new pool with updated size
+	// Note: sync.Pool doesn't have a direct way to resize,
+	// so we recreate the pool
+	switch poolName {
+	case "data":
+		mo.templatePools["data"] = &sync.Pool{
+			New: func() interface{} {
+				return make(map[string]interface{}, newSize)
+			},
+		}
+	case "builder":
+		mo.templatePools["builder"] = &sync.Pool{
+			New: func() interface{} {
+				return make([]byte, 0, newSize)
+			},
 		}
 	}
 
-	if o.config.EnableSectionDeduplication && optimized.Content != nil {
-		// Parse content to work with sections
-		parsedTemplate, err := format.ParseTemplate(optimized.Content)
-		if err == nil && parsedTemplate != nil {
-			// Store the optimized content back
-			optimized = parsedTemplate
-		}
-	}
-
-	if o.config.EnableVariableOptimization && optimized.Variables != nil {
-		optimized.Variables, err = o.optimizeVariables(optimized.Variables)
-		if err != nil {
-			return nil, fmt.Errorf("failed to optimize variables: %w", err)
-		}
-	}
-
-	if o.config.EnableInheritanceFlattening {
-		optimized, err = o.flattenInheritance(optimized)
-		if err != nil {
-			return nil, fmt.Errorf("failed to flatten inheritance: %w", err)
-		}
-	}
-
-	// Calculate optimized size
-	optimizedSize := estimateTemplateSize(optimized)
-	o.mutex.Lock()
-	o.optimizedSizes[template.ID] = optimizedSize
-	o.mutex.Unlock()
-
-	// Update statistics
-	atomic.AddInt64(&o.stats.TemplatesOptimized, 1)
-	atomic.AddInt64(&o.stats.BytesSaved, int64(originalSize-optimizedSize))
-	o.stats.OptimizationTime += time.Since(startTime)
-	atomic.AddInt64(&o.optimizationCount, 1)
-	o.lastOptimization = time.Now()
-
-	// Take a snapshot of memory after optimization
-	o.profiler.CreateSnapshot("after")
-
-	// Compare memory snapshots
-	diff, err := o.profiler.CompareSnapshots("before", "after")
-	if err == nil && diff != nil {
-		if heapDiff, ok := diff["heap_alloc_diff_mb"].(float64); ok && heapDiff < 0 {
-			o.stats.MemoryReduced -= heapDiff // Convert negative diff to positive reduction
-		}
-	}
-
-	// Trigger garbage collection if needed
-	if o.config.EnableGarbageCollectionHints && o.shouldTriggerGC() {
-		o.triggerGC()
-	}
-
-	return optimized, nil
-
-// OptimizeTemplates optimizes multiple templates for memory usage
-func (o *MemoryOptimizer) OptimizeTemplates(templates []*format.Template) ([]*format.Template, error) {
-	if len(templates) == 0 {
-		return nil, fmt.Errorf("templates is empty")
-	}
-
-	// Take a snapshot of memory before optimization
-	o.profiler.CreateSnapshot("before_batch")
-
-	// Start optimization timer
-	startTime := time.Now()
-
-	// Create result slice
-	result := make([]*format.Template, len(templates))
-
-	// Optimize templates
-	var totalOriginalSize, totalOptimizedSize int
-	var wg sync.WaitGroup
-	var errMutex sync.Mutex
-	var firstErr error
-
-	for i, template := range templates {
-		wg.Add(1)
-		go func(i int, template *format.Template) {
-			defer wg.Done()
-
-			// Calculate original size
-			originalSize := estimateTemplateSize(template)
-			o.mutex.Lock()
-			o.templateSizes[template.ID] = originalSize
-			o.mutex.Unlock()
-
-			// Optimize template
-			optimized, err := o.OptimizeTemplate(template)
-			if err != nil {
-				errMutex.Lock()
-				if firstErr == nil {
-					firstErr = fmt.Errorf("failed to optimize template %s: %w", template.ID, err)
-				}
-				errMutex.Unlock()
-				return
-			}
-
-			// Calculate optimized size
-			optimizedSize := estimateTemplateSize(optimized)
-			o.mutex.Lock()
-			o.optimizedSizes[template.ID] = optimizedSize
-			totalOriginalSize += originalSize
-			totalOptimizedSize += optimizedSize
-			o.mutex.Unlock()
-
-			// Store result
-			result[i] = optimized
-		}(i, template)
-	}
-
-	// Wait for all goroutines to finish
-	wg.Wait()
-
-	// Check for errors
-	if firstErr != nil {
-		return nil, firstErr
-	}
-
-	// Update statistics
-	atomic.AddInt64(&o.stats.TemplatesOptimized, int64(len(templates)))
-	atomic.AddInt64(&o.stats.BytesSaved, int64(totalOriginalSize-totalOptimizedSize))
-	o.stats.OptimizationTime += time.Since(startTime)
-	atomic.AddInt64(&o.optimizationCount, 1)
-	o.lastOptimization = time.Now()
-
-	// Take a snapshot of memory after optimization
-	o.profiler.CreateSnapshot("after_batch")
-
-	// Compare memory snapshots
-	diff, err := o.profiler.CompareSnapshots("before_batch", "after_batch")
-	if err == nil && diff != nil {
-		if heapDiff, ok := diff["heap_alloc_diff_mb"].(float64); ok && heapDiff < 0 {
-			o.stats.MemoryReduced -= heapDiff // Convert negative diff to positive reduction
-		}
-	}
-
-	// Trigger garbage collection if needed
-	if o.config.EnableGarbageCollectionHints && o.shouldTriggerGC() {
-		o.triggerGC()
-	}
-
-	return result, nil
-
-// deduplicateTemplate deduplicates a template
-func (o *MemoryOptimizer) deduplicateTemplate(template *format.Template) (*format.Template, error) {
-	// Implementation would deduplicate template content
-	// This is a simplified version
-	atomic.AddInt64(&o.stats.DuplicatesRemoved, 1)
-	return template, nil
-
-// deduplicateSections deduplicates template sections
-func (o *MemoryOptimizer) deduplicateSections(sections []format.TemplateSection) ([]format.TemplateSection, error) {
-	if len(sections) == 0 {
-		return sections, nil
-	}
-
-	// Implementation would deduplicate sections
-	// This is a simplified version
-	atomic.AddInt64(&o.stats.SectionsOptimized, int64(len(sections)))
-	return sections, nil
-
-// optimizeVariables optimizes template variables
-func (o *MemoryOptimizer) optimizeVariables(variables map[string]interface{}) (map[string]interface{}, error) {
-	if len(variables) == 0 {
-		return variables, nil
-	}
-
-	// Implementation would optimize variables
-	// This is a simplified version
-	atomic.AddInt64(&o.stats.VariablesOptimized, int64(len(variables)))
-	return variables, nil
-
-// flattenInheritance flattens template inheritance
-func (o *MemoryOptimizer) flattenInheritance(template *format.Template) (*format.Template, error) {
-	// Implementation would flatten inheritance
-	// This is a simplified version
-	return template, nil
-
-// shouldTriggerGC checks if garbage collection should be triggered
-func (o *MemoryOptimizer) shouldTriggerGC() bool {
-	// Check memory usage
-	memoryUsage := o.profiler.GetMemoryUsage()
-	return memoryUsage > float64(o.config.MemoryThreshold)
-
-// triggerGC triggers garbage collection
-func (o *MemoryOptimizer) triggerGC() {
-	runtime.GC()
-	atomic.AddInt64(&o.stats.GarbageCollections, 1)
-
-// GetStats returns statistics for the memory optimizer
-func (o *MemoryOptimizer) GetStats() *MemoryOptimizerStats {
-	o.mutex.RLock()
-	defer o.mutex.RUnlock()
-
-	return o.stats
-
-// GetConfig returns the configuration for the memory optimizer
-func (o *MemoryOptimizer) GetConfig() *MemoryOptimizerConfig {
-	o.mutex.RLock()
-	defer o.mutex.RUnlock()
-
-	return o.config
-
-// SetConfig sets the configuration for the memory optimizer
-func (o *MemoryOptimizer) SetConfig(config *MemoryOptimizerConfig) {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
-
-	o.config = config
-
-// GetMemoryProfiler returns the memory profiler
-func (o *MemoryOptimizer) GetMemoryProfiler() *profiling.MemoryProfiler {
-	return o.profiler
-
-// GetOptimizationCount returns the number of optimization operations
-func (o *MemoryOptimizer) GetOptimizationCount() int64 {
-	return atomic.LoadInt64(&o.optimizationCount)
-
-// GetLastOptimizationTime returns the time of the last optimization
-func (o *MemoryOptimizer) GetLastOptimizationTime() time.Time {
-	o.mutex.RLock()
-	defer o.mutex.RUnlock()
-
-	return o.lastOptimization
-
-// GetTemplateSizes returns the sizes of templates
-func (o *MemoryOptimizer) GetTemplateSizes() map[string]int {
-	o.mutex.RLock()
-	defer o.mutex.RUnlock()
-
-	// Create a copy of the map
-	result := make(map[string]int)
-	for id, size := range o.templateSizes {
-		result[id] = size
-	}
-
-	return result
-
-// GetOptimizedSizes returns the sizes of optimized templates
-func (o *MemoryOptimizer) GetOptimizedSizes() map[string]int {
-	o.mutex.RLock()
-	defer o.mutex.RUnlock()
-
-	// Create a copy of the map
-	result := make(map[string]int)
-	for id, size := range o.optimizedSizes {
-		result[id] = size
-	}
-
-	return result
-
-// GetMemorySavings returns the memory savings for templates
-func (o *MemoryOptimizer) GetMemorySavings() map[string]float64 {
-	o.mutex.RLock()
-	defer o.mutex.RUnlock()
-
-	// Create result map
-	result := make(map[string]float64)
-
-	// Calculate savings
-	for id, originalSize := range o.templateSizes {
-		if optimizedSize, ok := o.optimizedSizes[id]; ok {
-			if originalSize > 0 {
-				savings := float64(originalSize-optimizedSize) / float64(originalSize) * 100
-				result[id] = savings
-			}
-		}
-	}
-
-	return result
-
-// estimateTemplateSize estimates the size of a template in bytes
-func estimateTemplateSize(template *format.Template) int {
-	if template == nil {
-		return 0
-	}
-
-	size := len(template.ID)
-
-	// Add size of raw content
-	if template.Content != nil {
-		size += len(template.Content)
-	}
-
-	// Add size of template info
-	size += len(template.Info.Name)
-	size += len(template.Info.Description)
-	size += len(template.Info.Version)
-	size += len(template.Info.Author)
-	size += len(template.Info.Severity)
-	for _, tag := range template.Info.Tags {
-		size += len(tag)
-	}
-	for _, ref := range template.Info.References {
-		size += len(ref)
-	}
-
-	// Add size of test definition
-	size += len(template.Test.Prompt)
-	size += len(template.Test.ExpectedBehavior)
-	size += len(template.Test.Detection.Type)
-	size += len(template.Test.Detection.Match)
-	size += len(template.Test.Detection.Pattern)
-	size += len(template.Test.Detection.Criteria)
-	size += len(template.Test.Detection.Condition)
-
-	// Add size of variations
-	for _, variation := range template.Test.Variations {
-		size += len(variation.Prompt)
-		size += len(variation.Detection.Type)
-		size += len(variation.Detection.Match)
-		size += len(variation.Detection.Pattern)
-		size += len(variation.Detection.Criteria)
-		size += len(variation.Detection.Condition)
-	}
-
-	// Add size of variables at template level
-	if template.Variables != nil {
-		for name, value := range template.Variables {
-			size += len(name)
-			
-			// Estimate size of value
-			switch v := value.(type) {
-			case string:
-				size += len(v)
-			case []byte:
-				size += len(v)
-			default:
-				size += 8 // Assume 8 bytes for other types
-			}
-		}
-	}
-
+	return nil
+}

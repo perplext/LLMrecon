@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/access/common"
 	"github.com/perplext/LLMrecon/src/security/access/mfa"
@@ -17,6 +18,7 @@ type simpleRBACManager struct {
 	rolePermissions map[string][]string
 	userRoles       map[string][]string
 	mu              sync.RWMutex
+}
 
 // Initialize initializes the RBAC manager
 func (r *simpleRBACManager) Initialize(ctx context.Context) error {
@@ -27,6 +29,7 @@ func (r *simpleRBACManager) Initialize(ctx context.Context) error {
 		}
 	}
 	return nil
+}
 
 // RoleHasPermission checks if a role has a specific permission
 func (r *simpleRBACManager) RoleHasPermission(role, permission string) bool {
@@ -44,15 +47,18 @@ func (r *simpleRBACManager) RoleHasPermission(role, permission string) bool {
 		}
 	}
 	return false
+}
 
 // simpleSecurityManager manages security incidents and vulnerabilities
 type simpleSecurityManager struct {
 	auditLogger AuditLogger
 	config      *SecurityConfig
+}
 
 // Initialize initializes the security manager
 func (s *simpleSecurityManager) Initialize(ctx context.Context) error {
 	return nil
+}
 
 // AccessControlSystem is the main entry point for the access control system
 type AccessControlSystem struct {
@@ -149,6 +155,7 @@ func NewAccessControlSystem(config *AccessControlConfig) (*AccessControlSystem, 
 		securityManager: securityManager,
 		mfaManager:      mfaManager,
 	}, nil
+}
 
 // Initialize initializes the access control system
 func (s *AccessControlSystem) Initialize(ctx context.Context) error {
@@ -170,38 +177,47 @@ func (s *AccessControlSystem) Initialize(ctx context.Context) error {
 	}
 
 	return nil
+}
 
 // Auth returns the auth manager
 func (s *AccessControlSystem) Auth() *AuthManager {
 	return s.authManager
+}
 
 // RBAC returns the RBAC manager
 func (s *AccessControlSystem) RBAC() *simpleRBACManager {
 	return s.rbacManager
+}
 
 // Audit returns the audit manager
 func (s *AccessControlSystem) Audit() *AuditManager {
 	return s.auditManager
+}
 
 // Security returns the security manager
 func (s *AccessControlSystem) Security() *simpleSecurityManager {
 	return s.securityManager
+}
 
 // MFA returns the multi-factor authentication manager
 func (s *AccessControlSystem) MFA() mfa.MFAManager {
 	return s.mfaManager
+}
 
 // GetAllUsers returns all users in the system
 func (s *AccessControlSystem) GetAllUsers(ctx context.Context) ([]*User, error) {
 	return s.authManager.GetAllUsers(ctx)
+}
 
 // GetUserByID retrieves a user by ID
 func (s *AccessControlSystem) GetUserByID(ctx context.Context, id string) (*User, error) {
 	return s.authManager.GetUserByID(ctx, id)
+}
 
 // GetUserByUsername retrieves a user by username
 func (s *AccessControlSystem) GetUserByUsername(ctx context.Context, username string) (*User, error) {
 	return s.authManager.GetUserByUsername(ctx, username)
+}
 
 // CreateUser creates a new user
 func (s *AccessControlSystem) CreateUser(ctx context.Context, username, email, password string, roles []string) (*User, error) {
@@ -224,6 +240,8 @@ func (s *AccessControlSystem) CreateUser(ctx context.Context, username, email, p
 	}
 
 	return user, nil
+}
+
 // UpdateUser updates an existing user
 func (a *AccessControlSystem) UpdateUser(ctx context.Context, user *User) error {
 	// Ensure user is not nil and has required fields
@@ -258,6 +276,7 @@ func (a *AccessControlSystem) UpdateUser(ctx context.Context, user *User) error 
 	}
 
 	return nil
+}
 
 // DeleteUser deletes a user
 func (a *AccessControlSystem) DeleteUser(ctx context.Context, userID string) error {
@@ -286,6 +305,7 @@ func (a *AccessControlSystem) DeleteUser(ctx context.Context, userID string) err
 	}
 
 	return nil
+}
 
 // UpdateUserPassword updates a user's password
 func (a *AccessControlSystem) UpdateUserPassword(ctx context.Context, userID, currentPassword, newPassword string) error {
@@ -314,6 +334,7 @@ func (a *AccessControlSystem) UpdateUserPassword(ctx context.Context, userID, cu
 	}
 
 	return nil
+}
 
 // EnableMFA enables multi-factor authentication for a user
 func (a *AccessControlSystem) EnableMFA(ctx context.Context, userID string, method common.AuthMethod) error {
@@ -346,6 +367,7 @@ func (a *AccessControlSystem) EnableMFA(ctx context.Context, userID string, meth
 	}
 
 	return nil
+}
 
 // DisableMFA disables multi-factor authentication for a user
 func (a *AccessControlSystem) DisableMFA(ctx context.Context, userID string, method common.AuthMethod) error {
@@ -378,6 +400,7 @@ func (a *AccessControlSystem) DisableMFA(ctx context.Context, userID string, met
 	}
 
 	return nil
+}
 
 // Helper function to get changes between two users
 func getChanges(oldUser, newUser *User) map[string]interface{} {
@@ -407,6 +430,7 @@ func getChanges(oldUser, newUser *User) map[string]interface{} {
 	}
 
 	return changes
+}
 
 // Close closes the access control system and releases any resources
 func (a *AccessControlSystem) Close() error {
@@ -416,10 +440,12 @@ func (a *AccessControlSystem) Close() error {
 	}
 
 	return nil
+}
 
 // DefaultAccessControlConfig returns the default access control configuration
 func DefaultAccessControlConfig() *AccessControlConfig {
 	return DefaultAccessControlConfigV2()
+}
 
 // Helper function to get user ID from context
 func getUserIDFromContext(ctx context.Context) string {
@@ -433,6 +459,7 @@ func getUserIDFromContext(ctx context.Context) string {
 	}
 
 	return userID
+}
 
 // SecurityConfig contains security configuration
 type SecurityConfig struct {
@@ -444,25 +471,4 @@ type SecurityConfig struct {
 	// Vulnerability management
 	VulnerabilityCheckPeriod        time.Duration
 	VulnerabilityNotificationEmails []string
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

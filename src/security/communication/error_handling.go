@@ -34,10 +34,12 @@ type SecureError struct {
 	Details string `json:"-"`
 	// OriginalError is the original error (not exposed to clients)
 	OriginalError error `json:"-"`
+}
 
 // Error implements the error interface
 func (e *SecureError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Code, e.Message)
+}
 
 // NewSecureError creates a new secure error
 func NewSecureError(code string, message string, level ErrorLevel, originalError error) *SecureError {
@@ -47,11 +49,13 @@ func NewSecureError(code string, message string, level ErrorLevel, originalError
 		Level:         level,
 		OriginalError: originalError,
 	}
+}
 
 // WithDetails adds details to a secure error
 func (e *SecureError) WithDetails(details string) *SecureError {
 	e.Details = details
 	return e
+}
 
 // ErrorResponse represents an error response
 type ErrorResponse struct {
@@ -61,6 +65,7 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 	// RequestID is a unique identifier for the request
 	RequestID string `json:"request_id,omitempty"`
+}
 
 // ErrorHandler handles errors securely
 type ErrorHandler struct {
@@ -68,6 +73,7 @@ type ErrorHandler struct {
 	DevelopmentMode bool
 	// ErrorCodeMap maps error types to error codes
 	ErrorCodeMap map[string]string
+}
 
 // NewErrorHandler creates a new error handler
 func NewErrorHandler(developmentMode bool) *ErrorHandler {
@@ -75,10 +81,12 @@ func NewErrorHandler(developmentMode bool) *ErrorHandler {
 		DevelopmentMode: developmentMode,
 		ErrorCodeMap:    make(map[string]string),
 	}
+}
 
 // RegisterErrorCode registers an error code for an error type
 func (h *ErrorHandler) RegisterErrorCode(errorType string, code string) {
 	h.ErrorCodeMap[errorType] = code
+}
 
 // GetErrorCode gets the error code for an error
 func (h *ErrorHandler) GetErrorCode(err error) string {
@@ -94,6 +102,7 @@ func (h *ErrorHandler) GetErrorCode(err error) string {
 
 	// Default error code
 	return "INTERNAL_ERROR"
+}
 
 // HandleError handles an error securely
 func (h *ErrorHandler) HandleError(w http.ResponseWriter, r *http.Request, err error, defaultMessage string) {
@@ -115,6 +124,7 @@ func (h *ErrorHandler) HandleError(w http.ResponseWriter, r *http.Request, err e
 
 	// Write the response
 	_ = json.NewEncoder(w).Encode(response) // Best effort, headers already sent
+}
 
 // getStatusCodeForError gets the HTTP status code for an error
 func (h *ErrorHandler) getStatusCodeForError(err error) int {
@@ -151,6 +161,7 @@ func (h *ErrorHandler) getStatusCodeForError(err error) int {
 
 	// Default to internal server error
 	return http.StatusInternalServerError
+}
 
 // getErrorMessage gets a user-friendly error message
 func (h *ErrorHandler) getErrorMessage(err error, defaultMessage string) string {
@@ -170,6 +181,7 @@ func (h *ErrorHandler) getErrorMessage(err error, defaultMessage string) string 
 
 	// In production mode, use the default message
 	return defaultMessage
+}
 
 // SanitizeErrorForLogging sanitizes an error for logging
 func (h *ErrorHandler) SanitizeErrorForLogging(err error) string {
@@ -188,3 +200,5 @@ func (h *ErrorHandler) SanitizeErrorForLogging(err error) string {
 		errStr = strings.ReplaceAll(errStr, pattern, "[REDACTED]")
 	}
 
+	return errStr
+}

@@ -7,8 +7,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/provider/middleware"
@@ -17,14 +19,14 @@ import (
 // AnthropicProvider is an implementation of the Provider interface for Anthropic
 type AnthropicProvider struct {
 	*core.BaseProvider
-	client             *http.Client
-	connectionPool     *core.ProviderConnectionPool
-	rateLimiter        *middleware.RateLimiter
-	retryMiddleware    *middleware.RetryMiddleware
-	loggingMiddleware  *middleware.LoggingMiddleware
-	circuitBreaker     *middleware.CircuitBreakerMiddleware
-	requestQueue       *middleware.RequestQueueMiddleware
-	usageTracker       *middleware.UsageTracker
+	client            *http.Client
+	connectionPool    *core.ProviderConnectionPool
+	rateLimiter       *middleware.RateLimiter
+	retryMiddleware   *middleware.RetryMiddleware
+	loggingMiddleware *middleware.LoggingMiddleware
+	circuitBreaker    *middleware.CircuitBreakerMiddleware
+	requestQueue      *middleware.RequestQueueMiddleware
+	usageTracker      *middleware.UsageTracker
 }
 
 // NewAnthropicProvider creates a new Anthropic provider
@@ -55,7 +57,7 @@ func NewAnthropicProvider(config *core.ProviderConfig) (core.Provider, error) {
 	if config.Timeout > 0 {
 		poolConfig.ResponseHeaderTimeout = config.Timeout
 	}
-	
+
 	// Create connection pool manager
 	logger := core.NewDefaultLogger()
 	poolManager := core.NewConnectionPoolManager(poolConfig, logger)
@@ -63,7 +65,7 @@ func NewAnthropicProvider(config *core.ProviderConfig) (core.Provider, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create connection pool: %w", err)
 	}
-	
+
 	// Get HTTP client from connection pool
 	client := connectionPool.GetClient()
 
@@ -96,22 +98,22 @@ func NewAnthropicProvider(config *core.ProviderConfig) (core.Provider, error) {
 
 	// Create circuit breaker middleware with appropriate configuration
 	circuitBreakerConfig := middleware.CircuitBreakerConfig{
-		FailureThreshold:         5,  // 5 consecutive failures will open the circuit
+		FailureThreshold:         5,                // 5 consecutive failures will open the circuit
 		ResetTimeout:             30 * time.Second, // Wait 30 seconds before trying again
-		HalfOpenSuccessThreshold: 2,  // 2 consecutive successes will close the circuit
+		HalfOpenSuccessThreshold: 2,                // 2 consecutive successes will close the circuit
 	}
 	circuitBreaker := middleware.NewCircuitBreakerMiddleware(circuitBreakerConfig)
-	
+
 	// Create request queue middleware with appropriate configuration
 	requestQueueConfig := middleware.RequestQueueConfig{
-		MaxQueueSize:   100, // Maximum number of requests that can be queued
+		MaxQueueSize:   100,              // Maximum number of requests that can be queued
 		MaxWaitTime:    60 * time.Second, // Maximum time a request can wait in the queue
-		PriorityLevels: 3,  // Number of priority levels (0 = highest, 2 = lowest)
+		PriorityLevels: 3,                // Number of priority levels (0 = highest, 2 = lowest)
 	}
 	requestQueue := middleware.NewRequestQueueMiddleware(requestQueueConfig, 5) // 5 worker goroutines
 	// Start the request queue workers
 	requestQueue.Start()
-	
+
 	// Create usage tracker with daily reset interval
 	usageTracker := middleware.NewUsageTracker(24 * time.Hour)
 
@@ -126,11 +128,12 @@ func NewAnthropicProvider(config *core.ProviderConfig) (core.Provider, error) {
 		requestQueue:      requestQueue,
 		usageTracker:      usageTracker,
 	}, nil
+}
 
 // GetModels returns a list of available models
 func (p *AnthropicProvider) GetModels(ctx context.Context) ([]core.ModelInfo, error) {
 	result, err := p.executeWithResilience(ctx, "GetModels", nil, func(ctx context.Context) (interface{}, error) {
-			// Create request
+		// Create request
 		req, err := http.NewRequestWithContext(ctx, "GET", p.GetConfig().BaseURL+"/v1/models", nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
@@ -152,7 +155,11 @@ func (p *AnthropicProvider) GetModels(ctx context.Context) ([]core.ModelInfo, er
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute request: %w", err)
 		}
-		defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Check for error
 		if resp.StatusCode != http.StatusOK {
@@ -205,6 +212,7 @@ func (p *AnthropicProvider) GetModels(ctx context.Context) ([]core.ModelInfo, er
 	}
 
 	return result.([]core.ModelInfo), nil
+}
 
 // GetModelInfo returns information about a specific model
 func (p *AnthropicProvider) GetModelInfo(ctx context.Context, modelID string) (*core.ModelInfo, error) {
@@ -220,6 +228,7 @@ func (p *AnthropicProvider) GetModelInfo(ctx context.Context, modelID string) (*
 	}
 
 	return nil, fmt.Errorf("model %s not found", modelID)
+}
 
 // TextCompletion generates a text completion
 func (p *AnthropicProvider) TextCompletion(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
@@ -282,7 +291,11 @@ func (p *AnthropicProvider) TextCompletion(ctx context.Context, request *core.Te
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute request: %w", err)
 		}
-		defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Read response body
 		body, err := io.ReadAll(resp.Body)
@@ -297,11 +310,11 @@ func (p *AnthropicProvider) TextCompletion(ctx context.Context, request *core.Te
 
 		// Parse response
 		var response struct {
-			ID        string `json:"id"`
-			Type      string `json:"type"`
-			Model     string `json:"model"`
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Model      string `json:"model"`
 			StopReason string `json:"stop_reason"`
-			Content   []struct {
+			Content    []struct {
 				Type string `json:"type"`
 				Text string `json:"text"`
 				Role string `json:"role"`
@@ -345,6 +358,7 @@ func (p *AnthropicProvider) TextCompletion(ctx context.Context, request *core.Te
 	}
 
 	return result.(*core.TextCompletionResponse), nil
+}
 
 // ChatCompletion generates a chat completion
 func (p *AnthropicProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -421,7 +435,11 @@ func (p *AnthropicProvider) ChatCompletion(ctx context.Context, request *core.Ch
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute request: %w", err)
 		}
-		defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Check for error
 		if resp.StatusCode != http.StatusOK {
@@ -431,11 +449,11 @@ func (p *AnthropicProvider) ChatCompletion(ctx context.Context, request *core.Ch
 
 		// Parse response
 		var response struct {
-			ID        string `json:"id"`
-			Type      string `json:"type"`
-			Model     string `json:"model"`
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Model      string `json:"model"`
 			StopReason string `json:"stop_reason"`
-			Content   []struct {
+			Content    []struct {
 				Type string `json:"type"`
 				Text string `json:"text"`
 				Role string `json:"role"`
@@ -474,6 +492,7 @@ func (p *AnthropicProvider) ChatCompletion(ctx context.Context, request *core.Ch
 	})
 
 	return result.(*core.ChatCompletionResponse), nil
+}
 
 // StreamingChatCompletion generates a streaming chat completion
 func (p *AnthropicProvider) StreamingChatCompletion(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
@@ -499,7 +518,7 @@ func (p *AnthropicProvider) StreamingChatCompletion(ctx context.Context, request
 		"top_p":       request.TopP,
 		"stream":      true,
 	}
-	
+
 	// Stream parameter is added directly to the URL in the request creation
 
 	// Add stop sequences if specified
@@ -549,7 +568,11 @@ func (p *AnthropicProvider) StreamingChatCompletion(ctx context.Context, request
 	if err != nil {
 		return fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Check for error
 	if resp.StatusCode != http.StatusOK {
@@ -593,14 +616,14 @@ func (p *AnthropicProvider) StreamingChatCompletion(ctx context.Context, request
 
 		// Parse event
 		var event struct {
-			Type         string `json:"type"`
-			Index        int    `json:"index,omitempty"`
-			Message      struct {
-				ID         string `json:"id"`
-				Role       string `json:"role"`
+			Type    string `json:"type"`
+			Index   int    `json:"index,omitempty"`
+			Message struct {
+				ID         string        `json:"id"`
+				Role       string        `json:"role"`
 				Content    []interface{} `json:"content"`
-				Model      string `json:"model"`
-				StopReason interface{} `json:"stop_reason"`
+				Model      string        `json:"model"`
+				StopReason interface{}   `json:"stop_reason"`
 				Usage      struct {
 					InputTokens  int `json:"input_tokens"`
 					OutputTokens int `json:"output_tokens,omitempty"`
@@ -610,7 +633,7 @@ func (p *AnthropicProvider) StreamingChatCompletion(ctx context.Context, request
 				Type string `json:"type"`
 				Text string `json:"text"`
 			} `json:"content_block,omitempty"`
-			Delta        struct {
+			Delta struct {
 				Type       string `json:"type"`
 				Text       string `json:"text,omitempty"`
 				StopReason string `json:"stop_reason,omitempty"`
@@ -703,10 +726,12 @@ func (p *AnthropicProvider) StreamingChatCompletion(ctx context.Context, request
 	}
 
 	return nil
+}
 
 // CreateEmbedding creates an embedding
 func (p *AnthropicProvider) CreateEmbedding(ctx context.Context, request *core.EmbeddingRequest) (*core.EmbeddingResponse, error) {
 	return nil, fmt.Errorf("embeddings are not supported by Anthropic provider")
+}
 
 // CountTokens counts the number of tokens in a text
 func (p *AnthropicProvider) CountTokens(ctx context.Context, text string, modelID string) (int, error) {
@@ -715,23 +740,25 @@ func (p *AnthropicProvider) CountTokens(ctx context.Context, text string, modelI
 	// For now, we'll just estimate based on words
 	words := strings.Fields(text)
 	return len(words) * 4 / 3, nil // Rough estimate: 4 tokens per 3 words
+}
 
 // Close closes the provider and releases any resources
 func (p *AnthropicProvider) Close() error {
 	// Stop the request queue workers
 	p.requestQueue.Stop()
-	
+
 	// Stop the connection pool
 	if p.connectionPool != nil {
 		p.connectionPool.Stop()
 	}
-	
+
 	// Close the HTTP client if it implements io.Closer
 	if closer, ok := interface{}(p.client).(io.Closer); ok {
 		closer.Close()
 	}
-	
+
 	return nil
+}
 
 // GetUsageMetrics returns the usage metrics for a specific model
 func (p *AnthropicProvider) GetUsageMetrics(modelID string) (*core.UsageMetrics, error) {
@@ -776,6 +803,7 @@ func (p *AnthropicProvider) GetUsageMetrics(modelID string) (*core.UsageMetrics,
 	}
 
 	return coreMetrics, nil
+}
 
 // GetAllUsageMetrics returns the usage metrics for all models
 func (p *AnthropicProvider) GetAllUsageMetrics() (map[string]*core.UsageMetrics, error) {
@@ -818,11 +846,13 @@ func (p *AnthropicProvider) GetAllUsageMetrics() (map[string]*core.UsageMetrics,
 	}
 
 	return coreMetrics, nil
+}
 
 // ResetUsageMetrics resets the usage metrics
 func (p *AnthropicProvider) ResetUsageMetrics() error {
 	p.usageTracker.ResetMetrics()
 	return nil
+}
 
 // GetRateLimitConfig returns the rate limit configuration
 func (p *AnthropicProvider) GetRateLimitConfig() *core.RateLimitConfig {
@@ -833,13 +863,14 @@ func (p *AnthropicProvider) GetRateLimitConfig() *core.RateLimitConfig {
 		MaxConcurrentRequests: maxConcurrentRequests,
 		BurstSize:             burstSize,
 	}
+}
 
 // UpdateRateLimitConfig updates the rate limit configuration
 func (p *AnthropicProvider) UpdateRateLimitConfig(config *core.RateLimitConfig) error {
 	if config == nil {
 		return fmt.Errorf("rate limit config cannot be nil")
 	}
-	
+
 	// Update the rate limiter with the new configuration
 	p.rateLimiter.UpdateLimits(
 		config.RequestsPerMinute,
@@ -847,23 +878,25 @@ func (p *AnthropicProvider) UpdateRateLimitConfig(config *core.RateLimitConfig) 
 		config.MaxConcurrentRequests,
 		config.BurstSize,
 	)
-	
+
 	return nil
+}
 
 // GetRetryConfig returns the retry configuration
 func (p *AnthropicProvider) GetRetryConfig() *core.RetryConfig {
 	return p.retryMiddleware.GetConfig()
-	
+}
 
 // UpdateRetryConfig updates the retry configuration
 func (p *AnthropicProvider) UpdateRetryConfig(config *core.RetryConfig) error {
 	if config == nil {
 		return fmt.Errorf("retry config cannot be nil")
 	}
-	
+
 	// Update the retry middleware with the new configuration
 	p.retryMiddleware.UpdateConfig(config)
 	return nil
+}
 
 // handleErrorResponse handles an error response from the Anthropic API
 func (p *AnthropicProvider) handleErrorResponse(statusCode int, body []byte) error {
@@ -888,6 +921,7 @@ func (p *AnthropicProvider) handleErrorResponse(statusCode int, body []byte) err
 		Message:     errorResponse.Error.Message,
 		RawResponse: string(body),
 	}
+}
 
 // executeWithResilience executes a function with resilience
 func (p *AnthropicProvider) executeWithResilience(ctx context.Context, operation string, request interface{}, fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
@@ -937,20 +971,20 @@ func (p *AnthropicProvider) executeWithResilience(ctx context.Context, operation
 
 	// Log response
 	p.loggingMiddleware.LogResponse(ctx, p.GetType(), operation, requestID, request, result, err, duration, nil)
-	
+
 	// Track usage metrics
 	if err == nil {
 		// Estimate token usage based on request and response
 		var tokenCount int64
 		modelID := "claude-3"
-		
+
 		// Extract model ID if available
 		if req, ok := request.(map[string]interface{}); ok {
 			if model, ok := req["model"].(string); ok {
 				modelID = model
 			}
 		}
-		
+
 		// Estimate token count based on operation and result
 		switch operation {
 		case "ChatCompletion":
@@ -977,7 +1011,7 @@ func (p *AnthropicProvider) executeWithResilience(ctx context.Context, operation
 			// Default token count for other operations
 			tokenCount = 10
 		}
-		
+
 		// Track the usage
 		p.usageTracker.TrackRequest(modelID, tokenCount, duration, nil)
 	} else {
@@ -986,6 +1020,7 @@ func (p *AnthropicProvider) executeWithResilience(ctx context.Context, operation
 	}
 
 	return result, err
+}
 
 // Helper functions
 
@@ -1016,6 +1051,7 @@ func convertMessagesToAnthropicFormat(messages []core.Message) []map[string]inte
 		})
 	}
 	return result
+}
 
 // convertToolsToAnthropicFormat converts tools to Anthropic API format
 func convertToolsToAnthropicFormat(tools []core.Tool) []map[string]interface{} {
@@ -1033,13 +1069,14 @@ func convertToolsToAnthropicFormat(tools []core.Tool) []map[string]interface{} {
 		}
 	}
 	return result
+}
 
 // getContentText extracts text content from Anthropic response content
 func getContentText(content []struct {
-	Type  string `json:"type"`
-	Text  string `json:"text"`
-	Role  string `json:"role"`
-) string {
+	Type string `json:"type"`
+	Text string `json:"text"`
+	Role string `json:"role"`
+}) string {
 	var result strings.Builder
 	for _, block := range content {
 		if block.Type == "text" {
@@ -1047,6 +1084,7 @@ func getContentText(content []struct {
 		}
 	}
 	return result.String()
+}
 
 // convertStopReasonToFinishReason converts Anthropic stop reason to standard finish reason
 func convertStopReasonToFinishReason(stopReason string) string {
@@ -1060,24 +1098,4 @@ func convertStopReasonToFinishReason(stopReason string) string {
 	default:
 		return stopReason
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

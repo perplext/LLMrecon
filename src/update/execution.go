@@ -4,6 +4,9 @@ package update
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
@@ -36,11 +39,13 @@ type UpdateExecutionOptions struct {
 	PostUpdateHooks []UpdateHook
 	// VerificationHooks are functions to run for verification
 	VerificationHooks []VerificationHook
+}
 
 // UpdateHook is a function that runs before or after an update
 type UpdateHook func(ctx context.Context, transaction *UpdateTransaction) error
 
 // VerificationHook is a function that runs for verification
+// Use UpdatePackage from package.go
 type VerificationHook func(ctx context.Context, pkg *UpdatePackage) (*VerificationResult, error)
 
 // UpdateExecutor handles the execution of updates
@@ -71,6 +76,7 @@ type UpdateExecutor struct {
 	PostUpdateHooks []UpdateHook
 	// VerificationHooks are functions to run for verification
 	VerificationHooks []VerificationHook
+}
 
 // NewUpdateExecutor creates a new update executor
 func NewUpdateExecutor(options *UpdateExecutionOptions) (*UpdateExecutor, error) {
@@ -158,3 +164,4 @@ func NewUpdateExecutor(options *UpdateExecutionOptions) (*UpdateExecutor, error)
 		PostUpdateHooks:     options.PostUpdateHooks,
 		VerificationHooks:   options.VerificationHooks,
 	}, nil
+}

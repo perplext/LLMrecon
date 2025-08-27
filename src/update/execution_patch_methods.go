@@ -3,8 +3,10 @@ package update
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
-	
+
 	"github.com/perplext/LLMrecon/src/version"
 )
 
@@ -102,6 +104,7 @@ func (e *UpdateExecutor) executeBinaryPatchUpdate(ctx context.Context, pkg *Upda
 	e.CurrentVersions["binary"] = binaryVersion
 
 	return nil
+}
 
 // executeTemplatesPatchUpdate executes a templates patch update
 func (e *UpdateExecutor) executeTemplatesPatchUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -193,6 +196,7 @@ func (e *UpdateExecutor) executeTemplatesPatchUpdate(ctx context.Context, pkg *U
 	e.CurrentVersions["templates"] = templatesVersion
 
 	return nil
+}
 
 // executeModulesPatchUpdate executes a modules patch update
 func (e *UpdateExecutor) executeModulesPatchUpdate(ctx context.Context, pkg *UpdatePackage, transaction *UpdateTransaction) error {
@@ -276,3 +280,5 @@ func (e *UpdateExecutor) executeModulesPatchUpdate(ctx context.Context, pkg *Upd
 		e.CurrentVersions[fmt.Sprintf("module.%s", modulePatch.ID)] = moduleVersion
 	}
 
+	return nil
+}

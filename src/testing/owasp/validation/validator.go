@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
 
@@ -27,6 +27,7 @@ type ValidationResult struct {
 	Remediation string
 	// RawData contains additional data specific to the vulnerability type
 	RawData map[string]interface{}
+}
 
 // ValidationLocation represents the location of a vulnerability in a prompt or response
 type ValidationLocation struct {
@@ -36,6 +37,7 @@ type ValidationLocation struct {
 	EndIndex int
 	// Context is the surrounding text for context
 	Context string
+}
 
 // PromptValidationOptions represents options for validating prompts
 type PromptValidationOptions struct {
@@ -51,6 +53,7 @@ type PromptValidationOptions struct {
 	MaxScanDepth int
 	// ContextAware indicates whether to use context-aware validation
 	ContextAware bool
+}
 
 // ResponseValidationOptions represents options for validating responses
 type ResponseValidationOptions struct {
@@ -66,6 +69,7 @@ type ResponseValidationOptions struct {
 	OriginalPrompt string
 	// ContextAware indicates whether to use context-aware validation
 	ContextAware bool
+}
 
 // DefaultPromptValidationOptions returns the default options for prompt validation
 func DefaultPromptValidationOptions() *PromptValidationOptions {
@@ -75,6 +79,7 @@ func DefaultPromptValidationOptions() *PromptValidationOptions {
 		MaxScanDepth:    3,
 		ContextAware:    true,
 	}
+}
 
 // DefaultResponseValidationOptions returns the default options for response validation
 func DefaultResponseValidationOptions() *ResponseValidationOptions {
@@ -83,26 +88,28 @@ func DefaultResponseValidationOptions() *ResponseValidationOptions {
 		IncludeMetadata: true,
 		ContextAware:    true,
 	}
+}
 
 // Validator is the interface that all vulnerability validators must implement
 type Validator interface {
 	// ValidatePrompt validates a prompt for vulnerabilities
 	ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error)
-	
+
 	// ValidateResponse validates a response for vulnerabilities
 	ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error)
-	
+
 	// ValidateChatMessages validates a list of chat messages for vulnerabilities
 	ValidateChatMessages(ctx context.Context, messages []core.Message, options *PromptValidationOptions) ([]*ValidationResult, error)
-	
+
 	// GetVulnerabilityType returns the vulnerability type that this validator checks for
 	GetVulnerabilityType() types.VulnerabilityType
-	
+
 	// GetName returns the name of the validator
 	GetName() string
-	
+
 	// GetDescription returns a description of the validator
 	GetDescription() string
+}
 
 // BaseValidator provides a base implementation of the Validator interface
 type BaseValidator struct {
@@ -112,6 +119,7 @@ type BaseValidator struct {
 	name string
 	// description is a description of the validator
 	description string
+}
 
 // NewBaseValidator creates a new base validator
 func NewBaseValidator(vulnerabilityType types.VulnerabilityType, name, description string) *BaseValidator {
@@ -120,41 +128,47 @@ func NewBaseValidator(vulnerabilityType types.VulnerabilityType, name, descripti
 		name:              name,
 		description:       description,
 	}
+}
 
 // GetVulnerabilityType returns the vulnerability type that this validator checks for
 func (v *BaseValidator) GetVulnerabilityType() types.VulnerabilityType {
 	return v.vulnerabilityType
+}
 
 // GetName returns the name of the validator
 func (v *BaseValidator) GetName() string {
 	return v.name
+}
 
 // GetDescription returns a description of the validator
 func (v *BaseValidator) GetDescription() string {
 	return v.description
+}
 
 // ValidatePrompt validates a prompt for vulnerabilities
 // This is a default implementation that should be overridden by specific validators
 func (v *BaseValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
 	// Default implementation returns no vulnerabilities
 	return []*ValidationResult{}, nil
+}
 
 // ValidateResponse validates a response for vulnerabilities
 // This is a default implementation that should be overridden by specific validators
 func (v *BaseValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
 	// Default implementation returns no vulnerabilities
 	return []*ValidationResult{}, nil
+}
 
 // ValidateChatMessages validates a list of chat messages for vulnerabilities
 // This is a default implementation that can be overridden by specific validators
 func (v *BaseValidator) ValidateChatMessages(ctx context.Context, messages []core.Message, options *PromptValidationOptions) ([]*ValidationResult, error) {
 	var results []*ValidationResult
-	
+
 	// Validate each message individually based on its role
 	for _, message := range messages {
 		var messageResults []*ValidationResult
 		var err error
-		
+
 		// Use ValidatePrompt for user messages and ValidateResponse for assistant messages
 		if message.Role == "assistant" {
 			// Convert PromptValidationOptions to ResponseValidationOptions
@@ -164,16 +178,16 @@ func (v *BaseValidator) ValidateChatMessages(ctx context.Context, messages []cor
 				CustomPatterns:  options.CustomPatterns,
 				ExcludePatterns: options.ExcludePatterns,
 			}
-			
+
 			messageResults, err = v.ValidateResponse(ctx, message.Content, responseOptions)
 		} else {
 			messageResults, err = v.ValidatePrompt(ctx, message.Content, options)
 		}
-		
+
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Add message role to raw data
 		for _, result := range messageResults {
 			if result.RawData == nil {
@@ -181,11 +195,12 @@ func (v *BaseValidator) ValidateChatMessages(ctx context.Context, messages []cor
 			}
 			result.RawData["message_role"] = message.Role
 		}
-		
+
 		results = append(results, messageResults...)
 	}
-	
+
 	return results, nil
+}
 
 // CreateValidationResult creates a new validation result
 func CreateValidationResult(vulnerable bool, vulnerabilityType types.VulnerabilityType, confidence float64, details string, severity detection.SeverityLevel) *ValidationResult {
@@ -197,6 +212,7 @@ func CreateValidationResult(vulnerable bool, vulnerabilityType types.Vulnerabili
 		Severity:          severity,
 		RawData:           make(map[string]interface{}),
 	}
+}
 
 // SetLocation sets the location of the vulnerability in the validation result
 func (r *ValidationResult) SetLocation(startIndex, endIndex int, context string) *ValidationResult {
@@ -206,11 +222,13 @@ func (r *ValidationResult) SetLocation(startIndex, endIndex int, context string)
 		Context:    context,
 	}
 	return r
+}
 
 // SetRemediation sets the remediation suggestion in the validation result
 func (r *ValidationResult) SetRemediation(remediation string) *ValidationResult {
 	r.Remediation = remediation
 	return r
+}
 
 // AddRawData adds raw data to the validation result
 func (r *ValidationResult) AddRawData(key string, value interface{}) *ValidationResult {
@@ -219,6 +237,7 @@ func (r *ValidationResult) AddRawData(key string, value interface{}) *Validation
 	}
 	r.RawData[key] = value
 	return r
+}
 
 // ValidatorRegistry is a registry of all available validators
 type ValidatorRegistry struct {
@@ -230,6 +249,7 @@ func NewValidatorRegistry() *ValidatorRegistry {
 	return &ValidatorRegistry{
 		validators: make(map[types.VulnerabilityType][]Validator),
 	}
+}
 
 // RegisterValidator registers a validator with the registry
 func (r *ValidatorRegistry) RegisterValidator(validator Validator) {
@@ -238,10 +258,12 @@ func (r *ValidatorRegistry) RegisterValidator(validator Validator) {
 		r.validators[vulnerabilityType] = make([]Validator, 0)
 	}
 	r.validators[vulnerabilityType] = append(r.validators[vulnerabilityType], validator)
+}
 
 // GetValidators returns all validators for a specific vulnerability type
 func (r *ValidatorRegistry) GetValidators(vulnerabilityType types.VulnerabilityType) []Validator {
 	return r.validators[vulnerabilityType]
+}
 
 // GetAllValidators returns all registered validators
 func (r *ValidatorRegistry) GetAllValidators() []Validator {
@@ -250,61 +272,64 @@ func (r *ValidatorRegistry) GetAllValidators() []Validator {
 		allValidators = append(allValidators, validators...)
 	}
 	return allValidators
+}
 
 // ValidatePrompt validates a prompt using all registered validators
 func (r *ValidatorRegistry) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) (map[types.VulnerabilityType][]*ValidationResult, error) {
 	if options == nil {
 		options = DefaultPromptValidationOptions()
 	}
-	
+
 	results := make(map[types.VulnerabilityType][]*ValidationResult)
-	
+
 	for _, validator := range r.GetAllValidators() {
 		validatorResults, err := validator.ValidatePrompt(ctx, prompt, options)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		vulnerabilityType := validator.GetVulnerabilityType()
 		if results[vulnerabilityType] == nil {
 			results[vulnerabilityType] = make([]*ValidationResult, 0)
 		}
 		results[vulnerabilityType] = append(results[vulnerabilityType], validatorResults...)
 	}
-	
+
 	return results, nil
+}
 
 // ValidateResponse validates a response using all registered validators
 func (r *ValidatorRegistry) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) (map[types.VulnerabilityType][]*ValidationResult, error) {
 	if options == nil {
 		options = DefaultResponseValidationOptions()
 	}
-	
+
 	results := make(map[types.VulnerabilityType][]*ValidationResult)
-	
+
 	for _, validator := range r.GetAllValidators() {
 		validatorResults, err := validator.ValidateResponse(ctx, response, options)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		vulnerabilityType := validator.GetVulnerabilityType()
 		if results[vulnerabilityType] == nil {
 			results[vulnerabilityType] = make([]*ValidationResult, 0)
 		}
 		results[vulnerabilityType] = append(results[vulnerabilityType], validatorResults...)
 	}
-	
+
 	return results, nil
+}
 
 // ValidateChatMessages validates chat messages using all registered validators
 func (r *ValidatorRegistry) ValidateChatMessages(ctx context.Context, messages []core.Message, options *PromptValidationOptions) (map[types.VulnerabilityType][]*ValidationResult, error) {
 	if options == nil {
 		options = DefaultPromptValidationOptions()
 	}
-	
+
 	results := make(map[types.VulnerabilityType][]*ValidationResult)
-	
+
 	// Process each message individually based on its role
 	for _, message := range messages {
 		if message.Role == "assistant" {
@@ -315,12 +340,12 @@ func (r *ValidatorRegistry) ValidateChatMessages(ctx context.Context, messages [
 				CustomPatterns:  options.CustomPatterns,
 				ExcludePatterns: options.ExcludePatterns,
 			}
-			
+
 			messageResults, err := r.ValidateResponse(ctx, message.Content, responseOptions)
 			if err != nil {
 				return nil, err
 			}
-			
+
 			// Merge results
 			for vulnType, vulnResults := range messageResults {
 				if results[vulnType] == nil {
@@ -334,7 +359,7 @@ func (r *ValidatorRegistry) ValidateChatMessages(ctx context.Context, messages [
 			if err != nil {
 				return nil, err
 			}
-			
+
 			// Merge results
 			for vulnType, vulnResults := range messageResults {
 				if results[vulnType] == nil {
@@ -344,23 +369,6 @@ func (r *ValidatorRegistry) ValidateChatMessages(ctx context.Context, messages [
 			}
 		}
 	}
-	
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+
+	return results, nil
 }

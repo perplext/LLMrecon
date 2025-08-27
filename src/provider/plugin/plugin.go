@@ -3,8 +3,10 @@ package plugin
 
 import (
 	"fmt"
+	"path/filepath"
 	"plugin"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/provider/factory"
@@ -28,6 +30,7 @@ type ProviderPlugin struct {
 	PluginInterface PluginInterface
 	// IsLegacy indicates if this is a legacy plugin
 	IsLegacy bool
+}
 
 // PluginManager is responsible for managing provider plugins
 type PluginManager struct {
@@ -43,25 +46,27 @@ type PluginManager struct {
 	discovery *PluginDiscovery
 	// validator is the plugin validator
 	validator PluginValidator
+}
 
 // NewPluginManager creates a new plugin manager
 func NewPluginManager(providerFactory *factory.ProviderFactory, pluginDirs []string) *PluginManager {
 	// Create plugin discovery
 	discovery := NewPluginDiscovery(pluginDirs)
-	
+
 	// Create plugin validator
 	validator := NewDefaultPluginValidator()
-	
+
 	// Add validator to discovery
 	discovery.AddValidator(validator)
-	
+
 	return &PluginManager{
-		plugins:        make(map[string]*ProviderPlugin),
+		plugins:         make(map[string]*ProviderPlugin),
 		providerFactory: providerFactory,
-		pluginDirs:     pluginDirs,
-		discovery:      discovery,
-		validator:      validator,
+		pluginDirs:      pluginDirs,
+		discovery:       discovery,
+		validator:       validator,
 	}
+}
 
 // LoadPlugin loads a plugin from a file
 func (m *PluginManager) LoadPlugin(pluginPath string) (*ProviderPlugin, error) {
@@ -95,21 +100,22 @@ func (m *PluginManager) LoadPlugin(pluginPath string) (*ProviderPlugin, error) {
 	m.plugins[pluginName] = providerPlugin
 
 	return providerPlugin, nil
+}
 
 // LoadPluginsFromDirs loads plugins from directories
 func (m *PluginManager) LoadPluginsFromDirs() ([]string, []error) {
 	// Discover plugins
 	plugins, errors := m.discovery.DiscoverPlugins()
-	
+
 	var loadedPlugins []string
-	
+
 	// Register discovered plugins
 	for _, plugin := range plugins {
 		// Check if plugin is already loaded
 		if _, ok := m.plugins[plugin.Name]; ok {
 			continue
 		}
-		
+
 		// Register provider constructor
 		if plugin.IsLegacy {
 			// Legacy plugin
@@ -120,16 +126,17 @@ func (m *PluginManager) LoadPluginsFromDirs() ([]string, []error) {
 				return plugin.PluginInterface.CreateProvider(config)
 			})
 		}
-		
+
 		// Store plugin
 		m.mutex.Lock()
 		m.plugins[plugin.Name] = plugin
 		m.mutex.Unlock()
-		
+
 		loadedPlugins = append(loadedPlugins, plugin.Name)
 	}
-	
+
 	return loadedPlugins, errors
+}
 
 // GetPlugin returns a plugin by name
 func (m *PluginManager) GetPlugin(name string) (*ProviderPlugin, error) {
@@ -142,6 +149,7 @@ func (m *PluginManager) GetPlugin(name string) (*ProviderPlugin, error) {
 	}
 
 	return plugin, nil
+}
 
 // GetPluginByProviderType returns a plugin by provider type
 func (m *PluginManager) GetPluginByProviderType(providerType core.ProviderType) (*ProviderPlugin, error) {
@@ -155,6 +163,7 @@ func (m *PluginManager) GetPluginByProviderType(providerType core.ProviderType) 
 	}
 
 	return nil, fmt.Errorf("plugin for provider type %s not found", providerType)
+}
 
 // GetAllPlugins returns all plugins
 func (m *PluginManager) GetAllPlugins() []*ProviderPlugin {
@@ -167,6 +176,7 @@ func (m *PluginManager) GetAllPlugins() []*ProviderPlugin {
 	}
 
 	return plugins
+}
 
 // UnloadPlugin unloads a plugin
 func (m *PluginManager) UnloadPlugin(name string) error {
@@ -182,6 +192,7 @@ func (m *PluginManager) UnloadPlugin(name string) error {
 	delete(m.plugins, name)
 
 	return nil
+}
 
 // AddPluginDir adds a plugin directory
 func (m *PluginManager) AddPluginDir(dir string) {
@@ -190,18 +201,23 @@ func (m *PluginManager) AddPluginDir(dir string) {
 
 	m.pluginDirs = append(m.pluginDirs, dir)
 	m.discovery.AddPluginDir(dir)
+}
 
 // GetPluginDirs returns the plugin directories
 func (m *PluginManager) GetPluginDirs() []string {
 	return m.discovery.GetPluginDirs()
+}
 
 // ValidatePlugin validates a plugin
 func (m *PluginManager) ValidatePlugin(plugin *ProviderPlugin) error {
 	return m.validator.ValidatePlugin(plugin)
+}
 
 // ValidatePluginConfig validates a plugin configuration
 func (m *PluginManager) ValidatePluginConfig(plugin *ProviderPlugin, config *core.ProviderConfig) error {
 	if plugin == nil {
 		return fmt.Errorf("plugin is nil")
 	}
-	
+
+	return nil
+}

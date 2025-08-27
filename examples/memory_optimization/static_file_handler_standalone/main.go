@@ -5,8 +5,223 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"runtime"
+	"sync"
+	"time"
 )
+
+// MockFileHandlerOptions represents options for the mock file handler
+type MockFileHandlerOptions struct {
+	RootDir           string
+	EnableCache       bool
+	EnableCompression bool
+	MaxCacheSize      int64
+}
+
+// DefaultMockFileHandlerOptions returns default options for the mock file handler
+func DefaultMockFileHandlerOptions() *MockFileHandlerOptions {
+	return &MockFileHandlerOptions{
+		RootDir:           "./static",
+		EnableCache:       true,
+		EnableCompression: true,
+		MaxCacheSize:      100 * 1024 * 1024, // 100MB
+	}
+}
+
+// MockFileHandler represents a mock static file handler
+type MockFileHandler struct {
+	options *MockFileHandlerOptions
+	cache   map[string][]byte
+	stats   MockFileHandlerStats
+	mutex   sync.RWMutex
+}
+
+// MockFileHandlerStats represents stats for the mock file handler
+type MockFileHandlerStats struct {
+	FilesServed      int64
+	CacheHits        int64
+	CacheMisses      int64
+	CompressedFiles  int64
+	TotalSize        int64
+	CompressedSize   int64
+	CompressionRatio float64
+	AverageServeTime time.Duration
+}
+
+// NewMockFileHandler creates a new mock file handler
+func NewMockFileHandler(options *MockFileHandlerOptions) *MockFileHandler {
+	return &MockFileHandler{
+		options: options,
+		cache:   make(map[string][]byte),
+		stats: MockFileHandlerStats{
+			FilesServed:      0,
+			CacheHits:        0,
+			CacheMisses:      0,
+			CompressedFiles:  0,
+			TotalSize:        0,
+			CompressedSize:   0,
+			CompressionRatio: 0.0,
+			AverageServeTime: 5 * time.Millisecond,
+		},
+	}
+}
+
+// ServeHTTP implements the http.Handler interface
+func (h *MockFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+	
+	// Update stats
+	h.stats.FilesServed++
+	if h.options.EnableCache {
+		h.stats.CacheHits++
+	} else {
+		h.stats.CacheMisses++
+	}
+	if h.options.EnableCompression {
+		h.stats.CompressedFiles++
+	}
+	
+	// Simple file serving logic for the example
+	filePath := filepath.Join(h.options.RootDir, r.URL.Path)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		http.NotFound(w, r)
+		return
+	}
+	http.ServeFile(w, r, filePath)
+}
+
+// GetStats returns the current stats
+func (h *MockFileHandler) GetStats() MockFileHandlerStats {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+	
+	return h.stats
+}
+
+// MockMonitoringService is a simplified version of the monitoring service for the example
+type MockMonitoringService struct {
+	monitors map[string]interface{}
+	mutex    sync.RWMutex
+}
+
+// NewMockMonitoringService creates a new mock monitoring service
+func NewMockMonitoringService() *MockMonitoringService {
+	return &MockMonitoringService{
+		monitors: make(map[string]interface{}),
+	}
+}
+
+// AddStaticFileMonitor adds a static file monitor to the service
+func (s *MockMonitoringService) AddStaticFileMonitor(fileHandler interface{}) *MockStaticFileMonitor {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	
+	monitor := NewMockStaticFileMonitor(fileHandler)
+	s.monitors[monitor.ID] = monitor
+	return monitor
+}
+
+// Start starts the monitoring service
+func (s *MockMonitoringService) Start() {
+	fmt.Println("Mock monitoring service started")
+}
+
+// Stop stops the monitoring service
+func (s *MockMonitoringService) Stop() {
+	fmt.Println("Mock monitoring service stopped")
+}
+
+// MockStaticFileMonitor is a simplified version of the static file monitor for the example
+type MockStaticFileMonitor struct {
+	ID          string
+	FileHandler interface{}
+	metrics     MockStaticFileMetrics
+	mutex       sync.RWMutex
+}
+
+// NewMockStaticFileMonitor creates a new mock static file monitor
+func NewMockStaticFileMonitor(fileHandler interface{}) *MockStaticFileMonitor {
+	return &MockStaticFileMonitor{
+		ID:          fmt.Sprintf("static-file-monitor-%d", time.Now().UnixNano()),
+		FileHandler: fileHandler,
+		metrics: MockStaticFileMetrics{
+			FilesServed:      0,
+			CacheHits:        0,
+			CacheMisses:      0,
+			CacheHitRatio:    0.0,
+			CompressedFiles:  0,
+			CompressionRatio: 0.0,
+			AverageServeTime: 5 * time.Millisecond,
+			CacheSize:        0,
+			CacheItemCount:   0,
+		},
+	}
+}
+
+// GetMetrics returns the current metrics
+func (m *MockStaticFileMonitor) GetMetrics() MockStaticFileMetrics {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	
+	// Simulate some metrics for the example
+	m.metrics.FilesServed += 1
+	m.metrics.CacheHits += 1
+	m.metrics.CacheHitRatio = float64(m.metrics.CacheHits) / float64(m.metrics.FilesServed)
+	m.metrics.CacheSize += 1024
+	m.metrics.CacheItemCount += 1
+	
+	return m.metrics
+}
+
+// CheckAlerts checks for alerts based on the current metrics
+func (m *MockStaticFileMonitor) CheckAlerts() []MockAlert {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	
+	// Simulate some alerts for the example
+	var alerts []MockAlert
+	
+	if m.metrics.CacheHitRatio < 0.5 {
+		alerts = append(alerts, MockAlert{
+			ID:       "low-cache-hit-ratio",
+			Message:  "Cache hit ratio is below 50%",
+			Severity: "info",
+		})
+	}
+	
+	if m.metrics.AverageServeTime > 50*time.Millisecond {
+		alerts = append(alerts, MockAlert{
+			ID:       "slow-serve-time",
+			Message:  "Average serve time is above 50ms",
+			Severity: "warning",
+		})
+	}
+	
+	return alerts
+}
+
+// MockStaticFileMetrics represents metrics for the static file handler
+type MockStaticFileMetrics struct {
+	FilesServed      int64
+	CacheHits        int64
+	CacheMisses      int64
+	CacheHitRatio    float64
+	CompressedFiles  int64
+	CompressionRatio float64
+	AverageServeTime time.Duration
+	CacheSize        int64
+	CacheItemCount   int64
+}
+
+// MockAlert represents an alert from the monitoring system
+type MockAlert struct {
+	ID       string
+	Message  string
+	Severity string
+}
 
 func main() {
 	fmt.Println("Starting Static File Handler Example with Monitoring Integration")
@@ -37,9 +252,7 @@ func main() {
 
 	// Create static directory if it doesn't exist
 	if _, err := os.Stat("./static"); os.IsNotExist(err) {
-if err != nil {
-treturn err
-}		os.Mkdir("./static", 0755)
+		os.Mkdir("./static", 0755)
 	}
 
 	// Create some example static files
@@ -167,9 +380,7 @@ treturn err
 			},
 		}
 		
-if err != nil {
-treturn err
-}		// Encode response
+		// Encode response
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -191,7 +402,7 @@ func createExampleFiles(dir string, numFiles, fileSize int) {
 	for i := 1; i <= numFiles; i++ {
 		filePath := filepath.Join(dir, fmt.Sprintf("file%d.txt", i))
 		content := generateRandomContent(fileSize)
-		os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644)
+		os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
 	}
 }
 
@@ -272,7 +483,7 @@ th {
     background-color: #f2f2f2;
 }
 `
-	os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
 }
 
 // createJSFile creates a JavaScript file for the example
@@ -315,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	setInterval(updateStats, 2000);
 });
 `
-	os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
 }
 
 // formatBytes formats bytes to a human-readable string (KB, MB, GB)

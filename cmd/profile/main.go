@@ -5,6 +5,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/profiling"
 	"github.com/perplext/LLMrecon/src/repository"
@@ -81,9 +83,7 @@ func main() {
 
 	// Start profiler
 	if err := templateProfiler.Start(); err != nil {
-if err != nil {
-treturn err
-}		fmt.Printf("Error starting profiler: %v\n", err)
+		fmt.Printf("Error starting profiler: %v\n", err)
 		os.Exit(1)
 	}
 	defer templateProfiler.Stop()
@@ -95,9 +95,7 @@ treturn err
 	}
 
 	// Establish baseline if requested
-if err != nil {
-treturn err
-}	if *baselineFlag {
+	if *baselineFlag {
 		if err := templateProfiler.EstablishBaseline(ctx, []types.TemplateSource{source}, *iterationsFlag); err != nil {
 			fmt.Printf("Error establishing baseline: %v\n", err)
 			os.Exit(1)

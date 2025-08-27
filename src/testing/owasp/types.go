@@ -3,6 +3,7 @@ package owasp
 
 import (
 	"context"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/reporting"
@@ -14,24 +15,24 @@ type VulnerabilityType string
 
 // OWASP Top 10 LLM vulnerability types (simplified naming for internal use)
 const (
-	PromptInjection              VulnerabilityType = "prompt_injection"
-	InsecureOutput               VulnerabilityType = "insecure_output"
-	TrainingDataPoisoning        VulnerabilityType = "training_data_poisoning"
-	ModelDOS                     VulnerabilityType = "model_dos"
-	SupplyChainVulnerabilities   VulnerabilityType = "supply_chain_vulnerabilities"
+	PromptInjection                VulnerabilityType = "prompt_injection"
+	InsecureOutput                 VulnerabilityType = "insecure_output"
+	TrainingDataPoisoning          VulnerabilityType = "training_data_poisoning"
+	ModelDOS                       VulnerabilityType = "model_dos"
+	SupplyChainVulnerabilities     VulnerabilityType = "supply_chain_vulnerabilities"
 	SensitiveInformationDisclosure VulnerabilityType = "sensitive_information_disclosure"
-	InsecurePluginDesign         VulnerabilityType = "insecure_plugin_design"
-	ExcessiveAgency              VulnerabilityType = "excessive_agency"
-	Overreliance                 VulnerabilityType = "overreliance"
-	ModelTheft                   VulnerabilityType = "model_theft"
+	InsecurePluginDesign           VulnerabilityType = "insecure_plugin_design"
+	ExcessiveAgency                VulnerabilityType = "excessive_agency"
+	Overreliance                   VulnerabilityType = "overreliance"
+	ModelTheft                     VulnerabilityType = "model_theft"
 	// Additional vulnerability types
-	InsecureOutputHandling       VulnerabilityType = "insecure_output_handling"
-	SystemPromptLeakage          VulnerabilityType = "system_prompt_leakage"
-	VectorEmbeddingWeaknesses    VulnerabilityType = "vector_embedding_weaknesses"
-	Misinformation               VulnerabilityType = "misinformation"
-	UnboundedConsumption         VulnerabilityType = "unbounded_consumption"
-	ImproperOutputHandling       VulnerabilityType = "improper_output_handling"
-	DataAndModelPoisoning        VulnerabilityType = "data_and_model_poisoning"
+	InsecureOutputHandling    VulnerabilityType = "insecure_output_handling"
+	SystemPromptLeakage       VulnerabilityType = "system_prompt_leakage"
+	VectorEmbeddingWeaknesses VulnerabilityType = "vector_embedding_weaknesses"
+	Misinformation            VulnerabilityType = "misinformation"
+	UnboundedConsumption      VulnerabilityType = "unbounded_consumption"
+	ImproperOutputHandling    VulnerabilityType = "improper_output_handling"
+	DataAndModelPoisoning     VulnerabilityType = "data_and_model_poisoning"
 )
 
 // OWASP Top 10 LLM vulnerabilities (2023-2024)
@@ -106,6 +107,7 @@ type TestCase struct {
 	OWASPMapping string `json:"owasp_mapping"`
 	// Metadata is additional metadata for the test case
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // TestResult represents the result of a test case execution
 type TestResult struct {
@@ -129,6 +131,7 @@ type TestResult struct {
 	Timestamp time.Time `json:"timestamp"`
 	// Notes are additional notes about the test result
 	Notes string `json:"notes,omitempty"`
+}
 
 // TestSuite represents a suite of test cases
 type TestSuite struct {
@@ -146,6 +149,7 @@ type TestSuite struct {
 	Tags []string `json:"tags,omitempty"`
 	// Metadata is additional metadata for the test suite
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // TestRunner is the interface for running tests
 type TestRunner interface {
@@ -155,11 +159,13 @@ type TestRunner interface {
 	RunTestSuite(ctx context.Context, testSuite *TestSuite, provider core.Provider, model string) ([]*TestResult, error)
 	// RunTestSuites runs multiple test suites and returns the results
 	RunTestSuites(ctx context.Context, testSuites []*TestSuite, provider core.Provider, model string) ([]*TestResult, error)
+}
 
 // ReportGenerator is the interface for generating reports
 type ReportGenerator interface {
 	// GenerateReport generates a report from test results
 	GenerateReport(ctx context.Context, testSuites []*TestSuite, options *ReportOptions) (*Report, error)
+}
 
 // ReportOptions defines options for generating reports
 type ReportOptions struct {
@@ -177,6 +183,7 @@ type ReportOptions struct {
 	IncludeMetadata bool
 	// Metadata is additional metadata to include in the report
 	Metadata map[string]interface{}
+}
 
 // Report represents a generated report
 type Report struct {
@@ -198,6 +205,7 @@ type Report struct {
 	OutputPath string
 	// Metadata is additional metadata included in the report
 	Metadata map[string]interface{}
+}
 
 // MockLLMProvider is the interface for mock LLM providers used in testing
 type MockLLMProvider interface {
@@ -214,6 +222,7 @@ type MockLLMProvider interface {
 	SetErrorRate(rate float64)
 	// ResetState resets the state of the mock provider
 	ResetState()
+}
 
 // TestCaseBuilder is the interface for building test cases
 type TestCaseBuilder interface {
@@ -243,6 +252,7 @@ type TestCaseBuilder interface {
 	WithMetadata(metadata map[string]interface{}) TestCaseBuilder
 	// Build builds the test case
 	Build() (*TestCase, error)
+}
 
 // TestSuiteBuilder is the interface for building test suites
 type TestSuiteBuilder interface {
@@ -264,6 +274,7 @@ type TestSuiteBuilder interface {
 	WithMetadata(metadata map[string]interface{}) TestSuiteBuilder
 	// Build builds the test suite
 	Build() (*TestSuite, error)
+}
 
 // TestCaseFactory is the interface for creating test cases
 type TestCaseFactory interface {
@@ -291,9 +302,12 @@ type TestCaseFactory interface {
 	CreateTestSuite(id string, name string, description string) *TestSuite
 	// CreateTestCasesForVulnerability creates test cases for a specific vulnerability type
 	CreateTestCasesForVulnerability(vulnerabilityType VulnerabilityType) ([]*TestCase, error)
+}
 
 // TestResultConverter is the interface for converting test results to reporting format
 type TestResultConverter interface {
 	// ConvertToReportingTestSuite converts test results to a reporting test suite
 	ConvertToReportingTestSuite(ctx context.Context, results []*TestResult, suiteID string, suiteName string) (*reporting.TestSuite, error)
 	// ConvertToReportingTestResult converts a test result to a reporting test result
+	ConvertToReportingTestResult(ctx context.Context, result *TestResult) (*reporting.TestResult, error)
+}

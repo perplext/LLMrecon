@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 // ConcurrencyManager manages concurrent operations and limits
@@ -34,6 +35,7 @@ type ConcurrencyManager struct {
 	stats *ConcurrencyStats
 	// lastAdjustment is the time of the last concurrency adjustment
 	lastAdjustment time.Time
+}
 
 // ManagerConfig represents configuration for the concurrency manager
 type ManagerConfig struct {
@@ -61,6 +63,7 @@ type ManagerConfig struct {
 	ScaleUpStep int
 	// ScaleDownStep is the number of workers to remove when scaling down
 	ScaleDownStep int
+}
 
 // ConcurrencyStats tracks statistics for the concurrency manager
 type ConcurrencyStats struct {
@@ -90,6 +93,7 @@ type ConcurrencyStats struct {
 	LastScaleUpTime time.Time
 	// LastScaleDownTime is the time of the last scale down
 	LastScaleDownTime time.Time
+}
 
 // Task represents a task to be executed
 type Task interface {
@@ -99,9 +103,9 @@ type Task interface {
 	ID() string
 	// Priority returns the task priority
 	Priority() int
+}
 
 // DefaultManagerConfig returns default configuration for the concurrency manager
-}
 func DefaultManagerConfig() *ManagerConfig {
 	numCPU := runtime.NumCPU()
 
@@ -113,15 +117,15 @@ func DefaultManagerConfig() *ManagerConfig {
 		WorkerIdleTimeout:  30 * time.Second,
 		TaskTimeout:        5 * time.Minute,
 		EnableAutoScaling:  true,
-		ScaleUpThreshold:   0.8,  // 80% utilization
-		ScaleDownThreshold: 0.2,  // 20% utilization
+		ScaleUpThreshold:   0.8, // 80% utilization
+		ScaleDownThreshold: 0.2, // 20% utilization
 		ScaleCheckInterval: 10 * time.Second,
 		ScaleUpStep:        numCPU,
 		ScaleDownStep:      numCPU / 2,
 	}
+}
 
 // NewConcurrencyManager creates a new concurrency manager
-}
 func NewConcurrencyManager(config *ManagerConfig) (*ConcurrencyManager, error) {
 	if config == nil {
 		config = DefaultManagerConfig()
@@ -148,17 +152,17 @@ func NewConcurrencyManager(config *ManagerConfig) (*ConcurrencyManager, error) {
 	}
 
 	manager := &ConcurrencyManager{
-		config:        config,
-		taskQueue:     make(chan Task, config.QueueSize),
-		stopChan:      make(chan struct{}),
-		stats:         &ConcurrencyStats{},
+		config:         config,
+		taskQueue:      make(chan Task, config.QueueSize),
+		stopChan:       make(chan struct{}),
+		stats:          &ConcurrencyStats{},
 		lastAdjustment: time.Now(),
 	}
 
 	return manager, nil
+}
 
 // Start starts the concurrency manager
-}
 func (m *ConcurrencyManager) Start() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -181,9 +185,9 @@ func (m *ConcurrencyManager) Start() error {
 	}
 
 	return nil
+}
 
 // Stop stops the concurrency manager
-}
 func (m *ConcurrencyManager) Stop() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -197,9 +201,9 @@ func (m *ConcurrencyManager) Stop() {
 
 	// Wait for all workers to finish
 	m.workersWg.Wait()
+}
 
 // Submit submits a task for execution
-}
 func (m *ConcurrencyManager) Submit(task Task) error {
 	if task == nil {
 		return fmt.Errorf("task cannot be nil")
@@ -221,17 +225,16 @@ func (m *ConcurrencyManager) Submit(task Task) error {
 	// Submit task to queue
 	select {
 	case m.taskQueue <- task:
-}
 		// Task submitted successfully
 		return nil
 	default:
-}
 		// Queue is full
 		atomic.AddInt32(&m.pendingTasks, -1)
 		atomic.AddInt32(&m.stats.PendingTasks, -1)
 		atomic.AddInt64(&m.stats.TotalTasks, -1)
 		return fmt.Errorf("task queue is full")
 	}
+}
 
 // SubmitWithTimeout submits a task for execution with a timeout
 func (m *ConcurrencyManager) SubmitWithTimeout(task Task, timeout time.Duration) error {
@@ -255,7 +258,6 @@ func (m *ConcurrencyManager) SubmitWithTimeout(task Task, timeout time.Duration)
 	// Submit task to queue with timeout
 	select {
 	case m.taskQueue <- task:
-}
 		// Task submitted successfully
 		return nil
 	case <-time.After(timeout):
@@ -265,6 +267,7 @@ func (m *ConcurrencyManager) SubmitWithTimeout(task Task, timeout time.Duration)
 		atomic.AddInt64(&m.stats.TotalTasks, -1)
 		return fmt.Errorf("timeout submitting task")
 	}
+}
 
 // startWorker starts a new worker
 func (m *ConcurrencyManager) startWorker() {
@@ -285,14 +288,12 @@ func (m *ConcurrencyManager) startWorker() {
 			case <-m.stopChan:
 				return
 			default:
-}
 				// Continue
 			}
 
 			// Wait for a task or timeout
 			select {
 			case task := <-m.taskQueue:
-}
 				// Execute task
 				m.executeTask(task)
 			case <-time.After(m.config.WorkerIdleTimeout):
@@ -305,6 +306,7 @@ func (m *ConcurrencyManager) startWorker() {
 			}
 		}
 	}()
+}
 
 // executeTask executes a task
 func (m *ConcurrencyManager) executeTask(task Task) {
@@ -344,9 +346,9 @@ func (m *ConcurrencyManager) executeTask(task Task) {
 		atomic.AddInt64(&m.completedTasks, 1)
 		atomic.AddInt64(&m.stats.CompletedTasks, 1)
 	}
+}
 
 // startAutoScaling starts automatic worker scaling
-}
 func (m *ConcurrencyManager) startAutoScaling() {
 	ticker := time.NewTicker(m.config.ScaleCheckInterval)
 	defer ticker.Stop()
@@ -359,9 +361,9 @@ func (m *ConcurrencyManager) startAutoScaling() {
 			return
 		}
 	}
+}
 
 // adjustWorkerCount adjusts the number of workers based on utilization
-}
 func (m *ConcurrencyManager) adjustWorkerCount() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -399,9 +401,9 @@ func (m *ConcurrencyManager) adjustWorkerCount() {
 		m.stats.LastScaleDownTime = time.Now()
 		m.lastAdjustment = time.Now()
 	}
+}
 
 // shouldScaleDown checks if a worker should scale down
-}
 func (m *ConcurrencyManager) shouldScaleDown() bool {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -417,42 +419,42 @@ func (m *ConcurrencyManager) shouldScaleDown() bool {
 	utilization := float64(pendingTasks) / float64(activeWorkers)
 
 	return utilization <= m.config.ScaleDownThreshold
+}
 
 // GetStats returns statistics for the concurrency manager
-}
 func (m *ConcurrencyManager) GetStats() *ConcurrencyStats {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
 	// Create a copy of the stats
 	stats := &ConcurrencyStats{
-		ActiveWorkers:      atomic.LoadInt32(&m.stats.ActiveWorkers),
-		PendingTasks:       atomic.LoadInt32(&m.stats.PendingTasks),
-		CompletedTasks:     atomic.LoadInt64(&m.stats.CompletedTasks),
-		FailedTasks:        atomic.LoadInt64(&m.stats.FailedTasks),
-		TotalTasks:         atomic.LoadInt64(&m.stats.TotalTasks),
+		ActiveWorkers:       atomic.LoadInt32(&m.stats.ActiveWorkers),
+		PendingTasks:        atomic.LoadInt32(&m.stats.PendingTasks),
+		CompletedTasks:      atomic.LoadInt64(&m.stats.CompletedTasks),
+		FailedTasks:         atomic.LoadInt64(&m.stats.FailedTasks),
+		TotalTasks:          atomic.LoadInt64(&m.stats.TotalTasks),
 		AverageTaskDuration: m.stats.AverageTaskDuration,
-		MaxTaskDuration:    m.stats.MaxTaskDuration,
-		MinTaskDuration:    m.stats.MinTaskDuration,
-		TotalTaskDuration:  m.stats.TotalTaskDuration,
-		QueuedTasks:        int32(len(m.taskQueue)),
+		MaxTaskDuration:     m.stats.MaxTaskDuration,
+		MinTaskDuration:     m.stats.MinTaskDuration,
+		TotalTaskDuration:   m.stats.TotalTaskDuration,
+		QueuedTasks:         int32(len(m.taskQueue)),
 		WorkerScalingEvents: m.stats.WorkerScalingEvents,
-		LastScaleUpTime:    m.stats.LastScaleUpTime,
-		LastScaleDownTime:  m.stats.LastScaleDownTime,
+		LastScaleUpTime:     m.stats.LastScaleUpTime,
+		LastScaleDownTime:   m.stats.LastScaleDownTime,
 	}
 
 	return stats
+}
 
 // GetConfig returns the configuration for the concurrency manager
-}
 func (m *ConcurrencyManager) GetConfig() *ManagerConfig {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
 	return m.config
+}
 
 // SetConfig sets the configuration for the concurrency manager
-}
 func (m *ConcurrencyManager) SetConfig(config *ManagerConfig) error {
 	if config == nil {
 		return fmt.Errorf("config cannot be nil")
@@ -477,47 +479,47 @@ func (m *ConcurrencyManager) SetConfig(config *ManagerConfig) error {
 
 	m.config = config
 	return nil
+}
 
 // IsRunning returns if the concurrency manager is running
-}
 func (m *ConcurrencyManager) IsRunning() bool {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
 	return m.running
+}
 
 // GetActiveWorkers returns the number of active workers
-}
 func (m *ConcurrencyManager) GetActiveWorkers() int {
 	return int(atomic.LoadInt32(&m.activeWorkers))
+}
 
 // GetPendingTasks returns the number of pending tasks
-}
 func (m *ConcurrencyManager) GetPendingTasks() int {
 	return int(atomic.LoadInt32(&m.pendingTasks))
+}
 
 // GetCompletedTasks returns the number of completed tasks
-}
 func (m *ConcurrencyManager) GetCompletedTasks() int64 {
 	return atomic.LoadInt64(&m.completedTasks)
+}
 
 // GetFailedTasks returns the number of failed tasks
-}
 func (m *ConcurrencyManager) GetFailedTasks() int64 {
 	return atomic.LoadInt64(&m.failedTasks)
+}
 
 // GetQueueSize returns the size of the task queue
-}
 func (m *ConcurrencyManager) GetQueueSize() int {
 	return len(m.taskQueue)
+}
 
 // GetQueueCapacity returns the capacity of the task queue
-}
 func (m *ConcurrencyManager) GetQueueCapacity() int {
 	return cap(m.taskQueue)
+}
 
 // GetUtilization returns the worker utilization
-}
 func (m *ConcurrencyManager) GetUtilization() float64 {
 	activeWorkers := atomic.LoadInt32(&m.activeWorkers)
 	if activeWorkers == 0 {
@@ -526,3 +528,4 @@ func (m *ConcurrencyManager) GetUtilization() float64 {
 
 	pendingTasks := atomic.LoadInt32(&m.pendingTasks)
 	return float64(pendingTasks) / float64(activeWorkers)
+}

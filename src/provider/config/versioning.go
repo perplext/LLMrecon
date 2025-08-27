@@ -4,6 +4,9 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 )
@@ -12,13 +15,14 @@ import (
 type ConfigHistoryFile struct {
 	// History is a map of provider types to configuration history
 	History map[string]*ConfigHistory `json:"history"`
+}
 
 // AddConfigVersion adds a new version to the configuration history
 func (m *ConfigManager) AddConfigVersion(providerType core.ProviderType, changes string) error {
 	// Create new version
 	var newVersion int
 	var history *ConfigHistory
-	
+
 	// Update the history under a lock
 	m.mutex.Lock()
 	history, ok := m.history[providerType]
@@ -29,7 +33,7 @@ func (m *ConfigManager) AddConfigVersion(providerType core.ProviderType, changes
 		}
 		m.history[providerType] = history
 	}
-	
+
 	// Create new version
 	newVersion = history.Current + 1
 	version := ConfigVersion{
@@ -45,6 +49,7 @@ func (m *ConfigManager) AddConfigVersion(providerType core.ProviderType, changes
 
 	// Save history without holding the lock
 	return m.SaveHistory()
+}
 
 // GetConfigHistory returns the configuration history for a provider type
 func (m *ConfigManager) GetConfigHistory(providerType core.ProviderType) (*ConfigHistory, error) {
@@ -58,6 +63,7 @@ func (m *ConfigManager) GetConfigHistory(providerType core.ProviderType) (*Confi
 	}
 
 	return history, nil
+}
 
 // GetConfigVersion returns a specific version of a provider configuration
 func (m *ConfigManager) GetConfigVersion(providerType core.ProviderType, version int) (*ConfigVersion, error) {
@@ -77,6 +83,7 @@ func (m *ConfigManager) GetConfigVersion(providerType core.ProviderType, version
 	}
 
 	return &configVersion, nil
+}
 
 // GetAllConfigHistory returns the configuration history for all providers
 func (m *ConfigManager) GetAllConfigHistory() map[core.ProviderType]*ConfigHistory {
@@ -90,6 +97,7 @@ func (m *ConfigManager) GetAllConfigHistory() map[core.ProviderType]*ConfigHisto
 	}
 
 	return historyCopy
+}
 
 // LoadHistory loads configuration history from file
 func (m *ConfigManager) LoadHistory() error {
@@ -133,6 +141,7 @@ func (m *ConfigManager) LoadHistory() error {
 	}
 
 	return nil
+}
 
 // SaveHistory saves configuration history to file
 func (m *ConfigManager) SaveHistory() error {
@@ -140,7 +149,7 @@ func (m *ConfigManager) SaveHistory() error {
 	var historyFilePath string
 	var historyData map[string]*ConfigHistory
 	var encryptionKey []byte
-	
+
 	m.mutex.RLock()
 	// Get history file path
 	historyFilePath = getHistoryFilePath(m.configFile)
@@ -153,15 +162,15 @@ func (m *ConfigManager) SaveHistory() error {
 			Current:  value.Current,
 			Versions: make(map[int]ConfigVersion),
 		}
-		
+
 		// Copy all versions
 		for versionNum, version := range value.Versions {
 			historyCopy.Versions[versionNum] = version
 		}
-		
+
 		historyData[string(key)] = historyCopy
 	}
-	
+
 	// Copy encryption key if available
 	if len(m.encryptionKey) > 0 {
 		encryptionKey = make([]byte, len(m.encryptionKey))
@@ -186,7 +195,7 @@ func (m *ConfigManager) SaveHistory() error {
 		}
 		data = encryptedData
 	}
-	
+
 	// Create directory if it doesn't exist
 	historyDir := filepath.Dir(historyFilePath)
 	if err := os.MkdirAll(historyDir, 0700); err != nil {
@@ -194,11 +203,12 @@ func (m *ConfigManager) SaveHistory() error {
 	}
 
 	// Write file
-	if err := os.WriteFile(filepath.Clean(historyFilePath, data, 0600)); err != nil {
+	if err := os.WriteFile(filepath.Clean(historyFilePath), data, 0600); err != nil {
 		return fmt.Errorf("failed to write history file: %w", err)
 	}
 
 	return nil
+}
 
 // getHistoryFilePath returns the path to the history file
 func getHistoryFilePath(configFile string) string {
@@ -210,11 +220,12 @@ func getHistoryFilePath(configFile string) string {
 
 	// Create history file path
 	return filepath.Join(dir, name+".history"+ext)
+}
 
 // RollbackConfig rolls back a provider configuration to a specific version
 func (m *ConfigManager) RollbackConfig(providerType core.ProviderType, version int) error {
 	m.mutex.Lock()
-	
+
 	// Get history for provider
 	history, ok := m.history[providerType]
 	if !ok {
@@ -240,12 +251,13 @@ func (m *ConfigManager) RollbackConfig(providerType core.ProviderType, version i
 	// Add version to history
 	history.Versions[newVersion] = rollbackVersion
 	history.Current = newVersion
-	
+
 	// Release the lock before I/O operations
 	m.mutex.Unlock()
 
 	// Save history
 	return m.SaveHistory()
+}
 
 // GetConfigVersions returns all versions of a provider configuration
 func (m *ConfigManager) GetConfigVersions(providerType core.ProviderType) ([]ConfigVersion, error) {
@@ -264,3 +276,5 @@ func (m *ConfigManager) GetConfigVersions(providerType core.ProviderType) ([]Con
 		versions = append(versions, version)
 	}
 
+	return versions, nil
+}

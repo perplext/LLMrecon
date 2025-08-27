@@ -2,6 +2,7 @@
 package types
 
 import (
+	"time"
 )
 
 // TemplateSourceType represents the type of template source
@@ -66,6 +67,4 @@ type TemplateResult struct {
 	Input string `json:"input,omitempty"`
 	// Output contains the expected output from the template
 	Output string `json:"output,omitempty"`
-
-// Note: TemplateManager and TemplateLoader interfaces are defined in interfaces.go
-// to avoid duplicate declarations
+}

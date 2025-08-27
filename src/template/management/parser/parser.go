@@ -11,14 +11,56 @@ import (
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
 )
 
+// TemplateParserAdapter adapts TemplateParser to implement interfaces.TemplateValidator
+type TemplateParserAdapter struct {
+	parser *TemplateParser
+}
+
+// NewTemplateParserAdapter creates a new template parser adapter
+func NewTemplateParserAdapter(parser *TemplateParser) *TemplateParserAdapter {
+	return &TemplateParserAdapter{parser: parser}
+}
+
+// Validate validates a template (interface compatibility)
+func (a *TemplateParserAdapter) Validate(template interfaces.Template) error {
+	// Convert interfaces.Template to *format.Template
+	formatTemplate, ok := template.(*format.Template)
+	if !ok {
+		return fmt.Errorf("template must be of type *format.Template")
+	}
+	return a.parser.Validate(formatTemplate)
+}
+
+// ValidateContent validates template content (interface compatibility)
+func (a *TemplateParserAdapter) ValidateContent(content []byte) error {
+	// Parse content to template first
+	var template format.Template
+	if err := json.Unmarshal(content, &template); err != nil {
+		return fmt.Errorf("failed to parse template content: %w", err)
+	}
+	return a.parser.Validate(&template)
+}
+
+// ValidateSchema validates against a schema (interface compatibility)
+func (a *TemplateParserAdapter) ValidateSchema(template interfaces.Template, schema interface{}) error {
+	// Use the schema validator if available
+	if a.parser.schemaValidator != nil {
+		return a.parser.schemaValidator.ValidateSchema(schema)
+	}
+	// Fall back to basic validation
+	return a.Validate(template)
+}
+
 // TemplateParser is responsible for parsing and validating templates
 type TemplateParser struct {
 	// schemaValidator is the schema validator for templates
 	schemaValidator interfaces.SchemaValidator
 	// variablePattern is the regex pattern for template variables
 	variablePattern *regexp.Regexp
+}
 
 // NewTemplateParser creates a new template parser
+
 func NewTemplateParser(schemaValidator interfaces.SchemaValidator) (*TemplateParser, error) {
 	// Compile variable pattern regex
 	variablePattern, err := regexp.Compile(`\{\{\s*([a-zA-Z0-9_\.]+)\s*\}\}`)
@@ -30,6 +72,7 @@ func NewTemplateParser(schemaValidator interfaces.SchemaValidator) (*TemplatePar
 		schemaValidator: schemaValidator,
 		variablePattern: variablePattern,
 	}, nil
+}
 
 // Parse parses a template
 func (p *TemplateParser) Parse(template *format.Template) error {
@@ -55,6 +98,7 @@ func (p *TemplateParser) Parse(template *format.Template) error {
 	}
 
 	return nil
+}
 
 // Validate validates a template
 func (p *TemplateParser) Validate(template *format.Template) error {
@@ -64,12 +108,12 @@ func (p *TemplateParser) Validate(template *format.Template) error {
 	}
 
 	// Additional validation logic
-	errors := template.ValidateStructure()
-	if len(errors) > 0 {
-		return fmt.Errorf("template validation failed: %s", strings.Join(errors, ", "))
+	if err := template.ValidateStructure(); err != nil {
+		return fmt.Errorf("template validation failed: %w", err)
 	}
 
 	return nil
+}
 
 // ResolveVariables resolves variables in a template
 func (p *TemplateParser) ResolveVariables(template *format.Template, variables map[string]interface{}) error {
@@ -108,6 +152,7 @@ func (p *TemplateParser) ResolveVariables(template *format.Template, variables m
 	}
 
 	return nil
+}
 
 // ExtractVariables extracts variables from a template
 func (p *TemplateParser) ExtractVariables(template *format.Template) ([]string, error) {
@@ -133,6 +178,7 @@ func (p *TemplateParser) ExtractVariables(template *format.Template) ([]string, 
 	}
 
 	return variables, nil
+}
 
 // getNestedValue gets a nested value from a map using dot notation
 func getNestedValue(data map[string]interface{}, key string) (interface{}, bool) {
@@ -162,6 +208,7 @@ func getNestedValue(data map[string]interface{}, key string) (interface{}, bool)
 	}
 
 	return nil, false
+}
 
 // convertToString converts a value to a string representation for JSON
 func convertToString(value interface{}) (string, error) {
@@ -180,6 +227,7 @@ func convertToString(value interface{}) (string, error) {
 		}
 		return string(data), nil
 	}
+}
 
 // ValidateTemplateInheritance validates template inheritance
 func (p *TemplateParser) ValidateTemplateInheritance(template *format.Template, parentTemplate *format.Template) error {
@@ -197,6 +245,7 @@ func (p *TemplateParser) ValidateTemplateInheritance(template *format.Template, 
 	}
 
 	return nil
+}
 
 // MergeTemplates merges a child template with its parent template
 func (p *TemplateParser) MergeTemplates(childTemplate, parentTemplate *format.Template) (*format.Template, error) {
@@ -220,3 +269,5 @@ func (p *TemplateParser) MergeTemplates(childTemplate, parentTemplate *format.Te
 	// Override test definition
 	mergedTemplate.Test = childTemplate.Test
 
+	return &mergedTemplate, nil
+}

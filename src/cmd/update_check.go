@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/perplext/LLMrecon/src/config"
@@ -14,17 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Color functions for output
-var (
-	green   = color.New(color.FgGreen).SprintFunc()
-	yellow  = color.New(color.FgYellow).SprintFunc()
-	red     = color.New(color.FgRed).SprintFunc()
-	blue    = color.New(color.FgBlue).SprintFunc()
-	cyan    = color.New(color.FgCyan).SprintFunc()
-	magenta = color.New(color.FgMagenta).SprintFunc()
-	bold    = color.New(color.Bold).SprintFunc()
-	dim     = color.New(color.Faint).SprintFunc()
-)
+// Color functions defined in changelog.go
 
 // updateCheckCmd represents the update check command
 var updateCheckCmd = &cobra.Command{
@@ -50,6 +42,7 @@ It displays version differences, change types, and release notes without applyin
   # Check updates from specific source
   LLMrecon update check --source=github`,
 	RunE: runUpdateCheck,
+}
 
 func init() {
 	updateCmd.AddCommand(updateCheckCmd)
@@ -61,6 +54,7 @@ func init() {
 	updateCheckCmd.Flags().Bool("json", false, "Output results in JSON format")
 	updateCheckCmd.Flags().Bool("no-color", false, "Disable colored output")
 	updateCheckCmd.Flags().Duration("timeout", 30*time.Second, "Timeout for update checks")
+}
 
 func runUpdateCheck(cmd *cobra.Command, args []string) error {
 	// Get flags
@@ -107,6 +101,7 @@ func runUpdateCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	return outputTable(filteredUpdates, verboseFlag)
+}
 
 func getUpdateCurrentVersions(cfg *config.Config) (map[string]version.Version, error) {
 	versions := make(map[string]version.Version)
@@ -130,6 +125,7 @@ func getUpdateCurrentVersions(cfg *config.Config) (map[string]version.Version, e
 	}
 
 	return versions, nil
+}
 
 func checkUpdatesFromSources(ctx context.Context, cfg *config.Config, currentVersions map[string]version.Version, source string) ([]update.ExtendedUpdateInfo, error) {
 	var allUpdates []update.ExtendedUpdateInfo
@@ -207,6 +203,7 @@ func checkUpdatesFromSources(ctx context.Context, cfg *config.Config, currentVer
 
 	// Return updates directly (merging is done elsewhere if needed)
 	return allUpdates, nil
+}
 
 func filterUpdatesByComponent(updates []update.ExtendedUpdateInfo, component string) []update.ExtendedUpdateInfo {
 	if component == "all" {
@@ -235,6 +232,7 @@ func filterUpdatesByComponent(updates []update.ExtendedUpdateInfo, component str
 		}
 	}
 	return filtered
+}
 
 func outputTable(updates []update.ExtendedUpdateInfo, verbose bool) error {
 	if len(updates) == 0 {
@@ -309,6 +307,7 @@ func outputTable(updates []update.ExtendedUpdateInfo, verbose bool) error {
 		bold("LLMrecon update apply"))
 
 	return nil
+}
 
 func outputUpdateJSON(updates []update.ExtendedUpdateInfo) error {
 	// Convert to JSON-friendly format
@@ -346,6 +345,7 @@ func outputUpdateJSON(updates []update.ExtendedUpdateInfo) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(jsonUpdates)
+}
 
 func getChangeTypeColor(changeType version.VersionChangeType) func(...interface{}) string {
 	switch changeType {
@@ -358,6 +358,7 @@ func getChangeTypeColor(changeType version.VersionChangeType) func(...interface{
 	default:
 		return blue
 	}
+}
 
 func formatChangeType(changeType version.VersionChangeType) string {
 	switch changeType {
@@ -374,6 +375,7 @@ func formatChangeType(changeType version.VersionChangeType) string {
 	default:
 		return "Unknown"
 	}
+}
 
 func formatUpdateSize(size int64) string {
 	const unit = 1024
@@ -385,3 +387,5 @@ func formatUpdateSize(size int64) string {
 		div *= unit
 		exp++
 	}
+	return fmt.Sprintf("%.1f %ciB", float64(size)/float64(div), "KMGTPE"[exp])
+}

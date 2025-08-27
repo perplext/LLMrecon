@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
@@ -9,6 +10,7 @@ import (
 type ExportConfigurator struct {
 	terminal *Terminal
 	preview  *ExportPreview
+}
 
 // NewExportConfigurator creates a new export configurator
 func NewExportConfigurator(terminal *Terminal) *ExportConfigurator {
@@ -16,65 +18,68 @@ func NewExportConfigurator(terminal *Terminal) *ExportConfigurator {
 		terminal: terminal,
 		preview:  NewExportPreview(terminal),
 	}
+}
 
 // ConfigureExport interactively configures export settings
 func (ec *ExportConfigurator) ConfigureExport(data interface{}) (*ExportConfig, error) {
 	ec.terminal.Clear()
 	ec.terminal.HeaderBox("Configure Export Settings")
-	
+
 	config := &ExportConfig{}
-	
+
 	// Step 1: Select format
 	format, err := ec.selectFormat(data)
 	if err != nil {
 		return nil, err
 	}
 	config.Format = format
-	
+
 	// Step 2: Configure output
 	if err := ec.configureOutput(config); err != nil {
 		return nil, err
 	}
-	
+
 	// Step 3: Configure format-specific options
 	if err := ec.configureFormatOptions(config); err != nil {
 		return nil, err
 	}
-	
+
 	// Step 4: Configure filtering
 	if err := ec.configureFiltering(config); err != nil {
 		return nil, err
 	}
-	
+
 	// Step 5: Review and confirm
 	if err := ec.reviewConfiguration(config); err != nil {
 		return nil, err
 	}
-	
+
 	return config, nil
+}
 
 // Step 1: Format selection with preview
 func (ec *ExportConfigurator) selectFormat(data interface{}) (string, error) {
 	return ec.preview.ShowFormatSelection(data)
+}
 
 // Step 2: Output configuration
 func (ec *ExportConfigurator) configureOutput(config *ExportConfig) error {
 	ec.terminal.Section("Output Configuration")
-	
+
 	// Filename
 	defaultName := fmt.Sprintf("scan-report-%s", config.Format)
 	filename, err := ec.terminal.Input("Output filename:", defaultName)
 	if err != nil {
 		return err
 	}
-	
+
 	// Add extension if missing
 	ext := ec.getDefaultExtension(config.Format)
 	if ext != "" && !strings.HasSuffix(filename, ext) {
 		filename += ext
 	}
 	config.Filename = filename
-	
+
 	// Output directory
 	defaultDir := "./reports"
 	dir, err := ec.terminal.Input("Output directory:", defaultDir)
@@ -82,7 +87,7 @@ func (ec *ExportConfigurator) configureOutput(config *ExportConfig) error {
 		return err
 	}
 	config.OutputPath = filepath.Join(dir, config.Filename)
-	
+
 	// Overwrite handling
 	overwrite, err := ec.terminal.Select("If file exists:", []string{
 		"Ask before overwriting",
@@ -93,7 +98,7 @@ func (ec *ExportConfigurator) configureOutput(config *ExportConfig) error {
 	if err != nil {
 		return err
 	}
-	
+
 	switch overwrite {
 	case 0:
 		config.OverwriteMode = "ask"
@@ -104,72 +109,83 @@ func (ec *ExportConfigurator) configureOutput(config *ExportConfig) error {
 	case 3:
 		config.OverwriteMode = "timestamp"
 	}
-	
+
 	return nil
+}
 
 // Step 3: Format-specific options
 func (ec *ExportConfigurator) configureFormatOptions(config *ExportConfig) error {
 	ec.terminal.Section("Format Options: " + strings.ToUpper(config.Format))
-	
+
 	options := make(map[string]interface{})
-	
+
 	switch config.Format {
 	case "json":
 		options["pretty"] = ec.askYesNo("Pretty print (indented)?", true)
 		options["include_metadata"] = ec.askYesNo("Include metadata?", true)
 		options["minify"] = ec.askYesNo("Minify output?", false)
-		
+
 	case "yaml":
 		options["include_comments"] = ec.askYesNo("Include explanatory comments?", true)
 		options["flow_style"] = ec.askYesNo("Use flow style for arrays?", false)
-		
+
 	case "markdown":
 		options["toc"] = ec.askYesNo("Include table of contents?", true)
 		options["emoji"] = ec.askYesNo("Use emoji indicators?", true)
 		options["github_flavored"] = ec.askYesNo("GitHub flavored markdown?", true)
-		
+
 	case "html":
 		theme, _ := ec.terminal.Select("Theme:", []string{"Light", "Dark", "Auto"})
 		options["theme"] = []string{"light", "dark", "auto"}[theme]
 		options["include_charts"] = ec.askYesNo("Include interactive charts?", true)
 		options["standalone"] = ec.askYesNo("Single file (embed assets)?", true)
-		
+
 	case "pdf":
 		size, _ := ec.terminal.Select("Page size:", []string{"A4", "Letter", "Legal"})
 		options["page_size"] = []string{"A4", "Letter", "Legal"}[size]
 		options["toc"] = ec.askYesNo("Include table of contents?", true)
 		options["page_numbers"] = ec.askYesNo("Include page numbers?", true)
 		options["watermark"] = ec.askYesNo("Add confidential watermark?", false)
-		
+
 	case "csv":
 		delimiter, _ := ec.terminal.Input("Field delimiter:", ",")
 		options["delimiter"] = delimiter
 		options["headers"] = ec.askYesNo("Include headers?", true)
 		options["quote_all"] = ec.askYesNo("Quote all fields?", false)
-		
+
 	case "sarif":
 		options["schema_version"] = "2.1.0"
 		options["include_rules"] = ec.askYesNo("Include rule definitions?", true)
 		options["include_graphs"] = ec.askYesNo("Include code flow graphs?", false)
-		
+
 	case "jira":
-		options["project_key"], if err := ec.terminal.Input("JIRA project key:", "SEC"); err != nil { return err }
-		options["issue_type"], if err := ec.terminal.Select("Issue type:", ; err != nil { return err }
-			[]string{"Bug", "Security Vulnerability", "Task"})
+		projectKey, err := ec.terminal.Input("JIRA project key:", "SEC")
+		if err != nil {
+			return err
+		}
+		options["project_key"] = projectKey
+
+		issueType, err := ec.terminal.Select("Issue type:", []string{"Bug", "Security Vulnerability", "Task"})
+		if err != nil {
+			return err
+		}
+		options["issue_type"] = issueType
+
 		options["auto_assign"] = ec.askYesNo("Auto-assign issues?", true)
 	}
-	
+
 	config.FormatOptions = options
 	return nil
+}
 
 // Step 4: Filtering configuration
 func (ec *ExportConfigurator) configureFiltering(config *ExportConfig) error {
 	ec.terminal.Section("Data Filtering")
-	
+
 	// Severity filter
 	includeSeverities := []string{}
 	severities := []string{"Critical", "High", "Medium", "Low", "Info"}
-	
+
 	ec.terminal.Info("Select severities to include:")
 	for _, sev := range severities {
 		if ec.askYesNo(fmt.Sprintf("Include %s?", sev), true) {
@@ -177,7 +193,7 @@ func (ec *ExportConfigurator) configureFiltering(config *ExportConfig) error {
 		}
 	}
 	config.Filters.Severities = includeSeverities
-	
+
 	// Category filter
 	includeAll := ec.askYesNo("Include all vulnerability categories?", true)
 	if !includeAll {
@@ -189,7 +205,7 @@ func (ec *ExportConfigurator) configureFiltering(config *ExportConfig) error {
 			"Access Control",
 			"Misconfiguration",
 		}
-		
+
 		includeCategories := []string{}
 		ec.terminal.Info("Select categories to include:")
 		for _, cat := range categories {
@@ -199,11 +215,11 @@ func (ec *ExportConfigurator) configureFiltering(config *ExportConfig) error {
 		}
 		config.Filters.Categories = includeCategories
 	}
-	
+
 	// Status filter
 	config.Filters.IncludeResolved = ec.askYesNo("Include resolved findings?", false)
 	config.Filters.IncludeFalsePositives = ec.askYesNo("Include false positives?", false)
-	
+
 	// Data redaction
 	config.Redaction.Enabled = ec.askYesNo("Enable sensitive data redaction?", true)
 	if config.Redaction.Enabled {
@@ -211,17 +227,18 @@ func (ec *ExportConfigurator) configureFiltering(config *ExportConfig) error {
 		config.Redaction.RedactSecrets = ec.askYesNo("Redact secrets/tokens?", true)
 		config.Redaction.RedactURLs = ec.askYesNo("Redact internal URLs?", false)
 	}
-	
+
 	return nil
+}
 
 // Step 5: Review configuration
 func (ec *ExportConfigurator) reviewConfiguration(config *ExportConfig) error {
 	ec.terminal.Clear()
 	ec.terminal.HeaderBox("Export Configuration Review")
-	
+
 	// Display configuration summary
 	ec.terminal.Section("Summary")
-	
+
 	summary := fmt.Sprintf(`Format: %s
 Output: %s
 Overwrite: %s
@@ -234,18 +251,18 @@ Data Redaction: %s`,
 		strings.Join(config.Filters.Severities, ", "),
 		ec.boolToString(config.Redaction.Enabled, "Enabled", "Disabled"),
 	)
-	
+
 	ec.terminal.Box("Configuration", summary)
-	
+
 	// Format-specific options
 	if len(config.FormatOptions) > 0 {
 		ec.terminal.Section("Format Options")
 		for key, value := range config.FormatOptions {
-			ec.terminal.Info(fmt.Sprintf("• %s: %v", 
+			ec.terminal.Info(fmt.Sprintf("• %s: %v",
 				ec.humanizeKey(key), value))
 		}
 	}
-	
+
 	// Actions
 	ec.terminal.Section("Actions")
 	actions := []string{
@@ -254,12 +271,12 @@ Data Redaction: %s`,
 		"Modify configuration",
 		"Cancel export",
 	}
-	
+
 	choice, err := ec.terminal.Select("Choose action:", actions)
 	if err != nil {
 		return err
 	}
-	
+
 	switch choice {
 	case 0:
 		// Proceed with export
@@ -274,14 +291,16 @@ Data Redaction: %s`,
 		// Cancel
 		return fmt.Errorf("export cancelled")
 	}
-	
+
 	return nil
+}
 
 // Helper methods
 
 func (ec *ExportConfigurator) askYesNo(question string, defaultYes bool) bool {
-	result, _ := ec.terminal.Confirm(question)
+	result, _ := ec.terminal.Confirm(question, defaultYes)
 	return result
+}
 
 func (ec *ExportConfigurator) getDefaultExtension(format string) string {
 	extensions := map[string]string{
@@ -295,6 +314,7 @@ func (ec *ExportConfigurator) getDefaultExtension(format string) string {
 		"jira":     "", // No file extension
 	}
 	return extensions[format]
+}
 
 func (ec *ExportConfigurator) humanizeKey(key string) string {
 	// Convert snake_case to Title Case
@@ -303,42 +323,48 @@ func (ec *ExportConfigurator) humanizeKey(key string) string {
 		words[i] = strings.Title(word)
 	}
 	return strings.Join(words, " ")
+}
 
 func (ec *ExportConfigurator) boolToString(value bool, trueStr, falseStr string) string {
 	if value {
 		return trueStr
 	}
 	return falseStr
+}
 
 // saveConfigTemplate saves the configuration as a reusable template
 func (ec *ExportConfigurator) saveConfigTemplate(config *ExportConfig) error {
 	ec.terminal.Section("Save Configuration Template")
-	
+
 	name, err := ec.terminal.Input("Template name:", "my-export-config")
 	if err != nil {
 		return err
 	}
-	
+
 	description, err := ec.terminal.Input("Description:", "")
 	if err != nil {
 		return err
 	}
-	
+
 	// Save template (in real implementation)
 	ec.terminal.Success(fmt.Sprintf("Template '%s' saved successfully!", name))
+	if description != "" {
+		ec.terminal.Info("Description: " + description)
+	}
 	ec.terminal.Info("Use --export-template " + name + " to reuse this configuration")
-	
+
 	return nil
+}
 
 // LoadTemplate loads a saved configuration template
 func (ec *ExportConfigurator) LoadTemplate(name string) (*ExportConfig, error) {
 	// In real implementation, load from storage
 	// For now, return a sample configuration
-	
+
 	if name == "compliance-report" {
 		return &ExportConfig{
-			Format:     "pdf",
-			OutputPath: "./reports/compliance-report.pdf",
+			Format:        "pdf",
+			OutputPath:    "./reports/compliance-report.pdf",
 			OverwriteMode: "timestamp",
 			FormatOptions: map[string]interface{}{
 				"page_size":    "A4",
@@ -359,8 +385,9 @@ func (ec *ExportConfigurator) LoadTemplate(name string) (*ExportConfig, error) {
 			},
 		}, nil
 	}
-	
+
 	return nil, fmt.Errorf("template not found: %s", name)
+}
 
 // QuickExport provides common export presets
 func (ec *ExportConfigurator) QuickExport(preset string, data interface{}) (*ExportConfig, error) {
@@ -410,19 +437,20 @@ func (ec *ExportConfigurator) QuickExport(preset string, data interface{}) (*Exp
 			},
 		},
 	}
-	
+
 	if config, ok := presets[preset]; ok {
 		// Show preview
 		ec.terminal.Info("Using preset: " + preset)
 		ec.preview.ShowPreview(config.Format, data)
-		
+
 		// Confirm
-		if confirmed, _ := ec.terminal.Confirm("Use this preset?"); confirmed {
+		if confirmed, _ := ec.terminal.Confirm("Use this preset?", true); confirmed {
 			return config, nil
 		}
 	}
-	
+
 	return nil, fmt.Errorf("unknown preset: %s", preset)
+}
 
 // Data structures
 
@@ -447,22 +475,12 @@ type ExportFilters struct {
 type DateRange struct {
 	Start string
 	End   string
+}
 
 type RedactionConfig struct {
-	Enabled       bool
-	RedactPII     bool
-	RedactSecrets bool
-	RedactURLs    bool
+	Enabled        bool
+	RedactPII      bool
+	RedactSecrets  bool
+	RedactURLs     bool
 	CustomPatterns []string
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

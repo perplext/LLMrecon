@@ -25,6 +25,8 @@ Use 'LLMrecon update <subcommand> --help' for more information about each subcom
   
   # Check version information
   LLMrecon version --verbose`,
+}
 
 func init() {
 	rootCmd.AddCommand(updateCmd)
+}

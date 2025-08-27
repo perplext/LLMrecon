@@ -2,8 +2,10 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/utils/profiling"
 )
@@ -28,6 +30,7 @@ type ConfigTuner struct {
 	recommendations []string
 	// onConfigChange is called when configuration changes
 	onConfigChange func(*TunerConfig)
+}
 
 // TunerConfig represents configuration for the tuner
 type TunerConfig struct {
@@ -65,30 +68,32 @@ type TunerConfig struct {
 	GCPercent int
 	// MaxMemory is the maximum memory usage (in MB)
 	MaxMemory int64
+}
 
 // DefaultTunerConfig returns default configuration for the tuner
 func DefaultTunerConfig() *TunerConfig {
 	numCPU := runtime.NumCPU()
-	
+
 	return &TunerConfig{
-		WorkerCount:          numCPU,
+		WorkerCount:           numCPU,
 		MaxConcurrentRequests: numCPU * 100,
-		ConnectionPoolSize:   numCPU * 10,
-		KeepAliveTimeout:     60 * time.Second,
-		ReadTimeout:          30 * time.Second,
-		WriteTimeout:         30 * time.Second,
-		IdleTimeout:          120 * time.Second,
-		MaxHeaderBytes:       1 << 20, // 1 MB
-		BufferPoolSize:       1000,
-		TemplateCache:        1000,
-		StaticFileCache:      1000,
-		GzipCompression:      true,
-		CompressionLevel:     6,
-		MaxRequestBodySize:   10 << 20, // 10 MB
-		EnableHTTP2:          true,
-		GCPercent:            100,
-		MaxMemory:            0, // No limit
+		ConnectionPoolSize:    numCPU * 10,
+		KeepAliveTimeout:      60 * time.Second,
+		ReadTimeout:           30 * time.Second,
+		WriteTimeout:          30 * time.Second,
+		IdleTimeout:           120 * time.Second,
+		MaxHeaderBytes:        1 << 20, // 1 MB
+		BufferPoolSize:        1000,
+		TemplateCache:         1000,
+		StaticFileCache:       1000,
+		GzipCompression:       true,
+		CompressionLevel:      6,
+		MaxRequestBodySize:    10 << 20, // 10 MB
+		EnableHTTP2:           true,
+		GCPercent:             100,
+		MaxMemory:             0, // No limit
 	}
+}
 
 // NewConfigTuner creates a new configuration tuner
 func NewConfigTuner(config *TunerConfig, onConfigChange func(*TunerConfig)) (*ConfigTuner, error) {
@@ -104,11 +109,12 @@ func NewConfigTuner(config *TunerConfig, onConfigChange func(*TunerConfig)) (*Co
 	}
 
 	return &ConfigTuner{
-		config:        config,
-		profiler:      profiler,
-		stopChan:      make(chan struct{}),
+		config:         config,
+		profiler:       profiler,
+		stopChan:       make(chan struct{}),
 		onConfigChange: onConfigChange,
 	}, nil
+}
 
 // StartAutomaticTuning starts automatic configuration tuning
 func (t *ConfigTuner) StartAutomaticTuning(interval time.Duration) error {
@@ -143,6 +149,7 @@ func (t *ConfigTuner) StartAutomaticTuning(interval time.Duration) error {
 	}()
 
 	return nil
+}
 
 // StopAutomaticTuning stops automatic configuration tuning
 func (t *ConfigTuner) StopAutomaticTuning() {
@@ -158,6 +165,7 @@ func (t *ConfigTuner) StopAutomaticTuning() {
 
 	// Stop memory profiling
 	t.profiler.StopAutomaticProfiling()
+}
 
 // TuneConfiguration tunes the configuration based on system metrics
 func (t *ConfigTuner) TuneConfiguration() {
@@ -178,38 +186,38 @@ func (t *ConfigTuner) TuneConfiguration() {
 	// Tune worker count based on CPU count and load
 	numCPU := runtime.NumCPU()
 	numGoroutines := memStats["num_goroutines"].(int)
-	
+
 	if numGoroutines > numCPU*1000 {
 		// Too many goroutines, reduce worker count
 		if t.config.WorkerCount > 1 {
 			t.config.WorkerCount = max(1, t.config.WorkerCount/2)
-			t.recommendations = append(t.recommendations, 
-				fmt.Sprintf("Reduced worker count to %d due to high goroutine count (%d)", 
+			t.recommendations = append(t.recommendations,
+				fmt.Sprintf("Reduced worker count to %d due to high goroutine count (%d)",
 					t.config.WorkerCount, numGoroutines))
 		}
 	} else if numGoroutines < numCPU*10 && t.config.WorkerCount < numCPU*2 {
 		// Few goroutines, increase worker count
 		t.config.WorkerCount = min(numCPU*2, t.config.WorkerCount*2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Increased worker count to %d due to low goroutine count (%d)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Increased worker count to %d due to low goroutine count (%d)",
 				t.config.WorkerCount, numGoroutines))
 	}
 
 	// Tune max concurrent requests based on memory usage
 	heapAllocMB := memStats["heap_alloc_mb"].(float64)
 	heapSysMB := memStats["heap_sys_mb"].(float64)
-	
+
 	if heapAllocMB > 1000 && t.config.MaxConcurrentRequests > numCPU*10 {
 		// High memory usage, reduce max concurrent requests
 		t.config.MaxConcurrentRequests = max(numCPU*10, t.config.MaxConcurrentRequests/2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Reduced max concurrent requests to %d due to high memory usage (%.2f MB)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Reduced max concurrent requests to %d due to high memory usage (%.2f MB)",
 				t.config.MaxConcurrentRequests, heapAllocMB))
 	} else if heapAllocMB < 100 && heapSysMB < 500 && t.config.MaxConcurrentRequests < numCPU*200 {
 		// Low memory usage, increase max concurrent requests
 		t.config.MaxConcurrentRequests = min(numCPU*200, t.config.MaxConcurrentRequests*2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Increased max concurrent requests to %d due to low memory usage (%.2f MB)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Increased max concurrent requests to %d due to low memory usage (%.2f MB)",
 				t.config.MaxConcurrentRequests, heapAllocMB))
 	}
 
@@ -218,18 +226,18 @@ func (t *ConfigTuner) TuneConfiguration() {
 
 	// Tune GC percent based on GC stats
 	gcCPUFraction := gcStats["gc_cpu_fraction"].(float64)
-	
+
 	if gcCPUFraction > 0.1 && t.config.GCPercent > 50 {
 		// GC is taking too much CPU time, increase GC percent
 		t.config.GCPercent = min(1000, t.config.GCPercent*2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Increased GC percent to %d due to high GC CPU usage (%.2f%%)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Increased GC percent to %d due to high GC CPU usage (%.2f%%)",
 				t.config.GCPercent, gcCPUFraction*100))
 	} else if gcCPUFraction < 0.01 && t.config.GCPercent > 25 {
 		// GC is taking very little CPU time, decrease GC percent
 		t.config.GCPercent = max(25, t.config.GCPercent/2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Decreased GC percent to %d due to low GC CPU usage (%.2f%%)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Decreased GC percent to %d due to low GC CPU usage (%.2f%%)",
 				t.config.GCPercent, gcCPUFraction*100))
 	}
 
@@ -237,14 +245,14 @@ func (t *ConfigTuner) TuneConfiguration() {
 	if heapAllocMB > 500 && t.config.BufferPoolSize > 100 {
 		// High memory usage, reduce buffer pool size
 		t.config.BufferPoolSize = max(100, t.config.BufferPoolSize/2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Reduced buffer pool size to %d due to high memory usage (%.2f MB)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Reduced buffer pool size to %d due to high memory usage (%.2f MB)",
 				t.config.BufferPoolSize, heapAllocMB))
 	} else if heapAllocMB < 100 && t.config.BufferPoolSize < 10000 {
 		// Low memory usage, increase buffer pool size
 		t.config.BufferPoolSize = min(10000, t.config.BufferPoolSize*2)
-		t.recommendations = append(t.recommendations, 
-			fmt.Sprintf("Increased buffer pool size to %d due to low memory usage (%.2f MB)", 
+		t.recommendations = append(t.recommendations,
+			fmt.Sprintf("Increased buffer pool size to %d due to low memory usage (%.2f MB)",
 				t.config.BufferPoolSize, heapAllocMB))
 	}
 
@@ -252,6 +260,7 @@ func (t *ConfigTuner) TuneConfiguration() {
 	if len(t.recommendations) > 0 && t.onConfigChange != nil {
 		t.onConfigChange(t.config)
 	}
+}
 
 // GetConfig returns the current configuration
 func (t *ConfigTuner) GetConfig() *TunerConfig {
@@ -259,6 +268,7 @@ func (t *ConfigTuner) GetConfig() *TunerConfig {
 	defer t.mutex.RUnlock()
 
 	return t.config
+}
 
 // SetConfig sets the configuration
 func (t *ConfigTuner) SetConfig(config *TunerConfig) {
@@ -271,6 +281,7 @@ func (t *ConfigTuner) SetConfig(config *TunerConfig) {
 	if t.onConfigChange != nil {
 		t.onConfigChange(t.config)
 	}
+}
 
 // GetRecommendations returns tuning recommendations
 func (t *ConfigTuner) GetRecommendations() []string {
@@ -278,6 +289,7 @@ func (t *ConfigTuner) GetRecommendations() []string {
 	defer t.mutex.RUnlock()
 
 	return append([]string{}, t.recommendations...)
+}
 
 // GetTuneCount returns the number of tuning operations
 func (t *ConfigTuner) GetTuneCount() int {
@@ -285,6 +297,7 @@ func (t *ConfigTuner) GetTuneCount() int {
 	defer t.mutex.RUnlock()
 
 	return t.tuneCount
+}
 
 // GetLastTuneTime returns the time of the last tuning
 func (t *ConfigTuner) GetLastTuneTime() time.Time {
@@ -292,6 +305,7 @@ func (t *ConfigTuner) GetLastTuneTime() time.Time {
 	defer t.mutex.RUnlock()
 
 	return t.lastTuneTime
+}
 
 // IsRunning returns if automatic tuning is running
 func (t *ConfigTuner) IsRunning() bool {
@@ -299,10 +313,12 @@ func (t *ConfigTuner) IsRunning() bool {
 	defer t.mutex.RUnlock()
 
 	return t.running
+}
 
 // GetMemoryProfiler returns the memory profiler
 func (t *ConfigTuner) GetMemoryProfiler() *profiling.MemoryProfiler {
 	return t.profiler
+}
 
 // SaveConfigToFile saves the configuration to a file
 func (t *ConfigTuner) SaveConfigToFile(filename string) error {
@@ -314,7 +330,11 @@ func (t *ConfigTuner) SaveConfigToFile(filename string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	defer func() { if err := f.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write configuration
 	fmt.Fprintf(f, "# Configuration generated by ConfigTuner on %s\n\n", time.Now().Format(time.RFC3339))
@@ -337,11 +357,13 @@ func (t *ConfigTuner) SaveConfigToFile(filename string) error {
 	fmt.Fprintf(f, "max_memory = %d\n", t.config.MaxMemory)
 
 	return nil
+}
 
 // LoadConfigFromFile loads the configuration from a file
 func (t *ConfigTuner) LoadConfigFromFile(filename string) error {
 	// Not implemented - would parse the file format above
 	return fmt.Errorf("not implemented")
+}
 
 // min returns the minimum of two integers
 func min(a, b int) int {
@@ -349,9 +371,12 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
 
 // max returns the maximum of two integers
 func max(a, b int) int {
 	if a > b {
 		return a
 	}
+	return b
+}

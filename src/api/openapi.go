@@ -69,6 +69,7 @@ func GenerateOpenAPISpec() map[string]interface{} {
 		"paths":      generatePaths(),
 		"components": generateComponents(),
 	}
+}
 
 // generatePaths generates the API paths section
 func generatePaths() map[string]interface{} {
@@ -114,7 +115,7 @@ func generatePaths() map[string]interface{} {
 				},
 			},
 		},
-		
+
 		// Authentication
 		"/auth/login": map[string]interface{}{
 			"post": map[string]interface{}{
@@ -242,7 +243,7 @@ func generatePaths() map[string]interface{} {
 				},
 			},
 		},
-		
+
 		// API Keys
 		"/auth/keys": map[string]interface{}{
 			"get": map[string]interface{}{
@@ -319,7 +320,7 @@ func generatePaths() map[string]interface{} {
 				},
 			},
 		},
-		
+
 		// Scans
 		"/scans": map[string]interface{}{
 			"get": map[string]interface{}{
@@ -475,7 +476,7 @@ func generatePaths() map[string]interface{} {
 				},
 			},
 		},
-		
+
 		// Templates
 		"/templates": map[string]interface{}{
 			"get": map[string]interface{}{
@@ -511,6 +512,7 @@ func generatePaths() map[string]interface{} {
 			},
 		},
 	}
+}
 
 // generateComponents generates the components section
 func generateComponents() map[string]interface{} {
@@ -597,7 +599,7 @@ func generateComponents() map[string]interface{} {
 					},
 				},
 			},
-			
+
 			// Auth schemas
 			"LoginRequest": map[string]interface{}{
 				"type": "object",
@@ -671,7 +673,7 @@ func generateComponents() map[string]interface{} {
 				},
 				"required": []string{"username", "email", "password"},
 			},
-			
+
 			// API Key schemas
 			"APIKey": map[string]interface{}{
 				"type": "object",
@@ -753,7 +755,7 @@ func generateComponents() map[string]interface{} {
 					},
 				},
 			},
-			
+
 			// Scan schemas
 			"Scan": map[string]interface{}{
 				"type": "object",
@@ -971,7 +973,7 @@ func generateComponents() map[string]interface{} {
 					},
 				},
 			},
-			
+
 			// Template schemas
 			"Template": map[string]interface{}{
 				"type": "object",
@@ -1014,7 +1016,7 @@ func generateComponents() map[string]interface{} {
 					},
 				},
 			},
-			
+
 			// System schemas
 			"HealthResponse": map[string]interface{}{
 				"type": "object",
@@ -1129,6 +1131,7 @@ func generateComponents() map[string]interface{} {
 			},
 		},
 	}
+}
 
 // handleOpenAPISpec serves the OpenAPI specification
 func handleOpenAPISpec(w http.ResponseWriter, r *http.Request) {
@@ -1138,3 +1141,4 @@ func handleOpenAPISpec(w http.ResponseWriter, r *http.Request) {
 		// Log error but response is already partially sent
 		log.Printf("Error encoding OpenAPI spec: %v", err)
 	}
+}

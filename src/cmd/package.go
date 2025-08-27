@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/update"
@@ -52,7 +53,7 @@ var (
 
 func init() {
 	// Add package command to root command
-	rootCmd.AddCommand(packageCmd)
+	// rootCmd.AddCommand(packageCmd) // TODO: Uncomment when rootCmd is properly defined
 
 	// Add subcommands to package command
 	packageCmd.AddCommand(createPackageCmd)
@@ -69,6 +70,7 @@ func init() {
 	applyPackageCmd.Flags().StringVar(&backupDir, "backup-dir", "", "Backup directory for update operations")
 	applyPackageCmd.Flags().BoolVar(&forceUpdate, "force", false, "Force update even if not compatible")
 	applyPackageCmd.Flags().BoolVar(&skipVerify, "skip-verify", false, "Skip package verification (not recommended)")
+}
 
 func runCreatePackage(cmd *cobra.Command, args []string) error {
 	manifestPath := args[0]
@@ -88,6 +90,7 @@ func runCreatePackage(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Successfully created update package: %s\n", outputPath)
 	return nil
+}
 
 func runVerifyPackage(cmd *cobra.Command, args []string) error {
 	packagePath := args[0]
@@ -102,7 +105,11 @@ func runVerifyPackage(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open package: %w", err)
 	}
-	defer func() { if err := pkg.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := pkg.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Print package information
 	fmt.Println("Package Information:")
@@ -123,10 +130,7 @@ func runVerifyPackage(cmd *cobra.Command, args []string) error {
 		}
 
 		// TODO: Parse public key data
-		var publicKey []byte
-		if err := publicKeyData // Placeholder; err != nil {
-			return fmt.Errorf("operation failed: %w", err)
-		}
+		publicKey := publicKeyData
 
 		// Verify package
 		fmt.Println("Verifying package...")
@@ -140,6 +144,7 @@ func runVerifyPackage(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
 
 func runApplyPackage(cmd *cobra.Command, args []string) error {
 	packagePath := args[0]
@@ -155,7 +160,11 @@ func runApplyPackage(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open package: %w", err)
 	}
-	defer func() { if err := pkg.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := pkg.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Print package information
 	fmt.Println("Package Information:")
@@ -176,10 +185,7 @@ func runApplyPackage(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to read public key: %w", err)
 		}
 		// TODO: Parse public key data
-		var publicKey []byte
-		if err := publicKeyData // Placeholder; err != nil {
-			return fmt.Errorf("operation failed: %w", err)
-		}
+		publicKey := publicKeyData
 		// Verify package
 		fmt.Println("Verifying package...")
 		err = pkg.Verify(publicKey)
@@ -243,6 +249,7 @@ func runApplyPackage(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Update applied successfully.")
 	return nil
+}
 
 // getCurrentVersions gets the current versions of components
 func getCurrentVersions() (map[string]version.Version, error) {
@@ -252,3 +259,4 @@ func getCurrentVersions() (map[string]version.Version, error) {
 		"core":      {Major: 1, Minor: 0, Patch: 0},
 		"templates": {Major: 1, Minor: 0, Patch: 0},
 	}, nil
+}

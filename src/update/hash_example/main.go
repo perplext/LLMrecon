@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/update"
 )
@@ -18,7 +20,7 @@ func main() {
 	// Create a test file
 	testFilePath := filepath.Join(tempDir, "test-file.txt")
 	testData := []byte("This is test data for hash verification utilities")
-	err = os.WriteFile(filepath.Clean(testFilePath, testData, 0600))
+	err = os.WriteFile(filepath.Clean(testFilePath), testData, 0600)
 	if err != nil {
 		fmt.Printf("Error creating test file: %v\n", err)
 		return
@@ -117,4 +119,4 @@ func main() {
 	fmt.Printf("  'same' == 'different': %v\n", update.SecureCompare("same", "different"))
 	fmt.Printf("  'almost same' == 'almost dame': %v\n", update.SecureCompare("almost same", "almost dame"))
 	fmt.Println()
-
+}

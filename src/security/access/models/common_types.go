@@ -35,10 +35,10 @@ const (
 
 // Constants for security incident status
 const (
-	SecurityIncidentStatusOpen      SecurityIncidentStatus = "open"
+	SecurityIncidentStatusOpen       SecurityIncidentStatus = "open"
 	SecurityIncidentStatusInProgress SecurityIncidentStatus = "in-progress"
-	SecurityIncidentStatusResolved  SecurityIncidentStatus = "resolved"
-	SecurityIncidentStatusClosed    SecurityIncidentStatus = "closed"
+	SecurityIncidentStatusResolved   SecurityIncidentStatus = "resolved"
+	SecurityIncidentStatusClosed     SecurityIncidentStatus = "closed"
 )
 
 // Constants for vulnerability severity
@@ -69,39 +69,39 @@ const (
 
 // User represents a user in the system
 type User struct {
-	ID                 string                 `json:"id"`
-	Username           string                 `json:"username"`
-	Email              string                 `json:"email"`
-	PasswordHash       string                 `json:"password_hash,omitempty"`
-	Roles              []string               `json:"roles"`
-	Permissions        []string               `json:"permissions,omitempty"`
-	MFAEnabled         bool                   `json:"mfa_enabled"`
-	MFAMethod          string                 `json:"mfa_method,omitempty"`
-	MFAMethods         []string               `json:"mfa_methods,omitempty"`
-	MFASecret          string                 `json:"mfa_secret,omitempty"`
-	LastLogin          time.Time              `json:"last_login"`
-	LastPasswordChange time.Time              `json:"last_password_change"`
-	FailedLoginAttempts int                   `json:"failed_login_attempts"`
-	Locked             bool                   `json:"locked"`
-	Active             bool                   `json:"active"`
-	CreatedAt          time.Time              `json:"created_at"`
-	UpdatedAt          time.Time              `json:"updated_at"`
-	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	ID                  string                 `json:"id"`
+	Username            string                 `json:"username"`
+	Email               string                 `json:"email"`
+	PasswordHash        string                 `json:"password_hash,omitempty"`
+	Roles               []string               `json:"roles"`
+	Permissions         []string               `json:"permissions,omitempty"`
+	MFAEnabled          bool                   `json:"mfa_enabled"`
+	MFAMethod           string                 `json:"mfa_method,omitempty"`
+	MFAMethods          []string               `json:"mfa_methods,omitempty"`
+	MFASecret           string                 `json:"mfa_secret,omitempty"`
+	LastLogin           time.Time              `json:"last_login"`
+	LastPasswordChange  time.Time              `json:"last_password_change"`
+	FailedLoginAttempts int                    `json:"failed_login_attempts"`
+	Locked              bool                   `json:"locked"`
+	Active              bool                   `json:"active"`
+	CreatedAt           time.Time              `json:"created_at"`
+	UpdatedAt           time.Time              `json:"updated_at"`
+	Metadata            map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // Session represents a user session
 type Session struct {
-	ID              string                 `json:"id"`
-	UserID          string                 `json:"user_id"`
-	Token           string                 `json:"token"`
-	RefreshToken    string                 `json:"refresh_token,omitempty"`
-	IPAddress       string                 `json:"ip_address"`
-	UserAgent       string                 `json:"user_agent"`
-	ExpiresAt       time.Time              `json:"expires_at"`
-	LastActivity    time.Time              `json:"last_activity"`
-	MFACompleted    bool                   `json:"mfa_completed"`
-	CreatedAt       time.Time              `json:"created_at"`
-	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+	ID           string                 `json:"id"`
+	UserID       string                 `json:"user_id"`
+	Token        string                 `json:"token"`
+	RefreshToken string                 `json:"refresh_token,omitempty"`
+	IPAddress    string                 `json:"ip_address"`
+	UserAgent    string                 `json:"user_agent"`
+	ExpiresAt    time.Time              `json:"expires_at"`
+	LastActivity time.Time              `json:"last_activity"`
+	MFACompleted bool                   `json:"mfa_completed"`
+	CreatedAt    time.Time              `json:"created_at"`
+	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // AuditLog represents an audit log entry
@@ -123,20 +123,20 @@ type AuditLog struct {
 
 // SecurityIncident represents a security incident
 type SecurityIncident struct {
-	ID              string                  `json:"id"`
-	Title           string                  `json:"title"`
-	Description     string                  `json:"description"`
+	ID              string                   `json:"id"`
+	Title           string                   `json:"title"`
+	Description     string                   `json:"description"`
 	Severity        SecurityIncidentSeverity `json:"severity"`
-	Status          SecurityIncidentStatus  `json:"status"`
-	ReportedAt      time.Time               `json:"reported_at"`
-	ReportedBy      string                  `json:"reported_by"`
-	AssignedTo      string                  `json:"assigned_to,omitempty"`
-	Resolution      string                  `json:"resolution,omitempty"`
-	ResolvedAt      time.Time               `json:"resolved_at,omitempty"`
-	ResolvedBy      string                  `json:"resolved_by,omitempty"`
-	AffectedSystems []string                `json:"affected_systems,omitempty"`
-	RelatedLogs     []string                `json:"related_logs,omitempty"`
-	Metadata        map[string]interface{}  `json:"metadata,omitempty"`
+	Status          SecurityIncidentStatus   `json:"status"`
+	ReportedAt      time.Time                `json:"reported_at"`
+	ReportedBy      string                   `json:"reported_by"`
+	AssignedTo      string                   `json:"assigned_to,omitempty"`
+	Resolution      string                   `json:"resolution,omitempty"`
+	ResolvedAt      time.Time                `json:"resolved_at,omitempty"`
+	ResolvedBy      string                   `json:"resolved_by,omitempty"`
+	AffectedSystems []string                 `json:"affected_systems,omitempty"`
+	RelatedLogs     []string                 `json:"related_logs,omitempty"`
+	Metadata        map[string]interface{}   `json:"metadata,omitempty"`
 }
 
 // Vulnerability represents a security vulnerability

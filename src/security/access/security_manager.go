@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"time"
 )
 
 // generateSecurityID generates a unique ID for security entities
@@ -15,6 +16,7 @@ func generateSecurityID() (string, error) {
 		return "", fmt.Errorf("failed to generate random bytes: %w", err)
 	}
 	return hex.EncodeToString(bytes), nil
+}
 
 // getSecurityUserIDFromContext extracts the user ID from the context for security operations
 func getSecurityUserIDFromContext(ctx context.Context) string {
@@ -25,6 +27,7 @@ func getSecurityUserIDFromContext(ctx context.Context) string {
 		return userID
 	}
 	return "unknown"
+}
 
 // SecurityIncident is already defined in config.go
 /*
@@ -44,7 +47,6 @@ type SecurityIncident struct {
 	RelatedLogs     []string                   `json:"related_logs,omitempty"`
 	Metadata        map[string]interface{}     `json:"metadata,omitempty"`
 */
-}
 
 // Vulnerability is already defined in config.go
 /*
@@ -66,7 +68,6 @@ type Vulnerability struct {
 	CVE             string                     `json:"cve,omitempty"`
 	Metadata        map[string]interface{}     `json:"metadata,omitempty"`
 */
-}
 
 // IncidentStatus is already defined in config.go
 // type IncidentStatus string
@@ -85,6 +86,7 @@ func generateSecurityRandomID() string {
 		return fmt.Sprintf("id-%d", time.Now().UnixNano())
 	}
 	return id
+}
 
 // All InMemoryAuditLogger functions below are duplicates from audit.go
 // TODO: Remove these duplicate implementations
@@ -186,8 +188,3 @@ func (l *InMemoryAuditLogger) ListAuditLogs(ctx context.Context, filter *AuditLo
 
 	return results, nil
 */
-}
-}
-}
-}
-}

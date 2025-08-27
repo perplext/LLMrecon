@@ -2,7 +2,10 @@
 package security
 
 import (
+	"io"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/api"
 	"github.com/perplext/LLMrecon/src/security/communication"
@@ -24,6 +27,7 @@ type SecurityConfig struct {
 	DevelopmentMode bool
 	// Log file path
 	LogFilePath string
+}
 
 // DefaultSecurityConfig returns the default security configuration
 func DefaultSecurityConfig() *SecurityConfig {
@@ -36,6 +40,7 @@ func DefaultSecurityConfig() *SecurityConfig {
 		DevelopmentMode:       false,
 		LogFilePath:           "logs/security.log",
 	}
+}
 
 // SecurityManager manages security components
 type SecurityManager struct {
@@ -124,6 +129,7 @@ func NewSecurityManager(config *SecurityConfig) (*SecurityManager, error) {
 		certPinner:      certPinner,
 		logFile:         logFile,
 	}, nil
+}
 
 // Close closes the security manager and releases resources
 func (sm *SecurityManager) Close() error {
@@ -136,34 +142,42 @@ func (sm *SecurityManager) Close() error {
 	}
 
 	return nil
+}
 
 // GetTLSManager returns the TLS manager
 func (sm *SecurityManager) GetTLSManager() *communication.TLSManager {
 	return sm.tlsManager
+}
 
 // GetRateLimiter returns the rate limiter
 func (sm *SecurityManager) GetRateLimiter() *api.RateLimiter {
 	return sm.rateLimiter
+}
 
 // GetIPAllowlist returns the IP allowlist
 func (sm *SecurityManager) GetIPAllowlist() *api.IPAllowlist {
 	return sm.ipAllowlist
+}
 
 // GetSecureLogger returns the secure logger
 func (sm *SecurityManager) GetSecureLogger() *api.SecureLogger {
 	return sm.secureLogger
+}
 
 // GetAnomalyDetector returns the anomaly detector
 func (sm *SecurityManager) GetAnomalyDetector() *api.AnomalyDetector {
 	return sm.anomalyDetector
+}
 
 // GetErrorHandler returns the error handler
 func (sm *SecurityManager) GetErrorHandler() *communication.ErrorHandler {
 	return sm.errorHandler
+}
 
 // GetCertificatePinner returns the certificate pinner
 func (sm *SecurityManager) GetCertificatePinner() *communication.CertificatePinner {
 	return sm.certPinner
+}
 
 // ApplyMiddleware applies all security middleware to a handler
 func (sm *SecurityManager) ApplyMiddleware(handler http.Handler) http.Handler {
@@ -178,6 +192,7 @@ func (sm *SecurityManager) ApplyMiddleware(handler http.Handler) http.Handler {
 	handler = sm.anomalyDetector.Middleware(handler)
 
 	return handler
+}
 
 // CreateSecureClient creates a secure HTTP client
 func (sm *SecurityManager) CreateSecureClient(name string, config *communication.TLSConfig) (*http.Client, error) {
@@ -188,23 +203,27 @@ func (sm *SecurityManager) CreateSecureClient(name string, config *communication
 
 	// Get client
 	return sm.tlsManager.GetClient(name)
+}
 
 // CreatePinnedClient creates a client with certificate pinning
 func (sm *SecurityManager) CreatePinnedClient(hostname string, pins []string) *http.Client {
 	return sm.certPinner.CreatePinnedClient(hostname, pins)
+}
 
 // HandleError handles an error securely
 func (sm *SecurityManager) HandleError(w http.ResponseWriter, r *http.Request, err error, defaultMessage string) {
 	sm.errorHandler.HandleError(w, r, err, defaultMessage)
+}
 
 // NewSecureError creates a new secure error
 func (sm *SecurityManager) NewSecureError(code string, message string, level communication.ErrorLevel, originalError error) *communication.SecureError {
 	return communication.NewSecureError(code, message, level, originalError)
+}
 
 // Log logs a message
 func (sm *SecurityManager) Log(level api.LogLevel, requestID string, message string, err error) {
 	sm.secureLogger.Log(level, requestID, message, err)
-	
+}
 
 // ConfigureTLSForServer configures TLS for an HTTP server
 func (sm *SecurityManager) ConfigureTLSForServer() (*http.Server, error) {
@@ -223,19 +242,5 @@ func (sm *SecurityManager) ConfigureTLSForServer() (*http.Server, error) {
 		IdleTimeout:  60 * time.Second,
 	}
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return server, nil
 }

@@ -77,7 +77,7 @@ func main() {
 	// Create a valid template
 	validTemplate := &format.Template{
 		ID: "valid-template",
-		Info: format.TemplateInfo{
+		Info: &format.TemplateInfo{
 			Name:        "Valid Template",
 			Description: "A valid template for testing",
 			Version:     "1.0.0",
@@ -106,7 +106,7 @@ func main() {
 	// Create a template with a jailbreak attempt
 	jailbreakTemplate := &format.Template{
 		ID: "jailbreak-template",
-		Info: format.TemplateInfo{
+		Info: &format.TemplateInfo{
 			Name:        "Jailbreak Template",
 			Description: "A template with a jailbreak attempt",
 			Version:     "1.0.0",
@@ -135,7 +135,7 @@ func main() {
 	// Create a template with HTML injection
 	htmlTemplate := &format.Template{
 		ID: "html-template",
-		Info: format.TemplateInfo{
+		Info: &format.TemplateInfo{
 			Name:        "HTML Template",
 			Description: "A template with HTML injection",
 			Version:     "1.0.0",
@@ -169,7 +169,7 @@ func main() {
 	// Create a template with SQL injection
 	sqlTemplate := &format.Template{
 		ID: "sql-template",
-		Info: format.TemplateInfo{
+		Info: &format.TemplateInfo{
 			Name:        "SQL Template",
 			Description: "A template with SQL injection",
 			Version:     "1.0.0",

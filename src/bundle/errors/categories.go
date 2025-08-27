@@ -45,59 +45,59 @@ func (c *DefaultErrorCategorizer) CategorizeError(err error) (ErrorCategory, Err
 
 	// Get the error message
 	errMsg := err.Error()
-	
+
 	// Check for validation errors
-	if strings.Contains(errMsg, "validation") || 
-	   strings.Contains(errMsg, "invalid") || 
-	   strings.Contains(errMsg, "schema") {
+	if strings.Contains(errMsg, "validation") ||
+		strings.Contains(errMsg, "invalid") ||
+		strings.Contains(errMsg, "schema") {
 		return ValidationError, HighSeverity, NonRecoverableError
 	}
-	
+
 	// Check for file system errors
-	if os.IsNotExist(err) || 
-	   os.IsPermission(err) || 
-	   strings.Contains(errMsg, "file") || 
-	   strings.Contains(errMsg, "directory") || 
-	   strings.Contains(errMsg, "path") {
-		
+	if os.IsNotExist(err) ||
+		os.IsPermission(err) ||
+		strings.Contains(errMsg, "file") ||
+		strings.Contains(errMsg, "directory") ||
+		strings.Contains(errMsg, "path") {
+
 		// Check for permission errors specifically
 		if os.IsPermission(err) {
 			return PermissionError, HighSeverity, NonRecoverableError
 		}
-		
+
 		// Check for not found errors
 		if os.IsNotExist(err) {
 			return FileSystemError, MediumSeverity, NonRecoverableError
 		}
-		
+
 		return FileSystemError, MediumSeverity, RecoverableError
 	}
-	
+
 	// Check for network errors
-	if strings.Contains(errMsg, "network") || 
-	   strings.Contains(errMsg, "connection") || 
-	   strings.Contains(errMsg, "timeout") || 
-	   strings.Contains(errMsg, "unreachable") {
+	if strings.Contains(errMsg, "network") ||
+		strings.Contains(errMsg, "connection") ||
+		strings.Contains(errMsg, "timeout") ||
+		strings.Contains(errMsg, "unreachable") {
 		return NetworkError, MediumSeverity, RecoverableError
 	}
-	
+
 	// Check for configuration errors
-	if strings.Contains(errMsg, "config") || 
-	   strings.Contains(errMsg, "configuration") || 
-	   strings.Contains(errMsg, "settings") {
+	if strings.Contains(errMsg, "config") ||
+		strings.Contains(errMsg, "configuration") ||
+		strings.Contains(errMsg, "settings") {
 		return ConfigurationError, MediumSeverity, NonRecoverableError
 	}
-	
+
 	// Check for backup errors
 	if strings.Contains(errMsg, "backup") {
 		return BackupError, HighSeverity, RecoverableError
 	}
-	
+
 	// Check for conflict errors
 	if strings.Contains(errMsg, "conflict") {
 		return ConflictError, MediumSeverity, NonRecoverableError
 	}
-	
+
 	// Check for system call errors
 	var errno syscall.Errno
 	if errors.As(err, &errno) {
@@ -112,7 +112,7 @@ func (c *DefaultErrorCategorizer) CategorizeError(err error) (ErrorCategory, Err
 			return NetworkError, MediumSeverity, RecoverableError
 		}
 	}
-	
+
 	// Default to unknown error
 	return UnknownError, MediumSeverity, RecoverableError
 }
@@ -122,12 +122,12 @@ func GetErrorDetails(err error) map[string]interface{} {
 	if err == nil {
 		return map[string]interface{}{"error": "nil"}
 	}
-	
+
 	details := map[string]interface{}{
-		"error":     err.Error(),
+		"error":      err.Error(),
 		"error_type": fmt.Sprintf("%T", err),
 	}
-	
+
 	// Extract additional details from BundleError
 	if be, ok := err.(*BundleError); ok {
 		details["category"] = string(be.Category)
@@ -137,13 +137,13 @@ func GetErrorDetails(err error) map[string]interface{} {
 		details["timestamp"] = be.Timestamp.Format("2006-01-02T15:04:05Z07:00")
 		details["retry_attempt"] = be.RetryAttempt
 		details["max_retries"] = be.MaxRetries
-		
+
 		// Add context
 		for k, v := range be.Context {
 			details[k] = v
 		}
 	}
-	
+
 	return details
 }
 
@@ -153,11 +153,11 @@ func IsRetryableError(err error) bool {
 	if be, ok := err.(*BundleError); ok {
 		return be.Recoverability == RecoverableError
 	}
-	
+
 	// Categorize the error
 	categorizer := NewErrorCategorizer(nil)
 	_, _, recoverability := categorizer.CategorizeError(err)
-	
+
 	return recoverability == RecoverableError
 }
 
@@ -167,11 +167,11 @@ func GetErrorSeverity(err error) ErrorSeverity {
 	if be, ok := err.(*BundleError); ok {
 		return be.Severity
 	}
-	
+
 	// Categorize the error
 	categorizer := NewErrorCategorizer(nil)
 	_, severity, _ := categorizer.CategorizeError(err)
-	
+
 	return severity
 }
 
@@ -181,11 +181,11 @@ func GetErrorCategory(err error) ErrorCategory {
 	if be, ok := err.(*BundleError); ok {
 		return be.Category
 	}
-	
+
 	// Categorize the error
 	categorizer := NewErrorCategorizer(nil)
 	category, _, _ := categorizer.CategorizeError(err)
-	
+
 	return category
 }
 
@@ -194,6 +194,6 @@ func WrapError(err error, message string) error {
 	if err == nil {
 		return nil
 	}
-	
+
 	return fmt.Errorf("%s: %w", message, err)
 }

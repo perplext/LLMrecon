@@ -7,60 +7,118 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/keystore"
 	"github.com/perplext/LLMrecon/src/version"
 )
 
+// SignatureAlgorithm represents a cryptographic signature algorithm
+type SignatureAlgorithm string
+
+const (
+	Ed25519Algorithm SignatureAlgorithm = "ed25519"
+	RSAAlgorithm     SignatureAlgorithm = "rsa"
+	ECDSAAlgorithm   SignatureAlgorithm = "ecdsa"
+)
+
+// ConnectionSecurityOptions defines security options for network connections
+// Use shared types from types.go: ConnectionSecurityOptions, UpdatePackage, SecureClient, SignatureGenerator
+
+// Use DefaultConnectionSecurityOptions from secure_connection.go
+
+// UpdateManifest represents the manifest of an update package (specific to downgrade protection)
+type UpdateManifest struct {
+	Signature  string
+	Components UpdateComponents
+}
+
+// UpdateComponents represents the components in an update package (specific to downgrade protection)
+type UpdateComponents struct {
+	Binary    UpdateComponent
+	Templates UpdateComponent
+	Modules   []UpdateComponent
+}
+
+// UpdateComponent represents a single component in an update package (specific to downgrade protection)
+type UpdateComponent struct {
+	ID      string
+	Version string
+}
+
+// SignatureVerifier provides signature verification functionality
+type SignatureVerifier struct {
+	publicKey string
+}
+
+// NewSignatureVerifier creates a new signature verifier
+func NewSignatureVerifier(publicKey string) (*SignatureVerifier, error) {
+	return &SignatureVerifier{publicKey: publicKey}, nil
+}
+
+// VerifySignature verifies a file signature
+func (sv *SignatureVerifier) VerifySignature(filePath, signature string) error {
+	// This is a placeholder implementation
+	// In a real implementation, this would verify the cryptographic signature
+	return nil
+}
+
+// SignatureGenerator functionality is implemented in sign.go
+
 // SecurityPolicy defines the minimum security requirements for cryptographic operations
 type SecurityPolicy struct {
 	// MinimumTLSVersion is the minimum allowed TLS version
 	MinimumTLSVersion uint16 `json:"minimum_tls_version"`
-	
+
 	// AllowedCipherSuites is the list of allowed TLS cipher suites
 	AllowedCipherSuites []uint16 `json:"allowed_cipher_suites"`
-	
+
 	// AllowedSignatureAlgorithms is the list of allowed signature algorithms
 	AllowedSignatureAlgorithms []SignatureAlgorithm `json:"allowed_signature_algorithms"`
-	
+
 	// MinimumKeySize maps algorithm types to their minimum key sizes in bits
 	MinimumKeySize map[string]int `json:"minimum_key_size"`
-	
+
 	// RequireCertificatePinning indicates whether certificate pinning is required
 	RequireCertificatePinning bool `json:"require_certificate_pinning"`
-	
+
 	// RequireRevocationCheck indicates whether certificate revocation checking is required
 	RequireRevocationCheck bool `json:"require_revocation_check"`
-	
+
 	// MinimumVersions maps component types to their minimum allowed versions
 	MinimumVersions map[string]string `json:"minimum_versions"`
-	
+
 	// LastUpdateTime is when the policy was last updated
 	LastUpdateTime time.Time `json:"last_update_time"`
-	
+
 	// PolicyVersion is the version of the security policy
 	PolicyVersion string `json:"policy_version"`
-	
+
 	// PolicySignature is the cryptographic signature of the policy
 	PolicySignature string `json:"policy_signature"`
-	
+
 	// RequireSignatureVerification indicates whether signature verification is required
 	RequireSignatureVerification bool `json:"require_signature_verification"`
+}
 
 // DowngradeProtection provides protection against cryptographic downgrade attacks
 type DowngradeProtection struct {
 	// Policy is the current security policy
 	Policy *SecurityPolicy
-	
+
 	// PolicyPath is the path to the security policy file
 	PolicyPath string
-	
+
 	// Verifier is used to verify policy signatures
 	Verifier *SignatureVerifier
-	
+
 	// KeyStore is used to store and retrieve cryptographic keys
 	KeyStore *keystore.FileKeyStore
+}
 
 // NewDowngradeProtection creates a new DowngradeProtection instance
 func NewDowngradeProtection(policyPath string, keyStore *keystore.FileKeyStore) (*DowngradeProtection, error) {
@@ -100,6 +158,7 @@ func NewDowngradeProtection(policyPath string, keyStore *keystore.FileKeyStore) 
 	}
 
 	return dp, nil
+}
 
 // DefaultSecurityPolicy returns the default security policy
 func DefaultSecurityPolicy() *SecurityPolicy {
@@ -119,9 +178,9 @@ func DefaultSecurityPolicy() *SecurityPolicy {
 			RSAAlgorithm,
 		},
 		MinimumKeySize: map[string]int{
-			"rsa":      2048,
-			"ecdsa":    256,
-			"ed25519":  256,
+			"rsa":       2048,
+			"ecdsa":     256,
+			"ed25519":   256,
 			"symmetric": 256,
 		},
 		RequireCertificatePinning: true,
@@ -131,11 +190,13 @@ func DefaultSecurityPolicy() *SecurityPolicy {
 			"templates": "1.0.0",
 			"modules":   "1.0.0",
 		},
-		LastUpdateTime:             time.Now(),
-		PolicyVersion:              "1.0.0",
-		PolicySignature:            "",
+		LastUpdateTime:               time.Now(),
+		PolicyVersion:                "1.0.0",
+		PolicySignature:              "",
 		RequireSignatureVerification: true,
 	}
+}
+
 // LoadPolicy loads the security policy from disk
 func (dp *DowngradeProtection) LoadPolicy() error {
 	// Check if policy file exists
@@ -159,20 +220,20 @@ func (dp *DowngradeProtection) LoadPolicy() error {
 		// Create a temporary copy of the policy without the signature
 		tempPolicy := policy
 		tempPolicy.PolicySignature = ""
-		
+
 		// Marshal the policy without the signature
 		tempPolicyData, err := json.Marshal(tempPolicy)
 		if err != nil {
 			return fmt.Errorf("failed to marshal policy for signature verification: %w", err)
 		}
-		
+
 		// Create a temporary file for verification
 		tempFile := dp.PolicyPath + ".temp"
 		if err := ioutil.WriteFile(tempFile, tempPolicyData, 0600); err != nil {
 			return fmt.Errorf("failed to write temporary policy file: %w", err)
 		}
 		defer os.Remove(tempFile)
-		
+
 		// Verify the signature
 		if err := dp.Verifier.VerifySignature(tempFile, policy.PolicySignature); err != nil {
 			return fmt.Errorf("policy signature verification failed: %w", err)
@@ -181,6 +242,7 @@ func (dp *DowngradeProtection) LoadPolicy() error {
 
 	dp.Policy = &policy
 	return nil
+}
 
 // SavePolicy saves the security policy to disk
 func (dp *DowngradeProtection) SavePolicy() error {
@@ -205,6 +267,7 @@ func (dp *DowngradeProtection) SavePolicy() error {
 	}
 
 	return nil
+}
 
 // SignPolicy signs the security policy
 func (dp *DowngradeProtection) SignPolicy(privateKeyID string) error {
@@ -232,37 +295,38 @@ func (dp *DowngradeProtection) SignPolicy(privateKeyID string) error {
 	// Create a temporary copy of the policy without the signature
 	tempPolicy := *dp.Policy
 	tempPolicy.PolicySignature = ""
-	
+
 	// Marshal the policy without the signature
 	tempPolicyData, err := json.MarshalIndent(tempPolicy, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal policy for signing: %w", err)
 	}
-	
+
 	// Create a temporary file for signing
 	tempFile := dp.PolicyPath + ".temp"
 	if err := ioutil.WriteFile(tempFile, tempPolicyData, 0600); err != nil {
 		return fmt.Errorf("failed to write temporary policy file: %w", err)
 	}
 	defer os.Remove(tempFile)
-	
+
 	// Generate the signature
 	signature, err := generator.GenerateSignature(tempFile)
 	if err != nil {
 		return fmt.Errorf("failed to generate policy signature: %w", err)
 	}
-	
+
 	// Update the policy signature
 	dp.Policy.PolicySignature = signature
-	
+
 	// Save the policy
 	return dp.SavePolicy()
+}
 
 // ValidateConnectionSecurity validates that the connection security options meet the policy requirements
 func (dp *DowngradeProtection) ValidateConnectionSecurity(options *ConnectionSecurityOptions) error {
 	// Check TLS version
 	if options.MinTLSVersion < dp.Policy.MinimumTLSVersion {
-		return fmt.Errorf("TLS version %x is below the minimum required version %x", 
+		return fmt.Errorf("TLS version %x is below the minimum required version %x",
 			options.MinTLSVersion, dp.Policy.MinimumTLSVersion)
 	}
 
@@ -297,6 +361,7 @@ func (dp *DowngradeProtection) ValidateConnectionSecurity(options *ConnectionSec
 	}
 
 	return nil
+}
 
 // ValidateSignatureAlgorithm validates that a signature algorithm meets the policy requirements
 func (dp *DowngradeProtection) ValidateSignatureAlgorithm(algorithm SignatureAlgorithm) error {
@@ -312,6 +377,7 @@ func (dp *DowngradeProtection) ValidateSignatureAlgorithm(algorithm SignatureAlg
 		return fmt.Errorf("signature algorithm %s is not allowed by the security policy", algorithm)
 	}
 	return nil
+}
 
 // ValidateKeySize validates that a key size meets the policy requirements
 func (dp *DowngradeProtection) ValidateKeySize(algorithm string, keySize int) error {
@@ -323,11 +389,12 @@ func (dp *DowngradeProtection) ValidateKeySize(algorithm string, keySize int) er
 
 	// Check if the key size meets the minimum requirement
 	if keySize < minSize {
-		return fmt.Errorf("key size %d is below the minimum required size %d for algorithm %s", 
+		return fmt.Errorf("key size %d is below the minimum required size %d for algorithm %s",
 			keySize, minSize, algorithm)
 	}
 
 	return nil
+}
 
 // ValidateVersion validates that a version meets the minimum version requirement
 func (dp *DowngradeProtection) ValidateVersion(componentType, versionStr string) error {
@@ -350,11 +417,12 @@ func (dp *DowngradeProtection) ValidateVersion(componentType, versionStr string)
 
 	// Compare the versions
 	if ver.LessThan(&minVer) {
-		return fmt.Errorf("version %s is below the minimum required version %s for component type %s", 
+		return fmt.Errorf("version %s is below the minimum required version %s for component type %s",
 			versionStr, minVersionStr, componentType)
 	}
 
 	return nil
+}
 
 // ValidateUpdatePackage validates that an update package meets the security policy requirements
 func (dp *DowngradeProtection) ValidateUpdatePackage(pkg *UpdatePackage) error {
@@ -385,6 +453,7 @@ func (dp *DowngradeProtection) ValidateUpdatePackage(pkg *UpdatePackage) error {
 	}
 
 	return nil
+}
 
 // EnforceSecurityPolicy applies the security policy to a connection security options object
 func (dp *DowngradeProtection) EnforceSecurityPolicy(options *ConnectionSecurityOptions) {
@@ -423,6 +492,7 @@ func (dp *DowngradeProtection) EnforceSecurityPolicy(options *ConnectionSecurity
 	if dp.Policy.RequireRevocationCheck {
 		options.CheckRevocation = true
 	}
+}
 
 // UpdateMinimumVersion updates the minimum version requirement for a component type
 func (dp *DowngradeProtection) UpdateMinimumVersion(componentType, versionStr string) error {
@@ -437,6 +507,7 @@ func (dp *DowngradeProtection) UpdateMinimumVersion(componentType, versionStr st
 
 	// Save the policy
 	return dp.SavePolicy()
+}
 
 // UpdateAllowedSignatureAlgorithms updates the allowed signature algorithms
 func (dp *DowngradeProtection) UpdateAllowedSignatureAlgorithms(algorithms []SignatureAlgorithm) error {
@@ -455,6 +526,7 @@ func (dp *DowngradeProtection) UpdateAllowedSignatureAlgorithms(algorithms []Sig
 
 	// Save the policy
 	return dp.SavePolicy()
+}
 
 // UpdateMinimumKeySize updates the minimum key size for an algorithm
 func (dp *DowngradeProtection) UpdateMinimumKeySize(algorithm string, keySize int) error {
@@ -468,6 +540,7 @@ func (dp *DowngradeProtection) UpdateMinimumKeySize(algorithm string, keySize in
 
 	// Save the policy
 	return dp.SavePolicy()
+}
 
 // CreateSecureClient creates a secure HTTP client that complies with the security policy
 func (dp *DowngradeProtection) CreateSecureClient() (*SecureClient, error) {
@@ -478,3 +551,14 @@ func (dp *DowngradeProtection) CreateSecureClient() (*SecureClient, error) {
 	dp.EnforceSecurityPolicy(options)
 
 	// Create the secure client
+	return &SecureClient{
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					MinVersion:   options.MinTLSVersion,
+					CipherSuites: options.CipherSuites,
+				},
+			},
+		},
+	}, nil
+}

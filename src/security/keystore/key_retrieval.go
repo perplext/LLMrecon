@@ -1,487 +1,493 @@
-// Package keystore provides secure storage for cryptographic keys and sensitive materials.
 package keystore
 
 import (
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
+	"time"
 )
 
-// GetRSAPrivateKey gets an RSA private key by ID
-func (ks *FileKeyStore) GetRSAPrivateKey(id string) (*rsa.PrivateKey, error) {
-	// Get the key
-	key, err := ks.GetKey(id)
+// KeyFilter represents filters for key retrieval
+type KeyFilter struct {
+	Types         []KeyType         `json:"types,omitempty"`
+	Algorithms    []string          `json:"algorithms,omitempty"`
+	Metadata      map[string]string `json:"metadata,omitempty"`
+	CreatedAfter  *time.Time        `json:"created_after,omitempty"`
+	CreatedBefore *time.Time        `json:"created_before,omitempty"`
+	UpdatedAfter  *time.Time        `json:"updated_after,omitempty"`
+	UpdatedBefore *time.Time        `json:"updated_before,omitempty"`
+	Active        *bool             `json:"active,omitempty"`
+}
+
+// SortOptions represents sorting options for key retrieval
+type SortOptions struct {
+	Field     string `json:"field"`     // "id", "type", "algorithm", "created_at", "updated_at"
+	Direction string `json:"direction"` // "asc", "desc"
+}
+
+// PaginationOptions represents pagination options
+type PaginationOptions struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
+// KeyListResult represents the result of a key list operation
+type KeyListResult struct {
+	Keys    []*KeyEntry `json:"keys"`
+	Total   int         `json:"total"`
+	Limit   int         `json:"limit"`
+	Offset  int         `json:"offset"`
+	HasMore bool        `json:"has_more"`
+}
+
+// KeySearchOptions contains options for key searching
+type KeySearchOptions struct {
+	Query      string             `json:"query"`
+	Filter     *KeyFilter         `json:"filter,omitempty"`
+	Sort       *SortOptions       `json:"sort,omitempty"`
+	Pagination *PaginationOptions `json:"pagination,omitempty"`
+}
+
+// KeyRetriever handles key retrieval operations
+type KeyRetriever struct {
+	keystore *Keystore
+}
+
+// NewKeyRetriever creates a new key retriever
+func NewKeyRetriever(ks *Keystore) *KeyRetriever {
+	return &KeyRetriever{keystore: ks}
+}
+
+// GetKey retrieves a key by its ID
+func (kr *KeyRetriever) GetKey(keyID string) (*KeyEntry, error) {
+	if keyID == "" {
+		return nil, errors.New("key ID cannot be empty")
+	}
+
+	kr.keystore.mu.RLock()
+	defer kr.keystore.mu.RUnlock()
+
+	keyEntry, exists := kr.keystore.keys[keyID]
+	if !exists {
+		return nil, fmt.Errorf("key with ID %s not found", keyID)
+	}
+
+	// Return a copy to prevent modification
+	return kr.copyKeyEntry(keyEntry), nil
+}
+
+// GetKeys retrieves multiple keys by their IDs
+func (kr *KeyRetriever) GetKeys(keyIDs []string) (map[string]*KeyEntry, error) {
+	if len(keyIDs) == 0 {
+		return make(map[string]*KeyEntry), nil
+	}
+
+	kr.keystore.mu.RLock()
+	defer kr.keystore.mu.RUnlock()
+
+	result := make(map[string]*KeyEntry)
+	for _, keyID := range keyIDs {
+		if keyEntry, exists := kr.keystore.keys[keyID]; exists {
+			result[keyID] = kr.copyKeyEntry(keyEntry)
+		}
+	}
+
+	return result, nil
+}
+
+// ListKeys retrieves all keys with optional filtering, sorting, and pagination
+func (kr *KeyRetriever) ListKeys(options *KeySearchOptions) (*KeyListResult, error) {
+	kr.keystore.mu.RLock()
+	defer kr.keystore.mu.RUnlock()
+
+	// Start with all keys
+	var allKeys []*KeyEntry
+	for _, keyEntry := range kr.keystore.keys {
+		allKeys = append(allKeys, kr.copyKeyEntry(keyEntry))
+	}
+
+	// Apply filters
+	if options != nil && options.Filter != nil {
+		allKeys = kr.applyFilters(allKeys, options.Filter)
+	}
+
+	// Apply search query
+	if options != nil && options.Query != "" {
+		allKeys = kr.applySearch(allKeys, options.Query)
+	}
+
+	// Sort results
+	if options != nil && options.Sort != nil {
+		kr.sortKeys(allKeys, options.Sort)
+	}
+
+	total := len(allKeys)
+
+	// Apply pagination
+	var keys []*KeyEntry
+	var hasMore bool
+	if options != nil && options.Pagination != nil {
+		keys, hasMore = kr.applyPagination(allKeys, options.Pagination)
+	} else {
+		keys = allKeys
+		hasMore = false
+	}
+
+	limit := 0
+	offset := 0
+	if options != nil && options.Pagination != nil {
+		limit = options.Pagination.Limit
+		offset = options.Pagination.Offset
+	}
+
+	return &KeyListResult{
+		Keys:    keys,
+		Total:   total,
+		Limit:   limit,
+		Offset:  offset,
+		HasMore: hasMore,
+	}, nil
+}
+
+// FindKeysByType retrieves keys by their type
+func (kr *KeyRetriever) FindKeysByType(keyType KeyType) ([]*KeyEntry, error) {
+	filter := &KeyFilter{
+		Types: []KeyType{keyType},
+	}
+
+	options := &KeySearchOptions{
+		Filter: filter,
+	}
+
+	result, err := kr.ListKeys(options)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get key: %w", err)
+		return nil, err
 	}
 
-	// Check key type
-	if key.Metadata.Type != RSAKey {
-		return nil, fmt.Errorf("key is not an RSA key, it is %s", key.Metadata.Type)
+	return result.Keys, nil
+}
+
+// FindKeysByAlgorithm retrieves keys by their algorithm
+func (kr *KeyRetriever) FindKeysByAlgorithm(algorithm string) ([]*KeyEntry, error) {
+	if algorithm == "" {
+		return nil, errors.New("algorithm cannot be empty")
 	}
 
-	// Check if private key is available
-	if !key.Metadata.HasPrivateKey {
-		return nil, errors.New("private key is not available")
+	filter := &KeyFilter{
+		Algorithms: []string{algorithm},
 	}
 
-	// Log the key access
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("access", key.Metadata.ID, "Retrieved RSA private key")
+	options := &KeySearchOptions{
+		Filter: filter,
 	}
 
-	// Handle HSM-protected keys
-	if key.Metadata.ProtectionLevel == HSMProtection && ks.hsmManager != nil {
-		return ks.hsmManager.GetRSAPrivateKey(id)
-	}
-
-	// Parse the private key
-	switch key.Material.Format {
-	case "PEM":
-		// Decode PEM
-		block, _ := pem.Decode(key.Material.Private)
-		if block == nil {
-			return nil, errors.New("failed to decode PEM block")
-		}
-
-		// Parse private key
-		if block.Type == "RSA PRIVATE KEY" {
-			// PKCS#1 format
-			return x509.ParsePKCS1PrivateKey(block.Bytes)
-		} else if block.Type == "PRIVATE KEY" {
-			// PKCS#8 format
-			pkcs8Key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse PKCS#8 private key: %w", err)
-			}
-			rsaKey, ok := pkcs8Key.(*rsa.PrivateKey)
-			if !ok {
-				return nil, errors.New("key is not an RSA private key")
-			}
-			return rsaKey, nil
-		}
-		return nil, fmt.Errorf("unsupported PEM block type: %s", block.Type)
-
-	case "DER":
-		// Try PKCS#1 format first
-		privateKey, err := x509.ParsePKCS1PrivateKey(key.Material.Private)
-		if err == nil {
-			return privateKey, nil
-		}
-
-		// Try PKCS#8 format
-		pkcs8Key, err := x509.ParsePKCS8PrivateKey(key.Material.Private)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse private key: %w", err)
-		}
-		rsaKey, ok := pkcs8Key.(*rsa.PrivateKey)
-		if !ok {
-			return nil, errors.New("key is not an RSA private key")
-		}
-		return rsaKey, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
-	}
-
-// GetRSAPublicKey gets an RSA public key by ID
-func (ks *FileKeyStore) GetRSAPublicKey(id string) (*rsa.PublicKey, error) {
-	// Get the key
-	key, err := ks.GetKey(id)
+	result, err := kr.ListKeys(options)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get key: %w", err)
+		return nil, err
 	}
 
-	// Check key type
-	if key.Metadata.Type != RSAKey {
-		return nil, fmt.Errorf("key is not an RSA key, it is %s", key.Metadata.Type)
+	return result.Keys, nil
+}
+
+// FindKeysByMetadata retrieves keys that match the specified metadata
+func (kr *KeyRetriever) FindKeysByMetadata(metadata map[string]string) ([]*KeyEntry, error) {
+	if len(metadata) == 0 {
+		return nil, errors.New("metadata cannot be empty")
 	}
 
-	// Check if public key is available
-	if !key.Metadata.HasPublicKey {
-		return nil, errors.New("public key is not available")
+	filter := &KeyFilter{
+		Metadata: metadata,
 	}
 
-	// Log the key access
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("access", key.Metadata.ID, "Retrieved RSA public key")
+	options := &KeySearchOptions{
+		Filter: filter,
 	}
 
-	// Handle HSM-protected keys
-	if key.Metadata.ProtectionLevel == HSMProtection && ks.hsmManager != nil {
-		return ks.hsmManager.GetRSAPublicKey(id)
-	}
-
-	// Parse the public key
-	switch key.Material.Format {
-	case "PEM":
-		// Decode PEM
-		block, _ := pem.Decode(key.Material.Public)
-		if block == nil {
-			return nil, errors.New("failed to decode PEM block")
-		}
-
-		// Parse public key
-		if block.Type == "RSA PUBLIC KEY" {
-			// PKCS#1 format
-			return x509.ParsePKCS1PublicKey(block.Bytes)
-		} else if block.Type == "PUBLIC KEY" {
-			// PKIX format
-			pubKey, err := x509.ParsePKIXPublicKey(block.Bytes)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse PKIX public key: %w", err)
-			}
-			rsaKey, ok := pubKey.(*rsa.PublicKey)
-			if !ok {
-				return nil, errors.New("key is not an RSA public key")
-			}
-			return rsaKey, nil
-		}
-		return nil, fmt.Errorf("unsupported PEM block type: %s", block.Type)
-
-	case "DER":
-		// Try PKCS#1 format first
-		publicKey, err := x509.ParsePKCS1PublicKey(key.Material.Public)
-		if err == nil {
-			return publicKey, nil
-		}
-
-		// Try PKIX format
-		pubKey, err := x509.ParsePKIXPublicKey(key.Material.Public)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse public key: %w", err)
-		}
-		rsaKey, ok := pubKey.(*rsa.PublicKey)
-		if !ok {
-			return nil, errors.New("key is not an RSA public key")
-		}
-		return rsaKey, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
-	}
-
-// GetECDSAPrivateKey gets an ECDSA private key by ID
-func (ks *FileKeyStore) GetECDSAPrivateKey(id string) (*ecdsa.PrivateKey, error) {
-	// Get the key
-	key, err := ks.GetKey(id)
+	result, err := kr.ListKeys(options)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get key: %w", err)
+		return nil, err
 	}
 
-	// Check key type
-	if key.Metadata.Type != ECDSAKey {
-		return nil, fmt.Errorf("key is not an ECDSA key, it is %s", key.Metadata.Type)
+	return result.Keys, nil
+}
+
+// FindKeysCreatedAfter retrieves keys created after the specified time
+func (kr *KeyRetriever) FindKeysCreatedAfter(after time.Time) ([]*KeyEntry, error) {
+	filter := &KeyFilter{
+		CreatedAfter: &after,
 	}
 
-	// Check if private key is available
-	if !key.Metadata.HasPrivateKey {
-		return nil, errors.New("private key is not available")
+	options := &KeySearchOptions{
+		Filter: filter,
 	}
 
-	// Log the key access
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("access", key.Metadata.ID, "Retrieved ECDSA private key")
-	}
-
-	// Handle HSM-protected keys
-	if key.Metadata.ProtectionLevel == HSMProtection && ks.hsmManager != nil {
-		return ks.hsmManager.GetECDSAPrivateKey(id)
-	}
-
-	// Parse the private key
-	switch key.Material.Format {
-	case "PEM":
-		// Decode PEM
-		block, _ := pem.Decode(key.Material.Private)
-		if block == nil {
-			return nil, errors.New("failed to decode PEM block")
-		}
-
-		// Parse private key
-		if block.Type == "EC PRIVATE KEY" {
-			// SEC1 format
-			return x509.ParseECPrivateKey(block.Bytes)
-		} else if block.Type == "PRIVATE KEY" {
-			// PKCS#8 format
-			pkcs8Key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse PKCS#8 private key: %w", err)
-			}
-			ecdsaKey, ok := pkcs8Key.(*ecdsa.PrivateKey)
-			if !ok {
-				return nil, errors.New("key is not an ECDSA private key")
-			}
-			return ecdsaKey, nil
-		}
-		return nil, fmt.Errorf("unsupported PEM block type: %s", block.Type)
-
-	case "DER":
-		// Try SEC1 format first
-		privateKey, err := x509.ParseECPrivateKey(key.Material.Private)
-		if err == nil {
-			return privateKey, nil
-		}
-
-		// Try PKCS#8 format
-		pkcs8Key, err := x509.ParsePKCS8PrivateKey(key.Material.Private)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse private key: %w", err)
-		}
-		ecdsaKey, ok := pkcs8Key.(*ecdsa.PrivateKey)
-		if !ok {
-			return nil, errors.New("key is not an ECDSA private key")
-		}
-		return ecdsaKey, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
-	}
-
-// GetECDSAPublicKey gets an ECDSA public key by ID
-func (ks *FileKeyStore) GetECDSAPublicKey(id string) (*ecdsa.PublicKey, error) {
-	// Get the key
-	key, err := ks.GetKey(id)
+	result, err := kr.ListKeys(options)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get key: %w", err)
+		return nil, err
 	}
 
-	// Check key type
-	if key.Metadata.Type != ECDSAKey {
-		return nil, fmt.Errorf("key is not an ECDSA key, it is %s", key.Metadata.Type)
+	return result.Keys, nil
+}
+
+// SearchKeys performs a text search across key IDs and metadata
+func (kr *KeyRetriever) SearchKeys(query string) ([]*KeyEntry, error) {
+	if query == "" {
+		return nil, errors.New("search query cannot be empty")
 	}
 
-	// Check if public key is available
-	if !key.Metadata.HasPublicKey {
-		return nil, errors.New("public key is not available")
+	options := &KeySearchOptions{
+		Query: query,
 	}
 
-	// Log the key access
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("access", key.Metadata.ID, "Retrieved ECDSA public key")
-	}
-
-	// Handle HSM-protected keys
-	if key.Metadata.ProtectionLevel == HSMProtection && ks.hsmManager != nil {
-		return ks.hsmManager.GetECDSAPublicKey(id)
-	}
-
-	// Parse the public key
-	switch key.Material.Format {
-	case "PEM":
-		// Decode PEM
-		block, _ := pem.Decode(key.Material.Public)
-		if block == nil {
-			return nil, errors.New("failed to decode PEM block")
-		}
-
-		// Parse public key
-		if block.Type == "EC PUBLIC KEY" || block.Type == "PUBLIC KEY" {
-			// PKIX format
-			pubKey, err := x509.ParsePKIXPublicKey(block.Bytes)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse PKIX public key: %w", err)
-			}
-			ecdsaKey, ok := pubKey.(*ecdsa.PublicKey)
-			if !ok {
-				return nil, errors.New("key is not an ECDSA public key")
-			}
-			return ecdsaKey, nil
-		}
-		return nil, fmt.Errorf("unsupported PEM block type: %s", block.Type)
-
-	case "DER":
-		// Try PKIX format
-		pubKey, err := x509.ParsePKIXPublicKey(key.Material.Public)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse public key: %w", err)
-		}
-		ecdsaKey, ok := pubKey.(*ecdsa.PublicKey)
-		if !ok {
-			return nil, errors.New("key is not an ECDSA public key")
-		}
-		return ecdsaKey, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
-	}
-
-// GetEd25519PrivateKey gets an Ed25519 private key by ID
-func (ks *FileKeyStore) GetEd25519PrivateKey(id string) (ed25519.PrivateKey, error) {
-	// Get the key
-	key, err := ks.GetKey(id)
+	result, err := kr.ListKeys(options)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get key: %w", err)
+		return nil, err
 	}
 
-	// Check key type
-	if key.Metadata.Type != Ed25519Key {
-		return nil, fmt.Errorf("key is not an Ed25519 key, it is %s", key.Metadata.Type)
+	return result.Keys, nil
+}
+
+// GetKeyCount returns the total number of keys in the keystore
+func (kr *KeyRetriever) GetKeyCount() int {
+	kr.keystore.mu.RLock()
+	defer kr.keystore.mu.RUnlock()
+
+	return len(kr.keystore.keys)
+}
+
+// GetKeyStatistics returns statistics about the keys in the keystore
+func (kr *KeyRetriever) GetKeyStatistics() map[string]interface{} {
+	kr.keystore.mu.RLock()
+	defer kr.keystore.mu.RUnlock()
+
+	stats := make(map[string]interface{})
+	typeCount := make(map[string]int)
+	algorithmCount := make(map[string]int)
+
+	for _, keyEntry := range kr.keystore.keys {
+		typeCount[string(keyEntry.Type)]++
+		algorithmCount[keyEntry.Algorithm]++
 	}
 
-	// Check if private key is available
-	if !key.Metadata.HasPrivateKey {
-		return nil, errors.New("private key is not available")
+	stats["total_keys"] = len(kr.keystore.keys)
+	stats["types"] = typeCount
+	stats["algorithms"] = algorithmCount
+
+	return stats
+}
+
+// copyKeyEntry creates a deep copy of a key entry
+func (kr *KeyRetriever) copyKeyEntry(original *KeyEntry) *KeyEntry {
+	copy := &KeyEntry{
+		ID:        original.ID,
+		Type:      original.Type,
+		Algorithm: original.Algorithm,
+		Key:       original.Key,
+		CreatedAt: original.CreatedAt,
+		UpdatedAt: original.UpdatedAt,
 	}
 
-	// Log the key access
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("access", key.Metadata.ID, "Retrieved Ed25519 private key")
-	}
-
-	// Handle HSM-protected keys
-	if key.Metadata.ProtectionLevel == HSMProtection && ks.hsmManager != nil {
-		return ks.hsmManager.GetEd25519PrivateKey(id)
-	}
-
-	// Parse the private key
-	switch key.Material.Format {
-	case "PEM":
-		// Decode PEM
-		block, _ := pem.Decode(key.Material.Private)
-		if block == nil {
-			return nil, errors.New("failed to decode PEM block")
+	// Copy metadata
+	if original.Metadata != nil {
+		copy.Metadata = make(map[string]string)
+		for k, v := range original.Metadata {
+			copy.Metadata[k] = v
 		}
+	}
 
-		// Parse private key (Ed25519 keys are typically in PKCS#8 format)
-		if block.Type == "PRIVATE KEY" {
-			pkcs8Key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse PKCS#8 private key: %w", err)
+	return copy
+}
+
+// applyFilters applies the specified filters to the key list
+func (kr *KeyRetriever) applyFilters(keys []*KeyEntry, filter *KeyFilter) []*KeyEntry {
+	var filtered []*KeyEntry
+
+	for _, key := range keys {
+		if kr.matchesFilter(key, filter) {
+			filtered = append(filtered, key)
+		}
+	}
+
+	return filtered
+}
+
+// matchesFilter checks if a key matches the specified filter
+func (kr *KeyRetriever) matchesFilter(key *KeyEntry, filter *KeyFilter) bool {
+	// Check type filter
+	if len(filter.Types) > 0 {
+		typeMatches := false
+		for _, filterType := range filter.Types {
+			if key.Type == filterType {
+				typeMatches = true
+				break
 			}
-			ed25519Key, ok := pkcs8Key.(ed25519.PrivateKey)
-			if !ok {
-				return nil, errors.New("key is not an Ed25519 private key")
+		}
+		if !typeMatches {
+			return false
+		}
+	}
+
+	// Check algorithm filter
+	if len(filter.Algorithms) > 0 {
+		algorithmMatches := false
+		for _, filterAlgorithm := range filter.Algorithms {
+			if key.Algorithm == filterAlgorithm {
+				algorithmMatches = true
+				break
 			}
-			return ed25519Key, nil
 		}
-		return nil, fmt.Errorf("unsupported PEM block type: %s", block.Type)
-
-	case "DER":
-		// Try PKCS#8 format
-		pkcs8Key, err := x509.ParsePKCS8PrivateKey(key.Material.Private)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse private key: %w", err)
+		if !algorithmMatches {
+			return false
 		}
-		ed25519Key, ok := pkcs8Key.(ed25519.PrivateKey)
-		if !ok {
-			return nil, errors.New("key is not an Ed25519 private key")
-		}
-		return ed25519Key, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
 	}
 
-// GetEd25519PublicKey gets an Ed25519 public key by ID
-func (ks *FileKeyStore) GetEd25519PublicKey(id string) (ed25519.PublicKey, error) {
-	// Get the key
-	key, err := ks.GetKey(id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get key: %w", err)
-	}
-
-	// Check key type
-	if key.Metadata.Type != Ed25519Key {
-		return nil, fmt.Errorf("key is not an Ed25519 key, it is %s", key.Metadata.Type)
-	}
-
-	// Check if public key is available
-	if !key.Metadata.HasPublicKey {
-		return nil, errors.New("public key is not available")
-	}
-
-	// Log the key access
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("access", key.Metadata.ID, "Retrieved Ed25519 public key")
-	}
-
-	// Handle HSM-protected keys
-	if key.Metadata.ProtectionLevel == HSMProtection && ks.hsmManager != nil {
-		return ks.hsmManager.GetEd25519PublicKey(id)
-	}
-
-	// Parse the public key
-	switch key.Material.Format {
-	case "PEM":
-		// Decode PEM
-		block, _ := pem.Decode(key.Material.Public)
-		if block == nil {
-			return nil, errors.New("failed to decode PEM block")
-		}
-
-		// Parse public key
-		if block.Type == "PUBLIC KEY" {
-			// PKIX format
-			pubKey, err := x509.ParsePKIXPublicKey(block.Bytes)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse PKIX public key: %w", err)
+	// Check metadata filter
+	if len(filter.Metadata) > 0 {
+		for filterKey, filterValue := range filter.Metadata {
+			if value, exists := key.Metadata[filterKey]; !exists || value != filterValue {
+				return false
 			}
-			ed25519Key, ok := pubKey.(ed25519.PublicKey)
-			if !ok {
-				return nil, errors.New("key is not an Ed25519 public key")
-			}
-			return ed25519Key, nil
 		}
-		return nil, fmt.Errorf("unsupported PEM block type: %s", block.Type)
-
-	case "DER":
-		// Try PKIX format
-		pubKey, err := x509.ParsePKIXPublicKey(key.Material.Public)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse public key: %w", err)
-		}
-		ed25519Key, ok := pubKey.(ed25519.PublicKey)
-		if !ok {
-			return nil, errors.New("key is not an Ed25519 public key")
-		}
-		return ed25519Key, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported key format: %s", key.Material.Format)
 	}
 
-// GetCertificate gets a certificate by ID
-func (ks *FileKeyStore) GetCertificate(id string) (*x509.Certificate, error) {
-	// Get the key
-	key, err := ks.GetKey(id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get key: %w", err)
+	// Check created after filter
+	if filter.CreatedAfter != nil && key.CreatedAt.Before(*filter.CreatedAfter) {
+		return false
 	}
 
-	// Check if certificate is available
-	if len(key.Material.Certificate) == 0 {
-		return nil, errors.New("certificate is not available")
+	// Check created before filter
+	if filter.CreatedBefore != nil && key.CreatedAt.After(*filter.CreatedBefore) {
+		return false
 	}
 
-	// Log the certificate access
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("access", key.Metadata.ID, "Retrieved certificate")
+	// Check updated after filter
+	if filter.UpdatedAfter != nil && key.UpdatedAt.Before(*filter.UpdatedAfter) {
+		return false
 	}
 
-	// Parse the certificate
-	switch key.Material.Format {
-	case "PEM":
-		// Decode PEM
-		block, _ := pem.Decode(key.Material.Certificate)
-		if block == nil {
-			return nil, errors.New("failed to decode PEM block")
+	// Check updated before filter
+	if filter.UpdatedBefore != nil && key.UpdatedAt.After(*filter.UpdatedBefore) {
+		return false
+	}
+
+	return true
+}
+
+// applySearch applies text search to the key list
+func (kr *KeyRetriever) applySearch(keys []*KeyEntry, query string) []*KeyEntry {
+	var results []*KeyEntry
+	lowerQuery := strings.ToLower(query)
+
+	for _, key := range keys {
+		if kr.matchesQuery(key, lowerQuery) {
+			results = append(results, key)
+		}
+	}
+
+	return results
+}
+
+// matchesQuery checks if a key matches the search query
+func (kr *KeyRetriever) matchesQuery(key *KeyEntry, query string) bool {
+	// Search in key ID
+	if strings.Contains(strings.ToLower(key.ID), query) {
+		return true
+	}
+
+	// Search in algorithm
+	if strings.Contains(strings.ToLower(key.Algorithm), query) {
+		return true
+	}
+
+	// Search in metadata values
+	for _, value := range key.Metadata {
+		if strings.Contains(strings.ToLower(value), query) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// sortKeys sorts the key list based on the specified sort options
+func (kr *KeyRetriever) sortKeys(keys []*KeyEntry, sortOpts *SortOptions) {
+	if sortOpts == nil {
+		return
+	}
+
+	sort.Slice(keys, func(i, j int) bool {
+		var result bool
+
+		switch sortOpts.Field {
+		case "id":
+			result = keys[i].ID < keys[j].ID
+		case "type":
+			result = string(keys[i].Type) < string(keys[j].Type)
+		case "algorithm":
+			result = keys[i].Algorithm < keys[j].Algorithm
+		case "created_at":
+			result = keys[i].CreatedAt.Before(keys[j].CreatedAt)
+		case "updated_at":
+			result = keys[i].UpdatedAt.Before(keys[j].UpdatedAt)
+		default:
+			// Default sort by ID
+			result = keys[i].ID < keys[j].ID
 		}
 
-		// Parse certificate
-		if block.Type == "CERTIFICATE" {
-			return x509.ParseCertificate(block.Bytes)
+		if sortOpts.Direction == "desc" {
+			result = !result
 		}
-		return nil, fmt.Errorf("unsupported PEM block type: %s", block.Type)
 
-	case "DER":
-		// Parse DER-encoded certificate
-		return x509.ParseCertificate(key.Material.Certificate)
+		return result
+	})
+}
 
-	default:
-		return nil, fmt.Errorf("unsupported certificate format: %s", key.Material.Format)
+// applyPagination applies pagination to the key list
+func (kr *KeyRetriever) applyPagination(keys []*KeyEntry, pagination *PaginationOptions) ([]*KeyEntry, bool) {
+	if pagination == nil || pagination.Limit <= 0 {
+		return keys, false
 	}
+
+	total := len(keys)
+	start := pagination.Offset
+
+	if start >= total {
+		return []*KeyEntry{}, false
+	}
+
+	end := start + pagination.Limit
+	if end > total {
+		end = total
+	}
+
+	hasMore := end < total
+	return keys[start:end], hasMore
+}
+
+// KeyExists checks if a key with the specified ID exists
+func (kr *KeyRetriever) KeyExists(keyID string) bool {
+	if keyID == "" {
+		return false
+	}
+
+	kr.keystore.mu.RLock()
+	defer kr.keystore.mu.RUnlock()
+
+	_, exists := kr.keystore.keys[keyID]
+	return exists
+}
+
+// GetKeyIDs returns all key IDs in the keystore
+func (kr *KeyRetriever) GetKeyIDs() []string {
+	kr.keystore.mu.RLock()
+	defer kr.keystore.mu.RUnlock()
+
+	var ids []string
+	for id := range kr.keystore.keys {
+		ids = append(ids, id)
+	}
+
+	sort.Strings(ids)
+	return ids
+}

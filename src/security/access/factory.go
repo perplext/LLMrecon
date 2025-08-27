@@ -31,7 +31,6 @@ type Config struct {
 	// Database configuration
 	DBDriver string
 	DBDSN    string
-}
 
 	// In-memory mode
 	InMemory bool
@@ -56,6 +55,7 @@ type Config struct {
 	// MFA configuration
 	MFAEnabled bool
 	MFAMethods []string
+}
 
 // NewFactory creates a new factory
 func NewFactory(config *Config) *FactoryImpl {
@@ -63,20 +63,24 @@ func NewFactory(config *Config) *FactoryImpl {
 		config:         config,
 		adapterFactory: impl.NewFactory(),
 	}
+}
 
 // NewAccessControlFactory creates a new access control factory (alias for NewFactory)
 func NewAccessControlFactory(config *Config) *FactoryImpl {
 	return NewFactory(config)
+}
 
 // CreateInMemoryAccessControlSystem creates an in-memory access control system
 func (f *FactoryImpl) CreateInMemoryAccessControlSystem() (*AccessControlSystem, error) {
 	return f.CreateAccessControlSystem()
+}
 
 // CreateDatabaseAccessControlSystem creates a database-backed access control system
 func (f *FactoryImpl) CreateDatabaseAccessControlSystem(dbDriver, dbDSN string) (*AccessControlSystem, error) {
 	// For now, just return the in-memory version
 	// In a real implementation, this would use database stores
 	return f.CreateAccessControlSystem()
+}
 
 // CreateAccessControlSystem creates a new access control system
 func (f *FactoryImpl) CreateAccessControlSystem() (*AccessControlSystem, error) {
@@ -97,6 +101,7 @@ func (f *FactoryImpl) CreateAccessControlSystem() (*AccessControlSystem, error) 
 	}
 
 	return f.accessControlSystem, nil
+}
 
 // CreateSecurityManager creates a new security manager
 func (f *FactoryImpl) CreateSecurityManager() (*BasicSecurityManager, error) {
@@ -116,6 +121,7 @@ func (f *FactoryImpl) CreateSecurityManager() (*BasicSecurityManager, error) {
 	// BasicSecurityManager doesn't have Initialize method
 
 	return f.securityManager, nil
+}
 
 // CreateUserManager creates a new user manager
 func (f *FactoryImpl) CreateUserManager() (UserManager, error) {
@@ -129,6 +135,7 @@ func (f *FactoryImpl) CreateUserManager() (UserManager, error) {
 	// For now, return a placeholder implementation
 	// In a real implementation, we would create a user manager that uses a user store
 	return nil, errors.New("not implemented")
+}
 
 // CreateAuthManager creates a new auth manager
 func (f *FactoryImpl) CreateAuthManager() (AuthManager, error) {
@@ -138,6 +145,7 @@ func (f *FactoryImpl) CreateAuthManager() (AuthManager, error) {
 	// Return a zero-value AuthManager for now to satisfy the signature
 	// In a real implementation, we would properly initialize the AuthManager
 	return AuthManager{}, nil
+}
 
 // CreateRBACManager creates a new RBAC manager
 func (f *FactoryImpl) CreateRBACManager() (RBACManager, error) {
@@ -151,6 +159,7 @@ func (f *FactoryImpl) CreateRBACManager() (RBACManager, error) {
 	// For now, return a placeholder implementation
 	// In a real implementation, we would create an RBAC manager that uses a user store and role store
 	return nil, errors.New("not implemented")
+}
 
 // CreateAuditLogger creates a new audit logger
 func (f *FactoryImpl) CreateAuditLogger() (AuditLogger, error) {
@@ -164,6 +173,7 @@ func (f *FactoryImpl) CreateAuditLogger() (AuditLogger, error) {
 	// For now, return a placeholder implementation
 	// In a real implementation, we would create an audit logger that uses an audit store
 	return nil, errors.New("not implemented")
+}
 
 // createIncidentStore creates a new incident store
 func (f *FactoryImpl) createIncidentStore() (IncidentStore, error) {
@@ -173,6 +183,7 @@ func (f *FactoryImpl) createIncidentStore() (IncidentStore, error) {
 	// TODO: Fix interface mismatches between different SecurityIncident types
 	// For now, return an error to allow compilation
 	return nil, errors.New("incident store temporarily disabled due to interface mismatches")
+}
 
 // createVulnerabilityStore creates a new vulnerability store
 func (f *FactoryImpl) createVulnerabilityStore() (VulnerabilityStore, error) {
@@ -182,18 +193,22 @@ func (f *FactoryImpl) createVulnerabilityStore() (VulnerabilityStore, error) {
 	// TODO: Fix interface mismatches between different Vulnerability types
 	// For now, return an error to allow compilation
 	return nil, errors.New("vulnerability store temporarily disabled due to interface mismatches")
+}
 
 // CreateUserStoreAdapter creates a new user store adapter
 func (f *FactoryImpl) CreateUserStoreAdapter(legacyStore interface{}) interfaces.UserStore {
 	return f.adapterFactory.CreateUserStoreAdapter(legacyStore)
+}
 
 // CreateSessionStoreAdapter creates a new session store adapter
 func (f *FactoryImpl) CreateSessionStoreAdapter(legacyStore interface{}) interfaces.SessionStore {
 	return f.adapterFactory.CreateSessionStoreAdapter(legacyStore)
+}
 
 // CreateSecurityManagerAdapter creates a new security manager adapter
 func (f *FactoryImpl) CreateSecurityManagerAdapter(legacyManager interface{}) interfaces.SecurityManager {
 	return f.adapterFactory.CreateSecurityManagerAdapter(legacyManager)
+}
 
 // AccessControlSystemImpl implements the AccessControlSystem interface
 type AccessControlSystemImpl struct {
@@ -203,6 +218,7 @@ type AccessControlSystemImpl struct {
 	rbacManager     RBACManager
 	auditLogger     AuditLogger
 	initialized     bool
+}
 
 // Initialize initializes the access control system
 func (a *AccessControlSystemImpl) Initialize() error {
@@ -212,26 +228,32 @@ func (a *AccessControlSystemImpl) Initialize() error {
 
 	a.initialized = true
 	return nil
+}
 
 // GetSecurityManager returns the security manager
 func (a *AccessControlSystemImpl) GetSecurityManager() SecurityManager {
 	return a.securityManager
+}
 
 // GetUserManager returns the user manager
 func (a *AccessControlSystemImpl) GetUserManager() UserManager {
 	return a.userManager
+}
 
 // GetAuthManager returns the authentication manager
 func (a *AccessControlSystemImpl) GetAuthManager() AuthManager {
 	return a.authManager
+}
 
 // GetRBACManager returns the RBAC manager
 func (a *AccessControlSystemImpl) GetRBACManager() RBACManager {
 	return a.rbacManager
+}
 
 // GetAuditLogger returns the audit logger
 func (a *AccessControlSystemImpl) GetAuditLogger() AuditLogger {
 	return a.auditLogger
+}
 
 // Close closes the access control system
 func (a *AccessControlSystemImpl) Close() error {
@@ -252,11 +274,13 @@ func (a *AccessControlSystemImpl) Close() error {
 	}
 
 	return nil
+}
 
 // InMemoryIncidentStoreModels is an in-memory implementation of the IncidentStore interface using models
 type InMemoryIncidentStoreModels struct {
 	mu        sync.RWMutex
 	incidents map[string]*models.SecurityIncident
+}
 
 // CreateIncident creates a new security incident
 func (s *InMemoryIncidentStoreModels) CreateIncident(ctx context.Context, incident *models.SecurityIncident) error {
@@ -265,6 +289,7 @@ func (s *InMemoryIncidentStoreModels) CreateIncident(ctx context.Context, incide
 
 	s.incidents[incident.ID] = incident
 	return nil
+}
 
 // GetIncidentByID retrieves a security incident by ID
 func (s *InMemoryIncidentStoreModels) GetIncidentByID(ctx context.Context, incidentID string) (*models.SecurityIncident, error) {
@@ -277,6 +302,7 @@ func (s *InMemoryIncidentStoreModels) GetIncidentByID(ctx context.Context, incid
 	}
 
 	return incident, nil
+}
 
 // UpdateIncident updates a security incident
 func (s *InMemoryIncidentStoreModels) UpdateIncident(ctx context.Context, incident *models.SecurityIncident) error {
@@ -290,6 +316,7 @@ func (s *InMemoryIncidentStoreModels) UpdateIncident(ctx context.Context, incide
 
 	s.incidents[incident.ID] = incident
 	return nil
+}
 
 // ListIncidents lists security incidents with optional filtering
 func (s *InMemoryIncidentStoreModels) ListIncidents(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.SecurityIncident, int, error) {
@@ -316,11 +343,13 @@ func (s *InMemoryIncidentStoreModels) ListIncidents(ctx context.Context, filter 
 	}
 
 	return incidents[offset:end], total, nil
+}
 
 // InMemoryVulnerabilityStoreModels is an in-memory implementation of the VulnerabilityStore interface using models
 type InMemoryVulnerabilityStoreModels struct {
 	mu              sync.RWMutex
 	vulnerabilities map[string]*models.Vulnerability
+}
 
 // CreateVulnerability creates a new security vulnerability
 func (s *InMemoryVulnerabilityStoreModels) CreateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
@@ -329,6 +358,7 @@ func (s *InMemoryVulnerabilityStoreModels) CreateVulnerability(ctx context.Conte
 
 	s.vulnerabilities[vulnerability.ID] = vulnerability
 	return nil
+}
 
 // GetVulnerabilityByID retrieves a security vulnerability by ID
 func (s *InMemoryVulnerabilityStoreModels) GetVulnerabilityByID(ctx context.Context, vulnerabilityID string) (*models.Vulnerability, error) {
@@ -341,6 +371,7 @@ func (s *InMemoryVulnerabilityStoreModels) GetVulnerabilityByID(ctx context.Cont
 	}
 
 	return vulnerability, nil
+}
 
 // UpdateVulnerability updates a security vulnerability
 func (s *InMemoryVulnerabilityStoreModels) UpdateVulnerability(ctx context.Context, vulnerability *models.Vulnerability) error {
@@ -354,6 +385,7 @@ func (s *InMemoryVulnerabilityStoreModels) UpdateVulnerability(ctx context.Conte
 
 	s.vulnerabilities[vulnerability.ID] = vulnerability
 	return nil
+}
 
 // ListVulnerabilities lists security vulnerabilities with optional filtering
 func (s *InMemoryVulnerabilityStoreModels) ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Vulnerability, int, error) {
@@ -379,31 +411,5 @@ func (s *InMemoryVulnerabilityStoreModels) ListVulnerabilities(ctx context.Conte
 		end = total
 	}
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return vulnerabilities[offset:end], total, nil
 }

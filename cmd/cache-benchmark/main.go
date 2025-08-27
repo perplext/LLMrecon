@@ -381,7 +381,7 @@ func generateRandomTemplates(count int) []*format.Template {
 	for i := 0; i < count; i++ {
 		template := &format.Template{
 			ID: fmt.Sprintf("template-%d", i),
-			Info: format.TemplateInfo{
+			Info: &format.TemplateInfo{
 				Name:        fmt.Sprintf("Test Template %d", i),
 				Description: "Generated test template",
 				Version:     "1.0.0",

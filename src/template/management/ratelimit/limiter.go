@@ -27,18 +27,19 @@ import (
 type TokenBucketLimiter struct {
 	// Global limiter controls the overall system throughput
 	globalLimiter *rate.Limiter
-	
+
 	// User-specific limiters control per-user throughput
 	userLimiters map[string]*rate.Limiter
-	
+
 	// Default rate limit for new users without a specific limit
 	defaultUserLimit rate.Limit
-	
+
 	// Default burst size for new users without a specific limit
 	defaultUserBurst int
-	
+
 	// Mutex for concurrent access to user limiters
 	mu sync.RWMutex
+}
 
 // NewTokenBucketLimiter creates a new token bucket rate limiter with the specified parameters.
 //
@@ -53,7 +54,7 @@ type TokenBucketLimiter struct {
 //
 // Example:
 //
-//     limiter := NewTokenBucketLimiter(100, 50, 10, 5)
+//	limiter := NewTokenBucketLimiter(100, 50, 10, 5)
 //
 // This creates a limiter with a global limit of 100 QPS with bursts up to 50,
 // and a default per-user limit of 10 QPS with bursts up to 5.
@@ -64,6 +65,7 @@ func NewTokenBucketLimiter(globalQPS float64, globalBurst int, defaultUserQPS fl
 		defaultUserLimit: rate.Limit(defaultUserQPS),
 		defaultUserBurst: defaultUserBurst,
 	}
+}
 
 // Acquire acquires a token from the global limiter.
 //
@@ -79,12 +81,12 @@ func NewTokenBucketLimiter(globalQPS float64, globalBurst int, defaultUserQPS fl
 //
 // Example:
 //
-//     ctx := context.Background()
-//     err := limiter.Acquire(ctx)
-//     if err != nil {
-//         // Handle rate limit exceeded error
-//         return err
-//     }
+//	ctx := context.Background()
+//	err := limiter.Acquire(ctx)
+//	if err != nil {
+//	    // Handle rate limit exceeded error
+//	    return err
+//	}
 //
 // For user-specific rate limiting, use AcquireForUser instead.
 func (l *TokenBucketLimiter) Acquire(ctx context.Context) error {
@@ -92,6 +94,7 @@ func (l *TokenBucketLimiter) Acquire(ctx context.Context) error {
 		return fmt.Errorf("global rate limit exceeded: %w", err)
 	}
 	return nil
+}
 
 // AcquireForUser acquires a token for a specific user, applying both global and user-specific limits.
 //
@@ -109,12 +112,12 @@ func (l *TokenBucketLimiter) Acquire(ctx context.Context) error {
 //
 // Example:
 //
-//     ctx := context.Background()
-//     err := limiter.AcquireForUser(ctx, "user123")
-//     if err != nil {
-//         // Handle rate limit exceeded error
-//         return err
-//     }
+//	ctx := context.Background()
+//	err := limiter.AcquireForUser(ctx, "user123")
+//	if err != nil {
+//	    // Handle rate limit exceeded error
+//	    return err
+//	}
 //
 // Note that this method in TokenBucketLimiter does not implement priority-based fairness.
 // For priority-based fairness, use AdaptiveLimiter instead.
@@ -123,105 +126,121 @@ func (l *TokenBucketLimiter) AcquireForUser(ctx context.Context, userID string) 
 	if err := l.Acquire(ctx); err != nil {
 		return err
 	}
-	
+
 	// Get user-specific limiter
 	limiter := l.getUserLimiter(userID)
-	
+
 	// Check user-specific limit
 	if err := limiter.Wait(ctx); err != nil {
 		return fmt.Errorf("user rate limit exceeded for %s: %w", userID, err)
 	}
-	
+
 	return nil
+}
 
 // Release releases a token (no-op for token bucket)
 func (l *TokenBucketLimiter) Release() {
 	// No-op for token bucket limiter
+}
 
 // ReleaseForUser releases a token for a specific user (no-op for token bucket)
 func (l *TokenBucketLimiter) ReleaseForUser(userID string) {
 	// No-op for token bucket limiter
+}
 
 // getUserLimiter gets or creates a rate limiter for a specific user
 func (l *TokenBucketLimiter) getUserLimiter(userID string) *rate.Limiter {
 	l.mu.RLock()
 	limiter, exists := l.userLimiters[userID]
 	l.mu.RUnlock()
-	
+
 	if exists {
 		return limiter
 	}
-	
+
 	// Create new limiter for this user
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	// Double-check to avoid race condition
 	if limiter, exists = l.userLimiters[userID]; exists {
 		return limiter
 	}
-	
+
 	limiter = rate.NewLimiter(l.defaultUserLimit, l.defaultUserBurst)
 	l.userLimiters[userID] = limiter
 	return limiter
+}
 
 // GetLimit returns the current global rate limit
 func (l *TokenBucketLimiter) GetLimit() int {
 	return l.globalLimiter.Burst()
+}
 
 // GetUserLimit returns the current rate limit for a specific user
 func (l *TokenBucketLimiter) GetUserLimit(userID string) int {
 	limiter := l.getUserLimiter(userID)
 	return limiter.Burst()
+}
 
 // SetLimit sets the global rate limit
 func (l *TokenBucketLimiter) SetLimit(limit int) {
 	l.globalLimiter.SetBurst(limit)
+}
 
 // SetUserLimit sets the rate limit for a specific user
 func (l *TokenBucketLimiter) SetUserLimit(userID string, limit int) {
 	limiter := l.getUserLimiter(userID)
 	limiter.SetBurst(limit)
+}
 
 // SetGlobalQPS sets the global queries per second limit
 func (l *TokenBucketLimiter) SetGlobalQPS(qps float64) {
 	l.globalLimiter.SetLimit(rate.Limit(qps))
+}
 
 // SetUserQPS sets the queries per second limit for a specific user
 func (l *TokenBucketLimiter) SetUserQPS(userID string, qps float64) {
 	limiter := l.getUserLimiter(userID)
 	limiter.SetLimit(rate.Limit(qps))
+}
 
 // GetGlobalQPS gets the global queries per second limit
 func (l *TokenBucketLimiter) GetGlobalQPS() float64 {
 	return float64(l.globalLimiter.Limit())
+}
 
 // GetUserQPS gets the queries per second limit for a specific user
 func (l *TokenBucketLimiter) GetUserQPS(userID string) float64 {
 	limiter := l.getUserLimiter(userID)
 	return float64(limiter.Limit())
+}
 
 // GetUserLimiters returns all user limiters
 func (l *TokenBucketLimiter) GetUserLimiters() map[string]float64 {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	
+
 	result := make(map[string]float64, len(l.userLimiters))
 	for userID, limiter := range l.userLimiters {
 		result[userID] = float64(limiter.Limit())
 	}
-	
+
 	return result
+}
 
 // ResetUserLimiter resets the rate limiter for a specific user
 func (l *TokenBucketLimiter) ResetUserLimiter(userID string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	delete(l.userLimiters, userID)
+}
 
 // ResetAllUserLimiters resets all user-specific rate limiters
 func (l *TokenBucketLimiter) ResetAllUserLimiters() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
+	l.userLimiters = make(map[string]*rate.Limiter)
+}

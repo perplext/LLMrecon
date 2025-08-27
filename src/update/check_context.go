@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
@@ -18,6 +19,7 @@ func NewVersionCheckerWithURL(updateServerURL string, currentVersions map[string
 		},
 		CurrentVersions: currentVersions,
 	}
+}
 
 // CheckForUpdatesContext checks for updates with context support
 func (vc *VersionChecker) CheckForUpdatesContext(ctx context.Context) ([]ExtendedUpdateInfo, error) {
@@ -44,9 +46,9 @@ func (vc *VersionChecker) CheckForUpdatesContext(ctx context.Context) ([]Extende
 					DownloadURL:     manifest.Core.DownloadURL,
 					ChecksumSHA256:  manifest.Core.ChecksumSHA256,
 					Signature:       manifest.Core.Signature,
-					Size:            0, // Not available in manifest
+					Size:            0,          // Not available in manifest
 					Dependencies:    []string{}, // Not available in manifest
-					BreakingChanges: false, // Not available in manifest
+					BreakingChanges: false,      // Not available in manifest
 				})
 			}
 		}
@@ -67,9 +69,9 @@ func (vc *VersionChecker) CheckForUpdatesContext(ctx context.Context) ([]Extende
 					DownloadURL:     manifest.Templates.DownloadURL,
 					ChecksumSHA256:  manifest.Templates.ChecksumSHA256,
 					Signature:       manifest.Templates.Signature,
-					Size:            0, // Not available in manifest
+					Size:            0,          // Not available in manifest
 					Dependencies:    []string{}, // Not available in manifest
-					BreakingChanges: false, // Not available in manifest
+					BreakingChanges: false,      // Not available in manifest
 				})
 			}
 		}
@@ -91,15 +93,16 @@ func (vc *VersionChecker) CheckForUpdatesContext(ctx context.Context) ([]Extende
 					DownloadURL:     module.DownloadURL,
 					ChecksumSHA256:  module.ChecksumSHA256,
 					Signature:       module.Signature,
-					Size:            0, // Not available in manifest
+					Size:            0,          // Not available in manifest
 					Dependencies:    []string{}, // Not available in manifest
-					BreakingChanges: false, // Not available in manifest
+					BreakingChanges: false,      // Not available in manifest
 				})
 			}
 		}
 	}
 
 	return updates, nil
+}
 
 // fetchEnhancedVersionManifest fetches the enhanced version manifest from the update server
 func (vc *VersionChecker) fetchEnhancedVersionManifest(ctx context.Context) (*EnhancedVersionManifest, error) {
@@ -112,8 +115,13 @@ func (vc *VersionChecker) fetchEnhancedVersionManifest(ctx context.Context) (*En
 	if err != nil {
 		return nil, fmt.Errorf("fetching manifest: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP error: %d", resp.StatusCode)
 	}
 
 	var manifest EnhancedVersionManifest
@@ -122,6 +130,7 @@ func (vc *VersionChecker) fetchEnhancedVersionManifest(ctx context.Context) (*En
 	}
 
 	return &manifest, nil
+}
 
 // EnhancedVersionManifest extends VersionManifest with additional fields
 type EnhancedVersionManifest struct {
@@ -187,7 +196,7 @@ type ExtendedUpdateInfo struct {
 // MergeExtendedUpdates merges and deduplicates extended update lists
 func MergeExtendedUpdates(updateLists ...[]ExtendedUpdateInfo) []ExtendedUpdateInfo {
 	seen := make(map[string]ExtendedUpdateInfo)
-	
+
 	for _, updates := range updateLists {
 		for _, update := range updates {
 			key := fmt.Sprintf("%s-%s", update.Component, update.LatestVersion.String())
@@ -196,11 +205,11 @@ func MergeExtendedUpdates(updateLists ...[]ExtendedUpdateInfo) []ExtendedUpdateI
 			}
 		}
 	}
-	
+
 	result := make([]ExtendedUpdateInfo, 0, len(seen))
 	for _, update := range seen {
 		result = append(result, update)
 	}
-	
-}
+
+	return result
 }

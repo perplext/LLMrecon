@@ -4,6 +4,7 @@ package management
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/repository"
 	"github.com/perplext/LLMrecon/src/template/format"
@@ -16,19 +17,25 @@ import (
 	"github.com/perplext/LLMrecon/src/template/management/reporting"
 )
 
+// TemplateResult is an alias for the interface type to maintain consistency
+type TemplateResult = interfaces.TemplateResult
+
 // CreateDefaultManager creates a default template manager with all components
 func CreateDefaultManager(ctx context.Context, options *DefaultManagerOptions) (*Manager, error) {
-	// Create schema validator
-	schemaValidator, err := DefaultSchemaValidator(options.JSONSchemaPath, options.YAMLSchemaPath)
+	// Create schema validator for parser
+	schemaValidatorForParser, err := DefaultSchemaValidatorForParser(options.JSONSchemaPath, options.YAMLSchemaPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create schema validator: %w", err)
 	}
 
 	// Create template parser
-	templateParser, err := parser.NewTemplateParser(schemaValidator)
+	templateParser, err := parser.NewTemplateParser(schemaValidatorForParser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create template parser: %w", err)
 	}
+
+	// Create adapter for interface compatibility
+	templateParserAdapter := parser.NewTemplateParserAdapter(templateParser)
 
 	// Create repository manager
 	repoManager := repository.NewManager()
@@ -66,10 +73,18 @@ func CreateDefaultManager(ctx context.Context, options *DefaultManagerOptions) (
 		templateExecutor.RegisterProvider(provider)
 	}
 
+	// Create adapter for interface compatibility
+	templateExecutorAdapter := execution.NewTemplateExecutorAdapter(templateExecutor)
+
 	// Create template reporter
 	templateReporter, err := reporting.NewTemplateReporter()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create template reporter: %w", err)
+	}
+
+	// Create reporter function from template reporter
+	reporterFunc := func(results []*interfaces.TemplateResult, format string) ([]byte, error) {
+		return templateReporter.GenerateReport(results, format)
 	}
 
 	// Create adapter for cache and registry
@@ -78,13 +93,13 @@ func CreateDefaultManager(ctx context.Context, options *DefaultManagerOptions) (
 
 	// Create manager options
 	managerOptions := &ManagerOptions{
-		Loaders:           []interfaces.TemplateLoader{templateLoader},
-		Parser:            templateParser,
-		Executor:          templateExecutor,
-		Reporter:          templateReporter,
-		Cache:             cacheAdapter,
-		Registry:          registryAdapter,
-		PreExecutionHooks: options.PreExecutionHooks,
+		Loaders:            []interfaces.TemplateLoader{templateLoader},
+		Parser:             templateParserAdapter,
+		Executor:           templateExecutorAdapter,
+		Reporter:           reporterFunc,
+		Cache:              cacheAdapter,
+		Registry:           registryAdapter,
+		PreExecutionHooks:  options.PreExecutionHooks,
 		PostExecutionHooks: options.PostExecutionHooks,
 	}
 
@@ -111,6 +126,7 @@ func CreateDefaultManager(ctx context.Context, options *DefaultManagerOptions) (
 	}
 
 	return manager, nil
+}
 
 // DefaultManagerOptions contains options for creating a default template manager
 type DefaultManagerOptions struct {
@@ -140,27 +156,29 @@ type DefaultManagerOptions struct {
 	PreExecutionHooks []TemplateHook
 	// PostExecutionHooks are functions to run after template execution
 	PostExecutionHooks []TemplateHook
+}
 
 // DefaultManagerOptionsWithDefaults creates default manager options with default values
 func DefaultManagerOptionsWithDefaults() *DefaultManagerOptions {
 	return &DefaultManagerOptions{
-		JSONSchemaPath:    "src/template/management/schemas/template.json",
-		YAMLSchemaPath:    "src/template/management/schemas/template.yaml",
-		TemplatePaths:     []string{"examples/templates"},
-		RepositoryConfig:  &repository.Config{},
-		CacheTTL:          1 * time.Hour,
-		CacheMaxSize:      100,
-		ExecutionTimeout:  30 * time.Second,
-		RetryCount:        3,
-		RetryDelay:        1 * time.Second,
-		MaxConcurrent:     10,
-		Providers:         []execution.LLMProvider{},
-		PreExecutionHooks: []TemplateHook{},
+		JSONSchemaPath:     "src/template/management/schemas/template.json",
+		YAMLSchemaPath:     "src/template/management/schemas/template.yaml",
+		TemplatePaths:      []string{"examples/templates"},
+		RepositoryConfig:   &repository.Config{},
+		CacheTTL:           1 * time.Hour,
+		CacheMaxSize:       100,
+		ExecutionTimeout:   30 * time.Second,
+		RetryCount:         3,
+		RetryDelay:         1 * time.Second,
+		MaxConcurrent:      10,
+		Providers:          []execution.LLMProvider{},
+		PreExecutionHooks:  []TemplateHook{},
 		PostExecutionHooks: []TemplateHook{},
 	}
+}
 
 // RunTemplate runs a template with the specified options
-func RunTemplate(ctx context.Context, manager *Manager, templateID string, options map[string]interface{}) (*TemplateResult, error) {
+func RunTemplate(ctx context.Context, manager *Manager, templateID string, options map[string]interface{}) (*interfaces.TemplateResult, error) {
 	// Execute template
 	result, err := manager.ExecuteTemplate(ctx, templateID, options)
 	if err != nil {
@@ -168,9 +186,10 @@ func RunTemplate(ctx context.Context, manager *Manager, templateID string, optio
 	}
 
 	return result, nil
+}
 
 // RunTemplates runs multiple templates with the specified options
-func RunTemplates(ctx context.Context, manager *Manager, templateIDs []string, options map[string]interface{}) ([]*TemplateResult, error) {
+func RunTemplates(ctx context.Context, manager *Manager, templateIDs []string, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
 	// Execute templates
 	results, err := manager.ExecuteTemplates(ctx, templateIDs, options)
 	if err != nil {
@@ -178,10 +197,10 @@ func RunTemplates(ctx context.Context, manager *Manager, templateIDs []string, o
 	}
 
 	return results, nil
-	
+}
 
 // GenerateTemplateReport generates a report for template execution results
-func GenerateTemplateReport(manager *Manager, results []*TemplateResult, format string) ([]byte, error) {
+func GenerateTemplateReport(manager *Manager, results []*interfaces.TemplateResult, format string) ([]byte, error) {
 	// Generate report
 	report, err := manager.GenerateReport(results, format)
 	if err != nil {
@@ -189,19 +208,24 @@ func GenerateTemplateReport(manager *Manager, results []*TemplateResult, format 
 	}
 
 	return report, nil
+}
 
 // ListAllTemplates lists all templates
 func ListAllTemplates(manager *Manager) []*format.Template {
 	return manager.ListTemplates()
+}
 
 // FindTemplatesByTag finds templates by tag
 func FindTemplatesByTag(manager *Manager, tag string) []*format.Template {
 	return manager.FindTemplatesByTag(tag)
+}
 
 // FindTemplatesByTags finds templates by multiple tags
 func FindTemplatesByTags(manager *Manager, tags []string) []*format.Template {
 	return manager.FindTemplatesByTags(tags)
+}
 
 // GetTemplateByID gets a template by ID
 func GetTemplateByID(manager *Manager, id string) (*format.Template, error) {
 	return manager.GetTemplate(id)
+}

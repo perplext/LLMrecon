@@ -4,6 +4,7 @@ package cache
 import (
 	"container/list"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 )
@@ -24,6 +25,7 @@ type OptimizedTemplateCache struct {
 	maxSize int
 	// stats tracks cache statistics
 	stats CacheStats
+}
 
 // OptimizedCacheEntry represents a cached template with additional metadata
 type OptimizedCacheEntry struct {
@@ -35,6 +37,7 @@ type OptimizedCacheEntry struct {
 	ExpiresAt time.Time
 	// Size is an estimate of the template's memory size
 	Size int
+}
 
 // CacheStats tracks cache statistics
 type CacheStats struct {
@@ -48,6 +51,7 @@ type CacheStats struct {
 	Expirations int64
 	// TotalLookups is the total number of lookups
 	TotalLookups int64
+}
 
 // NewOptimizedTemplateCache creates a new optimized template cache
 func NewOptimizedTemplateCache(defaultTTL time.Duration, maxSize int) *OptimizedTemplateCache {
@@ -66,6 +70,7 @@ func NewOptimizedTemplateCache(defaultTTL time.Duration, maxSize int) *Optimized
 		defaultTTL:   defaultTTL,
 		maxSize:      maxSize,
 	}
+}
 
 // Get gets a template from the cache
 func (c *OptimizedTemplateCache) Get(id string) (*format.Template, bool) {
@@ -98,10 +103,12 @@ func (c *OptimizedTemplateCache) Get(id string) (*format.Template, bool) {
 
 	c.stats.Hits++
 	return entry.Template, true
+}
 
 // Set sets a template in the cache
 func (c *OptimizedTemplateCache) Set(id string, template *format.Template) {
 	c.SetWithTTL(id, template, c.defaultTTL)
+}
 
 // SetWithTTL sets a template in the cache with a specific TTL
 func (c *OptimizedTemplateCache) SetWithTTL(id string, template *format.Template, ttl time.Duration) {
@@ -134,6 +141,7 @@ func (c *OptimizedTemplateCache) SetWithTTL(id string, template *format.Template
 		// Check if cache exceeds max size
 		c.evictIfNeeded()
 	}
+}
 
 // Delete deletes a template from the cache
 func (c *OptimizedTemplateCache) Delete(id string) {
@@ -141,6 +149,7 @@ func (c *OptimizedTemplateCache) Delete(id string) {
 	defer c.mutex.Unlock()
 
 	c.removeEntry(id)
+}
 
 // Clear clears the cache
 func (c *OptimizedTemplateCache) Clear() {
@@ -150,6 +159,7 @@ func (c *OptimizedTemplateCache) Clear() {
 	c.cache = make(map[string]*OptimizedCacheEntry)
 	c.evictionList = list.New()
 	c.evictionMap = make(map[string]*list.Element)
+}
 
 // Size returns the number of templates in the cache
 func (c *OptimizedTemplateCache) Size() int {
@@ -157,6 +167,7 @@ func (c *OptimizedTemplateCache) Size() int {
 	defer c.mutex.RUnlock()
 
 	return len(c.cache)
+}
 
 // Prune removes entries from the cache that are older than the specified duration
 func (c *OptimizedTemplateCache) Prune(maxAge time.Duration) int {
@@ -177,6 +188,7 @@ func (c *OptimizedTemplateCache) Prune(maxAge time.Duration) int {
 	}
 
 	return count
+}
 
 // GetKeys returns the keys of all templates in the cache
 func (c *OptimizedTemplateCache) GetKeys() []string {
@@ -189,6 +201,7 @@ func (c *OptimizedTemplateCache) GetKeys() []string {
 	}
 
 	return keys
+}
 
 // GetStats returns statistics about the cache
 func (c *OptimizedTemplateCache) GetStats() map[string]interface{} {
@@ -209,6 +222,7 @@ func (c *OptimizedTemplateCache) GetStats() map[string]interface{} {
 		"expirations": c.stats.Expirations,
 		"hit_rate":    hitRate,
 	}
+}
 
 // SetMaxSize sets the maximum size of the cache
 func (c *OptimizedTemplateCache) SetMaxSize(maxSize int) {
@@ -223,6 +237,7 @@ func (c *OptimizedTemplateCache) SetMaxSize(maxSize int) {
 
 	// Evict entries if needed
 	c.evictIfNeeded()
+}
 
 // SetDefaultTTL sets the default TTL for cache entries
 func (c *OptimizedTemplateCache) SetDefaultTTL(ttl time.Duration) {
@@ -230,10 +245,12 @@ func (c *OptimizedTemplateCache) SetDefaultTTL(ttl time.Duration) {
 	defer c.mutex.Unlock()
 
 	c.defaultTTL = ttl
+}
 
 // Refresh refreshes the expiration time of a cache entry
 func (c *OptimizedTemplateCache) Refresh(id string) bool {
 	return c.RefreshWithTTL(id, c.defaultTTL)
+}
 
 // RefreshWithTTL refreshes the expiration time of a cache entry with a specific TTL
 func (c *OptimizedTemplateCache) RefreshWithTTL(id string, ttl time.Duration) bool {
@@ -252,6 +269,7 @@ func (c *OptimizedTemplateCache) RefreshWithTTL(id string, ttl time.Duration) bo
 	c.updateEntryPosition(id)
 
 	return true
+}
 
 // PreloadTemplates preloads templates into the cache
 func (c *OptimizedTemplateCache) PreloadTemplates(templates map[string]*format.Template) {
@@ -278,6 +296,7 @@ func (c *OptimizedTemplateCache) PreloadTemplates(templates map[string]*format.T
 
 	// Evict entries if needed
 	c.evictIfNeeded()
+}
 
 // removeEntry removes an entry from the cache
 func (c *OptimizedTemplateCache) removeEntry(id string) {
@@ -286,12 +305,14 @@ func (c *OptimizedTemplateCache) removeEntry(id string) {
 		delete(c.evictionMap, id)
 	}
 	delete(c.cache, id)
+}
 
 // updateEntryPosition updates the position of an entry in the eviction list
 func (c *OptimizedTemplateCache) updateEntryPosition(id string) {
 	if elem, exists := c.evictionMap[id]; exists {
 		c.evictionList.MoveToFront(elem)
 	}
+}
 
 // evictIfNeeded evicts entries if the cache exceeds the maximum size
 func (c *OptimizedTemplateCache) evictIfNeeded() {
@@ -307,6 +328,7 @@ func (c *OptimizedTemplateCache) evictIfNeeded() {
 		c.removeEntry(id)
 		c.stats.Evictions++
 	}
+}
 
 // estimateTemplateSize estimates the size of a template in bytes
 func estimateTemplateSize(template *format.Template) int {
@@ -317,16 +339,18 @@ func estimateTemplateSize(template *format.Template) int {
 	// Base size for the template struct
 	size := 100
 
-	// Add size for the template ID
-	size += len(template.ID)
+	// Add size for the template Name (used as ID)
+	size += len(template.Name)
 
-	// Add size for the template name
-	size += len(template.Info.Name)
+	// Add size for the template version
+	size += len(template.Version)
 
-	// Add size for the template description
-	size += len(template.Info.Description)
+	// Add size for the template path
+	size += len(template.Path)
 
 	// Add size for the template content
-	size += len(template.Test.Prompt) * 2 // Unicode characters
+	size += len(template.Content)
 
 	// This is a rough estimate and could be improved with more detailed analysis
+	return size
+}

@@ -5,25 +5,28 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
-	"github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
 
 // LoginRequest represents a login request
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
 
 // LoginResponse represents a login response
 type LoginResponse struct {
-	UserID       string `json:"user_id"`
-	Username     string `json:"username"`
-	Email        string `json:"email"`
-	Token        string `json:"token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresAt    int64  `json:"expires_at"`
-	MFARequired  bool   `json:"mfa_required"`
+	UserID       string   `json:"user_id"`
+	Username     string   `json:"username"`
+	Email        string   `json:"email"`
+	Token        string   `json:"token"`
+	RefreshToken string   `json:"refresh_token"`
+	ExpiresAt    int64    `json:"expires_at"`
+	MFARequired  bool     `json:"mfa_required"`
 	MFAMethods   []string `json:"mfa_methods,omitempty"`
+}
 
 // RefreshTokenRequest represents a token refresh request
 type RefreshTokenRequest struct {
@@ -92,6 +95,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Login successful", resp)
+}
 
 // handleLogout handles user logout
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -119,6 +123,8 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Logout successful", nil)
+}
+
 // handleRefreshToken handles token refresh
 func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 	// Parse request
@@ -163,6 +169,7 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Token refreshed", resp)
+}
 
 // handleAuthStatus handles authentication status check
 func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
@@ -222,6 +229,7 @@ func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Authentication status", resp)
+}
 
 // handleMFAVerify handles MFA verification
 func (s *Server) handleMFAVerify(w http.ResponseWriter, r *http.Request) {
@@ -256,6 +264,5 @@ func (s *Server) handleMFAVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return success response
-}
-}
+	WriteSuccessResponse(w, http.StatusOK, "MFA verification successful", nil)
 }

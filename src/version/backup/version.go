@@ -59,6 +59,7 @@ func ParseVersion(versionStr string) (Version, error) {
 		PreRelease: preRelease,
 		BuildMeta:  buildMeta,
 	}, nil
+}
 
 // String returns the string representation of a Version
 func (v Version) String() string {
@@ -70,12 +71,14 @@ func (v Version) String() string {
 		result += "+" + v.BuildMeta
 	}
 	return result
+}
 
 // Compare compares two versions
 // Returns:
-//   -1 if v1 < v2
-//    0 if v1 == v2
-//   +1 if v1 > v2
+//
+//	-1 if v1 < v2
+//	 0 if v1 == v2
+//	+1 if v1 > v2
 func Compare(v1, v2 Version) int {
 	// Compare major version
 	if v1.Major != v2.Major {
@@ -117,12 +120,14 @@ func Compare(v1, v2 Version) int {
 
 	// Build metadata does not affect precedence
 	return 0
+}
 
 // comparePreRelease compares pre-release identifiers
 // Returns:
-//   -1 if pr1 < pr2
-//    0 if pr1 == pr2
-//   +1 if pr1 > pr2
+//
+//	-1 if pr1 < pr2
+//	 0 if pr1 == pr2
+//	+1 if pr1 > pr2
 func comparePreRelease(pr1, pr2 string) int {
 	if pr1 == pr2 {
 		return 0
@@ -193,18 +198,22 @@ func comparePreRelease(pr1, pr2 string) int {
 	}
 
 	return 0
+}
 
 // Equal checks if two versions are equal
 func Equal(v1, v2 Version) bool {
 	return Compare(v1, v2) == 0
+}
 
 // LessThan checks if v1 is less than v2
 func LessThan(v1, v2 Version) bool {
 	return Compare(v1, v2) < 0
+}
 
 // GreaterThan checks if v1 is greater than v2
 func GreaterThan(v1, v2 Version) bool {
 	return Compare(v1, v2) > 0
+}
 
 // VersionChangeType represents the type of version change
 type VersionChangeType int
@@ -228,6 +237,7 @@ func DetermineChangeType(oldV, newV Version) VersionChangeType {
 		return PatchChange
 	}
 	return NoChange
+}
 
 // FormatVersionDiff formats the difference between versions
 func FormatVersionDiff(oldV, newV Version) string {
@@ -243,11 +253,4 @@ func FormatVersionDiff(oldV, newV Version) string {
 	default:
 		return fmt.Sprintf("%s (No Change)", oldV.String())
 	}
-}
-}
-}
-}
-}
-}
-}
 }

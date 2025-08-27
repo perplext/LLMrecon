@@ -117,5 +117,6 @@ type Provider interface {
     Name() string
     SendPrompt(ctx context.Context, prompt string, opts *Options) (string, error)
     GetModels() []string
-` + "```" + `
 }
+` + "```" + `
+`

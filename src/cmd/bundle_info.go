@@ -3,9 +3,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/perplext/LLMrecon/src/update"
@@ -41,6 +44,7 @@ This command shows:
   LLMrecon bundle info update.bundle --list-files`,
 	Args: cobra.ExactArgs(1),
 	RunE: runBundleInfo,
+}
 
 func init() {
 	bundleCmd.AddCommand(bundleInfoCmd)
@@ -51,6 +55,7 @@ func init() {
 	bundleInfoCmd.Flags().Bool("json", false, "Output in JSON format")
 	bundleInfoCmd.Flags().Bool("list-files", false, "List all files in the bundle")
 	bundleInfoCmd.Flags().Bool("show-checksums", false, "Show file checksums")
+}
 
 func runBundleInfo(cmd *cobra.Command, args []string) error {
 	bundlePath := args[0]
@@ -92,6 +97,7 @@ func runBundleInfo(cmd *cobra.Command, args []string) error {
 	displayBundleInfo(info, verbose, showCompliance, listFiles, showChecksums)
 
 	return nil
+}
 
 // BundleInfo contains comprehensive bundle information
 type BundleInfo struct {
@@ -114,6 +120,7 @@ type BundleManifestInfo struct {
 	Author      string                 `json:"author"`
 	CreatedAt   time.Time              `json:"created_at"`
 	Metadata    map[string]interface{} `json:"metadata"`
+}
 
 // ComponentsInfo contains component counts
 type ComponentsInfo struct {
@@ -121,6 +128,7 @@ type ComponentsInfo struct {
 	Modules   []ComponentItem `json:"modules"`
 	Documents []ComponentItem `json:"documents"`
 	Resources []ComponentItem `json:"resources"`
+}
 
 // ComponentItem represents a component in the bundle
 type ComponentItem struct {
@@ -132,6 +140,7 @@ type ComponentItem struct {
 	Category string                 `json:"category,omitempty"`
 	Type     string                 `json:"type,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // OWASPInfo contains OWASP categorization information
 type OWASPInfo struct {
@@ -153,6 +162,7 @@ type BundleComplianceStatus struct {
 	Version     string   `json:"version"`
 	LastUpdated string   `json:"last_updated"`
 	Files       []string `json:"files"`
+}
 
 // BundleStatistics contains bundle statistics
 type BundleStatistics struct {
@@ -279,6 +289,7 @@ func collectBundleInfo(manifest *bundle.BundleManifest, fileInfo os.FileInfo, ch
 	}
 
 	return info
+}
 
 func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, showChecksums bool) {
 	// Header
@@ -426,6 +437,7 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 		}
 		fmt.Printf("  Average file size: %s\n", formatSize(avgSize))
 	}
+}
 
 func getCategoryIcon(category string) string {
 	icons := map[string]string{
@@ -445,6 +457,7 @@ func getCategoryIcon(category string) string {
 		return icon
 	}
 	return "📁"
+}
 
 func getFileIcon(path string) string {
 	ext := filepath.Ext(path)
@@ -462,5 +475,4 @@ func getFileIcon(path string) string {
 	default:
 		return "📄"
 	}
-}
 }

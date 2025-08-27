@@ -3,9 +3,13 @@ package bundle
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
+	"github.com/perplext/LLMrecon/src/audit/trail"
 )
 
 // BundleConverter converts standard bundles to offline bundles
@@ -16,6 +20,7 @@ type BundleConverter struct {
 	Logger io.Writer
 	// AuditTrail is the audit trail manager for logging operations
 	AuditTrail *trail.AuditTrailManager
+}
 
 // NewBundleConverter creates a new bundle converter
 func NewBundleConverter(creator *OfflineBundleCreator, logger io.Writer, auditTrail *trail.AuditTrailManager) *BundleConverter {
@@ -28,6 +33,7 @@ func NewBundleConverter(creator *OfflineBundleCreator, logger io.Writer, auditTr
 		Logger:     logger,
 		AuditTrail: auditTrail,
 	}
+}
 
 // ConvertToOfflineBundle converts a standard bundle to an offline bundle
 func (c *BundleConverter) ConvertToOfflineBundle(bundle *Bundle, outputPath string) (*OfflineBundle, error) {
@@ -106,7 +112,7 @@ func (c *BundleConverter) ConvertToOfflineBundle(bundle *Bundle, outputPath stri
 			return nil, fmt.Errorf("failed to read source file: %w", err)
 		}
 
-		if err := os.WriteFile(filepath.Clean(targetPath, sourceData, 0600)); err != nil {
+		if err := os.WriteFile(filepath.Clean(targetPath), sourceData, 0600); err != nil {
 			return nil, fmt.Errorf("failed to write target file: %w", err)
 		}
 	}
@@ -140,11 +146,11 @@ This offline bundle contains templates and modules for LLM red teaming.
 ## Usage
 
 See the documentation directory for usage instructions.
-`, bundle.Manifest.Name, bundle.Manifest.Description, bundle.Manifest.Version, 
+`, bundle.Manifest.Name, bundle.Manifest.Description, bundle.Manifest.Version,
 		bundle.Manifest.BundleType, bundle.Manifest.CreatedAt.Format(time.RFC3339),
 		bundle.Manifest.Author.Name, bundle.Manifest.Author.Email)
 
-	if err := os.WriteFile(filepath.Clean(readmePath, []byte(readmeContent)), 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(readmePath), []byte(readmeContent), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write README.md: %w", err)
 	}
 
@@ -179,21 +185,23 @@ See the documentation directory for usage instructions.
 	// Log audit event
 	if c.AuditTrail != nil {
 		auditLog := &trail.AuditLog{
-			Operation:     "convert_to_offline_bundle",
-			ResourceType:  "bundle",
-			ResourceID:    bundle.Manifest.BundleID,
-			Status:        "success",
-			Timestamp:     time.Now(),
-			UserID:        bundle.Manifest.Author.Email,
-			Username:      bundle.Manifest.Author.Name,
-			IPAddress:     "",
-			Details: map[string]interface{}{
+			Operation:  "convert_to_offline_bundle",
+			Component:  "bundle",
+			Resource:   "bundle",
+			ResourceID: bundle.Manifest.BundleID,
+			Status:     "success",
+			Timestamp:  time.Now(),
+			UserID:     bundle.Manifest.Author.Email,
+			User:       bundle.Manifest.Author.Name,
+			IPAddress:  "",
+			Message:    "Converted bundle to offline format",
+			Metadata: map[string]interface{}{
 				"original_bundle_id": bundle.Manifest.BundleID,
 				"original_version":   bundle.Manifest.Version,
 			},
 		}
-		
-		if err := c.AuditTrail.LogOperation(nil, auditLog); err != nil {
+
+		if err := c.AuditTrail.Log(nil, auditLog); err != nil {
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
 	}
@@ -201,6 +209,7 @@ See the documentation directory for usage instructions.
 	fmt.Fprintf(c.Logger, "Bundle converted successfully to offline format: %s\n", outputPath)
 
 	return offlineBundle, nil
+}
 
 // AutoDetectComplianceForTemplates automatically detects and adds compliance mappings for templates
 func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *OfflineBundle) error {
@@ -233,8 +242,8 @@ func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *Offlin
 			if err != nil {
 				return fmt.Errorf("failed to add compliance mappings for template %s: %w", item.ID, err)
 			}
-			
-			fmt.Fprintf(c.Logger, "Added compliance mappings for template %s: OWASP categories: %v, ISO controls: %v\n", 
+
+			fmt.Fprintf(c.Logger, "Added compliance mappings for template %s: OWASP categories: %v, ISO controls: %v\n",
 				item.ID, owaspCategories, isoControls)
 		}
 	}
@@ -243,74 +252,77 @@ func (c *BundleConverter) AutoDetectComplianceForTemplates(offlineBundle *Offlin
 	fmt.Fprintf(c.Logger, "Compliance mapping auto-detection completed successfully\n")
 
 	return nil
+}
 
 // detectOwaspCategories analyzes template content and detects relevant OWASP LLM Top 10 categories
 func detectOwaspCategories(templateContent string) []string {
 	categories := []string{}
-	
+
 	// Simple keyword-based detection for demonstration purposes
 	// In a real implementation, this would use more sophisticated analysis
-	
+
 	// LLM01: Prompt Injection
 	if containsKeywords(templateContent, "prompt injection", "input validation", "sanitize input", "user input") {
 		categories = append(categories, "LLM01:PromptInjection")
 	}
-	
+
 	// LLM02: Insecure Output
 	if containsKeywords(templateContent, "output validation", "validate response", "harmful output", "dangerous output") {
 		categories = append(categories, "LLM02:InsecureOutput")
 	}
-	
+
 	// LLM06: Sensitive Information Disclosure
 	if containsKeywords(templateContent, "sensitive information", "personal data", "pii", "confidential") {
 		categories = append(categories, "LLM06:SensitiveInformationDisclosure")
 	}
-	
+
 	// LLM07: Insecure Plugin Design
 	if containsKeywords(templateContent, "plugin", "extension", "module integration", "third-party") {
 		categories = append(categories, "LLM07:InsecurePluginDesign")
 	}
-	
+
 	// LLM08: Excessive Agency
 	if containsKeywords(templateContent, "autonomous", "agency", "decision making", "authority") {
 		categories = append(categories, "LLM08:ExcessiveAgency")
 	}
-	
+
 	// LLM09: Overreliance
 	if containsKeywords(templateContent, "verification", "human review", "oversight", "check accuracy") {
 		categories = append(categories, "LLM09:Overreliance")
 	}
-	
+
 	return categories
+}
 
 // detectISOControls analyzes template content and detects relevant ISO/IEC 42001 controls
 func detectISOControls(templateContent string) []string {
 	controls := []string{}
-	
+
 	// Simple keyword-based detection for demonstration purposes
 	// In a real implementation, this would use more sophisticated analysis
-	
+
 	// 42001:8.2.3 - Risk assessment
 	if containsKeywords(templateContent, "risk assessment", "risk analysis", "threat model") {
 		controls = append(controls, "42001:8.2.3")
 	}
-	
+
 	// 42001:8.2.4 - Risk treatment
 	if containsKeywords(templateContent, "risk mitigation", "risk treatment", "control implementation") {
 		controls = append(controls, "42001:8.2.4")
 	}
-	
+
 	// 42001:9.2 - Internal audit
 	if containsKeywords(templateContent, "audit", "review", "assessment", "evaluation") {
 		controls = append(controls, "42001:9.2")
 	}
-	
+
 	// 42001:10.1 - Nonconformity and corrective action
 	if containsKeywords(templateContent, "nonconformity", "corrective action", "remediation", "fix") {
 		controls = append(controls, "42001:10.1")
 	}
-	
+
 	return controls
+}
 
 // containsKeywords checks if any of the keywords are present in the content
 func containsKeywords(content string, keywords ...string) bool {
@@ -319,3 +331,5 @@ func containsKeywords(content string, keywords ...string) bool {
 			return true
 		}
 	}
+	return false
+}

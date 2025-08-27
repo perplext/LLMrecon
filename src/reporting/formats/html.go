@@ -5,6 +5,10 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/api"
 )
@@ -13,6 +17,7 @@ import (
 type HTMLFormatter struct {
 	// template is the HTML template for reports
 	template *template.Template
+}
 
 // NewHTMLFormatter creates a new HTML formatter with the default template
 func NewHTMLFormatter() (*HTMLFormatter, error) {
@@ -25,6 +30,7 @@ func NewHTMLFormatter() (*HTMLFormatter, error) {
 	return &HTMLFormatter{
 		template: tmpl,
 	}, nil
+}
 
 // NewHTMLFormatterWithTemplate creates a new HTML formatter with a custom template
 func NewHTMLFormatterWithTemplate(templatePath string) (*HTMLFormatter, error) {
@@ -37,6 +43,7 @@ func NewHTMLFormatterWithTemplate(templatePath string) (*HTMLFormatter, error) {
 	return &HTMLFormatter{
 		template: tmpl,
 	}, nil
+}
 
 // FormatReport formats a report and writes it to the given writer
 func (f *HTMLFormatter) FormatReport(results api.TestResults, writer io.Writer) error {
@@ -59,6 +66,7 @@ func (f *HTMLFormatter) FormatReport(results api.TestResults, writer io.Writer) 
 
 	// Execute template
 	return f.template.Execute(writer, data)
+}
 
 // Format formats a report as HTML
 func (f *HTMLFormatter) Format(ctx context.Context, reportInterface interface{}, optionsInterface interface{}) ([]byte, error) {
@@ -66,21 +74,23 @@ func (f *HTMLFormatter) Format(ctx context.Context, reportInterface interface{},
 	if !ok {
 		return nil, fmt.Errorf("expected api.TestResults, got %T", reportInterface)
 	}
-	
+
 	// Create a buffer to hold the HTML data
 	buf := &bytes.Buffer{}
-	
+
 	// Use the FormatReport method to write to the buffer
 	err := f.FormatReport(results, buf)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return buf.Bytes(), nil
+}
 
 // GetFormat returns the format supported by this formatter
 func (f *HTMLFormatter) GetFormat() api.ReportFormat {
 	return api.HTMLFormat
+}
 
 // WriteToFile writes a report to a file
 func (f *HTMLFormatter) WriteToFile(ctx context.Context, reportInterface interface{}, optionsInterface interface{}, filePath string) error {
@@ -100,7 +110,11 @@ func (f *HTMLFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", filePath, err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Format and write the report
 	if err := f.FormatReport(results, file); err != nil {
@@ -108,6 +122,7 @@ func (f *HTMLFormatter) WriteToFile(ctx context.Context, reportInterface interfa
 	}
 
 	return nil
+}
 
 // defaultHTMLTemplate is the default HTML template for reports
 var defaultHTMLTemplate = `<!DOCTYPE html>

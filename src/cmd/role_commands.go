@@ -498,3 +498,4 @@ func initRoleCommands() {
 		},
 	}
 	roleCmd.AddCommand(checkRoleCmd)
+}

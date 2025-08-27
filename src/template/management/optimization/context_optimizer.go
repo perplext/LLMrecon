@@ -23,6 +23,7 @@ type ContextOptimizer struct {
 	variableUsageCount map[string]int
 	// mutex protects shared data
 	mutex sync.RWMutex
+}
 
 // ContextOptimizerOptions contains options for the context optimizer
 type ContextOptimizerOptions struct {
@@ -32,6 +33,7 @@ type ContextOptimizerOptions struct {
 	EnableLazyLoading bool
 	// EnableCompression enables variable compression
 	EnableCompression bool
+}
 
 // DefaultContextOptimizerOptions returns default options for the context optimizer
 func DefaultContextOptimizerOptions() *ContextOptimizerOptions {
@@ -40,6 +42,7 @@ func DefaultContextOptimizerOptions() *ContextOptimizerOptions {
 		EnableLazyLoading:   true,
 		EnableCompression:   false,
 	}
+}
 
 // NewContextOptimizer creates a new context optimizer
 func NewContextOptimizer(options *ContextOptimizerOptions) *ContextOptimizer {
@@ -54,6 +57,7 @@ func NewContextOptimizer(options *ContextOptimizerOptions) *ContextOptimizer {
 		sharedVariables:     make(map[string]string),
 		variableUsageCount:  make(map[string]int),
 	}
+}
 
 // OptimizeTemplate optimizes context variable usage in a template
 func (o *ContextOptimizer) OptimizeTemplate(ctx context.Context, template *format.Template) (*format.Template, error) {
@@ -70,6 +74,7 @@ func (o *ContextOptimizer) OptimizeTemplate(ctx context.Context, template *forma
 	}
 
 	return optimizedTemplate, nil
+}
 
 // optimizeVariables optimizes variables in a template
 func (o *ContextOptimizer) optimizeVariables(template *format.Template) error {
@@ -87,6 +92,7 @@ func (o *ContextOptimizer) optimizeVariables(template *format.Template) error {
 	o.trackVariableUsage(template)
 
 	return nil
+}
 
 // deduplicateVariables deduplicates variables by sharing common values
 func (o *ContextOptimizer) deduplicateVariables(template *format.Template) {
@@ -122,6 +128,7 @@ func (o *ContextOptimizer) deduplicateVariables(template *format.Template) {
 
 	// Update template variables
 	template.Variables = newVariables
+}
 
 // trackVariableUsage tracks variable usage across templates
 func (o *ContextOptimizer) trackVariableUsage(template *format.Template) {
@@ -132,6 +139,7 @@ func (o *ContextOptimizer) trackVariableUsage(template *format.Template) {
 	for key := range template.Variables {
 		o.variableUsageCount[key]++
 	}
+}
 
 // OptimizeTemplates optimizes context variable usage in multiple templates
 func (o *ContextOptimizer) OptimizeTemplates(ctx context.Context, templates []*format.Template) ([]*format.Template, error) {
@@ -167,6 +175,7 @@ func (o *ContextOptimizer) OptimizeTemplates(ctx context.Context, templates []*f
 	}
 
 	return optimizedTemplates, nil
+}
 
 // analyzeVariableUsage analyzes variable usage across all templates
 func (o *ContextOptimizer) analyzeVariableUsage(templates []*format.Template) {
@@ -186,6 +195,7 @@ func (o *ContextOptimizer) analyzeVariableUsage(templates []*format.Template) {
 			o.variableUsageCount[key]++
 		}
 	}
+}
 
 // GetSharedVariables returns the shared variables
 func (o *ContextOptimizer) GetSharedVariables() map[string]string {
@@ -199,6 +209,7 @@ func (o *ContextOptimizer) GetSharedVariables() map[string]string {
 	}
 
 	return sharedVars
+}
 
 // GetVariableUsageCount returns the variable usage count
 func (o *ContextOptimizer) GetVariableUsageCount() map[string]int {
@@ -212,6 +223,7 @@ func (o *ContextOptimizer) GetVariableUsageCount() map[string]int {
 	}
 
 	return usageCount
+}
 
 // GetHighUsageVariables returns variables with high usage
 func (o *ContextOptimizer) GetHighUsageVariables(threshold int) map[string]int {
@@ -227,6 +239,7 @@ func (o *ContextOptimizer) GetHighUsageVariables(threshold int) map[string]int {
 	}
 
 	return highUsage
+}
 
 // GetLowUsageVariables returns variables with low usage
 func (o *ContextOptimizer) GetLowUsageVariables(threshold int) map[string]int {
@@ -242,6 +255,7 @@ func (o *ContextOptimizer) GetLowUsageVariables(threshold int) map[string]int {
 	}
 
 	return lowUsage
+}
 
 // ClearSharedVariables clears the shared variables
 func (o *ContextOptimizer) ClearSharedVariables() {
@@ -249,27 +263,34 @@ func (o *ContextOptimizer) ClearSharedVariables() {
 	defer o.mutex.Unlock()
 
 	o.sharedVariables = make(map[string]string)
+}
 
 // SetEnableDeduplication sets whether variable deduplication is enabled
 func (o *ContextOptimizer) SetEnableDeduplication(enable bool) {
 	o.enableDeduplication = enable
+}
 
 // GetEnableDeduplication returns whether variable deduplication is enabled
 func (o *ContextOptimizer) GetEnableDeduplication() bool {
 	return o.enableDeduplication
+}
 
 // SetEnableLazyLoading sets whether lazy loading of variables is enabled
 func (o *ContextOptimizer) SetEnableLazyLoading(enable bool) {
 	o.enableLazyLoading = enable
+}
 
 // GetEnableLazyLoading returns whether lazy loading of variables is enabled
 func (o *ContextOptimizer) GetEnableLazyLoading() bool {
 	return o.enableLazyLoading
+}
 
 // SetEnableCompression sets whether variable compression is enabled
 func (o *ContextOptimizer) SetEnableCompression(enable bool) {
 	o.enableCompression = enable
+}
 
 // GetEnableCompression returns whether variable compression is enabled
 func (o *ContextOptimizer) GetEnableCompression() bool {
 	return o.enableCompression
+}

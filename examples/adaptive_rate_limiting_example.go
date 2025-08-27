@@ -129,7 +129,7 @@ func SimulateUserActivity(
 			// Create a template with a unique ID
 			template := &format.Template{
 				ID: fmt.Sprintf("%s-template-%d", profile.ID, i),
-				Info: format.TemplateInfo{
+				Info: &format.TemplateInfo{
 					Name:        fmt.Sprintf("Template %d for %s", i, profile.ID),
 					Description: "Test template for adaptive rate limiting",
 					Version:     "1.0.0",

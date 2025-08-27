@@ -3,9 +3,6 @@ package core
 
 import "time"
 
-import (
-)
-
 // UsageMetrics represents the usage metrics for a provider
 type UsageMetrics struct {
 	// Requests is the number of requests made
@@ -26,12 +23,14 @@ type UsageMetrics struct {
 	RequestsPerMinute float64 `json:"requests_per_minute"`
 	// ModelID is the ID of the model
 	ModelID string `json:"model_id"`
+}
 
 // NewUsageMetrics creates a new usage metrics instance
 func NewUsageMetrics(modelID string) *UsageMetrics {
 	return &UsageMetrics{
 		ModelID: modelID,
 	}
+}
 
 // AddRequest adds a request to the usage metrics
 func (m *UsageMetrics) AddRequest(tokens int64, duration time.Duration, err error) {
@@ -39,16 +38,16 @@ func (m *UsageMetrics) AddRequest(tokens int64, duration time.Duration, err erro
 	m.Tokens += tokens
 	m.LastRequestTime = time.Now()
 	m.TotalRequestDuration += duration
-	
+
 	if err != nil {
 		m.Errors++
 	}
-	
+
 	// Update averages
 	if m.Requests > 0 {
 		m.AverageResponseTime = time.Duration(m.TotalRequestDuration.Nanoseconds() / m.Requests)
 	}
-	
+
 	// Calculate tokens per minute and requests per minute
 	// based on the last hour of usage
 	oneHourAgo := time.Now().Add(-1 * time.Hour)
@@ -59,6 +58,7 @@ func (m *UsageMetrics) AddRequest(tokens int64, duration time.Duration, err erro
 			m.RequestsPerMinute = float64(m.Requests) / elapsedMinutes
 		}
 	}
+}
 
 // Reset resets the usage metrics
 func (m *UsageMetrics) Reset() {
@@ -69,6 +69,7 @@ func (m *UsageMetrics) Reset() {
 	m.AverageResponseTime = 0
 	m.TokensPerMinute = 0
 	m.RequestsPerMinute = 0
+}
 
 // Merge merges another usage metrics into this one
 func (m *UsageMetrics) Merge(other *UsageMetrics) {
@@ -76,17 +77,17 @@ func (m *UsageMetrics) Merge(other *UsageMetrics) {
 	m.Tokens += other.Tokens
 	m.Errors += other.Errors
 	m.TotalRequestDuration += other.TotalRequestDuration
-	
+
 	// Update last request time if the other is more recent
 	if other.LastRequestTime.After(m.LastRequestTime) {
 		m.LastRequestTime = other.LastRequestTime
 	}
-	
+
 	// Recalculate averages
 	if m.Requests > 0 {
 		m.AverageResponseTime = time.Duration(m.TotalRequestDuration.Nanoseconds() / m.Requests)
 	}
-	
+
 	// Recalculate tokens per minute and requests per minute
 	oneHourAgo := time.Now().Add(-1 * time.Hour)
 	if m.LastRequestTime.After(oneHourAgo) {
@@ -96,3 +97,4 @@ func (m *UsageMetrics) Merge(other *UsageMetrics) {
 			m.RequestsPerMinute = float64(m.Requests) / elapsedMinutes
 		}
 	}
+}

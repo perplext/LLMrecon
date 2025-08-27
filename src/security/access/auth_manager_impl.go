@@ -4,7 +4,9 @@ package access
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/perplext/LLMrecon/src/security/access/interfaces"
@@ -20,13 +22,13 @@ type AuthManagerImpl struct {
 	auditLogger  AuditLogger
 	initialized  bool
 	config       *AuthConfig
+}
 
 // AuthConfig contains configuration for the auth manager
 type AuthConfig struct {
 	// Session configuration
 	SessionTimeout     time.Duration
 	SessionMaxInactive time.Duration
-}
 
 	// Password configuration
 	PasswordMinLength      int
@@ -39,6 +41,7 @@ type AuthConfig struct {
 	// MFA configuration
 	MFAEnabled bool
 	MFAMethods []string
+}
 
 // NewAuthManagerImpl creates a new auth manager implementation
 func NewAuthManagerImpl(userStore interfaces.UserStore, sessionStore interfaces.SessionStore, auditLogger AuditLogger, config *AuthConfig) *AuthManagerImpl {
@@ -57,6 +60,7 @@ func NewAuthManagerImpl(userStore interfaces.UserStore, sessionStore interfaces.
 		auditLogger:  auditLogger,
 		config:       config,
 	}
+}
 
 // Initialize initializes the auth manager
 func (m *AuthManagerImpl) Initialize(ctx context.Context) error {
@@ -65,6 +69,7 @@ func (m *AuthManagerImpl) Initialize(ctx context.Context) error {
 
 	m.initialized = true
 	return nil
+}
 
 // Login authenticates a user
 func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) (*models.Session, error) {
@@ -242,6 +247,7 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 	}
 
 	return session, nil
+}
 
 // Logout logs out a user
 func (m *AuthManagerImpl) Logout(ctx context.Context, sessionID string) error {
@@ -291,6 +297,7 @@ func (m *AuthManagerImpl) Logout(ctx context.Context, sessionID string) error {
 	}
 
 	return nil
+}
 
 // ValidateSession validates a session
 func (m *AuthManagerImpl) ValidateSession(ctx context.Context, sessionID string) (*models.Session, error) {
@@ -325,6 +332,7 @@ func (m *AuthManagerImpl) ValidateSession(ctx context.Context, sessionID string)
 	}
 
 	return session, nil
+}
 
 // RefreshSession refreshes a session
 func (m *AuthManagerImpl) RefreshSession(ctx context.Context, sessionID string) (*models.Session, error) {
@@ -353,6 +361,7 @@ func (m *AuthManagerImpl) RefreshSession(ctx context.Context, sessionID string) 
 	}
 
 	return session, nil
+}
 
 // ChangePassword changes a user's password
 func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error {
@@ -451,6 +460,7 @@ func (m *AuthManagerImpl) ChangePassword(ctx context.Context, userID, oldPasswor
 	}
 
 	return nil
+}
 
 // ResetPassword resets a user's password
 func (m *AuthManagerImpl) ResetPassword(ctx context.Context, userID, newPassword string) error {
@@ -525,6 +535,7 @@ func (m *AuthManagerImpl) ResetPassword(ctx context.Context, userID, newPassword
 	}
 
 	return nil
+}
 
 // Close closes the auth manager
 func (m *AuthManagerImpl) Close() error {
@@ -533,6 +544,7 @@ func (m *AuthManagerImpl) Close() error {
 
 	m.initialized = false
 	return nil
+}
 
 // validatePassword validates a password against the password policy
 func (m *AuthManagerImpl) validatePassword(password string) error {
@@ -598,6 +610,7 @@ func (m *AuthManagerImpl) validatePassword(password string) error {
 	}
 
 	return nil
+}
 
 // Helper functions to get context values
 func getIPFromContext(ctx context.Context) string {
@@ -611,6 +624,7 @@ func getIPFromContext(ctx context.Context) string {
 	}
 
 	return ip
+}
 
 func getUserAgentFromContext(ctx context.Context) string {
 	if ctx == nil {
@@ -622,14 +636,5 @@ func getUserAgentFromContext(ctx context.Context) string {
 		return ""
 	}
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return userAgent
 }

@@ -11,6 +11,7 @@ type ExtendedUpdateNotifier interface {
 	NotifyAvailableUpdate(ctx context.Context, versionInfo *UpdateVersionInfo) error
 	NotifyRequiredUpdate(ctx context.Context, versionInfo *UpdateVersionInfo) error
 	NotifySecurityUpdate(ctx context.Context, versionInfo *UpdateVersionInfo, details string) error
+}
 
 // NotificationIntegration provides integration between the update system and notification system
 type NotificationIntegration struct {
@@ -22,6 +23,7 @@ func NewNotificationIntegration(notifier ExtendedUpdateNotifier) *NotificationIn
 	return &NotificationIntegration{
 		notifier: notifier,
 	}
+}
 
 // HandleUpdateCheck processes the results of a version check and creates notifications
 func (n *NotificationIntegration) HandleUpdateCheck(ctx context.Context, versionInfo *UpdateVersionInfo) error {
@@ -49,14 +51,14 @@ func (n *NotificationIntegration) HandleUpdateCheck(ctx context.Context, version
 	}
 
 	return nil
+}
 
 // NotifyUpdateSuccess creates a notification for a successful update
 func (n *NotificationIntegration) NotifyUpdateSuccess(ctx context.Context, fromVersion, toVersion string) error {
 	return n.notifier.NotifyUpdateSuccess(ctx, fromVersion, toVersion)
+}
 
 // NotifyUpdateFailure creates a notification for a failed update
 func (n *NotificationIntegration) NotifyUpdateFailure(ctx context.Context, fromVersion, toVersion string, err error) error {
 	return n.notifier.NotifyUpdateFailure(ctx, fromVersion, toVersion, err)
-}
-}
 }

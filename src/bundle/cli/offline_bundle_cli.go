@@ -6,10 +6,13 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/perplext/LLMrecon/src/audit/trail"
 	"github.com/perplext/LLMrecon/src/bundle"
-	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +28,7 @@ type OfflineBundleCLI struct {
 	KeyPath string
 	// AuditTrailManager is the audit trail manager
 	AuditTrailManager *trail.AuditTrailManager
+}
 
 // NewOfflineBundleCLI creates a new offline bundle CLI
 func NewOfflineBundleCLI(output io.Writer, auditTrailManager *trail.AuditTrailManager) *OfflineBundleCLI {
@@ -33,7 +37,7 @@ func NewOfflineBundleCLI(output io.Writer, auditTrailManager *trail.AuditTrailMa
 	}
 
 	cli := &OfflineBundleCLI{
-		Output:           output,
+		Output:            output,
 		AuditTrailManager: auditTrailManager,
 	}
 
@@ -61,10 +65,12 @@ func NewOfflineBundleCLI(output io.Writer, auditTrailManager *trail.AuditTrailMa
 	cli.RootCmd = rootCmd
 
 	return cli
+}
 
 // Execute executes the root command
 func (c *OfflineBundleCLI) Execute() error {
 	return c.RootCmd.Execute()
+}
 
 // createCreateCommand creates the 'create' command
 func (c *OfflineBundleCLI) createCreateCommand() *cobra.Command {
@@ -83,9 +89,8 @@ func (c *OfflineBundleCLI) createCreateCommand() *cobra.Command {
 
 			// Create author
 			author := bundle.Author{
-				Name:         authorName,
-				Email:        authorEmail,
-				Organization: authorOrg,
+				Name:  authorName,
+				Email: authorEmail,
 			}
 
 			// Create creator
@@ -130,6 +135,7 @@ func (c *OfflineBundleCLI) createCreateCommand() *cobra.Command {
 	_ = cmd.MarkFlagRequired("output")
 
 	return cmd
+}
 
 // createAddContentCommand creates the 'add-content' command
 func (c *OfflineBundleCLI) createAddContentCommand() *cobra.Command {
@@ -195,6 +201,7 @@ func (c *OfflineBundleCLI) createAddContentCommand() *cobra.Command {
 	_ = cmd.MarkFlagRequired("type")
 
 	return cmd
+}
 
 // createAddComplianceCommand creates the 'add-compliance' command
 func (c *OfflineBundleCLI) createAddComplianceCommand() *cobra.Command {
@@ -261,6 +268,7 @@ func (c *OfflineBundleCLI) createAddComplianceCommand() *cobra.Command {
 	_ = cmd.MarkFlagRequired("content-id")
 
 	return cmd
+}
 
 // createAddDocumentationCommand creates the 'add-documentation' command
 func (c *OfflineBundleCLI) createAddDocumentationCommand() *cobra.Command {
@@ -306,6 +314,7 @@ func (c *OfflineBundleCLI) createAddDocumentationCommand() *cobra.Command {
 	_ = cmd.MarkFlagRequired("source")
 
 	return cmd
+}
 
 // loadSigningKey loads the signing key from the specified path
 func (c *OfflineBundleCLI) loadSigningKey() (ed25519.PrivateKey, error) {
@@ -342,6 +351,7 @@ func (c *OfflineBundleCLI) loadSigningKey() (ed25519.PrivateKey, error) {
 	}
 
 	return ed25519.PrivateKey(keyData), nil
+}
 
 // createValidateCommand creates the 'validate' command for validating bundles
 func (c *OfflineBundleCLI) createValidateCommand() *cobra.Command {
@@ -435,6 +445,7 @@ func (c *OfflineBundleCLI) createValidateCommand() *cobra.Command {
 	_ = cmd.MarkFlagRequired("bundle")
 
 	return cmd
+}
 
 // createKeygenCommand creates the 'keygen' command for generating signing keys
 func (c *OfflineBundleCLI) createKeygenCommand() *cobra.Command {
@@ -480,12 +491,12 @@ func (c *OfflineBundleCLI) createKeygenCommand() *cobra.Command {
 			}
 
 			// Write private key to file
-			if err := os.WriteFile(filepath.Clean(privateKeyPath, privateKey, 0600)); err != nil {
+			if err := os.WriteFile(filepath.Clean(privateKeyPath), privateKey, 0600); err != nil {
 				return fmt.Errorf("failed to write private key file: %w", err)
 			}
 
 			// Write public key to file
-			if err := os.WriteFile(filepath.Clean(publicKeyPath, publicKey, 0600)); err != nil {
+			if err := os.WriteFile(filepath.Clean(publicKeyPath), publicKey, 0600); err != nil {
 				return fmt.Errorf("failed to write public key file: %w", err)
 			}
 
@@ -507,3 +518,5 @@ func (c *OfflineBundleCLI) createKeygenCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&keyType, "type", "t", "ed25519", "Key type (currently only ed25519 is supported)")
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Overwrite existing key files")
 
+	return cmd
+}

@@ -1,26 +1,35 @@
 // Package converters provides conversion functions between different types
 package converters
 
+// GenericConverter represents a generic model converter
+type GenericConverter struct{}
+
 // NewUserConverter creates a new user converter
-func NewUserConverter() *ModelConverter {
-	return &ModelConverter{}
+func NewUserConverter() *GenericConverter {
+	return &GenericConverter{}
+}
 
 // NewSessionConverter creates a new session converter
-func NewSessionConverter() *ModelConverter {
-	return &ModelConverter{}
+func NewSessionConverter() *GenericConverter {
+	return &GenericConverter{}
+}
 
 // NewSecurityConverter creates a new security converter
-func NewSecurityConverter() *ModelConverter {
-	return &ModelConverter{}
+func NewSecurityConverter() *GenericConverter {
+	return &GenericConverter{}
+}
 
 // NewIncidentConverter creates a new incident converter
-func NewIncidentConverter() *ModelConverter {
-	return &ModelConverter{}
+func NewIncidentConverter() *GenericConverter {
+	return &GenericConverter{}
+}
 
 // NewVulnerabilityConverter creates a new vulnerability converter
-func NewVulnerabilityConverter() *ModelConverter {
-	return &ModelConverter{}
+func NewVulnerabilityConverter() *GenericConverter {
+	return &GenericConverter{}
+}
 
 // NewAuditLogConverter creates a new audit log converter
-func NewAuditLogConverter() *ModelConverter {
-	return &ModelConverter{}
+func NewAuditLogConverter() *GenericConverter {
+	return &GenericConverter{}
+}

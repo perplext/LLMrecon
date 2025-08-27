@@ -1,17 +1,15 @@
 // Package api provides API protection mechanisms for the LLMrecon tool.
 package api
 
-
-
 import (
-	"io"
-	"time"
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -54,16 +52,17 @@ type SecureLoggerConfig struct {
 	RedactionString string
 	// OutputWriter is the writer to use for log output
 	OutputWriter io.Writer
+}
 
 // DefaultSecureLoggerConfig returns the default secure logger configuration
 func DefaultSecureLoggerConfig() *SecureLoggerConfig {
 	return &SecureLoggerConfig{
-		Level:           LogLevelInfo,
-		LogRequests:     true,
-		LogResponses:    true,
-		LogHeaders:      true,
-		LogBodies:       true,
-		MaxBodySize:     10 * 1024, // 10KB
+		Level:        LogLevelInfo,
+		LogRequests:  true,
+		LogResponses: true,
+		LogHeaders:   true,
+		LogBodies:    true,
+		MaxBodySize:  10 * 1024, // 10KB
 		SensitiveHeaders: []string{
 			"Authorization",
 			"Cookie",
@@ -85,23 +84,25 @@ func DefaultSecureLoggerConfig() *SecureLoggerConfig {
 			"cvv",
 		},
 		SensitivePatterns: []string{
-			`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`,                           // Email
-			`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`,                                               // US Phone
-			`\b\d{3}[-.]?\d{2}[-.]?\d{4}\b`,                                               // SSN
-			`\b(?:\d[ -]*?){13,16}\b`,                                                     // Credit Card
-			`\b[A-Za-z0-9]{24,}\b`,                                                        // API Key
-			`\bsk-[A-Za-z0-9]{24,}\b`,                                                     // OpenAI API Key
-			`\b(?:Bearer|bearer|BEARER)\s+[A-Za-z0-9\-._~+/]+=*\b`,                        // Bearer Token
-			`\b(?:eyJ|ey0)[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\b`,            // JWT
+			`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`,                              // Email
+			`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`,                                                   // US Phone
+			`\b\d{3}[-.]?\d{2}[-.]?\d{4}\b`,                                                   // SSN
+			`\b(?:\d[ -]*?){13,16}\b`,                                                         // Credit Card
+			`\b[A-Za-z0-9]{24,}\b`,                                                            // API Key
+			`\bsk-[A-Za-z0-9]{24,}\b`,                                                         // OpenAI API Key
+			`\b(?:Bearer|bearer|BEARER)\s+[A-Za-z0-9\-._~+/]+=*\b`,                            // Bearer Token
+			`\b(?:eyJ|ey0)[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\b`,                // JWT
 			`\b[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}\b`, // UUID
 		},
 		RedactionString: "[REDACTED]",
 	}
+}
 
 // SecureLogger implements secure logging for API requests and responses
 type SecureLogger struct {
 	config            *SecureLoggerConfig
 	sensitivePatterns []*regexp.Regexp
+}
 
 // NewSecureLogger creates a new secure logger
 func NewSecureLogger(config *SecureLoggerConfig) (*SecureLogger, error) {
@@ -123,6 +124,7 @@ func NewSecureLogger(config *SecureLoggerConfig) (*SecureLogger, error) {
 		config:            config,
 		sensitivePatterns: sensitivePatterns,
 	}, nil
+}
 
 // LogEntry represents a log entry
 type LogEntry struct {
@@ -150,6 +152,7 @@ type LogEntry struct {
 	Error string `json:"error,omitempty"`
 	// Message is a log message
 	Message string `json:"message,omitempty"`
+}
 
 // Middleware returns a middleware function for secure logging
 func (sl *SecureLogger) Middleware(next http.Handler) http.Handler {
@@ -253,6 +256,7 @@ func (sl *SecureLogger) Middleware(next http.Handler) http.Handler {
 			sl.logEntry(responseEntry)
 		}
 	})
+}
 
 // redactHeaders redacts sensitive information from headers
 func (sl *SecureLogger) redactHeaders(headers http.Header) map[string]string {
@@ -277,6 +281,7 @@ func (sl *SecureLogger) redactHeaders(headers http.Header) map[string]string {
 	}
 
 	return result
+}
 
 // redactBody redacts sensitive information from a body
 func (sl *SecureLogger) redactBody(body string) string {
@@ -297,6 +302,7 @@ func (sl *SecureLogger) redactBody(body string) string {
 	}
 
 	return body
+}
 
 // redactJSON redacts sensitive information from a JSON object
 func (sl *SecureLogger) redactJSON(obj interface{}) interface{} {
@@ -330,6 +336,7 @@ func (sl *SecureLogger) redactJSON(obj interface{}) interface{} {
 	default:
 		return v
 	}
+}
 
 // logEntry logs a log entry
 func (sl *SecureLogger) logEntry(entry LogEntry) {
@@ -344,6 +351,7 @@ func (sl *SecureLogger) logEntry(entry LogEntry) {
 		sl.config.OutputWriter.Write(data)
 		sl.config.OutputWriter.Write([]byte("\n"))
 	}
+}
 
 // Log logs a message
 func (sl *SecureLogger) Log(level LogLevel, requestID string, message string, err error) {
@@ -367,6 +375,7 @@ func (sl *SecureLogger) Log(level LogLevel, requestID string, message string, er
 
 	// Log the entry
 	sl.logEntry(entry)
+}
 
 // responseWrapper wraps an http.ResponseWriter to capture the response
 type responseWrapper struct {
@@ -382,30 +391,23 @@ func newResponseWrapper(w http.ResponseWriter) *responseWrapper {
 		statusCode:     http.StatusOK,
 		body:           bytes.NewBuffer(nil),
 	}
+}
 
 // WriteHeader captures the status code
 func (rw *responseWrapper) WriteHeader(statusCode int) {
 	rw.statusCode = statusCode
 	rw.ResponseWriter.WriteHeader(statusCode)
+}
 
 // Write captures the response body
 func (rw *responseWrapper) Write(b []byte) (int, error) {
 	rw.body.Write(b)
 	return rw.ResponseWriter.Write(b)
+}
 
 // Flush implements the http.Flusher interface
 func (rw *responseWrapper) Flush() {
 	if f, ok := rw.ResponseWriter.(http.Flusher); ok {
 		f.Flush()
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

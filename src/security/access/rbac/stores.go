@@ -5,71 +5,74 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 // RoleStore defines the interface for role storage
 type RoleStore interface {
 	// CreateRole creates a new role
 	CreateRole(ctx context.Context, role *Role) error
-	
+
 	// GetRole retrieves a role by ID
 	GetRole(ctx context.Context, roleID string) (*Role, error)
-	
+
 	// UpdateRole updates an existing role
 	UpdateRole(ctx context.Context, role *Role) error
-	
+
 	// DeleteRole deletes a role
 	DeleteRole(ctx context.Context, roleID string) error
-	
+
 	// ListRoles lists all roles
 	ListRoles(ctx context.Context) ([]*Role, error)
-	
+
 	// RoleExists checks if a role exists
 	RoleExists(ctx context.Context, roleID string) (bool, error)
-	
+
 	// AssignRoleToUser assigns a role to a user
 	AssignRoleToUser(ctx context.Context, userID string, roleID string) error
-	
+
 	// RevokeRoleFromUser revokes a role from a user
 	RevokeRoleFromUser(ctx context.Context, userID string, roleID string) error
-	
+
 	// GetUserRoles gets all roles assigned to a user
 	GetUserRoles(ctx context.Context, userID string) ([]*Role, error)
-	
+
 	// AddPermissionToRole adds a permission to a role
 	AddPermissionToRole(ctx context.Context, roleID string, permissionID string) error
-	
+
 	// RemovePermissionFromRole removes a permission from a role
 	RemovePermissionFromRole(ctx context.Context, roleID string, permissionID string) error
+}
 
 // PermissionStore defines the interface for permission storage
 type PermissionStore interface {
 	// CreatePermission creates a new permission
 	CreatePermission(ctx context.Context, permission *Permission) error
-	
+
 	// GetPermission retrieves a permission by ID
 	GetPermission(ctx context.Context, permissionID string) (*Permission, error)
-	
+
 	// UpdatePermission updates an existing permission
 	UpdatePermission(ctx context.Context, permission *Permission) error
-	
+
 	// DeletePermission deletes a permission
 	DeletePermission(ctx context.Context, permissionID string) error
-	
+
 	// ListPermissions lists all permissions
 	ListPermissions(ctx context.Context) ([]*Permission, error)
-	
+
 	// PermissionExists checks if a permission exists
 	PermissionExists(ctx context.Context, permissionID string) (bool, error)
-	
+
 	// AssignPermissionToUser assigns a permission directly to a user
 	AssignPermissionToUser(ctx context.Context, userID string, permissionID string) error
-	
+
 	// RevokePermissionFromUser revokes a permission from a user
 	RevokePermissionFromUser(ctx context.Context, userID string, permissionID string) error
-	
+
 	// GetUserPermissions gets all permissions directly assigned to a user
 	GetUserPermissions(ctx context.Context, userID string) ([]*Permission, error)
+}
 
 // InMemoryRoleStore is an in-memory implementation of RoleStore
 type InMemoryRoleStore struct {
@@ -84,6 +87,7 @@ func NewInMemoryRoleStore() *InMemoryRoleStore {
 		roles:     make(map[string]*Role),
 		userRoles: make(map[string][]string),
 	}
+}
 
 // CreateRole creates a new role
 func (s *InMemoryRoleStore) CreateRole(ctx context.Context, role *Role) error {
@@ -100,6 +104,7 @@ func (s *InMemoryRoleStore) CreateRole(ctx context.Context, role *Role) error {
 	s.roles[role.ID] = &roleCopy
 
 	return nil
+}
 
 // GetRole retrieves a role by ID
 func (s *InMemoryRoleStore) GetRole(ctx context.Context, roleID string) (*Role, error) {
@@ -114,6 +119,7 @@ func (s *InMemoryRoleStore) GetRole(ctx context.Context, roleID string) (*Role, 
 	// Return a copy to prevent modification
 	roleCopy := *role
 	return &roleCopy, nil
+}
 
 // UpdateRole updates an existing role
 func (s *InMemoryRoleStore) UpdateRole(ctx context.Context, role *Role) error {
@@ -131,6 +137,7 @@ func (s *InMemoryRoleStore) UpdateRole(ctx context.Context, role *Role) error {
 	s.roles[role.ID] = &roleCopy
 
 	return nil
+}
 
 // DeleteRole deletes a role
 func (s *InMemoryRoleStore) DeleteRole(ctx context.Context, roleID string) error {
@@ -173,6 +180,7 @@ func (s *InMemoryRoleStore) DeleteRole(ctx context.Context, roleID string) error
 	}
 
 	return nil
+}
 
 // ListRoles lists all roles
 func (s *InMemoryRoleStore) ListRoles(ctx context.Context) ([]*Role, error) {
@@ -187,6 +195,7 @@ func (s *InMemoryRoleStore) ListRoles(ctx context.Context) ([]*Role, error) {
 	}
 
 	return roles, nil
+}
 
 // RoleExists checks if a role exists
 func (s *InMemoryRoleStore) RoleExists(ctx context.Context, roleID string) (bool, error) {
@@ -195,6 +204,7 @@ func (s *InMemoryRoleStore) RoleExists(ctx context.Context, roleID string) (bool
 
 	_, exists := s.roles[roleID]
 	return exists, nil
+}
 
 // AssignRoleToUser assigns a role to a user
 func (s *InMemoryRoleStore) AssignRoleToUser(ctx context.Context, userID string, roleID string) error {
@@ -222,6 +232,7 @@ func (s *InMemoryRoleStore) AssignRoleToUser(ctx context.Context, userID string,
 	}
 
 	return nil
+}
 
 // RevokeRoleFromUser revokes a role from a user
 func (s *InMemoryRoleStore) RevokeRoleFromUser(ctx context.Context, userID string, roleID string) error {
@@ -244,6 +255,7 @@ func (s *InMemoryRoleStore) RevokeRoleFromUser(ctx context.Context, userID strin
 	s.userRoles[userID] = newRoles
 
 	return nil
+}
 
 // GetUserRoles gets all roles assigned to a user
 func (s *InMemoryRoleStore) GetUserRoles(ctx context.Context, userID string) ([]*Role, error) {
@@ -268,6 +280,7 @@ func (s *InMemoryRoleStore) GetUserRoles(ctx context.Context, userID string) ([]
 	}
 
 	return roles, nil
+}
 
 // AddPermissionToRole adds a permission to a role
 func (s *InMemoryRoleStore) AddPermissionToRole(ctx context.Context, roleID string, permissionID string) error {
@@ -292,6 +305,7 @@ func (s *InMemoryRoleStore) AddPermissionToRole(ctx context.Context, roleID stri
 	role.UpdatedAt = time.Now()
 
 	return nil
+}
 
 // RemovePermissionFromRole removes a permission from a role
 func (s *InMemoryRoleStore) RemovePermissionFromRole(ctx context.Context, roleID string, permissionID string) error {
@@ -315,6 +329,7 @@ func (s *InMemoryRoleStore) RemovePermissionFromRole(ctx context.Context, roleID
 	role.UpdatedAt = time.Now()
 
 	return nil
+}
 
 // InMemoryPermissionStore is an in-memory implementation of PermissionStore
 type InMemoryPermissionStore struct {
@@ -329,6 +344,7 @@ func NewInMemoryPermissionStore() *InMemoryPermissionStore {
 		permissions:     make(map[string]*Permission),
 		userPermissions: make(map[string][]string),
 	}
+}
 
 // CreatePermission creates a new permission
 func (s *InMemoryPermissionStore) CreatePermission(ctx context.Context, permission *Permission) error {
@@ -345,6 +361,7 @@ func (s *InMemoryPermissionStore) CreatePermission(ctx context.Context, permissi
 	s.permissions[permission.ID] = &permissionCopy
 
 	return nil
+}
 
 // GetPermission retrieves a permission by ID
 func (s *InMemoryPermissionStore) GetPermission(ctx context.Context, permissionID string) (*Permission, error) {
@@ -359,6 +376,7 @@ func (s *InMemoryPermissionStore) GetPermission(ctx context.Context, permissionI
 	// Return a copy to prevent modification
 	permissionCopy := *permission
 	return &permissionCopy, nil
+}
 
 // UpdatePermission updates an existing permission
 func (s *InMemoryPermissionStore) UpdatePermission(ctx context.Context, permission *Permission) error {
@@ -376,6 +394,7 @@ func (s *InMemoryPermissionStore) UpdatePermission(ctx context.Context, permissi
 	s.permissions[permission.ID] = &permissionCopy
 
 	return nil
+}
 
 // DeletePermission deletes a permission
 func (s *InMemoryPermissionStore) DeletePermission(ctx context.Context, permissionID string) error {
@@ -407,6 +426,7 @@ func (s *InMemoryPermissionStore) DeletePermission(ctx context.Context, permissi
 	}
 
 	return nil
+}
 
 // ListPermissions lists all permissions
 func (s *InMemoryPermissionStore) ListPermissions(ctx context.Context) ([]*Permission, error) {
@@ -421,6 +441,7 @@ func (s *InMemoryPermissionStore) ListPermissions(ctx context.Context) ([]*Permi
 	}
 
 	return permissions, nil
+}
 
 // PermissionExists checks if a permission exists
 func (s *InMemoryPermissionStore) PermissionExists(ctx context.Context, permissionID string) (bool, error) {
@@ -429,6 +450,7 @@ func (s *InMemoryPermissionStore) PermissionExists(ctx context.Context, permissi
 
 	_, exists := s.permissions[permissionID]
 	return exists, nil
+}
 
 // AssignPermissionToUser assigns a permission directly to a user
 func (s *InMemoryPermissionStore) AssignPermissionToUser(ctx context.Context, userID string, permissionID string) error {
@@ -456,6 +478,7 @@ func (s *InMemoryPermissionStore) AssignPermissionToUser(ctx context.Context, us
 	}
 
 	return nil
+}
 
 // RevokePermissionFromUser revokes a permission from a user
 func (s *InMemoryPermissionStore) RevokePermissionFromUser(ctx context.Context, userID string, permissionID string) error {
@@ -478,6 +501,7 @@ func (s *InMemoryPermissionStore) RevokePermissionFromUser(ctx context.Context, 
 	s.userPermissions[userID] = newPermissions
 
 	return nil
+}
 
 // GetUserPermissions gets all permissions directly assigned to a user
 func (s *InMemoryPermissionStore) GetUserPermissions(ctx context.Context, userID string) ([]*Permission, error) {
@@ -501,23 +525,5 @@ func (s *InMemoryPermissionStore) GetUserPermissions(ctx context.Context, userID
 		}
 	}
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return permissions, nil
 }

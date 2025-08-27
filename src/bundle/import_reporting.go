@@ -15,8 +15,12 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // Using ReportLevel from report.go for consistency
@@ -47,6 +51,7 @@ type ImportStatistics struct {
 	ExtractionTime time.Duration `json:"extraction_time"`
 	// InstallationTime is the time spent installing the bundle
 	InstallationTime time.Duration `json:"installation_time"`
+}
 
 // SystemImpactAssessment contains information about the impact of an import on the system
 type SystemImpactAssessment struct {
@@ -64,6 +69,7 @@ type SystemImpactAssessment struct {
 	ConfigChanges int `json:"config_changes"`
 	// SecurityImpact contains information about the security impact of the import
 	SecurityImpact string `json:"security_impact"`
+}
 
 // EnhancedImportReport extends ImportReport with additional detailed information
 type EnhancedImportReport struct {
@@ -83,6 +89,7 @@ type EnhancedImportReport struct {
 	LogEntries []string `json:"log_entries,omitempty"`
 	// ReportingLevel is the level of detail in the report
 	ReportingLevel ReportLevel `json:"reporting_level"` // Using ReportLevel from report.go for consistency
+}
 
 // ImportReportingSystem defines the interface for the import reporting system
 type ImportReportingSystem interface {
@@ -102,6 +109,7 @@ type ImportReportingSystem interface {
 	AddPerformanceMetric(bundleID string, metricName string, value interface{})
 	// GenerateUserFriendlySummary creates a human-readable summary of an import operation
 	GenerateUserFriendlySummary(report *EnhancedImportReport) string
+}
 
 // DefaultImportReportingSystem is the default implementation of ImportReportingSystem
 type DefaultImportReportingSystem struct {
@@ -115,6 +123,7 @@ type DefaultImportReportingSystem struct {
 	PerformanceMetrics map[string]map[string]interface{}
 	// ReportsDir is the directory where reports are stored
 	ReportsDir string
+}
 
 // NewImportReportingSystem creates a new import reporting system
 func NewImportReportingSystem(reportManager ReportManager, reportsDir string, logger io.Writer) ImportReportingSystem {
@@ -131,6 +140,7 @@ func NewImportReportingSystem(reportManager ReportManager, reportsDir string, lo
 		PerformanceMetrics: make(map[string]map[string]interface{}),
 		ReportsDir:         reportsDir,
 	}
+}
 
 // CreateReport creates an enhanced report for an import operation.
 // This method uses ReportLevel from report.go for consistency across the reporting system.
@@ -154,12 +164,12 @@ func (r *DefaultImportReportingSystem) CreateReport(result *ImportResult, level 
 	// Add additional information based on reporting level
 	if level != BasicReportLevel {
 		enhancedReport.Statistics = r.GenerateStatistics(result)
-		
+
 		if level == DetailedReportLevel || level == VerboseReportLevel {
 			enhancedReport.ValidationDetails = r.extractValidationDetails(result)
 			enhancedReport.ConflictDetails = r.extractConflictDetails(result)
 		}
-		
+
 		if level == VerboseReportLevel {
 			enhancedReport.SystemImpact = r.AssessSystemImpact(result)
 			enhancedReport.PerformanceMetrics = r.collectPerformanceMetrics(result)
@@ -168,6 +178,7 @@ func (r *DefaultImportReportingSystem) CreateReport(result *ImportResult, level 
 	}
 
 	return enhancedReport, nil
+}
 
 // SaveReport saves a report to a file
 func (r *DefaultImportReportingSystem) SaveReport(report *EnhancedImportReport, path string) error {
@@ -182,7 +193,11 @@ func (r *DefaultImportReportingSystem) SaveReport(report *EnhancedImportReport, 
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", path, err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write the report to the file
 	encoder := json.NewEncoder(file)
@@ -192,6 +207,7 @@ func (r *DefaultImportReportingSystem) SaveReport(report *EnhancedImportReport, 
 	}
 
 	return nil
+}
 
 // GenerateStatistics generates statistics for an import operation
 func (r *DefaultImportReportingSystem) GenerateStatistics(result *ImportResult) *ImportStatistics {
@@ -230,6 +246,7 @@ func (r *DefaultImportReportingSystem) GenerateStatistics(result *ImportResult) 
 	}
 
 	return stats
+}
 
 // AssessSystemImpact assesses the impact of an import on the system
 func (r *DefaultImportReportingSystem) AssessSystemImpact(result *ImportResult) *SystemImpactAssessment {
@@ -281,6 +298,7 @@ func (r *DefaultImportReportingSystem) AssessSystemImpact(result *ImportResult) 
 	}
 
 	return impact
+}
 
 // LogImportEvent logs an event during the import process
 func (r *DefaultImportReportingSystem) LogImportEvent(bundleID, event string, args ...interface{}) {
@@ -296,10 +314,12 @@ func (r *DefaultImportReportingSystem) LogImportEvent(bundleID, event string, ar
 		r.LogEntries[bundleID] = []string{}
 	}
 	r.LogEntries[bundleID] = append(r.LogEntries[bundleID], logEntry)
+}
 
 // GetLogEntries gets the log entries for an import
 func (r *DefaultImportReportingSystem) GetLogEntries(bundleID string) []string {
 	return r.LogEntries[bundleID]
+}
 
 // AddPerformanceMetric adds a performance metric for an import
 func (r *DefaultImportReportingSystem) AddPerformanceMetric(bundleID string, metricName string, value interface{}) {
@@ -307,12 +327,13 @@ func (r *DefaultImportReportingSystem) AddPerformanceMetric(bundleID string, met
 	if _, exists := r.PerformanceMetrics[bundleID]; !exists {
 		r.PerformanceMetrics[bundleID] = make(map[string]interface{})
 	}
-	
+
 	// Add the metric
 	r.PerformanceMetrics[bundleID][metricName] = value
-	
+
 	// Log the metric addition
 	r.LogImportEvent(bundleID, "Performance metric added: %s = %v", metricName, value)
+}
 
 // extractValidationDetails extracts detailed validation information about the import operation
 // This provides a comprehensive view of all validation checks performed during import
@@ -334,14 +355,14 @@ func (r *DefaultImportReportingSystem) extractValidationDetails(result *ImportRe
 
 		for _, err := range result.ValidationResult.Errors {
 			errorDetails = append(errorDetails, map[string]interface{}{
-				"message": err,
+				"message":  err,
 				"severity": "error",
 			})
 		}
 
 		for _, warn := range result.ValidationResult.Warnings {
 			warningDetails = append(warningDetails, map[string]interface{}{
-				"message": warn,
+				"message":  warn,
 				"severity": "warning",
 			})
 		}
@@ -383,13 +404,13 @@ func (r *DefaultImportReportingSystem) extractValidationDetails(result *ImportRe
 
 	// Generate a human-readable summary text
 	var summaryText strings.Builder
-	summaryText.WriteString(fmt.Sprintf("Validation checks: %d passed, %d failed\n", 
+	summaryText.WriteString(fmt.Sprintf("Validation checks: %d passed, %d failed\n",
 		validationSummary["passed"], validationSummary["failed"]))
-	
+
 	if result.ValidationResult != nil && len(result.ValidationResult.Errors) > 0 {
 		summaryText.WriteString(fmt.Sprintf("Critical errors: %d\n", len(result.ValidationResult.Errors)))
 	}
-	
+
 	if result.ValidationResult != nil && len(result.ValidationResult.Warnings) > 0 {
 		summaryText.WriteString(fmt.Sprintf("Warnings: %d\n", len(result.ValidationResult.Warnings)))
 	}
@@ -397,6 +418,7 @@ func (r *DefaultImportReportingSystem) extractValidationDetails(result *ImportRe
 	details["summary_text"] = summaryText.String()
 
 	return details
+}
 
 // extractConflictDetails extracts detailed conflict information
 func (r *DefaultImportReportingSystem) extractConflictDetails(result *ImportResult) map[string]interface{} {
@@ -425,16 +447,17 @@ func (r *DefaultImportReportingSystem) extractConflictDetails(result *ImportResu
 	details["resolutions"] = resolutionStats
 
 	return details
+}
 
 // GenerateUserFriendlySummary creates a human-readable summary of an import operation
 // This provides a clear, concise overview of the import results suitable for end users
 func (r *DefaultImportReportingSystem) GenerateUserFriendlySummary(report *EnhancedImportReport) string {
 	var summary strings.Builder
-	
+
 	// Basic import information
 	summary.WriteString(fmt.Sprintf("Import Summary for Bundle: %s\n", report.Result.BundleID))
 	summary.WriteString(fmt.Sprintf("Generated: %s\n\n", report.GeneratedAt.Format(time.RFC1123)))
-	
+
 	// Overall status
 	if report.Result.Success {
 		summary.WriteString("Status: ✅ Import Successful\n")
@@ -445,53 +468,53 @@ func (r *DefaultImportReportingSystem) GenerateUserFriendlySummary(report *Enhan
 		}
 	}
 	summary.WriteString("\n")
-	
+
 	// Statistics if available
 	if report.Statistics != nil {
 		summary.WriteString("Import Statistics:\n")
-		summary.WriteString(fmt.Sprintf("- Files Processed: %d of %d\n", 
+		summary.WriteString(fmt.Sprintf("- Files Processed: %d of %d\n",
 			report.Statistics.ImportedFiles, report.Statistics.TotalFiles))
-		
+
 		if report.Statistics.SkippedFiles > 0 {
 			summary.WriteString(fmt.Sprintf("- Files Skipped: %d\n", report.Statistics.SkippedFiles))
 		}
-		
+
 		if report.Statistics.ConflictFiles > 0 {
 			summary.WriteString(fmt.Sprintf("- Files with Conflicts: %d\n", report.Statistics.ConflictFiles))
 			summary.WriteString(fmt.Sprintf("- Conflicts Resolved: %d\n", report.Statistics.ResolvedConflicts))
 		}
-		
+
 		if report.Statistics.ValidationErrors > 0 || report.Statistics.ValidationWarnings > 0 {
-			summary.WriteString(fmt.Sprintf("- Validation Issues: %d errors, %d warnings\n", 
+			summary.WriteString(fmt.Sprintf("- Validation Issues: %d errors, %d warnings\n",
 				report.Statistics.ValidationErrors, report.Statistics.ValidationWarnings))
 		}
-		
+
 		summary.WriteString(fmt.Sprintf("- Total Size: %s\n", formatByteSize(report.Statistics.TotalSize)))
-		summary.WriteString(fmt.Sprintf("- Total Processing Time: %s\n", 
+		summary.WriteString(fmt.Sprintf("- Total Processing Time: %s\n",
 			formatImportDuration(report.Statistics.ProcessingTime)))
 		summary.WriteString("\n")
 	}
-	
+
 	// System impact if available
 	if report.SystemImpact != nil {
 		summary.WriteString("System Impact:\n")
-		summary.WriteString(fmt.Sprintf("- Disk Space Used: %s\n", 
+		summary.WriteString(fmt.Sprintf("- Disk Space Used: %s\n",
 			formatByteSize(report.SystemImpact.DiskSpaceUsed)))
-		summary.WriteString(fmt.Sprintf("- Disk Space Available: %s\n", 
+		summary.WriteString(fmt.Sprintf("- Disk Space Available: %s\n",
 			formatByteSize(report.SystemImpact.DiskSpaceAvailable)))
-		
+
 		if report.SystemImpact.ConfigChanges > 0 {
-			summary.WriteString(fmt.Sprintf("- Configuration Changes: %d\n", 
+			summary.WriteString(fmt.Sprintf("- Configuration Changes: %d\n",
 				report.SystemImpact.ConfigChanges))
 		}
-		
+
 		if report.SystemImpact.SecurityImpact != "" {
-			summary.WriteString(fmt.Sprintf("- Security Impact: %s\n", 
+			summary.WriteString(fmt.Sprintf("- Security Impact: %s\n",
 				report.SystemImpact.SecurityImpact))
 		}
 		summary.WriteString("\n")
 	}
-	
+
 	// Add validation summary if detailed level
 	if report.ValidationDetails != nil && len(report.ValidationDetails) > 0 {
 		summary.WriteString("Validation Summary:\n")
@@ -508,7 +531,7 @@ func (r *DefaultImportReportingSystem) GenerateUserFriendlySummary(report *Enhan
 		}
 		summary.WriteString("\n")
 	}
-	
+
 	// Add conflict summary if detailed level
 	if report.ConflictDetails != nil && len(report.ConflictDetails) > 0 {
 		summary.WriteString("Conflict Summary:\n")
@@ -537,7 +560,7 @@ func (r *DefaultImportReportingSystem) GenerateUserFriendlySummary(report *Enhan
 		}
 		summary.WriteString("\n")
 	}
-	
+
 	// Add next steps or recommendations
 	summary.WriteString("Next Steps:\n")
 	if !report.Result.Success {
@@ -552,8 +575,9 @@ func (r *DefaultImportReportingSystem) GenerateUserFriendlySummary(report *Enhan
 			summary.WriteString("- Review configuration changes\n")
 		}
 	}
-	
+
 	return summary.String()
+}
 
 // Helper function to format byte sizes in a human-readable way
 func formatByteSize(bytes int64) string {
@@ -567,6 +591,7 @@ func formatByteSize(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
 
 // formatImportDuration formats durations for import reporting in a human-readable way
 func formatImportDuration(d time.Duration) string {
@@ -574,29 +599,30 @@ func formatImportDuration(d time.Duration) string {
 	if d < time.Minute {
 		return fmt.Sprintf("%.2f seconds", d.Seconds())
 	}
-	
+
 	// For longer durations, format as minutes and seconds
 	minutes := int(d.Minutes())
 	seconds := int(d.Seconds()) % 60
-	
+
 	if minutes < 60 {
 		return fmt.Sprintf("%dm %ds", minutes, seconds)
 	}
-	
+
 	// For very long durations, include hours
 	hours := minutes / 60
 	minutes = minutes % 60
-	
+
 	return fmt.Sprintf("%dh %dm %ds", hours, minutes, seconds)
+}
 
 // collectPerformanceMetrics collects detailed performance metrics
 func (r *DefaultImportReportingSystem) collectPerformanceMetrics(result *ImportResult) map[string]interface{} {
 	metrics := make(map[string]interface{})
-	
+
 	// Calculate total processing time
 	processingTime := result.EndTime.Sub(result.StartTime)
 	metrics["total_processing_time_ms"] = processingTime.Milliseconds()
-	
+
 	// Add memory usage information
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
@@ -605,12 +631,12 @@ func (r *DefaultImportReportingSystem) collectPerformanceMetrics(result *ImportR
 	metrics["heap_alloc_bytes"] = memStats.HeapAlloc
 	metrics["heap_sys_bytes"] = memStats.HeapSys
 	metrics["num_gc"] = memStats.NumGC
-	
+
 	// Add CPU usage information if available
 	// This is a simplified approach and might not be accurate in all environments
 	metrics["num_goroutines"] = runtime.NumGoroutine()
 	metrics["num_cpu"] = runtime.NumCPU()
-	
+
 	// Add any custom performance metrics that were collected during the import process
 	if customMetrics, exists := r.PerformanceMetrics[result.BundleID]; exists {
 		for key, value := range customMetrics {
@@ -619,6 +645,7 @@ func (r *DefaultImportReportingSystem) collectPerformanceMetrics(result *ImportR
 	}
 
 	return metrics
+}
 
 // calculateDirectorySize calculates the size of a directory in bytes
 func (r *DefaultImportReportingSystem) calculateDirectorySize(path string) (int64, error) {
@@ -633,6 +660,7 @@ func (r *DefaultImportReportingSystem) calculateDirectorySize(path string) (int6
 		return nil
 	})
 	return size, err
+}
 
 // ImportConflict represents a conflict between a bundle file and an existing file during import reporting
 type ImportConflict struct {
@@ -644,6 +672,17 @@ type ImportConflict struct {
 	ExistingChecksum string `json:"existing_checksum,omitempty"`
 	// Type is the type of conflict
 	Type string `json:"type,omitempty"`
+}
 
 // ConflictResolution represents a resolution for a conflict
 // ValidationResult is defined in types.go
+
+// getDiskSpaceForImportedFiles calculates the available disk space for imported files
+func (r *DefaultImportReportingSystem) getDiskSpaceForImportedFiles(importedFiles []string) int64 {
+	if len(importedFiles) > 0 {
+		dir := filepath.Dir(importedFiles[0])
+		return getDiskSpaceAvailable(dir)
+	}
+	// Fallback for empty file list
+	return 1024 * 1024 * 1024 * 10 // 10GB placeholder
+}

@@ -151,11 +151,11 @@ type AccessControlConfig struct {
 
 	// SessionPolicy defines session management settings
 	SessionPolicy struct {
-		MaxDuration      int  `json:"maxDuration"`
-		IdleTimeout      int  `json:"idleTimeout"`
-		RequireMFA       bool `json:"requireMFA"`
-		SecureCookies    bool `json:"secureCookies"`
-		AllowConcurrent  bool `json:"allowConcurrent"`
+		MaxDuration     int  `json:"maxDuration"`
+		IdleTimeout     int  `json:"idleTimeout"`
+		RequireMFA      bool `json:"requireMFA"`
+		SecureCookies   bool `json:"secureCookies"`
+		AllowConcurrent bool `json:"allowConcurrent"`
 	} `json:"sessionPolicy"`
 
 	// RolePermissions maps roles to their permissions

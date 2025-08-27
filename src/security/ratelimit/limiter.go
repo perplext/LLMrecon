@@ -4,18 +4,18 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 // RateLimiter implements a token bucket rate limiter
 type RateLimiter struct {
-	mu        sync.Mutex
-	tokens    float64
-	maxTokens float64
+	mu         sync.Mutex
+	tokens     float64
+	maxTokens  float64
 	refillRate float64
 	lastRefill time.Time
 }
 
-}
 // NewRateLimiter creates a new rate limiter
 func NewRateLimiter(maxTokens float64, refillRate float64) *RateLimiter {
 	return &RateLimiter{
@@ -24,9 +24,9 @@ func NewRateLimiter(maxTokens float64, refillRate float64) *RateLimiter {
 		refillRate: refillRate,
 		lastRefill: time.Now(),
 	}
+}
 
 // Allow checks if a request is allowed
-}
 func (rl *RateLimiter) Allow() bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -39,9 +39,9 @@ func (rl *RateLimiter) Allow() bool {
 	}
 
 	return false
+}
 
 // AllowN checks if n requests are allowed
-}
 func (rl *RateLimiter) AllowN(n float64) bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -54,9 +54,9 @@ func (rl *RateLimiter) AllowN(n float64) bool {
 	}
 
 	return false
+}
 
 // refill adds tokens based on time elapsed
-}
 func (rl *RateLimiter) refill() {
 	now := time.Now()
 	elapsed := now.Sub(rl.lastRefill).Seconds()
@@ -64,9 +64,9 @@ func (rl *RateLimiter) refill() {
 
 	rl.tokens = min(rl.tokens+tokensToAdd, rl.maxTokens)
 	rl.lastRefill = now
+}
 
 // Wait blocks until a token is available
-}
 func (rl *RateLimiter) Wait(ctx context.Context) error {
 	for {
 		if rl.Allow() {
@@ -80,17 +80,17 @@ func (rl *RateLimiter) Wait(ctx context.Context) error {
 			// Check again
 		}
 	}
+}
 
 // IPRateLimiter manages rate limits per IP address
 type IPRateLimiter struct {
-	mu       sync.RWMutex
-	limiters map[string]*RateLimiter
-	maxTokens float64
-	refillRate float64
+	mu              sync.RWMutex
+	limiters        map[string]*RateLimiter
+	maxTokens       float64
+	refillRate      float64
 	cleanupInterval time.Duration
 }
 
-}
 // NewIPRateLimiter creates a new IP-based rate limiter
 func NewIPRateLimiter(maxTokens, refillRate float64) *IPRateLimiter {
 	rl := &IPRateLimiter{
@@ -104,9 +104,9 @@ func NewIPRateLimiter(maxTokens, refillRate float64) *IPRateLimiter {
 	go rl.cleanup()
 
 	return rl
+}
 
 // Allow checks if a request from an IP is allowed
-}
 func (rl *IPRateLimiter) Allow(ip string) bool {
 	rl.mu.Lock()
 	limiter, exists := rl.limiters[ip]
@@ -117,9 +117,9 @@ func (rl *IPRateLimiter) Allow(ip string) bool {
 	rl.mu.Unlock()
 
 	return limiter.Allow()
+}
 
 // cleanup removes inactive rate limiters
-}
 func (rl *IPRateLimiter) cleanup() {
 	ticker := time.NewTicker(rl.cleanupInterval)
 	defer ticker.Stop()
@@ -135,6 +135,7 @@ func (rl *IPRateLimiter) cleanup() {
 		}
 		rl.mu.Unlock()
 	}
+}
 
 // APIKeyRateLimiter manages rate limits per API key
 type APIKeyRateLimiter struct {
@@ -143,7 +144,6 @@ type APIKeyRateLimiter struct {
 	limits   map[string]RateLimitConfig
 }
 
-}
 // RateLimitConfig defines rate limit configuration
 type RateLimitConfig struct {
 	MaxTokens  float64
@@ -151,16 +151,15 @@ type RateLimitConfig struct {
 	BurstSize  int
 }
 
-}
 // NewAPIKeyRateLimiter creates a new API key-based rate limiter
 func NewAPIKeyRateLimiter() *APIKeyRateLimiter {
 	return &APIKeyRateLimiter{
 		limiters: make(map[string]*RateLimiter),
 		limits:   make(map[string]RateLimitConfig),
 	}
+}
 
 // SetLimit sets the rate limit for an API key
-}
 func (rl *APIKeyRateLimiter) SetLimit(apiKey string, config RateLimitConfig) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -168,6 +167,7 @@ func (rl *APIKeyRateLimiter) SetLimit(apiKey string, config RateLimitConfig) {
 	rl.limits[apiKey] = config
 	// Reset the limiter if it exists
 	delete(rl.limiters, apiKey)
+}
 
 // Allow checks if a request with an API key is allowed
 func (rl *APIKeyRateLimiter) Allow(apiKey string) (bool, error) {
@@ -176,7 +176,12 @@ func (rl *APIKeyRateLimiter) Allow(apiKey string) (bool, error) {
 
 	config, exists := rl.limits[apiKey]
 	if !exists {
-		return false, fmt.Errorf("API key not configured: %s", apiKey[:min(8, len(apiKey))]+"...")
+		keyLen := len(apiKey)
+		displayLen := 8
+		if keyLen < displayLen {
+			displayLen = keyLen
+		}
+		return false, fmt.Errorf("API key not configured: %s", apiKey[:displayLen]+"...")
 	}
 
 	limiter, exists := rl.limiters[apiKey]
@@ -186,10 +191,4 @@ func (rl *APIKeyRateLimiter) Allow(apiKey string) (bool, error) {
 	}
 
 	return limiter.Allow(), nil
-
-// min returns the minimum of two float64 values
 }
-func min(a, b float64) float64 {
-	if a < b {
-		return a
-	}

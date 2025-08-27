@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 )
 
 // Manager orchestrates all analytics operations
@@ -19,6 +20,7 @@ type Manager struct {
 	dashboardEngine *DashboardEngine
 	logger          Logger
 	mu              sync.RWMutex
+}
 
 // Config holds analytics configuration
 type Config struct {
@@ -26,34 +28,67 @@ type Config struct {
 	StorageType     StorageType
 	DatabaseURL     string
 	RetentionPolicy RetentionPolicy
-	
+
 	// Collection settings
 	MetricsEnabled     bool
 	CollectionInterval time.Duration
 	BatchSize          int
 	BufferSize         int
-	
+
 	// Analysis settings
-	TrendWindowDays    int
-	AnalysisInterval   time.Duration
-	AnomalyThreshold   float64
-	BaselineWindow     time.Duration
-	
+	TrendWindowDays  int
+	AnalysisInterval time.Duration
+	AnomalyThreshold float64
+	BaselineWindow   time.Duration
+
 	// Dashboard settings
-	DashboardEnabled   bool
-	RealTimeUpdates    bool
-	RefreshInterval    time.Duration
-	CacheTTL           time.Duration
-	
+	DashboardEnabled bool
+	RealTimeUpdates  bool
+	RefreshInterval  time.Duration
+	CacheTTL         time.Duration
+
 	// Export settings
-	ExportFormats      []string
-	APIEnabled         bool
-	WebhookURLs        []string
-	
+	ExportFormats []string
+	APIEnabled    bool
+	WebhookURLs   []string
+
 	// Security settings
-	DataEncryption     bool
-	AccessControl      bool
-	AuditLogging       bool
+	DataEncryption bool
+	AccessControl  bool
+	AuditLogging   bool
+
+	// Analytics sub-configuration
+	Analytics AnalyticsConfig
+}
+
+// AnalyticsConfig holds detailed analytics configuration
+type AnalyticsConfig struct {
+	// Collection settings
+	CollectionEnabled     bool          `json:"collection_enabled"`
+	BufferSize            int           `json:"buffer_size"`
+	BatchSize             int           `json:"batch_size"`
+	FlushInterval         time.Duration `json:"flush_interval"`
+	SystemMetricsInterval int           `json:"system_metrics_interval"`
+	AggregationInterval   int           `json:"aggregation_interval"`
+	ArchivePath           string        `json:"archive_path"`
+
+	// Trend analysis settings
+	TrendAnalysis TrendAnalysisConfig `json:"trend_analysis"`
+
+	// Filtering settings
+	FilteringEnabled bool          `json:"filtering_enabled"`
+	ExcludePatterns  []string      `json:"exclude_patterns"`
+	MinValue         float64       `json:"min_value"`
+	MaxAge           time.Duration `json:"max_age"`
+}
+
+// TrendAnalysisConfig holds trend analysis specific configuration
+type TrendAnalysisConfig struct {
+	LookbackDays            int     `json:"lookback_days"`
+	AnalysisIntervalMinutes int     `json:"analysis_interval_minutes"`
+	ConfidenceLevel         float64 `json:"confidence_level"`
+	SignificanceLevel       float64 `json:"significance_level"`
+}
 
 // StorageType represents different storage backends
 type StorageType string
@@ -81,36 +116,38 @@ type Logger interface {
 	Error(msg string, err error)
 	Debug(msg string)
 	Warn(msg string)
+}
 
 // NewManager creates a new analytics manager
 func NewManager(config *Config, logger Logger) (*Manager, error) {
 	if config == nil {
 		config = DefaultConfig()
 	}
-	
+
 	// Initialize storage
 	storage, err := NewDataStorage(config, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize storage: %w", err)
 	}
-	
+
 	manager := &Manager{
 		config:          config,
 		collector:       NewMetricsCollector(config, logger),
 		storage:         storage,
-		trendAnalyzer:   NewTrendAnalyzer(config, logger),
-		reportGenerator: NewReportGenerator(config, logger),
+		trendAnalyzer:   NewTrendAnalyzer(config, storage, logger),
+		reportGenerator: NewBasicReportGenerator(config, logger),
 		dashboardEngine: NewDashboardEngine(config, logger),
 		logger:          logger,
 	}
-	
+
 	return manager, nil
+}
 
 // DefaultConfig returns default analytics configuration
 func DefaultConfig() *Config {
 	return &Config{
-		StorageType:        StorageTypeSQLite,
-		DatabaseURL:        "./analytics.db",
+		StorageType: StorageTypeSQLite,
+		DatabaseURL: "./analytics.db",
 		RetentionPolicy: RetentionPolicy{
 			RawDataDays:       30,
 			AggregatedDays:    365,
@@ -135,107 +172,135 @@ func DefaultConfig() *Config {
 		DataEncryption:     false,
 		AccessControl:      false,
 		AuditLogging:       true,
+		Analytics: AnalyticsConfig{
+			CollectionEnabled:     true,
+			BufferSize:            1000,
+			BatchSize:             100,
+			FlushInterval:         30 * time.Second,
+			SystemMetricsInterval: 60,
+			AggregationInterval:   300,
+			ArchivePath:           "./analytics_archive",
+			TrendAnalysis: TrendAnalysisConfig{
+				LookbackDays:            30,
+				AnalysisIntervalMinutes: 60,
+				ConfidenceLevel:         0.95,
+				SignificanceLevel:       0.05,
+			},
+			FilteringEnabled: true,
+			ExcludePatterns:  []string{},
+			MinValue:         0.0,
+			MaxAge:           24 * time.Hour,
+		},
 	}
+}
 
 // Start initializes and starts analytics collection
 func (m *Manager) Start(ctx context.Context) error {
 	m.logger.Info("Starting analytics manager...")
-	
+
 	// Initialize storage
 	if err := m.storage.Initialize(); err != nil {
 		return fmt.Errorf("failed to initialize storage: %w", err)
 	}
-	
+
 	// Start metrics collection
 	if m.config.MetricsEnabled {
 		if err := m.collector.Start(ctx, m.storage); err != nil {
 			return fmt.Errorf("failed to start metrics collection: %w", err)
 		}
 	}
-	
+
 	// Start trend analysis
 	if err := m.trendAnalyzer.Start(ctx, m.storage); err != nil {
 		return fmt.Errorf("failed to start trend analysis: %w", err)
 	}
-	
+
 	// Start dashboard engine
 	if m.config.DashboardEnabled {
 		if err := m.dashboardEngine.Start(ctx, m.storage); err != nil {
 			return fmt.Errorf("failed to start dashboard engine: %w", err)
 		}
 	}
-	
+
 	// Start cleanup routine
 	go m.runCleanup(ctx)
-	
+
 	m.logger.Info("Analytics manager started successfully")
 	return nil
-	
+}
 
 // Stop gracefully shuts down analytics components
 func (m *Manager) Stop() error {
 	m.logger.Info("Stopping analytics manager...")
-	
+
 	// Stop components
 	if err := m.collector.Stop(); err != nil {
 		m.logger.Error("Failed to stop metrics collector", err)
 	}
-	
+
 	if err := m.trendAnalyzer.Stop(); err != nil {
 		m.logger.Error("Failed to stop trend analyzer", err)
 	}
-	
+
 	if err := m.dashboardEngine.Stop(); err != nil {
 		m.logger.Error("Failed to stop dashboard engine", err)
 	}
-	
+
 	// Close storage
 	if err := m.storage.Close(); err != nil {
 		m.logger.Error("Failed to close storage", err)
 		return err
 	}
-	
+
 	m.logger.Info("Analytics manager stopped")
 	return nil
+}
 
 // RecordScanResult records a scan result for analytics
 func (m *Manager) RecordScanResult(result *ScanResult) error {
 	if !m.config.MetricsEnabled {
 		return nil
 	}
-	
+
 	return m.collector.RecordScanResult(result)
+}
 
 // RecordMetric records a custom metric
 func (m *Manager) RecordMetric(metric *Metric) error {
 	if !m.config.MetricsEnabled {
 		return nil
 	}
-	
+
 	return m.collector.RecordMetric(metric)
+}
 
 // GetDashboard returns dashboard data
 func (m *Manager) GetDashboard(timeRange TimeRange) (*Dashboard, error) {
 	return m.dashboardEngine.GenerateDashboard(timeRange)
+}
 
 // GetTrends returns trend analysis data
 func (m *Manager) GetTrends(params *TrendParams) (*TrendAnalysis, error) {
 	return m.trendAnalyzer.AnalyzeTrends(params)
+}
 
 // GetReport generates an analytics report
 func (m *Manager) GetReport(params *ReportParams) (*Report, error) {
 	return m.reportGenerator.GenerateReport(params)
+}
 
 // GetMetrics retrieves metrics data
 func (m *Manager) GetMetrics(query *MetricsQuery) (*MetricsResult, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	return m.storage.QueryMetrics(query)
+}
 
 // GetComparisonAnalysis performs comparative analysis
 func (m *Manager) GetComparisonAnalysis(params *ComparisonParams) (*ComparisonResult, error) {
 	return m.performComparison(params)
+}
 
 // ExportData exports analytics data in specified format
 func (m *Manager) ExportData(params *ExportParams) ([]byte, error) {
@@ -249,13 +314,14 @@ func (m *Manager) ExportData(params *ExportParams) ([]byte, error) {
 	default:
 		return nil, fmt.Errorf("unsupported export format: %s", params.Format)
 	}
+}
 
 // GetAnalyticsSummary returns a high-level analytics summary
 func (m *Manager) GetAnalyticsSummary() (*AnalyticsSummary, error) {
 	summary := &AnalyticsSummary{
 		GeneratedAt: time.Now(),
 	}
-	
+
 	// Get basic metrics
 	if metrics, err := m.storage.QueryMetrics(&MetricsQuery{
 		TimeRange: TimeRange{
@@ -266,7 +332,7 @@ func (m *Manager) GetAnalyticsSummary() (*AnalyticsSummary, error) {
 		summary.TotalScans = len(metrics.Data)
 		summary.calculateBasicStats(metrics)
 	}
-	
+
 	// Get trends
 	if trends, err := m.trendAnalyzer.AnalyzeTrends(&TrendParams{
 		TimeRange: TimeRange{
@@ -277,17 +343,18 @@ func (m *Manager) GetAnalyticsSummary() (*AnalyticsSummary, error) {
 	}); err == nil {
 		summary.TrendData = trends.Summary
 	}
-	
+
 	// Get storage stats
 	summary.StorageStats = m.getStorageStats()
-	
+
 	return summary, nil
+}
 
 // runCleanup performs periodic cleanup of old data
 func (m *Manager) runCleanup(ctx context.Context) {
 	ticker := time.NewTicker(24 * time.Hour) // Daily cleanup
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -298,14 +365,15 @@ func (m *Manager) runCleanup(ctx context.Context) {
 			}
 		}
 	}
+}
 
 // performCleanup removes old data according to retention policy
 func (m *Manager) performCleanup() error {
 	m.logger.Info("Starting data cleanup...")
-	
+
 	policy := m.config.RetentionPolicy
 	now := time.Now()
-	
+
 	// Clean raw data
 	if policy.RawDataDays > 0 {
 		cutoff := now.AddDate(0, 0, -policy.RawDataDays)
@@ -313,7 +381,7 @@ func (m *Manager) performCleanup() error {
 			return fmt.Errorf("failed to clean raw data: %w", err)
 		}
 	}
-	
+
 	// Archive old data
 	if policy.ArchiveAfterDays > 0 {
 		cutoff := now.AddDate(0, 0, -policy.ArchiveAfterDays)
@@ -321,9 +389,10 @@ func (m *Manager) performCleanup() error {
 			return fmt.Errorf("failed to archive data: %w", err)
 		}
 	}
-	
+
 	m.logger.Info("Data cleanup completed")
 	return nil
+}
 
 // performComparison performs comparative analysis
 func (m *Manager) performComparison(params *ComparisonParams) (*ComparisonResult, error) {
@@ -332,7 +401,7 @@ func (m *Manager) performComparison(params *ComparisonParams) (*ComparisonResult
 		GeneratedAt:    time.Now(),
 		Comparisons:    make([]Comparison, 0),
 	}
-	
+
 	switch params.Type {
 	case ComparisonTypeTimeRange:
 		return m.compareTimeRanges(params)
@@ -343,6 +412,7 @@ func (m *Manager) performComparison(params *ComparisonParams) (*ComparisonResult
 	default:
 		return nil, fmt.Errorf("unsupported comparison type: %s", params.Type)
 	}
+}
 
 // compareTimeRanges compares metrics across different time ranges
 func (m *Manager) compareTimeRanges(params *ComparisonParams) (*ComparisonResult, error) {
@@ -350,7 +420,7 @@ func (m *Manager) compareTimeRanges(params *ComparisonParams) (*ComparisonResult
 		ComparisonType: ComparisonTypeTimeRange,
 		GeneratedAt:    time.Now(),
 	}
-	
+
 	// Get metrics for each time range
 	for _, timeRange := range params.TimeRanges {
 		metrics, err := m.storage.QueryMetrics(&MetricsQuery{
@@ -360,61 +430,67 @@ func (m *Manager) compareTimeRanges(params *ComparisonParams) (*ComparisonResult
 		if err != nil {
 			return nil, err
 		}
-		
+
 		comparison := Comparison{
 			Label:   fmt.Sprintf("%s to %s", timeRange.Start.Format("2006-01-02"), timeRange.End.Format("2006-01-02")),
 			Metrics: m.aggregateMetrics(metrics),
 		}
-		
+
 		result.Comparisons = append(result.Comparisons, comparison)
 	}
-	
+
 	// Calculate deltas
 	result.calculateDeltas()
-	
+
 	return result, nil
+}
 
 // Helper methods
 func (m *Manager) getStorageStats() StorageStats {
 	stats := StorageStats{}
-	
+
 	// Get storage size and record counts
 	if size, err := m.storage.GetStorageSize(); err == nil {
 		stats.TotalSize = size
 	}
-	
+
 	if count, err := m.storage.GetRecordCount(); err == nil {
 		stats.TotalRecords = count
 	}
-	
+
 	return stats
+}
 
 func (m *Manager) aggregateMetrics(metrics *MetricsResult) map[string]float64 {
 	aggregated := make(map[string]float64)
-	
+
 	for _, dataPoint := range metrics.Data {
 		for key, value := range dataPoint.Values {
 			aggregated[key] += value
 		}
 	}
-	
+
 	return aggregated
+}
 
 func (m *Manager) exportJSON(params *ExportParams) ([]byte, error) {
 	data, err := m.gatherExportData(params)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return json.MarshalIndent(data, "", "  ")
+}
 
 func (m *Manager) exportCSV(params *ExportParams) ([]byte, error) {
 	// Implementation for CSV export
 	return nil, fmt.Errorf("CSV export not yet implemented")
+}
 
 func (m *Manager) exportExcel(params *ExportParams) ([]byte, error) {
 	// Implementation for Excel export
 	return nil, fmt.Errorf("Excel export not yet implemented")
+}
 
 func (m *Manager) gatherExportData(params *ExportParams) (interface{}, error) {
 	switch params.DataType {
@@ -431,27 +507,30 @@ func (m *Manager) gatherExportData(params *ExportParams) (interface{}, error) {
 	default:
 		return nil, fmt.Errorf("unsupported data type: %s", params.DataType)
 	}
+}
 
 // compareTargets compares metrics across different targets
 func (m *Manager) compareTargets(params *ComparisonParams) (*ComparisonResult, error) {
 	// Implementation for target comparison
 	return nil, fmt.Errorf("target comparison not yet implemented")
+}
 
 // compareTemplates compares metrics across different templates
 func (m *Manager) compareTemplates(params *ComparisonParams) (*ComparisonResult, error) {
 	// Implementation for template comparison
 	return nil, fmt.Errorf("template comparison not yet implemented")
+}
 
 // calculateBasicStats calculates basic statistics from metrics
 func (summary *AnalyticsSummary) calculateBasicStats(metrics *MetricsResult) {
 	if len(metrics.Data) == 0 {
 		return
 	}
-	
+
 	// Calculate averages, totals, etc.
 	var totalVulns, totalDuration float64
 	durations := make([]float64, 0)
-	
+
 	for _, dataPoint := range metrics.Data {
 		if v, ok := dataPoint.Values["vulnerability_count"]; ok {
 			totalVulns += v
@@ -461,10 +540,10 @@ func (summary *AnalyticsSummary) calculateBasicStats(metrics *MetricsResult) {
 			durations = append(durations, d)
 		}
 	}
-	
+
 	summary.TotalVulnerabilities = int(totalVulns)
 	summary.AverageScanDuration = totalDuration / float64(len(metrics.Data))
-	
+
 	// Calculate median duration
 	if len(durations) > 0 {
 		sort.Float64s(durations)
@@ -474,19 +553,20 @@ func (summary *AnalyticsSummary) calculateBasicStats(metrics *MetricsResult) {
 			summary.MedianScanDuration = durations[len(durations)/2]
 		}
 	}
+}
 
 // calculateDeltas calculates percentage changes between comparisons
 func (result *ComparisonResult) calculateDeltas() {
 	if len(result.Comparisons) < 2 {
 		return
 	}
-	
+
 	baseline := result.Comparisons[0]
-	
+
 	for i := 1; i < len(result.Comparisons); i++ {
 		comparison := &result.Comparisons[i]
 		comparison.Deltas = make(map[string]float64)
-		
+
 		for metric, value := range comparison.Metrics {
 			if baseValue, ok := baseline.Metrics[metric]; ok && baseValue != 0 {
 				delta := ((value - baseValue) / baseValue) * 100
@@ -495,28 +575,35 @@ func (result *ComparisonResult) calculateDeltas() {
 		}
 	}
 }
+
+// BasicReportGenerator implements ReportGenerator interface
+type BasicReportGenerator struct {
+	config *Config
+	logger Logger
 }
+
+// NewBasicReportGenerator creates a new basic report generator
+func NewBasicReportGenerator(config *Config, logger Logger) *BasicReportGenerator {
+	return &BasicReportGenerator{
+		config: config,
+		logger: logger,
+	}
 }
+
+// GenerateReport generates a basic report
+func (brg *BasicReportGenerator) GenerateReport(params *ReportParams) (*Report, error) {
+	return &Report{
+		ID:          "basic-report-" + time.Now().Format("20060102-150405"),
+		Type:        params.Type,
+		Title:       "Basic Analytics Report",
+		GeneratedAt: time.Now(),
+		GeneratedBy: "system",
+		Params:      params,
+		Sections:    []ReportSection{},
+		Metadata:    make(map[string]string),
+		Size:        0,
+		Format:      params.Format,
+	}, nil
 }
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+
+// Note: DashboardEngine is defined in dashboard.go

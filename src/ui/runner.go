@@ -3,7 +3,9 @@ package ui
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -23,29 +25,31 @@ type RunnerTask struct {
 	Execute     func(ctx context.Context, progress ProgressReporter) error
 	Retryable   bool
 	Required    bool
+}
 
 // RunnerOptions configures the runner
 type RunnerOptions struct {
-	ShowProgress     bool
-	ConcurrentTasks  int
-	RetryAttempts    int
-	RetryDelay       time.Duration
-	ContinueOnError  bool
-	ShowTaskDetails  bool
-	SummaryReport    bool
+	ShowProgress    bool
+	ConcurrentTasks int
+	RetryAttempts   int
+	RetryDelay      time.Duration
+	ContinueOnError bool
+	ShowTaskDetails bool
+	SummaryReport   bool
 }
 
 // DefaultRunnerOptions returns default runner options
 func DefaultRunnerOptions() RunnerOptions {
 	return RunnerOptions{
-		ShowProgress:     true,
-		ConcurrentTasks:  1,
-		RetryAttempts:    3,
-		RetryDelay:       time.Second,
-		ContinueOnError:  false,
-		ShowTaskDetails:  true,
-		SummaryReport:    true,
+		ShowProgress:    true,
+		ConcurrentTasks: 1,
+		RetryAttempts:   3,
+		RetryDelay:      time.Second,
+		ContinueOnError: false,
+		ShowTaskDetails: true,
+		SummaryReport:   true,
 	}
+}
 
 // ProgressReporter provides progress reporting interface
 type ProgressReporter interface {
@@ -56,6 +60,7 @@ type ProgressReporter interface {
 	SetDetails(details string)
 	AddSubTask(name string)
 	CompleteSubTask(name string)
+}
 
 // NewRunner creates a new interactive runner
 func NewRunner(terminal *Terminal, options RunnerOptions) *Runner {
@@ -64,10 +69,12 @@ func NewRunner(terminal *Terminal, options RunnerOptions) *Runner {
 		tasks:    make([]RunnerTask, 0),
 		options:  options,
 	}
+}
 
 // AddTask adds a task to the runner
 func (r *Runner) AddTask(task RunnerTask) {
 	r.tasks = append(r.tasks, task)
+}
 
 // Run executes all tasks with progress tracking
 func (r *Runner) Run(ctx context.Context) error {
@@ -100,6 +107,7 @@ func (r *Runner) Run(ctx context.Context) error {
 	}
 
 	return nil
+}
 
 // TaskResult represents the result of a task execution
 type TaskResult struct {
@@ -131,6 +139,7 @@ func (r *Runner) runSequential(ctx context.Context) []TaskResult {
 	}
 
 	return results
+}
 
 // runConcurrent runs tasks concurrently
 func (r *Runner) runConcurrent(ctx context.Context) []TaskResult {
@@ -160,11 +169,12 @@ func (r *Runner) runConcurrent(ctx context.Context) []TaskResult {
 
 	wg.Wait()
 	return results
+}
 
 // runTask runs a single task with retry logic
 func (r *Runner) runTask(ctx context.Context, index int, task RunnerTask) TaskResult {
 	startTime := time.Now()
-	
+
 	// Create progress reporter
 	progress := &progressReporter{
 		terminal: r.terminal,
@@ -200,7 +210,7 @@ func (r *Runner) runTask(ctx context.Context, index int, task RunnerTask) TaskRe
 			// Success
 			duration := time.Since(startTime)
 			r.terminal.Success("Completed: %s (%s)", task.Name, formatDuration(duration))
-			
+
 			return TaskResult{
 				TaskIndex: index,
 				Success:   true,
@@ -218,7 +228,7 @@ func (r *Runner) runTask(ctx context.Context, index int, task RunnerTask) TaskRe
 	// Final failure
 	duration := time.Since(startTime)
 	r.terminal.Error("Failed: %s - %v", task.Name, err)
-	
+
 	return TaskResult{
 		TaskIndex: index,
 		Success:   false,
@@ -226,6 +236,7 @@ func (r *Runner) runTask(ctx context.Context, index int, task RunnerTask) TaskRe
 		Duration:  duration,
 		Retries:   attempts - 1,
 	}
+}
 
 // showSummary shows execution summary
 func (r *Runner) showSummary(results []TaskResult, totalDuration time.Duration) {
@@ -259,17 +270,17 @@ func (r *Runner) showSummary(results []TaskResult, totalDuration time.Duration) 
 	// Detailed results table
 	if r.options.ShowTaskDetails && len(results) > 0 {
 		r.terminal.Print("\nDetailed Results:")
-		
+
 		headers := []string{"Task", "Status", "Duration", "Retries"}
 		rows := make([][]string, 0, len(results))
 
-		for i, result := range results {
+		for _, result := range results {
 			task := r.tasks[result.TaskIndex]
 			status := "✓ Success"
 			if !result.Success {
 				status = "✗ Failed"
 			}
-			
+
 			row := []string{
 				task.Name,
 				status,
@@ -285,77 +296,88 @@ func (r *Runner) showSummary(results []TaskResult, totalDuration time.Duration) 
 	// Failed task details
 	if failed > 0 && r.options.ShowTaskDetails {
 		r.terminal.Print("\nFailed Tasks:")
-		for i, result := range results {
+		for _, result := range results {
 			if !result.Success && result.Error != nil {
 				task := r.tasks[result.TaskIndex]
 				r.terminal.Print("  • %s: %v", task.Name, result.Error)
 			}
 		}
 	}
+}
 
 // progressReporter implements ProgressReporter
 type progressReporter struct {
-	terminal  *Terminal
-	taskID    string
-	taskName  string
-	total     int64
-	current   int64
-	mu        sync.Mutex
+	terminal *Terminal
+	taskID   string
+	taskName string
+	total    int64
+	current  int64
+	mu       sync.Mutex
+}
 
 func (pr *progressReporter) SetTotal(total int64) {
 	pr.mu.Lock()
 	defer pr.mu.Unlock()
-	
+
 	pr.total = total
 	if pr.terminal.progressMgr != nil {
 		pr.terminal.StartProgress(pr.taskID, pr.taskName, total)
 	}
+}
 
 func (pr *progressReporter) SetCurrent(current int64) {
 	pr.mu.Lock()
 	defer pr.mu.Unlock()
-	
+
 	pr.current = current
 	if pr.terminal.progressMgr != nil {
 		pr.terminal.UpdateProgress(pr.taskID, current)
 	}
+}
 
 func (pr *progressReporter) Increment() {
 	pr.mu.Lock()
 	defer pr.mu.Unlock()
-	
+
 	pr.current++
 	if pr.terminal.progressMgr != nil {
 		pr.terminal.UpdateProgress(pr.taskID, pr.current)
 	}
+}
 
 func (pr *progressReporter) SetStatus(status string) {
 	pr.terminal.Info("  %s: %s", pr.taskName, status)
+}
 
 func (pr *progressReporter) SetDetails(details string) {
 	if pr.terminal.multiProg != nil {
 		pr.terminal.multiProg.UpdateTask(pr.taskID, TaskRunning, float64(pr.current)/float64(pr.total), details)
 	}
+}
 
 func (pr *progressReporter) AddSubTask(name string) {
 	if pr.terminal.multiProg != nil {
 		pr.terminal.multiProg.AddSubTask(pr.taskID, name)
 	}
+}
 
 func (pr *progressReporter) CompleteSubTask(name string) {
 	// Implementation would update subtask status
 	log.Debug().Str("task", pr.taskID).Str("subtask", name).Msg("Subtask completed")
+}
 
 // InteractiveRunner provides interactive task execution
 type InteractiveRunner struct {
 	*Runner
 	selectedTasks []int
+}
 
 // NewInteractiveRunner creates a new interactive runner
 func NewInteractiveRunner(terminal *Terminal, options RunnerOptions) *InteractiveRunner {
 	return &InteractiveRunner{
 		Runner: NewRunner(terminal, options),
 	}
+}
 
 // SelectTasks allows user to interactively select tasks
 func (ir *InteractiveRunner) SelectTasks() error {
@@ -364,7 +386,7 @@ func (ir *InteractiveRunner) SelectTasks() error {
 	}
 
 	ir.terminal.Header("Task Selection")
-	
+
 	// Build task list
 	taskNames := make([]string, len(ir.tasks))
 	for i, task := range ir.tasks {
@@ -407,6 +429,7 @@ func (ir *InteractiveRunner) SelectTasks() error {
 	}
 
 	return nil
+}
 
 // Run executes selected tasks
 func (ir *InteractiveRunner) Run(ctx context.Context) error {
@@ -418,16 +441,17 @@ func (ir *InteractiveRunner) Run(ctx context.Context) error {
 	// Filter tasks to run only selected ones
 	originalTasks := ir.tasks
 	selectedTasksOnly := make([]RunnerTask, len(ir.selectedTasks))
-	
+
 	for i, idx := range ir.selectedTasks {
 		selectedTasksOnly[i] = originalTasks[idx]
 	}
-	
+
 	ir.tasks = selectedTasksOnly
 	err := ir.Runner.Run(ctx)
 	ir.tasks = originalTasks // Restore original tasks
-	
+
 	return err
+}
 
 // ExampleUsage shows how to use the runner
 func ExampleUsage() {
@@ -479,7 +503,7 @@ func ExampleUsage() {
 		Execute: func(ctx context.Context, progress ProgressReporter) error {
 			templates := []string{"prompt-injection", "data-leakage", "model-manipulation"}
 			progress.SetTotal(int64(len(templates)))
-			
+
 			for i, template := range templates {
 				progress.AddSubTask(fmt.Sprintf("Validating %s", template))
 				time.Sleep(500 * time.Millisecond)
@@ -499,19 +523,4 @@ func ExampleUsage() {
 	if err := runner.Run(ctx); err != nil {
 		terminal.Error("Execution failed: %v", err)
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

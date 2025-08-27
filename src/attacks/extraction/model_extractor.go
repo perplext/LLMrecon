@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 // ModelExtractor extracts model information and parameters
@@ -18,14 +19,15 @@ type ModelExtractor struct {
 	behaviorMap    *BehaviorMapper
 	config         ExtractorConfig
 	mu             sync.RWMutex
+}
 
 // ExtractorConfig configures the extractor
 type ExtractorConfig struct {
-	ProbeTimeout      time.Duration
-	MaxProbesPerType  int
-	ParallelProbes    int
-	AdaptiveProbing   bool
-	StealthMode       bool
+	ProbeTimeout     time.Duration
+	MaxProbesPerType int
+	ParallelProbes   int
+	AdaptiveProbing  bool
+	StealthMode      bool
 }
 
 // Probe represents a model probing technique
@@ -33,6 +35,7 @@ type Probe interface {
 	Name() string
 	Execute(target interface{}) (ProbeResult, error)
 	Analyze(results []ProbeResult) ModelInfo
+}
 
 // ProbeResult contains probe execution results
 type ProbeResult struct {
@@ -42,6 +45,7 @@ type ProbeResult struct {
 	Output    string
 	Metadata  map[string]interface{}
 	Latency   time.Duration
+}
 
 // ModelInfo contains extracted model information
 type ModelInfo struct {
@@ -70,6 +74,7 @@ func NewModelExtractor(config ExtractorConfig) *ModelExtractor {
 	me.registerDefaultProbes()
 
 	return me
+}
 
 // registerDefaultProbes adds built-in probing techniques
 func (me *ModelExtractor) registerDefaultProbes() {
@@ -77,8 +82,8 @@ func (me *ModelExtractor) registerDefaultProbes() {
 	me.RegisterProbe(&ArchitectureProbe{
 		patterns: map[string][]string{
 			"transformer": {"attention", "transformer", "BERT", "GPT"},
-			"rnn":        {"LSTM", "GRU", "recurrent"},
-			"cnn":        {"convolution", "CNN", "filters"},
+			"rnn":         {"LSTM", "GRU", "recurrent"},
+			"cnn":         {"convolution", "CNN", "filters"},
 		},
 	})
 
@@ -124,12 +129,14 @@ func (me *ModelExtractor) registerDefaultProbes() {
 			"Academic":    {"papers", "research"},
 		},
 	})
+}
 
 // RegisterProbe adds a new probe
 func (me *ModelExtractor) RegisterProbe(probe Probe) {
 	me.mu.Lock()
 	defer me.mu.Unlock()
 	me.probes = append(me.probes, probe)
+}
 
 // ExtractModelInfo performs comprehensive model extraction
 func (me *ModelExtractor) ExtractModelInfo(target interface{}) (*ModelInfo, error) {
@@ -197,6 +204,7 @@ func (me *ModelExtractor) ExtractModelInfo(target interface{}) (*ModelInfo, erro
 	me.enhanceWithBehavior(modelInfo, behaviorProfile)
 
 	return modelInfo, nil
+}
 
 // mergeModelInfo combines model information
 func (me *ModelExtractor) mergeModelInfo(target, source *ModelInfo) {
@@ -226,19 +234,21 @@ func (me *ModelExtractor) mergeModelInfo(target, source *ModelInfo) {
 			target.Confidence = (target.Confidence + source.Confidence) / 2
 		}
 	}
+}
 
 // ModelFingerprinter generates unique model fingerprints
 type ModelFingerprinter struct {
 	knownFingerprints map[string]ModelProfile
 	mu                sync.RWMutex
+}
 
 // ModelProfile represents a known model profile
 type ModelProfile struct {
-	Family       string
-	Version      string
-	Fingerprint  string
-	Behaviors    []string
-	KnownVulns   []string
+	Family      string
+	Version     string
+	Fingerprint string
+	Behaviors   []string
+	KnownVulns  []string
 }
 
 // NewModelFingerprinter creates a new fingerprinter
@@ -251,6 +261,7 @@ func NewModelFingerprinter() *ModelFingerprinter {
 	mf.loadKnownProfiles()
 
 	return mf
+}
 
 // loadKnownProfiles loads known model fingerprints
 func (mf *ModelFingerprinter) loadKnownProfiles() {
@@ -281,6 +292,7 @@ func (mf *ModelFingerprinter) loadKnownProfiles() {
 	}
 
 	// Add more known models...
+}
 
 // GenerateFingerprint creates a fingerprint from probe results
 func (mf *ModelFingerprinter) GenerateFingerprint(results map[string][]ProbeResult) string {
@@ -314,11 +326,12 @@ func (mf *ModelFingerprinter) GenerateFingerprint(results map[string][]ProbeResu
 	}
 
 	return fingerprint
+}
 
 // analyzeResponseStyle analyzes response patterns
 func (mf *ModelFingerprinter) analyzeResponseStyle(results map[string][]ProbeResult) []string {
 	styles := []string{}
-	
+
 	// Analyze response lengths
 	avgLength := 0.0
 	count := 0
@@ -328,7 +341,7 @@ func (mf *ModelFingerprinter) analyzeResponseStyle(results map[string][]ProbeRes
 			count++
 		}
 	}
-	
+
 	if count > 0 {
 		avgLength /= float64(count)
 		if avgLength > 500 {
@@ -341,6 +354,7 @@ func (mf *ModelFingerprinter) analyzeResponseStyle(results map[string][]ProbeRes
 	}
 
 	return styles
+}
 
 // ParameterExtractor estimates model parameters
 type ParameterExtractor struct {
@@ -351,6 +365,7 @@ type ParameterExtractor struct {
 type EstimationTechnique interface {
 	Name() string
 	Estimate(results []ProbeResult) int64
+}
 
 // NewParameterExtractor creates a parameter extractor
 func NewParameterExtractor() *ParameterExtractor {
@@ -364,6 +379,7 @@ func NewParameterExtractor() *ParameterExtractor {
 	pe.techniques = append(pe.techniques, &ContextWindowEstimator{})
 
 	return pe
+}
 
 // EstimateParameters estimates model parameter count
 func (pe *ParameterExtractor) EstimateParameters(results map[string][]ProbeResult) ParameterInfo {
@@ -393,7 +409,7 @@ func (pe *ParameterExtractor) EstimateParameters(results map[string][]ProbeResul
 	})
 
 	median := estimates[len(estimates)/2]
-	
+
 	// Calculate confidence based on variance
 	variance := calculateVariance(estimates)
 	confidence := 1.0 - (variance / float64(median))
@@ -408,6 +424,7 @@ func (pe *ParameterExtractor) EstimateParameters(results map[string][]ProbeResul
 		Confidence:     confidence,
 		Techniques:     pe.getTechniqueNames(),
 	}
+}
 
 // ParameterInfo contains parameter estimation results
 type ParameterInfo struct {
@@ -434,7 +451,7 @@ func (ce *ComplexityEstimator) Estimate(results []ProbeResult) int64 {
 	}
 
 	avgComplexity := totalComplexity / float64(len(results))
-	
+
 	// Map complexity to parameter count (rough approximation)
 	// Based on empirical observations
 	if avgComplexity < 50 {
@@ -448,12 +465,13 @@ func (ce *ComplexityEstimator) Estimate(results []ProbeResult) int64 {
 	} else {
 		return 175_000_000_000 // ~175B parameters
 	}
+}
 
 func (ce *ComplexityEstimator) calculateComplexity(text string) float64 {
 	// Simple complexity metrics
 	words := strings.Fields(text)
 	sentences := strings.Split(text, ".")
-	
+
 	if len(sentences) == 0 {
 		return 0
 	}
@@ -463,22 +481,25 @@ func (ce *ComplexityEstimator) calculateComplexity(text string) float64 {
 	for _, word := range words {
 		uniqueWords[strings.ToLower(word)] = true
 	}
-	
+
 	vocabularyDiversity := float64(len(uniqueWords)) / float64(len(words))
-	
+
 	return avgWordsPerSentence * vocabularyDiversity * 100
+}
 
 // BehaviorMapper maps model behavior patterns
 type BehaviorMapper struct {
 	patterns map[string]BehaviorPattern
 	mu       sync.RWMutex
+}
 
 // BehaviorPattern represents a behavioral pattern
 type BehaviorPattern struct {
-	Name        string
-	Indicators  []string
-	Confidence  float64
+	Name         string
+	Indicators   []string
+	Confidence   float64
 	Implications []string
+}
 
 // NewBehaviorMapper creates a behavior mapper
 func NewBehaviorMapper() *BehaviorMapper {
@@ -490,34 +511,36 @@ func NewBehaviorMapper() *BehaviorMapper {
 	bm.loadPatterns()
 
 	return bm
+}
 
 // loadPatterns loads known behavior patterns
 func (bm *BehaviorMapper) loadPatterns() {
 	bm.patterns["safety_focused"] = BehaviorPattern{
-		Name:       "Safety-Focused",
-		Indicators: []string{"I cannot", "I shouldn't", "unsafe", "harmful"},
+		Name:         "Safety-Focused",
+		Indicators:   []string{"I cannot", "I shouldn't", "unsafe", "harmful"},
 		Implications: []string{"strong_safety_training", "constitutional_ai"},
 	}
 
 	bm.patterns["helpful_assistant"] = BehaviorPattern{
-		Name:       "Helpful Assistant",
-		Indicators: []string{"I'd be happy to", "Let me help", "Here's how"},
+		Name:         "Helpful Assistant",
+		Indicators:   []string{"I'd be happy to", "Let me help", "Here's how"},
 		Implications: []string{"instruction_tuned", "rlhf_trained"},
 	}
 
 	bm.patterns["analytical"] = BehaviorPattern{
-		Name:       "Analytical",
-		Indicators: []string{"Let's analyze", "Consider", "On one hand"},
+		Name:         "Analytical",
+		Indicators:   []string{"Let's analyze", "Consider", "On one hand"},
 		Implications: []string{"reasoning_focused", "chain_of_thought"},
 	}
+}
 
 // MapBehavior creates behavior profile from results
 func (bm *BehaviorMapper) MapBehavior(results map[string][]ProbeResult) BehaviorProfile {
 	profile := BehaviorProfile{
-		Patterns:    []string{},
-		Traits:      []string{},
-		Weaknesses:  []string{},
-		Strengths:   []string{},
+		Patterns:   []string{},
+		Traits:     []string{},
+		Weaknesses: []string{},
+		Strengths:  []string{},
 	}
 
 	// Analyze all responses
@@ -542,7 +565,7 @@ func (bm *BehaviorMapper) MapBehavior(results map[string][]ProbeResult) Behavior
 			}
 		}
 
-		confidence := float64(matches) / float64(len(allResponses) * len(pattern.Indicators))
+		confidence := float64(matches) / float64(len(allResponses)*len(pattern.Indicators))
 		if confidence > 0.1 { // Threshold for pattern detection
 			profile.Patterns = append(profile.Patterns, pattern.Name)
 			profile.Traits = append(profile.Traits, pattern.Implications...)
@@ -554,6 +577,7 @@ func (bm *BehaviorMapper) MapBehavior(results map[string][]ProbeResult) Behavior
 	profile.Strengths = bm.identifyStrengths(profile.Patterns)
 
 	return profile
+}
 
 // BehaviorProfile represents model behavior profile
 type BehaviorProfile struct {
@@ -561,6 +585,7 @@ type BehaviorProfile struct {
 	Traits     []string
 	Weaknesses []string
 	Strengths  []string
+}
 
 // identifyWeaknesses finds potential weaknesses
 func (bm *BehaviorMapper) identifyWeaknesses(patterns []string) []string {
@@ -578,6 +603,7 @@ func (bm *BehaviorMapper) identifyWeaknesses(patterns []string) []string {
 	}
 
 	return weaknesses
+}
 
 // identifyStrengths finds model strengths
 func (bm *BehaviorMapper) identifyStrengths(patterns []string) []string {
@@ -595,6 +621,7 @@ func (bm *BehaviorMapper) identifyStrengths(patterns []string) []string {
 	}
 
 	return strengths
+}
 
 // Probe implementations
 
@@ -625,6 +652,7 @@ func (ap *ArchitectureProbe) Execute(target interface{}) (ProbeResult, error) {
 		Output:    response,
 		Latency:   time.Since(start),
 	}, nil
+}
 
 func (ap *ArchitectureProbe) Analyze(results []ProbeResult) ModelInfo {
 	info := ModelInfo{}
@@ -646,6 +674,7 @@ func (ap *ArchitectureProbe) Analyze(results []ProbeResult) ModelInfo {
 	}
 
 	return info
+}
 
 // VersionProbe probes for version information
 type VersionProbe struct {
@@ -668,6 +697,7 @@ func (vp *VersionProbe) Execute(target interface{}) (ProbeResult, error) {
 		Output:    response,
 		Latency:   time.Since(start),
 	}, nil
+}
 
 func (vp *VersionProbe) Analyze(results []ProbeResult) ModelInfo {
 	info := ModelInfo{}
@@ -688,6 +718,7 @@ func (vp *VersionProbe) Analyze(results []ProbeResult) ModelInfo {
 	}
 
 	return info
+}
 
 // CapabilityProbe tests model capabilities
 type CapabilityProbe struct {
@@ -714,6 +745,7 @@ func (cp *CapabilityProbe) Execute(target interface{}) (ProbeResult, error) {
 			"capability": capability,
 		},
 	}, nil
+}
 
 func (cp *CapabilityProbe) Analyze(results []ProbeResult) ModelInfo {
 	info := ModelInfo{
@@ -730,6 +762,7 @@ func (cp *CapabilityProbe) Analyze(results []ProbeResult) ModelInfo {
 
 	info.Confidence = float64(len(info.Capabilities)) / float64(len(cp.capabilities))
 	return info
+}
 
 // ParameterProbe estimates parameter count
 type ParameterProbe struct {
@@ -753,6 +786,7 @@ func (pp *ParameterProbe) Execute(target interface{}) (ProbeResult, error) {
 		Output:    response,
 		Latency:   time.Since(start),
 	}, nil
+}
 
 func (pp *ParameterProbe) Analyze(results []ProbeResult) ModelInfo {
 	info := ModelInfo{}
@@ -764,7 +798,7 @@ func (pp *ParameterProbe) Analyze(results []ProbeResult) ModelInfo {
 	}
 
 	avgLength := totalLength / len(results)
-	
+
 	// Rough parameter estimation based on response quality
 	if avgLength < 100 {
 		info.ParameterCount = 1_000_000_000 // 1B
@@ -778,6 +812,7 @@ func (pp *ParameterProbe) Analyze(results []ProbeResult) ModelInfo {
 
 	info.Confidence = 0.6 // Moderate confidence for estimation
 	return info
+}
 
 // TrainingDataProbe probes for training data information
 type TrainingDataProbe struct {
@@ -806,6 +841,7 @@ func (td *TrainingDataProbe) Execute(target interface{}) (ProbeResult, error) {
 		Output:    response,
 		Latency:   time.Since(start),
 	}, nil
+}
 
 func (td *TrainingDataProbe) Analyze(results []ProbeResult) ModelInfo {
 	info := ModelInfo{
@@ -840,28 +876,34 @@ func (td *TrainingDataProbe) Analyze(results []ProbeResult) ModelInfo {
 	}
 
 	return info
+}
 
 // Helper functions
 func (mf *ModelFingerprinter) extractCapabilities(results map[string][]ProbeResult) []string {
 	capabilities := []string{}
 	// Implementation details...
 	return capabilities
+}
 
 func (mf *ModelFingerprinter) extractBehaviors(results map[string][]ProbeResult) []string {
 	behaviors := []string{}
 	// Implementation details...
 	return behaviors
+}
 
 func (mf *ModelFingerprinter) matchesProfile(features map[string]interface{}, profile ModelProfile) bool {
 	// Matching logic...
 	return false
+}
 
 func (me *ModelExtractor) enhanceWithFingerprint(info *ModelInfo, fingerprint string) {
 	// Enhancement logic...
+}
 
 func (me *ModelExtractor) enhanceWithBehavior(info *ModelInfo, profile BehaviorProfile) {
 	info.Capabilities = append(info.Capabilities, profile.Strengths...)
 	info.Limitations = append(info.Limitations, profile.Weaknesses...)
+}
 
 func (pe *ParameterExtractor) getTechniqueNames() []string {
 	names := []string{}
@@ -869,6 +911,7 @@ func (pe *ParameterExtractor) getTechniqueNames() []string {
 		names = append(names, technique.Name())
 	}
 	return names
+}
 
 // VocabularyEstimator estimates parameters from vocabulary usage
 type VocabularyEstimator struct{}
@@ -886,7 +929,7 @@ func (ve *VocabularyEstimator) Estimate(results []ProbeResult) int64 {
 	}
 
 	vocabSize := len(tokens)
-	
+
 	// Map vocabulary size to parameter count
 	if vocabSize < 1000 {
 		return 1_000_000_000 // 1B
@@ -897,6 +940,7 @@ func (ve *VocabularyEstimator) Estimate(results []ProbeResult) int64 {
 	} else {
 		return 175_000_000_000 // 175B
 	}
+}
 
 // ContextWindowEstimator estimates from context handling
 type ContextWindowEstimator struct{}
@@ -922,6 +966,7 @@ func (ce *ContextWindowEstimator) Estimate(results []ProbeResult) int64 {
 	} else {
 		return 175_000_000_000 // 175B
 	}
+}
 
 func calculateVariance(values []int64) float64 {
 	if len(values) == 0 {
@@ -942,38 +987,5 @@ func calculateVariance(values []int64) float64 {
 		variance += diff * diff
 	}
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return math.Sqrt(variance / float64(len(values)))
 }

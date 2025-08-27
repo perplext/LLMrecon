@@ -6,8 +6,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting"
 	"github.com/perplext/LLMrecon/src/template/management"
@@ -21,6 +23,7 @@ var reportCmd = &cobra.Command{
 	Long: `Generate comprehensive reports from LLM test results in various formats.
 Supports multiple output formats including JSON, JSONL, CSV, Excel, Text, Markdown, PDF, and HTML.
 Reports can include compliance mappings to frameworks like OWASP Top 10 for LLMs and ISO/IEC 42001.`,
+}
 
 // generateReportCmd represents the generate command
 var generateReportCmd = &cobra.Command{
@@ -163,6 +166,7 @@ Example:
 		fmt.Printf("Report generated successfully: %s\n", output)
 		return nil
 	},
+}
 
 // batchReportCmd represents the batch command
 var batchReportCmd = &cobra.Command{
@@ -303,6 +307,7 @@ Example:
 		fmt.Printf("Report generated successfully: %s\n", output)
 		return nil
 	},
+}
 
 // convertCmd represents the convert command
 var convertCmd = &cobra.Command{
@@ -387,6 +392,7 @@ Example:
 		fmt.Printf("Report converted successfully: %s\n", output)
 		return nil
 	},
+}
 
 // isValidFormat checks if a report format is valid
 func isValidFormat(format reporting.ReportFormat) bool {
@@ -408,6 +414,7 @@ func isValidFormat(format reporting.ReportFormat) bool {
 	}
 
 	return false
+}
 
 func init() {
 	rootCmd.AddCommand(reportCmd)
@@ -450,3 +457,4 @@ func init() {
 	convertCmd.Flags().String("format", "json", "Output format (json, jsonl, csv, xlsx, txt, md, pdf, html)")
 	convertCmd.Flags().String("output", "", "Output file path")
 	convertCmd.Flags().String("template", "", "Path to custom template file")
+}

@@ -4,7 +4,9 @@ package profiling
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
@@ -39,6 +41,7 @@ type TemplateProfiler struct {
 	mutex sync.RWMutex
 	// baselineMetrics stores baseline metrics for comparison
 	baselineMetrics map[string]MetricSummary
+}
 
 // TemplateProfilerConfig contains configuration for the template profiler
 type TemplateProfilerConfig struct {
@@ -54,6 +57,7 @@ type TemplateProfilerConfig struct {
 	BaselineFilePath string
 	// ReportFilePath is the path to save profiling reports
 	ReportFilePath string
+}
 
 // NewTemplateProfiler creates a new template profiler
 func NewTemplateProfiler(templateManager types.TemplateManager, config *TemplateProfilerConfig) *TemplateProfiler {
@@ -67,11 +71,11 @@ func NewTemplateProfiler(templateManager types.TemplateManager, config *Template
 				MaxSamples:         1000,
 				Tags:               make(map[string]string),
 			},
-			EnableDetailedProfiling:   false,
+			EnableDetailedProfiling:    false,
 			EnableContinuousMonitoring: false,
-			MonitoringInterval:        5 * time.Minute,
-			BaselineFilePath:          "template_baseline.json",
-			ReportFilePath:            "template_profile.txt",
+			MonitoringInterval:         5 * time.Minute,
+			BaselineFilePath:           "template_baseline.json",
+			ReportFilePath:             "template_profile.txt",
 		}
 	}
 
@@ -96,6 +100,7 @@ func NewTemplateProfiler(templateManager types.TemplateManager, config *Template
 		config:          config,
 		baselineMetrics: make(map[string]MetricSummary),
 	}
+}
 
 // Start starts the profiler
 func (p *TemplateProfiler) Start() error {
@@ -113,6 +118,7 @@ func (p *TemplateProfiler) Start() error {
 	}
 
 	return nil
+}
 
 // Stop stops the profiler
 func (p *TemplateProfiler) Stop() error {
@@ -121,6 +127,7 @@ func (p *TemplateProfiler) Stop() error {
 
 	// Stop underlying profiler
 	return p.profiler.Stop()
+}
 
 // ProfileTemplateLoad profiles template loading
 func (p *TemplateProfiler) ProfileTemplateLoad(ctx context.Context, source string, sourceType string) (*format.Template, error) {
@@ -156,6 +163,7 @@ func (p *TemplateProfiler) ProfileTemplateLoad(ctx context.Context, source strin
 	p.profiler.RecordMemoryUsage("template.memory.usage", labels)
 
 	return template, nil
+}
 
 // ProfileTemplateLoadBatch profiles batch template loading
 func (p *TemplateProfiler) ProfileTemplateLoadBatch(ctx context.Context, source string, sourceType string) ([]*format.Template, error) {
@@ -200,6 +208,7 @@ func (p *TemplateProfiler) ProfileTemplateLoadBatch(ctx context.Context, source 
 	}
 
 	return templates, nil
+}
 
 // ProfileTemplateExecution profiles template execution
 func (p *TemplateProfiler) ProfileTemplateExecution(ctx context.Context, template *format.Template, options map[string]interface{}) (*interfaces.TemplateResult, error) {
@@ -232,7 +241,19 @@ func (p *TemplateProfiler) ProfileTemplateExecution(ctx context.Context, templat
 	// Record memory after
 	p.profiler.RecordMemoryUsage("template.memory.usage", labels)
 
-	return result, nil
+	// Convert types.TemplateResult to interfaces.TemplateResult
+	interfacesResult := &interfaces.TemplateResult{
+		TemplateID:   result.TemplateID,
+		TemplateName: result.TemplateName,
+		Description:  result.Description,
+		Status:       string(result.Status),
+		StartTime:    result.StartTime,
+		EndTime:      result.EndTime,
+		Duration:     result.Duration,
+	}
+
+	return interfacesResult, nil
+}
 
 // ProfileTemplateExecutionBatch profiles batch template execution
 func (p *TemplateProfiler) ProfileTemplateExecutionBatch(ctx context.Context, templates []*format.Template, options map[string]interface{}) ([]*interfaces.TemplateResult, error) {
@@ -275,7 +296,22 @@ func (p *TemplateProfiler) ProfileTemplateExecutionBatch(ctx context.Context, te
 		p.profiler.RecordMetric("template.throughput", throughput, labels)
 	}
 
-	return results, nil
+	// Convert []*types.TemplateResult to []*interfaces.TemplateResult
+	interfacesResults := make([]*interfaces.TemplateResult, len(results))
+	for i, result := range results {
+		interfacesResults[i] = &interfaces.TemplateResult{
+			TemplateID:   result.TemplateID,
+			TemplateName: result.TemplateName,
+			Description:  result.Description,
+			Status:       string(result.Status),
+			StartTime:    result.StartTime,
+			EndTime:      result.EndTime,
+			Duration:     result.Duration,
+		}
+	}
+
+	return interfacesResults, nil
+}
 
 // EstablishBaseline establishes baseline metrics
 func (p *TemplateProfiler) EstablishBaseline(ctx context.Context, sources []types.TemplateSource, iterations int) error {
@@ -329,6 +365,7 @@ func (p *TemplateProfiler) EstablishBaseline(ctx context.Context, sources []type
 
 	fmt.Println("Baseline established successfully")
 	return nil
+}
 
 // saveBaseline saves baseline metrics to a file
 func (p *TemplateProfiler) saveBaseline() error {
@@ -337,7 +374,11 @@ func (p *TemplateProfiler) saveBaseline() error {
 	if err != nil {
 		return fmt.Errorf("failed to create baseline file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write header
 	fmt.Fprintf(file, "Template Performance Baseline - %s\n", time.Now().Format(time.RFC3339))
@@ -366,6 +407,7 @@ func (p *TemplateProfiler) saveBaseline() error {
 	fmt.Fprintf(file, "  Cache Hit Rate: > 90%%\n")
 
 	return nil
+}
 
 // CompareWithBaseline compares current metrics with baseline
 func (p *TemplateProfiler) CompareWithBaseline() map[string]map[string]interface{} {
@@ -399,6 +441,7 @@ func (p *TemplateProfiler) CompareWithBaseline() map[string]map[string]interface
 	}
 
 	return comparison
+}
 
 // SaveComparisonReport saves a comparison report to a file
 func (p *TemplateProfiler) SaveComparisonReport(filePath string) error {
@@ -410,7 +453,11 @@ func (p *TemplateProfiler) SaveComparisonReport(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create comparison report file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write header
 	fmt.Fprintf(file, "Template Performance Comparison - %s\n", time.Now().Format(time.RFC3339))
@@ -474,6 +521,7 @@ func (p *TemplateProfiler) SaveComparisonReport(filePath string) error {
 	}
 
 	return nil
+}
 
 // startContinuousMonitoring starts continuous monitoring
 func (p *TemplateProfiler) startContinuousMonitoring() {
@@ -511,13 +559,7 @@ func (p *TemplateProfiler) startContinuousMonitoring() {
 			}
 		}
 	}
-
-// calculatePercentageDiff calculates the percentage difference between two values
-func calculatePercentageDiff(current, baseline float64) float64 {
-	if baseline == 0 {
-		return 0
-	}
-	return ((current - baseline) / baseline) * 100
+}
 
 // getStatusString returns a status string based on a condition
 func getStatusString(condition bool) string {
@@ -525,9 +567,12 @@ func getStatusString(condition bool) string {
 		return "✓ PASS"
 	}
 	return "✗ FAIL"
+}
 
 // min returns the minimum of two integers
 func min(a, b int) int {
 	if a < b {
 		return a
 	}
+	return b
+}

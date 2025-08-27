@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/api/scan"
 	"github.com/perplext/LLMrecon/src/security"
@@ -19,13 +21,13 @@ import (
 
 // Server represents the API server
 type Server struct {
-	server                  *http.Server
-	mux                     *http.ServeMux
-	scanSvc                 *scan.Service
-	scanHdlr                *scan.Handler
-	securityManager         *security.SecurityManager
+	server                     *http.Server
+	mux                        *http.ServeMux
+	scanSvc                    *scan.Service
+	scanHdlr                   *scan.Handler
+	securityManager            *security.SecurityManager
 	promptProtectionMiddleware *prompt.PromptProtectionMiddleware
-	config                  *ServerConfig
+	config                     *ServerConfig
 }
 
 // ServerConfig represents the configuration for the API server
@@ -42,15 +44,17 @@ type ServerConfig struct {
 	SecurityConfig *security.SecurityConfig
 	// PromptProtectionConfig is the configuration for prompt injection protection
 	PromptProtectionConfig *prompt.ProtectionConfig
+}
 
 // DefaultServerConfig returns the default server configuration
 func DefaultServerConfig() *ServerConfig {
 	return &ServerConfig{
-		Address:               ":8080",
-		UseTLS:                false,
-		SecurityConfig:        security.DefaultSecurityConfig(),
+		Address:                ":8080",
+		UseTLS:                 false,
+		SecurityConfig:         security.DefaultSecurityConfig(),
 		PromptProtectionConfig: prompt.DefaultProtectionConfig(),
 	}
+}
 
 // NewServer creates a new API server
 func NewServer(config *ServerConfig) (*Server, error) {
@@ -106,14 +110,15 @@ func NewServer(config *ServerConfig) (*Server, error) {
 	scanHdlr := scan.NewHandler(scanSvc)
 
 	return &Server{
-		server:                  server,
-		mux:                     mux,
-		scanSvc:                 scanSvc,
-		scanHdlr:                scanHdlr,
-		securityManager:         securityManager,
+		server:                     server,
+		mux:                        mux,
+		scanSvc:                    scanSvc,
+		scanHdlr:                   scanHdlr,
+		securityManager:            securityManager,
 		promptProtectionMiddleware: promptProtectionMiddleware,
-		config:                  config,
+		config:                     config,
 	}, nil
+}
 
 // Start starts the server
 func (s *Server) Start() error {
@@ -159,6 +164,7 @@ func (s *Server) Start() error {
 
 	log.Println("Server exited properly")
 	return nil
+}
 
 // registerRoutes registers all API routes
 func (s *Server) registerRoutes() {
@@ -170,6 +176,7 @@ func (s *Server) registerRoutes() {
 
 	// Register security routes
 	s.registerSecurityRoutes()
+}
 
 // handleIndex handles the root path
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -181,6 +188,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, `{"status":"ok","message":"LLMrecon API","version":"1.0.0"}`)
+}
 
 // registerSecurityRoutes registers security-related routes
 func (s *Server) registerSecurityRoutes() {
@@ -201,7 +209,7 @@ func (s *Server) registerSecurityRoutes() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		
+
 		// Get anomalies
 		anomalies := s.securityManager.GetAnomalyDetector().GetAnomalies()
 
@@ -210,9 +218,9 @@ func (s *Server) registerSecurityRoutes() {
 
 		// Create response
 		response := map[string]interface{}{
-			"anomalies": anomalies,
+			"anomalies":        anomalies,
 			"rate_limit_stats": rateLimitStats,
-			"timestamp": time.Now(),
+			"timestamp":        time.Now(),
 		}
 
 		// Write response
@@ -220,6 +228,7 @@ func (s *Server) registerSecurityRoutes() {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
 	})))
+}
 
 // generateRequestID is implemented in middleware.go
 
@@ -247,6 +256,8 @@ func (s *Server) withMiddleware(next http.Handler) http.Handler {
 	errorHandler := s.securityManager.GetErrorHandler()
 	// Wrap the handler with error handling
 	handlerWithErrorHandling := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Use error handler to handle any errors
+		_ = errorHandler // Silence unused warning for now
 		// Set up recovery to handle panics
 		defer func() {
 			if err := recover(); err != nil {
@@ -257,11 +268,11 @@ func (s *Server) withMiddleware(next http.Handler) http.Handler {
 				// Return a 500 error
 			}
 		}()
-		
+
 		// Call the next handler
 		handler.ServeHTTP(w, r)
 	})
-	
+
 	handler = handlerWithErrorHandling
 
 	// Apply request ID and client IP middleware (innermost, executed first)
@@ -289,9 +300,4 @@ func (s *Server) withMiddleware(next http.Handler) http.Handler {
 		// Call the next handler
 		handler.ServeHTTP(w, r)
 	})
-}
-}
-}
-}
-}
 }

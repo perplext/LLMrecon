@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/perplext/LLMrecon/src/reporting/common"
+	"github.com/perplext/LLMrecon/src/security/access/common"
 )
 
 // DefaultReportGenerator is the default implementation of ReportGenerator
@@ -15,22 +16,26 @@ type DefaultReportGenerator struct {
 	formatters map[common.ReportFormat]common.ReportFormatter
 	// complianceProviders is a list of compliance mapping providers
 	complianceProviders []ComplianceMappingProvider
+}
 
 // NewReportGenerator creates a new report generator
 func NewReportGenerator() *DefaultReportGenerator {
 	return &DefaultReportGenerator{
-		formatters:         make(map[common.ReportFormat]common.ReportFormatter),
+		formatters:          make(map[common.ReportFormat]common.ReportFormatter),
 		complianceProviders: []ComplianceMappingProvider{},
 	}
+}
 
 // RegisterFormatter registers a formatter for a specific format
 func (g *DefaultReportGenerator) RegisterFormatter(formatter common.ReportFormatter) {
 	g.formatters[formatter.GetFormat()] = formatter
+}
 
 // GetFormatter returns a formatter for a specific format
 func (g *DefaultReportGenerator) GetFormatter(format common.ReportFormat) (common.ReportFormatter, bool) {
 	formatter, ok := g.formatters[format]
 	return formatter, ok
+}
 
 // ListFormats returns a list of supported formats
 func (g *DefaultReportGenerator) ListFormats() []common.ReportFormat {
@@ -39,22 +44,24 @@ func (g *DefaultReportGenerator) ListFormats() []common.ReportFormat {
 		formats = append(formats, format)
 	}
 	return formats
+}
 
 // RegisterComplianceProvider registers a compliance mapping provider
 func (g *DefaultReportGenerator) RegisterComplianceProvider(provider ComplianceMappingProvider) {
 	g.complianceProviders = append(g.complianceProviders, provider)
+}
 
 // GenerateReport generates a report from test results
 func (g *DefaultReportGenerator) GenerateReport(ctx context.Context, testSuites []*TestSuite, options *ReportOptions) (*Report, error) {
 	// Apply default options if necessary
 	if options == nil {
 		options = &ReportOptions{
-			Format:            JSONFormat,
-			Title:             "LLM Test Report",
-			IncludePassedTests: true,
+			Format:              JSONFormat,
+			Title:               "LLM Test Report",
+			IncludePassedTests:  true,
 			IncludeSkippedTests: true,
 			IncludePendingTests: true,
-			MinimumSeverity:   InfoSeverity,
+			MinimumSeverity:     InfoSeverity,
 		}
 	}
 
@@ -91,6 +98,7 @@ func (g *DefaultReportGenerator) GenerateReport(ctx context.Context, testSuites 
 	report.Summary = summary
 
 	return report, nil
+}
 
 // processTestSuite applies filters and enrichments to a test suite
 func (g *DefaultReportGenerator) processTestSuite(ctx context.Context, suite *TestSuite, options *ReportOptions) *TestSuite {
@@ -130,6 +138,7 @@ func (g *DefaultReportGenerator) processTestSuite(ctx context.Context, suite *Te
 	}
 
 	return filteredSuite
+}
 
 // shouldIncludeResult determines if a test result should be included in the report
 func (g *DefaultReportGenerator) shouldIncludeResult(result *TestResult, options *ReportOptions) bool {
@@ -185,6 +194,7 @@ func (g *DefaultReportGenerator) shouldIncludeResult(result *TestResult, options
 	}
 
 	return true
+}
 
 // isEqualOrHigherSeverity checks if a severity level is equal to or higher than a reference level
 func (g *DefaultReportGenerator) isEqualOrHigherSeverity(severity, reference SeverityLevel) bool {
@@ -197,6 +207,7 @@ func (g *DefaultReportGenerator) isEqualOrHigherSeverity(severity, reference Sev
 	}
 
 	return severityOrder[severity] >= severityOrder[reference]
+}
 
 // getComplianceMappings gets compliance mappings for a test result
 func (g *DefaultReportGenerator) getComplianceMappings(ctx context.Context, result *TestResult) ([]ComplianceMapping, error) {
@@ -211,6 +222,7 @@ func (g *DefaultReportGenerator) getComplianceMappings(ctx context.Context, resu
 	}
 
 	return allMappings, nil
+}
 
 // sortResults sorts test results based on the specified field and order
 func (g *DefaultReportGenerator) sortResults(results []*TestResult, sortBy, sortOrder string) {
@@ -263,6 +275,7 @@ func (g *DefaultReportGenerator) sortResults(results []*TestResult, sortBy, sort
 	}
 
 	sort.Slice(results, sortFunc)
+}
 
 // generateSummary generates a summary of test results
 func (g *DefaultReportGenerator) generateSummary(testSuites []*TestSuite) ReportSummary {
@@ -322,3 +335,5 @@ func (g *DefaultReportGenerator) generateSummary(testSuites []*TestSuite) Report
 
 	summary.TotalDuration = totalDuration
 
+	return summary
+}

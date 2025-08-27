@@ -2,15 +2,13 @@ package evasion
 
 import (
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"math"
+	math_rand "math/rand"
 	"strings"
 	"sync"
+	"time"
 	"unicode"
 )
 
@@ -27,31 +25,28 @@ type AdvancedEvasion struct {
 	mu             sync.RWMutex
 }
 
-}
 // EvasionConfig configures evasion system
 type EvasionConfig struct {
-	PolymorphismLevel    int
-	EncodingLayers       int
-	ObfuscationDepth     int
-	TimingVariance       time.Duration
-	AntiForensics        bool
-	AdaptiveEvasion      bool
-	StealthMode          bool
+	PolymorphismLevel int
+	EncodingLayers    int
+	ObfuscationDepth  int
+	TimingVariance    time.Duration
+	AntiForensics     bool
+	AdaptiveEvasion   bool
+	StealthMode       bool
 }
 
-}
 // EvasionSession tracks active evasion
 type EvasionSession struct {
-	ID             string
-	Technique      EvasionTechnique
-	Payload        string
+	ID              string
+	Technique       EvasionTechnique
+	Payload         string
 	Transformations []Transformation
-	StartTime      time.Time
-	Success        bool
-	DetectionScore float64
+	StartTime       time.Time
+	Success         bool
+	DetectionScore  float64
 }
 
-}
 // EvasionTechnique categorizes evasion methods
 type EvasionTechnique string
 
@@ -67,14 +62,13 @@ const (
 
 // Transformation represents a payload transformation
 type Transformation struct {
-	Type        TransformationType
-	Input       string
-	Output      string
-	Parameters  map[string]interface{}
-	Timestamp   time.Time
+	Type       TransformationType
+	Input      string
+	Output     string
+	Parameters map[string]interface{}
+	Timestamp  time.Time
 }
 
-}
 // TransformationType categorizes transformations
 type TransformationType string
 
@@ -99,9 +93,9 @@ func NewAdvancedEvasion(config EvasionConfig) *AdvancedEvasion {
 		timing:         NewTimingEvasion(config.TimingVariance),
 		activeEvasions: make(map[string]*EvasionSession),
 	}
+}
 
 // EvadeDetection applies evasion techniques to payload
-}
 func (ae *AdvancedEvasion) EvadeDetection(ctx context.Context, request EvasionRequest) (*EvasionResponse, error) {
 	session := &EvasionSession{
 		ID:              generateSessionID(),
@@ -125,7 +119,7 @@ func (ae *AdvancedEvasion) EvadeDetection(ctx context.Context, request EvasionRe
 	// Test detection bypass
 	if ae.config.AdaptiveEvasion {
 		session.DetectionScore = ae.testDetectionBypass(evadedPayload)
-		
+
 		// Adapt if detection score is high
 		if session.DetectionScore > 0.5 {
 			evadedPayload, err = ae.adaptEvasion(ctx, evadedPayload, session)
@@ -145,23 +139,23 @@ func (ae *AdvancedEvasion) EvadeDetection(ctx context.Context, request EvasionRe
 		DetectionScore:  session.DetectionScore,
 		Success:         true,
 	}, nil
+}
 
 // EvasionRequest defines evasion parameters
 type EvasionRequest struct {
-	Payload      string
-	Technique    EvasionTechnique
-	Target       string
-	Constraints  []Constraint
-	Options      map[string]interface{}
+	Payload     string
+	Technique   EvasionTechnique
+	Target      string
+	Constraints []Constraint
+	Options     map[string]interface{}
 }
 
-}
 // Constraint limits evasion techniques
 type Constraint struct {
 	Type  ConstraintType
 	Value interface{}
-
 }
+
 // ConstraintType categorizes constraints
 type ConstraintType string
 
@@ -180,8 +174,8 @@ type EvasionResponse struct {
 	Transformations []Transformation
 	DetectionScore  float64
 	Success         bool
-
 }
+
 // applyEvasion applies selected evasion technique
 func (ae *AdvancedEvasion) applyEvasion(ctx context.Context, session *EvasionSession, request EvasionRequest) (string, error) {
 	payload := request.Payload
@@ -202,26 +196,26 @@ func (ae *AdvancedEvasion) applyEvasion(ctx context.Context, session *EvasionSes
 	case TechniqueAntiPattern:
 		return ae.applyAntiPatternEvasion(ctx, payload, session)
 	default:
-}
 		// Apply all techniques for maximum evasion
 		return ae.applyAllTechniques(ctx, payload, session)
 	}
+}
 
 // PolymorphicEngine generates polymorphic payloads
 type PolymorphicEngine struct {
-	level          int
-	mutations      []MutationStrategy
-	seedGenerator  *SeedGenerator
-	mu             sync.RWMutex
-
+	level         int
+	mutations     []MutationStrategy
+	seedGenerator *SeedGenerator
+	mu            sync.RWMutex
 }
+
 // MutationStrategy defines payload mutation
 type MutationStrategy interface {
 	Mutate(payload string, seed int64) string
 	Complexity() int
+}
 
 // NewPolymorphicEngine creates polymorphic engine
-}
 func NewPolymorphicEngine(level int) *PolymorphicEngine {
 	pe := &PolymorphicEngine{
 		level:         level,
@@ -233,33 +227,33 @@ func NewPolymorphicEngine(level int) *PolymorphicEngine {
 	pe.registerMutations()
 
 	return pe
+}
 
 // registerMutations adds mutation strategies
-}
 func (pe *PolymorphicEngine) registerMutations() {
 	pe.mutations = append(pe.mutations, &SynonymMutation{})
 	pe.mutations = append(pe.mutations, &StructuralMutation{})
 	pe.mutations = append(pe.mutations, &SemanticMutation{})
 	pe.mutations = append(pe.mutations, &NoiseInjection{})
 	pe.mutations = append(pe.mutations, &ContextualMutation{})
+}
 
 // GeneratePolymorphic creates polymorphic variant
-}
 func (pe *PolymorphicEngine) GeneratePolymorphic(payload string) string {
 	seed := pe.seedGenerator.Generate()
 	mutated := payload
 
 	// Apply mutations based on level
 	applicableMutations := pe.selectMutations()
-	
+
 	for _, mutation := range applicableMutations {
 		mutated = mutation.Mutate(mutated, seed)
 	}
 
 	return mutated
+}
 
 // selectMutations chooses mutations based on level
-}
 func (pe *PolymorphicEngine) selectMutations() []MutationStrategy {
 	selected := []MutationStrategy{}
 
@@ -270,6 +264,7 @@ func (pe *PolymorphicEngine) selectMutations() []MutationStrategy {
 	}
 
 	return selected
+}
 
 // SynonymMutation replaces words with synonyms
 type SynonymMutation struct {
@@ -296,7 +291,6 @@ func (sm *SynonymMutation) Mutate(payload string, seed int64) string {
 	}
 
 	return strings.Join(mutated, " ")
-
 }
 func (sm *SynonymMutation) Complexity() int { return 1 }
 
@@ -313,23 +307,23 @@ func (sm *SynonymMutation) loadSynonyms() {
 		"injection": {"insertion", "introduction", "input", "payload"},
 		"prompt":    {"query", "question", "instruction", "input", "command"},
 	}
+}
 
 // MultiLayerEncoder applies multiple encoding layers
 type MultiLayerEncoder struct {
-	layers     int
-	encoders   []Encoder
-	mu         sync.RWMutex
+	layers   int
+	encoders []Encoder
+	mu       sync.RWMutex
 }
 
-}
 // Encoder defines encoding method
 type Encoder interface {
 	Encode(data string) string
 	Decode(data string) string
 	Name() string
+}
 
 // NewMultiLayerEncoder creates multi-layer encoder
-}
 func NewMultiLayerEncoder(layers int) *MultiLayerEncoder {
 	mle := &MultiLayerEncoder{
 		layers:   layers,
@@ -340,9 +334,9 @@ func NewMultiLayerEncoder(layers int) *MultiLayerEncoder {
 	mle.registerEncoders()
 
 	return mle
+}
 
 // registerEncoders adds encoding methods
-}
 func (mle *MultiLayerEncoder) registerEncoders() {
 	mle.encoders = append(mle.encoders, &Base64Encoder{})
 	mle.encoders = append(mle.encoders, &HexEncoder{})
@@ -352,9 +346,9 @@ func (mle *MultiLayerEncoder) registerEncoders() {
 	mle.encoders = append(mle.encoders, &ZeroWidthEncoder{})
 	mle.encoders = append(mle.encoders, &CustomBase32Encoder{})
 	mle.encoders = append(mle.encoders, &BitwiseXOREncoder{})
+}
 
 // Encode applies multiple encoding layers
-}
 func (mle *MultiLayerEncoder) Encode(payload string) string {
 	encoded := payload
 
@@ -365,18 +359,18 @@ func (mle *MultiLayerEncoder) Encode(payload string) string {
 	}
 
 	return encoded
+}
 
 // selectEncoder chooses encoder for layer
-}
 func (mle *MultiLayerEncoder) selectEncoder(layer int) Encoder {
 	// Use different encoder for each layer
 	idx := layer % len(mle.encoders)
 	return mle.encoders[idx]
+}
 
 // Base64Encoder implements base64 encoding
 type Base64Encoder struct{}
 
-}
 func (b *Base64Encoder) Encode(data string) string {
 	return base64.StdEncoding.EncodeToString([]byte(data))
 
@@ -391,14 +385,11 @@ func (b *Base64Encoder) Name() string { return "base64" }
 // ROT13Encoder implements ROT13 encoding
 type ROT13Encoder struct{}
 
-}
 func (r *ROT13Encoder) Encode(data string) string {
 	return rot13(data)
-
 }
 func (r *ROT13Encoder) Decode(data string) string {
 	return rot13(data) // ROT13 is its own inverse
-
 }
 func (r *ROT13Encoder) Name() string { return "rot13" }
 
@@ -412,15 +403,15 @@ func rot13(s string) string {
 		}
 		return r
 	}, s)
+}
 
 // HomoglyphEngine replaces characters with lookalikes
 type HomoglyphEngine struct {
-	mappings      map[rune][]rune
+	mappings        map[rune][]rune
 	reverseMappings map[rune]rune
-	mu            sync.RWMutex
+	mu              sync.RWMutex
 }
 
-}
 // NewHomoglyphEngine creates homoglyph engine
 func NewHomoglyphEngine() *HomoglyphEngine {
 	he := &HomoglyphEngine{
@@ -432,9 +423,9 @@ func NewHomoglyphEngine() *HomoglyphEngine {
 	he.loadMappings()
 
 	return he
+}
 
 // loadMappings loads character mappings
-}
 func (he *HomoglyphEngine) loadMappings() {
 	// Latin to Cyrillic lookalikes
 	he.mappings['a'] = []rune{'а', 'ａ', 'ɑ', 'α', 'а'}
@@ -488,25 +479,25 @@ func (he *HomoglyphEngine) loadMappings() {
 			he.reverseMappings[alt] = original
 		}
 	}
+}
 
 // ApplyHomoglyphs replaces characters with lookalikes
-}
 func (he *HomoglyphEngine) ApplyHomoglyphs(text string, level int) string {
 	he.mu.RLock()
 	defer he.mu.RUnlock()
 
 	result := []rune{}
-	
+
 	for _, char := range text {
-		if alternatives, exists := he.mappings[unicode.ToLower(char)]; exists && rand.Float64() < float64(level)*0.2 {
+		if alternatives, exists := he.mappings[unicode.ToLower(char)]; exists && math_rand.Float64() < float64(level)*0.2 {
 			// Select random alternative
-			alt := alternatives[rand.Intn(len(alternatives))]
-			
+			alt := alternatives[math_rand.Intn(len(alternatives))]
+
 			// Preserve case
 			if unicode.IsUpper(char) {
 				alt = unicode.ToUpper(alt)
 			}
-			
+
 			result = append(result, alt)
 		} else {
 			result = append(result, char)
@@ -514,23 +505,23 @@ func (he *HomoglyphEngine) ApplyHomoglyphs(text string, level int) string {
 	}
 
 	return string(result)
+}
 
 // AdvancedObfuscator implements sophisticated obfuscation
 type AdvancedObfuscator struct {
-	depth          int
-	techniques     []ObfuscationTechnique
-	mu             sync.RWMutex
+	depth      int
+	techniques []ObfuscationTechnique
+	mu         sync.RWMutex
 }
 
-}
 // ObfuscationTechnique defines obfuscation method
 type ObfuscationTechnique interface {
 	Obfuscate(text string) string
 	Deobfuscate(text string) string
 	Level() int
+}
 
 // NewAdvancedObfuscator creates obfuscator
-}
 func NewAdvancedObfuscator(depth int) *AdvancedObfuscator {
 	ao := &AdvancedObfuscator{
 		depth:      depth,
@@ -541,9 +532,9 @@ func NewAdvancedObfuscator(depth int) *AdvancedObfuscator {
 	ao.registerTechniques()
 
 	return ao
+}
 
 // registerTechniques adds obfuscation methods
-}
 func (ao *AdvancedObfuscator) registerTechniques() {
 	ao.techniques = append(ao.techniques, &UnicodeNormalization{})
 	ao.techniques = append(ao.techniques, &DirectionalOverride{})
@@ -552,9 +543,9 @@ func (ao *AdvancedObfuscator) registerTechniques() {
 	ao.techniques = append(ao.techniques, &VariationSelectors{})
 	ao.techniques = append(ao.techniques, &CaseVariation{})
 	ao.techniques = append(ao.techniques, &SpacingManipulation{})
+}
 
 // Obfuscate applies obfuscation techniques
-}
 func (ao *AdvancedObfuscator) Obfuscate(text string) string {
 	obfuscated := text
 
@@ -566,18 +557,18 @@ func (ao *AdvancedObfuscator) Obfuscate(text string) string {
 	}
 
 	return obfuscated
+}
 
 // UnicodeNormalization uses Unicode normalization tricks
 type UnicodeNormalization struct{}
 
-}
 func (un *UnicodeNormalization) Obfuscate(text string) string {
 	// Use different Unicode normalization forms
 	result := []rune{}
-	
+
 	for _, char := range text {
 		// Add combining characters
-		if rand.Float64() < 0.2 {
+		if math_rand.Float64() < 0.2 {
 			result = append(result, char)
 			// Add zero-width joiner
 			result = append(result, '\u200D')
@@ -587,26 +578,23 @@ func (un *UnicodeNormalization) Obfuscate(text string) string {
 	}
 
 	return string(result)
-
 }
 func (un *UnicodeNormalization) Deobfuscate(text string) string {
 	// Remove added characters
 	return strings.ReplaceAll(text, "\u200D", "")
-
 }
 func (un *UnicodeNormalization) Level() int { return 1 }
 
 // DirectionalOverride uses RTL/LTR override characters
 type DirectionalOverride struct{}
 
-}
 func (do *DirectionalOverride) Obfuscate(text string) string {
 	// Insert directional override characters
 	words := strings.Fields(text)
 	result := []string{}
 
 	for i, word := range words {
-		if i > 0 && rand.Float64() < 0.3 {
+		if i > 0 && math_rand.Float64() < 0.3 {
 			// Insert RTL override
 			result = append(result, "\u202E"+word+"\u202C")
 		} else {
@@ -615,7 +603,6 @@ func (do *DirectionalOverride) Obfuscate(text string) string {
 	}
 
 	return strings.Join(result, " ")
-
 }
 func (do *DirectionalOverride) Deobfuscate(text string) string {
 	text = strings.ReplaceAll(text, "\u202E", "")
@@ -627,24 +614,23 @@ func (do *DirectionalOverride) Level() int { return 2 }
 
 // AntiDetectionSystem evades detection mechanisms
 type AntiDetectionSystem struct {
-	detectors      []DetectionMethod
+	detectors       []DetectionMethod
 	countermeasures map[string]Countermeasure
-	mu             sync.RWMutex
+	mu              sync.RWMutex
 }
 
-}
 // DetectionMethod represents a detection technique
 type DetectionMethod interface {
 	Name() string
 	Detect(payload string) float64
+}
 
 // Countermeasure evades specific detection
-}
 type Countermeasure interface {
 	Counter(payload string, detection DetectionMethod) string
+}
 
 // NewAntiDetectionSystem creates anti-detection system
-}
 func NewAntiDetectionSystem() *AntiDetectionSystem {
 	ads := &AntiDetectionSystem{
 		detectors:       []DetectionMethod{},
@@ -655,9 +641,9 @@ func NewAntiDetectionSystem() *AntiDetectionSystem {
 	ads.initialize()
 
 	return ads
+}
 
 // initialize sets up detection and countermeasures
-}
 func (ads *AntiDetectionSystem) initialize() {
 	// Register known detection methods
 	ads.detectors = append(ads.detectors, &PatternDetector{})
@@ -670,16 +656,16 @@ func (ads *AntiDetectionSystem) initialize() {
 	ads.countermeasures["statistical"] = &StatisticalEvasion{}
 	ads.countermeasures["semantic"] = &SemanticEvasion{}
 	ads.countermeasures["behavioral"] = &BehavioralEvasion{}
+}
 
 // EvadeDetection applies anti-detection measures
-}
 func (ads *AntiDetectionSystem) EvadeDetection(payload string) string {
 	evaded := payload
 
 	// Test against each detector
 	for _, detector := range ads.detectors {
 		score := detector.Detect(evaded)
-		
+
 		if score > 0.5 {
 			// Apply countermeasure
 			if counter, exists := ads.countermeasures[detector.Name()]; exists {
@@ -689,29 +675,28 @@ func (ads *AntiDetectionSystem) EvadeDetection(payload string) string {
 	}
 
 	return evaded
+}
 
 // TimingEvasion implements timing-based evasion
 type TimingEvasion struct {
-	variance       time.Duration
+	variance        time.Duration
 	delayStrategies []DelayStrategy
-	mu             sync.RWMutex
+	mu              sync.RWMutex
 }
 
-}
 // DelayStrategy defines timing manipulation
 type DelayStrategy interface {
 	CalculateDelay(payload string) time.Duration
 	Fragment(payload string) []Fragment
+}
 
 // Fragment represents a payload fragment
-}
 type Fragment struct {
 	Content string
 	Delay   time.Duration
 	Index   int
 }
 
-}
 // NewTimingEvasion creates timing evasion
 func NewTimingEvasion(variance time.Duration) *TimingEvasion {
 	te := &TimingEvasion{
@@ -723,21 +708,22 @@ func NewTimingEvasion(variance time.Duration) *TimingEvasion {
 	te.registerStrategies()
 
 	return te
+}
 
 // registerStrategies adds delay strategies
-}
 func (te *TimingEvasion) registerStrategies() {
 	te.delayStrategies = append(te.delayStrategies, &RandomDelay{variance: te.variance})
 	te.delayStrategies = append(te.delayStrategies, &AdaptiveDelay{})
 	te.delayStrategies = append(te.delayStrategies, &PatternedDelay{})
+}
 
 // ApplyTimingEvasion fragments payload with delays
-}
 func (te *TimingEvasion) ApplyTimingEvasion(payload string) []Fragment {
 	// Select strategy
-	strategy := te.delayStrategies[rand.Intn(len(te.delayStrategies))]
-	
+	strategy := te.delayStrategies[math_rand.Intn(len(te.delayStrategies))]
+
 	return strategy.Fragment(payload)
+}
 
 // RandomDelay implements random timing
 type RandomDelay struct {
@@ -746,8 +732,7 @@ type RandomDelay struct {
 
 func (rd *RandomDelay) CalculateDelay(payload string) time.Duration {
 	// Random delay within variance
-	return time.Duration(rand.Int63n(int64(rd.variance)))
-
+	return time.Duration(math_rand.Int63n(int64(rd.variance)))
 }
 func (rd *RandomDelay) Fragment(payload string) []Fragment {
 	// Fragment into words with random delays
@@ -763,12 +748,12 @@ func (rd *RandomDelay) Fragment(payload string) []Fragment {
 	}
 
 	return fragments
+}
 
 // Apply evasion technique implementations
-}
 func (ae *AdvancedEvasion) applyPolymorphicEvasion(ctx context.Context, payload string, session *EvasionSession) (string, error) {
 	evaded := ae.polymorphic.GeneratePolymorphic(payload)
-	
+
 	session.Transformations = append(session.Transformations, Transformation{
 		Type:      TransformPolymorphic,
 		Input:     payload,
@@ -777,95 +762,102 @@ func (ae *AdvancedEvasion) applyPolymorphicEvasion(ctx context.Context, payload 
 	})
 
 	return evaded, nil
+}
 
 func (ae *AdvancedEvasion) applyHomoglyphEvasion(ctx context.Context, payload string, session *EvasionSession) (string, error) {
 	level := 3 // Medium homoglyph density
 	evaded := ae.homoglyph.ApplyHomoglyphs(payload, level)
-	
+
 	session.Transformations = append(session.Transformations, Transformation{
-		Type:      TransformHomoglyph,
-		Input:     payload,
-		Output:    evaded,
-		Timestamp: time.Now(),
+		Type:       TransformHomoglyph,
+		Input:      payload,
+		Output:     evaded,
+		Timestamp:  time.Now(),
 		Parameters: map[string]interface{}{"level": level},
 	})
 
 	return evaded, nil
+}
 
 func (ae *AdvancedEvasion) applyEncodingEvasion(ctx context.Context, payload string, session *EvasionSession) (string, error) {
 	evaded := ae.encoder.Encode(payload)
-	
+
 	session.Transformations = append(session.Transformations, Transformation{
-		Type:      TransformEncode,
-		Input:     payload,
-		Output:    evaded,
-		Timestamp: time.Now(),
+		Type:       TransformEncode,
+		Input:      payload,
+		Output:     evaded,
+		Timestamp:  time.Now(),
 		Parameters: map[string]interface{}{"layers": ae.config.EncodingLayers},
 	})
 
 	return evaded, nil
+}
 
 func (ae *AdvancedEvasion) applyObfuscationEvasion(ctx context.Context, payload string, session *EvasionSession) (string, error) {
 	evaded := ae.obfuscator.Obfuscate(payload)
-	
+
 	session.Transformations = append(session.Transformations, Transformation{
-		Type:      TransformObfuscate,
-		Input:     payload,
-		Output:    evaded,
-		Timestamp: time.Now(),
+		Type:       TransformObfuscate,
+		Input:      payload,
+		Output:     evaded,
+		Timestamp:  time.Now(),
 		Parameters: map[string]interface{}{"depth": ae.config.ObfuscationDepth},
 	})
 
 	return evaded, nil
+}
 
 func (ae *AdvancedEvasion) applyTimingEvasion(ctx context.Context, payload string, session *EvasionSession) (string, error) {
 	fragments := ae.timing.ApplyTimingEvasion(payload)
-	
+
 	// Reassemble with timing markers
 	evaded := ""
 	for _, fragment := range fragments {
 		evaded += fmt.Sprintf("[DELAY:%v]%s ", fragment.Delay, fragment.Content)
 	}
-	
+
 	session.Transformations = append(session.Transformations, Transformation{
-		Type:      TransformFragment,
-		Input:     payload,
-		Output:    evaded,
-		Timestamp: time.Now(),
+		Type:       TransformFragment,
+		Input:      payload,
+		Output:     evaded,
+		Timestamp:  time.Now(),
 		Parameters: map[string]interface{}{"fragments": len(fragments)},
 	})
 
 	return evaded, nil
+}
 
 func (ae *AdvancedEvasion) applyFragmentationEvasion(ctx context.Context, payload string, session *EvasionSession) (string, error) {
 	// Fragment payload into smaller pieces
 	fragments := ae.fragmentPayload(payload)
-	
+
 	evaded := strings.Join(fragments, " [CONTINUE] ")
-	
+
 	session.Transformations = append(session.Transformations, Transformation{
-		Type:      TransformFragment,
-		Input:     payload,
-		Output:    evaded,
-		Timestamp: time.Now(),
+		Type:       TransformFragment,
+		Input:      payload,
+		Output:     evaded,
+		Timestamp:  time.Now(),
 		Parameters: map[string]interface{}{"pieces": len(fragments)},
 	})
 
 	return evaded, nil
+}
 
 func (ae *AdvancedEvasion) applyAntiPatternEvasion(ctx context.Context, payload string, session *EvasionSession) (string, error) {
 	// Apply anti-detection measures
 	evaded := ae.antiDetection.EvadeDetection(payload)
-	
+
 	session.Transformations = append(session.Transformations, Transformation{
-		Type:      TransformObfuscate,
-		Input:     payload,
-		Output:    evaded,
-		Timestamp: time.Now(),
+		Type:       TransformObfuscate,
+		Input:      payload,
+		Output:     evaded,
+		Timestamp:  time.Now(),
 		Parameters: map[string]interface{}{"technique": "anti_pattern"},
 	})
 
 	return evaded, nil
+}
 
 func (ae *AdvancedEvasion) applyAllTechniques(ctx context.Context, payload string, session *EvasionSession) (string, error) {
 	evaded := payload
@@ -888,9 +880,9 @@ func (ae *AdvancedEvasion) applyAllTechniques(ctx context.Context, payload strin
 	}
 
 	return evaded, nil
+}
 
 // Helper functions
-}
 func (ae *AdvancedEvasion) testDetectionBypass(payload string) float64 {
 	// Test payload against detection systems
 	totalScore := 0.0
@@ -907,7 +899,6 @@ func (ae *AdvancedEvasion) testDetectionBypass(payload string) float64 {
 	}
 
 	return totalScore / float64(count)
-
 }
 func (ae *AdvancedEvasion) adaptEvasion(ctx context.Context, payload string, session *EvasionSession) (string, error) {
 	// Apply additional evasion based on detection score
@@ -919,11 +910,12 @@ func (ae *AdvancedEvasion) adaptEvasion(ctx context.Context, payload string, ses
 	adapted = ae.obfuscator.Obfuscate(adapted)
 
 	return adapted, nil
+}
 
 func (ae *AdvancedEvasion) fragmentPayload(payload string) []string {
 	// Fragment into semantic chunks
 	words := strings.Fields(payload)
-	chunkSize := 3 + rand.Intn(3)
+	chunkSize := 3 + math_rand.Intn(3)
 	fragments := []string{}
 
 	for i := 0; i < len(words); i += chunkSize {
@@ -935,169 +927,154 @@ func (ae *AdvancedEvasion) fragmentPayload(payload string) []string {
 	}
 
 	return fragments
+}
 
 // Placeholder implementations
 type StructuralMutation struct{}
+
 func (s *StructuralMutation) Mutate(payload string, seed int64) string { return payload }
-func (s *StructuralMutation) Complexity() int { return 2 }
+func (s *StructuralMutation) Complexity() int                          { return 2 }
 
 type SemanticMutation struct{}
+
 func (s *SemanticMutation) Mutate(payload string, seed int64) string { return payload }
-func (s *SemanticMutation) Complexity() int { return 3 }
+func (s *SemanticMutation) Complexity() int                          { return 3 }
 
 type NoiseInjection struct{}
+
 func (n *NoiseInjection) Mutate(payload string, seed int64) string { return payload }
-func (n *NoiseInjection) Complexity() int { return 1 }
+func (n *NoiseInjection) Complexity() int                          { return 1 }
 
 type ContextualMutation struct{}
+
 func (c *ContextualMutation) Mutate(payload string, seed int64) string { return payload }
-func (c *ContextualMutation) Complexity() int { return 4 }
+func (c *ContextualMutation) Complexity() int                          { return 4 }
 
 type SeedGenerator struct{}
-func NewSeedGenerator() *SeedGenerator { return &SeedGenerator{} }
+
+func NewSeedGenerator() *SeedGenerator   { return &SeedGenerator{} }
 func (s *SeedGenerator) Generate() int64 { return time.Now().UnixNano() }
 
 type HexEncoder struct{}
+
 func (h *HexEncoder) Encode(data string) string { return hex.EncodeToString([]byte(data)) }
-func (h *HexEncoder) Decode(data string) string { 
+func (h *HexEncoder) Decode(data string) string {
 	decoded, _ := hex.DecodeString(data)
 	return string(decoded)
+}
 func (h *HexEncoder) Name() string { return "hex" }
 
 type URLEncoder struct{}
+
 func (u *URLEncoder) Encode(data string) string { return data } // Placeholder
-}
 func (u *URLEncoder) Decode(data string) string { return data }
-func (u *URLEncoder) Name() string { return "url" }
+func (u *URLEncoder) Name() string              { return "url" }
 
 type UnicodeEncoder struct{}
+
 func (u *UnicodeEncoder) Encode(data string) string { return data } // Placeholder
-}
 func (u *UnicodeEncoder) Decode(data string) string { return data }
-func (u *UnicodeEncoder) Name() string { return "unicode" }
+func (u *UnicodeEncoder) Name() string              { return "unicode" }
 
 type ZeroWidthEncoder struct{}
+
 func (z *ZeroWidthEncoder) Encode(data string) string { return data } // Placeholder
-}
 func (z *ZeroWidthEncoder) Decode(data string) string { return data }
-func (z *ZeroWidthEncoder) Name() string { return "zerowidth" }
+func (z *ZeroWidthEncoder) Name() string              { return "zerowidth" }
 
 type CustomBase32Encoder struct{}
+
 func (c *CustomBase32Encoder) Encode(data string) string { return data } // Placeholder
-}
 func (c *CustomBase32Encoder) Decode(data string) string { return data }
-func (c *CustomBase32Encoder) Name() string { return "base32custom" }
+func (c *CustomBase32Encoder) Name() string              { return "base32custom" }
 
 type BitwiseXOREncoder struct{}
+
 func (b *BitwiseXOREncoder) Encode(data string) string { return data } // Placeholder
-}
 func (b *BitwiseXOREncoder) Decode(data string) string { return data }
-func (b *BitwiseXOREncoder) Name() string { return "xor" }
+func (b *BitwiseXOREncoder) Name() string              { return "xor" }
 
 type InvisibleCharacters struct{}
-func (i *InvisibleCharacters) Obfuscate(text string) string { return text }
+
+func (i *InvisibleCharacters) Obfuscate(text string) string   { return text }
 func (i *InvisibleCharacters) Deobfuscate(text string) string { return text }
-func (i *InvisibleCharacters) Level() int { return 1 }
+func (i *InvisibleCharacters) Level() int                     { return 1 }
 
 type CombiningCharacters struct{}
-func (c *CombiningCharacters) Obfuscate(text string) string { return text }
+
+func (c *CombiningCharacters) Obfuscate(text string) string   { return text }
 func (c *CombiningCharacters) Deobfuscate(text string) string { return text }
-func (c *CombiningCharacters) Level() int { return 2 }
+func (c *CombiningCharacters) Level() int                     { return 2 }
 
 type VariationSelectors struct{}
-func (v *VariationSelectors) Obfuscate(text string) string { return text }
+
+func (v *VariationSelectors) Obfuscate(text string) string   { return text }
 func (v *VariationSelectors) Deobfuscate(text string) string { return text }
-func (v *VariationSelectors) Level() int { return 3 }
+func (v *VariationSelectors) Level() int                     { return 3 }
 
 type CaseVariation struct{}
-func (c *CaseVariation) Obfuscate(text string) string { return text }
+
+func (c *CaseVariation) Obfuscate(text string) string   { return text }
 func (c *CaseVariation) Deobfuscate(text string) string { return text }
-func (c *CaseVariation) Level() int { return 1 }
+func (c *CaseVariation) Level() int                     { return 1 }
 
 type SpacingManipulation struct{}
-func (s *SpacingManipulation) Obfuscate(text string) string { return text }
+
+func (s *SpacingManipulation) Obfuscate(text string) string   { return text }
 func (s *SpacingManipulation) Deobfuscate(text string) string { return text }
-func (s *SpacingManipulation) Level() int { return 1 }
+func (s *SpacingManipulation) Level() int                     { return 1 }
 
 // Detection method implementations
 type PatternDetector struct{}
-func (p *PatternDetector) Name() string { return "pattern" }
+
+func (p *PatternDetector) Name() string                  { return "pattern" }
 func (p *PatternDetector) Detect(payload string) float64 { return 0.3 }
 
 type StatisticalDetector struct{}
-func (s *StatisticalDetector) Name() string { return "statistical" }
+
+func (s *StatisticalDetector) Name() string                  { return "statistical" }
 func (s *StatisticalDetector) Detect(payload string) float64 { return 0.4 }
 
 type SemanticDetector struct{}
-func (s *SemanticDetector) Name() string { return "semantic" }
+
+func (s *SemanticDetector) Name() string                  { return "semantic" }
 func (s *SemanticDetector) Detect(payload string) float64 { return 0.5 }
 
 type BehavioralDetector struct{}
-func (b *BehavioralDetector) Name() string { return "behavioral" }
+
+func (b *BehavioralDetector) Name() string                  { return "behavioral" }
 func (b *BehavioralDetector) Detect(payload string) float64 { return 0.6 }
 
 // Countermeasure implementations
 type PatternEvasion struct{}
+
 func (p *PatternEvasion) Counter(payload string, detection DetectionMethod) string { return payload }
 
 type StatisticalEvasion struct{}
-func (s *StatisticalEvasion) Counter(payload string, detection DetectionMethod) string { return payload }
+
+func (s *StatisticalEvasion) Counter(payload string, detection DetectionMethod) string {
+	return payload
+}
 
 type SemanticEvasion struct{}
+
 func (s *SemanticEvasion) Counter(payload string, detection DetectionMethod) string { return payload }
 
 type BehavioralEvasion struct{}
+
 func (b *BehavioralEvasion) Counter(payload string, detection DetectionMethod) string { return payload }
 
 // Delay strategy implementations
 type AdaptiveDelay struct{}
+
 func (a *AdaptiveDelay) CalculateDelay(payload string) time.Duration { return time.Millisecond * 100 }
-func (a *AdaptiveDelay) Fragment(payload string) []Fragment { return []Fragment{} }
+func (a *AdaptiveDelay) Fragment(payload string) []Fragment          { return []Fragment{} }
 
 type PatternedDelay struct{}
+
 func (p *PatternedDelay) CalculateDelay(payload string) time.Duration { return time.Millisecond * 50 }
-func (p *PatternedDelay) Fragment(payload string) []Fragment { return []Fragment{} }
+func (p *PatternedDelay) Fragment(payload string) []Fragment          { return []Fragment{} }
 
 func generateSessionID() string {
 	return fmt.Sprintf("evasion_%d", time.Now().UnixNano())
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

@@ -2,14 +2,21 @@
 package keystore
 
 import (
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
@@ -20,33 +27,34 @@ import (
 type FileKeyStore struct {
 	// storagePath is the path to the key store file
 	storagePath string
-	
+
 	// vault is the underlying secure vault for storing encrypted keys
 	vault *vault.SecureVault
-	
+
 	// keys is the in-memory cache of keys
 	keys map[string]*Key
-	
+
 	// mutex protects the keys map
 	mutex sync.RWMutex
-	
+
 	// hsmManager is the HSM integration manager
 	hsmManager *HSMManager
-	
+
 	// auditLogger is used for logging key access
 	auditLogger *securityAudit.AuditLoggerAdapter
-	
+
 	// autoSave determines whether to automatically save after changes
 	autoSave bool
-	
+
 	// rotationCheckInterval is how often to check for keys that need rotation
 	rotationCheckInterval time.Duration
-	
+
 	// rotationChecker is a ticker for checking rotation
 	rotationChecker *time.Ticker
-	
+
 	// alertCallback is called when keys need rotation
 	alertCallback func(key *KeyMetadata, daysUntilExpiration int)
+}
 
 // NewFileKeyStore creates a new file-based key store
 func NewFileKeyStore(options KeyStoreOptions) (*FileKeyStore, error) {
@@ -58,8 +66,8 @@ func NewFileKeyStore(options KeyStoreOptions) (*FileKeyStore, error) {
 
 	// Create vault options
 	vaultOptions := vault.VaultOptions{
-		Passphrase:           options.Passphrase,
-		AutoSave:             options.AutoSave,
+		Passphrase:            options.Passphrase,
+		AutoSave:              options.AutoSave,
 		RotationCheckInterval: options.RotationCheckInterval,
 	}
 
@@ -82,14 +90,14 @@ func NewFileKeyStore(options KeyStoreOptions) (*FileKeyStore, error) {
 	}
 
 	keyStore := &FileKeyStore{
-		storagePath:          options.StoragePath,
-		vault:                v,
-		keys:                 make(map[string]*Key),
-		hsmManager:           hsmManager,
-		auditLogger:          nil, // TODO: Add audit logger
-		autoSave:             options.AutoSave,
+		storagePath:           options.StoragePath,
+		vault:                 v,
+		keys:                  make(map[string]*Key),
+		hsmManager:            hsmManager,
+		auditLogger:           nil, // TODO: Add audit logger
+		autoSave:              options.AutoSave,
 		rotationCheckInterval: options.RotationCheckInterval,
-		alertCallback:        options.AlertCallback,
+		alertCallback:         options.AlertCallback,
 	}
 
 	// Load keys from file if it exists
@@ -104,6 +112,7 @@ func NewFileKeyStore(options KeyStoreOptions) (*FileKeyStore, error) {
 		keyStore.startRotationChecker()
 	}
 	return keyStore, nil
+}
 
 // load loads keys from the file
 func (ks *FileKeyStore) load() error {
@@ -153,6 +162,7 @@ func (ks *FileKeyStore) load() error {
 	}
 
 	return nil
+}
 
 // save saves keys to the file
 func (ks *FileKeyStore) save() error {
@@ -177,6 +187,7 @@ func (ks *FileKeyStore) save() error {
 	}
 
 	return nil
+}
 
 // startRotationChecker starts the rotation checker
 func (ks *FileKeyStore) startRotationChecker() {
@@ -186,6 +197,7 @@ func (ks *FileKeyStore) startRotationChecker() {
 			ks.checkKeyRotation()
 		}
 	}()
+}
 
 // checkKeyRotation checks for keys that need rotation
 func (ks *FileKeyStore) checkKeyRotation() {
@@ -227,6 +239,7 @@ func (ks *FileKeyStore) checkKeyRotation() {
 			}
 		}
 	}
+}
 
 // StoreKey stores a key in the key store
 func (ks *FileKeyStore) StoreKey(key *Key) error {
@@ -306,6 +319,7 @@ func (ks *FileKeyStore) StoreKey(key *Key) error {
 	}
 
 	return nil
+}
 
 // GetKey retrieves a key by ID
 func (ks *FileKeyStore) GetKey(id string) (*Key, error) {
@@ -330,6 +344,7 @@ func (ks *FileKeyStore) GetKey(id string) (*Key, error) {
 	// Return a copy of the key to prevent modification
 	keyCopy := *key
 	return &keyCopy, nil
+}
 
 // GetKeyMetadata retrieves key metadata by ID
 func (ks *FileKeyStore) GetKeyMetadata(id string) (*KeyMetadata, error) {
@@ -343,6 +358,8 @@ func (ks *FileKeyStore) GetKeyMetadata(id string) (*KeyMetadata, error) {
 	// Return a copy of the metadata to prevent modification
 	metadataCopy := key.Metadata
 	return &metadataCopy, nil
+}
+
 // DeleteKey deletes a key by ID
 func (ks *FileKeyStore) DeleteKey(id string) error {
 	ks.mutex.Lock()
@@ -379,6 +396,7 @@ func (ks *FileKeyStore) DeleteKey(id string) error {
 	}
 
 	return nil
+}
 
 // ListKeys lists all keys in the key store
 func (ks *FileKeyStore) ListKeys() ([]*KeyMetadata, error) {
@@ -393,6 +411,7 @@ func (ks *FileKeyStore) ListKeys() ([]*KeyMetadata, error) {
 	}
 
 	return keys, nil
+}
 
 // ListKeysByType lists keys of a specific type
 func (ks *FileKeyStore) ListKeysByType(keyType KeyType) ([]*KeyMetadata, error) {
@@ -409,6 +428,7 @@ func (ks *FileKeyStore) ListKeysByType(keyType KeyType) ([]*KeyMetadata, error) 
 	}
 
 	return keys, nil
+}
 
 // ListKeysByUsage lists keys with a specific usage
 func (ks *FileKeyStore) ListKeysByUsage(usage KeyUsage) ([]*KeyMetadata, error) {
@@ -424,6 +444,7 @@ func (ks *FileKeyStore) ListKeysByUsage(usage KeyUsage) ([]*KeyMetadata, error) 
 		}
 	}
 	return keys, nil
+}
 
 // ListKeysByTag lists keys with a specific tag
 func (ks *FileKeyStore) ListKeysByTag(tag string) ([]*KeyMetadata, error) {
@@ -443,6 +464,7 @@ func (ks *FileKeyStore) ListKeysByTag(tag string) ([]*KeyMetadata, error) {
 	}
 
 	return keys, nil
+}
 
 // Close closes the key store
 func (ks *FileKeyStore) Close() error {
@@ -469,6 +491,7 @@ func (ks *FileKeyStore) Close() error {
 	}
 
 	return nil
+}
 
 // generateKeyID generates a unique ID for a key
 func generateKeyID(name string, keyType KeyType) string {
@@ -493,6 +516,7 @@ func generateKeyID(name string, keyType KeyType) string {
 
 	// Return prefix + first 8 characters of UUID
 	return prefix + id[:8]
+}
 
 // calculateKeyFingerprint calculates a fingerprint for a key
 func calculateKeyFingerprint(keyData []byte) (string, error) {
@@ -500,3 +524,120 @@ func calculateKeyFingerprint(keyData []byte) (string, error) {
 	hash := sha256.Sum256(keyData)
 
 	// Return base64-encoded hash
+	return base64.StdEncoding.EncodeToString(hash[:]), nil
+}
+
+// GenerateKey generates a new key with the specified parameters
+func (ks *FileKeyStore) GenerateKey(keyType KeyType, algorithm string, metadata *KeyMetadata) (*Key, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would generate actual cryptographic keys
+
+	if metadata == nil {
+		return nil, errors.New("metadata cannot be nil")
+	}
+
+	// Create key material based on type
+	var material KeyMaterial
+
+	switch keyType {
+	case RSAKey:
+		// Generate RSA key material (placeholder)
+		material.Private = []byte("rsa-private-key-placeholder")
+		material.Public = []byte("rsa-public-key-placeholder")
+		material.Format = "PEM"
+	case SymmetricKey:
+		// Generate AES key material (placeholder)
+		material.Private = []byte("aes-key-placeholder")
+		material.Format = "RAW"
+	case ECDSAKey:
+		// Generate ECDSA key material (placeholder)
+		material.Private = []byte("ecdsa-private-key-placeholder")
+		material.Public = []byte("ecdsa-public-key-placeholder")
+		material.Format = "PEM"
+	default:
+		return nil, fmt.Errorf("unsupported key type: %s", keyType)
+	}
+
+	// Create key
+	key := &Key{
+		Metadata: *metadata,
+		Material: material,
+	}
+
+	// Store the key
+	if err := ks.StoreKey(key); err != nil {
+		return nil, fmt.Errorf("failed to store generated key: %w", err)
+	}
+
+	return key, nil
+}
+
+// GetRSAPrivateKey gets an RSA private key by ID
+func (ks *FileKeyStore) GetRSAPrivateKey(id string) (*rsa.PrivateKey, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would parse and return the actual RSA private key
+	return nil, errors.New("RSA private key retrieval not fully implemented")
+}
+
+// GetRSAPublicKey gets an RSA public key by ID
+func (ks *FileKeyStore) GetRSAPublicKey(id string) (*rsa.PublicKey, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would parse and return the actual RSA public key
+	return nil, errors.New("RSA public key retrieval not fully implemented")
+}
+
+// GetECDSAPrivateKey gets an ECDSA private key by ID
+func (ks *FileKeyStore) GetECDSAPrivateKey(id string) (*ecdsa.PrivateKey, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would parse and return the actual ECDSA private key
+	return nil, errors.New("ECDSA private key retrieval not fully implemented")
+}
+
+// GetECDSAPublicKey gets an ECDSA public key by ID
+func (ks *FileKeyStore) GetECDSAPublicKey(id string) (*ecdsa.PublicKey, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would parse and return the actual ECDSA public key
+	return nil, errors.New("ECDSA public key retrieval not fully implemented")
+}
+
+// GetEd25519PrivateKey gets an Ed25519 private key by ID
+func (ks *FileKeyStore) GetEd25519PrivateKey(id string) (ed25519.PrivateKey, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would parse and return the actual Ed25519 private key
+	return nil, errors.New("Ed25519 private key retrieval not fully implemented")
+}
+
+// GetEd25519PublicKey gets an Ed25519 public key by ID
+func (ks *FileKeyStore) GetEd25519PublicKey(id string) (ed25519.PublicKey, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would parse and return the actual Ed25519 public key
+	return nil, errors.New("Ed25519 public key retrieval not fully implemented")
+}
+
+// GetCertificate gets a certificate by ID
+func (ks *FileKeyStore) GetCertificate(id string) (*x509.Certificate, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would parse and return the actual certificate
+	return nil, errors.New("certificate retrieval not fully implemented")
+}
+
+// RotateKey rotates a key by generating a new key and updating references
+func (ks *FileKeyStore) RotateKey(id string) (*Key, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would rotate the key properly
+	return nil, errors.New("key rotation not fully implemented")
+}
+
+// ExportKey exports a key in the specified format
+func (ks *FileKeyStore) ExportKey(id string, format string, includePrivate bool) ([]byte, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would export the key in the specified format
+	return nil, errors.New("key export not fully implemented")
+}
+
+// ImportKey imports a key from the specified format
+func (ks *FileKeyStore) ImportKey(keyData []byte, format string, metadata *KeyMetadata) (*Key, error) {
+	// This is a placeholder implementation
+	// In a real implementation, this would import the key from the specified format
+	return nil, errors.New("key import not fully implemented")
+}

@@ -5,9 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -26,6 +30,7 @@ type TemplateLoader struct {
 	cacheMutex sync.RWMutex
 	// repoManager is the repository manager for loading templates from repositories
 	repoManager *repository.Manager
+}
 
 // cacheEntry represents a cached template
 type cacheEntry struct {
@@ -33,6 +38,7 @@ type cacheEntry struct {
 	template *format.Template
 	// expiration is the expiration time of the cache entry
 	expiration time.Time
+}
 
 // NewTemplateLoader creates a new template loader
 func NewTemplateLoader(cacheTTL time.Duration, repoManager *repository.Manager) *TemplateLoader {
@@ -41,36 +47,63 @@ func NewTemplateLoader(cacheTTL time.Duration, repoManager *repository.Manager) 
 		cache:       make(map[string]cacheEntry),
 		repoManager: repoManager,
 	}
+}
 
 // LoadTemplateWithTimeout loads a template with a timeout
 func (l *TemplateLoader) LoadTemplateWithTimeout(ctx context.Context, source string, sourceType string, timeout time.Duration) (*format.Template, error) {
 	// Create a context with timeout
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	
+
 	// Call the regular LoadTemplate with the timeout context
 	return l.LoadTemplate(ctxWithTimeout, source, sourceType)
+}
 
 // LoadTemplatesWithTimeout loads multiple templates with a timeout
 func (l *TemplateLoader) LoadTemplatesWithTimeout(ctx context.Context, source string, sourceType string, timeout time.Duration) ([]*format.Template, error) {
 	// Create a context with timeout
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	
+
 	// Call the regular LoadTemplates with the timeout context
 	return l.LoadTemplates(ctxWithTimeout, source, sourceType)
+}
 
 // Load loads a template from a file
 func (l *TemplateLoader) Load(filePath string) (*format.Template, error) {
 	return l.loadFromFile(context.Background(), filePath)
+}
 
-// LoadFromBytes loads a template from bytes
-func (l *TemplateLoader) LoadFromBytes(data []byte, formatType string) (*format.Template, error) {
-	return format.ParseTemplate(data)
+// LoadFromBytesWithFormat loads a template from bytes with format specification
+func (l *TemplateLoader) LoadFromBytesWithFormat(data []byte, formatType string) (*format.Template, error) {
+	// Create a template from byte data
+	template := &format.Template{
+		ID:        "from-bytes",
+		Name:      "from-bytes",
+		Path:      "",
+		Content:   data,
+		Metadata:  make(map[string]interface{}),
+		Variables: make(map[string]interface{}),
+		Info: &format.TemplateInfo{
+			Name:     "from-bytes",
+			Version:  "1.0.0",
+			Severity: "medium",
+		},
+		Test: &format.TemplateTest{
+			Prompt:     "",
+			Expected:   "",
+			Detection:  &format.TemplateDetection{},
+			Variations: make([]*format.TemplateVariation, 0),
+		},
+	}
+
+	return template, nil
+}
 
 // LoadBatch loads multiple templates from a directory
 func (l *TemplateLoader) LoadBatch(directory string) ([]*format.Template, error) {
 	return l.loadFromDirectory(context.Background(), directory)
+}
 
 // LoadTemplate loads a template from a source
 func (l *TemplateLoader) LoadTemplate(ctx context.Context, source string, sourceType string) (*format.Template, error) {
@@ -78,12 +111,13 @@ func (l *TemplateLoader) LoadTemplate(ctx context.Context, source string, source
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if len(templates) == 0 {
 		return nil, fmt.Errorf("no templates found")
 	}
-	
+
 	return templates[0], nil
+}
 
 // LoadTemplates loads multiple templates from a source
 func (l *TemplateLoader) LoadTemplates(ctx context.Context, source string, sourceType string) ([]*format.Template, error) {
@@ -109,6 +143,7 @@ func (l *TemplateLoader) LoadTemplates(ctx context.Context, source string, sourc
 	default:
 		return nil, fmt.Errorf("unsupported source type: %s", sourceType)
 	}
+}
 
 // loadFromLocalPath loads templates from a local path
 func (l *TemplateLoader) loadFromLocalPath(ctx context.Context, path string) ([]*format.Template, error) {
@@ -130,6 +165,7 @@ func (l *TemplateLoader) loadFromLocalPath(ctx context.Context, path string) ([]
 	}
 
 	return []*format.Template{template}, nil
+}
 
 // loadFromDirectory loads templates from a directory
 func (l *TemplateLoader) loadFromDirectory(ctx context.Context, dirPath string) ([]*format.Template, error) {
@@ -165,22 +201,18 @@ func (l *TemplateLoader) loadFromDirectory(ctx context.Context, dirPath string) 
 	}
 
 	return templates, nil
-	
+}
 
 // loadFromFile loads a template from a file
 func (l *TemplateLoader) loadFromFile(ctx context.Context, filePath string) (*format.Template, error) {
-	// Read file content
-	content, err := ioutil.ReadFile(filepath.Clean(filePath))
+	// Use format.LoadFromFile which handles the parsing internally
+	template, err := format.LoadFromFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
-	}
-	// Parse template
-	template, err := format.ParseTemplate(content)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse template from file %s: %w", filePath, err)
+		return nil, fmt.Errorf("failed to load template from file %s: %w", filePath, err)
 	}
 
 	return template, nil
+}
 
 // LoadFromPath loads templates from a specific path
 func (l *TemplateLoader) LoadFromPath(ctx context.Context, path string, recursive bool) ([]*format.Template, error) {
@@ -240,7 +272,7 @@ func (l *TemplateLoader) LoadFromPath(ctx context.Context, path string, recursiv
 	}
 
 	return templates, nil
-	
+}
 
 // LoadFromRepository loads templates from a remote repository
 func (l *TemplateLoader) LoadFromRepository(ctx context.Context, repoURL string, options map[string]interface{}) ([]*format.Template, error) {
@@ -289,7 +321,11 @@ func (l *TemplateLoader) LoadFromRepository(ctx context.Context, repoURL string,
 					fmt.Printf("Error getting file content from repository: %v\n", err)
 					return
 				}
-				defer func() { if err := fileReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+				defer func() {
+					if err := fileReader.Close(); err != nil {
+						fmt.Printf("Failed to close: %v\n", err)
+					}
+				}()
 
 				// Read file content
 				content, err := ioutil.ReadAll(fileReader)
@@ -317,7 +353,7 @@ func (l *TemplateLoader) LoadFromRepository(ctx context.Context, repoURL string,
 
 	wg.Wait()
 	return templates, nil
-	
+}
 
 // loadTemplateFromFile loads a template from a file
 func (l *TemplateLoader) loadTemplateFromFile(filePath string) (*format.Template, error) {
@@ -344,6 +380,7 @@ func (l *TemplateLoader) loadTemplateFromFile(filePath string) (*format.Template
 	l.cacheMutex.Unlock()
 
 	return template, nil
+}
 
 // parseTemplateFromContent parses a template from file content
 func parseTemplateFromContent(filePath string, content []byte) (*format.Template, error) {
@@ -366,23 +403,21 @@ func parseTemplateFromContent(filePath string, content []byte) (*format.Template
 	}
 
 	return &template, nil
-
-// isTemplateFile checks if a file is a template file
-func isTemplateFile(filePath string) bool {
-	ext := strings.ToLower(filepath.Ext(filePath))
-	return ext == ".json" || ext == ".yaml" || ext == ".yml"
+}
 
 // ClearCache clears the template cache
 func (l *TemplateLoader) ClearCache() {
 	l.cacheMutex.Lock()
 	defer l.cacheMutex.Unlock()
 	l.cache = make(map[string]cacheEntry)
+}
 
 // GetCacheSize returns the number of templates in the cache
 func (l *TemplateLoader) GetCacheSize() int {
 	l.cacheMutex.RLock()
 	defer l.cacheMutex.RUnlock()
 	return len(l.cache)
+}
 
 // PruneCache removes expired entries from the cache
 func (l *TemplateLoader) PruneCache() int {
@@ -399,3 +434,63 @@ func (l *TemplateLoader) PruneCache() int {
 		}
 	}
 
+	return count
+}
+
+// isTemplateFile checks if a file is a template file based on its extension
+func isTemplateFile(filename string) bool {
+	ext := filepath.Ext(filename)
+	return ext == ".yaml" || ext == ".yml" || ext == ".json"
+}
+
+// Interface compatibility methods for interfaces.TemplateLoader
+
+// LoadFromFile loads a template from a file (interface compatibility)
+func (l *TemplateLoader) LoadFromFile(path string) (interfaces.Template, error) {
+	template, err := l.loadFromFile(context.Background(), path)
+	if err != nil {
+		return nil, err
+	}
+	return template, nil
+}
+
+// LoadFromReader loads a template from a reader (interface compatibility)
+func (l *TemplateLoader) LoadFromReader(reader io.Reader) (interfaces.Template, error) {
+	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read from reader: %w", err)
+	}
+	return l.LoadFromBytes(data) // Use interface-compatible method
+}
+
+// LoadFromBytes loads a template from bytes (interface compatibility - updated signature)
+func (l *TemplateLoader) LoadFromBytes(data []byte) (interfaces.Template, error) {
+	// Create a template from byte data
+	template := &format.Template{
+		ID:        "from-bytes",
+		Name:      "from-bytes",
+		Path:      "",
+		Content:   data,
+		Metadata:  make(map[string]interface{}),
+		Variables: make(map[string]interface{}),
+		Info: &format.TemplateInfo{
+			Name:     "from-bytes",
+			Version:  "1.0.0",
+			Severity: "medium",
+		},
+		Test: &format.TemplateTest{
+			Prompt:     "",
+			Expected:   "",
+			Detection:  &format.TemplateDetection{},
+			Variations: make([]*format.TemplateVariation, 0),
+		},
+	}
+
+	return template, nil
+}
+
+// LoadFromURL loads a template from a URL (interface compatibility)
+func (l *TemplateLoader) LoadFromURL(url string) (interfaces.Template, error) {
+	// This would require HTTP client implementation
+	return nil, fmt.Errorf("LoadFromURL not implemented yet")
+}

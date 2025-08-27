@@ -2,7 +2,10 @@ package bundle
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/schollz/progressbar/v3"
@@ -28,6 +31,7 @@ func NewInteractiveProgressTracker(writer io.Writer, verbose bool) *InteractiveP
 		startTime: time.Now(),
 		verbose:   verbose,
 	}
+}
 
 // StartOperation starts tracking a new operation with a progress bar
 func (ipt *InteractiveProgressTracker) StartOperation(operation string, total int, description string) {
@@ -54,6 +58,7 @@ func (ipt *InteractiveProgressTracker) StartOperation(operation string, total in
 	)
 
 	ipt.bars[operation] = bar
+}
 
 // UpdateProgress updates the progress for an operation
 func (ipt *InteractiveProgressTracker) UpdateProgress(operation string, current int) {
@@ -64,6 +69,7 @@ func (ipt *InteractiveProgressTracker) UpdateProgress(operation string, current 
 	if exists {
 		bar.Set(current)
 	}
+}
 
 // IncrementProgress increments progress by 1
 func (ipt *InteractiveProgressTracker) IncrementProgress(operation string) {
@@ -74,6 +80,7 @@ func (ipt *InteractiveProgressTracker) IncrementProgress(operation string) {
 	if exists {
 		bar.Add(1)
 	}
+}
 
 // CompleteOperation marks an operation as complete
 func (ipt *InteractiveProgressTracker) CompleteOperation(operation string, message string) {
@@ -85,6 +92,7 @@ func (ipt *InteractiveProgressTracker) CompleteOperation(operation string, messa
 		color.Green("✓ %s", message)
 		delete(ipt.bars, operation)
 	}
+}
 
 // FailOperation marks an operation as failed
 func (ipt *InteractiveProgressTracker) FailOperation(operation string, err error) {
@@ -96,6 +104,7 @@ func (ipt *InteractiveProgressTracker) FailOperation(operation string, err error
 		color.Red("✗ %s: %v", operation, err)
 		delete(ipt.bars, operation)
 	}
+}
 
 // LogMessage logs a message without affecting progress bars
 func (ipt *InteractiveProgressTracker) LogMessage(level, message string) {
@@ -131,6 +140,7 @@ func (ipt *InteractiveProgressTracker) LogMessage(level, message string) {
 	for _, bar := range ipt.bars {
 		bar.RenderBlank()
 	}
+}
 
 // Summary prints a summary of the operation
 func (ipt *InteractiveProgressTracker) Summary(stats map[string]interface{}) {
@@ -138,13 +148,14 @@ func (ipt *InteractiveProgressTracker) Summary(stats map[string]interface{}) {
 	color.Cyan("═══════════════════════════════════════════")
 	color.Cyan("          Operation Summary")
 	color.Cyan("═══════════════════════════════════════════")
-	
+
 	for key, value := range stats {
 		fmt.Fprintf(ipt.writer, "%-20s: %v\n", key, value)
 	}
-	
+
 	fmt.Fprintf(ipt.writer, "%-20s: %s\n", "Duration", time.Since(ipt.startTime).Round(time.Second))
 	color.Cyan("═══════════════════════════════════════════")
+}
 
 // BundleProgressReporter provides specialized progress reporting for bundle operations
 type BundleProgressReporter struct {
@@ -159,27 +170,31 @@ func NewBundleProgressReporter(writer io.Writer, verbose bool) *BundleProgressRe
 		tracker: NewInteractiveProgressTracker(writer, verbose),
 		stats:   make(map[string]interface{}),
 	}
+}
 
 // ReportBundleCreation reports progress for bundle creation
 func (bpr *BundleProgressReporter) ReportBundleCreation(totalTemplates int) {
 	bpr.tracker.StartOperation("create", totalTemplates, "Creating bundle")
 	bpr.updateStat("Total Templates", totalTemplates)
+}
 
 // ReportTemplateProcessed reports a template has been processed
 func (bpr *BundleProgressReporter) ReportTemplateProcessed(templateName string) {
 	bpr.tracker.IncrementProgress("create")
 	bpr.incrementStat("Templates Processed")
 	bpr.tracker.LogMessage("debug", fmt.Sprintf("Processed template: %s", templateName))
+}
 
 // ReportBundleVerification reports progress for bundle verification
 func (bpr *BundleProgressReporter) ReportBundleVerification(checks int) {
 	bpr.tracker.StartOperation("verify", checks, "Verifying bundle")
 	bpr.updateStat("Total Checks", checks)
+}
 
 // ReportVerificationCheck reports a verification check completed
 func (bpr *BundleProgressReporter) ReportVerificationCheck(checkName string, passed bool) {
 	bpr.tracker.IncrementProgress("verify")
-	
+
 	if passed {
 		bpr.incrementStat("Checks Passed")
 		bpr.tracker.LogMessage("success", fmt.Sprintf("✓ %s", checkName))
@@ -187,16 +202,18 @@ func (bpr *BundleProgressReporter) ReportVerificationCheck(checkName string, pas
 		bpr.incrementStat("Checks Failed")
 		bpr.tracker.LogMessage("error", fmt.Sprintf("✗ %s", checkName))
 	}
+}
 
 // ReportImportProgress reports progress for bundle import
 func (bpr *BundleProgressReporter) ReportImportProgress(totalFiles int) {
 	bpr.tracker.StartOperation("import", totalFiles, "Importing bundle")
 	bpr.updateStat("Total Files", totalFiles)
+}
 
 // ReportFileImported reports a file has been imported
 func (bpr *BundleProgressReporter) ReportFileImported(fileName string, status string) {
 	bpr.tracker.IncrementProgress("import")
-	
+
 	switch status {
 	case "new":
 		bpr.incrementStat("New Files")
@@ -211,6 +228,7 @@ func (bpr *BundleProgressReporter) ReportFileImported(fileName string, status st
 		bpr.incrementStat("Conflicts")
 		bpr.tracker.LogMessage("warning", fmt.Sprintf("! %s (conflict)", fileName))
 	}
+}
 
 // ReportCompression reports compression progress
 func (bpr *BundleProgressReporter) ReportCompression(originalSize, compressedSize int64) {
@@ -218,57 +236,64 @@ func (bpr *BundleProgressReporter) ReportCompression(originalSize, compressedSiz
 	bpr.updateStat("Original Size", formatBytes(originalSize))
 	bpr.updateStat("Compressed Size", formatBytes(compressedSize))
 	bpr.updateStat("Compression Ratio", fmt.Sprintf("%.1f%%", ratio))
-	bpr.tracker.LogMessage("info", fmt.Sprintf("Compressed: %s → %s (%.1f%%)", 
+	bpr.tracker.LogMessage("info", fmt.Sprintf("Compressed: %s → %s (%.1f%%)",
 		formatBytes(originalSize), formatBytes(compressedSize), ratio))
+}
 
 // ReportEncryption reports encryption status
 func (bpr *BundleProgressReporter) ReportEncryption(algorithm string) {
 	bpr.updateStat("Encryption", algorithm)
 	bpr.tracker.LogMessage("info", fmt.Sprintf("Encrypted with %s", algorithm))
+}
 
 // ReportSignature reports signature status
 func (bpr *BundleProgressReporter) ReportSignature(keyID string) {
 	bpr.updateStat("Signed", "Yes")
 	bpr.updateStat("Key ID", keyID)
 	bpr.tracker.LogMessage("info", fmt.Sprintf("Signed with key %s", keyID))
+}
 
 // Complete marks all operations as complete and shows summary
 func (bpr *BundleProgressReporter) Complete() {
 	bpr.tracker.CompleteOperation("create", "Bundle creation completed")
 	bpr.tracker.CompleteOperation("verify", "Bundle verification completed")
 	bpr.tracker.CompleteOperation("import", "Bundle import completed")
-	
+
 	bpr.mu.RLock()
 	stats := make(map[string]interface{})
 	for k, v := range bpr.stats {
 		stats[k] = v
 	}
 	bpr.mu.RUnlock()
-	
+
 	bpr.tracker.Summary(stats)
+}
 
 // CompleteWithError marks operations as failed
 func (bpr *BundleProgressReporter) CompleteWithError(err error) {
 	bpr.tracker.FailOperation("create", err)
 	bpr.tracker.FailOperation("verify", err)
 	bpr.tracker.FailOperation("import", err)
+}
 
 // updateStat updates a statistic
 func (bpr *BundleProgressReporter) updateStat(key string, value interface{}) {
 	bpr.mu.Lock()
 	defer bpr.mu.Unlock()
 	bpr.stats[key] = value
+}
 
 // incrementStat increments a numeric statistic
 func (bpr *BundleProgressReporter) incrementStat(key string) {
 	bpr.mu.Lock()
 	defer bpr.mu.Unlock()
-	
+
 	if val, ok := bpr.stats[key].(int); ok {
 		bpr.stats[key] = val + 1
 	} else {
 		bpr.stats[key] = 1
 	}
+}
 
 // SpinnerProgress provides a simple spinner for indeterminate progress
 type SpinnerProgress struct {
@@ -287,6 +312,7 @@ func NewSpinnerProgress(message string, writer io.Writer) *SpinnerProgress {
 		done:    make(chan bool),
 		writer:  writer,
 	}
+}
 
 // Start starts the spinner
 func (sp *SpinnerProgress) Start() {
@@ -305,10 +331,12 @@ func (sp *SpinnerProgress) Start() {
 			}
 		}
 	}()
+}
 
 // Stop stops the spinner
 func (sp *SpinnerProgress) Stop() {
 	close(sp.done)
+}
 
 // StopWithMessage stops the spinner and displays a message
 func (sp *SpinnerProgress) StopWithMessage(success bool, message string) {
@@ -318,26 +346,4 @@ func (sp *SpinnerProgress) StopWithMessage(success bool, message string) {
 	} else {
 		color.Red("✗ %s", message)
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

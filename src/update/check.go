@@ -5,54 +5,57 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
 
 // UpdateInfo represents information about an available update
 type UpdateInfo struct {
-	Component       string
-	CurrentVersion  version.Version
-	LatestVersion   version.Version
-	ChangeType      version.VersionChangeType
-	ChangelogURL    string
-	ReleaseDate     time.Time
-	ReleaseNotes    string
-	DownloadURL     string
-	Signature       string
-	ChecksumSHA256  string
-	Required        bool                // Indicates if this update is required
-	SecurityFixes   bool                // Indicates if this update contains security fixes
+	Component      string
+	CurrentVersion version.Version
+	LatestVersion  version.Version
+	ChangeType     version.VersionChangeType
+	ChangelogURL   string
+	ReleaseDate    time.Time
+	ReleaseNotes   string
+	DownloadURL    string
+	Signature      string
+	ChecksumSHA256 string
+	Required       bool // Indicates if this update is required
+	SecurityFixes  bool // Indicates if this update contains security fixes
+}
 
 // VersionManifest represents the version information from the update server
 type VersionManifest struct {
 	Core struct {
-		Version       string    `json:"version"`
-		ReleaseDate   time.Time `json:"releaseDate"`
-		ChangelogURL  string    `json:"changelogURL"`
-		ReleaseNotes  string    `json:"releaseNotes"`
-		DownloadURL   string    `json:"downloadURL"`
-		Signature     string    `json:"signature"`
-		ChecksumSHA256 string   `json:"checksumSHA256"`
+		Version        string    `json:"version"`
+		ReleaseDate    time.Time `json:"releaseDate"`
+		ChangelogURL   string    `json:"changelogURL"`
+		ReleaseNotes   string    `json:"releaseNotes"`
+		DownloadURL    string    `json:"downloadURL"`
+		Signature      string    `json:"signature"`
+		ChecksumSHA256 string    `json:"checksumSHA256"`
 	} `json:"core"`
 	Templates struct {
-		Version       string    `json:"version"`
-		ReleaseDate   time.Time `json:"releaseDate"`
-		ChangelogURL  string    `json:"changelogURL"`
-		DownloadURL   string    `json:"downloadURL"`
-		Signature     string    `json:"signature"`
-		ChecksumSHA256 string   `json:"checksumSHA256"`
+		Version        string    `json:"version"`
+		ReleaseDate    time.Time `json:"releaseDate"`
+		ChangelogURL   string    `json:"changelogURL"`
+		DownloadURL    string    `json:"downloadURL"`
+		Signature      string    `json:"signature"`
+		ChecksumSHA256 string    `json:"checksumSHA256"`
 	} `json:"templates"`
 	Modules []struct {
-		ID            string    `json:"id"`
-		Name          string    `json:"name"`
-		Version       string    `json:"version"`
-		ReleaseDate   time.Time `json:"releaseDate"`
-		ChangelogURL  string    `json:"changelogURL"`
-		DownloadURL   string    `json:"downloadURL"`
-		Signature     string    `json:"signature"`
-		ChecksumSHA256 string   `json:"checksumSHA256"`
+		ID             string    `json:"id"`
+		Name           string    `json:"name"`
+		Version        string    `json:"version"`
+		ReleaseDate    time.Time `json:"releaseDate"`
+		ChangelogURL   string    `json:"changelogURL"`
+		DownloadURL    string    `json:"downloadURL"`
+		Signature      string    `json:"signature"`
+		ChecksumSHA256 string    `json:"checksumSHA256"`
 	} `json:"modules"`
 }
 
@@ -75,12 +78,14 @@ type VersionChecker struct {
 	HTTPClient      *http.Client
 	CurrentVersions map[string]version.Version
 	Notifier        UpdateNotifier
+}
 
 // UpdateNotifier defines the interface for notifying about updates
 type UpdateNotifier interface {
 	HandleUpdateCheck(ctx context.Context, versionInfo *UpdateVersionInfo) error
 	NotifyUpdateSuccess(ctx context.Context, fromVersion, toVersion string) error
 	NotifyUpdateFailure(ctx context.Context, fromVersion, toVersion string, err error) error
+}
 
 // NewVersionChecker creates a new VersionChecker
 func NewVersionChecker(ctx context.Context) (*VersionChecker, error) {
@@ -98,10 +103,12 @@ func NewVersionChecker(ctx context.Context) (*VersionChecker, error) {
 		},
 		CurrentVersions: currentVersions,
 	}, nil
+}
 
 // SetNotifier sets the notifier for the version checker
 func (vc *VersionChecker) SetNotifier(notifier UpdateNotifier) {
 	vc.Notifier = notifier
+}
 
 // CheckVersion checks if updates are available and returns version information
 func (vc *VersionChecker) CheckVersion(ctx context.Context) (*UpdateVersionInfo, error) {
@@ -154,6 +161,7 @@ func (vc *VersionChecker) CheckVersion(ctx context.Context) (*UpdateVersionInfo,
 	}
 
 	return versionInfo, nil
+}
 
 // CheckForUpdates checks if updates are available for components
 func (vc *VersionChecker) CheckForUpdates() ([]UpdateInfo, error) {
@@ -184,7 +192,7 @@ func (vc *VersionChecker) CheckForUpdates() ([]UpdateInfo, error) {
 				DownloadURL:    manifest.Core.DownloadURL,
 				Signature:      manifest.Core.Signature,
 				ChecksumSHA256: manifest.Core.ChecksumSHA256,
-				SecurityFixes: false, // This should be determined from the manifest
+				SecurityFixes:  false, // This should be determined from the manifest
 			})
 		}
 	}
@@ -208,7 +216,7 @@ func (vc *VersionChecker) CheckForUpdates() ([]UpdateInfo, error) {
 				DownloadURL:    manifest.Templates.DownloadURL,
 				Signature:      manifest.Templates.Signature,
 				ChecksumSHA256: manifest.Templates.ChecksumSHA256,
-				SecurityFixes: false, // This should be determined from the manifest
+				SecurityFixes:  false, // This should be determined from the manifest
 			})
 		}
 	}
@@ -216,7 +224,7 @@ func (vc *VersionChecker) CheckForUpdates() ([]UpdateInfo, error) {
 	for _, moduleManifest := range manifest.Modules {
 		moduleID := moduleManifest.ID
 		moduleCurrentVersion, hasModuleVersion := vc.CurrentVersions[fmt.Sprintf("module.%s", moduleID)]
-		
+
 		if hasModuleVersion {
 			moduleLatestVersion, err := version.ParseVersion(moduleManifest.Version)
 			if err != nil {
@@ -234,13 +242,14 @@ func (vc *VersionChecker) CheckForUpdates() ([]UpdateInfo, error) {
 					DownloadURL:    moduleManifest.DownloadURL,
 					Signature:      moduleManifest.Signature,
 					ChecksumSHA256: moduleManifest.ChecksumSHA256,
-					SecurityFixes: false, // This should be determined from the manifest
+					SecurityFixes:  false, // This should be determined from the manifest
 				})
 			}
 		}
 	}
 
 	return updates, nil
+}
 
 // fetchVersionManifest fetches the version manifest from the update server
 func (vc *VersionChecker) fetchVersionManifest() (VersionManifest, error) {
@@ -250,9 +259,14 @@ func (vc *VersionChecker) fetchVersionManifest() (VersionManifest, error) {
 	if err != nil {
 		return manifest, fmt.Errorf("failed to connect to update server: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
+		return manifest, fmt.Errorf("update server returned status %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -266,6 +280,7 @@ func (vc *VersionChecker) fetchVersionManifest() (VersionManifest, error) {
 	}
 
 	return manifest, nil
+}
 
 // FormatUpdateInfo formats update information for display
 func FormatUpdateInfo(updates []UpdateInfo) string {
@@ -280,19 +295,20 @@ func FormatUpdateInfo(updates []UpdateInfo) string {
 		result += fmt.Sprintf("Latest Version: %s\n", update.LatestVersion.String())
 		result += fmt.Sprintf("Change Type: %s\n", FormatChangeType(update.ChangeType))
 		result += fmt.Sprintf("Release Date: %s\n", update.ReleaseDate.Format("2006-01-02"))
-		
+
 		if update.ReleaseNotes != "" {
 			result += fmt.Sprintf("Release Notes: %s\n", update.ReleaseNotes)
 		}
-		
+
 		if update.ChangelogURL != "" {
 			result += fmt.Sprintf("Changelog: %s\n", update.ChangelogURL)
 		}
-		
+
 		result += "\n"
 	}
 
 	return result
+}
 
 // FormatChangeType formats a VersionChangeType as a string
 func FormatChangeType(changeType version.VersionChangeType) string {
@@ -306,17 +322,18 @@ func FormatChangeType(changeType version.VersionChangeType) string {
 	default:
 		return "No Change"
 	}
+}
 
 // MergeUpdates combines updates from multiple sources, with priority rules
 func MergeUpdates(githubUpdates, gitlabUpdates []UpdateInfo) []UpdateInfo {
 	// Create a map to store the highest priority update for each component
 	updateMap := make(map[string]UpdateInfo)
-	
+
 	// Process GitHub updates first (they take precedence for core components)
 	for _, update := range githubUpdates {
 		updateMap[update.Component] = update
 	}
-	
+
 	// Process GitLab updates, which take precedence for custom templates and modules
 	for _, update := range gitlabUpdates {
 		// For core components, only use GitLab if GitHub doesn't have an update
@@ -329,16 +346,12 @@ func MergeUpdates(githubUpdates, gitlabUpdates []UpdateInfo) []UpdateInfo {
 			updateMap[update.Component] = update
 		}
 	}
-	
+
 	// Convert map back to slice
 	result := make([]UpdateInfo, 0, len(updateMap))
 	for _, update := range updateMap {
 		result = append(result, update)
 	}
-	
-}
-}
-}
-}
-}
+
+	return result
 }

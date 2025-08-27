@@ -5,9 +5,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // OpenAIMockProvider is a mock implementation of the OpenAI provider
@@ -28,19 +29,20 @@ func NewOpenAIMockProvider() *OpenAIMockProvider {
 			CompletionTokens: 50,
 			TotalTokens:      150,
 		},
-		VulnerableResponses:   make(map[string]string),
+		VulnerableResponses:    make(map[string]string),
 		VulnerabilityBehaviors: make(map[types.VulnerabilityType]*VulnerabilityBehavior),
 	}
 
 	// Set up OpenAI-specific models
 	base := NewBaseMockProviderImpl(config)
-	
+
 	// Configure OpenAI-specific behavior for vulnerabilities
 	setupOpenAIVulnerabilityBehaviors(base)
-	
+
 	return &OpenAIMockProvider{
 		BaseMockProviderImpl: base,
 	}
+}
 
 // setupOpenAIVulnerabilityBehaviors configures OpenAI-specific vulnerability behaviors
 func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
@@ -63,7 +65,7 @@ func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Severity: core.SeverityHigh,
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "prompt_injection",
-			"cve_examples": []string{"CVE-2023-42793", "CVE-2023-36189"},
+			"cve_examples":       []string{"CVE-2023-42793", "CVE-2023-36189"},
 		},
 	})
 
@@ -84,7 +86,7 @@ func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Severity: core.SeverityMedium,
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "insecure_output",
-			"mitigation": "Always sanitize LLM outputs before rendering in web applications",
+			"mitigation":         "Always sanitize LLM outputs before rendering in web applications",
 		},
 	})
 
@@ -106,7 +108,7 @@ func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Severity: core.SeverityHigh,
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "sensitive_info_disclosure",
-			"data_types": []string{"API keys", "credentials", "connection strings"},
+			"data_types":         []string{"API keys", "credentials", "connection strings"},
 		},
 	})
 
@@ -127,9 +129,10 @@ func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Severity: core.SeverityMedium,
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "excessive_agency",
-			"potential_impact": "Unauthorized actions taken on user's behalf",
+			"potential_impact":   "Unauthorized actions taken on user's behalf",
 		},
 	})
+}
 
 // ChatCompletion overrides the base implementation to add OpenAI-specific behavior
 func (p *OpenAIMockProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -160,6 +163,7 @@ func (p *OpenAIMockProvider) ChatCompletion(ctx context.Context, request *core.C
 
 	// Fall back to the base implementation
 	return p.BaseMockProviderImpl.ChatCompletion(ctx, request)
+}
 
 // shouldSimulateContentFiltering checks if content filtering should be simulated
 func (p *OpenAIMockProvider) shouldSimulateContentFiltering(request *core.ChatCompletionRequest) bool {
@@ -187,6 +191,7 @@ func (p *OpenAIMockProvider) shouldSimulateContentFiltering(request *core.ChatCo
 	}
 
 	return false
+}
 
 // estimateTokenCountForMessages estimates the token count for a list of chat messages
 func (p *OpenAIMockProvider) estimateTokenCountForMessages(messages []core.ChatMessage) int {
@@ -200,6 +205,7 @@ func (p *OpenAIMockProvider) estimateTokenCountForMessages(messages []core.ChatM
 	// Add 2 tokens for conversation metadata
 	tokenCount += 2
 	return tokenCount
+}
 
 // estimateTokenCount estimates the token count for a text
 // OpenAI-specific implementation that uses tiktoken-style estimation
@@ -207,12 +213,9 @@ func (p *OpenAIMockProvider) estimateTokenCount(text string) int {
 	if text == "" {
 		return 0
 	}
-	
+
 	// More accurate OpenAI-specific estimation
 	// For GPT models, approximately 1 token ~= 4 characters in English
 	// This is a simplified approximation
-}
-}
-}
-}
+	return len(text) / 4
 }

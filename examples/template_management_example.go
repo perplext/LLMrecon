@@ -120,7 +120,7 @@ treturn err
 		fmt.Printf("Generated HTML report (%d bytes)\n", len(reportData))
 		
 		// Save report to file for demonstration
-		err = os.WriteFile(filepath.Clean("template_execution_report.html", reportData, 0644))
+		err = os.WriteFile(filepath.Clean("template_execution_report.html"), reportData, 0644)
 		if err != nil {
 			fmt.Printf("Error saving report: %v\n", err)
 		} else {

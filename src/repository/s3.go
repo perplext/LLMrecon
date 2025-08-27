@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/url"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -16,7 +19,6 @@ import (
 // S3Repository implements the Repository interface for AWS S3 repositories
 type S3Repository struct {
 	*BaseRepository
-}
 
 	// client is the S3 API client
 	client *s3.Client
@@ -32,6 +34,7 @@ type S3Repository struct {
 
 	// auditLogger is the audit logger for repository operations
 	auditLogger *RepositoryAuditLogger
+}
 
 // NewS3Repository creates a new S3 repository
 func NewS3Repository(config *Config) (Repository, error) {
@@ -57,6 +60,7 @@ func NewS3Repository(config *Config) (Repository, error) {
 		region:         region,
 		auditLogger:    auditLogger,
 	}, nil
+}
 
 // parseS3URL parses an S3 URL to extract bucket name, prefix, and region
 // Format: s3://bucket-name/prefix?region=us-east-1
@@ -88,6 +92,7 @@ func parseS3URL(urlStr string) (string, string, string, error) {
 	}
 
 	return bucketName, prefix, region, nil
+}
 
 // Connect establishes a connection to the S3 repository
 func (r *S3Repository) Connect(ctx context.Context) error {
@@ -143,6 +148,7 @@ func (r *S3Repository) Connect(ctx context.Context) error {
 	r.setConnected(true)
 
 	return nil
+}
 
 // Disconnect closes the connection to the S3 repository
 func (r *S3Repository) Disconnect() error {
@@ -158,6 +164,7 @@ func (r *S3Repository) Disconnect() error {
 	r.client = nil
 
 	return nil
+}
 
 // ListFiles lists files in the S3 repository matching the pattern
 func (r *S3Repository) ListFiles(ctx context.Context, pattern string) ([]FileInfo, error) {
@@ -244,6 +251,7 @@ func (r *S3Repository) ListFiles(ctx context.Context, pattern string) ([]FileInf
 	}
 
 	return result, nil
+}
 
 // GetFile retrieves a file from the S3 repository
 func (r *S3Repository) GetFile(ctx context.Context, path string) (io.ReadCloser, error) {
@@ -263,7 +271,7 @@ func (r *S3Repository) GetFile(ctx context.Context, path string) (io.ReadCloser,
 	}
 
 	// Create full object key
-		key := path
+	key := path
 	if r.prefix != "" {
 		key = r.prefix + "/" + path
 	}
@@ -273,7 +281,11 @@ func (r *S3Repository) GetFile(ctx context.Context, path string) (io.ReadCloser,
 
 	// Fetch and write content in a goroutine
 	go func() {
-		defer func() { if err := pw.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := pw.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Use WithRetry for the operation
 		err := r.WithRetry(ctx, func() error {
@@ -285,7 +297,11 @@ func (r *S3Repository) GetFile(ctx context.Context, path string) (io.ReadCloser,
 			if err != nil {
 				return err
 			}
-			defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					fmt.Printf("Failed to close: %v\n", err)
+				}
+			}()
 
 			// Copy content to pipe
 			_, err = io.Copy(pw, resp.Body)
@@ -309,11 +325,12 @@ func (r *S3Repository) GetFile(ctx context.Context, path string) (io.ReadCloser,
 		filePath:    path,
 		baseURL:     r.config.URL,
 	}, nil
+}
 
 // FileExists checks if a file exists in the S3 repository
 func (r *S3Repository) FileExists(ctx context.Context, path string) (bool, error) {
 	// Log file existence check operation
-		if r.auditLogger != nil {
+	if r.auditLogger != nil {
 		r.auditLogger.LogRepositoryFileExists(ctx, r.config.URL, path)
 	}
 
@@ -366,11 +383,13 @@ func (r *S3Repository) FileExists(ctx context.Context, path string) (bool, error
 	}
 
 	return exists, nil
+}
 
 // GetBranch returns the branch of the repository
-	// S3 repositories don't have branches, so this returns an empty string
+// S3 repositories don't have branches, so this returns an empty string
 func (r *S3Repository) GetBranch() string {
 	return ""
+}
 
 // GetLastModified gets the last modified time of a file in the S3 repository
 func (r *S3Repository) GetLastModified(ctx context.Context, path string) (time.Time, error) {
@@ -418,6 +437,7 @@ func (r *S3Repository) GetLastModified(ctx context.Context, path string) (time.T
 	}
 
 	return lastModified, nil
+}
 
 // StoreFile stores a file in the S3 repository
 func (r *S3Repository) StoreFile(ctx context.Context, path string, content []byte) error {
@@ -466,6 +486,7 @@ func (r *S3Repository) StoreFile(ctx context.Context, path string, content []byt
 		})
 		return err
 	})
+}
 
 // DeleteFile deletes a file from the S3 repository
 func (r *S3Repository) DeleteFile(ctx context.Context, path string) error {
@@ -500,18 +521,9 @@ func (r *S3Repository) DeleteFile(ctx context.Context, path string) error {
 		})
 		return err
 	})
+}
 
 // init registers the S3 repository type with the default factory
 func init() {
 	// Register the S3 repository type
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

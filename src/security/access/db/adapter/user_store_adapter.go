@@ -15,27 +15,30 @@ type UserStoreAdapter struct {
 }
 
 // NewUserStoreAdapter creates a new user store adapter
-func NewUserStoreAdapter(store interfaces.UserStore) *UserStoreAdapter {
+func NewUserStoreAdapter(store interfaces.UserStore) interfaces.UserStore {
 	return &UserStoreAdapter{
 		store: store,
 	}
+}
 
 // Close closes the user store
 func (a *UserStoreAdapter) Close() error {
 	return a.store.Close()
+}
 
 // CreateUser creates a new user
 func (a *UserStoreAdapter) CreateUser(ctx context.Context, user *models.User) error {
 	// Convert domain user to interface user
 	interfaceUser := converters.ModelUserToInterfaceUser(user)
-	
+
 	// Create user in store
 	err := a.store.CreateUser(ctx, interfaceUser)
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
+}
 
 // GetUserByID retrieves a user by ID
 func (a *UserStoreAdapter) GetUserByID(ctx context.Context, id string) (*models.User, error) {
@@ -44,11 +47,12 @@ func (a *UserStoreAdapter) GetUserByID(ctx context.Context, id string) (*models.
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert interface user to domain user
 	user := converters.InterfaceUserToModelUser(interfaceUser)
-	
+
 	return user, nil
+}
 
 // GetUserByUsername retrieves a user by username
 func (a *UserStoreAdapter) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
@@ -57,11 +61,12 @@ func (a *UserStoreAdapter) GetUserByUsername(ctx context.Context, username strin
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert interface user to domain user
 	user := converters.InterfaceUserToModelUser(interfaceUser)
-	
+
 	return user, nil
+}
 
 // GetUserByEmail retrieves a user by email
 func (a *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -70,49 +75,35 @@ func (a *UserStoreAdapter) GetUserByEmail(ctx context.Context, email string) (*m
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert interface user to domain user
 	user := converters.InterfaceUserToModelUser(interfaceUser)
-	
+
 	return user, nil
+}
 
 // UpdateUser updates an existing user
 func (a *UserStoreAdapter) UpdateUser(ctx context.Context, user *models.User) error {
 	// Convert domain user to interface user
 	interfaceUser := converters.ModelUserToInterfaceUser(user)
-	
+
 	// Update user in store
 	err := a.store.UpdateUser(ctx, interfaceUser)
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
+}
 
 // DeleteUser deletes a user by ID
 func (a *UserStoreAdapter) DeleteUser(ctx context.Context, id string) error {
 	// Delete user from store
 	return a.store.DeleteUser(ctx, id)
+}
 
-// ListUsers lists all users
-func (a *UserStoreAdapter) ListUsers(ctx context.Context) ([]*models.User, error) {
+// ListUsers lists users with optional filtering
+func (a *UserStoreAdapter) ListUsers(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*interfaces.User, int, error) {
 	// List users from store
-	interfaceUsers, _, err := a.store.ListUsers(ctx, nil, 0, 0)
-	if err != nil {
-		return nil, err
-	}
-	
-	// Convert interface users to domain users
-	users := make([]*models.User, len(interfaceUsers))
-	for i, interfaceUser := range interfaceUsers {
-		users[i] = converters.InterfaceUserToModelUser(interfaceUser)
-	}
-	
-}
-}
-}
-}
-}
-}
-}
+	return a.store.ListUsers(ctx, filter, offset, limit)
 }

@@ -4,8 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -33,6 +37,7 @@ type ManifestOptions struct {
 	CustomFields        map[string]interface{} // Custom fields to add
 	PrettyPrint         bool                   // Format output for readability
 	Format              ManifestFormat         // Output format
+}
 
 // ManifestFormat defines the output format
 type ManifestFormat string
@@ -49,11 +54,13 @@ type DependencyInfo struct {
 	Required     bool     `json:"required"`     // Is this dependency required
 	Version      string   `json:"version"`      // Version constraint
 	Alternatives []string `json:"alternatives"` // Alternative dependencies
+}
 
 // MetadataExtractor extracts metadata from different file types
 type MetadataExtractor interface {
 	Extract(path string) (map[string]interface{}, error)
 	Supports(path string) bool
+}
 
 // NewEnhancedManifestGenerator creates a new enhanced manifest generator
 func NewEnhancedManifestGenerator(bundlePath string, options ManifestOptions) *EnhancedManifestGenerator {
@@ -73,6 +80,7 @@ func NewEnhancedManifestGenerator(bundlePath string, options ManifestOptions) *E
 		metadata:        make(map[string]interface{}),
 		errors:          []error{},
 	}
+}
 
 // Generate creates a comprehensive manifest
 func (g *EnhancedManifestGenerator) Generate() (*BundleManifest, error) {
@@ -100,6 +108,7 @@ func (g *EnhancedManifestGenerator) Generate() (*BundleManifest, error) {
 	}
 
 	return manifest, nil
+}
 
 // scanBundleContents scans all files in the bundle
 func (g *EnhancedManifestGenerator) scanBundleContents() error {
@@ -140,7 +149,7 @@ func (g *EnhancedManifestGenerator) scanBundleContents() error {
 		default:
 			contentType = ContentType(contentTypeStr)
 		}
-		
+
 		item := &ContentItem{
 			Path:     relPath,
 			Type:     contentType,
@@ -164,6 +173,7 @@ func (g *EnhancedManifestGenerator) scanBundleContents() error {
 
 		return nil
 	})
+}
 
 // determineContentType determines the type of content
 func (g *EnhancedManifestGenerator) determineContentType(path string, info os.FileInfo) string {
@@ -201,6 +211,7 @@ func (g *EnhancedManifestGenerator) determineContentType(path string, info os.Fi
 	default:
 		return "file"
 	}
+}
 
 // calculateChecksums calculates multiple checksums for a file
 func (g *EnhancedManifestGenerator) calculateChecksums(path string) (map[string]string, error) {
@@ -208,7 +219,11 @@ func (g *EnhancedManifestGenerator) calculateChecksums(path string) (map[string]
 	if err != nil {
 		return nil, err
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	checksums := make(map[string]string)
 
@@ -222,6 +237,7 @@ func (g *EnhancedManifestGenerator) calculateChecksums(path string) (map[string]
 	checksums["sha256"] = fmt.Sprintf("sha256:%x", h.Sum(nil))
 
 	return checksums, nil
+}
 
 // extractMetadata extracts metadata from content files
 func (g *EnhancedManifestGenerator) extractMetadata() {
@@ -233,7 +249,7 @@ func (g *EnhancedManifestGenerator) extractMetadata() {
 
 	for _, item := range g.contentItems {
 		fullPath := filepath.Join(g.bundlePath, item.Path)
-		
+
 		for _, extractor := range extractors {
 			if extractor.Supports(fullPath) {
 				metadata, err := extractor.Extract(fullPath)
@@ -241,7 +257,7 @@ func (g *EnhancedManifestGenerator) extractMetadata() {
 					g.errors = append(g.errors, fmt.Errorf("metadata extraction failed for %s: %w", item.Path, err))
 					continue
 				}
-				
+
 				// Merge extracted metadata
 				if item.Metadata == nil {
 					item.Metadata = make(map[string]interface{})
@@ -249,16 +265,17 @@ func (g *EnhancedManifestGenerator) extractMetadata() {
 				for k, v := range metadata {
 					item.Metadata[k] = v
 				}
-				
+
 				// Set version if found
 				if version, ok := metadata["version"].(string); ok {
 					item.Version = version
 				}
-				
+
 				break
 			}
 		}
 	}
+}
 
 // resolveDependencies analyzes and resolves dependencies
 func (g *EnhancedManifestGenerator) resolveDependencies() {
@@ -287,11 +304,12 @@ func (g *EnhancedManifestGenerator) resolveDependencies() {
 
 	// Find cross-references
 	g.findCrossReferences()
+}
 
 // analyzeTemplateDependencies finds dependencies in templates
 func (g *EnhancedManifestGenerator) analyzeTemplateDependencies(item *ContentItem) []string {
 	deps := []string{}
-	
+
 	// Read template file
 	fullPath := filepath.Join(g.bundlePath, item.Path)
 	data, err := os.ReadFile(filepath.Clean(fullPath))
@@ -300,7 +318,7 @@ func (g *EnhancedManifestGenerator) analyzeTemplateDependencies(item *ContentIte
 	}
 
 	content := string(data)
-	
+
 	// Look for references to other templates
 	if strings.Contains(content, "template:") || strings.Contains(content, "workflow:") {
 		// Simple pattern matching for demonstration
@@ -320,12 +338,14 @@ func (g *EnhancedManifestGenerator) analyzeTemplateDependencies(item *ContentIte
 	}
 
 	return deps
+}
 
 // analyzeModuleDependencies finds module dependencies
 func (g *EnhancedManifestGenerator) analyzeModuleDependencies(item *ContentItem) []string {
 	// This would analyze binary dependencies, imports, etc.
 	// For now, return empty
 	return []string{}
+}
 
 // findCrossReferences finds references between content items
 func (g *EnhancedManifestGenerator) findCrossReferences() {
@@ -346,6 +366,7 @@ func (g *EnhancedManifestGenerator) findCrossReferences() {
 			}
 		}
 	}
+}
 
 // buildManifest builds the final manifest
 func (g *EnhancedManifestGenerator) buildManifest() *BundleManifest {
@@ -356,7 +377,7 @@ func (g *EnhancedManifestGenerator) buildManifest() *BundleManifest {
 		Content:         convertContentItems(g.contentItems),
 		Metadata:        g.metadata,
 		Checksums: Checksums{
-			Content:   make(map[string]string),
+			Content: make(map[string]string),
 		},
 	}
 
@@ -393,6 +414,7 @@ func (g *EnhancedManifestGenerator) buildManifest() *BundleManifest {
 	})
 
 	return manifest
+}
 
 // validateManifest validates the generated manifest
 func (g *EnhancedManifestGenerator) validateManifest(manifest *BundleManifest) error {
@@ -425,6 +447,7 @@ func (g *EnhancedManifestGenerator) validateManifest(manifest *BundleManifest) e
 	}
 
 	return nil
+}
 
 // checkDependencyCycles checks for circular dependencies
 func (g *EnhancedManifestGenerator) checkDependencyCycles() error {
@@ -459,6 +482,7 @@ func (g *EnhancedManifestGenerator) checkDependencyCycles() error {
 	}
 
 	return nil
+}
 
 // WriteManifest writes the manifest to a file
 func (g *EnhancedManifestGenerator) WriteManifest(manifest *BundleManifest, outputPath string) error {
@@ -482,11 +506,13 @@ func (g *EnhancedManifestGenerator) WriteManifest(manifest *BundleManifest, outp
 		return fmt.Errorf("failed to marshal manifest: %w", err)
 	}
 
-	return os.WriteFile(filepath.Clean(outputPath, data, 0600))
+	return os.WriteFile(filepath.Clean(outputPath), data, 0600)
+}
 
 // GetErrors returns any errors encountered during generation
 func (g *EnhancedManifestGenerator) GetErrors() []error {
 	return g.errors
+}
 
 // Metadata Extractors
 
@@ -496,6 +522,7 @@ type TemplateMetadataExtractor struct{}
 func (e *TemplateMetadataExtractor) Supports(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	return ext == ".yaml" || ext == ".yml"
+}
 
 func (e *TemplateMetadataExtractor) Extract(path string) (map[string]interface{}, error) {
 	data, err := os.ReadFile(filepath.Clean(path))
@@ -522,6 +549,7 @@ func (e *TemplateMetadataExtractor) Extract(path string) (map[string]interface{}
 	}
 
 	return metadata, nil
+}
 
 // ModuleMetadataExtractor extracts metadata from module files
 type ModuleMetadataExtractor struct{}
@@ -529,10 +557,11 @@ type ModuleMetadataExtractor struct{}
 func (e *ModuleMetadataExtractor) Supports(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	return ext == ".so" || ext == ".dll" || ext == ".dylib"
+}
 
 func (e *ModuleMetadataExtractor) Extract(path string) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	
+
 	// Check for companion metadata file
 	metadataPath := path + ".metadata.json"
 	if data, err := os.ReadFile(filepath.Clean(metadataPath)); err == nil {
@@ -542,7 +571,7 @@ func (e *ModuleMetadataExtractor) Extract(path string) (map[string]interface{}, 
 	// Extract from filename
 	base := filepath.Base(path)
 	metadata["filename"] = base
-	
+
 	// Extract module type from path
 	if strings.Contains(path, "providers") {
 		metadata["moduleType"] = "provider"
@@ -551,6 +580,7 @@ func (e *ModuleMetadataExtractor) Extract(path string) (map[string]interface{}, 
 	}
 
 	return metadata, nil
+}
 
 // DocumentationMetadataExtractor extracts metadata from documentation files
 type DocumentationMetadataExtractor struct{}
@@ -558,10 +588,11 @@ type DocumentationMetadataExtractor struct{}
 func (e *DocumentationMetadataExtractor) Supports(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	return ext == ".md" || ext == ".txt" || ext == ".pdf" || ext == ".html"
+}
 
 func (e *DocumentationMetadataExtractor) Extract(path string) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	
+
 	// Extract title from markdown files
 	if strings.HasSuffix(path, ".md") {
 		data, err := os.ReadFile(filepath.Clean(path))
@@ -577,8 +608,9 @@ func (e *DocumentationMetadataExtractor) Extract(path string) (map[string]interf
 	}
 
 	metadata["docType"] = strings.TrimPrefix(filepath.Ext(path), ".")
-	
+
 	return metadata, nil
+}
 
 // convertContentItems converts []*ContentItem to []ContentItem
 func convertContentItems(items []*ContentItem) []ContentItem {
@@ -589,7 +621,7 @@ func convertContentItems(items []*ContentItem) []ContentItem {
 		}
 	}
 	return result
-
+}
 
 // GenerateComparisonReport generates a comparison between two manifests
 func GenerateComparisonReport(oldManifest, newManifest *BundleManifest) *ManifestComparison {
@@ -647,19 +679,21 @@ func GenerateComparisonReport(oldManifest, newManifest *BundleManifest) *Manifes
 		}
 	}
 
-	comparison.Summary.TotalChanges = comparison.Summary.AddedCount + 
+	comparison.Summary.TotalChanges = comparison.Summary.AddedCount +
 		comparison.Summary.RemovedCount + comparison.Summary.ModifiedCount
 
 	return comparison
+}
 
 // Types for manifest comparison
 
 // ManifestComparison contains the comparison results
 type ManifestComparison struct {
-	OldVersion string             `json:"oldVersion"`
-	NewVersion string             `json:"newVersion"`
-	Changes    ManifestChanges    `json:"changes"`
-	Summary    ComparisonSummary  `json:"summary"`
+	OldVersion string            `json:"oldVersion"`
+	NewVersion string            `json:"newVersion"`
+	Changes    ManifestChanges   `json:"changes"`
+	Summary    ComparisonSummary `json:"summary"`
+}
 
 // ManifestChanges contains lists of changes
 type ManifestChanges struct {
@@ -676,30 +710,12 @@ type ContentChange struct {
 	OldChecksum string      `json:"oldChecksum,omitempty"`
 	NewChecksum string      `json:"newChecksum,omitempty"`
 	SizeDelta   int64       `json:"sizeDelta,omitempty"`
+}
 
 // ComparisonSummary provides a summary of changes
 type ComparisonSummary struct {
 	TotalChanges  int `json:"totalChanges"`
 	AddedCount    int `json:"addedCount"`
 	RemovedCount  int `json:"removedCount"`
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	ModifiedCount int `json:"modifiedCount"`
 }

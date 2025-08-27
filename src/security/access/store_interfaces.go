@@ -30,6 +30,7 @@ type UserStore interface {
 
 	// Close closes the store
 	Close() error
+}
 
 // SessionStore defines the interface for session storage
 type SessionStore interface {
@@ -53,6 +54,7 @@ type SessionStore interface {
 
 	// Close closes the store
 	Close() error
+}
 
 // AuditLogger defines the interface for audit logging
 type AuditLogger interface {
@@ -70,6 +72,7 @@ type AuditLogger interface {
 
 	// Close closes the logger
 	Close(ctx context.Context) error
+}
 
 // TypesIncidentStore defines the interface for security incident storage using types.SecurityIncident
 type TypesIncidentStore interface {
@@ -90,6 +93,7 @@ type TypesIncidentStore interface {
 
 	// Close closes the store
 	Close() error
+}
 
 // TypesVulnerabilityStore defines the interface for vulnerability storage using types.Vulnerability
 type TypesVulnerabilityStore interface {
@@ -109,3 +113,5 @@ type TypesVulnerabilityStore interface {
 	ListVulnerabilities(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*Vulnerability, int, error)
 
 	// Close closes the store
+	Close() error
+}
