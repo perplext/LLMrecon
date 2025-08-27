@@ -38,6 +38,18 @@ func NewIndirectPromptInjectionValidator() *IndirectPromptInjectionValidator {
 		regexp.MustCompile(`(?i)after\s+(reading|processing|analyzing|summarizing|translating)\s+(the|this|following)\s+(content|text|document|file|url|link|website)`),
 		regexp.MustCompile(`(?i)(visit|go\s+to|navigate\s+to|check|look\s+at)\s+(this|the|following)\s+(url|link|website|page)`),
 		regexp.MustCompile(`(?i)(fetch|retrieve|get|download)\s+(content|text|document|file|data)\s+from\s+(this|the|following)\s+(url|link|website|page)`),
+		// Enhanced patterns for API and database injections
+		regexp.MustCompile(`(?i)(query|select|fetch)\s+from\s+(database|api|service|endpoint)`),
+		regexp.MustCompile(`(?i)process\s+(this|the)\s+(api|database|cache|webhook)\s+(response|result|payload)`),
+		// Document processing patterns
+		regexp.MustCompile(`(?i)(parse|compile|render|process)\s+(this|the)\s+(pdf|docx?|xlsx?|pptx?|csv|latex|markdown)`),
+		regexp.MustCompile(`(?i)extract\s+(data|content|information)\s+from\s+(document|file|spreadsheet|presentation)`),
+		// Email and communication patterns
+		regexp.MustCompile(`(?i)(read|process|analyze)\s+(this|the)\s+(email|message|thread|conversation)`),
+		regexp.MustCompile(`(?i)summarize\s+(this|the)\s+(email|message)\s+(thread|chain|conversation)`),
+		// Code and configuration patterns
+		regexp.MustCompile(`(?i)(review|analyze|audit)\s+(this|the)\s+(code|script|configuration|config)`),
+		regexp.MustCompile(`(?i)check\s+(this|the)\s+(repository|commit|pull\s+request|merge\s+request)`),
 	}
 
 	// Compile regex patterns for detecting untrusted content references
@@ -48,6 +60,15 @@ func NewIndirectPromptInjectionValidator() *IndirectPromptInjectionValidator {
 		regexp.MustCompile(`(?i)<img\s+src=["'][^"']+["']`),
 		regexp.MustCompile(`(?i)<link\s+href=["'][^"']+["']`),
 		regexp.MustCompile(`(?i)@import\s+url\(['"]?[^'"]+['"]?\)`),
+		// Data URI patterns
+		regexp.MustCompile(`(?i)data:[^;]+;base64,[A-Za-z0-9+/]+=*`),
+		regexp.MustCompile(`(?i)javascript:[^"'\s]+`),
+		// API and webhook patterns
+		regexp.MustCompile(`(?i)/api/v[0-9]+/[^\s]+`),
+		regexp.MustCompile(`(?i)webhook[s]?://[^\s]+`),
+		// File path patterns
+		regexp.MustCompile(`(?i)file://[^\s]+`),
+		regexp.MustCompile(`(?i)\.\.[\\/]+(system|admin|config|etc|root)`),
 	}
 
 	// Compile regex patterns for detecting suspicious URLs
@@ -86,6 +107,28 @@ func NewIndirectPromptInjectionValidator() *IndirectPromptInjectionValidator {
 		"user-provided url",
 		"user-provided link",
 		"user-provided website",
+		// Additional suspicious keywords
+		"untrusted source",
+		"remote content",
+		"fetched data",
+		"imported content",
+		"embedded instructions",
+		"hidden text",
+		"white text",
+		"system directive",
+		"admin override",
+		"security bypass",
+		"ignore previous",
+		"disregard context",
+		"override instructions",
+		"execute command",
+		"run script",
+		"eval code",
+		"process payload",
+		"inject content",
+		"malicious payload",
+		"backdoor",
+		"privilege escalation",
 	}
 
 	return &IndirectPromptInjectionValidator{
