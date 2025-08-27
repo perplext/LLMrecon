@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"sort"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
 	"github.com/xuri/excelize/v2"
@@ -37,6 +38,7 @@ type TemplateReporter struct {
 	htmlTemplate *template.Template
 	// customFormatters is a map of report format to custom formatter function
 	customFormatters map[ReportFormat]ReportFormatter
+}
 
 // ReportFormatter is a function that formats a report
 type ReportFormatter func(results []*interfaces.TemplateResult) ([]byte, error)
@@ -53,10 +55,12 @@ func NewTemplateReporter() (*TemplateReporter, error) {
 		htmlTemplate:     htmlTemplate,
 		customFormatters: make(map[ReportFormat]ReportFormatter),
 	}, nil
+}
 
 // RegisterCustomFormatter registers a custom formatter for a specific report format
 func (r *TemplateReporter) RegisterCustomFormatter(format ReportFormat, formatter ReportFormatter) {
 	r.customFormatters[format] = formatter
+}
 
 // SetHTMLTemplate sets the HTML template for reports
 func (r *TemplateReporter) SetHTMLTemplate(htmlTemplate string) error {
@@ -68,6 +72,7 @@ func (r *TemplateReporter) SetHTMLTemplate(htmlTemplate string) error {
 
 	r.htmlTemplate = tmpl
 	return nil
+}
 
 // GenerateReport generates a report for template execution results
 func (r *TemplateReporter) GenerateReport(results []*interfaces.TemplateResult, format string) ([]byte, error) {
@@ -93,6 +98,7 @@ func (r *TemplateReporter) GenerateReport(results []*interfaces.TemplateResult, 
 	default:
 		return nil, fmt.Errorf("unsupported report format: %s", format)
 	}
+}
 
 // generateJSONReport generates a JSON report
 func (r *TemplateReporter) generateJSONReport(results []*interfaces.TemplateResult) ([]byte, error) {
@@ -106,6 +112,7 @@ func (r *TemplateReporter) generateJSONReport(results []*interfaces.TemplateResu
 	}
 
 	return data, nil
+}
 
 // generateYAMLReport generates a YAML report
 func (r *TemplateReporter) generateYAMLReport(results []*interfaces.TemplateResult) ([]byte, error) {
@@ -119,6 +126,7 @@ func (r *TemplateReporter) generateYAMLReport(results []*interfaces.TemplateResu
 	}
 
 	return data, nil
+}
 
 // generateHTMLReport generates an HTML report
 func (r *TemplateReporter) generateHTMLReport(results []*interfaces.TemplateResult) ([]byte, error) {
@@ -132,6 +140,7 @@ func (r *TemplateReporter) generateHTMLReport(results []*interfaces.TemplateResu
 	}
 
 	return buf.Bytes(), nil
+}
 
 // generateExcelReport generates an Excel report
 func (r *TemplateReporter) generateExcelReport(results []*interfaces.TemplateResult) ([]byte, error) {
@@ -192,6 +201,7 @@ func (r *TemplateReporter) generateExcelReport(results []*interfaces.TemplateRes
 	}
 
 	return buf.Bytes(), nil
+}
 
 // generateCSVReport generates a CSV report
 func (r *TemplateReporter) generateCSVReport(results []*interfaces.TemplateResult) ([]byte, error) {
@@ -224,6 +234,7 @@ func (r *TemplateReporter) generateCSVReport(results []*interfaces.TemplateResul
 	}
 
 	return buf.Bytes(), nil
+}
 
 // generatePDFReport generates a PDF report
 // This is a placeholder implementation that returns an error
@@ -232,6 +243,7 @@ func (r *TemplateReporter) generatePDFReport(results []*interfaces.TemplateResul
 	// This is a placeholder implementation
 	// In a real implementation, this would use a PDF generation library
 	return nil, fmt.Errorf("PDF report generation not implemented")
+}
 
 // joinCSV joins strings with commas and handles escaping
 func joinCSV(values []string) string {
@@ -265,6 +277,7 @@ func joinCSV(values []string) string {
 		}
 	}
 	return buf.String()
+}
 
 // ReportData represents the data for a report
 type ReportData struct {
@@ -274,6 +287,7 @@ type ReportData struct {
 	Summary ReportSummary `json:"summary"`
 	// Results is the list of template execution results
 	Results []*interfaces.TemplateResult `json:"results"`
+}
 
 // ReportSummary represents the summary of a report
 type ReportSummary struct {
@@ -291,6 +305,7 @@ type ReportSummary struct {
 	AverageDuration time.Duration `json:"average_duration"`
 	// TotalDuration is the total duration of all templates
 	TotalDuration time.Duration `json:"total_duration"`
+}
 
 // createReportData creates report data from template execution results
 func createReportData(results []*interfaces.TemplateResult) *ReportData {
@@ -335,6 +350,7 @@ func createReportData(results []*interfaces.TemplateResult) *ReportData {
 		Summary:     summary,
 		Results:     results,
 	}
+}
 
 // defaultHTMLTemplate is the default HTML template for reports
 var defaultHTMLTemplate = `<!DOCTYPE html>

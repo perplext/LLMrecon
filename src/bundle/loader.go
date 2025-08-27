@@ -4,6 +4,9 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 // LoadBundle loads a bundle from the specified path
@@ -38,6 +41,7 @@ func LoadBundle(bundlePath string) (*Bundle, error) {
 	}
 
 	return bundle, nil
+}
 
 // SaveBundle saves a bundle to the specified path
 func SaveBundle(bundle *Bundle) error {
@@ -54,11 +58,12 @@ func SaveBundle(bundle *Bundle) error {
 
 	// Write manifest
 	manifestPath := filepath.Join(bundle.BundlePath, "manifest.json")
-	if err := os.WriteFile(filepath.Clean(manifestPath, manifestData, 0600)); err != nil {
+	if err := os.WriteFile(filepath.Clean(manifestPath), manifestData, 0600); err != nil {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
 	return nil
+}
 
 // CreateEmptyBundle creates a new empty bundle
 func CreateEmptyBundle(bundlePath string, schemaVersion string, bundleID string, bundleType BundleType, name string, description string, version string) (*Bundle, error) {
@@ -102,3 +107,5 @@ func CreateEmptyBundle(bundlePath string, schemaVersion string, bundleID string,
 		IsVerified: false,
 	}
 
+	return bundle, nil
+}

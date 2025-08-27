@@ -6,7 +6,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/interfaces"
@@ -20,6 +24,7 @@ type StreamProcessor struct {
 	stats StreamStats
 	// statsMutex protects the stats
 	statsMutex sync.RWMutex
+}
 
 // StreamConfig contains configuration for the stream processor
 type StreamConfig struct {
@@ -31,6 +36,7 @@ type StreamConfig struct {
 	MaxConcurrent int
 	// TemporaryDir is the directory for temporary files
 	TemporaryDir string
+}
 
 // StreamStats tracks processor statistics
 type StreamStats struct {
@@ -42,22 +48,24 @@ type StreamStats struct {
 	ProcessingTime time.Duration
 	// PeakMemoryUsage is the peak memory usage in bytes
 	PeakMemoryUsage int64
+}
 
 // NewStreamProcessor creates a new stream processor
 func NewStreamProcessor(config *StreamConfig) *StreamProcessor {
 	// Set default values
 	if config == nil {
 		config = &StreamConfig{
-			BufferSize:     4096,
-			ChunkSize:      1024 * 1024, // 1MB
-			MaxConcurrent:  10,
-			TemporaryDir:   os.TempDir(),
+			BufferSize:    4096,
+			ChunkSize:     1024 * 1024, // 1MB
+			MaxConcurrent: 10,
+			TemporaryDir:  os.TempDir(),
 		}
 	}
 
 	return &StreamProcessor{
 		config: config,
 	}
+}
 
 // ProcessTemplateFile processes a template file in a streaming fashion
 func (p *StreamProcessor) ProcessTemplateFile(ctx context.Context, filePath string, processor func(*format.Template) error) error {
@@ -68,7 +76,11 @@ func (p *StreamProcessor) ProcessTemplateFile(ctx context.Context, filePath stri
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Create buffered reader
 	reader := bufio.NewReaderSize(file, p.config.BufferSize)
 
@@ -100,14 +112,14 @@ func (p *StreamProcessor) ProcessTemplateFile(ctx context.Context, filePath stri
 
 		// If we've reached EOF or have enough data to parse a template
 		if err == io.EOF || len(templateData) >= p.config.ChunkSize {
-			// Try to parse template
-			template, err := format.ParseTemplate(templateData)
+			// Try to parse template by loading from file
+			template, err := format.LoadTemplate(filePath)
 			if err != nil {
 				// If we've reached EOF and still can't parse, return error
 				if err == io.EOF {
 					return fmt.Errorf("failed to parse template: %w", err)
 				}
-				
+
 				// If we haven't reached EOF, continue reading
 				continue
 			}
@@ -139,80 +151,63 @@ func (p *StreamProcessor) ProcessTemplateFile(ctx context.Context, filePath stri
 	p.statsMutex.Unlock()
 
 	return nil
+}
 
 // ProcessTemplateStream processes a template stream
 func (p *StreamProcessor) ProcessTemplateStream(ctx context.Context, reader io.Reader, processor func(*format.Template) error) error {
 	startTime := time.Now()
 
-	// Create buffered reader
-	bufferedReader := bufio.NewReaderSize(reader, p.config.BufferSize)
+	// Check if context is cancelled
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		// Continue processing
+	}
 
-	// Read stream in chunks
-	var processedBytes int64
-	buffer := make([]byte, p.config.ChunkSize)
-	templateData := make([]byte, 0, p.config.ChunkSize)
+	// Read all data from stream
+	templateData, err := io.ReadAll(reader)
+	if err != nil {
+		return fmt.Errorf("failed to read stream: %w", err)
+	}
 
-	for {
-		// Check if context is cancelled
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			// Continue processing
+	// Create a temporary file to parse the template
+	tempFile, tempErr := os.CreateTemp(p.config.TemporaryDir, "template-*.tmp")
+	if tempErr != nil {
+		return fmt.Errorf("failed to create temporary file: %w", tempErr)
+	}
+	defer os.Remove(tempFile.Name())
+	defer func() {
+		if err := tempFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
 		}
+	}()
 
-		// Read chunk
-		n, err := bufferedReader.Read(buffer)
-		if err != nil && err != io.EOF {
-			return fmt.Errorf("failed to read stream: %w", err)
-		}
+	// Write template data to temporary file
+	if _, writeErr := tempFile.Write(templateData); writeErr != nil {
+		return fmt.Errorf("failed to write temporary file: %w", writeErr)
+	}
 
-		if n > 0 {
-			// Append chunk to template data
-			templateData = append(templateData, buffer[:n]...)
-			processedBytes += int64(n)
-		}
+	// Parse template from temporary file
+	template, parseErr := format.LoadTemplate(tempFile.Name())
+	if parseErr != nil {
+		return fmt.Errorf("failed to parse template: %w", parseErr)
+	}
 
-		// If we've reached EOF or have enough data to parse a template
-		if err == io.EOF || len(templateData) >= p.config.ChunkSize {
-			// Try to parse template
-			template, err := format.ParseTemplate(templateData)
-			if err != nil {
-				// If we've reached EOF and still can't parse, return error
-				if err == io.EOF {
-					return fmt.Errorf("failed to parse template: %w", err)
-				}
-				
-				// If we haven't reached EOF, continue reading
-				continue
-			}
-
-			// Process template
-			if err := processor(template); err != nil {
-				return fmt.Errorf("failed to process template: %w", err)
-			}
-
-			// Update stats
-			p.statsMutex.Lock()
-			p.stats.ProcessedBytes += processedBytes
-			p.stats.ProcessedTemplates++
-			p.statsMutex.Unlock()
-
-			// Reset template data
-			templateData = make([]byte, 0, p.config.ChunkSize)
-		}
-
-		// If we've reached EOF, break
-		if err == io.EOF {
-			break
-		}
+	// Process template
+	if err := processor(template); err != nil {
+		return fmt.Errorf("failed to process template: %w", err)
 	}
 
 	// Update stats
 	p.statsMutex.Lock()
+	p.stats.ProcessedBytes += int64(len(templateData))
+	p.stats.ProcessedTemplates++
 	p.stats.ProcessingTime += time.Since(startTime)
 	p.statsMutex.Unlock()
+
 	return nil
+}
 
 // ProcessTemplateDirectory processes all template files in a directory
 func (p *StreamProcessor) ProcessTemplateDirectory(ctx context.Context, dirPath string, processor func(*format.Template) error) error {
@@ -223,7 +218,11 @@ func (p *StreamProcessor) ProcessTemplateDirectory(ctx context.Context, dirPath 
 	if err != nil {
 		return fmt.Errorf("failed to open directory: %w", err)
 	}
-	defer func() { if err := dir.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := dir.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read directory entries
 	entries, err := dir.Readdir(-1)
@@ -278,6 +277,7 @@ func (p *StreamProcessor) ProcessTemplateDirectory(ctx context.Context, dirPath 
 	p.statsMutex.Unlock()
 
 	return lastError
+}
 
 // StreamExecute executes a template in a streaming fashion
 func (p *StreamProcessor) StreamExecute(ctx context.Context, template *format.Template, executor interfaces.TemplateExecutor, options map[string]interface{}, resultWriter io.Writer) error {
@@ -301,6 +301,7 @@ func (p *StreamProcessor) StreamExecute(ctx context.Context, template *format.Te
 	p.statsMutex.Unlock()
 
 	return nil
+}
 
 // StreamExecuteBatch executes multiple templates in a streaming fashion
 func (p *StreamProcessor) StreamExecuteBatch(ctx context.Context, templates []*format.Template, executor interfaces.TemplateExecutor, options map[string]interface{}, resultWriter io.Writer) error {
@@ -312,7 +313,11 @@ func (p *StreamProcessor) StreamExecuteBatch(ctx context.Context, templates []*f
 		return fmt.Errorf("failed to create temporary file: %w", err)
 	}
 	defer os.Remove(tempFile.Name())
-	defer func() { if err := tempFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := tempFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Execute templates in batches
 	batchSize := 10
@@ -332,14 +337,15 @@ func (p *StreamProcessor) StreamExecuteBatch(ctx context.Context, templates []*f
 		}
 		batch := templates[i:end]
 
-		// Execute batch
-		results, err := executor.ExecuteBatch(ctx, batch, options)
-		if err != nil {
-			return fmt.Errorf("failed to execute batch: %w", err)
-		}
+		// Execute batch templates individually
+		for _, template := range batch {
+			// Execute template
+			result, err := executor.Execute(ctx, template, options)
+			if err != nil {
+				return fmt.Errorf("failed to execute template: %w", err)
+			}
 
-		// Write results to temporary file
-		for _, result := range results {
+			// Write result to temporary file
 			if err := json.NewEncoder(tempFile).Encode(result); err != nil {
 				return fmt.Errorf("failed to write result: %w", err)
 			}
@@ -367,6 +373,7 @@ func (p *StreamProcessor) StreamExecuteBatch(ctx context.Context, templates []*f
 	p.statsMutex.Unlock()
 
 	return nil
+}
 
 // GetStats gets the processor statistics
 func (p *StreamProcessor) GetStats() StreamStats {
@@ -374,6 +381,7 @@ func (p *StreamProcessor) GetStats() StreamStats {
 	defer p.statsMutex.RUnlock()
 
 	return p.stats
+}
 
 // ResetStats resets the processor statistics
 func (p *StreamProcessor) ResetStats() {
@@ -381,11 +389,10 @@ func (p *StreamProcessor) ResetStats() {
 	defer p.statsMutex.Unlock()
 
 	p.stats = StreamStats{}
+}
 
 // isTemplateFile checks if a file is a template file
 func isTemplateFile(fileName string) bool {
-	ext := ""
-	for i := len(fileName) - 1; i >= 0 && fileName[i] != '.'; i-- {
-		ext = string(fileName[i]) + ext
-	}
-	
+	ext := filepath.Ext(fileName)
+	return ext == ".yaml" || ext == ".yml" || ext == ".json"
+}

@@ -2,6 +2,8 @@
 package security
 
 import (
+	"context"
+
 	"github.com/perplext/LLMrecon/src/reporting/common"
 )
 
@@ -21,37 +23,44 @@ const (
 
 // SecurityIssue represents a security issue found in a template
 type SecurityIssue struct {
-	ID          string              `json:"id"`
-	Type        SecurityIssueType   `json:"type"`
-	Description string              `json:"description"`
-	Location    string              `json:"location"`
+	ID          string               `json:"id"`
+	Type        SecurityIssueType    `json:"type"`
+	Description string               `json:"description"`
+	Location    string               `json:"location"`
 	Severity    common.SeverityLevel `json:"severity"`
-	Remediation string              `json:"remediation"`
-	Context     string              `json:"context,omitempty"`
-	LineNumber  int                 `json:"line_number,omitempty"`
-	RawData     interface{}         `json:"raw_data,omitempty"`
+	Remediation string               `json:"remediation"`
+	Context     string               `json:"context,omitempty"`
+	LineNumber  int                  `json:"line_number,omitempty"`
+	RawData     interface{}          `json:"raw_data,omitempty"`
 }
 
 // VerificationResult represents the result of a template security verification
 type VerificationResult struct {
-	TemplatePath string          `json:"template_path"`
-	TemplateID   string          `json:"template_id"`
-	TemplateName string          `json:"template_name"`
-	Issues       []*SecurityIssue `json:"issues"`
-	Passed       bool            `json:"passed"`
-	Score        float64         `json:"score"`
-	MaxScore     float64         `json:"max_score"`
+	TemplatePath string                 `json:"template_path"`
+	TemplateID   string                 `json:"template_id"`
+	TemplateName string                 `json:"template_name"`
+	Issues       []*SecurityIssue       `json:"issues"`
+	Passed       bool                   `json:"passed"`
+	Score        float64                `json:"score"`
+	MaxScore     float64                `json:"max_score"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // VerificationOptions represents options for template security verification
 type VerificationOptions struct {
 	StrictMode         bool                   `json:"strict_mode"`
 	IgnorePatterns     []string               `json:"ignore_patterns,omitempty"`
 	CustomChecks       []string               `json:"custom_checks,omitempty"`
-	SeverityThreshold  common.SeverityLevel    `json:"severity_threshold,omitempty"`
+	SeverityThreshold  common.SeverityLevel   `json:"severity_threshold,omitempty"`
 	IncludeInfo        bool                   `json:"include_info"`
 	TemplateCategories []string               `json:"template_categories,omitempty"`
 	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// TemplateVerifier interface defines methods for template security verification
+type TemplateVerifier interface {
+	// VerifyTemplateFile verifies a template file and returns the verification result
+	VerifyTemplateFile(ctx context.Context, templatePath string, options *VerificationOptions) (*VerificationResult, error)
 }
 
 // DefaultVerificationOptions returns the default verification options
@@ -64,6 +73,7 @@ func DefaultVerificationOptions() *VerificationOptions {
 		IncludeInfo:       true,
 		Metadata:          make(map[string]interface{}),
 	}
+}
 
 // VerificationResultToTestResult converts a verification result to a test result
 func VerificationResultToTestResult(result *VerificationResult) *common.TestResult {
@@ -106,6 +116,7 @@ func VerificationResultToTestResult(result *VerificationResult) *common.TestResu
 		RawData:     result,
 		Metadata:    result.Metadata,
 	}
+}
 
 // isSeverityHigher returns true if severity1 is higher than severity2
 func isSeverityHigher(severity1, severity2 common.SeverityLevel) bool {
@@ -117,4 +128,5 @@ func isSeverityHigher(severity1, severity2 common.SeverityLevel) bool {
 		common.Info:     1,
 	}
 
+	return severityMap[severity1] > severityMap[severity2]
 }

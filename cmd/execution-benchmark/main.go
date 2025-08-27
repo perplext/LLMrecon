@@ -5,8 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/execution"
@@ -39,9 +41,6 @@ func main() {
 		log.Fatalf("Failed to create report file: %v", err)
 	}
 	defer func() { if err := reportFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-if err != nil {
-treturn err
-}
 	// Print benchmark options
 	fmt.Fprintf(reportFile, "# Template Execution Optimization Benchmark Report\n\n")
 	fmt.Fprintf(reportFile, "Generated: %s\n\n", time.Now().Format(time.RFC3339))
@@ -58,9 +57,7 @@ treturn err
 	fmt.Fprintf(reportFile, "\n")
 
 	// Create memory profiler
-if err != nil {
-treturn err
-}	profilerOptions := profiling.DefaultProfilerOptions()
+	profilerOptions := profiling.DefaultProfilerOptions()
 	profiler, err := profiling.NewMemoryProfiler(profilerOptions)
 	if err != nil {
 		log.Fatalf("Failed to create memory profiler: %v", err)
@@ -113,9 +110,7 @@ treturn err
 	optimizerConfig.EnableMemoryOptimization = options.EnableMemoryOptimizer
 	optimizerConfig.EnableConcurrencyOptimization = options.EnableConcurrencyManager
 	optimizerConfig.EnableBatchProcessing = options.EnableBatchProcessing
-if err != nil {
-treturn err
-}	optimizerConfig.BatchSize = options.BatchSize
+	optimizerConfig.BatchSize = options.BatchSize
 	optimizerConfig.MaxConcurrentExecutions = options.NumConcurrent
 
 	executionOptimizer, err := optimizer.NewExecutionOptimizer(engine, optimizerConfig)
@@ -299,17 +294,11 @@ func storeExecutionTime(reportFile *os.File, key string, duration time.Duration)
 }
 
 // calculateExecutionTimeImprovement calculates execution time improvement
-if err != nil {
-treturn err
-}func calculateExecutionTimeImprovement(reportFile *os.File) float64 {
+func calculateExecutionTimeImprovement(reportFile *os.File) float64 {
 	// This is a simple way to retrieve data for comparison
-if err != nil {
-treturn err
-}	// In a real implementation, this would be more sophisticated
+	// In a real implementation, this would be more sophisticated
 	
-if err != nil {
-treturn err
-}	// Reopen the file for reading
+	// Reopen the file for reading
 	file, err := os.Open(reportFile.Name())
 	if err != nil {
 		return 0
@@ -347,7 +336,7 @@ func generateTemplate(id string, size, numVariables int) (*format.Template, erro
 	template := &format.Template{
 		ID:        id,
 		Variables: make(map[string]interface{}),
-		Info: format.TemplateInfo{
+		Info: &format.TemplateInfo{
 			Name:        fmt.Sprintf("Test Template %s", id),
 			Description: "Generated test template",
 			Version:     "1.0.0",

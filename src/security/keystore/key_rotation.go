@@ -1,313 +1,549 @@
-// Package keystore provides secure storage for cryptographic keys and sensitive materials.
 package keystore
 
 import (
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
-	
-	"github.com/perplext/LLMrecon/src/security/vault"
+	"sync"
+	"time"
 )
 
-// RotateKey rotates a key by generating a new key and updating references
-func (ks *FileKeyStore) RotateKey(id string) (*Key, error) {
-	// Get the existing key
-	oldKey, err := ks.GetKey(id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get key for rotation: %w", err)
+// RotationPolicy defines the rotation policy for keys
+type RotationPolicy struct {
+	MaxAge          time.Duration `json:"max_age"`
+	RotationPeriod  time.Duration `json:"rotation_period"`
+	AutoRotate      bool          `json:"auto_rotate"`
+	NotifyBefore    time.Duration `json:"notify_before"`
+	ArchiveOldKeys  bool          `json:"archive_old_keys"`
+	MaxArchivedKeys int           `json:"max_archived_keys"`
+}
+
+// RotationStatus represents the rotation status of a key
+type RotationStatus string
+
+const (
+	StatusActive   RotationStatus = "active"
+	StatusExpiring RotationStatus = "expiring"
+	StatusExpired  RotationStatus = "expired"
+	StatusRotated  RotationStatus = "rotated"
+	StatusArchived RotationStatus = "archived"
+)
+
+// KeyRotationInfo contains information about key rotation
+type KeyRotationInfo struct {
+	KeyID          string         `json:"key_id"`
+	Status         RotationStatus `json:"status"`
+	CreatedAt      time.Time      `json:"created_at"`
+	LastRotated    *time.Time     `json:"last_rotated"`
+	NextRotation   *time.Time     `json:"next_rotation"`
+	RotationCount  int            `json:"rotation_count"`
+	Policy         RotationPolicy `json:"policy"`
+	PreviousKeyIDs []string       `json:"previous_key_ids"`
+}
+
+// RotationEvent represents a key rotation event
+type RotationEvent struct {
+	KeyID        string    `json:"key_id"`
+	OldKeyID     string    `json:"old_key_id"`
+	NewKeyID     string    `json:"new_key_id"`
+	RotationType string    `json:"rotation_type"` // "manual", "scheduled", "emergency"
+	Timestamp    time.Time `json:"timestamp"`
+	Reason       string    `json:"reason"`
+	RotatedBy    string    `json:"rotated_by"`
+}
+
+// KeyRotator handles key rotation operations
+type KeyRotator struct {
+	keystore        *Keystore
+	rotationInfos   map[string]*KeyRotationInfo
+	policies        map[string]*RotationPolicy
+	rotationHistory []RotationEvent
+	mu              sync.RWMutex
+	stopChan        chan struct{}
+	wg              sync.WaitGroup
+}
+
+// NewKeyRotator creates a new key rotator
+func NewKeyRotator(ks *Keystore) *KeyRotator {
+	return &KeyRotator{
+		keystore:        ks,
+		rotationInfos:   make(map[string]*KeyRotationInfo),
+		policies:        make(map[string]*RotationPolicy),
+		rotationHistory: make([]RotationEvent, 0),
+		stopChan:        make(chan struct{}),
+	}
+}
+
+// SetRotationPolicy sets the rotation policy for a key
+func (kr *KeyRotator) SetRotationPolicy(keyID string, policy RotationPolicy) error {
+	if keyID == "" {
+		return errors.New("key ID cannot be empty")
 	}
 
-	// Log the rotation attempt
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("rotate", oldKey.Metadata.ID, "Attempting key rotation")
+	kr.mu.Lock()
+	defer kr.mu.Unlock()
+
+	// Check if key exists
+	if _, exists := kr.keystore.keys[keyID]; !exists {
+		return fmt.Errorf("key with ID %s not found", keyID)
 	}
 
-	// Create new metadata based on the old key
-	newMetadata := oldKey.Metadata
-	newMetadata.ID = generateKeyID(newMetadata.Name, newMetadata.Type)
-	newMetadata.CreatedAt = time.Now()
-	newMetadata.UpdatedAt = time.Now()
-	newMetadata.LastRotatedAt = time.Now()
-	
-	// Set expiration if rotation period is defined
-	if newMetadata.RotationPeriod > 0 {
-		newMetadata.ExpiresAt = time.Now().AddDate(0, 0, newMetadata.RotationPeriod)
+	kr.policies[keyID] = &policy
+
+	// Update rotation info
+	if info, exists := kr.rotationInfos[keyID]; exists {
+		info.Policy = policy
+		kr.updateNextRotation(info)
+	} else {
+		keyEntry := kr.keystore.keys[keyID]
+		info := &KeyRotationInfo{
+			KeyID:          keyID,
+			Status:         StatusActive,
+			CreatedAt:      keyEntry.CreatedAt,
+			Policy:         policy,
+			PreviousKeyIDs: make([]string, 0),
+		}
+		kr.updateNextRotation(info)
+		kr.rotationInfos[keyID] = info
 	}
 
-	// Generate a new key with the same parameters
-	newKey, err := ks.GenerateKey(oldKey.Metadata.Type, oldKey.Metadata.Algorithm, &newMetadata)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate new key during rotation: %w", err)
+	return nil
+}
+
+// GetRotationPolicy returns the rotation policy for a key
+func (kr *KeyRotator) GetRotationPolicy(keyID string) (*RotationPolicy, error) {
+	if keyID == "" {
+		return nil, errors.New("key ID cannot be empty")
 	}
 
-	// Store the relationship between the old and new key
-	// This is useful for audit trails and for applications that need to know about key rotation
-	rotationInfo := map[string]string{
-		"previous_key_id": oldKey.Metadata.ID,
-		"new_key_id":      newKey.Metadata.ID,
-		"rotation_time":   time.Now().Format(time.RFC3339),
+	kr.mu.RLock()
+	defer kr.mu.RUnlock()
+
+	policy, exists := kr.policies[keyID]
+	if !exists {
+		return nil, fmt.Errorf("no rotation policy set for key %s", keyID)
 	}
 
-	rotationInfoBytes, err := json.Marshal(rotationInfo)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal rotation info: %w", err)
+	// Return a copy
+	policyCopy := *policy
+	return &policyCopy, nil
+}
+
+// GetRotationInfo returns rotation information for a key
+func (kr *KeyRotator) GetRotationInfo(keyID string) (*KeyRotationInfo, error) {
+	if keyID == "" {
+		return nil, errors.New("key ID cannot be empty")
 	}
 
-	// Store the rotation information in the vault
-	rotationCredential := &vault.Credential{
-		ID:          fmt.Sprintf("rotation_%s_%s", oldKey.Metadata.ID, newKey.Metadata.ID),
-		Name:        fmt.Sprintf("Key Rotation %s -> %s", oldKey.Metadata.ID, newKey.Metadata.ID),
-		Value:       string(rotationInfoBytes),
-		Description: "Key rotation relationship information",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		ExpiresAt:   time.Time{}, // Never expires
-		Tags:        []string{"key_rotation", oldKey.Metadata.ID, newKey.Metadata.ID},
+	kr.mu.RLock()
+	defer kr.mu.RUnlock()
+
+	info, exists := kr.rotationInfos[keyID]
+	if !exists {
+		return nil, fmt.Errorf("no rotation info found for key %s", keyID)
 	}
 
-	if err := ks.vault.StoreCredential(rotationCredential); err != nil {
-		return nil, fmt.Errorf("failed to store rotation information: %w", err)
+	// Return a copy
+	infoCopy := *info
+	infoCopy.PreviousKeyIDs = make([]string, len(info.PreviousKeyIDs))
+	copy(infoCopy.PreviousKeyIDs, info.PreviousKeyIDs)
+
+	return &infoCopy, nil
+}
+
+// RotateKey manually rotates a key
+func (kr *KeyRotator) RotateKey(keyID string, reason string, rotatedBy string) error {
+	if keyID == "" {
+		return errors.New("key ID cannot be empty")
 	}
 
-	// Log the successful rotation
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("rotate", oldKey.Metadata.ID, 
-			fmt.Sprintf("Key rotated successfully, new key ID: %s", newKey.Metadata.ID))
-	}
+	kr.mu.Lock()
+	defer kr.mu.Unlock()
 
-	// Save changes if auto-save is enabled
-	if ks.autoSave {
-		if err := ks.save(); err != nil {
-			return nil, fmt.Errorf("failed to save key store after rotation: %w", err)
+	return kr.rotateKeyInternal(keyID, "manual", reason, rotatedBy)
+}
+
+// RotateAllKeys rotates all keys that have rotation policies
+func (kr *KeyRotator) RotateAllKeys(reason string, rotatedBy string) error {
+	kr.mu.Lock()
+	defer kr.mu.Unlock()
+
+	var rotationErrors []string
+
+	for keyID := range kr.policies {
+		if err := kr.rotateKeyInternal(keyID, "bulk", reason, rotatedBy); err != nil {
+			rotationErrors = append(rotationErrors, fmt.Sprintf("failed to rotate key %s: %v", keyID, err))
 		}
 	}
 
-	return newKey, nil
-
-// GenerateKey generates a new key with the specified parameters
-func (ks *FileKeyStore) GenerateKey(keyType KeyType, algorithm string, metadata *KeyMetadata) (*Key, error) {
-	// Initialize metadata if not provided
-	if metadata == nil {
-		return nil, errors.New("metadata is required for key generation")
+	if len(rotationErrors) > 0 {
+		return fmt.Errorf("rotation errors: %v", rotationErrors)
 	}
 
-	// Set default values for metadata
-	if metadata.ID == "" {
-		metadata.ID = generateKeyID(metadata.Name, keyType)
-	}
-	if metadata.CreatedAt.IsZero() {
-		metadata.CreatedAt = time.Now()
-	}
-	if metadata.UpdatedAt.IsZero() {
-		metadata.UpdatedAt = time.Now()
-	}
-	
-	// Set expiration if rotation period is defined
-	if metadata.RotationPeriod > 0 && metadata.ExpiresAt.IsZero() {
-		metadata.ExpiresAt = time.Now().AddDate(0, 0, metadata.RotationPeriod)
+	return nil
+}
+
+// CheckRotationStatus checks the rotation status of all keys
+func (kr *KeyRotator) CheckRotationStatus() map[string]RotationStatus {
+	kr.mu.RLock()
+	defer kr.mu.RUnlock()
+
+	statusMap := make(map[string]RotationStatus)
+
+	for keyID, info := range kr.rotationInfos {
+		status := kr.calculateRotationStatus(info)
+		statusMap[keyID] = status
 	}
 
-	// Set key type and algorithm
-	metadata.Type = keyType
-	if algorithm != "" {
-		metadata.Algorithm = algorithm
+	return statusMap
+}
+
+// GetExpiringKeys returns keys that are approaching expiration
+func (kr *KeyRotator) GetExpiringKeys() []*KeyRotationInfo {
+	kr.mu.RLock()
+	defer kr.mu.RUnlock()
+
+	var expiringKeys []*KeyRotationInfo
+
+	for _, info := range kr.rotationInfos {
+		if kr.calculateRotationStatus(info) == StatusExpiring {
+			infoCopy := *info
+			infoCopy.PreviousKeyIDs = make([]string, len(info.PreviousKeyIDs))
+			copy(infoCopy.PreviousKeyIDs, info.PreviousKeyIDs)
+			expiringKeys = append(expiringKeys, &infoCopy)
+		}
 	}
 
-	// Generate key material based on type and algorithm
-	var keyMaterial KeyMaterial
-	var err error
+	return expiringKeys
+}
 
-	switch keyType {
-	case RSAKey:
-		keyMaterial, err = generateRSAKey(algorithm)
-	case ECDSAKey:
-		keyMaterial, err = generateECDSAKey(algorithm)
-	case Ed25519Key:
-		keyMaterial, err = generateEd25519Key()
-	case SymmetricKey:
-		keyMaterial, err = generateSymmetricKey(algorithm)
+// GetExpiredKeys returns keys that have expired
+func (kr *KeyRotator) GetExpiredKeys() []*KeyRotationInfo {
+	kr.mu.RLock()
+	defer kr.mu.RUnlock()
+
+	var expiredKeys []*KeyRotationInfo
+
+	for _, info := range kr.rotationInfos {
+		if kr.calculateRotationStatus(info) == StatusExpired {
+			infoCopy := *info
+			infoCopy.PreviousKeyIDs = make([]string, len(info.PreviousKeyIDs))
+			copy(infoCopy.PreviousKeyIDs, info.PreviousKeyIDs)
+			expiredKeys = append(expiredKeys, &infoCopy)
+		}
+	}
+
+	return expiredKeys
+}
+
+// StartAutoRotation starts the automatic rotation process
+func (kr *KeyRotator) StartAutoRotation() error {
+	kr.mu.Lock()
+	defer kr.mu.Unlock()
+
+	// Check if already running
+	select {
+	case <-kr.stopChan:
+		// Channel is closed, recreate it
+		kr.stopChan = make(chan struct{})
 	default:
-		return nil, fmt.Errorf("unsupported key type: %s", keyType)
+		// Already running
+		return errors.New("auto rotation is already running")
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate key material: %w", err)
-	}
+	kr.wg.Add(1)
+	go kr.autoRotationWorker()
 
-	// Calculate fingerprint
-	fingerprint, err := calculateKeyFingerprint(keyMaterial.Public)
-	if err != nil {
-		return nil, fmt.Errorf("failed to calculate key fingerprint: %w", err)
-	}
-	metadata.Fingerprint = fingerprint
+	return nil
+}
 
-	// Set key flags
-	metadata.HasPrivateKey = len(keyMaterial.Private) > 0
-	metadata.HasPublicKey = len(keyMaterial.Public) > 0
+// StopAutoRotation stops the automatic rotation process
+func (kr *KeyRotator) StopAutoRotation() error {
+	kr.mu.Lock()
+	defer kr.mu.Unlock()
 
-	// Create the key
-	key := &Key{
-		Metadata: *metadata,
-		Material: keyMaterial,
-	}
-
-	// Store the key
-	if err := ks.StoreKey(key); err != nil {
-		return nil, fmt.Errorf("failed to store generated key: %w", err)
-	}
-
-	// Log the key generation
-	if ks.auditLogger != nil {
-		ks.auditLogger.LogKeyOperation("generate", metadata.ID, 
-			fmt.Sprintf("Generated new %s key with algorithm %s", keyType, algorithm))
-	}
-
-	return key, nil
-
-// generateRSAKey generates an RSA key pair
-func generateRSAKey(algorithm string) (KeyMaterial, error) {
-	// Determine key size from algorithm
-	keySize := 2048 // Default
-	if algorithm == "RSA-4096" {
-		keySize = 4096
-	} else if algorithm == "RSA-3072" {
-		keySize = 3072
-	} else if algorithm == "RSA-2048" {
-		keySize = 2048
-	} else if algorithm != "" && algorithm != "RSA-2048" {
-		return KeyMaterial{}, fmt.Errorf("unsupported RSA algorithm: %s", algorithm)
-	}
-
-	// Generate key
-	privateKey, err := rsa.GenerateKey(rand.Reader, keySize)
-	if err != nil {
-		return KeyMaterial{}, fmt.Errorf("failed to generate RSA key: %w", err)
-	}
-	// Encode private key to PEM
-	privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
-	privatePEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: privateKeyBytes,
-	})
-
-	// Encode public key to PEM
-	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-	if err != nil {
-		return KeyMaterial{}, fmt.Errorf("failed to marshal RSA public key: %w", err)
-	}
-	publicPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PUBLIC KEY",
-		Bytes: publicKeyBytes,
-	})
-
-	return KeyMaterial{
-		Private: privatePEM,
-		Public:  publicPEM,
-		Format:  "PEM",
-	}, nil
-
-// generateECDSAKey generates an ECDSA key pair
-func generateECDSAKey(algorithm string) (KeyMaterial, error) {
-	// Determine curve from algorithm
-	var curve elliptic.Curve
-	switch algorithm {
-	case "ECDSA-P256":
-		curve = elliptic.P256()
-	case "ECDSA-P384":
-		curve = elliptic.P384()
-	case "ECDSA-P521":
-		curve = elliptic.P521()
-	case "":
-		curve = elliptic.P256() // Default
+	select {
+	case <-kr.stopChan:
+		return errors.New("auto rotation is not running")
 	default:
-		return KeyMaterial{}, fmt.Errorf("unsupported ECDSA algorithm: %s", algorithm)
+		close(kr.stopChan)
 	}
 
-	// Generate key
-	privateKey, err := ecdsa.GenerateKey(curve, rand.Reader)
-	if err != nil {
-		return KeyMaterial{}, fmt.Errorf("failed to generate ECDSA key: %w", err)
+	kr.wg.Wait()
+	return nil
+}
+
+// GetRotationHistory returns the rotation history
+func (kr *KeyRotator) GetRotationHistory() []RotationEvent {
+	kr.mu.RLock()
+	defer kr.mu.RUnlock()
+
+	history := make([]RotationEvent, len(kr.rotationHistory))
+	copy(history, kr.rotationHistory)
+
+	return history
+}
+
+// rotateKeyInternal performs the actual key rotation
+func (kr *KeyRotator) rotateKeyInternal(keyID string, rotationType string, reason string, rotatedBy string) error {
+	// Get the original key
+	originalKey, exists := kr.keystore.keys[keyID]
+	if !exists {
+		return fmt.Errorf("key with ID %s not found", keyID)
 	}
 
-	// Encode private key to PEM
-	privateKeyBytes, err := x509.MarshalECPrivateKey(privateKey)
-	if err != nil {
-		return KeyMaterial{}, fmt.Errorf("failed to marshal ECDSA private key: %w", err)
-	}
-	privatePEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "EC PRIVATE KEY",
-		Bytes: privateKeyBytes,
-	})
+	// Generate new key of the same type
+	newKeyID := fmt.Sprintf("%s-rotated-%d", keyID, time.Now().Unix())
+	var newKey interface{}
 
-	// Encode public key to PEM
-	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-	if err != nil {
-		return KeyMaterial{}, fmt.Errorf("failed to marshal ECDSA public key: %w", err)
-	}
-	publicPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "EC PUBLIC KEY",
-		Bytes: publicKeyBytes,
-	})
-
-	return KeyMaterial{
-		Private: privatePEM,
-		Public:  publicPEM,
-		Format:  "PEM",
-	}, nil
-
-// generateEd25519Key generates an Ed25519 key pair
-func generateEd25519Key() (KeyMaterial, error) {
-	// Generate key
-	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		return KeyMaterial{}, fmt.Errorf("failed to generate Ed25519 key: %w", err)
+	switch originalKey.Type {
+	case KeyTypeRSA:
+		// Generate new RSA key
+		rsaKey, rsaErr := rsa.GenerateKey(rand.Reader, 2048)
+		if rsaErr != nil {
+			return fmt.Errorf("failed to generate new RSA key: %w", rsaErr)
+		}
+		newKey = rsaKey
+	case KeyTypeAES:
+		// Generate new AES key
+		aesKey := make([]byte, 32) // 256-bit key
+		if _, randErr := rand.Read(aesKey); randErr != nil {
+			return fmt.Errorf("failed to generate new AES key: %w", randErr)
+		}
+		newKey = aesKey
+	default:
+		return fmt.Errorf("unsupported key type for rotation: %s", originalKey.Type)
 	}
 
-	// Encode private key to PEM
-	privatePEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: privateKey,
-	})
-
-	// Encode public key to PEM
-	publicPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: publicKey,
-	})
-
-	return KeyMaterial{
-		Private: privatePEM,
-		Public:  publicPEM,
-		Format:  "PEM",
-	}, nil
-// generateSymmetricKey generates a symmetric key
-func generateSymmetricKey(algorithm string) (KeyMaterial, error) {
-	// Determine key size from algorithm
-	keySize := 32 // Default (256 bits)
-	if algorithm == "AES-128" {
-		keySize = 16
-	} else if algorithm == "AES-192" {
-		keySize = 24
-	} else if algorithm == "AES-256" {
-		keySize = 32
-	} else if algorithm != "" && algorithm != "AES-256" {
-		return KeyMaterial{}, fmt.Errorf("unsupported symmetric algorithm: %s", algorithm)
+	// Create new key entry
+	newKeyEntry := &KeyEntry{
+		ID:        newKeyID,
+		Type:      originalKey.Type,
+		Algorithm: originalKey.Algorithm,
+		Key:       newKey,
+		Metadata:  make(map[string]string),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
-	// Generate random bytes
-	key := make([]byte, keySize)
-	if _, err := rand.Read(key); err != nil {
-		return KeyMaterial{}, fmt.Errorf("failed to generate symmetric key: %w", err)
+	// Copy metadata
+	for k, v := range originalKey.Metadata {
+		newKeyEntry.Metadata[k] = v
 	}
 
-	return KeyMaterial{
-		Private: key,
-		Format:  "RAW",
-	}, nil
+	// Add rotation metadata
+	newKeyEntry.Metadata["rotated_from"] = keyID
+	newKeyEntry.Metadata["rotation_reason"] = reason
+	newKeyEntry.Metadata["rotated_by"] = rotatedBy
+
+	// Store the new key
+	kr.keystore.keys[newKeyID] = newKeyEntry
+
+	// Update rotation info
+	info, exists := kr.rotationInfos[keyID]
+	if !exists {
+		info = &KeyRotationInfo{
+			KeyID:          keyID,
+			Status:         StatusActive,
+			CreatedAt:      originalKey.CreatedAt,
+			PreviousKeyIDs: make([]string, 0),
+		}
+		kr.rotationInfos[keyID] = info
+	}
+
+	// Update rotation info
+	now := time.Now()
+	info.LastRotated = &now
+	info.RotationCount++
+	info.Status = StatusRotated
+	info.PreviousKeyIDs = append(info.PreviousKeyIDs, keyID)
+
+	// Create rotation info for new key
+	newInfo := &KeyRotationInfo{
+		KeyID:          newKeyID,
+		Status:         StatusActive,
+		CreatedAt:      now,
+		LastRotated:    &now,
+		RotationCount:  0,
+		PreviousKeyIDs: make([]string, 0),
+	}
+
+	// Copy policy if exists
+	if policy, policyExists := kr.policies[keyID]; policyExists {
+		newInfo.Policy = *policy
+		kr.policies[newKeyID] = policy
+		kr.updateNextRotation(newInfo)
+	}
+
+	kr.rotationInfos[newKeyID] = newInfo
+
+	// Archive old key if policy requires it
+	if policy, policyExists := kr.policies[keyID]; policyExists && policy.ArchiveOldKeys {
+		originalKey.Metadata["archived_at"] = time.Now().Format(time.RFC3339)
+		originalKey.Metadata["status"] = "archived"
+		info.Status = StatusArchived
+
+		// Cleanup old archived keys if limit is set
+		if policy.MaxArchivedKeys > 0 {
+			kr.cleanupArchivedKeys(keyID, policy.MaxArchivedKeys)
+		}
+	} else {
+		// Remove old key if not archiving
+		delete(kr.keystore.keys, keyID)
+		delete(kr.rotationInfos, keyID)
+		delete(kr.policies, keyID)
+	}
+
+	// Record rotation event
+	event := RotationEvent{
+		KeyID:        newKeyID,
+		OldKeyID:     keyID,
+		NewKeyID:     newKeyID,
+		RotationType: rotationType,
+		Timestamp:    now,
+		Reason:       reason,
+		RotatedBy:    rotatedBy,
+	}
+
+	kr.rotationHistory = append(kr.rotationHistory, event)
+
+	return nil
+}
+
+// updateNextRotation calculates and updates the next rotation time
+func (kr *KeyRotator) updateNextRotation(info *KeyRotationInfo) {
+	if info.Policy.RotationPeriod > 0 {
+		var baseTime time.Time
+		if info.LastRotated != nil {
+			baseTime = *info.LastRotated
+		} else {
+			baseTime = info.CreatedAt
+		}
+
+		nextRotation := baseTime.Add(info.Policy.RotationPeriod)
+		info.NextRotation = &nextRotation
+	}
+}
+
+// calculateRotationStatus calculates the current rotation status
+func (kr *KeyRotator) calculateRotationStatus(info *KeyRotationInfo) RotationStatus {
+	now := time.Now()
+
+	// Check if already archived
+	if info.Status == StatusArchived {
+		return StatusArchived
+	}
+
+	// Check if already rotated
+	if info.Status == StatusRotated {
+		return StatusRotated
+	}
+
+	// Check age-based expiration
+	if info.Policy.MaxAge > 0 {
+		expirationTime := info.CreatedAt.Add(info.Policy.MaxAge)
+		if now.After(expirationTime) {
+			return StatusExpired
+		}
+
+		// Check if expiring soon
+		if info.Policy.NotifyBefore > 0 {
+			notifyTime := expirationTime.Add(-info.Policy.NotifyBefore)
+			if now.After(notifyTime) {
+				return StatusExpiring
+			}
+		}
+	}
+
+	// Check rotation period-based status
+	if info.NextRotation != nil {
+		if now.After(*info.NextRotation) {
+			return StatusExpired
+		}
+
+		// Check if rotation is due soon
+		if info.Policy.NotifyBefore > 0 {
+			notifyTime := info.NextRotation.Add(-info.Policy.NotifyBefore)
+			if now.After(notifyTime) {
+				return StatusExpiring
+			}
+		}
+	}
+
+	return StatusActive
+}
+
+// cleanupArchivedKeys removes old archived keys beyond the limit
+func (kr *KeyRotator) cleanupArchivedKeys(baseKeyID string, maxArchived int) {
+	// Find all archived keys for this base key
+	var archivedKeys []string
+
+	for keyID, info := range kr.rotationInfos {
+		if info.Status == StatusArchived {
+			// Check if this is an archived version of the base key
+			for _, prevID := range info.PreviousKeyIDs {
+				if prevID == baseKeyID {
+					archivedKeys = append(archivedKeys, keyID)
+					break
+				}
+			}
+		}
+	}
+
+	// Remove excess archived keys (keep the most recent ones)
+	if len(archivedKeys) > maxArchived {
+		// Sort by creation time (oldest first)
+		// In a real implementation, you'd sort properly
+		excessCount := len(archivedKeys) - maxArchived
+		for i := 0; i < excessCount; i++ {
+			keyToRemove := archivedKeys[i]
+			delete(kr.keystore.keys, keyToRemove)
+			delete(kr.rotationInfos, keyToRemove)
+			delete(kr.policies, keyToRemove)
+		}
+	}
+}
+
+// autoRotationWorker runs the automatic rotation process
+func (kr *KeyRotator) autoRotationWorker() {
+	defer kr.wg.Done()
+
+	ticker := time.NewTicker(time.Hour) // Check every hour
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-kr.stopChan:
+			return
+		case <-ticker.C:
+			kr.performAutoRotations()
+		}
+	}
+}
+
+// performAutoRotations checks and performs automatic rotations
+func (kr *KeyRotator) performAutoRotations() {
+	kr.mu.Lock()
+	defer kr.mu.Unlock()
+
+	for keyID, policy := range kr.policies {
+		if !policy.AutoRotate {
+			continue
+		}
+
+		info, exists := kr.rotationInfos[keyID]
+		if !exists {
+			continue
+		}
+
+		status := kr.calculateRotationStatus(info)
+		if status == StatusExpired {
+			err := kr.rotateKeyInternal(keyID, "scheduled", "automatic rotation due to policy", "system")
+			if err != nil {
+				// Log error in a real implementation
+				fmt.Printf("Failed to auto-rotate key %s: %v\n", keyID, err)
+			}
+		}
+	}
+}

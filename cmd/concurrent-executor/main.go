@@ -4,7 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"runtime"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/repository"
 	"github.com/perplext/LLMrecon/src/template/format"
@@ -38,6 +40,11 @@ func (p *MockLLMProvider) GetSupportedModels() []string {
 
 // GetName returns the name of the provider
 func (p *MockLLMProvider) GetName() string {
+	return p.name
+}
+
+// GetID returns the ID of the provider
+func (p *MockLLMProvider) GetID() string {
 	return p.name
 }
 

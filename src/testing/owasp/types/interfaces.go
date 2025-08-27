@@ -22,6 +22,7 @@ type TestCaseBuilder interface {
 	WithOWASPMapping(mapping string) TestCaseBuilder
 	WithMetadata(metadata map[string]interface{}) TestCaseBuilder
 	Build() (*TestCase, error)
+}
 
 // TestSuiteBuilder is an interface for building test suites
 type TestSuiteBuilder interface {
@@ -32,6 +33,7 @@ type TestSuiteBuilder interface {
 	WithTestCases(testCases []*TestCase) TestSuiteBuilder
 	WithMetadata(metadata map[string]interface{}) TestSuiteBuilder
 	Build() (*TestSuite, error)
+}
 
 // TestCaseFactory is an interface for creating test cases
 type TestCaseFactory interface {
@@ -47,6 +49,7 @@ type TestCaseFactory interface {
 	CreateModelTheftTestCases() []*TestCase
 	CreateTestCasesForVulnerability(vulnerabilityType VulnerabilityType) ([]*TestCase, error)
 	CreateTestSuite(id string, name string, description string) *TestSuite
+}
 
 // TestFactory is an interface for creating test cases and test suites
 type TestFactory interface {
@@ -56,12 +59,15 @@ type TestFactory interface {
 	GetValidator(vulnerabilityType VulnerabilityType) (interface{}, error)
 	RegisterComplianceService(service interface{}) error
 	GetComplianceService() (interface{}, error)
+}
 
 // TestRunner is an interface for running tests
 type TestRunner interface {
 	RunTest(ctx context.Context, testCase *TestCase, provider core.Provider, model string) (*TestResult, error)
 	RunTestSuite(ctx context.Context, testSuite *TestSuite, provider core.Provider, model string) error
+}
 
 // ReportGenerator is an interface for generating reports
 type ReportGenerator interface {
 	GenerateReport(ctx context.Context, testSuites []*TestSuite, options *ReportOptions) (*Report, error)
+}

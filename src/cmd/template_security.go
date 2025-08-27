@@ -3,11 +3,13 @@
 package cmd
 
 import (
-	"path/filepath"
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 	"github.com/perplext/LLMrecon/src/template/security"
@@ -92,6 +94,7 @@ var templateSecurityCmd = &cobra.Command{
 			os.Exit(1)
 		}
 	},
+}
 
 func init() {
 	rootCmd.AddCommand(templateSecurityCmd)
@@ -103,6 +106,7 @@ func init() {
 	templateSecurityCmd.Flags().StringSliceVar(&templateReportFormats, "format", []string{"JSON", "HTML"}, "Report formats (JSON, HTML, CSV, XML)")
 	templateSecurityCmd.Flags().StringVar(&templatePipelineConfig, "pipeline-config", "", "Path to pipeline configuration file")
 	templateSecurityCmd.Flags().StringVar(&templateSeverityThreshold, "severity", "medium", "Severity threshold (critical, high, medium, low, info)")
+}
 
 // verifyTemplate verifies a single template
 func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, options *security.VerificationOptions) error {
@@ -161,7 +165,7 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 	}
 
 	return nil
-	
+}
 
 // verifyTemplateDirectory verifies all templates in a directory
 func verifyTemplateDirectory(ctx context.Context, integration *compliance.ComplianceIntegration, options *security.VerificationOptions) error {
@@ -198,6 +202,7 @@ func verifyTemplateDirectory(ctx context.Context, integration *compliance.Compli
 	}
 
 	return nil
+}
 
 // runSecurityPipeline runs the template security pipeline
 func runSecurityPipeline(ctx context.Context, verifier security.TemplateVerifier, options *security.VerificationOptions) error {
@@ -244,6 +249,7 @@ func runSecurityPipeline(ctx context.Context, verifier security.TemplateVerifier
 
 	fmt.Printf("\nPipeline completed successfully. Reports saved to %s\n", config.OutputDirectory)
 	return nil
+}
 
 // printVerificationResult prints a verification result
 func printVerificationResult(result *security.VerificationResult) {
@@ -265,6 +271,7 @@ func printVerificationResult(result *security.VerificationResult) {
 	} else {
 		fmt.Println("No issues found")
 	}
+}
 
 // printComplianceResult prints a compliance result
 func printComplianceResult(result *compliance.TemplateComplianceResult) {
@@ -281,6 +288,7 @@ func printComplianceResult(result *compliance.TemplateComplianceResult) {
 	fmt.Printf("  Passed: %t\n", result.SecurityResult.Passed)
 	fmt.Printf("  Score: %.2f/%.2f\n", result.SecurityResult.Score, result.SecurityResult.MaxScore)
 	fmt.Printf("  Issues: %d\n", len(result.SecurityResult.Issues))
+}
 
 // printSummary prints a verification summary
 func printSummary(summary *security.VerificationSummary) {
@@ -306,6 +314,7 @@ func printSummary(summary *security.VerificationSummary) {
 	for standard, compliant := range summary.ComplianceStatus {
 		fmt.Printf("  %s: %t\n", standard, compliant)
 	}
+}
 
 // calculateTemplateSummary calculates a summary of template verification results
 func calculateTemplateSummary(results []*security.VerificationResult) *security.VerificationSummary {
@@ -339,6 +348,7 @@ func calculateTemplateSummary(results []*security.VerificationResult) *security.
 	}
 
 	return summary
+}
 
 // generateReports generates reports for verification results
 func generateReports(results []*security.VerificationResult) error {
@@ -349,7 +359,7 @@ func generateReports(results []*security.VerificationResult) error {
 		TemplateResults: results,
 		Options:         security.DefaultVerificationOptions(),
 		// We'll calculate the summary ourselves instead of using a non-existent method
-		Summary: calculateSummary(results),
+		Summary: calculateTemplateSummary(results),
 	}
 	// Convert to test results
 	testResults := security.ConvertToTestResults(report)
@@ -377,13 +387,14 @@ func generateReports(results []*security.VerificationResult) error {
 		}
 
 		// Save the report to file
-		if err := os.WriteFile(filepath.Clean(outputPath, []byte(formattedReport)), 0600); err != nil {
+		if err := os.WriteFile(filepath.Clean(outputPath), []byte(formattedReport), 0600); err != nil {
 			return fmt.Errorf("failed to save report to file: %w", err)
 		}
 		fmt.Printf("Report saved to %s\n", outputPath)
 	}
 
 	return nil
+}
 
 // generateComplianceReports generates compliance reports
 func generateComplianceReports(integration *compliance.ReportingIntegration, result *compliance.TemplateComplianceResult) error {
@@ -415,7 +426,7 @@ func generateComplianceReports(integration *compliance.ReportingIntegration, res
 		}
 
 		// Save the report to file
-		if err := os.WriteFile(filepath.Clean(outputPath, []byte(formattedReport)), 0600); err != nil {
+		if err := os.WriteFile(filepath.Clean(outputPath), []byte(formattedReport), 0600); err != nil {
 			return fmt.Errorf("failed to save report to file: %w", err)
 		}
 
@@ -423,6 +434,7 @@ func generateComplianceReports(integration *compliance.ReportingIntegration, res
 	}
 
 	return nil
+}
 
 // convertReportFormats converts string report formats to common.ReportFormat
 func convertReportFormats(formats []string) []common.ReportFormat {
@@ -430,3 +442,5 @@ func convertReportFormats(formats []string) []common.ReportFormat {
 	for _, format := range formats {
 		result = append(result, common.ReportFormat(format))
 	}
+	return result
+}

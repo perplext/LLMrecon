@@ -5,89 +5,91 @@ import (
 	"fmt"
 	"math"
 	"runtime"
+	"runtime/debug"
 	"sync"
-	"sync/atomic"
-
-	"github.com/perplext/LLMrecon/src/performance/distributed"
-	"github.com/perplext/LLMrecon/src/performance/optimization"
+	"time"
 )
 
 // ResourceManager manages system resources and scaling
 type ResourceManager struct {
-	scaler          *AutoScaler
-	limiter         *ResourceLimiter
-	allocator       *ResourceAllocator
-	monitor         *ResourceMonitor
-	predictor       *ResourcePredictor
-	optimizer       *ScalingOptimizer
-	config          ResourceConfig
-	currentState    *ResourceState
-	policies        map[string]*ScalingPolicy
-	mu              sync.RWMutex
+	scaler       *AutoScaler
+	limiter      *ResourceLimiter
+	allocator    *ResourceAllocator
+	monitor      *ResourceMonitor
+	predictor    *ResourcePredictor
+	optimizer    *ScalingOptimizer
+	config       ResourceConfig
+	currentState *ResourceState
+	policies     map[string]*ScalingPolicy
+	mu           sync.RWMutex
+}
 
 // ResourceConfig configures resource management
 type ResourceConfig struct {
-	MaxCPU             float64
-	MaxMemory          int64
-	MaxGoroutines      int
-	MaxConnections     int
-	ScalingEnabled     bool
-	PredictiveScaling  bool
-	ResourceLimits     ResourceLimits
-	ScalingThresholds  ScalingThresholds
+	MaxCPU            float64
+	MaxMemory         int64
+	MaxGoroutines     int
+	MaxConnections    int
+	ScalingEnabled    bool
+	PredictiveScaling bool
+	ResourceLimits    ResourceLimits
+	ScalingThresholds ScalingThresholds
+}
 
 // ResourceLimits defines resource boundaries
 type ResourceLimits struct {
-	CPULimit           float64
-	MemoryLimit        int64
-	GoroutineLimit     int
-	ConnectionLimit    int
-	RequestRateLimit   float64
-	BandwidthLimit     int64
+	CPULimit         float64
+	MemoryLimit      int64
+	GoroutineLimit   int
+	ConnectionLimit  int
+	RequestRateLimit float64
+	BandwidthLimit   int64
+}
 
 // ScalingThresholds triggers scaling actions
 type ScalingThresholds struct {
-	ScaleUpCPU         float64
-	ScaleUpMemory      float64
-	ScaleUpLatency     time.Duration
-	ScaleDownCPU       float64
-	ScaleDownMemory    float64
-	ScaleDownLatency   time.Duration
-	CooldownPeriod     time.Duration
+	ScaleUpCPU       float64
+	ScaleUpMemory    float64
+	ScaleUpLatency   time.Duration
+	ScaleDownCPU     float64
+	ScaleDownMemory  float64
+	ScaleDownLatency time.Duration
+	CooldownPeriod   time.Duration
 }
 
 // ResourceState tracks current resource usage
 type ResourceState struct {
-	CPUUsage           float64
-	MemoryUsage        int64
-	GoroutineCount     int
-	ConnectionCount    int
-	RequestRate        float64
-	Bandwidth          int64
-	LastScaleAction    time.Time
-	ScalingInProgress  bool
-	mu                 sync.RWMutex
+	CPUUsage          float64
+	MemoryUsage       int64
+	GoroutineCount    int
+	ConnectionCount   int
+	RequestRate       float64
+	Bandwidth         int64
+	LastScaleAction   time.Time
+	ScalingInProgress bool
+	mu                sync.RWMutex
 }
 
 // ScalingPolicy defines scaling behavior
 type ScalingPolicy struct {
-	ID                string
-	Name              string
-	Type              PolicyType
-	Triggers          []ScalingTrigger
-	Actions           []ScalingAction
-	Constraints       []ScalingConstraint
-	Priority          int
-	Enabled           bool
+	ID          string
+	Name        string
+	Type        PolicyType
+	Triggers    []ScalingTrigger
+	Actions     []ScalingAction
+	Constraints []ScalingConstraint
+	Priority    int
+	Enabled     bool
+}
 
 // PolicyType categorizes scaling policies
 type PolicyType string
 
 const (
-	PolicyReactive    PolicyType = "reactive"
-	PolicyPredictive  PolicyType = "predictive"
-	PolicyScheduled   PolicyType = "scheduled"
-	PolicyEmergency   PolicyType = "emergency"
+	PolicyReactive   PolicyType = "reactive"
+	PolicyPredictive PolicyType = "predictive"
+	PolicyScheduled  PolicyType = "scheduled"
+	PolicyEmergency  PolicyType = "emergency"
 )
 
 // ScalingTrigger defines when to scale
@@ -126,33 +128,35 @@ type ScalingAction struct {
 	Target     string
 	Value      interface{}
 	Parameters map[string]interface{}
+}
 
 // ActionType categorizes scaling actions
 type ActionType string
 
 const (
-	ActionScaleUp      ActionType = "scale_up"
-	ActionScaleDown    ActionType = "scale_down"
-	ActionScaleOut     ActionType = "scale_out"
-	ActionScaleIn      ActionType = "scale_in"
-	ActionOptimize     ActionType = "optimize"
-	ActionThrottle     ActionType = "throttle"
+	ActionScaleUp   ActionType = "scale_up"
+	ActionScaleDown ActionType = "scale_down"
+	ActionScaleOut  ActionType = "scale_out"
+	ActionScaleIn   ActionType = "scale_in"
+	ActionOptimize  ActionType = "optimize"
+	ActionThrottle  ActionType = "throttle"
 )
 
 // ScalingConstraint limits scaling behavior
 type ScalingConstraint struct {
 	Type  ConstraintType
 	Value interface{}
+}
 
 // ConstraintType categorizes constraints
 type ConstraintType string
 
 const (
-	ConstraintMinInstances   ConstraintType = "min_instances"
-	ConstraintMaxInstances   ConstraintType = "max_instances"
-	ConstraintMaxScaleRate   ConstraintType = "max_scale_rate"
-	ConstraintBudget         ConstraintType = "budget"
-	ConstraintTimeWindow     ConstraintType = "time_window"
+	ConstraintMinInstances ConstraintType = "min_instances"
+	ConstraintMaxInstances ConstraintType = "max_instances"
+	ConstraintMaxScaleRate ConstraintType = "max_scale_rate"
+	ConstraintBudget       ConstraintType = "budget"
+	ConstraintTimeWindow   ConstraintType = "time_window"
 )
 
 // NewResourceManager creates a resource manager
@@ -181,6 +185,7 @@ func NewResourceManager(config ResourceConfig) *ResourceManager {
 	}
 
 	return rm
+}
 
 // initializeDefaultPolicies sets up default scaling policies
 func (rm *ResourceManager) initializeDefaultPolicies() {
@@ -262,12 +267,14 @@ func (rm *ResourceManager) initializeDefaultPolicies() {
 		Priority: 0, // Highest priority
 		Enabled:  true,
 	})
+}
 
 // RegisterPolicy adds a scaling policy
 func (rm *ResourceManager) RegisterPolicy(policy *ScalingPolicy) {
 	rm.mu.Lock()
 	defer rm.mu.Unlock()
 	rm.policies[policy.ID] = policy
+}
 
 // AllocateResources allocates resources for a task
 func (rm *ResourceManager) AllocateResources(ctx context.Context, request ResourceRequest) (*ResourceAllocation, error) {
@@ -289,26 +296,28 @@ func (rm *ResourceManager) AllocateResources(ctx context.Context, request Resour
 	go rm.monitorAllocation(ctx, allocation)
 
 	return allocation, nil
+}
 
 // ResourceRequest defines resource requirements
 type ResourceRequest struct {
-	ID              string
-	Type            RequestType
-	CPU             float64
-	Memory          int64
-	Goroutines      int
-	Connections     int
-	Duration        time.Duration
-	Priority        int
+	ID          string
+	Type        RequestType
+	CPU         float64
+	Memory      int64
+	Goroutines  int
+	Connections int
+	Duration    time.Duration
+	Priority    int
+}
 
 // RequestType categorizes resource requests
 type RequestType string
 
 const (
-	RequestAttack    RequestType = "attack"
-	RequestScan      RequestType = "scan"
-	RequestAnalysis  RequestType = "analysis"
-	RequestTraining  RequestType = "training"
+	RequestAttack   RequestType = "attack"
+	RequestScan     RequestType = "scan"
+	RequestAnalysis RequestType = "analysis"
+	RequestTraining RequestType = "training"
 )
 
 // ResourceAllocation represents allocated resources
@@ -349,6 +358,7 @@ func (rm *ResourceManager) monitoringLoop() {
 			rm.handlePredictions(predictions)
 		}
 	}
+}
 
 // scalingLoop manages auto-scaling
 func (rm *ResourceManager) scalingLoop() {
@@ -358,6 +368,7 @@ func (rm *ResourceManager) scalingLoop() {
 	for range ticker.C {
 		rm.evaluateScalingPolicies()
 	}
+}
 
 // evaluateScalingPolicies checks and executes scaling policies
 func (rm *ResourceManager) evaluateScalingPolicies() {
@@ -380,6 +391,7 @@ func (rm *ResourceManager) evaluateScalingPolicies() {
 			break // Execute only one policy per cycle
 		}
 	}
+}
 
 // shouldTriggerPolicy checks if policy should be triggered
 func (rm *ResourceManager) shouldTriggerPolicy(policy *ScalingPolicy) bool {
@@ -396,11 +408,12 @@ func (rm *ResourceManager) shouldTriggerPolicy(policy *ScalingPolicy) bool {
 	}
 
 	return false
+}
 
 // evaluateTrigger checks if trigger condition is met
 func (rm *ResourceManager) evaluateTrigger(trigger ScalingTrigger) bool {
 	value := rm.getMetricValue(trigger.Metric)
-	
+
 	switch trigger.Operator {
 	case OpGreaterThan:
 		return value > trigger.Threshold
@@ -415,6 +428,7 @@ func (rm *ResourceManager) evaluateTrigger(trigger ScalingTrigger) bool {
 	default:
 		return false
 	}
+}
 
 // executePolicy executes scaling actions
 func (rm *ResourceManager) executePolicy(policy *ScalingPolicy) {
@@ -434,6 +448,7 @@ func (rm *ResourceManager) executePolicy(policy *ScalingPolicy) {
 			fmt.Printf("Failed to execute action %s: %v\n", action.Type, err)
 		}
 	}
+}
 
 // executeAction performs a scaling action
 func (rm *ResourceManager) executeAction(action ScalingAction) error {
@@ -453,42 +468,44 @@ func (rm *ResourceManager) executeAction(action ScalingAction) error {
 	default:
 		return fmt.Errorf("unknown action type: %s", action.Type)
 	}
+}
 
 // AutoScaler handles automatic scaling operations
 type AutoScaler struct {
-	instances      map[string]*ScalableInstance
-	scalingGroups  map[string]*ScalingGroup
-	mu             sync.RWMutex
+	instances     map[string]*ScalableInstance
+	scalingGroups map[string]*ScalingGroup
+	mu            sync.RWMutex
 }
 
 // ScalableInstance represents a scalable resource
 type ScalableInstance struct {
-	ID            string
-	Type          string
-	Capacity      float64
-	CurrentLoad   float64
-	Status        InstanceStatus
-	LastScaled    time.Time
+	ID          string
+	Type        string
+	Capacity    float64
+	CurrentLoad float64
+	Status      InstanceStatus
+	LastScaled  time.Time
+}
 
 // InstanceStatus represents instance state
 type InstanceStatus string
 
 const (
-	InstanceActive    InstanceStatus = "active"
-	InstanceScaling   InstanceStatus = "scaling"
-	InstanceDraining  InstanceStatus = "draining"
-	InstanceStopped   InstanceStatus = "stopped"
+	InstanceActive   InstanceStatus = "active"
+	InstanceScaling  InstanceStatus = "scaling"
+	InstanceDraining InstanceStatus = "draining"
+	InstanceStopped  InstanceStatus = "stopped"
 )
 
 // ScalingGroup manages a group of instances
 type ScalingGroup struct {
-	ID            string
-	Name          string
-	Instances     []string
-	MinInstances  int
-	MaxInstances  int
-	TargetMetric  string
-	TargetValue   float64
+	ID           string
+	Name         string
+	Instances    []string
+	MinInstances int
+	MaxInstances int
+	TargetMetric string
+	TargetValue  float64
 }
 
 // NewAutoScaler creates an auto scaler
@@ -497,6 +514,7 @@ func NewAutoScaler() *AutoScaler {
 		instances:     make(map[string]*ScalableInstance),
 		scalingGroups: make(map[string]*ScalingGroup),
 	}
+}
 
 // ScaleUp increases resource capacity
 func (as *AutoScaler) ScaleUp(target string, value interface{}) error {
@@ -507,7 +525,7 @@ func (as *AutoScaler) ScaleUp(target string, value interface{}) error {
 		// Scale up instances in group
 		currentCount := len(group.Instances)
 		targetCount := int(math.Ceil(float64(currentCount) * value.(float64)))
-		
+
 		if targetCount > group.MaxInstances {
 			targetCount = group.MaxInstances
 		}
@@ -522,6 +540,7 @@ func (as *AutoScaler) ScaleUp(target string, value interface{}) error {
 	}
 
 	return fmt.Errorf("scaling group not found: %s", target)
+}
 
 // ScaleDown decreases resource capacity
 func (as *AutoScaler) ScaleDown(target string, value interface{}) error {
@@ -531,7 +550,7 @@ func (as *AutoScaler) ScaleDown(target string, value interface{}) error {
 	if group, exists := as.scalingGroups[target]; exists {
 		currentCount := len(group.Instances)
 		targetCount := int(math.Floor(float64(currentCount) * value.(float64)))
-		
+
 		if targetCount < group.MinInstances {
 			targetCount = group.MinInstances
 		}
@@ -551,16 +570,19 @@ func (as *AutoScaler) ScaleDown(target string, value interface{}) error {
 	}
 
 	return fmt.Errorf("scaling group not found: %s", target)
+}
 
 // ScaleOut adds more instances
 func (as *AutoScaler) ScaleOut(target string, value interface{}) error {
 	// Horizontal scaling
 	return as.ScaleUp(target, value)
+}
 
 // ScaleIn removes instances
 func (as *AutoScaler) ScaleIn(target string, value interface{}) error {
 	// Horizontal scaling
 	return as.ScaleDown(target, value)
+}
 
 // createInstance creates a new instance
 func (as *AutoScaler) createInstance(groupID string) *ScalableInstance {
@@ -571,22 +593,25 @@ func (as *AutoScaler) createInstance(groupID string) *ScalableInstance {
 		Status:     InstanceActive,
 		LastScaled: time.Now(),
 	}
+}
 
 // ResourceLimiter enforces resource limits
 type ResourceLimiter struct {
-	limits         ResourceLimits
-	currentUsage   ResourceUsage
-	rateLimiters   map[string]*RateLimiter
-	mu             sync.RWMutex
+	limits       ResourceLimits
+	currentUsage ResourceUsage
+	rateLimiters map[string]*RateLimiter
+	mu           sync.RWMutex
+}
 
 // ResourceUsage tracks current usage
 type ResourceUsage struct {
-	CPU            float64
-	Memory         int64
-	Goroutines     int32
-	Connections    int32
-	RequestRate    float64
-	Bandwidth      int64
+	CPU         float64
+	Memory      int64
+	Goroutines  int32
+	Connections int32
+	RequestRate float64
+	Bandwidth   int64
+}
 
 // RateLimiter implements rate limiting
 type RateLimiter struct {
@@ -594,6 +619,7 @@ type RateLimiter struct {
 	tokens   float64
 	lastTime time.Time
 	mu       sync.Mutex
+}
 
 // NewResourceLimiter creates a resource limiter
 func NewResourceLimiter(limits ResourceLimits) *ResourceLimiter {
@@ -609,6 +635,7 @@ func NewResourceLimiter(limits ResourceLimits) *ResourceLimiter {
 	}
 
 	return rl
+}
 
 // CheckLimits verifies resource availability
 func (rl *ResourceLimiter) CheckLimits(request ResourceRequest) error {
@@ -636,6 +663,7 @@ func (rl *ResourceLimiter) CheckLimits(request ResourceRequest) error {
 	}
 
 	return nil
+}
 
 // Throttle reduces resource usage
 func (rl *ResourceLimiter) Throttle(target string, value interface{}) error {
@@ -647,20 +675,22 @@ func (rl *ResourceLimiter) Throttle(target string, value interface{}) error {
 		return nil
 	}
 	return fmt.Errorf("rate limiter not found: %s", target)
+}
 
 // ResourceAllocator manages resource allocation
 type ResourceAllocator struct {
-	allocations    map[string]*ResourceAllocation
-	pools          map[string]*ResourcePool
-	mu             sync.RWMutex
+	allocations map[string]*ResourceAllocation
+	pools       map[string]*ResourcePool
+	mu          sync.RWMutex
 }
 
 // ResourcePool manages pooled resources
 type ResourcePool struct {
-	Type         string
-	TotalSize    int64
-	Available    int64
-	Allocations  map[string]int64
+	Type        string
+	TotalSize   int64
+	Available   int64
+	Allocations map[string]int64
+}
 
 // NewResourceAllocator creates an allocator
 func NewResourceAllocator() *ResourceAllocator {
@@ -673,6 +703,7 @@ func NewResourceAllocator() *ResourceAllocator {
 	ra.initializePools()
 
 	return ra
+}
 
 // initializePools sets up resource pools
 func (ra *ResourceAllocator) initializePools() {
@@ -701,6 +732,7 @@ func (ra *ResourceAllocator) initializePools() {
 		Available:   10000 - int64(runtime.NumGoroutine()),
 		Allocations: make(map[string]int64),
 	}
+}
 
 // Allocate reserves resources
 func (ra *ResourceAllocator) Allocate(ctx context.Context, request ResourceRequest) (*ResourceAllocation, error) {
@@ -749,6 +781,7 @@ func (ra *ResourceAllocator) Allocate(ctx context.Context, request ResourceReque
 
 	ra.allocations[allocation.ID] = allocation
 	return allocation, nil
+}
 
 // allocateFromPool reserves from a resource pool
 func (ra *ResourceAllocator) allocateFromPool(poolType, allocationID string, amount int64) error {
@@ -765,20 +798,23 @@ func (ra *ResourceAllocator) allocateFromPool(poolType, allocationID string, amo
 	pool.Allocations[allocationID] = amount
 
 	return nil
+}
 
 // rollbackAllocation releases partially allocated resources
 func (ra *ResourceAllocator) rollbackAllocation(allocation *ResourceAllocation) {
-	for poolType, pool := range ra.pools {
+	for _, pool := range ra.pools {
 		if amount, exists := pool.Allocations[allocation.ID]; exists {
 			pool.Available += amount
 			delete(pool.Allocations, allocation.ID)
 		}
 	}
+}
 
 // scheduleRelease schedules automatic release
 func (ra *ResourceAllocator) scheduleRelease(allocation *ResourceAllocation) {
 	time.Sleep(time.Until(allocation.ExpiryTime))
 	ra.Release(allocation.ID)
+}
 
 // Release frees allocated resources
 func (ra *ResourceAllocator) Release(allocationID string) error {
@@ -791,7 +827,7 @@ func (ra *ResourceAllocator) Release(allocationID string) error {
 	}
 
 	// Release from pools
-	for poolType, pool := range ra.pools {
+	for _, pool := range ra.pools {
 		if amount, exists := pool.Allocations[allocationID]; exists {
 			pool.Available += amount
 			delete(pool.Allocations, allocationID)
@@ -802,29 +838,32 @@ func (ra *ResourceAllocator) Release(allocationID string) error {
 	delete(ra.allocations, allocationID)
 
 	return nil
+}
 
 // ResourceMonitor monitors resource usage
 type ResourceMonitor struct {
-	collectors     map[string]MetricCollector
-	history        *MetricHistory
-	mu             sync.RWMutex
+	collectors map[string]MetricCollector
+	history    *MetricHistory
+	mu         sync.RWMutex
 }
 
 // MetricCollector collects specific metrics
 type MetricCollector interface {
 	Collect() (string, float64)
+}
 
 // MetricHistory stores historical metrics
 type MetricHistory struct {
-	metrics    map[string][]MetricPoint
-	maxPoints  int
-	mu         sync.RWMutex
+	metrics   map[string][]MetricPoint
+	maxPoints int
+	mu        sync.RWMutex
 }
 
 // MetricPoint represents a metric at a point in time
 type MetricPoint struct {
 	Value     float64
 	Timestamp time.Time
+}
 
 // NewResourceMonitor creates a monitor
 func NewResourceMonitor() *ResourceMonitor {
@@ -839,12 +878,14 @@ func NewResourceMonitor() *ResourceMonitor {
 	rm.RegisterCollector("goroutine_count", &GoroutineCollector{})
 
 	return rm
+}
 
 // RegisterCollector adds a metric collector
 func (rm *ResourceMonitor) RegisterCollector(name string, collector MetricCollector) {
 	rm.mu.Lock()
 	defer rm.mu.Unlock()
 	rm.collectors[name] = collector
+}
 
 // CollectMetrics gathers current metrics
 func (rm *ResourceMonitor) CollectMetrics() map[string]float64 {
@@ -860,15 +901,18 @@ func (rm *ResourceMonitor) CollectMetrics() map[string]float64 {
 	}
 
 	return metrics
+}
 
 // ResourcePredictor predicts future resource usage
 type ResourcePredictor struct {
-	models         map[string]PredictionModel
-	mu             sync.RWMutex
+	models map[string]PredictionModel
+	mu     sync.RWMutex
+}
 
 // PredictionModel predicts resource usage
 type PredictionModel interface {
 	Predict(history []MetricPoint, horizon time.Duration) float64
+}
 
 // NewResourcePredictor creates a predictor
 func NewResourcePredictor() *ResourcePredictor {
@@ -881,6 +925,7 @@ func NewResourcePredictor() *ResourcePredictor {
 	rp.models["exponential"] = &ExponentialPredictor{}
 
 	return rp
+}
 
 // PredictUsage predicts future usage
 func (rp *ResourcePredictor) PredictUsage(current map[string]float64, horizon time.Duration) map[string]float64 {
@@ -892,15 +937,18 @@ func (rp *ResourcePredictor) PredictUsage(current map[string]float64, horizon ti
 	}
 
 	return predictions
+}
 
 // ScalingOptimizer optimizes scaling decisions
 type ScalingOptimizer struct {
-	strategies     map[string]OptimizationStrategy
-	mu             sync.RWMutex
+	strategies map[string]OptimizationStrategy
+	mu         sync.RWMutex
+}
 
 // OptimizationStrategy defines optimization approach
 type OptimizationStrategy interface {
 	Optimize(target string, metrics map[string]float64) error
+}
 
 // NewScalingOptimizer creates an optimizer
 func NewScalingOptimizer() *ScalingOptimizer {
@@ -913,6 +961,7 @@ func NewScalingOptimizer() *ScalingOptimizer {
 	so.strategies["cpu"] = &CPUOptimizationStrategy{}
 
 	return so
+}
 
 // Optimize applies optimization
 func (so *ScalingOptimizer) Optimize(target string) error {
@@ -928,6 +977,7 @@ func (so *ScalingOptimizer) Optimize(target string) error {
 	metrics := map[string]float64{} // Would collect actual metrics
 
 	return strategy.Optimize(target, metrics)
+}
 
 // Helper functions
 func (rm *ResourceManager) updateResourceState(allocation *ResourceAllocation) {
@@ -937,6 +987,7 @@ func (rm *ResourceManager) updateResourceState(allocation *ResourceAllocation) {
 	rm.currentState.CPUUsage += allocation.AllocatedCPU
 	rm.currentState.MemoryUsage += allocation.AllocatedMemory
 	rm.currentState.GoroutineCount += len(allocation.Goroutines)
+}
 
 func (rm *ResourceManager) monitorAllocation(ctx context.Context, allocation *ResourceAllocation) {
 	ticker := time.NewTicker(5 * time.Second)
@@ -954,6 +1005,7 @@ func (rm *ResourceManager) monitorAllocation(ctx context.Context, allocation *Re
 			// Monitor allocation health
 		}
 	}
+}
 
 func (rm *ResourceManager) updateCurrentState(metrics map[string]float64) {
 	rm.currentState.mu.Lock()
@@ -968,6 +1020,7 @@ func (rm *ResourceManager) updateCurrentState(metrics map[string]float64) {
 	if goroutines, exists := metrics["goroutine_count"]; exists {
 		rm.currentState.GoroutineCount = int(goroutines)
 	}
+}
 
 func (rm *ResourceManager) handlePredictions(predictions map[string]float64) {
 	// Check if predicted usage will exceed thresholds
@@ -977,6 +1030,7 @@ func (rm *ResourceManager) handlePredictions(predictions map[string]float64) {
 			rm.triggerPredictiveScaling("cpu", predicted)
 		}
 	}
+}
 
 func (rm *ResourceManager) triggerPredictiveScaling(resource string, predicted float64) {
 	// Create predictive scaling action
@@ -987,6 +1041,7 @@ func (rm *ResourceManager) triggerPredictiveScaling(resource string, predicted f
 	}
 
 	rm.executeAction(action)
+}
 
 func (rm *ResourceManager) getMetricValue(metric string) float64 {
 	rm.currentState.mu.RLock()
@@ -1006,6 +1061,7 @@ func (rm *ResourceManager) getMetricValue(metric string) float64 {
 	default:
 		return 0
 	}
+}
 
 func sortPoliciesByPriority(policies []*ScalingPolicy) {
 	// Sort by priority (lower number = higher priority)
@@ -1016,6 +1072,7 @@ func sortPoliciesByPriority(policies []*ScalingPolicy) {
 			}
 		}
 	}
+}
 
 // Metric collector implementations
 type CPUCollector struct{}
@@ -1023,6 +1080,7 @@ type CPUCollector struct{}
 func (c *CPUCollector) Collect() (string, float64) {
 	// Simplified CPU collection
 	return "cpu_usage", 0.5
+}
 
 type MemoryCollector struct{}
 
@@ -1030,11 +1088,13 @@ func (m *MemoryCollector) Collect() (string, float64) {
 	var ms runtime.MemStats
 	runtime.ReadMemStats(&ms)
 	return "memory_usage", float64(ms.HeapAlloc)
+}
 
 type GoroutineCollector struct{}
 
 func (g *GoroutineCollector) Collect() (string, float64) {
 	return "goroutine_count", float64(runtime.NumGoroutine())
+}
 
 // Metric history implementation
 func NewMetricHistory(maxPoints int) *MetricHistory {
@@ -1042,6 +1102,7 @@ func NewMetricHistory(maxPoints int) *MetricHistory {
 		metrics:   make(map[string][]MetricPoint),
 		maxPoints: maxPoints,
 	}
+}
 
 func (mh *MetricHistory) Record(metric string, value float64) {
 	mh.mu.Lock()
@@ -1062,6 +1123,7 @@ func (mh *MetricHistory) Record(metric string, value float64) {
 	if len(mh.metrics[metric]) > mh.maxPoints {
 		mh.metrics[metric] = mh.metrics[metric][1:]
 	}
+}
 
 // Prediction model implementations
 type LinearPredictor struct{}
@@ -1079,6 +1141,7 @@ func (lp *LinearPredictor) Predict(history []MetricPoint, horizon time.Duration)
 	periods := horizon.Seconds() / recent.Timestamp.Sub(previous.Timestamp).Seconds()
 
 	return recent.Value * (1 + rate*periods)
+}
 
 type ExponentialPredictor struct{}
 
@@ -1096,6 +1159,7 @@ func (ep *ExponentialPredictor) Predict(history []MetricPoint, horizon time.Dura
 	}
 
 	return smoothed
+}
 
 // Optimization strategy implementations
 type MemoryOptimizationStrategy struct{}
@@ -1109,6 +1173,7 @@ func (m *MemoryOptimizationStrategy) Optimize(target string, metrics map[string]
 	debug.FreeOSMemory()
 
 	return nil
+}
 
 type CPUOptimizationStrategy struct{}
 
@@ -1120,53 +1185,8 @@ func (c *CPUOptimizationStrategy) Optimize(target string, metrics map[string]flo
 	}
 
 	return nil
+}
 
 func generateAllocationID() string {
 	return fmt.Sprintf("alloc_%d", time.Now().UnixNano())
-
-// Add at package level
-func debug.FreeOSMemory() {
-	// This is a placeholder - actual implementation would call runtime/debug.FreeOSMemory()
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

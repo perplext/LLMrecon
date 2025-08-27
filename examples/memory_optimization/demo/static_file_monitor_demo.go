@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
+	"time"
 )
 
 // MockFileHandlerOptions represents options for the mock file handler
@@ -284,9 +287,7 @@ func main() {
 
 	// Create static directory if it doesn't exist
 	if _, err := os.Stat("./static"); os.IsNotExist(err) {
-if err != nil {
-treturn err
-}		os.Mkdir("./static", 0755)
+		os.Mkdir("./static", 0755)
 	}
 
 	// Create some example static files
@@ -432,9 +433,7 @@ treturn err
 			},
 		}
 		
-if err != nil {
-treturn err
-}		// Encode response
+		// Encode response
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -456,7 +455,7 @@ func createExampleFiles(dir string, numFiles, fileSize int) {
 	for i := 1; i <= numFiles; i++ {
 		filePath := filepath.Join(dir, fmt.Sprintf("file%d.txt", i))
 		content := generateRandomContent(fileSize)
-		os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644)
+		os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
 	}
 }
 
@@ -634,7 +633,7 @@ tr:hover {
     }
 }
 `
-	os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
 }
 
 // createJSFile creates a JavaScript file for the example
@@ -677,7 +676,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	setInterval(updateStats, 2000);
 });
 `
-	os.WriteFile(filepath.Clean(filePath, []byte(content)), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
 }
 
 // formatBytes formats bytes to a human-readable string (KB, MB, GB)

@@ -64,7 +64,7 @@ treturn err
 }func (s *DashboardServer) createTemplates() error {
 	// Create the index template
 	indexTemplate := filepath.Join(s.templateDir, "index.html")
-	if err := os.WriteFile(filepath.Clean(indexTemplate, []byte(indexHTML)), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(indexTemplate), []byte(indexHTML), 0644); err != nil {
 		return fmt.Errorf("failed to create index template: %w", err)
 	}
 

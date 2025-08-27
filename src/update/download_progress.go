@@ -3,7 +3,11 @@ package update
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -30,9 +34,14 @@ func DownloadWithProgressBar(ctx context.Context, url, destPath string) error {
 	if err != nil {
 		return fmt.Errorf("downloading file: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
 	}
 
 	// Create the destination file
@@ -40,7 +49,11 @@ func DownloadWithProgressBar(ctx context.Context, url, destPath string) error {
 	if err != nil {
 		return fmt.Errorf("creating file: %w", err)
 	}
-	defer func() { if err := out.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := out.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create progress bar
 	bar := progressbar.NewOptions64(
@@ -72,6 +85,7 @@ func DownloadWithProgressBar(ctx context.Context, url, destPath string) error {
 	}
 
 	return nil
+}
 
 // DownloadResult represents the result of a download operation
 type DownloadResult struct {
@@ -86,38 +100,40 @@ type DownloadResult struct {
 type BatchDownloader struct {
 	MaxConcurrent int
 	Client        *http.Client
+}
 
 // NewBatchDownloader creates a new batch downloader
 func NewBatchDownloader(maxConcurrent int) *BatchDownloader {
 	if maxConcurrent <= 0 {
 		maxConcurrent = 3
 	}
-	
+
 	return &BatchDownloader{
 		MaxConcurrent: maxConcurrent,
 		Client: &http.Client{
 			Timeout: 30 * time.Minute,
 		},
 	}
+}
 
 // Download downloads multiple files concurrently
 func (bd *BatchDownloader) Download(ctx context.Context, downloads map[string]string) []DownloadResult {
 	results := make([]DownloadResult, 0, len(downloads))
 	resultChan := make(chan DownloadResult, len(downloads))
-	
+
 	// Create a semaphore for concurrency control
 	sem := make(chan struct{}, bd.MaxConcurrent)
-	
+
 	// Start downloads
 	for url, destPath := range downloads {
 		go func(url, destPath string) {
 			// Acquire semaphore
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			
+
 			start := time.Now()
 			err := DownloadWithProgressBar(ctx, url, destPath)
-			
+
 			// Get file size
 			var size int64
 			if err == nil {
@@ -125,7 +141,7 @@ func (bd *BatchDownloader) Download(ctx context.Context, downloads map[string]st
 					size = info.Size()
 				}
 			}
-			
+
 			resultChan <- DownloadResult{
 				URL:      url,
 				Path:     destPath,
@@ -135,11 +151,11 @@ func (bd *BatchDownloader) Download(ctx context.Context, downloads map[string]st
 			}
 		}(url, destPath)
 	}
-	
+
 	// Collect results
 	for i := 0; i < len(downloads); i++ {
 		results = append(results, <-resultChan)
 	}
-	
-}
+
+	return results
 }

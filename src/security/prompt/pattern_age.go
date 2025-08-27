@@ -2,8 +2,11 @@
 package prompt
 
 import (
+	"time"
 )
 
 // patternAge is a helper struct for sorting patterns by age
 type patternAge struct {
 	pattern  string
+	lastSeen time.Time
+}

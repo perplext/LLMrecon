@@ -3,6 +3,8 @@ package version
 import (
 	"crypto/sha256"
 	"fmt"
+	"io"
+	"time"
 )
 
 // ReadFileContent reads content from a reader up to maxSize bytes
@@ -11,6 +13,7 @@ func ReadFileContent(reader io.Reader, maxSize int64) ([]byte, error) {
 		maxSize = 1024 * 1024 // Default 1MB
 	}
 	return io.ReadAll(io.LimitReader(reader, maxSize))
+}
 
 // FileInfo represents information about a file
 type FileInfo struct {
@@ -22,11 +25,11 @@ type FileInfo struct {
 }
 
 // ComputeHash computes a hash for the given content
-}
 func ComputeHash(content []byte) string {
 	hasher := sha256.New()
 	hasher.Write(content)
 	return fmt.Sprintf("%x", hasher.Sum(nil))
+}
 
 // Diff represents the differences between two sets of files
 type Diff struct {
@@ -34,9 +37,9 @@ type Diff struct {
 	NewFiles   []*FileInfo
 	OldVersion *SemVersion
 	NewVersion *SemVersion
+}
 
 // DiffFiles creates a diff between two sets of files
-}
 func DiffFiles(oldFiles, newFiles []*FileInfo, options *DiffOptions) *DiffResult {
 	// Stub implementation - return empty diff result
 	return &DiffResult{
@@ -46,3 +49,4 @@ func DiffFiles(oldFiles, newFiles []*FileInfo, options *DiffOptions) *DiffResult
 		Summary:       &DiffSummary{},
 		DiffTime:      time.Now(),
 	}
+}

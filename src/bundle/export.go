@@ -1,29 +1,32 @@
 package bundle
 
 import (
-	"os"
 	"archive/tar"
 	"compress/gzip"
 	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 // ExportOptions defines options for bundle export
 type ExportOptions struct {
-	OutputPath      string                 // Path to save the bundle
-	Format          ExportFormat           // Bundle format (tar.gz, zip, etc.)
-	IncludeBinary   bool                   // Include the tool binary
-	IncludeTemplates bool                  // Include templates
-	IncludeModules  bool                   // Include modules
-	IncludeDocs     bool                   // Include documentation
-	Compression     CompressionType        // Compression type
-	Encryption      *EncryptionOptions     // Optional encryption
-	Filters         *ExportFilters         // Filters for selective export
-	ProgressHandler ExportProgressHandler        // Progress callback
-	Metadata        map[string]interface{} // Additional metadata
+	OutputPath       string                 // Path to save the bundle
+	Format           ExportFormat           // Bundle format (tar.gz, zip, etc.)
+	IncludeBinary    bool                   // Include the tool binary
+	IncludeTemplates bool                   // Include templates
+	IncludeModules   bool                   // Include modules
+	IncludeDocs      bool                   // Include documentation
+	Compression      CompressionType        // Compression type
+	Encryption       *EncryptionOptions     // Optional encryption
+	Filters          *ExportFilters         // Filters for selective export
+	ProgressHandler  ExportProgressHandler  // Progress callback
+	Metadata         map[string]interface{} // Additional metadata
 }
 
 // ExportFormat defines the bundle format
@@ -54,43 +57,46 @@ type EncryptionOptions struct {
 
 // ExportFilters defines filters for selective export
 type ExportFilters struct {
-	TemplateCategories []string    // Filter templates by category
-	ModuleTypes        []string    // Filter modules by type
-	MinVersion         string      // Minimum version to include
-	MaxVersion         string      // Maximum version to include
-	CreatedAfter       *time.Time  // Include items created after this date
-	CreatedBefore      *time.Time  // Include items created before this date
-	Tags               []string    // Filter by tags
-	ExcludePatterns    []string    // Glob patterns to exclude
-	IncludeList        []string    // Explicit list of paths to include
-	ExcludeList        []string    // Explicit list of paths to exclude
+	TemplateCategories []string   // Filter templates by category
+	ModuleTypes        []string   // Filter modules by type
+	MinVersion         string     // Minimum version to include
+	MaxVersion         string     // Maximum version to include
+	CreatedAfter       *time.Time // Include items created after this date
+	CreatedBefore      *time.Time // Include items created before this date
+	Tags               []string   // Filter by tags
+	ExcludePatterns    []string   // Glob patterns to exclude
+	IncludeList        []string   // Explicit list of paths to include
+	ExcludeList        []string   // Explicit list of paths to exclude
+}
 
 // ExportProgressHandler is called to report export progress
 type ExportProgressHandler func(progress ProgressInfo)
 
 // ProgressInfo contains progress information
 type ProgressInfo struct {
-	Stage           string  // Current stage
-	Current         int     // Current item
-	Total           int     // Total items
-	Percentage      float64 // Completion percentage
-	CurrentFile     string  // Current file being processed
-	BytesProcessed  int64   // Bytes processed
-	TotalBytes      int64   // Total bytes to process
-	TimeElapsed     time.Duration
-	TimeRemaining   time.Duration
-	Message         string  // Status message
+	Stage          string  // Current stage
+	Current        int     // Current item
+	Total          int     // Total items
+	Percentage     float64 // Completion percentage
+	CurrentFile    string  // Current file being processed
+	BytesProcessed int64   // Bytes processed
+	TotalBytes     int64   // Total bytes to process
+	TimeElapsed    time.Duration
+	TimeRemaining  time.Duration
+	Message        string // Status message
+}
 
 // BundleExporter handles bundle export operations
 type BundleExporter struct {
-	options         ExportOptions
-	manifest        *BundleManifest
-	tempDir         string
-	startTime       time.Time
-	bytesProcessed  int64
-	totalBytes      int64
-	currentStage    string
-	errors          []error
+	options        ExportOptions
+	manifest       *BundleManifest
+	tempDir        string
+	startTime      time.Time
+	bytesProcessed int64
+	totalBytes     int64
+	currentStage   string
+	errors         []error
+}
 
 // NewBundleExporter creates a new bundle exporter
 func NewBundleExporter(options ExportOptions) *BundleExporter {
@@ -99,6 +105,7 @@ func NewBundleExporter(options ExportOptions) *BundleExporter {
 		startTime: time.Now(),
 		errors:    []error{},
 	}
+}
 
 // Export creates a bundle with the specified options
 func (e *BundleExporter) Export() error {
@@ -141,6 +148,7 @@ func (e *BundleExporter) Export() error {
 
 	e.reportProgress("Export complete", 100, 100)
 	return nil
+}
 
 // initialize sets up the export process
 func (e *BundleExporter) initialize() error {
@@ -175,12 +183,14 @@ func (e *BundleExporter) initialize() error {
 	}
 
 	return nil
+}
 
 // cleanup removes temporary files
 func (e *BundleExporter) cleanup() {
 	if e.tempDir != "" {
 		os.RemoveAll(e.tempDir)
 	}
+}
 
 // prepareManifest prepares the bundle manifest
 func (e *BundleExporter) prepareManifest() error {
@@ -199,6 +209,7 @@ func (e *BundleExporter) prepareManifest() error {
 	}
 
 	return nil
+}
 
 // collectComponents collects all components for the bundle
 func (e *BundleExporter) collectComponents() error {
@@ -254,6 +265,7 @@ func (e *BundleExporter) collectComponents() error {
 	}
 
 	return nil
+}
 
 // collectBinary collects the tool binary
 func (e *BundleExporter) collectBinary() error {
@@ -275,7 +287,7 @@ func (e *BundleExporter) collectBinary() error {
 
 	// Add to manifest
 	checksum, _ := e.calculateChecksum(destPath)
-	
+
 	e.manifest.Content = append(e.manifest.Content, ContentItem{
 		Path:        filepath.Join("binary", filepath.Base(execPath)),
 		Type:        "binary",
@@ -284,11 +296,12 @@ func (e *BundleExporter) collectBinary() error {
 		Description: fmt.Sprintf("Binary for %s/%s", getOS(), getArch()),
 	})
 	return nil
+}
 
 // collectTemplates collects security test templates
 func (e *BundleExporter) collectTemplates() error {
 	templateDir := getTemplateDirectory()
-	
+
 	// Apply filters if specified
 	templates, err := e.findTemplates(templateDir)
 	if err != nil {
@@ -301,7 +314,7 @@ func (e *BundleExporter) collectTemplates() error {
 	for i, tmplPath := range templates {
 		relPath, _ := filepath.Rel(templateDir, tmplPath)
 		destPath := filepath.Join(e.tempDir, "templates", relPath)
-		
+
 		if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 			return err
 		}
@@ -315,12 +328,12 @@ func (e *BundleExporter) collectTemplates() error {
 		metadata := e.parseTemplateMetadata(tmplData)
 		// Add to manifest
 		checksum, _ := e.calculateChecksum(destPath)
-		
+
 		versionStr := ""
 		if v, ok := metadata["version"].(string); ok {
 			versionStr = v
 		}
-		
+
 		e.manifest.Content = append(e.manifest.Content, ContentItem{
 			Path:        filepath.Join("templates", relPath),
 			Type:        TemplateContentType,
@@ -333,11 +346,12 @@ func (e *BundleExporter) collectTemplates() error {
 	}
 
 	return nil
+}
 
 // collectModules collects plugin modules
 func (e *BundleExporter) collectModules() error {
 	moduleDir := getModuleDirectory()
-	
+
 	modules, err := e.findModules(moduleDir)
 	if err != nil {
 		return err
@@ -346,7 +360,7 @@ func (e *BundleExporter) collectModules() error {
 	for i, modPath := range modules {
 		relPath, _ := filepath.Rel(moduleDir, modPath)
 		destPath := filepath.Join(e.tempDir, "modules", relPath)
-		
+
 		if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 			return err
 		}
@@ -357,7 +371,7 @@ func (e *BundleExporter) collectModules() error {
 
 		// Add to manifest
 		checksum, _ := e.calculateChecksum(destPath)
-		
+
 		e.manifest.Content = append(e.manifest.Content, ContentItem{
 			Path:        filepath.Join("modules", relPath),
 			Type:        ModuleContentType,
@@ -368,24 +382,25 @@ func (e *BundleExporter) collectModules() error {
 	}
 
 	return nil
+}
 
 // collectDocumentation collects documentation files
 func (e *BundleExporter) collectDocumentation() error {
 	docDir := getDocumentationDirectory()
-	
+
 	// Find all documentation files
 	var docs []string
 	err := filepath.Walk(docDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if !info.IsDir() && e.isDocumentationFile(path) {
 			docs = append(docs, path)
 		}
 		return nil
 	})
-	
+
 	if err != nil {
 		return err
 	}
@@ -394,7 +409,7 @@ func (e *BundleExporter) collectDocumentation() error {
 	for i, docPath := range docs {
 		relPath, _ := filepath.Rel(docDir, docPath)
 		destPath := filepath.Join(e.tempDir, "documentation", relPath)
-		
+
 		if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
 			return err
 		}
@@ -405,7 +420,7 @@ func (e *BundleExporter) collectDocumentation() error {
 
 		// Add to manifest
 		checksum, _ := e.calculateChecksum(destPath)
-		
+
 		e.manifest.Content = append(e.manifest.Content, ContentItem{
 			Path:        filepath.Join("documentation", relPath),
 			Type:        "documentation",
@@ -417,6 +432,7 @@ func (e *BundleExporter) collectDocumentation() error {
 	}
 
 	return nil
+}
 
 // generateSignatures generates digital signatures for the bundle
 func (e *BundleExporter) generateSignatures() error {
@@ -426,8 +442,8 @@ func (e *BundleExporter) generateSignatures() error {
 	if err != nil {
 		return err
 	}
-	
-	if err := os.WriteFile(filepath.Clean(manifestPath, manifestData, 0600)); err != nil {
+
+	if err := os.WriteFile(filepath.Clean(manifestPath), manifestData, 0600); err != nil {
 		return err
 	}
 
@@ -444,7 +460,7 @@ func (e *BundleExporter) generateSignatures() error {
 		if !ok {
 			return fmt.Errorf("invalid private key type")
 		}
-		
+
 		signer := NewSigner(privateKeyBytes, "bundle-signing-key", SignatureMetadata{
 			Signer:      e.manifest.Author.Name,
 			Environment: "production",
@@ -465,8 +481,8 @@ func (e *BundleExporter) generateSignatures() error {
 
 	// Update manifest with signature
 	manifestData, _ = json.MarshalIndent(e.manifest, "", "  ")
-	return os.WriteFile(filepath.Clean(manifestPath, manifestData, 0600))
-	}
+	return os.WriteFile(filepath.Clean(manifestPath), manifestData, 0600)
+}
 
 // createArchive creates the final bundle archive
 func (e *BundleExporter) createArchive() error {
@@ -480,6 +496,7 @@ func (e *BundleExporter) createArchive() error {
 	default:
 		return fmt.Errorf("unsupported format: %s", e.options.Format)
 	}
+}
 
 // createTarGzArchive creates a tar.gz archive
 func (e *BundleExporter) createTarGzArchive() error {
@@ -488,15 +505,27 @@ func (e *BundleExporter) createTarGzArchive() error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := outputFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := outputFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create gzip writer
 	gzWriter := gzip.NewWriter(outputFile)
-	defer func() { if err := gzWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := gzWriter.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create tar writer
 	tarWriter := tar.NewWriter(gzWriter)
-	defer func() { if err := tarWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := tarWriter.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Walk through temp directory and add files
 	return filepath.Walk(e.tempDir, func(path string, info os.FileInfo, err error) error {
@@ -527,7 +556,11 @@ func (e *BundleExporter) createTarGzArchive() error {
 			if err != nil {
 				return err
 			}
-			defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+			defer func() {
+				if err := file.Close(); err != nil {
+					fmt.Printf("Failed to close: %v\n", err)
+				}
+			}()
 
 			if _, err := io.Copy(tarWriter, file); err != nil {
 				return err
@@ -537,6 +570,7 @@ func (e *BundleExporter) createTarGzArchive() error {
 		e.updateFileProgress(path, info.Size())
 		return nil
 	})
+}
 
 // Helper methods
 func (e *BundleExporter) reportProgress(stage string, current, total int) {
@@ -569,17 +603,23 @@ func (e *BundleExporter) reportProgress(stage string, current, total int) {
 	}
 
 	e.options.ProgressHandler(info)
+}
 
 func (e *BundleExporter) updateFileProgress(path string, size int64) {
 	e.bytesProcessed += size
 	e.reportProgress(e.currentStage, int(e.bytesProcessed), int(e.totalBytes))
+}
 
 func (e *BundleExporter) calculateChecksum(path string) (string, error) {
 	file, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return "", err
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
@@ -587,6 +627,7 @@ func (e *BundleExporter) calculateChecksum(path string) (string, error) {
 	}
 
 	return fmt.Sprintf("sha256:%x", hash.Sum(nil)), nil
+}
 
 func (e *BundleExporter) getIncludeFlags() []string {
 	var flags []string
@@ -603,15 +644,16 @@ func (e *BundleExporter) getIncludeFlags() []string {
 		flags = append(flags, "documentation")
 	}
 	return flags
+}
 
 func (e *BundleExporter) findTemplates(dir string) ([]string, error) {
 	var templates []string
-	
+
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
 			// Apply filters
 			if e.shouldIncludeTemplate(path) {
@@ -620,8 +662,9 @@ func (e *BundleExporter) findTemplates(dir string) ([]string, error) {
 		}
 		return nil
 	})
-	
+
 	return templates, err
+}
 
 func (e *BundleExporter) shouldIncludeTemplate(path string) bool {
 	if e.options.Filters == nil {
@@ -641,7 +684,7 @@ func (e *BundleExporter) shouldIncludeTemplate(path string) bool {
 		data, _ := os.ReadFile(filepath.Clean(path))
 		metadata := e.parseTemplateMetadata(data)
 		category, _ := metadata["category"].(string)
-		
+
 		found := false
 		for _, cat := range e.options.Filters.TemplateCategories {
 			if cat == category {
@@ -655,11 +698,12 @@ func (e *BundleExporter) shouldIncludeTemplate(path string) bool {
 	}
 
 	return true
+}
 
 func (e *BundleExporter) parseTemplateMetadata(data []byte) map[string]interface{} {
 	// Simple YAML front matter parsing
-		metadata := make(map[string]interface{})
-	
+	metadata := make(map[string]interface{})
+
 	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {
 		if strings.HasPrefix(line, "id:") {
@@ -670,24 +714,26 @@ func (e *BundleExporter) parseTemplateMetadata(data []byte) map[string]interface
 			metadata["version"] = strings.TrimSpace(strings.TrimPrefix(line, "version:"))
 		}
 	}
-	
+
 	return metadata
+}
 
 func (e *BundleExporter) findModules(dir string) ([]string, error) {
 	var modules []string
-	
+
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if !info.IsDir() && (strings.HasSuffix(path, ".so") || strings.HasSuffix(path, ".dll")) {
 			modules = append(modules, path)
 		}
 		return nil
 	})
-	
+
 	return modules, err
+}
 
 func (e *BundleExporter) getModuleType(path string) string {
 	if strings.Contains(path, "provider") {
@@ -698,23 +744,28 @@ func (e *BundleExporter) getModuleType(path string) string {
 		return "utility"
 	}
 	return "unknown"
+}
 
 func (e *BundleExporter) isDocumentationFile(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	return ext == ".md" || ext == ".txt" || ext == ".pdf" || ext == ".html"
+}
 
 func (e *BundleExporter) getSigningKey() interface{} {
 	// TODO: Implement key management
 	return nil
+}
 
 func (e *BundleExporter) encryptBundle() error {
 	// TODO: Implement encryption
 	return nil
+}
 
 // Utility functions
 
 func generateBundleID() string {
 	return fmt.Sprintf("BDL-%d-%s", time.Now().Unix(), generateRandomString(8))
+}
 
 func generateRandomString(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -723,24 +774,33 @@ func generateRandomString(n int) string {
 		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
 	}
 	return string(b)
+}
 
 func copyFileWithProgress(src, dst string, progressFunc func(string, int64)) error {
 	sourceFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return err
 	}
-	defer func() { if err := sourceFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := sourceFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer func() { if err := destFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := destFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Copy with progress updates
 	buf := make([]byte, 32*1024)
 	var written int64
-	
+
 	for {
 		n, err := sourceFile.Read(buf)
 		if err != nil && err != io.EOF {
@@ -753,7 +813,7 @@ func copyFileWithProgress(src, dst string, progressFunc func(string, int64)) err
 		if _, err := destFile.Write(buf[:n]); err != nil {
 			return err
 		}
-		
+
 		written += int64(n)
 		if progressFunc != nil && written%1048576 == 0 { // Update every MB
 			progressFunc(src, written)
@@ -763,62 +823,37 @@ func copyFileWithProgress(src, dst string, progressFunc func(string, int64)) err
 	// Copy file permissions
 	srcInfo, _ := os.Stat(src)
 	return os.Chmod(dst, srcInfo.Mode())
+}
 
 func getOS() string {
 	return os.Getenv("GOOS")
+}
 
 func getArch() string {
 	return os.Getenv("GOARCH")
+}
 
 func getTemplateDirectory() string {
 	// TODO: Make configurable
 	return "./templates"
+}
 
 func getModuleDirectory() string {
 	// TODO: Make configurable
 	return "./modules"
+}
 
 func getDocumentationDirectory() string {
 	// TODO: Make configurable
 	return "./docs"
+}
 
 // createZipArchive creates a ZIP archive (stub for now)
 func (e *BundleExporter) createZipArchive() error {
 	return fmt.Errorf("ZIP format not yet implemented")
+}
 
 // createTarArchive creates a plain TAR archive (stub for now)
 func (e *BundleExporter) createTarArchive() error {
 	return fmt.Errorf("plain TAR format not yet implemented")
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

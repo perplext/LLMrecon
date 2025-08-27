@@ -3,6 +3,7 @@ package mfa
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/perplext/LLMrecon/src/security/access/interfaces"
@@ -10,19 +11,19 @@ import (
 
 // MFAHandler handles MFA-related API requests
 type MFAHandler struct {
-	mfaManager MFAManager
+	mfaManager   MFAManager
 	sessionStore interfaces.SessionStore
-
 }
+
 // NewMFAHandler creates a new MFA handler
 func NewMFAHandler(mfaManager MFAManager, sessionStore interfaces.SessionStore) *MFAHandler {
 	return &MFAHandler{
 		mfaManager:   mfaManager,
 		sessionStore: sessionStore,
 	}
+}
 
 // SetupTOTPHandler handles TOTP setup requests
-}
 func (h *MFAHandler) SetupTOTPHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST requests
 	if r.Method != http.MethodPost {
@@ -47,12 +48,12 @@ func (h *MFAHandler) SetupTOTPHandler(w http.ResponseWriter, r *http.Request) {
 	// Return TOTP configuration
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"secret":   totpConfig.Secret,
-		"qr_code":  totpConfig.QRCodeURL,
+		"secret":  totpConfig.Secret,
+		"qr_code": totpConfig.QRCodeURL,
 	})
+}
 
 // VerifyTOTPSetupHandler handles TOTP verification requests
-}
 func (h *MFAHandler) VerifyTOTPSetupHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST requests
 	if r.Method != http.MethodPost {
@@ -96,9 +97,9 @@ func (h *MFAHandler) VerifyTOTPSetupHandler(w http.ResponseWriter, r *http.Reque
 		"success": true,
 		"message": "TOTP setup verified successfully",
 	})
+}
 
 // GenerateBackupCodesHandler handles backup code generation requests
-}
 func (h *MFAHandler) GenerateBackupCodesHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST requests
 	if r.Method != http.MethodPost {
@@ -131,9 +132,9 @@ func (h *MFAHandler) GenerateBackupCodesHandler(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"backup_codes": codes,
 	})
+}
 
 // VerifyMFAHandler handles MFA verification requests
-}
 func (h *MFAHandler) VerifyMFAHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST requests
 	if r.Method != http.MethodPost {
@@ -183,9 +184,9 @@ func (h *MFAHandler) VerifyMFAHandler(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 		"message": "MFA verified successfully",
 	})
+}
 
 // DisableMFAHandler handles MFA disabling requests
-}
 func (h *MFAHandler) DisableMFAHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST requests
 	if r.Method != http.MethodPost {
@@ -213,9 +214,9 @@ func (h *MFAHandler) DisableMFAHandler(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 		"message": "MFA disabled successfully",
 	})
+}
 
 // GetMFASettingsHandler handles MFA settings retrieval requests
-}
 func (h *MFAHandler) GetMFASettingsHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow GET requests
 	if r.Method != http.MethodGet {
@@ -240,11 +241,13 @@ func (h *MFAHandler) GetMFASettingsHandler(w http.ResponseWriter, r *http.Reques
 	// Return MFA settings
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(settings) // Best effort, headers already sent
+}
 
 // Helper function to get session from request
-}
 func getSessionFromRequest(r *http.Request) (*interfaces.Session, error) {
 	// This is a placeholder - implement based on your session management
 	// For example:
 	// sessionID := getSessionIDFromCookie(r)
 	// return sessionStore.GetSessionByID(r.Context(), sessionID)
+	return nil, fmt.Errorf("session management not implemented")
+}

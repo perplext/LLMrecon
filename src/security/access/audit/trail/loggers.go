@@ -20,12 +20,12 @@ func NewFileLogger(logPath string) (*FileLogger, error) {
 	if err := os.MkdirAll(dir, 0750); err != nil {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
-	
+
 	file, err := os.OpenFile(filepath.Clean(logPath), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %w", err)
 	}
-	
+
 	return &FileLogger{file: file}, nil
 }
 
@@ -62,7 +62,7 @@ func (r *RotatingLogger) Write(data []byte) (int, error) {
 			return 0, err
 		}
 	}
-	
+
 	n, err := r.currentFile.Write(data)
 	r.currentSize += int64(n)
 	return n, err
@@ -75,14 +75,14 @@ func (r *RotatingLogger) rotate() error {
 			return err
 		}
 	}
-	
+
 	// Create new file with timestamp
 	newPath := fmt.Sprintf("%s-%s.log", r.basePath, time.Now().Format("20060102-150405"))
 	file, err := os.OpenFile(filepath.Clean(newPath), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to create new log file: %w", err)
 	}
-	
+
 	r.currentFile = file
 	r.currentSize = 0
 	return nil

@@ -23,6 +23,7 @@ type TemplateOptimizer struct {
 	mutex sync.RWMutex
 	// optimizationStats tracks optimization statistics
 	optimizationStats OptimizerStats
+}
 
 // OptimizerStats tracks optimizer statistics
 type OptimizerStats struct {
@@ -34,14 +35,16 @@ type OptimizerStats struct {
 	TotalBytesOptimized int64
 	// CompressionRatio is the average compression ratio
 	CompressionRatio float64
+}
 
 // NewTemplateOptimizer creates a new template optimizer
 func NewTemplateOptimizer(minifyEnabled, compressEnabled bool) *TemplateOptimizer {
 	return &TemplateOptimizer{
-		minifyEnabled:    minifyEnabled,
-		compressEnabled:  compressEnabled,
+		minifyEnabled:     minifyEnabled,
+		compressEnabled:   compressEnabled,
 		optimizationStats: OptimizerStats{},
 	}
+}
 
 // OptimizeTemplate optimizes a template by applying various optimizations
 func (o *TemplateOptimizer) OptimizeTemplate(template *format.Template) (*format.Template, error) {
@@ -54,18 +57,18 @@ func (o *TemplateOptimizer) OptimizeTemplate(template *format.Template) (*format
 
 	// Optimize prompt content
 	originalSize := o.estimateTemplateSize(optimizedTemplate)
-	
+
 	// Apply optimizations
 	if o.minifyEnabled {
 		o.minifyPrompt(&optimizedTemplate.Test.Prompt)
-		o.minifyExpectedBehavior(&optimizedTemplate.Test.ExpectedBehavior)
-		
+		o.minifyExpectedBehavior(&optimizedTemplate.Test.Expected)
+
 		// Optimize variations
 		for i := range optimizedTemplate.Test.Variations {
 			o.minifyPrompt(&optimizedTemplate.Test.Variations[i].Prompt)
 		}
 	}
-	
+
 	// Update optimization statistics
 	optimizedSize := o.estimateTemplateSize(optimizedTemplate)
 	o.mutex.Lock()
@@ -78,6 +81,7 @@ func (o *TemplateOptimizer) OptimizeTemplate(template *format.Template) (*format
 	o.mutex.Unlock()
 
 	return optimizedTemplate, nil
+}
 
 // OptimizeTemplates optimizes multiple templates
 func (o *TemplateOptimizer) OptimizeTemplates(templates []*format.Template) ([]*format.Template, error) {
@@ -116,6 +120,7 @@ func (o *TemplateOptimizer) OptimizeTemplates(templates []*format.Template) ([]*
 	}
 
 	return optimizedTemplates, nil
+}
 
 // minifyPrompt removes unnecessary whitespace from prompt content
 func (o *TemplateOptimizer) minifyPrompt(prompt *string) {
@@ -130,7 +135,7 @@ func (o *TemplateOptimizer) minifyPrompt(prompt *string) {
 
 	for i, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
-		
+
 		// Check for code block markers
 		if strings.HasPrefix(trimmedLine, "```") {
 			inCodeBlock = !inCodeBlock
@@ -160,26 +165,29 @@ func (o *TemplateOptimizer) minifyPrompt(prompt *string) {
 	}
 
 	*prompt = strings.TrimSpace(result.String())
+}
 
 // minifyExpectedBehavior optimizes expected behavior content
 func (o *TemplateOptimizer) minifyExpectedBehavior(expectedBehavior *string) {
 	o.minifyPrompt(expectedBehavior)
+}
 
 // compressContent compresses content using gzip
 func (o *TemplateOptimizer) compressContent(content string) ([]byte, error) {
 	var buf bytes.Buffer
 	gzipWriter := gzip.NewWriter(&buf)
-	
+
 	_, err := gzipWriter.Write([]byte(content))
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if err := gzipWriter.Close(); err != nil {
 		return nil, err
 	}
-	
+
 	return buf.Bytes(), nil
+}
 
 // decompressContent decompresses gzipped content
 func (o *TemplateOptimizer) decompressContent(compressed []byte) (string, error) {
@@ -188,52 +196,60 @@ func (o *TemplateOptimizer) decompressContent(compressed []byte) (string, error)
 	if err != nil {
 		return "", err
 	}
-	defer func() { if err := gzipReader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
-	
+	defer func() {
+		if err := gzipReader.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
+
 	decompressed, err := ioutil.ReadAll(gzipReader)
 	if err != nil {
 		return "", err
 	}
-	
+
 	return string(decompressed), nil
+}
 
 // cloneTemplate creates a deep copy of a template
 func (o *TemplateOptimizer) cloneTemplate(template *format.Template) *format.Template {
 	// Serialize to JSON and back for a deep copy
 	data, _ := json.Marshal(template)
 	var clone format.Template
-	if err := json.Unmarshal(data, &clone); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
-	}
+	json.Unmarshal(data, &clone)
 	return &clone
+}
 
 // estimateTemplateSize estimates the size of a template in bytes
 func (o *TemplateOptimizer) estimateTemplateSize(template *format.Template) int {
 	data, _ := json.Marshal(template)
 	return len(data)
+}
 
 // GetOptimizationStats returns statistics about the optimizer
 func (o *TemplateOptimizer) GetOptimizationStats() map[string]interface{} {
 	o.mutex.RLock()
 	defer o.mutex.RUnlock()
-	
+
 	return map[string]interface{}{
-		"total_optimizations":    o.optimizationStats.TotalOptimizations,
-		"total_bytes_original":   o.optimizationStats.TotalBytesOriginal,
-		"total_bytes_optimized":  o.optimizationStats.TotalBytesOptimized,
-		"compression_ratio":      o.optimizationStats.CompressionRatio,
-		"minify_enabled":         o.minifyEnabled,
-		"compress_enabled":       o.compressEnabled,
+		"total_optimizations":   o.optimizationStats.TotalOptimizations,
+		"total_bytes_original":  o.optimizationStats.TotalBytesOriginal,
+		"total_bytes_optimized": o.optimizationStats.TotalBytesOptimized,
+		"compression_ratio":     o.optimizationStats.CompressionRatio,
+		"minify_enabled":        o.minifyEnabled,
+		"compress_enabled":      o.compressEnabled,
 	}
+}
 
 // SetMinifyEnabled enables or disables minification
 func (o *TemplateOptimizer) SetMinifyEnabled(enabled bool) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.minifyEnabled = enabled
+}
 
 // SetCompressEnabled enables or disables compression
 func (o *TemplateOptimizer) SetCompressEnabled(enabled bool) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.compressEnabled = enabled
+}

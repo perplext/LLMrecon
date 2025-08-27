@@ -2,8 +2,11 @@ package update
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
@@ -34,6 +37,7 @@ type RepositoryInfo struct {
 	HasUpdates bool
 	// Last sync time
 	LastSync time.Time
+}
 
 // RepositoryManager handles operations on template repositories
 type RepositoryManager struct {
@@ -41,6 +45,7 @@ type RepositoryManager struct {
 	BaseDir string
 	// Map of repository information by name
 	Repositories map[string]*RepositoryInfo
+}
 
 // NewRepositoryManager creates a new RepositoryManager
 func NewRepositoryManager(baseDir string) *RepositoryManager {
@@ -48,6 +53,7 @@ func NewRepositoryManager(baseDir string) *RepositoryManager {
 		BaseDir:      baseDir,
 		Repositories: make(map[string]*RepositoryInfo),
 	}
+}
 
 // AddRepository adds a repository to the manager
 func (rm *RepositoryManager) AddRepository(name string, repoType RepositoryType, url string) (*RepositoryInfo, error) {
@@ -58,8 +64,8 @@ func (rm *RepositoryManager) AddRepository(name string, repoType RepositoryType,
 
 	// Create repository info
 	repo := &RepositoryInfo{
-		Type:     repoType,
-		URL:      url,
+		Type:      repoType,
+		URL:       url,
 		LocalPath: filepath.Join(rm.BaseDir, string(repoType), name),
 	}
 
@@ -67,6 +73,7 @@ func (rm *RepositoryManager) AddRepository(name string, repoType RepositoryType,
 	rm.Repositories[name] = repo
 
 	return repo, nil
+}
 
 // SyncRepository syncs a repository (clone if it doesn't exist, pull if it does)
 func (rm *RepositoryManager) SyncRepository(name string) error {
@@ -101,6 +108,7 @@ func (rm *RepositoryManager) SyncRepository(name string) error {
 	}
 
 	return nil
+}
 
 // updateRepositoryInfo updates the version information for a repository
 func (rm *RepositoryManager) updateRepositoryInfo(name string) error {
@@ -133,7 +141,7 @@ func (rm *RepositoryManager) updateRepositoryInfo(name string) error {
 	repo.LastSync = time.Now()
 
 	return nil
-	}
+}
 
 // GetTemplateVersion returns the version of the templates in a repository
 func (rm *RepositoryManager) GetTemplateVersion(name string) (version.Version, error) {
@@ -164,14 +172,15 @@ func (rm *RepositoryManager) GetTemplateVersion(name string) (version.Version, e
 	if len(repo.CurrentVersion) >= 7 {
 		// Use 0.0.0+<short commit hash> as version
 		return version.Version{
-			Major:     0,
-			Minor:     0,
-			Patch:     0,
-			Build:     repo.CurrentVersion[:7],
+			Major: 0,
+			Minor: 0,
+			Patch: 0,
+			Build: repo.CurrentVersion[:7],
 		}, nil
 	}
 
 	return version.Version{}, fmt.Errorf("could not determine template version")
+}
 
 // ListRepositories returns a list of all repositories
 func (rm *RepositoryManager) ListRepositories() []*RepositoryInfo {
@@ -180,6 +189,7 @@ func (rm *RepositoryManager) ListRepositories() []*RepositoryInfo {
 		repos = append(repos, repo)
 	}
 	return repos
+}
 
 // GetRepository returns a repository by name
 func (rm *RepositoryManager) GetRepository(name string) (*RepositoryInfo, error) {
@@ -188,6 +198,7 @@ func (rm *RepositoryManager) GetRepository(name string) (*RepositoryInfo, error)
 		return nil, fmt.Errorf("repository '%s' not found", name)
 	}
 	return repo, nil
+}
 
 // RemoveRepository removes a repository
 func (rm *RepositoryManager) RemoveRepository(name string) error {
@@ -206,3 +217,5 @@ func (rm *RepositoryManager) RemoveRepository(name string) error {
 	// Remove from map
 	delete(rm.Repositories, name)
 
+	return nil
+}

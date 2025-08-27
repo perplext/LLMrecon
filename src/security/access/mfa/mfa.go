@@ -23,21 +23,22 @@ var (
 type BasicMFAService struct {
 	// Secret is the TOTP secret key
 	Secret string `json:"secret"`
-	
+
 	// Algorithm is the TOTP algorithm (default: SHA1)
 	Algorithm string `json:"algorithm"`
-	
+
 	// Digits is the number of digits in the TOTP code (default: 6)
 	Digits int `json:"digits"`
-	
+
 	// Period is the TOTP period in seconds (default: 30)
 	Period int `json:"period"`
-	
+
 	// Issuer is the name of the issuer for the TOTP
 	Issuer string `json:"issuer"`
-	
+
 	// AccountName is the account name for the TOTP
 	AccountName string `json:"account_name"`
+}
 
 // Note: MFAManager, MFAStore, DefaultMFAManager types and their implementations are defined in other files to avoid duplicates
 // This file contains only utility functions and basic service definitions
@@ -49,3 +50,5 @@ func generateTOTPSecret() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(secret), nil
+}

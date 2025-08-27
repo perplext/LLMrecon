@@ -5,9 +5,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // GeminiMockProvider is a mock implementation of the Google Gemini provider
@@ -28,19 +29,20 @@ func NewGeminiMockProvider() *GeminiMockProvider {
 			CompletionTokens: 55,
 			TotalTokens:      165,
 		},
-		VulnerableResponses:   make(map[string]string),
+		VulnerableResponses:    make(map[string]string),
 		VulnerabilityBehaviors: make(map[types.VulnerabilityType]*VulnerabilityBehavior),
 	}
 
 	// Set up Gemini-specific models
 	base := NewBaseMockProviderImpl(config)
-	
+
 	// Configure Gemini-specific behavior for vulnerabilities
 	setupGeminiVulnerabilityBehaviors(base)
-	
+
 	return &GeminiMockProvider{
 		BaseMockProviderImpl: base,
 	}
+}
 
 // setupGeminiVulnerabilityBehaviors configures Gemini-specific vulnerability behaviors
 func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
@@ -62,8 +64,8 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Severity: core.SeverityMedium,
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "prompt_injection",
-			"model_specific": "gemini_pro",
-			"resistance_level": "medium",
+			"model_specific":     "gemini_pro",
+			"resistance_level":   "medium",
 		},
 	})
 
@@ -85,7 +87,7 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		},
 		Severity: core.SeverityMedium,
 		Metadata: map[string]interface{}{
-			"vulnerability_type": "supply_chain",
+			"vulnerability_type":  "supply_chain",
 			"affected_components": []string{"libraries", "APIs", "packages", "dependencies"},
 		},
 	})
@@ -108,7 +110,7 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		Severity: core.SeverityHigh,
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "insecure_plugin_design",
-			"security_concerns": []string{"input validation", "permission model", "authentication", "data handling"},
+			"security_concerns":  []string{"input validation", "permission model", "authentication", "data handling"},
 		},
 	})
 
@@ -130,10 +132,11 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 		},
 		Severity: core.SeverityMedium,
 		Metadata: map[string]interface{}{
-			"vulnerability_type": "model_theft",
+			"vulnerability_type":   "model_theft",
 			"detection_capability": "query pattern analysis",
 		},
 	})
+}
 
 // ChatCompletion overrides the base implementation to add Gemini-specific behavior
 func (p *GeminiMockProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -169,6 +172,7 @@ func (p *GeminiMockProvider) ChatCompletion(ctx context.Context, request *core.C
 
 	// Fall back to the base implementation
 	return p.BaseMockProviderImpl.ChatCompletion(ctx, request)
+}
 
 // shouldSimulateSafetyFilters checks if safety filters should be simulated
 func (p *GeminiMockProvider) shouldSimulateSafetyFilters(request *core.ChatCompletionRequest) bool {
@@ -197,6 +201,7 @@ func (p *GeminiMockProvider) shouldSimulateSafetyFilters(request *core.ChatCompl
 	}
 
 	return false
+}
 
 // shouldSimulateMultimodalResponse checks if a multimodal response should be simulated
 func (p *GeminiMockProvider) shouldSimulateMultimodalResponse(request *core.ChatCompletionRequest) bool {
@@ -223,6 +228,7 @@ func (p *GeminiMockProvider) shouldSimulateMultimodalResponse(request *core.Chat
 	}
 
 	return false
+}
 
 // generateMultimodalResponse generates a mock multimodal response
 func (p *GeminiMockProvider) generateMultimodalResponse(request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -248,6 +254,7 @@ func (p *GeminiMockProvider) generateMultimodalResponse(request *core.ChatComple
 			TotalTokens:      int64(p.estimateTokenCountForMessages(request.Messages)) + 600,
 		},
 	}, nil
+}
 
 // estimateTokenCountForMessages estimates the token count for a list of chat messages
 func (p *GeminiMockProvider) estimateTokenCountForMessages(messages []core.ChatMessage) int {
@@ -262,15 +269,16 @@ func (p *GeminiMockProvider) estimateTokenCountForMessages(messages []core.ChatM
 		case "system":
 			tokenCount += 4
 		}
-		
+
 		// Estimate tokens in content
 		tokenCount += p.estimateTokenCount(msg.Content)
 	}
-	
+
 	// Add tokens for conversation format
 	tokenCount += 3
-	
+
 	return tokenCount
+}
 
 // estimateTokenCount estimates the token count for a text
 // Gemini-specific implementation
@@ -278,13 +286,9 @@ func (p *GeminiMockProvider) estimateTokenCount(text string) int {
 	if text == "" {
 		return 0
 	}
-	
+
 	// Gemini's tokenization is similar to OpenAI but with some differences
 	// This is a simplified approximation
-}
-}
-}
-}
-}
-}
+	words := strings.Fields(text)
+	return int(float64(len(words)) * 1.3) // Approximate token-to-word ratio for Gemini
 }

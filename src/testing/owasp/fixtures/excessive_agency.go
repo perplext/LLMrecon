@@ -2,7 +2,7 @@
 package fixtures
 
 import (
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
 
@@ -179,3 +179,4 @@ func GetExcessiveAgencyFixtures() TestFixtures {
 			LLM08_ExcessiveAgency,
 		),
 	}
+}

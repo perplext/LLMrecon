@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
 
@@ -23,6 +23,7 @@ type PromptInjectionValidator struct {
 	delimitersPatterns []*regexp.Regexp
 	// systemPromptPatterns contains patterns that might indicate attempts to inject system prompts
 	systemPromptPatterns []*regexp.Regexp
+}
 
 // NewPromptInjectionValidator creates a new prompt injection validator
 func NewPromptInjectionValidator() *PromptInjectionValidator {
@@ -76,13 +77,14 @@ func NewPromptInjectionValidator() *PromptInjectionValidator {
 	}
 
 	return &PromptInjectionValidator{
-		BaseValidator:       baseValidator,
-		injectionPatterns:   injectionPatterns,
-		suspiciousKeywords:  suspiciousKeywords,
-		roleChangePatterns:  roleChangePatterns,
-		delimitersPatterns:  delimitersPatterns,
+		BaseValidator:        baseValidator,
+		injectionPatterns:    injectionPatterns,
+		suspiciousKeywords:   suspiciousKeywords,
+		roleChangePatterns:   roleChangePatterns,
+		delimitersPatterns:   delimitersPatterns,
 		systemPromptPatterns: systemPromptPatterns,
 	}
+}
 
 // ValidatePrompt validates a prompt for prompt injection vulnerabilities
 func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -99,12 +101,12 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := prompt[startIndex:endIndex]
-			
+
 			// Extract context (text before and after the match)
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(prompt), endIndex+20)
 			context := prompt[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.PromptInjection,
@@ -116,7 +118,7 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 			result.SetRemediation("Remove or sanitize the prompt injection attempt. Consider implementing input validation and filtering.")
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -128,12 +130,12 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := prompt[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(prompt), endIndex+20)
 			context := prompt[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.PromptInjection,
@@ -145,7 +147,7 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 			result.SetRemediation("Review the role change request and ensure it aligns with intended use. Consider implementing role validation.")
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -157,12 +159,12 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := prompt[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(prompt), endIndex+20)
 			context := prompt[contextStart:contextEnd]
-			
+
 			// Only flag as vulnerable if combined with suspicious keywords
 			isSuspicious := false
 			for _, keyword := range v.suspiciousKeywords {
@@ -171,7 +173,7 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 					break
 				}
 			}
-			
+
 			if isSuspicious {
 				result := CreateValidationResult(
 					true,
@@ -184,7 +186,7 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 				result.SetRemediation("Review the use of delimiters and ensure they're not being used for prompt injection.")
 				result.AddRawData("pattern", pattern.String())
 				result.AddRawData("matched_text", matchedText)
-				
+
 				results = append(results, result)
 			}
 		}
@@ -197,12 +199,12 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := prompt[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(prompt), endIndex+20)
 			context := prompt[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.PromptInjection,
@@ -214,7 +216,7 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 			result.SetRemediation("Remove or sanitize the system prompt injection attempt. Consider implementing strict input validation.")
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -224,17 +226,17 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 		for _, keyword := range v.suspiciousKeywords {
 			lowercasePrompt := strings.ToLower(prompt)
 			lowercaseKeyword := strings.ToLower(keyword)
-			
+
 			index := strings.Index(lowercasePrompt, lowercaseKeyword)
 			if index >= 0 {
 				startIndex := index
 				endIndex := index + len(keyword)
-				
+
 				// Extract context
 				contextStart := max(0, startIndex-20)
 				contextEnd := min(len(prompt), endIndex+20)
 				context := prompt[contextStart:contextEnd]
-				
+
 				result := CreateValidationResult(
 					true,
 					types.PromptInjection,
@@ -245,13 +247,14 @@ func (v *PromptInjectionValidator) ValidatePrompt(ctx context.Context, prompt st
 				result.SetLocation(startIndex, endIndex, context)
 				result.SetRemediation("Review the use of suspicious keywords and ensure they're not being used for prompt injection.")
 				result.AddRawData("keyword", keyword)
-				
+
 				results = append(results, result)
 			}
 		}
 	}
 
 	return results, nil
+}
 
 // ValidateResponse validates a response for prompt injection vulnerabilities
 func (v *PromptInjectionValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -277,12 +280,12 @@ func (v *PromptInjectionValidator) ValidateResponse(ctx context.Context, respons
 			index := strings.Index(strings.ToLower(response), strings.ToLower(indicator))
 			startIndex := index
 			endIndex := index + len(indicator)
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(response), endIndex+20)
 			context := response[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.PromptInjection,
@@ -293,11 +296,11 @@ func (v *PromptInjectionValidator) ValidateResponse(ctx context.Context, respons
 			result.SetLocation(startIndex, endIndex, context)
 			result.SetRemediation("Review the original prompt and implement stronger prompt injection defenses.")
 			result.AddRawData("indicator", indicator)
-			
+
 			if options.OriginalPrompt != "" {
 				result.AddRawData("original_prompt", options.OriginalPrompt)
 			}
-			
+
 			results = append(results, result)
 		}
 	}
@@ -316,12 +319,12 @@ func (v *PromptInjectionValidator) ValidateResponse(ctx context.Context, respons
 			index := strings.Index(strings.ToLower(response), strings.ToLower(indicator))
 			startIndex := index
 			endIndex := index + len(indicator)
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(response), endIndex+20)
 			context := response[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.PromptInjection,
@@ -332,16 +335,17 @@ func (v *PromptInjectionValidator) ValidateResponse(ctx context.Context, respons
 			result.SetLocation(startIndex, endIndex, context)
 			result.SetRemediation("Review the original prompt and implement stronger role validation.")
 			result.AddRawData("indicator", indicator)
-			
+
 			if options.OriginalPrompt != "" {
 				result.AddRawData("original_prompt", options.OriginalPrompt)
 			}
-			
+
 			results = append(results, result)
 		}
 	}
 
 	return results, nil
+}
 
 // Helper function to get the minimum of two integers
 func min(a, b int) int {
@@ -349,9 +353,12 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
 
 // Helper function to get the maximum of two integers
 func max(a, b int) int {
 	if a > b {
 		return a
 	}
+	return b
+}

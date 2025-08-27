@@ -2,64 +2,67 @@ package learning
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math"
+	"math/rand"
 	"sort"
+	"strings"
 	"sync"
-
-	"github.com/perplext/LLMrecon/src/automated/chain"
-	"github.com/perplext/LLMrecon/src/automated/discovery"
+	"time"
 )
 
 // AdaptiveSystem learns and improves attack strategies
 type AdaptiveSystem struct {
-	learner         *ReinforcementLearner
-	predictor       *SuccessPredictor
-	optimizer       *StrategyOptimizer
-	knowledge       *KnowledgeBase
-	feedback        *FeedbackProcessor
-	evolution       *EvolutionEngine
-	config          AdaptiveConfig
-	activeLearning  map[string]*LearningSession
-	mu              sync.RWMutex
+	learner        *ReinforcementLearner
+	predictor      *SuccessPredictor
+	optimizer      *StrategyOptimizer
+	knowledge      *KnowledgeBase
+	feedback       *FeedbackProcessor
+	evolution      *EvolutionEngine
+	config         AdaptiveConfig
+	activeLearning map[string]*LearningSession
+	mu             sync.RWMutex
 }
 
 // AdaptiveConfig configures the adaptive system
 type AdaptiveConfig struct {
-	LearningRate         float64
-	ExplorationRate      float64
-	MemorySize           int
-	UpdateFrequency      time.Duration
-	EvolutionEnabled     bool
-	PredictionEnabled    bool
-	AutoOptimization     bool
+	LearningRate      float64
+	ExplorationRate   float64
+	MemorySize        int
+	UpdateFrequency   time.Duration
+	EvolutionEnabled  bool
+	PredictionEnabled bool
+	AutoOptimization  bool
 }
 
 // LearningSession represents active learning
 type LearningSession struct {
-	ID              string
-	StartTime       time.Time
-	Episodes        []Episode
-	CurrentPolicy   *Policy
-	Metrics         LearningMetrics
-	Status          SessionStatus
+	ID            string
+	StartTime     time.Time
+	Episodes      []Episode
+	CurrentPolicy *Policy
+	Metrics       LearningMetrics
+	Status        SessionStatus
+	mu            sync.RWMutex
+}
 
 // Episode represents a learning episode
 type Episode struct {
-	ID          string
-	Actions     []Action
-	Rewards     []float64
-	States      []State
-	Outcome     Outcome
-	Timestamp   time.Time
+	ID        string
+	Actions   []Action
+	Rewards   []float64
+	States    []State
+	Outcome   Outcome
+	Timestamp time.Time
+}
 
 // Action represents an attack action
 type Action struct {
-	Type        ActionType
-	Exploit     string
-	Parameters  map[string]interface{}
-	Confidence  float64
+	Type       ActionType
+	Exploit    string
+	Parameters map[string]interface{}
+	Confidence float64
+}
 
 // ActionType categorizes actions
 type ActionType string
@@ -74,10 +77,11 @@ const (
 
 // State represents system state
 type State struct {
-	ModelResponse   string
-	SecurityLevel   float64
-	SuccessRate     float64
-	Features        map[string]float64
+	ModelResponse string
+	SecurityLevel float64
+	SuccessRate   float64
+	Features      map[string]float64
+}
 
 // Outcome represents episode outcome
 type Outcome struct {
@@ -85,6 +89,7 @@ type Outcome struct {
 	Reward          float64
 	Vulnerabilities []string
 	Insights        []string
+}
 
 // Policy defines action selection strategy
 type Policy struct {
@@ -97,28 +102,29 @@ type Policy struct {
 
 // PolicyPerformance tracks policy metrics
 type PolicyPerformance struct {
-	SuccessRate     float64
-	AverageReward   float64
-	ExploitCount    int
-	LastUpdated     time.Time
+	SuccessRate   float64
+	AverageReward float64
+	ExploitCount  int
+	LastUpdated   time.Time
+}
 
 // SessionStatus represents learning status
 type SessionStatus string
 
 const (
-	SessionActive    SessionStatus = "active"
-	SessionPaused    SessionStatus = "paused"
-	SessionComplete  SessionStatus = "complete"
-	SessionFailed    SessionStatus = "failed"
+	SessionActive   SessionStatus = "active"
+	SessionPaused   SessionStatus = "paused"
+	SessionComplete SessionStatus = "complete"
+	SessionFailed   SessionStatus = "failed"
 )
 
 // LearningMetrics tracks learning progress
 type LearningMetrics struct {
-	TotalEpisodes       int
-	SuccessfulEpisodes  int
-	AverageReward       float64
-	LearningCurve       []float64
-	ConvergenceRate     float64
+	TotalEpisodes      int
+	SuccessfulEpisodes int
+	AverageReward      float64
+	LearningCurve      []float64
+	ConvergenceRate    float64
 }
 
 // NewAdaptiveSystem creates an adaptive learning system
@@ -143,6 +149,7 @@ func NewAdaptiveSystem(config AdaptiveConfig) *AdaptiveSystem {
 	}
 
 	return as
+}
 
 // initialize sets up the adaptive system
 func (as *AdaptiveSystem) initialize() {
@@ -161,6 +168,7 @@ func (as *AdaptiveSystem) initialize() {
 			EliteSize:      10,
 		})
 	}
+}
 
 // initializePolicies creates initial policies
 func (as *AdaptiveSystem) initializePolicies() {
@@ -196,6 +204,7 @@ func (as *AdaptiveSystem) initializePolicies() {
 			"stealth":     0.6,
 		},
 	})
+}
 
 // StartLearning begins a learning session
 func (as *AdaptiveSystem) StartLearning(ctx context.Context, target interface{}) (*LearningSession, error) {
@@ -217,6 +226,7 @@ func (as *AdaptiveSystem) StartLearning(ctx context.Context, target interface{})
 	go as.runLearning(ctx, session, target)
 
 	return session, nil
+}
 
 // runLearning executes the learning process
 func (as *AdaptiveSystem) runLearning(ctx context.Context, session *LearningSession, target interface{}) {
@@ -228,7 +238,7 @@ func (as *AdaptiveSystem) runLearning(ctx context.Context, session *LearningSess
 		default:
 			// Run episode
 			episode := as.runEpisode(ctx, session, target)
-			
+
 			// Update session
 			session.mu.Lock()
 			session.Episodes = append(session.Episodes, episode)
@@ -253,6 +263,7 @@ func (as *AdaptiveSystem) runLearning(ctx context.Context, session *LearningSess
 
 	// Final optimization
 	as.finalizeSession(session)
+}
 
 // runEpisode executes a single learning episode
 func (as *AdaptiveSystem) runEpisode(ctx context.Context, session *LearningSession, target interface{}) Episode {
@@ -290,6 +301,7 @@ func (as *AdaptiveSystem) runEpisode(ctx context.Context, session *LearningSessi
 	episode.Outcome = as.calculateOutcome(episode)
 
 	return episode
+}
 
 // selectPolicy chooses initial policy
 func (as *AdaptiveSystem) selectPolicy(target interface{}) *Policy {
@@ -310,6 +322,7 @@ func (as *AdaptiveSystem) selectPolicy(target interface{}) *Policy {
 	}
 
 	return bestPolicy
+}
 
 // selectAction chooses action based on policy
 func (as *AdaptiveSystem) selectAction(state State, policy *Policy) Action {
@@ -321,6 +334,7 @@ func (as *AdaptiveSystem) selectAction(state State, policy *Policy) Action {
 
 	// Exploit: use policy
 	return as.generatePolicyAction(state, policy)
+}
 
 // generatePolicyAction creates action from policy
 func (as *AdaptiveSystem) generatePolicyAction(state State, policy *Policy) Action {
@@ -334,6 +348,7 @@ func (as *AdaptiveSystem) generatePolicyAction(state State, policy *Policy) Acti
 	action = as.adjustAction(action, state)
 
 	return action
+}
 
 // calculateActionProbabilities computes action probabilities
 func (as *AdaptiveSystem) calculateActionProbabilities(state State, policy *Policy) map[ActionType]float64 {
@@ -366,6 +381,7 @@ func (as *AdaptiveSystem) calculateActionProbabilities(state State, policy *Poli
 	}
 
 	return probs
+}
 
 // executeAction performs action and observes result
 func (as *AdaptiveSystem) executeAction(target interface{}, action Action, state State) (State, float64) {
@@ -394,6 +410,7 @@ func (as *AdaptiveSystem) executeAction(target interface{}, action Action, state
 	reward := as.calculateReward(action, state, newState, success)
 
 	return newState, reward
+}
 
 // calculateReward computes reward for action
 func (as *AdaptiveSystem) calculateReward(action Action, oldState, newState State, success bool) float64 {
@@ -425,6 +442,7 @@ func (as *AdaptiveSystem) calculateReward(action Action, oldState, newState Stat
 	}
 
 	return reward
+}
 
 // learnFromEpisode updates knowledge from episode
 func (as *AdaptiveSystem) learnFromEpisode(episode Episode, session *LearningSession) {
@@ -444,6 +462,7 @@ func (as *AdaptiveSystem) learnFromEpisode(episode Episode, session *LearningSes
 	if as.config.EvolutionEnabled {
 		as.evolution.Evolve(episode)
 	}
+}
 
 // updatePolicy improves policy based on learning
 func (as *AdaptiveSystem) updatePolicy(session *LearningSession) {
@@ -456,7 +475,7 @@ func (as *AdaptiveSystem) updatePolicy(session *LearningSession) {
 	// Update policy parameters
 	for param, grad := range gradient {
 		session.CurrentPolicy.Parameters[param] += as.config.LearningRate * grad
-		
+
 		// Clip to valid range
 		if session.CurrentPolicy.Parameters[param] < 0 {
 			session.CurrentPolicy.Parameters[param] = 0
@@ -468,6 +487,7 @@ func (as *AdaptiveSystem) updatePolicy(session *LearningSession) {
 	// Update version
 	session.CurrentPolicy.Version++
 	session.CurrentPolicy.Performance.LastUpdated = time.Now()
+}
 
 // ReinforcementLearner implements Q-learning
 type ReinforcementLearner struct {
@@ -475,6 +495,7 @@ type ReinforcementLearner struct {
 	learningRate float64
 	discountRate float64
 	mu           sync.RWMutex
+}
 
 // NewReinforcementLearner creates Q-learner
 func NewReinforcementLearner(learningRate float64) *ReinforcementLearner {
@@ -483,6 +504,7 @@ func NewReinforcementLearner(learningRate float64) *ReinforcementLearner {
 		learningRate: learningRate,
 		discountRate: 0.95,
 	}
+}
 
 // UpdateQValues updates Q-table from episode
 func (rl *ReinforcementLearner) UpdateQValues(episode Episode) {
@@ -510,6 +532,7 @@ func (rl *ReinforcementLearner) UpdateQValues(episode Episode) {
 		newQ := oldQ + rl.learningRate*(reward+rl.discountRate*maxNextQ-oldQ)
 		rl.qTable[state][action] = newQ
 	}
+}
 
 // GetBestAction returns action with highest Q-value
 func (rl *ReinforcementLearner) GetBestAction(state State) string {
@@ -533,6 +556,7 @@ func (rl *ReinforcementLearner) GetBestAction(state State) string {
 	}
 
 	return bestAction
+}
 
 // getMaxQ returns maximum Q-value for state
 func (rl *ReinforcementLearner) getMaxQ(state string) float64 {
@@ -553,33 +577,39 @@ func (rl *ReinforcementLearner) getMaxQ(state string) float64 {
 	}
 
 	return maxQ
+}
 
 // stateToString converts state to string key
 func (rl *ReinforcementLearner) stateToString(state State) string {
 	return fmt.Sprintf("sec:%.2f,success:%.2f", state.SecurityLevel, state.SuccessRate)
+}
 
 // actionToString converts action to string
 func (rl *ReinforcementLearner) actionToString(action Action) string {
 	return string(action.Type)
+}
 
 // SuccessPredictor predicts attack success
 type SuccessPredictor struct {
-	model      *PredictionModel
-	features   []Feature
-	history    []PredictionRecord
-	mu         sync.RWMutex
+	model    *PredictionModel
+	features []Feature
+	history  []PredictionRecord
+	mu       sync.RWMutex
+}
 
 // PredictionModel represents the ML model
 type PredictionModel struct {
-	Weights    map[string]float64
-	Bias       float64
-	Accuracy   float64
+	Weights     map[string]float64
+	Bias        float64
+	Accuracy    float64
 	LastTrained time.Time
+}
 
 // Feature represents a predictive feature
 type Feature struct {
 	Name      string
 	Extractor func(State, Action) float64
+}
 
 // PredictionRecord stores prediction history
 type PredictionRecord struct {
@@ -587,6 +617,7 @@ type PredictionRecord struct {
 	Actual     bool
 	Features   map[string]float64
 	Timestamp  time.Time
+}
 
 // NewSuccessPredictor creates predictor
 func NewSuccessPredictor() *SuccessPredictor {
@@ -602,6 +633,7 @@ func NewSuccessPredictor() *SuccessPredictor {
 	sp.registerFeatures()
 
 	return sp
+}
 
 // registerFeatures defines predictive features
 func (sp *SuccessPredictor) registerFeatures() {
@@ -632,6 +664,7 @@ func (sp *SuccessPredictor) registerFeatures() {
 			return s.SuccessRate
 		},
 	})
+}
 
 // Predict estimates success probability
 func (sp *SuccessPredictor) Predict(state State, action Action) float64 {
@@ -649,6 +682,7 @@ func (sp *SuccessPredictor) Predict(state State, action Action) float64 {
 
 	// Sigmoid activation
 	return 1.0 / (1.0 + math.Exp(-prediction))
+}
 
 // UpdateModel trains on new data
 func (sp *SuccessPredictor) UpdateModel(episode Episode) {
@@ -676,6 +710,7 @@ func (sp *SuccessPredictor) UpdateModel(episode Episode) {
 	if len(sp.history) > 100 && time.Since(sp.model.LastTrained) > time.Minute {
 		sp.train()
 	}
+}
 
 // extractFeatures computes feature values
 func (sp *SuccessPredictor) extractFeatures(state State, action Action) map[string]float64 {
@@ -686,6 +721,7 @@ func (sp *SuccessPredictor) extractFeatures(state State, action Action) map[stri
 	}
 
 	return features
+}
 
 // predictWithFeatures makes prediction from features
 func (sp *SuccessPredictor) predictWithFeatures(features map[string]float64) float64 {
@@ -694,6 +730,7 @@ func (sp *SuccessPredictor) predictWithFeatures(features map[string]float64) flo
 		prediction += sp.model.Weights[name] * value
 	}
 	return 1.0 / (1.0 + math.Exp(-prediction))
+}
 
 // train updates model weights
 func (sp *SuccessPredictor) train() {
@@ -727,6 +764,7 @@ func (sp *SuccessPredictor) train() {
 	}
 
 	sp.model.LastTrained = time.Now()
+}
 
 // StrategyOptimizer optimizes attack strategies
 type StrategyOptimizer struct {
@@ -740,8 +778,14 @@ type Strategy struct {
 	ID          string
 	Name        string
 	Components  []StrategyComponent
-	Constraints []Constraint
+	Constraints []StrategyConstraint
 	Score       float64
+}
+
+// StrategyConstraint represents a constraint on strategy
+type StrategyConstraint struct {
+	Type  string
+	Value interface{}
 }
 
 // StrategyComponent is part of strategy
@@ -755,18 +799,19 @@ type StrategyComponent struct {
 type ComponentType string
 
 const (
-	ComponentTechnique ComponentType = "technique"
-	ComponentTiming    ComponentType = "timing"
-	ComponentTarget    ComponentType = "target"
+	ComponentTechnique  ComponentType = "technique"
+	ComponentTiming     ComponentType = "timing"
+	ComponentTarget     ComponentType = "target"
 	ComponentAdaptation ComponentType = "adaptation"
 )
 
 // StrategyPerformance tracks strategy metrics
 type StrategyPerformance struct {
-	SuccessRate    float64
-	AverageTime    time.Duration
-	ResourceUsage  float64
-	LastOptimized  time.Time
+	SuccessRate   float64
+	AverageTime   time.Duration
+	ResourceUsage float64
+	LastOptimized time.Time
+}
 
 // NewStrategyOptimizer creates optimizer
 func NewStrategyOptimizer() *StrategyOptimizer {
@@ -774,6 +819,7 @@ func NewStrategyOptimizer() *StrategyOptimizer {
 		strategies:  make(map[string]*Strategy),
 		performance: make(map[string]*StrategyPerformance),
 	}
+}
 
 // OptimizeStrategy improves strategy
 func (so *StrategyOptimizer) OptimizeStrategy(strategy *Strategy, feedback []Feedback) *Strategy {
@@ -799,6 +845,7 @@ func (so *StrategyOptimizer) OptimizeStrategy(strategy *Strategy, feedback []Fee
 	so.updatePerformance(optimized, analysis)
 
 	return optimized
+}
 
 // analyzeFeedback extracts insights
 func (so *StrategyOptimizer) analyzeFeedback(feedback []Feedback) FeedbackAnalysis {
@@ -831,6 +878,7 @@ func (so *StrategyOptimizer) analyzeFeedback(feedback []Feedback) FeedbackAnalys
 	}
 
 	return analysis
+}
 
 // FeedbackAnalysis contains analyzed feedback
 type FeedbackAnalysis struct {
@@ -848,11 +896,11 @@ type Feedback struct {
 
 // KnowledgeBase stores learned knowledge
 type KnowledgeBase struct {
-	policies     map[string]*Policy
-	strategies   map[string]*Strategy
-	patterns     []Pattern
-	exploits     map[string]*ExploitKnowledge
-	mu           sync.RWMutex
+	policies   map[string]*Policy
+	strategies map[string]*Strategy
+	patterns   []Pattern
+	exploits   map[string]*ExploitKnowledge
+	mu         sync.RWMutex
 }
 
 // Pattern represents learned pattern
@@ -863,21 +911,23 @@ type Pattern struct {
 	Actions     []Action
 	SuccessRate float64
 	Discovered  time.Time
+}
 
 // PatternType categorizes patterns
 type PatternType string
 
 const (
 	PatternVulnerability PatternType = "vulnerability"
-	PatternDefense      PatternType = "defense"
-	PatternBehavior     PatternType = "behavior"
-	PatternChain        PatternType = "chain"
+	PatternDefense       PatternType = "defense"
+	PatternBehavior      PatternType = "behavior"
+	PatternChain         PatternType = "chain"
 )
 
 // Condition for pattern matching
 type Condition struct {
 	Type  ConditionType
 	Value interface{}
+}
 
 // ConditionType categorizes conditions
 type ConditionType string
@@ -890,12 +940,13 @@ const (
 
 // ExploitKnowledge stores exploit information
 type ExploitKnowledge struct {
-	ExploitID        string
-	Technique        string
-	SuccessRate      float64
+	ExploitID         string
+	Technique         string
+	SuccessRate       float64
 	OptimalConditions map[string]interface{}
-	Counters         []string
-	LastUpdated      time.Time
+	Counters          []string
+	LastUpdated       time.Time
+}
 
 // NewKnowledgeBase creates knowledge base
 func NewKnowledgeBase() *KnowledgeBase {
@@ -905,17 +956,20 @@ func NewKnowledgeBase() *KnowledgeBase {
 		patterns:   []Pattern{},
 		exploits:   make(map[string]*ExploitKnowledge),
 	}
+}
 
 // LoadHistoricalData loads past learning
 func (kb *KnowledgeBase) LoadHistoricalData() {
 	// Load from persistent storage
 	// This would load previously learned patterns, strategies, etc.
+}
 
 // AddPolicy adds policy to knowledge base
 func (kb *KnowledgeBase) AddPolicy(policy *Policy) {
 	kb.mu.Lock()
 	defer kb.mu.Unlock()
 	kb.policies[policy.ID] = policy
+}
 
 // GetPolicies returns all policies
 func (kb *KnowledgeBase) GetPolicies() []*Policy {
@@ -928,6 +982,7 @@ func (kb *KnowledgeBase) GetPolicies() []*Policy {
 	}
 
 	return policies
+}
 
 // AddPatterns adds discovered patterns
 func (kb *KnowledgeBase) AddPatterns(patterns []Pattern) {
@@ -950,6 +1005,7 @@ func (kb *KnowledgeBase) AddPatterns(patterns []Pattern) {
 			kb.patterns = append(kb.patterns, pattern)
 		}
 	}
+}
 
 // FindPatterns finds matching patterns
 func (kb *KnowledgeBase) FindPatterns(state State) []Pattern {
@@ -970,6 +1026,7 @@ func (kb *KnowledgeBase) FindPatterns(state State) []Pattern {
 	})
 
 	return matches
+}
 
 // patternsEqual checks pattern equality
 func (kb *KnowledgeBase) patternsEqual(p1, p2 Pattern) bool {
@@ -986,6 +1043,7 @@ func (kb *KnowledgeBase) patternsEqual(p1, p2 Pattern) bool {
 	}
 
 	return true
+}
 
 // matchesPattern checks if state matches pattern
 func (kb *KnowledgeBase) matchesPattern(pattern Pattern, state State) bool {
@@ -995,6 +1053,7 @@ func (kb *KnowledgeBase) matchesPattern(pattern Pattern, state State) bool {
 		}
 	}
 	return true
+}
 
 // checkCondition evaluates condition
 func (kb *KnowledgeBase) checkCondition(condition Condition, state State) bool {
@@ -1017,6 +1076,7 @@ func (kb *KnowledgeBase) checkCondition(condition Condition, state State) bool {
 		}
 	}
 	return true
+}
 
 // FeedbackProcessor processes attack feedback
 type FeedbackProcessor struct {
@@ -1031,6 +1091,7 @@ type ImmediateFeedback struct {
 	Reward    float64
 	State     State
 	Timestamp time.Time
+}
 
 // DelayedFeedback is post-analysis feedback
 type DelayedFeedback struct {
@@ -1038,6 +1099,7 @@ type DelayedFeedback struct {
 	Analysis  map[string]interface{}
 	Insights  []string
 	Timestamp time.Time
+}
 
 // NewFeedbackProcessor creates processor
 func NewFeedbackProcessor() *FeedbackProcessor {
@@ -1045,6 +1107,7 @@ func NewFeedbackProcessor() *FeedbackProcessor {
 		immediate: []ImmediateFeedback{},
 		delayed:   []DelayedFeedback{},
 	}
+}
 
 // ProcessImmediate handles real-time feedback
 func (fp *FeedbackProcessor) ProcessImmediate(action Action, reward float64, state State) {
@@ -1064,6 +1127,7 @@ func (fp *FeedbackProcessor) ProcessImmediate(action Action, reward float64, sta
 	if len(fp.immediate) > 1000 {
 		fp.immediate = fp.immediate[100:]
 	}
+}
 
 // ProcessDelayed handles post-analysis
 func (fp *FeedbackProcessor) ProcessDelayed(episodeID string, analysis map[string]interface{}) {
@@ -1078,6 +1142,7 @@ func (fp *FeedbackProcessor) ProcessDelayed(episodeID string, analysis map[strin
 	}
 
 	fp.delayed = append(fp.delayed, feedback)
+}
 
 // extractInsights derives insights from analysis
 func (fp *FeedbackProcessor) extractInsights(analysis map[string]interface{}) []string {
@@ -1093,6 +1158,7 @@ func (fp *FeedbackProcessor) extractInsights(analysis map[string]interface{}) []
 	}
 
 	return insights
+}
 
 // EvolutionEngine evolves strategies
 type EvolutionEngine struct {
@@ -1100,18 +1166,21 @@ type EvolutionEngine struct {
 	config     EvolutionConfig
 	generation int
 	mu         sync.RWMutex
+}
 
 // Individual in population
 type Individual struct {
-	ID       string
-	Genome   Genome
-	Fitness  float64
-	Age      int
+	ID      string
+	Genome  Genome
+	Fitness float64
+	Age     int
+}
 
 // Genome represents strategy encoding
 type Genome struct {
 	Genes    map[string]float64
 	Strategy *Strategy
+}
 
 // EvolutionConfig configures evolution
 type EvolutionConfig struct {
@@ -1119,6 +1188,7 @@ type EvolutionConfig struct {
 	MutationRate   float64
 	CrossoverRate  float64
 	EliteSize      int
+}
 
 // NewEvolutionEngine creates evolution engine
 func NewEvolutionEngine() *EvolutionEngine {
@@ -1126,6 +1196,7 @@ func NewEvolutionEngine() *EvolutionEngine {
 		population: []Individual{},
 		generation: 0,
 	}
+}
 
 // Initialize sets up evolution
 func (ee *EvolutionEngine) Initialize(config EvolutionConfig) {
@@ -1133,6 +1204,7 @@ func (ee *EvolutionEngine) Initialize(config EvolutionConfig) {
 
 	// Create initial population
 	ee.population = ee.createInitialPopulation()
+}
 
 // createInitialPopulation generates starting population
 func (ee *EvolutionEngine) createInitialPopulation() []Individual {
@@ -1150,6 +1222,7 @@ func (ee *EvolutionEngine) createInitialPopulation() []Individual {
 	}
 
 	return population
+}
 
 // randomGenome creates random genes
 func (ee *EvolutionEngine) randomGenome() map[string]float64 {
@@ -1161,6 +1234,7 @@ func (ee *EvolutionEngine) randomGenome() map[string]float64 {
 		"adaptation":  rand.Float64(),
 	}
 	return genes
+}
 
 // Evolve performs one evolution step
 func (ee *EvolutionEngine) Evolve(episode Episode) {
@@ -1181,6 +1255,7 @@ func (ee *EvolutionEngine) Evolve(episode Episode) {
 
 	// Increment generation
 	ee.generation++
+}
 
 // evaluateFitness calculates individual fitness
 func (ee *EvolutionEngine) evaluateFitness(episode Episode) {
@@ -1195,6 +1270,7 @@ func (ee *EvolutionEngine) evaluateFitness(episode Episode) {
 		ee.population[i].Fitness = fitness
 		ee.population[i].Age++
 	}
+}
 
 // selection chooses parents
 func (ee *EvolutionEngine) selection() []Individual {
@@ -1221,6 +1297,7 @@ func (ee *EvolutionEngine) selection() []Individual {
 	}
 
 	return parents
+}
 
 // reproduce creates offspring
 func (ee *EvolutionEngine) reproduce(parents []Individual) []Individual {
@@ -1244,6 +1321,7 @@ func (ee *EvolutionEngine) reproduce(parents []Individual) []Individual {
 	}
 
 	return offspring
+}
 
 // crossover combines two individuals
 func (ee *EvolutionEngine) crossover(parent1, parent2 Individual) (Individual, Individual) {
@@ -1270,6 +1348,7 @@ func (ee *EvolutionEngine) crossover(parent1, parent2 Individual) (Individual, I
 	}
 
 	return child1, child2
+}
 
 // mutate modifies individual
 func (ee *EvolutionEngine) mutate(individual Individual) Individual {
@@ -1280,7 +1359,7 @@ func (ee *EvolutionEngine) mutate(individual Individual) Individual {
 		if rand.Float64() < 0.2 { // 20% chance per gene
 			delta := rand.NormFloat64() * 0.1
 			mutated.Genome.Genes[gene] += delta
-			
+
 			// Clamp to [0,1]
 			if mutated.Genome.Genes[gene] < 0 {
 				mutated.Genome.Genes[gene] = 0
@@ -1291,6 +1370,7 @@ func (ee *EvolutionEngine) mutate(individual Individual) Individual {
 	}
 
 	return mutated
+}
 
 // replacement creates new population
 func (ee *EvolutionEngine) replacement(offspring []Individual) []Individual {
@@ -1312,6 +1392,7 @@ func (ee *EvolutionEngine) replacement(offspring []Individual) []Individual {
 	}
 
 	return newPopulation
+}
 
 // Helper functions
 func (as *AdaptiveSystem) observeState(target interface{}) State {
@@ -1321,10 +1402,12 @@ func (as *AdaptiveSystem) observeState(target interface{}) State {
 		SuccessRate:   0.0,
 		Features:      make(map[string]float64),
 	}
+}
 
 func (as *AdaptiveSystem) isTerminal(state State) bool {
 	// Check if episode should end
 	return state.SecurityLevel < 0.1 || state.SuccessRate > 0.9
+}
 
 func (as *AdaptiveSystem) generateRandomAction() Action {
 	actions := []ActionType{
@@ -1340,6 +1423,7 @@ func (as *AdaptiveSystem) generateRandomAction() Action {
 		Confidence: rand.Float64(),
 		Parameters: make(map[string]interface{}),
 	}
+}
 
 func (as *AdaptiveSystem) sampleAction(probs map[ActionType]float64) Action {
 	// Weighted random sampling
@@ -1359,6 +1443,7 @@ func (as *AdaptiveSystem) sampleAction(probs map[ActionType]float64) Action {
 
 	// Default
 	return as.generateRandomAction()
+}
 
 func (as *AdaptiveSystem) adjustAction(action Action, state State) Action {
 	// Adjust action parameters based on state
@@ -1370,6 +1455,7 @@ func (as *AdaptiveSystem) adjustAction(action Action, state State) Action {
 	}
 
 	return action
+}
 
 func (as *AdaptiveSystem) analyzeTarget(target interface{}) map[string]float64 {
 	// Analyze target characteristics
@@ -1378,6 +1464,7 @@ func (as *AdaptiveSystem) analyzeTarget(target interface{}) map[string]float64 {
 		"responsiveness": 0.7,
 		"security":       0.6,
 	}
+}
 
 func (as *AdaptiveSystem) scorePolicy(policy *Policy, characteristics map[string]float64) float64 {
 	score := 0.0
@@ -1392,32 +1479,39 @@ func (as *AdaptiveSystem) scorePolicy(policy *Policy, characteristics map[string
 	}
 
 	return score
+}
 
 func (as *AdaptiveSystem) wasDetected(state State) bool {
 	// Check detection indicators
 	return strings.Contains(state.ModelResponse, "detected") ||
 		strings.Contains(state.ModelResponse, "blocked") ||
 		strings.Contains(state.ModelResponse, "unauthorized")
+}
 
 func (as *AdaptiveSystem) executeInjection(target interface{}, action Action) (string, bool) {
 	// Execute injection attack
 	return "Injection executed", true
+}
 
 func (as *AdaptiveSystem) executeJailbreak(target interface{}, action Action) (string, bool) {
 	// Execute jailbreak attack
 	return "Jailbreak attempted", false
+}
 
 func (as *AdaptiveSystem) executeExtraction(target interface{}, action Action) (string, bool) {
 	// Execute extraction attack
 	return "Data extracted", true
+}
 
 func (as *AdaptiveSystem) executeChain(target interface{}, action Action) (string, bool) {
 	// Execute attack chain
 	return "Chain executed", true
+}
 
 func (as *AdaptiveSystem) executeAdaptation(target interface{}, action Action, state State) (string, bool) {
 	// Adapt strategy
 	return "Strategy adapted", true
+}
 
 func (as *AdaptiveSystem) extractPatterns(episode Episode) []Pattern {
 	patterns := []Pattern{}
@@ -1435,6 +1529,7 @@ func (as *AdaptiveSystem) extractPatterns(episode Episode) []Pattern {
 	}
 
 	return patterns
+}
 
 func (as *AdaptiveSystem) updateMetrics(session *LearningSession) {
 	successful := 0
@@ -1455,6 +1550,7 @@ func (as *AdaptiveSystem) updateMetrics(session *LearningSession) {
 
 	// Update learning curve
 	session.Metrics.LearningCurve = append(session.Metrics.LearningCurve, session.Metrics.AverageReward)
+}
 
 func (as *AdaptiveSystem) hasConverged(session *LearningSession) bool {
 	// Check convergence criteria
@@ -1467,6 +1563,7 @@ func (as *AdaptiveSystem) hasConverged(session *LearningSession) bool {
 	variance := calculateVariance(recent)
 
 	return variance < 0.01
+}
 
 func (as *AdaptiveSystem) calculateOutcome(episode Episode) Outcome {
 	totalReward := 0.0
@@ -1475,11 +1572,12 @@ func (as *AdaptiveSystem) calculateOutcome(episode Episode) Outcome {
 	}
 
 	return Outcome{
-		Success: totalReward > 0,
-		Reward:  totalReward,
+		Success:         totalReward > 0,
+		Reward:          totalReward,
 		Vulnerabilities: []string{}, // Would extract from episode
 		Insights:        []string{}, // Would derive insights
 	}
+}
 
 func (as *AdaptiveSystem) calculatePolicyGradient(episodes []Episode) map[string]float64 {
 	gradient := make(map[string]float64)
@@ -1504,6 +1602,7 @@ func (as *AdaptiveSystem) calculatePolicyGradient(episodes []Episode) map[string
 	}
 
 	return gradient
+}
 
 func (as *AdaptiveSystem) finalizeSession(session *LearningSession) {
 	// Save learned knowledge
@@ -1515,6 +1614,7 @@ func (as *AdaptiveSystem) finalizeSession(session *LearningSession) {
 	as.mu.Lock()
 	delete(as.activeLearning, session.ID)
 	as.mu.Unlock()
+}
 
 func (as *AdaptiveSystem) optimizationLoop() {
 	ticker := time.NewTicker(as.config.UpdateFrequency)
@@ -1530,6 +1630,7 @@ func (as *AdaptiveSystem) optimizationLoop() {
 			as.performOptimization()
 		}
 	}
+}
 
 func (as *AdaptiveSystem) performOptimization() {
 	// Optimize strategies
@@ -1540,19 +1641,21 @@ func (as *AdaptiveSystem) performOptimization() {
 	for _, strategy := range strategies {
 		// Collect feedback
 		feedback := as.collectStrategyFeedback(strategy)
-		
+
 		// Optimize
 		optimized := as.optimizer.OptimizeStrategy(strategy, feedback)
-		
+
 		// Update
 		as.knowledge.mu.Lock()
 		as.knowledge.strategies[optimized.ID] = optimized
 		as.knowledge.mu.Unlock()
 	}
+}
 
 func (as *AdaptiveSystem) collectStrategyFeedback(strategy *Strategy) []Feedback {
 	// Would collect actual feedback from executions
 	return []Feedback{}
+}
 
 func (so *StrategyOptimizer) cloneStrategy(strategy *Strategy) *Strategy {
 	clone := &Strategy{
@@ -1565,6 +1668,7 @@ func (so *StrategyOptimizer) cloneStrategy(strategy *Strategy) *Strategy {
 
 	copy(clone.Components, strategy.Components)
 	return clone
+}
 
 func (so *StrategyOptimizer) optimizeComponent(component *StrategyComponent, analysis FeedbackAnalysis) {
 	// Adjust based on analysis
@@ -1578,6 +1682,7 @@ func (so *StrategyOptimizer) optimizeComponent(component *StrategyComponent, ana
 			component.Weight *= 1.1
 		}
 	}
+}
 
 func (so *StrategyOptimizer) rebalanceWeights(strategy *Strategy) {
 	totalWeight := 0.0
@@ -1590,16 +1695,24 @@ func (so *StrategyOptimizer) rebalanceWeights(strategy *Strategy) {
 			strategy.Components[i].Weight /= totalWeight
 		}
 	}
+}
 
 func (so *StrategyOptimizer) updatePerformance(strategy *Strategy, analysis FeedbackAnalysis) {
+	totalFactors := len(analysis.SuccessFactors) + len(analysis.FailureFactors)
+	successRate := 0.0
+	if totalFactors > 0 {
+		successRate = float64(len(analysis.SuccessFactors)) / float64(totalFactors)
+	}
+
 	perf := &StrategyPerformance{
-		SuccessRate:   len(analysis.SuccessFactors) / float64(len(analysis.SuccessFactors)+len(analysis.FailureFactors)),
+		SuccessRate:   successRate,
 		LastOptimized: time.Now(),
 	}
 
 	so.mu.Lock()
 	so.performance[strategy.ID] = perf
 	so.mu.Unlock()
+}
 
 func calculateVariance(values []float64) float64 {
 	if len(values) == 0 {
@@ -1619,101 +1732,33 @@ func calculateVariance(values []float64) float64 {
 	}
 
 	return variance / float64(len(values))
+}
 
 func generateSessionID() string {
 	return fmt.Sprintf("session_%d", time.Now().UnixNano())
+}
 
 func generateEpisodeID() string {
 	return fmt.Sprintf("episode_%d", time.Now().UnixNano())
+}
 
 func generatePatternID() string {
 	return fmt.Sprintf("pattern_%d", time.Now().UnixNano())
+}
 
 func generateID() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
 
-func rand.Float64() float64 {
+func randomFloat64() float64 {
 	return float64(rand.Intn(100)) / 100.0
+}
 
-func rand.NormFloat64() float64 {
+func randomNormFloat64() float64 {
 	// Simple normal distribution approximation
 	sum := 0.0
 	for i := 0; i < 12; i++ {
 		sum += rand.Float64()
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return sum - 6.0
 }

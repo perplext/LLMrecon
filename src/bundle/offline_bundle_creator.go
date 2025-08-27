@@ -5,9 +5,13 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
+	"github.com/perplext/LLMrecon/src/audit/trail"
 )
 
 // OfflineBundleCreator creates offline bundles
@@ -22,6 +26,7 @@ type OfflineBundleCreator struct {
 	Logger io.Writer
 	// AuditTrail is the audit trail manager for logging operations
 	AuditTrail *trail.AuditTrailManager
+}
 
 // NewOfflineBundleCreator creates a new offline bundle creator
 func NewOfflineBundleCreator(signingKey ed25519.PrivateKey, author Author, logger io.Writer, auditTrail *trail.AuditTrailManager) *OfflineBundleCreator {
@@ -30,12 +35,13 @@ func NewOfflineBundleCreator(signingKey ed25519.PrivateKey, author Author, logge
 	}
 
 	return &OfflineBundleCreator{
-		Generator: NewManifestGenerator(signingKey, author),
-		Validator: NewOfflineBundleValidator(logger),
-		Format:    DefaultOfflineBundleFormat(),
-		Logger:    logger,
+		Generator:  NewManifestGenerator(signingKey, author),
+		Validator:  NewOfflineBundleValidator(logger),
+		Format:     DefaultOfflineBundleFormat(),
+		Logger:     logger,
 		AuditTrail: auditTrail,
 	}
+}
 
 // CreateOfflineBundle creates a new offline bundle
 func (c *OfflineBundleCreator) CreateOfflineBundle(name, description, version string, bundleType BundleType, outputPath string) (*OfflineBundle, error) {
@@ -94,7 +100,7 @@ See the documentation directory for usage instructions.
 `, name, description, version, bundleType, manifest.CreatedAt.Format(time.RFC3339),
 		manifest.Author.Name, manifest.Author.Email)
 
-	if err := os.WriteFile(filepath.Clean(readmePath, []byte(readmeContent)), 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(readmePath), []byte(readmeContent), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write README.md: %w", err)
 	}
 
@@ -116,26 +122,28 @@ See the documentation directory for usage instructions.
 	// Log audit event
 	if c.AuditTrail != nil {
 		auditLog := &trail.AuditLog{
-			Operation:     "create_offline_bundle",
-			ResourceType:  "offline_bundle",
-			ResourceID:    manifest.BundleID,
-			Status:        "success",
-			Timestamp:     time.Now(),
-			UserID:        manifest.Author.Email,
-			Username:      manifest.Author.Name,
-			IPAddress:     "",
-			Details: map[string]interface{}{
-				"name":        name,
-				"version":     version,
-				"bundle_type": string(bundleType),
-				"output_path": outputPath,
-				"bundle_id":   manifest.BundleID,
-				"created_at":  manifest.CreatedAt,
+			Operation:  "create_offline_bundle",
+			Component:  "bundle",
+			Resource:   "offline_bundle",
+			ResourceID: manifest.BundleID,
+			Status:     "success",
+			Timestamp:  time.Now(),
+			UserID:     manifest.Author.Email,
+			User:       manifest.Author.Name,
+			IPAddress:  "",
+			Message:    "Created offline bundle",
+			Metadata: map[string]interface{}{
+				"name":           name,
+				"version":        version,
+				"bundle_type":    string(bundleType),
+				"output_path":    outputPath,
+				"bundle_id":      manifest.BundleID,
+				"created_at":     manifest.CreatedAt,
 				"is_incremental": false,
 			},
 		}
-		
-		if err := c.AuditTrail.LogOperation(nil, auditLog); err != nil {
+
+		if err := c.AuditTrail.Log(nil, auditLog); err != nil {
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
 	}
@@ -144,6 +152,7 @@ See the documentation directory for usage instructions.
 	fmt.Fprintf(c.Logger, "Offline bundle created successfully: %s\n", outputPath)
 
 	return bundle, nil
+}
 
 // AddContentToOfflineBundle adds content to an offline bundle
 func (c *OfflineBundleCreator) AddContentToOfflineBundle(bundle *OfflineBundle, sourcePath, targetPath string, contentType ContentType, id, version, description string) error {
@@ -185,7 +194,7 @@ func (c *OfflineBundleCreator) AddContentToOfflineBundle(bundle *OfflineBundle, 
 		return fmt.Errorf("failed to read source file: %w", err)
 	}
 
-	if err := os.WriteFile(filepath.Clean(fullTargetPath, sourceData, 0600)); err != nil {
+	if err := os.WriteFile(filepath.Clean(fullTargetPath), sourceData, 0600); err != nil {
 		return fmt.Errorf("failed to write target file: %w", err)
 	}
 
@@ -215,29 +224,32 @@ func (c *OfflineBundleCreator) AddContentToOfflineBundle(bundle *OfflineBundle, 
 	// Log audit event
 	if c.AuditTrail != nil {
 		auditLog := &trail.AuditLog{
-			Operation:     "add_content_to_offline_bundle",
-			ResourceType:  "offline_bundle",
-			ResourceID:    bundle.Manifest.BundleID,
-			Status:        "success",
-			Timestamp:     time.Now(),
-			UserID:        bundle.Manifest.Author.Email,
-			Username:      bundle.Manifest.Author.Name,
-			IPAddress:     "",
-			Details: map[string]interface{}{
-				"source_path": sourcePath,
-				"target_path": targetPath,
-				"content_type": string(contentType),
-				"content_id": id,
+			Operation:  "add_content_to_offline_bundle",
+			Component:  "bundle",
+			Resource:   "offline_bundle",
+			ResourceID: bundle.Manifest.BundleID,
+			Status:     "success",
+			Timestamp:  time.Now(),
+			UserID:     bundle.Manifest.Author.Email,
+			User:       bundle.Manifest.Author.Name,
+			IPAddress:  "",
+			Message:    "Added content to offline bundle",
+			Metadata: map[string]interface{}{
+				"source_path":     sourcePath,
+				"target_path":     targetPath,
+				"content_type":    string(contentType),
+				"content_id":      id,
 				"content_version": version,
 			},
 		}
-		
-		if err := c.AuditTrail.LogOperation(nil, auditLog); err != nil {
+
+		if err := c.AuditTrail.Log(nil, auditLog); err != nil {
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
 	}
 
 	return nil
+}
 
 // AddComplianceMappingToOfflineBundle adds a compliance mapping to an offline bundle
 func (c *OfflineBundleCreator) AddComplianceMappingToOfflineBundle(bundle *OfflineBundle, contentID string, owaspCategories, isoControls []string) error {
@@ -273,47 +285,49 @@ func (c *OfflineBundleCreator) AddComplianceMappingToOfflineBundle(bundle *Offli
 
 	// Write compliance mappings to file
 	compliancePath := filepath.Join(bundle.BundlePath, "compliance", "mappings.json")
-	
+
 	// Create directory if it doesn't exist
 	if err := os.MkdirAll(filepath.Dir(compliancePath), 0700); err != nil {
 		return fmt.Errorf("failed to create compliance directory: %w", err)
 	}
-	
+
 	// Write mappings
 	mappingsData, err := json.MarshalIndent(bundle.ComplianceMappings, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal compliance mappings: %w", err)
 	}
-	
-	if err := os.WriteFile(filepath.Clean(compliancePath, mappingsData, 0600)); err != nil {
+
+	if err := os.WriteFile(filepath.Clean(compliancePath), mappingsData, 0600); err != nil {
 		return fmt.Errorf("failed to write compliance mappings: %w", err)
 	}
 
 	// Log audit event
 	if c.AuditTrail != nil {
 		auditLog := &trail.AuditLog{
-			Operation:     "add_compliance_mapping_to_offline_bundle",
-			ResourceType:  "offline_bundle",
-			ResourceID:    bundle.Manifest.BundleID,
-			Status:        "success",
-			Timestamp:     time.Now(),
-			UserID:        bundle.Manifest.Author.Email,
-			Username:      bundle.Manifest.Author.Name,
-			IPAddress:     "",
-			Details: map[string]interface{}{
-				"content_id": contentID,
+			Operation:  "add_compliance_mapping_to_offline_bundle",
+			Component:  "bundle",
+			Resource:   "offline_bundle",
+			ResourceID: bundle.Manifest.BundleID,
+			Status:     "success",
+			Timestamp:  time.Now(),
+			UserID:     bundle.Manifest.Author.Email,
+			User:       bundle.Manifest.Author.Name,
+			IPAddress:  "",
+			Message:    "Added compliance mapping to offline bundle",
+			Metadata: map[string]interface{}{
+				"content_id":       contentID,
 				"owasp_categories": owaspCategories,
-				"iso_controls": isoControls,
+				"iso_controls":     isoControls,
 			},
 		}
-		
-		if err := c.AuditTrail.LogOperation(nil, auditLog); err != nil {
+
+		if err := c.AuditTrail.Log(nil, auditLog); err != nil {
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
 	}
 
 	return nil
-	
+}
 
 // AddDocumentationToOfflineBundle adds documentation to an offline bundle
 func (c *OfflineBundleCreator) AddDocumentationToOfflineBundle(bundle *OfflineBundle, docType, sourcePath string) error {
@@ -324,7 +338,7 @@ func (c *OfflineBundleCreator) AddDocumentationToOfflineBundle(bundle *OfflineBu
 
 	// Determine target path
 	targetDir := filepath.Join(bundle.BundlePath, "documentation")
-	
+
 	// Create target directory if it doesn't exist
 	if err := os.MkdirAll(targetDir, 0700); err != nil {
 		return fmt.Errorf("failed to create documentation directory: %w", err)
@@ -339,7 +353,7 @@ func (c *OfflineBundleCreator) AddDocumentationToOfflineBundle(bundle *OfflineBu
 		return fmt.Errorf("failed to read source file: %w", err)
 	}
 
-	if err := os.WriteFile(filepath.Clean(targetPath, sourceData, 0600)); err != nil {
+	if err := os.WriteFile(filepath.Clean(targetPath), sourceData, 0600); err != nil {
 		return fmt.Errorf("failed to write documentation file: %w", err)
 	}
 
@@ -363,32 +377,35 @@ func (c *OfflineBundleCreator) AddDocumentationToOfflineBundle(bundle *OfflineBu
 	// Log audit event
 	if c.AuditTrail != nil {
 		auditLog := &trail.AuditLog{
-			Operation:     "add_documentation_to_offline_bundle",
-			ResourceType:  "offline_bundle",
-			ResourceID:    bundle.Manifest.BundleID,
-			Status:        "success",
-			Timestamp:     time.Now(),
-			UserID:        bundle.Manifest.Author.Email,
-			Username:      bundle.Manifest.Author.Name,
-			IPAddress:     "",
-			Details: map[string]interface{}{
-				"doc_type": docType,
+			Operation:  "add_documentation_to_offline_bundle",
+			Component:  "bundle",
+			Resource:   "offline_bundle",
+			ResourceID: bundle.Manifest.BundleID,
+			Status:     "success",
+			Timestamp:  time.Now(),
+			UserID:     bundle.Manifest.Author.Email,
+			User:       bundle.Manifest.Author.Name,
+			IPAddress:  "",
+			Message:    "Added documentation to offline bundle",
+			Metadata: map[string]interface{}{
+				"doc_type":    docType,
 				"source_path": sourcePath,
 				"target_path": relPath,
 			},
 		}
-		
-		if err := c.AuditTrail.LogOperation(nil, auditLog); err != nil {
+
+		if err := c.AuditTrail.Log(nil, auditLog); err != nil {
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
 	}
 
 	return nil
+}
 
 // CreateIncrementalBundle creates an incremental bundle based on an existing bundle
 func (c *OfflineBundleCreator) CreateIncrementalBundle(baseBundle *OfflineBundle, newVersion string, changes []string, outputPath string) (*OfflineBundle, error) {
 	// Log creation start
-	fmt.Fprintf(c.Logger, "Creating incremental bundle: %s (base: %s, new: %s)\n", 
+	fmt.Fprintf(c.Logger, "Creating incremental bundle: %s (base: %s, new: %s)\n",
 		baseBundle.Manifest.Name, baseBundle.EnhancedManifest.Version, newVersion)
 
 	// Generate incremental manifest
@@ -444,12 +461,12 @@ This is an incremental update to the base bundle. It contains only the changes s
 ## Usage
 
 See the documentation directory for usage instructions.
-`, manifest.Name, manifest.Description, newVersion, manifest.BaseVersion, 
+`, manifest.Name, manifest.Description, newVersion, manifest.BaseVersion,
 		manifest.BundleType, manifest.CreatedAt.Format(time.RFC3339),
-		manifest.Author.Name, manifest.Author.Email, 
+		manifest.Author.Name, manifest.Author.Email,
 		formatChanges(changes), manifest.BaseVersion)
 
-	if err := os.WriteFile(filepath.Clean(readmePath, []byte(readmeContent)), 0600); err != nil {
+	if err := os.WriteFile(filepath.Clean(readmePath), []byte(readmeContent), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write README.md: %w", err)
 	}
 
@@ -471,15 +488,17 @@ See the documentation directory for usage instructions.
 	// Log audit event
 	if c.AuditTrail != nil {
 		auditLog := &trail.AuditLog{
-			Operation:     "create_incremental_offline_bundle",
-			ResourceType:  "offline_bundle",
-			ResourceID:    manifest.BundleID,
-			Status:        "success",
-			Timestamp:     time.Now(),
-			UserID:        manifest.Author.Email,
-			Username:      manifest.Author.Name,
-			IPAddress:     "",
-			Details: map[string]interface{}{
+			Operation:  "create_incremental_offline_bundle",
+			Component:  "bundle",
+			Resource:   "offline_bundle",
+			ResourceID: manifest.BundleID,
+			Status:     "success",
+			Timestamp:  time.Now(),
+			UserID:     manifest.Author.Email,
+			User:       manifest.Author.Name,
+			IPAddress:  "",
+			Message:    "Created incremental offline bundle",
+			Metadata: map[string]interface{}{
 				"base_bundle_id": baseBundle.Manifest.BundleID,
 				"base_version":   baseBundle.EnhancedManifest.Version,
 				"new_version":    newVersion,
@@ -490,8 +509,8 @@ See the documentation directory for usage instructions.
 				"changes":        changes,
 			},
 		}
-		
-		if err := c.AuditTrail.LogOperation(nil, auditLog); err != nil {
+
+		if err := c.AuditTrail.Log(nil, auditLog); err != nil {
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
 	}
@@ -500,10 +519,12 @@ See the documentation directory for usage instructions.
 	fmt.Fprintf(c.Logger, "Incremental bundle created successfully: %s\n", outputPath)
 
 	return bundle, nil
+}
 
 // ValidateOfflineBundle validates an offline bundle
 func (c *OfflineBundleCreator) ValidateOfflineBundle(bundle *OfflineBundle, level ValidationLevel) (*ValidationResult, error) {
 	return c.Validator.ValidateOfflineBundle(bundle, level)
+}
 
 // LoadOfflineBundle loads an offline bundle from a directory
 func (c *OfflineBundleCreator) LoadOfflineBundle(bundlePath string) (*OfflineBundle, error) {
@@ -563,28 +584,31 @@ func (c *OfflineBundleCreator) LoadOfflineBundle(bundlePath string) (*OfflineBun
 	// Log audit event
 	if c.AuditTrail != nil {
 		auditLog := &trail.AuditLog{
-			Operation:     "load_offline_bundle",
-			ResourceType:  "offline_bundle",
-			ResourceID:    enhancedManifest.BundleID,
-			Status:        "success",
-			Timestamp:     time.Now(),
-			UserID:        enhancedManifest.Author.Email,
-			Username:      enhancedManifest.Author.Name,
-			IPAddress:     "",
-			Details: map[string]interface{}{
-				"bundle_path": bundlePath,
+			Operation:  "load_offline_bundle",
+			Component:  "bundle",
+			Resource:   "offline_bundle",
+			ResourceID: enhancedManifest.BundleID,
+			Status:     "success",
+			Timestamp:  time.Now(),
+			UserID:     enhancedManifest.Author.Email,
+			User:       enhancedManifest.Author.Name,
+			IPAddress:  "",
+			Message:    "Loaded offline bundle",
+			Metadata: map[string]interface{}{
+				"bundle_path":    bundlePath,
 				"bundle_id":      enhancedManifest.BundleID,
 				"version":        enhancedManifest.Version,
 				"is_incremental": enhancedManifest.IsIncremental,
 			},
 		}
-		
-		if err := c.AuditTrail.LogOperation(nil, auditLog); err != nil {
+
+		if err := c.AuditTrail.Log(nil, auditLog); err != nil {
 			fmt.Fprintf(c.Logger, "Warning: Failed to log audit event: %v\n", err)
 		}
 	}
 
 	return bundle, nil
+}
 
 // ExportOfflineBundle exports an offline bundle to a zip file
 func (c *OfflineBundleCreator) ExportOfflineBundle(bundle *OfflineBundle, outputPath string) error {
@@ -596,6 +620,7 @@ func (c *OfflineBundleCreator) ExportOfflineBundle(bundle *OfflineBundle, output
 
 	// Create zip file
 	return createZipFromDir(bundle.BundlePath, zipPath)
+}
 
 // formatChanges formats a list of changes for display
 func formatChanges(changes []string) string {
@@ -604,4 +629,4 @@ func formatChanges(changes []string) string {
 		result += fmt.Sprintf("- %s\n", change)
 	}
 	return result
-
+}

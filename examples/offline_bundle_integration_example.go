@@ -311,7 +311,7 @@ treturn err
 	if err := os.MkdirAll(filepath.Dir(templatePath), 0755); err != nil {
 		return fmt.Errorf("failed to create template directory: %w", err)
 	}
-	if err := os.WriteFile(filepath.Clean(templatePath, []byte(templateContent)), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(templatePath), []byte(templateContent), 0644); err != nil {
 		return fmt.Errorf("failed to write template file: %w", err)
 	}
 
@@ -346,7 +346,7 @@ treturn err
 	if err := os.MkdirAll(filepath.Dir(docPath), 0755); err != nil {
 		return fmt.Errorf("failed to create documentation directory: %w", err)
 	}
-	if err := os.WriteFile(filepath.Clean(docPath, []byte(docContent)), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(docPath), []byte(docContent), 0644); err != nil {
 		return fmt.Errorf("failed to write documentation file: %w", err)
 	}
 
@@ -407,7 +407,7 @@ treturn err
 	if err := os.MkdirAll(filepath.Dir(templatePath), 0755); err != nil {
 		return fmt.Errorf("failed to create template directory: %w", err)
 	}
-	if err := os.WriteFile(filepath.Clean(templatePath, []byte(templateContent)), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(templatePath), []byte(templateContent), 0644); err != nil {
 		return fmt.Errorf("failed to write template file: %w", err)
 	}
 

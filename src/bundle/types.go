@@ -3,6 +3,7 @@ package bundle
 
 import (
 	"crypto/ed25519"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
@@ -73,33 +74,37 @@ type ValidationResult struct {
 	Details map[string]interface{}
 	// Timestamp is when the validation was performed
 	Timestamp time.Time
+}
 
 // Author represents the author of a bundle
 type Author struct {
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	URL     string `json:"url,omitempty"`
-	KeyID   string `json:"key_id,omitempty"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	URL   string `json:"url,omitempty"`
+	KeyID string `json:"key_id,omitempty"`
+}
 
 // ContentItem represents an item in a bundle
 type ContentItem struct {
-	Path        string                 `json:"path"`
-	Type        ContentType            `json:"type"`
-	ID          string                 `json:"id,omitempty"`
-	Version     string                 `json:"version,omitempty"`
-	Description string                 `json:"description,omitempty"`
-	Checksum    string                 `json:"checksum"`
+	Path        string      `json:"path"`
+	Type        ContentType `json:"type"`
+	ID          string      `json:"id,omitempty"`
+	Version     string      `json:"version,omitempty"`
+	Description string      `json:"description,omitempty"`
+	Checksum    string      `json:"checksum"`
 	// BundleID is the ID of the bundle this item belongs to
-	BundleID    string                 `json:"bundle_id,omitempty"`
+	BundleID string `json:"bundle_id,omitempty"`
 	// Metadata stores additional metadata for the item
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// Size is the file size in bytes
-	Size        int64                  `json:"size,omitempty"`
+	Size int64 `json:"size,omitempty"`
+}
 
 // Checksums contains checksums for bundle components
 type Checksums struct {
-	Manifest  string            `json:"manifest"`
-	Content   map[string]string `json:"content"`
+	Manifest string            `json:"manifest"`
+	Content  map[string]string `json:"content"`
+}
 
 // BundleChecksums is an alias for Checksums for compatibility
 type BundleChecksums struct {
@@ -110,10 +115,11 @@ type BundleChecksums struct {
 
 // Compatibility represents compatibility information for a bundle
 type Compatibility struct {
-	MinVersion    string   `json:"min_version"`
-	MaxVersion    string   `json:"max_version,omitempty"`
-	Dependencies  []string `json:"dependencies,omitempty"`
-	Incompatible  []string `json:"incompatible,omitempty"`
+	MinVersion   string   `json:"min_version"`
+	MaxVersion   string   `json:"max_version,omitempty"`
+	Dependencies []string `json:"dependencies,omitempty"`
+	Incompatible []string `json:"incompatible,omitempty"`
+}
 
 // BundleManifest represents the manifest of a bundle
 type BundleManifest struct {
@@ -133,12 +139,13 @@ type BundleManifest struct {
 	Signature       string                 `json:"signature,omitempty"`
 	Dependencies    map[string][]string    `json:"dependencies,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // Bundle represents a bundle for import/export
 type Bundle struct {
-	Manifest    BundleManifest
-	BundlePath  string
-	IsVerified  bool
+	Manifest   BundleManifest
+	BundlePath string
+	IsVerified bool
 }
 
 // BundleValidator defines the interface for bundle validation
@@ -152,3 +159,5 @@ type BundleValidator interface {
 	// ValidateChecksums validates bundle checksums
 	ValidateChecksums(bundle *Bundle) (*ValidationResult, error)
 	// ValidateCompatibility validates bundle compatibility with current versions
+	ValidateCompatibility(bundle *Bundle, currentVersions map[string]*version.SemVersion) (*ValidationResult, error)
+}

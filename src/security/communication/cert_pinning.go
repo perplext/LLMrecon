@@ -18,6 +18,7 @@ type CertificatePinner struct {
 	pins     map[string]map[string]bool
 	mu       sync.RWMutex
 	enforced bool
+}
 
 // NewCertificatePinner creates a new certificate pinner
 func NewCertificatePinner(enforced bool) *CertificatePinner {
@@ -25,6 +26,7 @@ func NewCertificatePinner(enforced bool) *CertificatePinner {
 		pins:     make(map[string]map[string]bool),
 		enforced: enforced,
 	}
+}
 
 // AddPin adds a certificate pin for a host
 // The pin should be a base64-encoded SHA-256 hash of the certificate's public key
@@ -42,12 +44,14 @@ func (p *CertificatePinner) AddPin(hostname string, pin string) {
 
 	// Add pin
 	p.pins[hostname][pin] = true
+}
 
 // AddPins adds multiple certificate pins for a host
 func (p *CertificatePinner) AddPins(hostname string, pins []string) {
 	for _, pin := range pins {
 		p.AddPin(hostname, pin)
 	}
+}
 
 // RemovePin removes a certificate pin for a host
 func (p *CertificatePinner) RemovePin(hostname string, pin string) {
@@ -70,6 +74,7 @@ func (p *CertificatePinner) RemovePin(hostname string, pin string) {
 	if len(pinSet) == 0 {
 		delete(p.pins, hostname)
 	}
+}
 
 // ClearPins removes all pins for a host
 func (p *CertificatePinner) ClearPins(hostname string) {
@@ -81,6 +86,7 @@ func (p *CertificatePinner) ClearPins(hostname string) {
 
 	// Remove pin set
 	delete(p.pins, hostname)
+}
 
 // SetEnforced sets whether certificate pinning is enforced
 func (p *CertificatePinner) SetEnforced(enforced bool) {
@@ -88,6 +94,7 @@ func (p *CertificatePinner) SetEnforced(enforced bool) {
 	defer p.mu.Unlock()
 
 	p.enforced = enforced
+}
 
 // IsEnforced returns whether certificate pinning is enforced
 func (p *CertificatePinner) IsEnforced() bool {
@@ -95,6 +102,7 @@ func (p *CertificatePinner) IsEnforced() bool {
 	defer p.mu.RUnlock()
 
 	return p.enforced
+}
 
 // VerifyCertificate verifies that a certificate matches a pinned hash for a host
 func (p *CertificatePinner) VerifyCertificate(hostname string, cert *x509.Certificate) error {
@@ -127,6 +135,7 @@ func (p *CertificatePinner) VerifyCertificate(hostname string, cert *x509.Certif
 
 	// Otherwise, return an error
 	return fmt.Errorf("certificate pin verification failed for %s", hostname)
+}
 
 // WrapTransport wraps an HTTP transport with certificate pinning
 func (p *CertificatePinner) WrapTransport(transport *http.Transport) *http.Transport {
@@ -158,6 +167,7 @@ func (p *CertificatePinner) WrapTransport(transport *http.Transport) *http.Trans
 	}
 
 	return newTransport
+}
 
 // CreatePinnedClient creates an HTTP client with certificate pinning
 func (p *CertificatePinner) CreatePinnedClient(hostname string, pins []string) *http.Client {
@@ -179,22 +189,28 @@ func (p *CertificatePinner) CreatePinnedClient(hostname string, pins []string) *
 	return &http.Client{
 		Transport: pinnedTransport,
 	}
+}
 
 // ExtractCertificatePin extracts a certificate pin from a certificate
 func ExtractCertificatePin(cert *x509.Certificate) string {
 	hash := sha256.Sum256(cert.RawSubjectPublicKeyInfo)
 	return base64.StdEncoding.EncodeToString(hash[:])
+}
 
 // FetchCertificatePin fetches a certificate pin from a host
 func FetchCertificatePin(hostname string, port int) (string, error) {
 	// Connect to the host
 	conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%d", hostname, port), &tls.Config{
-		InsecureSkipVerify: false // Fixed: Enable cert validation,
+		InsecureSkipVerify: false, // Fixed: Enable cert validation
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to %s:%d: %w", hostname, port, err)
 	}
-	defer func() { if err := conn.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Get the peer certificates
 	certs := conn.ConnectionState().PeerCertificates
@@ -203,3 +219,5 @@ func FetchCertificatePin(hostname string, port int) (string, error) {
 	}
 
 	// Extract the pin from the first certificate
+	return ExtractCertificatePin(certs[0]), nil
+}

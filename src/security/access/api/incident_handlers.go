@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
 
 // CreateIncidentRequest represents a request to create a new security incident
@@ -19,6 +20,7 @@ type CreateIncidentRequest struct {
 	AffectedResources []string               `json:"affected_resources,omitempty"`
 	Tags              []string               `json:"tags,omitempty"`
 	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // UpdateIncidentRequest represents a request to update a security incident
 type UpdateIncidentRequest struct {
@@ -49,6 +51,7 @@ type IncidentResponse struct {
 	AffectedResources []string               `json:"affected_resources,omitempty"`
 	Tags              []string               `json:"tags,omitempty"`
 	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // handleListIncidents handles listing security incidents with filtering
 func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +71,7 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 
 	// Parse query parameters
 	query := r.URL.Query()
-	
+
 	// Create filter
 	filter := &access.IncidentFilter{
 		Severity:   query.Get("severity"),
@@ -76,7 +79,7 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 		ReportedBy: query.Get("reported_by"),
 		AssignedTo: query.Get("assigned_to"),
 	}
-	
+
 	// Parse time range
 	if startDateStr := query.Get("start_date"); startDateStr != "" {
 		startDate, err := time.Parse("2006-01-02", startDateStr)
@@ -86,7 +89,7 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 		}
 		filter.StartDate = &startDate
 	}
-	
+
 	if endDateStr := query.Get("end_date"); endDateStr != "" {
 		endDate, err := time.Parse("2006-01-02", endDateStr)
 		if err != nil {
@@ -97,18 +100,18 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 		endDate = endDate.Add(24*time.Hour - time.Second)
 		filter.EndDate = &endDate
 	}
-	
+
 	// Parse pagination parameters
 	page, _ := strconv.Atoi(query.Get("page"))
 	if page < 1 {
 		page = 1
 	}
-	
+
 	limit, _ := strconv.Atoi(query.Get("limit"))
 	if limit < 1 || limit > 100 {
 		limit = 20
 	}
-	
+
 	filter.Offset = (page - 1) * limit
 	filter.Limit = limit
 
@@ -150,6 +153,7 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Security incidents retrieved successfully", resp)
+}
 
 // handleCreateIncident handles creating a new security incident
 func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +192,7 @@ func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
 		access.SeverityLow,
 		access.SeverityInfo,
 	}
-	
+
 	validSeverity := false
 	for _, severity := range validSeverities {
 		if req.Severity == severity {
@@ -196,7 +200,7 @@ func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-	
+
 	if !validSeverity {
 		WriteErrorResponse(w, http.StatusBadRequest, "Invalid severity value")
 		return
@@ -222,6 +226,7 @@ func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusCreated, "Security incident created successfully", convertIncidentToResponse(incident))
+}
 
 // handleGetIncident handles retrieving a security incident
 func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
@@ -256,6 +261,7 @@ func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Security incident retrieved successfully", convertIncidentToResponse(incident))
+}
 
 // handleUpdateIncident handles updating a security incident
 func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
@@ -300,11 +306,11 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 	if req.Title != "" {
 		incident.Title = req.Title
 	}
-	
+
 	if req.Description != "" {
 		incident.Description = req.Description
 	}
-	
+
 	if req.Severity != "" {
 		// Validate severity
 		validSeverities := []string{
@@ -314,7 +320,7 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 			access.SeverityLow,
 			access.SeverityInfo,
 		}
-		
+
 		validSeverity := false
 		for _, severity := range validSeverities {
 			if req.Severity == severity {
@@ -322,15 +328,15 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-		
+
 		if !validSeverity {
 			WriteErrorResponse(w, http.StatusBadRequest, "Invalid severity value")
 			return
 		}
-		
+
 		incident.Severity = req.Severity
 	}
-	
+
 	if req.Status != "" {
 		// Validate status
 		validStatuses := []string{
@@ -339,7 +345,7 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 			access.StatusResolved,
 			access.StatusClosed,
 		}
-		
+
 		validStatus := false
 		for _, status := range validStatuses {
 			if req.Status == status {
@@ -347,21 +353,21 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-		
+
 		if !validStatus {
 			WriteErrorResponse(w, http.StatusBadRequest, "Invalid status value")
 			return
 		}
-		
+
 		// If changing to resolved or closed, set resolved time
-		if (req.Status == access.StatusResolved || req.Status == access.StatusClosed) && 
-		   (incident.Status != access.StatusResolved && incident.Status != access.StatusClosed) {
+		if (req.Status == access.StatusResolved || req.Status == access.StatusClosed) &&
+			(incident.Status != access.StatusResolved && incident.Status != access.StatusClosed) {
 			incident.ResolvedAt = time.Now()
 		}
-		
+
 		incident.Status = req.Status
 	}
-	
+
 	if req.AssignedTo != "" {
 		// Validate that the assigned user exists
 		userManager := s.accessManager.GetUserManager()
@@ -370,26 +376,26 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 			WriteErrorResponse(w, http.StatusBadRequest, "Assigned user does not exist")
 			return
 		}
-		
+
 		incident.AssignedTo = req.AssignedTo
 	}
-	
+
 	if req.ResolutionNotes != "" {
 		incident.ResolutionNotes = req.ResolutionNotes
 	}
-	
+
 	if len(req.AffectedResources) > 0 {
 		incident.AffectedResources = req.AffectedResources
 	}
-	
+
 	if len(req.Tags) > 0 {
 		incident.Tags = req.Tags
 	}
-	
+
 	if req.Metadata != nil {
 		incident.Metadata = req.Metadata
 	}
-	
+
 	// Update timestamp
 	incident.UpdatedAt = time.Now()
 
@@ -401,6 +407,7 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Security incident updated successfully", convertIncidentToResponse(incident))
+}
 
 // handleDeleteIncident handles deleting a security incident
 func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
@@ -438,6 +445,7 @@ func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Security incident deleted successfully", nil)
+}
 
 // convertIncidentToResponse converts a security incident to a response format
 func convertIncidentToResponse(incident *access.SecurityIncident) IncidentResponse {
@@ -462,8 +470,4 @@ func convertIncidentToResponse(incident *access.SecurityIncident) IncidentRespon
 		Tags:              incident.Tags,
 		Metadata:          incident.Metadata,
 	}
-}
-}
-}
-}
 }

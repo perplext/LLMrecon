@@ -3,12 +3,14 @@ package vault
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/perplext/LLMrecon/src/config"
-	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 	"github.com/perplext/LLMrecon/src/provider/core"
+	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 )
 
 // ConfigIntegration integrates the secure vault with the existing configuration system
@@ -21,6 +23,7 @@ type ConfigIntegration struct {
 	mutex sync.RWMutex
 	// initialized indicates whether the integration has been initialized
 	initialized bool
+}
 
 // NewConfigIntegration creates a new configuration integration
 func NewConfigIntegration(credManager *CredentialManager, cfg *config.Config) *ConfigIntegration {
@@ -28,6 +31,7 @@ func NewConfigIntegration(credManager *CredentialManager, cfg *config.Config) *C
 		credManager: credManager,
 		config:      cfg,
 	}
+}
 
 // Initialize initializes the integration
 func (i *ConfigIntegration) Initialize() error {
@@ -45,6 +49,7 @@ func (i *ConfigIntegration) Initialize() error {
 
 	i.initialized = true
 	return nil
+}
 
 // importExistingAPIKeys imports existing API keys from the configuration
 func (i *ConfigIntegration) importExistingAPIKeys() error {
@@ -70,6 +75,7 @@ func (i *ConfigIntegration) importExistingAPIKeys() error {
 	}
 
 	return nil
+}
 
 // UpdateConfig updates the application configuration with credentials from the vault
 func (i *ConfigIntegration) UpdateConfig() error {
@@ -89,6 +95,7 @@ func (i *ConfigIntegration) UpdateConfig() error {
 	}
 
 	return nil
+}
 
 // SaveConfig saves the application configuration without sensitive data
 func (i *ConfigIntegration) SaveConfig() error {
@@ -102,6 +109,7 @@ func (i *ConfigIntegration) SaveConfig() error {
 
 	// Save the config
 	return config.SaveConfig(&configCopy)
+}
 
 // SetupGitIgnore ensures that sensitive files are added to .gitignore
 func (i *ConfigIntegration) SetupGitIgnore() error {
@@ -163,12 +171,13 @@ func (i *ConfigIntegration) SetupGitIgnore() error {
 		}
 
 		// Write updated .gitignore
-		if err := os.WriteFile(filepath.Clean(gitignorePath, []byte(newContent)), 0600); err != nil {
+		if err := os.WriteFile(filepath.Clean(gitignorePath), []byte(newContent), 0600); err != nil {
 			return fmt.Errorf("failed to update .gitignore: %w", err)
 		}
 	}
 
 	return nil
+}
 
 // DefaultIntegration is the default configuration integration
 var DefaultIntegration *ConfigIntegration
@@ -183,13 +192,13 @@ func InitDefaultIntegration(configDir string, passphrase string, auditLogger *se
 
 	// Initialize credential manager
 	if err := InitDefaultManager(ManagerOptions{
-		ConfigDir:            configDir,
-		Passphrase:           passphrase,
-		EnvPrefix:            "LLMRT",
-		AuditLogger:          auditLogger,
-		AutoSave:             true,
+		ConfigDir:             configDir,
+		Passphrase:            passphrase,
+		EnvPrefix:             "LLMRT",
+		AuditLogger:           auditLogger,
+		AutoSave:              true,
 		RotationCheckInterval: 24 * 60 * 60 * 1000000000, // 24 hours
-		InstallGitHook:       true,
+		InstallGitHook:        true,
 	}); err != nil {
 		return fmt.Errorf("failed to initialize credential manager: %w", err)
 	}
@@ -208,3 +217,5 @@ func InitDefaultIntegration(configDir string, passphrase string, auditLogger *se
 		fmt.Printf("Warning: Failed to setup .gitignore: %v\n", err)
 	}
 
+	return nil
+}

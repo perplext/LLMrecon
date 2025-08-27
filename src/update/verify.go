@@ -11,29 +11,24 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 )
 
-// SignatureAlgorithm represents the type of signature algorithm
-type SignatureAlgorithm string
+// Use SignatureAlgorithm from downgrade_protection.go
 
-const (
-	// Ed25519Algorithm represents the Ed25519 signature algorithm
-	Ed25519Algorithm SignatureAlgorithm = "ed25519"
-	// RSAAlgorithm represents the RSA signature algorithm
-	RSAAlgorithm SignatureAlgorithm = "rsa"
-	// ECDSAAlgorithm represents the ECDSA signature algorithm
-	ECDSAAlgorithm SignatureAlgorithm = "ecdsa"
-)
-
-// SignatureVerifier handles verification of update signatures
-type SignatureVerifier struct {
+// AdvancedSignatureVerifier handles verification of update signatures with advanced features
+type AdvancedSignatureVerifier struct {
 	// Algorithm is the signature algorithm used
 	Algorithm SignatureAlgorithm
 	// PublicKey is the public key used for verification
 	PublicKey interface{}
+}
 
-// NewSignatureVerifier creates a new SignatureVerifier with the given public key
-func NewSignatureVerifier(publicKeyData string) (*SignatureVerifier, error) {
+// NewAdvancedSignatureVerifier creates a new AdvancedSignatureVerifier with the given public key
+func NewAdvancedSignatureVerifier(publicKeyData string) (*AdvancedSignatureVerifier, error) {
 	if publicKeyData == "" {
 		return nil, fmt.Errorf("public key is required for signature verification")
 	}
@@ -53,7 +48,7 @@ func NewSignatureVerifier(publicKeyData string) (*SignatureVerifier, error) {
 	// Try to parse as different key types
 	// First try Ed25519
 	if len(publicKeyBytes) == ed25519.PublicKeySize {
-		return &SignatureVerifier{
+		return &AdvancedSignatureVerifier{
 			Algorithm: Ed25519Algorithm,
 			PublicKey: ed25519.PublicKey(publicKeyBytes),
 		}, nil
@@ -66,9 +61,10 @@ func NewSignatureVerifier(publicKeyData string) (*SignatureVerifier, error) {
 	}
 
 	return nil, fmt.Errorf("unsupported public key format")
+}
 
 // parsePublicKeyFromPEM parses a public key from a PEM block
-func parsePublicKeyFromPEM(block *pem.Block) (*SignatureVerifier, error) {
+func parsePublicKeyFromPEM(block *pem.Block) (*AdvancedSignatureVerifier, error) {
 	switch block.Type {
 	case "PUBLIC KEY":
 		// PKIX, ASN.1 DER form
@@ -84,7 +80,7 @@ func parsePublicKeyFromPEM(block *pem.Block) (*SignatureVerifier, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse PKCS#1 public key: %w", err)
 		}
-		return &SignatureVerifier{
+		return &AdvancedSignatureVerifier{
 			Algorithm: RSAAlgorithm,
 			PublicKey: pubKey,
 		}, nil
@@ -92,31 +88,33 @@ func parsePublicKeyFromPEM(block *pem.Block) (*SignatureVerifier, error) {
 	default:
 		return nil, fmt.Errorf("unsupported PEM block type: %s", block.Type)
 	}
+}
 
 // createVerifierFromParsedKey creates a SignatureVerifier from a parsed public key
-func createVerifierFromParsedKey(pubKey interface{}) (*SignatureVerifier, error) {
+func createVerifierFromParsedKey(pubKey interface{}) (*AdvancedSignatureVerifier, error) {
 	switch key := pubKey.(type) {
 	case *rsa.PublicKey:
-		return &SignatureVerifier{
+		return &AdvancedSignatureVerifier{
 			Algorithm: RSAAlgorithm,
 			PublicKey: key,
 		}, nil
 	case *ecdsa.PublicKey:
-		return &SignatureVerifier{
+		return &AdvancedSignatureVerifier{
 			Algorithm: ECDSAAlgorithm,
 			PublicKey: key,
 		}, nil
 	case ed25519.PublicKey:
-		return &SignatureVerifier{
+		return &AdvancedSignatureVerifier{
 			Algorithm: Ed25519Algorithm,
 			PublicKey: key,
 		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported public key type: %T", pubKey)
 	}
+}
 
 // VerifySignature verifies the signature of a file
-func (v *SignatureVerifier) VerifySignature(filePath, signatureBase64 string) error {
+func (v *AdvancedSignatureVerifier) VerifySignature(filePath, signatureBase64 string) error {
 	// Read the file
 	fileContent, err := os.ReadFile(filepath.Clean(filePath))
 	if err != nil {
@@ -166,6 +164,7 @@ func (v *SignatureVerifier) VerifySignature(filePath, signatureBase64 string) er
 	}
 
 	return nil
+}
 
 // VerifyChecksum verifies the SHA-256 checksum of a file
 func VerifyChecksum(filePath, expectedChecksumHex string) error {
@@ -174,7 +173,11 @@ func VerifyChecksum(filePath, expectedChecksumHex string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Calculate the SHA-256 hash
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
@@ -190,7 +193,7 @@ func VerifyChecksum(filePath, expectedChecksumHex string) error {
 	}
 
 	return nil
-	
+}
 
 // VerifyUpdate performs both signature and checksum verification on an update file
 func VerifyUpdate(filePath, checksumHex, signatureBase64, publicKeyBase64 string) error {
@@ -211,6 +214,7 @@ func VerifyUpdate(filePath, checksumHex, signatureBase64, publicKeyBase64 string
 	}
 
 	return nil
+}
 
 // CalculateChecksum calculates the SHA256 checksum of a file
 func CalculateFileChecksum(filePath string) (string, error) {
@@ -218,7 +222,11 @@ func CalculateFileChecksum(filePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("opening file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
@@ -226,6 +234,7 @@ func CalculateFileChecksum(filePath string) (string, error) {
 	}
 
 	return hex.EncodeToString(hash.Sum(nil)), nil
+}
 
 // IntegrityReport represents the result of integrity verification
 type IntegrityReport struct {
@@ -237,6 +246,7 @@ type IntegrityReport struct {
 	SignatureError   error
 	FileSize         int64
 	VerifiedAt       string
+}
 
 // VerifyIntegrity performs comprehensive integrity verification
 func VerifyIntegrity(filePath, expectedChecksum, signature, publicKey string) (*IntegrityReport, error) {
@@ -254,7 +264,7 @@ func VerifyIntegrity(filePath, expectedChecksum, signature, publicKey string) (*
 	report.FileSize = info.Size()
 
 	// Calculate actual checksum
-	actualChecksum, err := CalculateChecksum(filePath)
+	actualChecksum, err := CalculateFileChecksum(filePath)
 	if err != nil {
 		return report, fmt.Errorf("calculating checksum: %w", err)
 	}
@@ -275,3 +285,5 @@ func VerifyIntegrity(filePath, expectedChecksum, signature, publicKey string) (*
 		}
 	}
 
+	return report, nil
+}

@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
 
 // AuditLogResponse represents an audit log entry in the response
@@ -47,7 +48,7 @@ func (s *Server) handleListAuditLogs(w http.ResponseWriter, r *http.Request) {
 
 	// Parse query parameters
 	query := r.URL.Query()
-	
+
 	// Create filter
 	filter := &access.AuditEventFilter{
 		UserID:     query.Get("user_id"),
@@ -59,7 +60,7 @@ func (s *Server) handleListAuditLogs(w http.ResponseWriter, r *http.Request) {
 		Status:     query.Get("status"),
 		IPAddress:  query.Get("ip_address"),
 	}
-	
+
 	// Parse time range
 	if startTimeStr := query.Get("start_time"); startTimeStr != "" {
 		startTime, err := time.Parse(time.RFC3339, startTimeStr)
@@ -69,7 +70,7 @@ func (s *Server) handleListAuditLogs(w http.ResponseWriter, r *http.Request) {
 		}
 		filter.StartTime = &startTime
 	}
-	
+
 	if endTimeStr := query.Get("end_time"); endTimeStr != "" {
 		endTime, err := time.Parse(time.RFC3339, endTimeStr)
 		if err != nil {
@@ -78,18 +79,18 @@ func (s *Server) handleListAuditLogs(w http.ResponseWriter, r *http.Request) {
 		}
 		filter.EndTime = &endTime
 	}
-	
+
 	// Parse pagination parameters
 	page, _ := strconv.Atoi(query.Get("page"))
 	if page < 1 {
 		page = 1
 	}
-	
+
 	limit, _ := strconv.Atoi(query.Get("limit"))
 	if limit < 1 || limit > 100 {
 		limit = 20
 	}
-	
+
 	filter.Offset = (page - 1) * limit
 	filter.Limit = limit
 
@@ -131,6 +132,7 @@ func (s *Server) handleListAuditLogs(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Audit logs retrieved successfully", resp)
+}
 
 // handleGetAuditLog handles retrieving a specific audit log entry
 func (s *Server) handleGetAuditLog(w http.ResponseWriter, r *http.Request) {
@@ -166,6 +168,7 @@ func (s *Server) handleGetAuditLog(w http.ResponseWriter, r *http.Request) {
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusOK, "Audit log retrieved successfully", convertAuditEventToResponse(event))
+}
 
 // handleExportAuditLogs handles exporting audit logs to a file
 func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
@@ -185,7 +188,7 @@ func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
 
 	// Parse query parameters
 	query := r.URL.Query()
-	
+
 	// Create filter
 	filter := &access.AuditEventFilter{
 		UserID:     query.Get("user_id"),
@@ -197,7 +200,7 @@ func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
 		Status:     query.Get("status"),
 		IPAddress:  query.Get("ip_address"),
 	}
-	
+
 	// Parse time range
 	if startTimeStr := query.Get("start_time"); startTimeStr != "" {
 		startTime, err := time.Parse(time.RFC3339, startTimeStr)
@@ -207,7 +210,7 @@ func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
 		}
 		filter.StartTime = &startTime
 	}
-	
+
 	if endTimeStr := query.Get("end_time"); endTimeStr != "" {
 		endTime, err := time.Parse(time.RFC3339, endTimeStr)
 		if err != nil {
@@ -216,13 +219,13 @@ func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
 		}
 		filter.EndTime = &endTime
 	}
-	
+
 	// Get export format
 	format := query.Get("format")
 	if format == "" {
 		format = "csv" // Default format
 	}
-	
+
 	if format != "csv" && format != "json" {
 		WriteErrorResponse(w, http.StatusBadRequest, "Unsupported export format, supported formats: csv, json")
 		return
@@ -240,7 +243,7 @@ func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
 	timestamp := time.Now().Format("20060102-150405")
 	filename := fmt.Sprintf("audit_logs_%s.%s", timestamp, format)
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-	
+
 	// Export based on format
 	switch format {
 	case "csv":
@@ -250,6 +253,7 @@ func (s *Server) handleExportAuditLogs(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		exportAuditLogsToJSON(w, events)
 	}
+}
 
 // exportAuditLogsToCSV exports audit logs to CSV format
 func exportAuditLogsToCSV(w http.ResponseWriter, events []*access.AuditEvent) {
@@ -268,7 +272,7 @@ func exportAuditLogsToCSV(w http.ResponseWriter, events []*access.AuditEvent) {
 	for _, event := range events {
 		// Convert details to JSON string
 		detailsJSON, _ := json.Marshal(event.Details)
-		
+
 		row := []string{
 			event.ID,
 			event.Timestamp.Format(time.RFC3339),
@@ -285,6 +289,7 @@ func exportAuditLogsToCSV(w http.ResponseWriter, events []*access.AuditEvent) {
 		}
 		writer.Write(row)
 	}
+}
 
 // exportAuditLogsToJSON exports audit logs to JSON format
 func exportAuditLogsToJSON(w http.ResponseWriter, events []*access.AuditEvent) {
@@ -296,6 +301,7 @@ func exportAuditLogsToJSON(w http.ResponseWriter, events []*access.AuditEvent) {
 
 	// Write JSON
 	_ = json.NewEncoder(w).Encode(eventResponses) // Best effort, headers already sent
+}
 
 // convertAuditEventToResponse converts an audit event to a response format
 func convertAuditEventToResponse(event *access.AuditEvent) AuditLogResponse {
@@ -314,8 +320,4 @@ func convertAuditEventToResponse(event *access.AuditEvent) AuditLogResponse {
 		Details:    event.Details,
 		Metadata:   event.Metadata,
 	}
-}
-}
-}
-}
 }

@@ -3,11 +3,14 @@ package vault
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
-	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 	"github.com/perplext/LLMrecon/src/provider/core"
+	securityAudit "github.com/perplext/LLMrecon/src/security/audit"
 )
 
 // CredentialManager manages credentials for the application
@@ -26,6 +29,7 @@ type CredentialManager struct {
 	providerToServiceMap map[core.ProviderType]string
 	// gitHookInstalled tracks whether the git hook is installed
 	gitHookInstalled bool
+}
 
 // ManagerOptions contains options for creating a credential manager
 type ManagerOptions struct {
@@ -45,6 +49,7 @@ type ManagerOptions struct {
 	InstallGitHook bool
 	// GitDir is the custom git directory to use for git hook installation (for testing)
 	GitDir string
+}
 
 // NewCredentialManager creates a new credential manager
 func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
@@ -67,23 +72,23 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 	// Create secure vault
 	vaultPath := filepath.Join(configDir, "credentials.vault")
 	vault, err := NewSecureVault(vaultPath, VaultOptions{
-		Passphrase:           options.Passphrase,
-		AuditLogger:          options.AuditLogger,
-		AutoSave:             options.AutoSave,
+		Passphrase:            options.Passphrase,
+		AuditLogger:           options.AuditLogger,
+		AutoSave:              options.AutoSave,
 		RotationCheckInterval: options.RotationCheckInterval,
 		AlertCallback: func(credential *Credential, daysUntilExpiration int) {
 			// Log alert about credential rotation
 			if options.AuditLogger != nil {
 				options.AuditLogger.LogAlert(
-					fmt.Sprintf("Credential '%s' for service '%s' needs rotation in %d days", 
-						credential.Name, 
-						credential.Service, 
+					fmt.Sprintf("Credential '%s' for service '%s' needs rotation in %d days",
+						credential.Name,
+						credential.Service,
 						daysUntilExpiration),
 					"credential_rotation",
 					map[string]string{
-						"credential_id":        credential.ID,
-						"credential_name":      credential.Name,
-						"service":              credential.Service,
+						"credential_id":         credential.ID,
+						"credential_name":       credential.Name,
+						"service":               credential.Service,
 						"days_until_expiration": fmt.Sprintf("%d", daysUntilExpiration),
 					},
 				)
@@ -96,9 +101,9 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 
 	// Create manager
 	manager := &CredentialManager{
-		vault:               vault,
-		envPrefix:           envPrefix,
-		configDir:           configDir,
+		vault:                vault,
+		envPrefix:            envPrefix,
+		configDir:            configDir,
 		serviceToProviderMap: make(map[string]core.ProviderType),
 		providerToServiceMap: make(map[core.ProviderType]string),
 	}
@@ -114,7 +119,7 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 		} else {
 			err = manager.InstallGitHook()
 		}
-		
+
 		if err != nil {
 			fmt.Printf("Warning: Failed to install git hook: %v\n", err)
 		} else {
@@ -129,33 +134,36 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 	}
 
 	return manager, nil
+}
 
 // initServiceMappings initializes the service to provider mappings
 func (m *CredentialManager) initServiceMappings() {
 	// Map service names to provider types
 	m.serviceToProviderMap = map[string]core.ProviderType{
-		"openai":   core.OpenAIProvider,
-		"anthropic": core.AnthropicProvider,
+		"openai":       core.OpenAIProvider,
+		"anthropic":    core.AnthropicProvider,
 		"azure-openai": core.AzureOpenAIProvider,
-		"huggingface": core.HuggingFaceProvider,
-		"local": core.LocalProvider,
+		"huggingface":  core.HuggingFaceProvider,
+		"local":        core.LocalProvider,
 	}
 
 	// Create reverse mapping
 	for service, provider := range m.serviceToProviderMap {
 		m.providerToServiceMap[provider] = service
 	}
+}
 
 // InstallGitHook installs a git hook to prevent credential leakage
 func (m *CredentialManager) InstallGitHook() error {
 	return m.InstallGitHookInDir("")
+}
 
 // InstallGitHookInDir installs a git hook in the specified directory or finds the git directory if empty
 func (m *CredentialManager) InstallGitHookInDir(customDir string) error {
 	// Find git directory
 	var gitDir string
 	var err error
-	
+
 	if customDir != "" {
 		// Use the custom directory for testing
 		gitDir = filepath.Join(customDir, ".git")
@@ -170,10 +178,10 @@ func (m *CredentialManager) InstallGitHookInDir(customDir string) error {
 			return fmt.Errorf("failed to find git directory: %w", err)
 		}
 	}
-	
+
 	// Create pre-commit hook
 	hookPath := filepath.Join(gitDir, "hooks", "pre-commit")
-	
+
 	// Check if hook already exists
 	if _, err := os.Stat(hookPath); err == nil {
 		// Read existing hook
@@ -189,7 +197,7 @@ func (m *CredentialManager) InstallGitHookInDir(customDir string) error {
 
 		// Backup existing hook
 		backupPath := hookPath + ".backup"
-		if err := os.WriteFile(filepath.Clean(backupPath, existingHook, 0700)); err != nil {
+		if err := os.WriteFile(filepath.Clean(backupPath), existingHook, 0700); err != nil {
 			return fmt.Errorf("failed to backup existing git hook: %w", err)
 		}
 	}
@@ -229,10 +237,11 @@ exit 0
 `
 
 	// Write hook
-	if err := os.WriteFile(filepath.Clean(hookPath, []byte(hookContent)), 0700); err != nil {
+	if err := os.WriteFile(filepath.Clean(hookPath), []byte(hookContent), 0700); err != nil {
 		return fmt.Errorf("failed to write git hook: %w", err)
 	}
 	return nil
+}
 
 // findGitDir finds the git directory for the current repository
 func findGitDir() (string, error) {
@@ -257,6 +266,7 @@ func findGitDir() (string, error) {
 		}
 		dir = parent
 	}
+}
 
 // LoadFromEnv loads credentials from environment variables
 func (m *CredentialManager) LoadFromEnv() error {
@@ -308,6 +318,7 @@ func (m *CredentialManager) LoadFromEnv() error {
 	}
 
 	return nil
+}
 
 // GetAPIKey gets an API key for a provider
 func (m *CredentialManager) GetAPIKey(providerType core.ProviderType) (string, error) {
@@ -335,11 +346,12 @@ func (m *CredentialManager) GetAPIKey(providerType core.ProviderType) (string, e
 
 	// Check environment variable as fallback
 	envKey := m.envPrefix + "_" + strings.ToUpper(service) + "_API_KEY"
-	if apiKey := os.Getenv("API_KEY") {
+	if apiKey := os.Getenv(envKey); apiKey != "" {
 		return apiKey, nil
 	}
 
 	return "", fmt.Errorf("no API key found for provider %s", providerType)
+}
 
 // SetAPIKey sets an API key for a provider
 func (m *CredentialManager) SetAPIKey(providerType core.ProviderType, apiKey string, description string) error {
@@ -365,54 +377,65 @@ func (m *CredentialManager) SetAPIKey(providerType core.ProviderType, apiKey str
 		UpdatedAt:   time.Now(),
 		RotationPolicy: &RotationPolicy{
 			Enabled:      true,
-			IntervalDays: 90,  // Default to 90-day rotation
-			WarningDays:  14,  // Warn 14 days before expiration
+			IntervalDays: 90, // Default to 90-day rotation
+			WarningDays:  14, // Warn 14 days before expiration
 			LastRotation: time.Now(),
 		},
 	}
 
 	// Store credential
 	return m.vault.StoreCredential(cred)
+}
 
 // GetCredential gets a credential by ID
 func (m *CredentialManager) GetCredential(id string) (*Credential, error) {
 	return m.vault.GetCredential(id)
+}
 
 // StoreCredential stores a credential
 func (m *CredentialManager) StoreCredential(cred *Credential) error {
 	return m.vault.StoreCredential(cred)
+}
 
 // DeleteCredential deletes a credential by ID
 func (m *CredentialManager) DeleteCredential(id string) error {
 	return m.vault.DeleteCredential(id)
+}
 
 // ListCredentials lists all credentials
 func (m *CredentialManager) ListCredentials() ([]*Credential, error) {
 	return m.vault.ListCredentials()
+}
 
 // ListCredentialsByService lists credentials for a specific service
 func (m *CredentialManager) ListCredentialsByService(service string) ([]*Credential, error) {
 	return m.vault.ListCredentialsByService(service)
+}
 
 // ListCredentialsByType lists credentials of a specific type
 func (m *CredentialManager) ListCredentialsByType(credType CredentialType) ([]*Credential, error) {
 	return m.vault.ListCredentialsByType(credType)
+}
 
 // ListCredentialsByTag lists credentials with a specific tag
 func (m *CredentialManager) ListCredentialsByTag(tag string) ([]*Credential, error) {
 	return m.vault.ListCredentialsByTag(tag)
+}
 
 // RotateCredential rotates a credential
 func (m *CredentialManager) RotateCredential(id string, newValue string) error {
 	return m.vault.RotateCredential(id, newValue)
+}
 
 // GetCredentialsNeedingRotation returns credentials that need rotation
 func (m *CredentialManager) GetCredentialsNeedingRotation() ([]*Credential, error) {
 	return m.vault.GetCredentialsNeedingRotation()
+}
 
 // Close closes the credential manager
 func (m *CredentialManager) Close() error {
 	return m.vault.Close()
+}
 
 // DefaultManager is the default credential manager
 var DefaultManager *CredentialManager
@@ -422,3 +445,4 @@ func InitDefaultManager(options ManagerOptions) error {
 	var err error
 	DefaultManager, err = NewCredentialManager(options)
 	return err
+}

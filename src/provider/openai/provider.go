@@ -7,8 +7,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/provider/middleware"
@@ -17,21 +19,21 @@ import (
 // OpenAIProvider is an implementation of the Provider interface for OpenAI
 type OpenAIProvider struct {
 	*core.BaseProvider
-	client             *http.Client
-	connectionPool     *core.ProviderConnectionPool
-	rateLimiter        *middleware.RateLimiter
-	retryMiddleware    *middleware.RetryMiddleware
-	loggingMiddleware  *middleware.LoggingMiddleware
-	circuitBreaker     *middleware.CircuitBreakerMiddleware
+	client            *http.Client
+	connectionPool    *core.ProviderConnectionPool
+	rateLimiter       *middleware.RateLimiter
+	retryMiddleware   *middleware.RetryMiddleware
+	loggingMiddleware *middleware.LoggingMiddleware
+	circuitBreaker    *middleware.CircuitBreakerMiddleware
 }
 
 // NewOpenAIProvider creates a new OpenAI provider
 func NewOpenAIProvider(config *core.ProviderConfig) (core.Provider, error) {
 	if config == nil {
 		config = &core.ProviderConfig{
-			Type:        core.OpenAIProvider,
-			BaseURL:     "https://api.openai.com/v1",
-			Timeout:     30 * time.Second,
+			Type:    core.OpenAIProvider,
+			BaseURL: "https://api.openai.com/v1",
+			Timeout: 30 * time.Second,
 		}
 	}
 
@@ -47,7 +49,7 @@ func NewOpenAIProvider(config *core.ProviderConfig) (core.Provider, error) {
 	if config.Timeout > 0 {
 		poolConfig.ResponseHeaderTimeout = config.Timeout
 	}
-	
+
 	// Create connection pool manager
 	logger := core.NewDefaultLogger()
 	poolManager := core.NewConnectionPoolManager(poolConfig, logger)
@@ -55,7 +57,7 @@ func NewOpenAIProvider(config *core.ProviderConfig) (core.Provider, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create connection pool: %w", err)
 	}
-	
+
 	// Get HTTP client from connection pool
 	client := connectionPool.GetClient()
 
@@ -74,7 +76,7 @@ func NewOpenAIProvider(config *core.ProviderConfig) (core.Provider, error) {
 	} else {
 		// Default rate limits for OpenAI
 		rateLimiter = middleware.NewRateLimiter(
-			60,    // 60 requests per minute (1 per second)
+			60,     // 60 requests per minute (1 per second)
 			100000, // 100K tokens per minute
 			10,     // 10 concurrent requests
 			10,     // Burst size of 10
@@ -95,8 +97,8 @@ func NewOpenAIProvider(config *core.ProviderConfig) (core.Provider, error) {
 
 	// Create circuit breaker
 	circuitBreaker := middleware.NewCircuitBreaker(middleware.CircuitBreakerConfig{
-		FailureThreshold:        5,
-		ResetTimeout:            60 * time.Second,
+		FailureThreshold:         5,
+		ResetTimeout:             60 * time.Second,
 		HalfOpenSuccessThreshold: 2,
 	})
 
@@ -114,6 +116,7 @@ func NewOpenAIProvider(config *core.ProviderConfig) (core.Provider, error) {
 	go provider.updateModels(context.Background())
 
 	return provider, nil
+}
 
 // updateModels updates the models cache
 func (p *OpenAIProvider) updateModels(ctx context.Context) error {
@@ -130,6 +133,7 @@ func (p *OpenAIProvider) updateModels(ctx context.Context) error {
 	p.SetModels(models)
 
 	return nil
+}
 
 // getModelsFromAPI gets models from the OpenAI API
 func (p *OpenAIProvider) getModelsFromAPI(ctx context.Context) ([]core.ModelInfo, error) {
@@ -156,7 +160,11 @@ func (p *OpenAIProvider) getModelsFromAPI(ctx context.Context) ([]core.ModelInfo
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
@@ -212,21 +220,22 @@ func (p *OpenAIProvider) getModelsFromAPI(ctx context.Context) ([]core.ModelInfo
 
 		// Add model info
 		models = append(models, core.ModelInfo{
-			ID:          model.ID,
-			Provider:    core.OpenAIProvider,
-			Type:        modelType,
+			ID:           model.ID,
+			Provider:     core.OpenAIProvider,
+			Type:         modelType,
 			Capabilities: capabilities,
 			// Other fields would be populated with more detailed information
 		})
 	}
 
 	return models, nil
-	
+}
 
 // GetModels returns a list of available models
 func (p *OpenAIProvider) GetModels(ctx context.Context) ([]core.ModelInfo, error) {
 	// Use the base implementation
 	return p.BaseProvider.GetModels(ctx)
+}
 
 // TextCompletion generates a text completion
 func (p *OpenAIProvider) TextCompletion(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
@@ -240,6 +249,8 @@ func (p *OpenAIProvider) TextCompletion(ctx context.Context, request *core.TextC
 	}
 
 	return result.(*core.TextCompletionResponse), nil
+}
+
 // textCompletionFromAPI gets text completion from the OpenAI API
 func (p *OpenAIProvider) textCompletionFromAPI(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
 	// Set default model if not specified
@@ -279,7 +290,11 @@ func (p *OpenAIProvider) textCompletionFromAPI(ctx context.Context, request *cor
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
@@ -299,6 +314,7 @@ func (p *OpenAIProvider) textCompletionFromAPI(ctx context.Context, request *cor
 	}
 
 	return &response, nil
+}
 
 // ChatCompletion generates a chat completion
 func (p *OpenAIProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -312,6 +328,7 @@ func (p *OpenAIProvider) ChatCompletion(ctx context.Context, request *core.ChatC
 	}
 
 	return result.(*core.ChatCompletionResponse), nil
+}
 
 // chatCompletionFromAPI gets chat completion from the OpenAI API
 func (p *OpenAIProvider) chatCompletionFromAPI(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
@@ -352,7 +369,11 @@ func (p *OpenAIProvider) chatCompletionFromAPI(ctx context.Context, request *cor
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
@@ -371,6 +392,7 @@ func (p *OpenAIProvider) chatCompletionFromAPI(ctx context.Context, request *cor
 	}
 
 	return &response, nil
+}
 
 // StreamingChatCompletion generates a streaming chat completion
 func (p *OpenAIProvider) StreamingChatCompletion(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
@@ -382,6 +404,7 @@ func (p *OpenAIProvider) StreamingChatCompletion(ctx context.Context, request *c
 		return nil, p.streamingChatCompletionFromAPI(ctx, request, callback)
 	})
 	return err
+}
 
 // streamingChatCompletionFromAPI gets streaming chat completion from the OpenAI API
 func (p *OpenAIProvider) streamingChatCompletionFromAPI(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
@@ -423,7 +446,11 @@ func (p *OpenAIProvider) streamingChatCompletionFromAPI(ctx context.Context, req
 	if err != nil {
 		return fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Check for error
 	if resp.StatusCode != http.StatusOK {
@@ -475,7 +502,7 @@ func (p *OpenAIProvider) streamingChatCompletionFromAPI(ctx context.Context, req
 	}
 
 	return nil
-	
+}
 
 // CreateEmbedding creates an embedding
 func (p *OpenAIProvider) CreateEmbedding(ctx context.Context, request *core.EmbeddingRequest) (*core.EmbeddingResponse, error) {
@@ -489,6 +516,7 @@ func (p *OpenAIProvider) CreateEmbedding(ctx context.Context, request *core.Embe
 	}
 
 	return result.(*core.EmbeddingResponse), nil
+}
 
 // createEmbeddingFromAPI creates an embedding using the OpenAI API
 func (p *OpenAIProvider) createEmbeddingFromAPI(ctx context.Context, request *core.EmbeddingRequest) (*core.EmbeddingResponse, error) {
@@ -530,7 +558,11 @@ func (p *OpenAIProvider) createEmbeddingFromAPI(ctx context.Context, request *co
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
@@ -550,6 +582,7 @@ func (p *OpenAIProvider) createEmbeddingFromAPI(ctx context.Context, request *co
 	}
 
 	return &response, nil
+}
 
 // CountTokens counts the number of tokens in a text
 func (p *OpenAIProvider) CountTokens(ctx context.Context, text string, modelID string) (int, error) {
@@ -558,6 +591,7 @@ func (p *OpenAIProvider) CountTokens(ctx context.Context, text string, modelID s
 	// For now, we'll just estimate based on words
 	words := strings.Fields(text)
 	return len(words) * 4 / 3, nil // Rough estimate: 4 tokens per 3 words
+}
 
 // Close closes the provider and releases any resources
 func (p *OpenAIProvider) Close() error {
@@ -566,6 +600,7 @@ func (p *OpenAIProvider) Close() error {
 		p.connectionPool.Stop()
 	}
 	return nil
+}
 
 // handleErrorResponse handles an error response from the OpenAI API
 func (p *OpenAIProvider) handleErrorResponse(statusCode int, body []byte) error {
@@ -594,6 +629,7 @@ func (p *OpenAIProvider) handleErrorResponse(statusCode int, body []byte) error 
 		Code:        errorResponse.Error.Code,
 		RawResponse: string(body),
 	}
+}
 
 // executeWithResilience executes a function with resilience
 func (p *OpenAIProvider) executeWithResilience(ctx context.Context, operation string, request interface{}, fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
@@ -632,18 +668,5 @@ func (p *OpenAIProvider) executeWithResilience(ctx context.Context, operation st
 	// Log response
 	p.loggingMiddleware.LogResponse(ctx, p.GetType(), operation, requestID, request, result, err, duration, nil)
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return result, err
 }

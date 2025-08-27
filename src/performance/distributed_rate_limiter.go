@@ -5,21 +5,22 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 )
 
 // DistributedRateLimiter implements distributed rate limiting using Redis
 type DistributedRateLimiter struct {
-	client     *redis.Client
-	config     DistributedRateLimitConfig
-	scripts    *RateLimitScripts
-	logger     Logger
-	metrics    *RateLimitMetrics
-	mutex      sync.RWMutex
-	ctx        context.Context
-	cancel     context.CancelFunc
-	wg         sync.WaitGroup
+	client  *redis.Client
+	config  DistributedRateLimitConfig
+	scripts *RateLimitScripts
+	logger  Logger
+	metrics *RateLimitMetrics
+	mutex   sync.RWMutex
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
 }
 
 // DistributedRateLimitConfig defines configuration for distributed rate limiting
@@ -28,39 +29,39 @@ type DistributedRateLimitConfig struct {
 	RedisAddr     string `json:"redis_addr"`
 	RedisPassword string `json:"redis_password"`
 	RedisDB       int    `json:"redis_db"`
-	
+
 	// Rate limiting configuration
-	KeyPrefix           string        `json:"key_prefix"`
-	DefaultLimit        int64         `json:"default_limit"`
-	DefaultWindow       time.Duration `json:"default_window"`
-	DefaultBurst        int64         `json:"default_burst"`
-	
+	KeyPrefix     string        `json:"key_prefix"`
+	DefaultLimit  int64         `json:"default_limit"`
+	DefaultWindow time.Duration `json:"default_window"`
+	DefaultBurst  int64         `json:"default_burst"`
+
 	// Algorithm settings
-	Algorithm           RateLimitAlgorithm `json:"algorithm"`
-	SlidingWindowParts  int                `json:"sliding_window_parts"`
-	
+	Algorithm          RateLimitAlgorithm `json:"algorithm"`
+	SlidingWindowParts int                `json:"sliding_window_parts"`
+
 	// Cleanup and maintenance
-	CleanupInterval     time.Duration `json:"cleanup_interval"`
-	KeyExpiration       time.Duration `json:"key_expiration"`
-	
+	CleanupInterval time.Duration `json:"cleanup_interval"`
+	KeyExpiration   time.Duration `json:"key_expiration"`
+
 	// Performance settings
-	EnablePipelining    bool          `json:"enable_pipelining"`
-	MaxRetries          int           `json:"max_retries"`
-	RetryDelay          time.Duration `json:"retry_delay"`
-	
+	EnablePipelining bool          `json:"enable_pipelining"`
+	MaxRetries       int           `json:"max_retries"`
+	RetryDelay       time.Duration `json:"retry_delay"`
+
 	// Monitoring
-	EnableMetrics       bool          `json:"enable_metrics"`
-	MetricsInterval     time.Duration `json:"metrics_interval"`
+	EnableMetrics   bool          `json:"enable_metrics"`
+	MetricsInterval time.Duration `json:"metrics_interval"`
 }
 
 // RateLimitAlgorithm defines the rate limiting algorithm
 type RateLimitAlgorithm string
 
 const (
-	AlgorithmTokenBucket    RateLimitAlgorithm = "token_bucket"
-	AlgorithmSlidingWindow  RateLimitAlgorithm = "sliding_window"
-	AlgorithmFixedWindow    RateLimitAlgorithm = "fixed_window"
-	AlgorithmLeakyBucket    RateLimitAlgorithm = "leaky_bucket"
+	AlgorithmTokenBucket   RateLimitAlgorithm = "token_bucket"
+	AlgorithmSlidingWindow RateLimitAlgorithm = "sliding_window"
+	AlgorithmFixedWindow   RateLimitAlgorithm = "fixed_window"
+	AlgorithmLeakyBucket   RateLimitAlgorithm = "leaky_bucket"
 )
 
 // RateLimitRequest represents a rate limit check request
@@ -71,36 +72,38 @@ type RateLimitRequest struct {
 	Burst     int64         `json:"burst"`
 	Cost      int64         `json:"cost"`
 	Timestamp time.Time     `json:"timestamp"`
+}
 
 // RateLimitResult represents the result of a rate limit check
 type RateLimitResult struct {
-	Allowed       bool          `json:"allowed"`
-	Remaining     int64         `json:"remaining"`
-	ResetTime     time.Time     `json:"reset_time"`
-	RetryAfter    time.Duration `json:"retry_after"`
-	TotalLimit    int64         `json:"total_limit"`
-	WindowSize    time.Duration `json:"window_size"`
-	CurrentUsage  int64         `json:"current_usage"`
+	Allowed      bool          `json:"allowed"`
+	Remaining    int64         `json:"remaining"`
+	ResetTime    time.Time     `json:"reset_time"`
+	RetryAfter   time.Duration `json:"retry_after"`
+	TotalLimit   int64         `json:"total_limit"`
+	WindowSize   time.Duration `json:"window_size"`
+	CurrentUsage int64         `json:"current_usage"`
 }
 
 // RateLimitMetrics tracks rate limiting performance
 type RateLimitMetrics struct {
-	TotalRequests      int64 `json:"total_requests"`
-	AllowedRequests    int64 `json:"allowed_requests"`
-	DeniedRequests     int64 `json:"denied_requests"`
-	ActiveKeys         int64 `json:"active_keys"`
-	RedisOperations    int64 `json:"redis_operations"`
-	RedisErrors        int64 `json:"redis_errors"`
-	AverageLatency     time.Duration `json:"average_latency"`
-	AllowRate          float64 `json:"allow_rate"`
+	TotalRequests   int64         `json:"total_requests"`
+	AllowedRequests int64         `json:"allowed_requests"`
+	DeniedRequests  int64         `json:"denied_requests"`
+	ActiveKeys      int64         `json:"active_keys"`
+	RedisOperations int64         `json:"redis_operations"`
+	RedisErrors     int64         `json:"redis_errors"`
+	AverageLatency  time.Duration `json:"average_latency"`
+	AllowRate       float64       `json:"allow_rate"`
+}
 
 // RateLimitScripts contains Lua scripts for atomic Redis operations
 type RateLimitScripts struct {
-	TokenBucket    *redis.Script
-	SlidingWindow  *redis.Script
-	FixedWindow    *redis.Script
-	LeakyBucket    *redis.Script
-	Cleanup        *redis.Script
+	TokenBucket   *redis.Script
+	SlidingWindow *redis.Script
+	FixedWindow   *redis.Script
+	LeakyBucket   *redis.Script
+	Cleanup       *redis.Script
 }
 
 // DefaultDistributedRateLimitConfig returns default configuration
@@ -123,24 +126,25 @@ func DefaultDistributedRateLimitConfig() DistributedRateLimitConfig {
 		EnableMetrics:      true,
 		MetricsInterval:    30 * time.Second,
 	}
+}
 
 // NewDistributedRateLimiter creates a new distributed rate limiter
 func NewDistributedRateLimiter(config DistributedRateLimitConfig, logger Logger) (*DistributedRateLimiter, error) {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Create Redis client
 	client := redis.NewClient(&redis.Options{
 		Addr:     config.RedisAddr,
 		Password: config.RedisPassword,
 		DB:       config.RedisDB,
 	})
-	
+
 	// Test connection
 	if err := client.Ping(ctx).Err(); err != nil {
 		cancel()
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
-	
+
 	// Initialize Lua scripts
 	scripts := &RateLimitScripts{
 		TokenBucket:   redis.NewScript(tokenBucketScript),
@@ -149,7 +153,7 @@ func NewDistributedRateLimiter(config DistributedRateLimitConfig, logger Logger)
 		LeakyBucket:   redis.NewScript(leakyBucketScript),
 		Cleanup:       redis.NewScript(cleanupScript),
 	}
-	
+
 	limiter := &DistributedRateLimiter{
 		client:  client,
 		config:  config,
@@ -159,20 +163,21 @@ func NewDistributedRateLimiter(config DistributedRateLimitConfig, logger Logger)
 		ctx:     ctx,
 		cancel:  cancel,
 	}
-	
+
 	return limiter, nil
+}
 
 // Start starts the distributed rate limiter
 func (d *DistributedRateLimiter) Start() error {
 	d.logger.Info("Starting distributed rate limiter", "algorithm", d.config.Algorithm)
-	
+
 	// Start cleanup loop
 	d.wg.Add(1)
 	go func() {
 		defer d.wg.Done()
 		d.cleanupLoop()
 	}()
-	
+
 	// Start metrics collection if enabled
 	if d.config.EnableMetrics {
 		d.wg.Add(1)
@@ -181,31 +186,33 @@ func (d *DistributedRateLimiter) Start() error {
 			d.metricsLoop()
 		}()
 	}
-	
+
 	d.logger.Info("Distributed rate limiter started")
 	return nil
+}
 
 // Stop stops the distributed rate limiter
 func (d *DistributedRateLimiter) Stop() error {
 	d.logger.Info("Stopping distributed rate limiter")
-	
+
 	d.cancel()
 	d.wg.Wait()
-	
+
 	// Close Redis connection
 	if err := d.client.Close(); err != nil {
 		d.logger.Error("Error closing Redis connection", "error", err)
 		return err
 	}
-	
+
 	d.logger.Info("Distributed rate limiter stopped")
 	return nil
+}
 
 // Allow checks if a request is allowed under the rate limit
 func (d *DistributedRateLimiter) Allow(request *RateLimitRequest) (*RateLimitResult, error) {
 	start := time.Now()
 	d.metrics.TotalRequests++
-	
+
 	// Set defaults if not provided
 	if request.Limit == 0 {
 		request.Limit = d.config.DefaultLimit
@@ -222,26 +229,27 @@ func (d *DistributedRateLimiter) Allow(request *RateLimitRequest) (*RateLimitRes
 	if request.Timestamp.IsZero() {
 		request.Timestamp = time.Now()
 	}
-	
+
 	// Execute rate limiting algorithm
 	result, err := d.executeRateLimit(request)
 	if err != nil {
 		d.metrics.RedisErrors++
 		return nil, fmt.Errorf("rate limit check failed: %w", err)
 	}
-	
+
 	// Update metrics
 	d.updateRequestMetrics(result, time.Since(start))
-	
-	d.logger.Debug("Rate limit check", 
+
+	d.logger.Debug("Rate limit check",
 		"key", request.Key,
 		"allowed", result.Allowed,
 		"remaining", result.Remaining,
 		"usage", result.CurrentUsage,
 		"limit", result.TotalLimit,
 	)
-	
+
 	return result, nil
+}
 
 // AllowN checks if N requests are allowed under the rate limit
 func (d *DistributedRateLimiter) AllowN(key string, n int64) (*RateLimitResult, error) {
@@ -250,18 +258,21 @@ func (d *DistributedRateLimiter) AllowN(key string, n int64) (*RateLimitResult, 
 		Cost: n,
 	}
 	return d.Allow(request)
+}
+
 // Reset resets the rate limit for a key
 func (d *DistributedRateLimiter) Reset(key string) error {
 	fullKey := d.getRedisKey(key)
-	
+
 	err := d.client.Del(d.ctx, fullKey).Err()
 	if err != nil {
 		d.metrics.RedisErrors++
 		return fmt.Errorf("failed to reset rate limit: %w", err)
 	}
-	
+
 	d.logger.Info("Rate limit reset", "key", key)
 	return nil
+}
 
 // GetStatus returns the current status for a key without consuming quota
 func (d *DistributedRateLimiter) GetStatus(key string) (*RateLimitResult, error) {
@@ -270,25 +281,27 @@ func (d *DistributedRateLimiter) GetStatus(key string) (*RateLimitResult, error)
 		Cost: 0, // Don't consume quota
 	}
 	return d.Allow(request)
+}
 
 // GetMetrics returns current rate limiting metrics
 func (d *DistributedRateLimiter) GetMetrics() *RateLimitMetrics {
 	d.mutex.RLock()
 	defer d.mutex.RUnlock()
-	
+
 	// Calculate allow rate
 	if d.metrics.TotalRequests > 0 {
 		d.metrics.AllowRate = float64(d.metrics.AllowedRequests) / float64(d.metrics.TotalRequests)
 	}
-	
+
 	return d.metrics
+}
 
 // Private methods
 
 // executeRateLimit executes the rate limiting algorithm
 func (d *DistributedRateLimiter) executeRateLimit(request *RateLimitRequest) (*RateLimitResult, error) {
 	d.metrics.RedisOperations++
-	
+
 	switch d.config.Algorithm {
 	case AlgorithmTokenBucket:
 		return d.executeTokenBucket(request)
@@ -301,12 +314,13 @@ func (d *DistributedRateLimiter) executeRateLimit(request *RateLimitRequest) (*R
 	default:
 		return nil, fmt.Errorf("unknown algorithm: %s", d.config.Algorithm)
 	}
+}
 
 // executeTokenBucket implements token bucket algorithm
 func (d *DistributedRateLimiter) executeTokenBucket(request *RateLimitRequest) (*RateLimitResult, error) {
 	key := d.getRedisKey(request.Key)
 	now := request.Timestamp.Unix()
-	
+
 	// Arguments: [key, limit, window_seconds, burst, cost, now]
 	args := []interface{}{
 		request.Limit,
@@ -315,20 +329,21 @@ func (d *DistributedRateLimiter) executeTokenBucket(request *RateLimitRequest) (
 		request.Cost,
 		now,
 	}
-	
+
 	result, err := d.scripts.TokenBucket.Run(d.ctx, d.client, []string{key}, args...).Result()
 	if err != nil {
 		return nil, fmt.Errorf("token bucket script failed: %w", err)
 	}
-	
+
 	return d.parseScriptResult(result, request)
+}
 
 // executeSlidingWindow implements sliding window algorithm
 func (d *DistributedRateLimiter) executeSlidingWindow(request *RateLimitRequest) (*RateLimitResult, error) {
 	key := d.getRedisKey(request.Key)
 	now := request.Timestamp.Unix()
 	windowStart := now - int64(request.Window.Seconds())
-	
+
 	// Arguments: [key, limit, window_start, now, cost, parts]
 	args := []interface{}{
 		request.Limit,
@@ -337,13 +352,14 @@ func (d *DistributedRateLimiter) executeSlidingWindow(request *RateLimitRequest)
 		request.Cost,
 		d.config.SlidingWindowParts,
 	}
-	
+
 	result, err := d.scripts.SlidingWindow.Run(d.ctx, d.client, []string{key}, args...).Result()
 	if err != nil {
 		return nil, fmt.Errorf("sliding window script failed: %w", err)
 	}
-	
+
 	return d.parseScriptResult(result, request)
+}
 
 // executeFixedWindow implements fixed window algorithm
 func (d *DistributedRateLimiter) executeFixedWindow(request *RateLimitRequest) (*RateLimitResult, error) {
@@ -351,7 +367,7 @@ func (d *DistributedRateLimiter) executeFixedWindow(request *RateLimitRequest) (
 	now := request.Timestamp.Unix()
 	window := int64(request.Window.Seconds())
 	windowStart := (now / window) * window
-	
+
 	// Arguments: [key, limit, window_start, window_end, cost]
 	args := []interface{}{
 		request.Limit,
@@ -359,19 +375,20 @@ func (d *DistributedRateLimiter) executeFixedWindow(request *RateLimitRequest) (
 		windowStart + window,
 		request.Cost,
 	}
-	
+
 	result, err := d.scripts.FixedWindow.Run(d.ctx, d.client, []string{key}, args...).Result()
 	if err != nil {
 		return nil, fmt.Errorf("fixed window script failed: %w", err)
 	}
-	
+
 	return d.parseScriptResult(result, request)
+}
 
 // executeLeakyBucket implements leaky bucket algorithm
 func (d *DistributedRateLimiter) executeLeakyBucket(request *RateLimitRequest) (*RateLimitResult, error) {
 	key := d.getRedisKey(request.Key)
 	now := request.Timestamp.Unix()
-	
+
 	// Arguments: [key, capacity, leak_rate, cost, now]
 	leakRate := float64(request.Limit) / request.Window.Seconds()
 	args := []interface{}{
@@ -380,13 +397,14 @@ func (d *DistributedRateLimiter) executeLeakyBucket(request *RateLimitRequest) (
 		request.Cost,
 		now,
 	}
-	
+
 	result, err := d.scripts.LeakyBucket.Run(d.ctx, d.client, []string{key}, args...).Result()
 	if err != nil {
 		return nil, fmt.Errorf("leaky bucket script failed: %w", err)
 	}
-	
+
 	return d.parseScriptResult(result, request)
+}
 
 // parseScriptResult parses the result from Lua scripts
 func (d *DistributedRateLimiter) parseScriptResult(result interface{}, request *RateLimitRequest) (*RateLimitResult, error) {
@@ -394,19 +412,19 @@ func (d *DistributedRateLimiter) parseScriptResult(result interface{}, request *
 	if !ok || len(values) < 4 {
 		return nil, fmt.Errorf("invalid script result format")
 	}
-	
+
 	// Parse script results: [allowed, remaining, reset_time, current_usage]
 	allowed, _ := strconv.ParseInt(fmt.Sprintf("%v", values[0]), 10, 64)
 	remaining, _ := strconv.ParseInt(fmt.Sprintf("%v", values[1]), 10, 64)
 	resetTime, _ := strconv.ParseInt(fmt.Sprintf("%v", values[2]), 10, 64)
 	currentUsage, _ := strconv.ParseInt(fmt.Sprintf("%v", values[3]), 10, 64)
-	
+
 	resetTimestamp := time.Unix(resetTime, 0)
 	var retryAfter time.Duration
 	if !resetTimestamp.IsZero() && resetTimestamp.After(time.Now()) {
 		retryAfter = resetTimestamp.Sub(time.Now())
 	}
-	
+
 	return &RateLimitResult{
 		Allowed:      allowed == 1,
 		Remaining:    remaining,
@@ -416,34 +434,37 @@ func (d *DistributedRateLimiter) parseScriptResult(result interface{}, request *
 		WindowSize:   request.Window,
 		CurrentUsage: currentUsage,
 	}, nil
+}
 
 // getRedisKey returns the full Redis key for rate limiting
 func (d *DistributedRateLimiter) getRedisKey(key string) string {
 	return fmt.Sprintf("%s:%s", d.config.KeyPrefix, key)
+}
 
 // updateRequestMetrics updates request-level metrics
 func (d *DistributedRateLimiter) updateRequestMetrics(result *RateLimitResult, latency time.Duration) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
-	
+
 	if result.Allowed {
 		d.metrics.AllowedRequests++
 	} else {
 		d.metrics.DeniedRequests++
 	}
-	
+
 	// Update average latency
 	if d.metrics.AverageLatency == 0 {
 		d.metrics.AverageLatency = latency
 	} else {
 		d.metrics.AverageLatency = (d.metrics.AverageLatency + latency) / 2
 	}
+}
 
 // cleanupLoop performs periodic cleanup of expired keys
 func (d *DistributedRateLimiter) cleanupLoop() {
 	ticker := time.NewTicker(d.config.CleanupInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -452,32 +473,34 @@ func (d *DistributedRateLimiter) cleanupLoop() {
 			return
 		}
 	}
+}
 
 // performCleanup removes expired rate limit keys
 func (d *DistributedRateLimiter) performCleanup() {
 	pattern := d.config.KeyPrefix + ":*"
 	expireTime := time.Now().Add(-d.config.KeyExpiration).Unix()
-	
+
 	// Arguments: [pattern, expire_time]
 	args := []interface{}{pattern, expireTime}
-	
+
 	result, err := d.scripts.Cleanup.Run(d.ctx, d.client, []string{}, args...).Result()
 	if err != nil {
 		d.logger.Error("Cleanup script failed", "error", err)
 		d.metrics.RedisErrors++
 		return
 	}
-	
+
 	cleaned, _ := strconv.ParseInt(fmt.Sprintf("%v", result), 10, 64)
 	if cleaned > 0 {
 		d.logger.Info("Cleaned up expired rate limit keys", "count", cleaned)
 	}
+}
 
 // metricsLoop periodically updates metrics
 func (d *DistributedRateLimiter) metricsLoop() {
 	ticker := time.NewTicker(d.config.MetricsInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -486,6 +509,7 @@ func (d *DistributedRateLimiter) metricsLoop() {
 			return
 		}
 	}
+}
 
 // updateMetrics updates system-level metrics
 func (d *DistributedRateLimiter) updateMetrics() {
@@ -497,10 +521,11 @@ func (d *DistributedRateLimiter) updateMetrics() {
 		d.metrics.RedisErrors++
 		return
 	}
-	
+
 	d.mutex.Lock()
 	d.metrics.ActiveKeys = int64(len(keys))
 	d.mutex.Unlock()
+}
 
 // Lua scripts for atomic operations
 
@@ -643,20 +668,3 @@ end
 
 return cleaned
 `
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}

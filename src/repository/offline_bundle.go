@@ -4,15 +4,14 @@ package repository
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/perplext/LLMrecon/src/audit/trail"
 	"github.com/perplext/LLMrecon/src/bundle"
-	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
 )
 
 // OfflineBundleRepository implements the Repository interface for offline bundles
@@ -29,6 +28,7 @@ type OfflineBundleRepository struct {
 	offlineBundle *bundle.OfflineBundle
 	// isConnected indicates whether the repository is connected
 	isConnected bool
+}
 
 // NewOfflineBundleRepository creates a new offline bundle repository
 func NewOfflineBundleRepository(basePath string, auditTrail *trail.AuditTrailManager) *OfflineBundleRepository {
@@ -39,6 +39,7 @@ func NewOfflineBundleRepository(basePath string, auditTrail *trail.AuditTrailMan
 		validationLevel: bundle.StandardValidation,
 		isConnected:     false,
 	}
+}
 
 // Connect connects to the repository
 func (r *OfflineBundleRepository) Connect(ctx context.Context) error {
@@ -70,39 +71,38 @@ func (r *OfflineBundleRepository) Connect(ctx context.Context) error {
 	// Log audit event
 	if r.auditTrail != nil {
 		auditLog := &trail.AuditLog{
-			ID:           uuid.New().String(),
-			Operation:    "connect_offline_bundle_repository",
-			ResourceType: "offline_bundle",
-			ResourceID:   offlineBundle.EnhancedManifest.BundleID,
-			Description:  fmt.Sprintf("Connected to offline bundle: %s", offlineBundle.EnhancedManifest.Name),
-			Status:       "success",
-			Timestamp:    time.Now(),
-			IPAddress:    "",
-			Details: map[string]interface{}{
-				"bundle_name":      offlineBundle.EnhancedManifest.Name,
-				"bundle_version":   offlineBundle.EnhancedManifest.Version,
-				"validation_level": string(r.validationLevel),
-				"base_path":        r.basePath,
-			},
+			ID:         uuid.New().String(),
+			Timestamp:  time.Now(),
+			Level:      trail.LogLevelInfo,
+			Operation:  trail.OperationRead,
+			Component:  "offline_bundle_repository",
+			Resource:   "offline_bundle",
+			ResourceID: offlineBundle.EnhancedManifest.BundleID,
+			Message:    fmt.Sprintf("Connected to offline bundle: %s", offlineBundle.EnhancedManifest.Name),
+			Status:     "success",
+			IPAddress:  "",
 		}
 
-		if err := r.auditTrail.LogOperation(context.Background(), auditLog); err != nil {
+		if err := r.auditTrail.Log(context.Background(), auditLog); err != nil {
 			// Log error but continue
 			fmt.Printf("Warning: Failed to log audit event: %v\n", err)
 		}
 	}
 
 	return nil
+}
 
 // Disconnect disconnects from the repository
 func (r *OfflineBundleRepository) Disconnect(ctx context.Context) error {
 	r.offlineBundle = nil
 	r.isConnected = false
 	return nil
+}
 
 // IsConnected checks if the repository is connected
 func (r *OfflineBundleRepository) IsConnected() bool {
 	return r.isConnected
+}
 
 // ListFiles lists files in the repository
 func (r *OfflineBundleRepository) ListFiles(ctx context.Context, path string) ([]FileInfo, error) {
@@ -130,6 +130,7 @@ func (r *OfflineBundleRepository) ListFiles(ctx context.Context, path string) ([
 	}
 
 	return files, nil
+}
 
 // GetFile gets a file from the repository
 func (r *OfflineBundleRepository) GetFile(ctx context.Context, path string) ([]byte, error) {
@@ -159,28 +160,26 @@ func (r *OfflineBundleRepository) GetFile(ctx context.Context, path string) ([]b
 	// Log audit event
 	if r.auditTrail != nil {
 		auditLog := &trail.AuditLog{
-			ID:           uuid.New().String(),
-			Operation:    "get_file_from_offline_bundle",
-			ResourceType: "file",
-			ResourceID:   contentItem.ID,
-			Description:  fmt.Sprintf("Retrieved file from offline bundle: %s", path),
-			Status:       "success",
-			Timestamp:    time.Now(),
-			IPAddress:    "",
-			Details: map[string]interface{}{
-				"path":         path,
-				"content_type": string(contentItem.Type),
-				"bundle_id":    r.offlineBundle.EnhancedManifest.BundleID,
-			},
+			ID:         uuid.New().String(),
+			Timestamp:  time.Now(),
+			Level:      trail.LogLevelInfo,
+			Operation:  trail.OperationRead,
+			Component:  "offline_bundle_repository",
+			Resource:   "file",
+			ResourceID: contentItem.ID,
+			Message:    fmt.Sprintf("Retrieved file from offline bundle: %s", path),
+			Status:     "success",
+			IPAddress:  "",
 		}
 
-		if err := r.auditTrail.LogOperation(context.Background(), auditLog); err != nil {
+		if err := r.auditTrail.Log(context.Background(), auditLog); err != nil {
 			// Log error but continue
 			fmt.Printf("Warning: Failed to log audit event: %v\n", err)
 		}
 	}
 
 	return content, nil
+}
 
 // GetFileInfo gets information about a file in the repository
 func (r *OfflineBundleRepository) GetFileInfo(ctx context.Context, path string) (FileInfo, error) {
@@ -213,6 +212,7 @@ func (r *OfflineBundleRepository) GetFileInfo(ctx context.Context, path string) 
 	// Compliance mappings are not included in basic FileInfo structure
 
 	return fileInfo, nil
+}
 
 // GetRepositoryInfo gets information about the repository
 func (r *OfflineBundleRepository) GetRepositoryInfo(ctx context.Context) (RepositoryInfo, error) {
@@ -233,15 +233,19 @@ func (r *OfflineBundleRepository) GetRepositoryInfo(ctx context.Context) (Reposi
 	}
 
 	return repoInfo, nil
+}
 
 // SetValidationLevel sets the validation level for offline bundles
 func (r *OfflineBundleRepository) SetValidationLevel(level bundle.ValidationLevel) {
 	r.validationLevel = level
+}
 
 // GetValidationLevel gets the current validation level
 func (r *OfflineBundleRepository) GetValidationLevel() bundle.ValidationLevel {
 	return r.validationLevel
+}
 
 // GetOfflineBundle gets the loaded offline bundle
 func (r *OfflineBundleRepository) GetOfflineBundle() *bundle.OfflineBundle {
 	return r.offlineBundle
+}

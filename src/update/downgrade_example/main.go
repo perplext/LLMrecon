@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/keystore"
 	"github.com/perplext/LLMrecon/src/update"
@@ -32,7 +35,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize key store: %v", err)
 	}
-	defer func() { if err := keyStore.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := keyStore.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Initialize downgrade protection
 	log.Println("Initializing downgrade protection...")
 	dp, err := update.NewDowngradeProtection(policyPath, keyStore)
@@ -93,6 +100,7 @@ func main() {
 	demonstratePolicyUpdate(dp)
 
 	log.Println("\nDowngrade protection example completed successfully")
+}
 
 // initializeKeyStore initializes the key store
 func initializeKeyStore(keyStorePath string) (*keystore.FileKeyStore, error) {
@@ -104,6 +112,7 @@ func initializeKeyStore(keyStorePath string) (*keystore.FileKeyStore, error) {
 	}
 
 	return keystore.NewFileKeyStore(keyStoreOptions)
+}
 
 // generatePolicyKeys generates keys for policy signing and verification
 func generatePolicyKeys(ks *keystore.FileKeyStore) (string, string, error) {
@@ -147,6 +156,7 @@ func generatePolicyKeys(ks *keystore.FileKeyStore) (string, string, error) {
 	}
 
 	return signingKey.Metadata.ID, verificationKey.Metadata.ID, nil
+}
 
 // displayPolicy displays the current security policy
 func displayPolicy(policy *update.SecurityPolicy) {
@@ -156,6 +166,7 @@ func displayPolicy(policy *update.SecurityPolicy) {
 		return
 	}
 	fmt.Println(string(policyJSON))
+}
 
 // demonstrateConnectionSecurityValidation demonstrates connection security validation
 func demonstrateConnectionSecurityValidation(dp *update.DowngradeProtection) {
@@ -175,6 +186,7 @@ func demonstrateConnectionSecurityValidation(dp *update.DowngradeProtection) {
 	if err != nil {
 		log.Printf("Validation correctly failed for invalid TLS version: %v", err)
 	} else {
+		log.Println("Validation unexpectedly succeeded for invalid TLS version")
 	}
 
 	// Create invalid options (certificate pinning disabled)
@@ -184,7 +196,9 @@ func demonstrateConnectionSecurityValidation(dp *update.DowngradeProtection) {
 	if err != nil {
 		log.Printf("Validation correctly failed for disabled certificate pinning: %v", err)
 	} else {
+		log.Println("Validation unexpectedly succeeded for disabled certificate pinning")
 	}
+}
 
 // demonstrateSignatureAlgorithmValidation demonstrates signature algorithm validation
 func demonstrateSignatureAlgorithmValidation(dp *update.DowngradeProtection) {
@@ -204,7 +218,9 @@ func demonstrateSignatureAlgorithmValidation(dp *update.DowngradeProtection) {
 	if err != nil {
 		log.Printf("Validation correctly failed for invalid algorithm: %v", err)
 	} else {
+		log.Println("Validation unexpectedly succeeded for invalid algorithm")
 	}
+}
 
 // demonstrateKeySizeValidation demonstrates key size validation
 func demonstrateKeySizeValidation(dp *update.DowngradeProtection) {
@@ -231,8 +247,10 @@ func demonstrateKeySizeValidation(dp *update.DowngradeProtection) {
 		if err != nil {
 			log.Printf("Validation correctly failed for key size %d below minimum %d for algorithm %s: %v", minSize-1, minSize, algorithm, err)
 		} else {
+			log.Printf("Validation unexpectedly succeeded for key size %d below minimum %d for algorithm %s", minSize-1, minSize, algorithm)
 		}
 	}
+}
 
 // demonstrateVersionValidation demonstrates version validation
 func demonstrateVersionValidation(dp *update.DowngradeProtection) {
@@ -258,23 +276,20 @@ func demonstrateVersionValidation(dp *update.DowngradeProtection) {
 	if err != nil {
 		log.Printf("Validation correctly failed for version below minimum: %v", err)
 	} else {
+		log.Println("Validation unexpectedly succeeded for version below minimum")
 	}
+}
 
 // demonstrateUpdatePackageValidation demonstrates update package validation
 func demonstrateUpdatePackageValidation(dp *update.DowngradeProtection) {
 	// Create a valid update package
 	validPkg := &update.UpdatePackage{
-		Path: os.TempDir(),
-		Manifest: update.UpdateManifest{
-			Signature: "valid-signature",
-			Versions: update.VersionInfo{
-				Core:      "1.0.0",
-				Templates: "1.0.0",
-				Modules: map[string]string{
-					"module1": "1.0.0",
-					"module2": "1.0.0",
-				},
-			},
+		PackagePath: os.TempDir(),
+		Manifest: update.PackageManifest{
+			Signature:     "valid-signature",
+			SchemaVersion: "1.0",
+			PackageID:     "example-package",
+			PackageType:   update.FullPackage,
 		},
 	}
 
@@ -295,16 +310,18 @@ func demonstrateUpdatePackageValidation(dp *update.DowngradeProtection) {
 	if err != nil {
 		log.Printf("Validation correctly failed for update package with missing signature: %v", err)
 	} else {
+		log.Println("Validation unexpectedly succeeded for update package with missing signature")
 	}
+}
 
 // demonstratePolicyEnforcement demonstrates policy enforcement
 func demonstratePolicyEnforcement(dp *update.DowngradeProtection) {
 	// Create options with values below the minimum requirements
 	options := &update.ConnectionSecurityOptions{
-		MinTLSVersion:          tls.VersionTLS10,
+		MinTLSVersion:            tls.VersionTLS10,
 		EnableCertificatePinning: false,
-		CheckRevocation:        false,
-		CipherSuites:           []uint16{tls.TLS_RSA_WITH_RC4_128_SHA}, // Weak cipher suite
+		CheckRevocation:          false,
+		CipherSuites:             []uint16{tls.TLS_RSA_WITH_RC4_128_SHA}, // Weak cipher suite
 	}
 
 	// Display original options
@@ -323,6 +340,7 @@ func demonstratePolicyEnforcement(dp *update.DowngradeProtection) {
 	log.Printf("  EnableCertificatePinning: %v", options.EnableCertificatePinning)
 	log.Printf("  CheckRevocation: %v", options.CheckRevocation)
 	log.Printf("  CipherSuites: %v", options.CipherSuites)
+}
 
 // demonstrateSecureClientCreation demonstrates secure client creation
 func demonstrateSecureClientCreation(dp *update.DowngradeProtection) {
@@ -341,8 +359,9 @@ func demonstrateSecureClientCreation(dp *update.DowngradeProtection) {
 
 	// Display retry configuration
 	retryConfig := client.GetRetryConfig()
-	log.Printf("Retry configuration: MaxRetries=%d, InitialDelay=%v", 
+	log.Printf("Retry configuration: MaxRetries=%d, InitialDelay=%v",
 		retryConfig.MaxRetries, retryConfig.InitialDelay)
+}
 
 // demonstratePolicyUpdate demonstrates policy update
 func demonstratePolicyUpdate(dp *update.DowngradeProtection) {
@@ -358,7 +377,7 @@ func demonstratePolicyUpdate(dp *update.DowngradeProtection) {
 	// Update allowed signature algorithms
 	log.Println("Updating allowed signature algorithms to Ed25519 and ECDSA only...")
 	err = dp.UpdateAllowedSignatureAlgorithms([]update.SignatureAlgorithm{
-		update.Ed25519Algorithm, 
+		update.Ed25519Algorithm,
 		update.ECDSAAlgorithm,
 	})
 	if err != nil {
@@ -379,3 +398,4 @@ func demonstratePolicyUpdate(dp *update.DowngradeProtection) {
 	// Display updated policy
 	log.Println("Updated security policy:")
 	displayPolicy(dp.Policy)
+}

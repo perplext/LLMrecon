@@ -1,6 +1,7 @@
 package api
 
 import (
+	"time"
 )
 
 // API Version
@@ -26,6 +27,7 @@ type Response struct {
 	Data    interface{} `json:"data,omitempty"`
 	Error   *Error      `json:"error,omitempty"`
 	Meta    *Meta       `json:"meta,omitempty"`
+}
 
 // Error represents API error details
 type Error struct {
@@ -57,16 +59,17 @@ type Scan struct {
 	Results     *ScanResults `json:"results,omitempty"`
 	CreatedAt   time.Time    `json:"created_at"`
 	UpdatedAt   time.Time    `json:"updated_at"`
+}
 
 // ScanStatus represents the current state of a scan
 type ScanStatus string
 
 const (
-	ScanStatusPending    ScanStatus = "pending"
-	ScanStatusRunning    ScanStatus = "running"
-	ScanStatusCompleted  ScanStatus = "completed"
-	ScanStatusFailed     ScanStatus = "failed"
-	ScanStatusCancelled  ScanStatus = "cancelled"
+	ScanStatusPending   ScanStatus = "pending"
+	ScanStatusRunning   ScanStatus = "running"
+	ScanStatusCompleted ScanStatus = "completed"
+	ScanStatusFailed    ScanStatus = "failed"
+	ScanStatusCancelled ScanStatus = "cancelled"
 )
 
 // ScanTarget defines what is being scanned
@@ -93,17 +96,19 @@ type ScanResults struct {
 	Findings     []Finding           `json:"findings"`
 	Errors       []ScanError         `json:"errors,omitempty"`
 	TemplateRuns []TemplateExecution `json:"template_runs"`
+}
 
 // ResultSummary provides high-level scan results
 type ResultSummary struct {
-	TotalTests       int            `json:"total_tests"`
-	Passed           int            `json:"passed"`
-	Failed           int            `json:"failed"`
-	Errors           int            `json:"errors"`
-	Skipped          int            `json:"skipped"`
-	SeverityCount    map[string]int `json:"severity_count"`
-	CategoryCount    map[string]int `json:"category_count"`
-	ComplianceScore  float64        `json:"compliance_score"`
+	TotalTests      int            `json:"total_tests"`
+	Passed          int            `json:"passed"`
+	Failed          int            `json:"failed"`
+	Errors          int            `json:"errors"`
+	Skipped         int            `json:"skipped"`
+	SeverityCount   map[string]int `json:"severity_count"`
+	CategoryCount   map[string]int `json:"category_count"`
+	ComplianceScore float64        `json:"compliance_score"`
+}
 
 // Finding represents a security issue discovered
 type Finding struct {
@@ -126,6 +131,7 @@ type ScanError struct {
 	Error      string    `json:"error"`
 	Details    string    `json:"details,omitempty"`
 	Timestamp  time.Time `json:"timestamp"`
+}
 
 // TemplateExecution tracks individual template runs
 type TemplateExecution struct {
@@ -138,31 +144,32 @@ type TemplateExecution struct {
 
 // Template represents a security test template
 type Template struct {
-	ID           string                 `json:"id"`
-	Name         string                 `json:"name"`
-	Description  string                 `json:"description"`
-	Category     string                 `json:"category"`
-	Severity     string                 `json:"severity"`
-	Author       string                 `json:"author,omitempty"`
-	Version      string                 `json:"version"`
-	Tags         []string               `json:"tags,omitempty"`
-	References   []string               `json:"references,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-	LastUpdated  time.Time              `json:"last_updated"`
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Category    string                 `json:"category"`
+	Severity    string                 `json:"severity"`
+	Author      string                 `json:"author,omitempty"`
+	Version     string                 `json:"version"`
+	Tags        []string               `json:"tags,omitempty"`
+	References  []string               `json:"references,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	LastUpdated time.Time              `json:"last_updated"`
 }
 
 // Module represents a provider module
 type Module struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Type         string    `json:"type"`
-	Version      string    `json:"version"`
-	Description  string    `json:"description"`
-	Provider     string    `json:"provider"`
-	Status       string    `json:"status"`
-	Capabilities []string  `json:"capabilities,omitempty"`
+	ID           string       `json:"id"`
+	Name         string       `json:"name"`
+	Type         string       `json:"type"`
+	Version      string       `json:"version"`
+	Description  string       `json:"description"`
+	Provider     string       `json:"provider"`
+	Status       string       `json:"status"`
+	Capabilities []string     `json:"capabilities,omitempty"`
 	Config       ModuleConfig `json:"config,omitempty"`
-	LoadedAt     time.Time `json:"loaded_at"`
+	LoadedAt     time.Time    `json:"loaded_at"`
+}
 
 // ModuleConfig contains module configuration
 type ModuleConfig struct {
@@ -177,14 +184,15 @@ type VersionInfo struct {
 	Templates ComponentVersion `json:"templates"`
 	Modules   ComponentVersion `json:"modules"`
 	API       ComponentVersion `json:"api"`
+}
 
 // ComponentVersion represents version details for a component
 type ComponentVersion struct {
-	Current        string    `json:"current"`
-	Latest         string    `json:"latest,omitempty"`
-	UpdateAvailable bool     `json:"update_available"`
-	ReleaseDate    time.Time `json:"release_date,omitempty"`
-	Changelog      string    `json:"changelog_url,omitempty"`
+	Current         string    `json:"current"`
+	Latest          string    `json:"latest,omitempty"`
+	UpdateAvailable bool      `json:"update_available"`
+	ReleaseDate     time.Time `json:"release_date,omitempty"`
+	Changelog       string    `json:"changelog_url,omitempty"`
 }
 
 // UpdateRequest represents an update operation request
@@ -196,18 +204,18 @@ type UpdateRequest struct {
 
 // UpdateResponse contains update operation results
 type UpdateResponse struct {
-	Status   string          `json:"status"`
-	Updates  []UpdateResult  `json:"updates"`
-	Messages []string        `json:"messages,omitempty"`
+	Status   string         `json:"status"`
+	Updates  []UpdateResult `json:"updates"`
+	Messages []string       `json:"messages,omitempty"`
 }
 
 // UpdateResult represents the result of updating a component
 type UpdateResult struct {
-	Component   string `json:"component"`
-	OldVersion  string `json:"old_version"`
-	NewVersion  string `json:"new_version"`
-	Status      string `json:"status"`
-	Message     string `json:"message,omitempty"`
+	Component  string `json:"component"`
+	OldVersion string `json:"old_version"`
+	NewVersion string `json:"new_version"`
+	Status     string `json:"status"`
+	Message    string `json:"message,omitempty"`
 }
 
 // CreateScanRequest represents a request to create a new scan
@@ -216,14 +224,15 @@ type CreateScanRequest struct {
 	Templates  []string   `json:"templates,omitempty"`
 	Categories []string   `json:"categories,omitempty"`
 	Config     ScanConfig `json:"config,omitempty"`
+}
 
 // ListScansRequest represents scan listing parameters
 type ListScansRequest struct {
-	Status   ScanStatus `json:"status,omitempty"`
-	Page     int        `json:"page,omitempty"`
-	PerPage  int        `json:"per_page,omitempty"`
-	SortBy   string     `json:"sort_by,omitempty"`
-	OrderBy  string     `json:"order_by,omitempty"`
+	Status  ScanStatus `json:"status,omitempty"`
+	Page    int        `json:"page,omitempty"`
+	PerPage int        `json:"per_page,omitempty"`
+	SortBy  string     `json:"sort_by,omitempty"`
+	OrderBy string     `json:"order_by,omitempty"`
 }
 
 // ListTemplatesRequest represents template listing parameters
@@ -234,11 +243,13 @@ type ListTemplatesRequest struct {
 	Search   string   `json:"search,omitempty"`
 	Page     int      `json:"page,omitempty"`
 	PerPage  int      `json:"per_page,omitempty"`
+}
 
 // AuthRequest represents authentication request
 type AuthRequest struct {
 	APIKey string `json:"api_key,omitempty"`
 	Token  string `json:"token,omitempty"`
+}
 
 // AuthResponse represents authentication response
 type AuthResponse struct {
@@ -246,6 +257,7 @@ type AuthResponse struct {
 	Token       string    `json:"token,omitempty"`
 	ExpiresAt   time.Time `json:"expires_at,omitempty"`
 	Permissions []string  `json:"permissions,omitempty"`
+}
 
 // Filter types for API operations
 
@@ -259,6 +271,7 @@ type TemplateFilter struct {
 	Version  string   `json:"version,omitempty"`
 	Limit    int      `json:"limit,omitempty"`
 	Offset   int      `json:"offset,omitempty"`
+}
 
 // ScanFilter represents filtering criteria for scans
 type ScanFilter struct {
@@ -270,6 +283,7 @@ type ScanFilter struct {
 	DateTo    *time.Time `json:"date_to,omitempty"`
 	Limit     int        `json:"limit,omitempty"`
 	Offset    int        `json:"offset,omitempty"`
+}
 
 // Bundle types for API operations
 
@@ -307,30 +321,33 @@ type ImportBundleRequest struct {
 	ValidateOnly  bool   `json:"validate_only,omitempty"`
 	Overwrite     bool   `json:"overwrite,omitempty"`
 	SkipConflicts bool   `json:"skip_conflicts,omitempty"`
+}
 
 // BundleOperationResult represents the result of a bundle operation
 type BundleOperationResult struct {
-	BundleID   string            `json:"bundle_id,omitempty"`
-	Status     string            `json:"status"`
-	Message    string            `json:"message,omitempty"`
-	Templates  []string          `json:"templates,omitempty"`
-	Modules    []string          `json:"modules,omitempty"`
-	Conflicts  []string          `json:"conflicts,omitempty"`
-	Errors     []string          `json:"errors,omitempty"`
-	Metadata   map[string]string `json:"metadata,omitempty"`
+	BundleID  string            `json:"bundle_id,omitempty"`
+	Status    string            `json:"status"`
+	Message   string            `json:"message,omitempty"`
+	Templates []string          `json:"templates,omitempty"`
+	Modules   []string          `json:"modules,omitempty"`
+	Conflicts []string          `json:"conflicts,omitempty"`
+	Errors    []string          `json:"errors,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+}
 
 // Compliance types for API operations
 
 // ComplianceReportRequest represents a request to generate a compliance report
 type ComplianceReportRequest struct {
-	Framework    string   `json:"framework"`     // "owasp", "iso42001", "nist"
-	ScanIDs      []string `json:"scan_ids,omitempty"`
-	DateFrom     *time.Time `json:"date_from,omitempty"`
-	DateTo       *time.Time `json:"date_to,omitempty"`
-	Format       string   `json:"format,omitempty"` // "json", "pdf", "html", "csv"
-	IncludePassed bool    `json:"include_passed,omitempty"`
-	IncludeFailed bool    `json:"include_failed,omitempty"`
-	IncludeSkipped bool   `json:"include_skipped,omitempty"`
+	Framework      string     `json:"framework"` // "owasp", "iso42001", "nist"
+	ScanIDs        []string   `json:"scan_ids,omitempty"`
+	DateFrom       *time.Time `json:"date_from,omitempty"`
+	DateTo         *time.Time `json:"date_to,omitempty"`
+	Format         string     `json:"format,omitempty"` // "json", "pdf", "html", "csv"
+	IncludePassed  bool       `json:"include_passed,omitempty"`
+	IncludeFailed  bool       `json:"include_failed,omitempty"`
+	IncludeSkipped bool       `json:"include_skipped,omitempty"`
+}
 
 // ComplianceReport represents a compliance report
 type ComplianceReport struct {
@@ -347,6 +364,7 @@ type ComplianceReport struct {
 type CompliancePeriod struct {
 	StartDate time.Time `json:"start_date"`
 	EndDate   time.Time `json:"end_date"`
+}
 
 // ComplianceSummary provides high-level compliance information
 type ComplianceSummary struct {
@@ -356,16 +374,17 @@ type ComplianceSummary struct {
 	SkippedControls   int     `json:"skipped_controls"`
 	ComplianceScore   float64 `json:"compliance_score"`
 	RiskLevel         string  `json:"risk_level"`
+}
 
 // ComplianceResult represents the compliance status of a specific control
 type ComplianceResult struct {
-	ControlID    string                 `json:"control_id"`
-	ControlName  string                 `json:"control_name"`
-	Description  string                 `json:"description"`
-	Status       string                 `json:"status"` // "compliant", "non-compliant", "not-applicable"
-	Evidence     []ComplianceEvidence   `json:"evidence,omitempty"`
-	Recommendations []string             `json:"recommendations,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	ControlID       string                 `json:"control_id"`
+	ControlName     string                 `json:"control_name"`
+	Description     string                 `json:"description"`
+	Status          string                 `json:"status"` // "compliant", "non-compliant", "not-applicable"
+	Evidence        []ComplianceEvidence   `json:"evidence,omitempty"`
+	Recommendations []string               `json:"recommendations,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ComplianceEvidence represents evidence supporting a compliance result
@@ -392,6 +411,7 @@ type ComplianceStatus struct {
 type ComplianceTrend struct {
 	Date  time.Time `json:"date"`
 	Score float64   `json:"score"`
+}
 
 // Service interfaces and types
 
@@ -403,6 +423,7 @@ type Services struct {
 	UpdateManager     UpdateService
 	BundleManager     BundleService
 	ComplianceManager ComplianceService
+}
 
 // ScanService interface for scan operations
 type ScanService interface {
@@ -411,6 +432,7 @@ type ScanService interface {
 	ListScans(filter ScanFilter) ([]Scan, error)
 	CancelScan(id string) error
 	GetScanResults(id string) (*ScanResults, error)
+}
 
 // TemplateService interface for template operations
 type TemplateService interface {
@@ -418,6 +440,7 @@ type TemplateService interface {
 	GetTemplate(id string) (*Template, error)
 	GetCategories() ([]string, error)
 	ValidateTemplate(template *Template) error
+}
 
 // ModuleService interface for module operations
 type ModuleService interface {
@@ -425,12 +448,14 @@ type ModuleService interface {
 	GetModule(id string) (*Module, error)
 	UpdateModuleConfig(id string, config ModuleConfig) error
 	ReloadModule(id string) error
+}
 
 // UpdateService interface for update operations
 type UpdateService interface {
 	CheckForUpdates() (*VersionInfo, error)
 	PerformUpdate(request UpdateRequest) (*UpdateResponse, error)
 	GetUpdateHistory() ([]UpdateResult, error)
+}
 
 // BundleService interface for bundle operations
 type BundleService interface {
@@ -439,9 +464,11 @@ type BundleService interface {
 	ExportBundle(request ExportBundleRequest) (*BundleOperationResult, error)
 	ImportBundle(request ImportBundleRequest) (*BundleOperationResult, error)
 	DeleteBundle(id string) error
+}
 
 // ComplianceService interface for compliance operations
 type ComplianceService interface {
 	GenerateReport(request ComplianceReportRequest) (*ComplianceReport, error)
 	CheckCompliance(framework string) (*ComplianceStatus, error)
 	GetComplianceHistory(framework string, days int) ([]ComplianceTrend, error)
+}

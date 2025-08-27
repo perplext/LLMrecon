@@ -2,12 +2,13 @@
 package middleware
 
 import (
-	"time"
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 )
@@ -48,6 +49,7 @@ type LogEntry struct {
 	Duration time.Duration `json:"duration,omitempty"`
 	// AdditionalInfo is additional information
 	AdditionalInfo map[string]interface{} `json:"additional_info,omitempty"`
+}
 
 // LogHandler is a function that handles log entries
 type LogHandler func(entry *LogEntry)
@@ -62,6 +64,7 @@ type LoggingMiddleware struct {
 	redactPII bool
 	// redactPatterns is a list of patterns to redact
 	redactPatterns []*regexp.Regexp
+}
 
 // NewLoggingMiddleware creates a new logging middleware
 func NewLoggingMiddleware(minLevel LogLevel, redactPII bool) *LoggingMiddleware {
@@ -82,6 +85,7 @@ func NewLoggingMiddleware(minLevel LogLevel, redactPII bool) *LoggingMiddleware 
 	}
 
 	return middleware
+}
 
 // AddHandler adds a log handler for a specific level
 func (m *LoggingMiddleware) AddHandler(level LogLevel, handler LogHandler) {
@@ -89,26 +93,32 @@ func (m *LoggingMiddleware) AddHandler(level LogLevel, handler LogHandler) {
 		m.handlers[level] = make([]LogHandler, 0)
 	}
 	m.handlers[level] = append(m.handlers[level], handler)
+}
 
 // RemoveHandlers removes all handlers for a specific level
 func (m *LoggingMiddleware) RemoveHandlers(level LogLevel) {
 	delete(m.handlers, level)
+}
 
 // SetMinLevel sets the minimum log level
 func (m *LoggingMiddleware) SetMinLevel(level LogLevel) {
 	m.minLevel = level
+}
 
 // GetMinLevel returns the minimum log level
 func (m *LoggingMiddleware) GetMinLevel() LogLevel {
 	return m.minLevel
+}
 
 // SetRedactPII sets whether to redact PII
 func (m *LoggingMiddleware) SetRedactPII(redact bool) {
 	m.redactPII = redact
+}
 
 // IsRedactingPII returns whether PII is being redacted
 func (m *LoggingMiddleware) IsRedactingPII() bool {
 	return m.redactPII
+}
 
 // AddRedactPattern adds a pattern to redact
 func (m *LoggingMiddleware) AddRedactPattern(pattern string, replacement string) error {
@@ -122,10 +132,12 @@ func (m *LoggingMiddleware) AddRedactPattern(pattern string, replacement string)
 	m.redactPatterns = append(m.redactPatterns, re)
 
 	return nil
+}
 
 // ClearRedactPatterns clears all redact patterns
 func (m *LoggingMiddleware) ClearRedactPatterns() {
 	m.redactPatterns = nil
+}
 
 // Log logs an entry
 func (m *LoggingMiddleware) Log(entry *LogEntry) {
@@ -148,6 +160,7 @@ func (m *LoggingMiddleware) Log(entry *LogEntry) {
 	for _, handler := range m.handlers[LogLevelDebug-1] {
 		handler(entry)
 	}
+}
 
 // redactEntry redacts PII from a log entry
 func (m *LoggingMiddleware) redactEntry(entry *LogEntry) {
@@ -190,6 +203,7 @@ func (m *LoggingMiddleware) redactEntry(entry *LogEntry) {
 			}
 		}
 	}
+}
 
 // LogRequest logs a request
 func (m *LoggingMiddleware) LogRequest(ctx context.Context, providerType core.ProviderType, operation string, request interface{}, additionalInfo map[string]interface{}) string {
@@ -198,12 +212,12 @@ func (m *LoggingMiddleware) LogRequest(ctx context.Context, providerType core.Pr
 
 	// Create a log entry
 	entry := &LogEntry{
-		Timestamp:     time.Now(),
-		Level:         LogLevelInfo,
-		ProviderType:  providerType,
-		Operation:     operation,
-		RequestID:     requestID,
-		Request:       request,
+		Timestamp:      time.Now(),
+		Level:          LogLevelInfo,
+		ProviderType:   providerType,
+		Operation:      operation,
+		RequestID:      requestID,
+		Request:        request,
 		AdditionalInfo: additionalInfo,
 	}
 
@@ -211,6 +225,7 @@ func (m *LoggingMiddleware) LogRequest(ctx context.Context, providerType core.Pr
 	m.Log(entry)
 
 	return requestID
+}
 
 // LogResponse logs a response
 func (m *LoggingMiddleware) LogResponse(ctx context.Context, providerType core.ProviderType, operation string, requestID string, request interface{}, response interface{}, err error, duration time.Duration, additionalInfo map[string]interface{}) {
@@ -222,14 +237,14 @@ func (m *LoggingMiddleware) LogResponse(ctx context.Context, providerType core.P
 
 	// Create a log entry
 	entry := &LogEntry{
-		Timestamp:     time.Now(),
-		Level:         level,
-		ProviderType:  providerType,
-		Operation:     operation,
-		RequestID:     requestID,
-		Request:       request,
-		Response:      response,
-		Duration:      duration,
+		Timestamp:      time.Now(),
+		Level:          level,
+		ProviderType:   providerType,
+		Operation:      operation,
+		RequestID:      requestID,
+		Request:        request,
+		Response:       response,
+		Duration:       duration,
 		AdditionalInfo: additionalInfo,
 	}
 
@@ -240,6 +255,7 @@ func (m *LoggingMiddleware) LogResponse(ctx context.Context, providerType core.P
 
 	// Log the entry
 	m.Log(entry)
+}
 
 // LogMiddleware is middleware that logs requests and responses
 func (m *LoggingMiddleware) LogMiddleware(ctx context.Context, providerType core.ProviderType, operation string, request interface{}, fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
@@ -258,10 +274,12 @@ func (m *LoggingMiddleware) LogMiddleware(ctx context.Context, providerType core
 	m.LogResponse(ctx, providerType, operation, requestID, request, response, err, duration, nil)
 
 	return response, err
+}
 
 // generateRequestID generates a unique request ID
 func generateRequestID() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
 
 // ConsoleLogHandler returns a log handler that logs to the console
 func ConsoleLogHandler() LogHandler {
@@ -307,6 +325,7 @@ func ConsoleLogHandler() LogHandler {
 			}
 		}
 	}
+}
 
 // FileLogHandler returns a log handler that logs to a file
 func FileLogHandler(filePath string) (LogHandler, error) {
@@ -329,6 +348,7 @@ func FileLogHandler(filePath string) (LogHandler, error) {
 			fmt.Printf("Failed to write log entry: %v\n", err)
 		}
 	}, nil
+}
 
 // JSONLogHandler returns a log handler that logs to a JSON file
 func JSONLogHandler(filePath string) (LogHandler, error) {
@@ -351,3 +371,4 @@ func JSONLogHandler(filePath string) (LogHandler, error) {
 			fmt.Printf("Failed to write log entry: %v\n", err)
 		}
 	}, nil
+}

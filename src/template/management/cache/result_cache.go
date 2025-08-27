@@ -5,16 +5,18 @@ import (
 	"compress/gzip"
 	"container/list"
 	"encoding/gob"
+	"io"
 	"math"
 	"sync"
+	"time"
 
-	"github.com/perplext/LLMrecon/src/template/management/interfaces"
+	"github.com/perplext/LLMrecon/src/template/management/types"
 )
 
 // ResultCacheEntry represents a cached template execution result with metadata
 type ResultCacheEntry struct {
 	// Result is the cached template execution result
-	Result *interfaces.TemplateResult
+	Result *types.TemplateResult
 	// CreatedAt is the time the entry was created
 	CreatedAt time.Time
 	// ExpiresAt is the time the entry expires
@@ -27,6 +29,7 @@ type ResultCacheEntry struct {
 	LastAccessed time.Time
 	// Compressed indicates if the result is compressed
 	Compressed bool
+}
 
 // ResultCache is a cache for template execution results
 type ResultCache struct {
@@ -56,6 +59,7 @@ type ResultCache struct {
 	minTTL time.Duration
 	// maxTTL is the maximum TTL for adaptive TTL
 	maxTTL time.Duration
+}
 
 // NewResultCache creates a new result cache
 func NewResultCache(defaultTTL time.Duration, maxSize int, enableCompression bool) *ResultCache {
@@ -79,9 +83,10 @@ func NewResultCache(defaultTTL time.Duration, maxSize int, enableCompression boo
 		minTTL:            1 * time.Minute,
 		maxTTL:            1 * time.Hour,
 	}
+}
 
 // Get gets a template execution result from the cache
-func (c *ResultCache) Get(key string) (*interfaces.TemplateResult, bool) {
+func (c *ResultCache) Get(key string) (*types.TemplateResult, bool) {
 	c.mutex.RLock()
 	entry, exists := c.cache[key]
 	c.mutex.RUnlock()
@@ -107,33 +112,35 @@ func (c *ResultCache) Get(key string) (*interfaces.TemplateResult, bool) {
 	// Update position in eviction list (mark as recently used)
 	c.mutex.Lock()
 	c.updateEntryPosition(key)
-	
+
 	// Update access statistics
 	entry.AccessCount++
 	entry.LastAccessed = time.Now()
-	
+
 	// If adaptive TTL is enabled, extend TTL based on access count
 	if c.adaptiveTTL {
 		c.extendTTL(entry)
 	}
-	
+
 	// Get the result (decompress if needed)
 	result := entry.Result
 	if entry.Compressed {
 		result = c.decompressResult(entry.Result)
 	}
-	
+
 	c.mutex.Unlock()
 
 	c.stats.Hits++
 	return result, true
+}
 
 // Set sets a template execution result in the cache
-func (c *ResultCache) Set(key string, result *interfaces.TemplateResult) {
+func (c *ResultCache) Set(key string, result *types.TemplateResult) {
 	c.SetWithTTL(key, result, c.defaultTTL)
+}
 
 // SetWithTTL sets a template execution result in the cache with a specific TTL
-func (c *ResultCache) SetWithTTL(key string, result *interfaces.TemplateResult, ttl time.Duration) {
+func (c *ResultCache) SetWithTTL(key string, result *types.TemplateResult, ttl time.Duration) {
 	if result == nil {
 		return
 	}
@@ -168,7 +175,7 @@ func (c *ResultCache) SetWithTTL(key string, result *interfaces.TemplateResult, 
 		oldEntry := c.cache[key]
 		c.currentSize -= oldEntry.Size
 		c.currentSize += size
-		
+
 		c.evictionList.MoveToFront(elem)
 		c.cache[key] = entry
 		elem.Value = key
@@ -182,6 +189,7 @@ func (c *ResultCache) SetWithTTL(key string, result *interfaces.TemplateResult, 
 		// Check if cache exceeds max size
 		c.evictIfNeeded()
 	}
+}
 
 // Delete deletes a template execution result from the cache
 func (c *ResultCache) Delete(key string) {
@@ -189,6 +197,7 @@ func (c *ResultCache) Delete(key string) {
 	defer c.mutex.Unlock()
 
 	c.removeEntry(key)
+}
 
 // Clear clears the cache
 func (c *ResultCache) Clear() {
@@ -199,6 +208,7 @@ func (c *ResultCache) Clear() {
 	c.evictionList = list.New()
 	c.evictionMap = make(map[string]*list.Element)
 	c.currentSize = 0
+}
 
 // Size returns the number of entries in the cache
 func (c *ResultCache) Size() int {
@@ -206,6 +216,7 @@ func (c *ResultCache) Size() int {
 	defer c.mutex.RUnlock()
 
 	return len(c.cache)
+}
 
 // Prune removes entries from the cache that are older than the specified duration
 func (c *ResultCache) Prune(maxAge time.Duration) int {
@@ -226,6 +237,7 @@ func (c *ResultCache) Prune(maxAge time.Duration) int {
 	}
 
 	return count
+}
 
 // GetStats returns statistics about the cache
 func (c *ResultCache) GetStats() map[string]interface{} {
@@ -238,19 +250,20 @@ func (c *ResultCache) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"hits":              c.stats.Hits,
-		"misses":            c.stats.Misses,
-		"evictions":         c.stats.Evictions,
-		"expirations":       c.stats.Expirations,
-		"total_lookups":     c.stats.TotalLookups,
-		"hit_ratio":         hitRatio,
-		"current_size":      c.currentSize,
-		"max_size":          c.maxSize,
-		"entry_count":       len(c.cache),
-		"compression":       c.enableCompression,
-		"adaptive_ttl":      c.adaptiveTTL,
+		"hits":               c.stats.Hits,
+		"misses":             c.stats.Misses,
+		"evictions":          c.stats.Evictions,
+		"expirations":        c.stats.Expirations,
+		"total_lookups":      c.stats.TotalLookups,
+		"hit_ratio":          hitRatio,
+		"current_size":       c.currentSize,
+		"max_size":           c.maxSize,
+		"entry_count":        len(c.cache),
+		"compression":        c.enableCompression,
+		"adaptive_ttl":       c.adaptiveTTL,
 		"memory_usage_bytes": c.currentSize,
 	}
+}
 
 // SetMaxSize sets the maximum size of the cache
 func (c *ResultCache) SetMaxSize(maxSize int) {
@@ -265,6 +278,7 @@ func (c *ResultCache) SetMaxSize(maxSize int) {
 
 	// Evict entries if needed
 	c.evictIfNeeded()
+}
 
 // SetDefaultTTL sets the default TTL for cache entries
 func (c *ResultCache) SetDefaultTTL(ttl time.Duration) {
@@ -276,6 +290,7 @@ func (c *ResultCache) SetDefaultTTL(ttl time.Duration) {
 	defer c.mutex.Unlock()
 
 	c.defaultTTL = ttl
+}
 
 // SetCompressionEnabled sets whether compression is enabled
 func (c *ResultCache) SetCompressionEnabled(enabled bool) {
@@ -283,6 +298,7 @@ func (c *ResultCache) SetCompressionEnabled(enabled bool) {
 	defer c.mutex.Unlock()
 
 	c.enableCompression = enabled
+}
 
 // SetCompressionLevel sets the compression level (1-9)
 func (c *ResultCache) SetCompressionLevel(level int) {
@@ -294,6 +310,7 @@ func (c *ResultCache) SetCompressionLevel(level int) {
 	defer c.mutex.Unlock()
 
 	c.compressionLevel = level
+}
 
 // SetAdaptiveTTL sets whether adaptive TTL is enabled
 func (c *ResultCache) SetAdaptiveTTL(enabled bool) {
@@ -301,6 +318,7 @@ func (c *ResultCache) SetAdaptiveTTL(enabled bool) {
 	defer c.mutex.Unlock()
 
 	c.adaptiveTTL = enabled
+}
 
 // SetAdaptiveTTLRange sets the range for adaptive TTL
 func (c *ResultCache) SetAdaptiveTTLRange(min, max time.Duration) {
@@ -313,6 +331,7 @@ func (c *ResultCache) SetAdaptiveTTLRange(min, max time.Duration) {
 
 	c.minTTL = min
 	c.maxTTL = max
+}
 
 // removeEntry removes an entry from the cache
 func (c *ResultCache) removeEntry(key string) {
@@ -330,12 +349,14 @@ func (c *ResultCache) removeEntry(key string) {
 	// Remove from cache
 	c.currentSize -= entry.Size
 	delete(c.cache, key)
+}
 
 // updateEntryPosition updates the position of an entry in the eviction list
 func (c *ResultCache) updateEntryPosition(key string) {
 	if elem, ok := c.evictionMap[key]; ok {
 		c.evictionList.MoveToFront(elem)
 	}
+}
 
 // evictIfNeeded evicts entries if the cache exceeds the maximum size
 func (c *ResultCache) evictIfNeeded() {
@@ -353,24 +374,27 @@ func (c *ResultCache) evictIfNeeded() {
 		c.removeEntry(key)
 		c.stats.Evictions++
 	}
+}
 
 // compressResult compresses a template execution result
-func (c *ResultCache) compressResult(result *interfaces.TemplateResult) *interfaces.TemplateResult {
+func (c *ResultCache) compressResult(result *types.TemplateResult) *types.TemplateResult {
 	// Create a copy of the result
-	compressedResult := &interfaces.TemplateResult{
-		TemplateID:           result.TemplateID,
-		Success:              result.Success,
-		VulnerabilityDetected: result.VulnerabilityDetected,
-		VulnerabilityScore:   result.VulnerabilityScore,
-		Error:                result.Error,
-		ExecutionTime:        result.ExecutionTime,
-		Timestamp:            result.Timestamp,
-		Status:               result.Status,
-		StartTime:            result.StartTime,
-		EndTime:              result.EndTime,
-		Duration:             result.Duration,
-		Detected:             result.Detected,
-		Score:                result.Score,
+	compressedResult := &types.TemplateResult{
+		TemplateID:   result.TemplateID,
+		TemplateName: result.TemplateName,
+		Description:  result.Description,
+		Status:       result.Status,
+		StartTime:    result.StartTime,
+		EndTime:      result.EndTime,
+		Duration:     result.Duration,
+		Error:        result.Error,
+		Detected:     result.Detected,
+		Score:        result.Score,
+		Details:      result.Details,
+		Tags:         result.Tags,
+		Metadata:     result.Metadata,
+		Input:        result.Input,
+		Output:       result.Output,
 	}
 
 	// Compress the response
@@ -391,32 +415,7 @@ func (c *ResultCache) compressResult(result *interfaces.TemplateResult) *interfa
 		}
 	}
 
-	// Compress vulnerability details if present
-	if result.VulnerabilityDetails != nil {
-		var buf bytes.Buffer
-		enc := gob.NewEncoder(&buf)
-		err := enc.Encode(result.VulnerabilityDetails)
-		if err == nil {
-			var compressed bytes.Buffer
-			gzw, err := gzip.NewWriterLevel(&compressed, c.compressionLevel)
-			if err == nil {
-				_, err = io.Copy(gzw, &buf)
-				gzw.Close()
-				if err == nil {
-					// Store compressed details as map with special key
-					compressedResult.VulnerabilityDetails = map[string]interface{}{
-						"__compressed__": compressed.Bytes(),
-					}
-				} else {
-					compressedResult.VulnerabilityDetails = result.VulnerabilityDetails
-				}
-			} else {
-				compressedResult.VulnerabilityDetails = result.VulnerabilityDetails
-			}
-		} else {
-			compressedResult.VulnerabilityDetails = result.VulnerabilityDetails
-		}
-	}
+	// This compression section is removed as VulnerabilityDetails field doesn't exist
 
 	// Compress details if present
 	if result.Details != nil {
@@ -446,24 +445,27 @@ func (c *ResultCache) compressResult(result *interfaces.TemplateResult) *interfa
 	}
 
 	return compressedResult
+}
 
 // decompressResult decompresses a template execution result
-func (c *ResultCache) decompressResult(result *interfaces.TemplateResult) *interfaces.TemplateResult {
+func (c *ResultCache) decompressResult(result *types.TemplateResult) *types.TemplateResult {
 	// Create a copy of the result
-	decompressedResult := &interfaces.TemplateResult{
-		TemplateID:           result.TemplateID,
-		Success:              result.Success,
-		VulnerabilityDetected: result.VulnerabilityDetected,
-		VulnerabilityScore:   result.VulnerabilityScore,
-		Error:                result.Error,
-		ExecutionTime:        result.ExecutionTime,
-		Timestamp:            result.Timestamp,
-		Status:               result.Status,
-		StartTime:            result.StartTime,
-		EndTime:              result.EndTime,
-		Duration:             result.Duration,
-		Detected:             result.Detected,
-		Score:                result.Score,
+	decompressedResult := &types.TemplateResult{
+		TemplateID:   result.TemplateID,
+		TemplateName: result.TemplateName,
+		Description:  result.Description,
+		Status:       result.Status,
+		StartTime:    result.StartTime,
+		EndTime:      result.EndTime,
+		Duration:     result.Duration,
+		Error:        result.Error,
+		Detected:     result.Detected,
+		Score:        result.Score,
+		Details:      result.Details,
+		Tags:         result.Tags,
+		Metadata:     result.Metadata,
+		Input:        result.Input,
+		Output:       result.Output,
 	}
 
 	// Decompress the response
@@ -483,34 +485,7 @@ func (c *ResultCache) decompressResult(result *interfaces.TemplateResult) *inter
 		}
 	}
 
-	// Decompress vulnerability details if present
-	if result.VulnerabilityDetails != nil {
-		// Check if details are compressed
-		if compressed, ok := result.VulnerabilityDetails["__compressed__"].([]byte); ok {
-			gzr, err := gzip.NewReader(bytes.NewReader(compressed))
-			if err == nil {
-				var decompressed bytes.Buffer
-				_, err = io.Copy(&decompressed, gzr)
-				gzr.Close()
-				if err == nil {
-					var details map[string]interface{}
-					dec := gob.NewDecoder(&decompressed)
-					err = dec.Decode(&details)
-					if err == nil {
-						decompressedResult.VulnerabilityDetails = details
-					} else {
-						decompressedResult.VulnerabilityDetails = result.VulnerabilityDetails
-					}
-				} else {
-					decompressedResult.VulnerabilityDetails = result.VulnerabilityDetails
-				}
-			} else {
-				decompressedResult.VulnerabilityDetails = result.VulnerabilityDetails
-			}
-		} else {
-			decompressedResult.VulnerabilityDetails = result.VulnerabilityDetails
-		}
-	}
+	// This decompression section is removed as VulnerabilityDetails field doesn't exist
 
 	// Decompress details if present
 	if result.Details != nil {
@@ -542,6 +517,7 @@ func (c *ResultCache) decompressResult(result *interfaces.TemplateResult) *inter
 	}
 
 	return decompressedResult
+}
 
 // extendTTL extends the TTL of an entry based on access count
 func (c *ResultCache) extendTTL(entry *ResultCacheEntry) {
@@ -565,9 +541,10 @@ func (c *ResultCache) extendTTL(entry *ResultCacheEntry) {
 
 	// Update expiration time
 	entry.ExpiresAt = time.Now().Add(newTTL)
+}
 
 // estimateResultSize estimates the size of a template execution result in bytes
-func estimateResultSize(result *interfaces.TemplateResult) int {
+func estimateResultSize(result *types.TemplateResult) int {
 	if result == nil {
 		return 0
 	}
@@ -576,17 +553,22 @@ func estimateResultSize(result *interfaces.TemplateResult) int {
 
 	// Add size of string fields
 	size += len(result.TemplateID)
+	size += len(result.TemplateName)
+	size += len(result.Description)
 	size += len(result.Response)
-	size += len(result.Status)
+	size += len(string(result.Status))
+	size += len(result.Input)
+	size += len(result.Output)
 
 	// Add size of maps
-	if result.VulnerabilityDetails != nil {
+	if result.Details != nil {
 		size += 1024 // Estimate for map
 	}
-	if result.Details != nil {
+	if result.Metadata != nil {
 		size += 1024 // Estimate for map
 	}
 
 	// Add fixed sizes for other fields
 	size += 100 // Estimate for timestamps, durations, etc.
-
+	return size
+}

@@ -3,19 +3,22 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // CommandSuggester provides intelligent command suggestions
 type CommandSuggester struct {
-	history      *CommandHistory
-	context      *CommandContext
-	terminal     *Terminal
-	suggestions  map[string][]Suggestion
+	history     *CommandHistory
+	context     *CommandContext
+	terminal    *Terminal
+	suggestions map[string][]Suggestion
+}
 
 // CommandHistory tracks command usage
 type CommandHistory struct {
 	commands   []HistoryEntry
 	maxEntries int
+}
 
 // HistoryEntry represents a command in history
 type HistoryEntry struct {
@@ -23,6 +26,7 @@ type HistoryEntry struct {
 	Timestamp time.Time
 	Success   bool
 	Duration  time.Duration
+}
 
 // CommandContext tracks current command context
 type CommandContext struct {
@@ -32,6 +36,7 @@ type CommandContext struct {
 	ActiveProvider string
 	LoadedTemplate string
 	CurrentScan    string
+}
 
 // Suggestion represents a command suggestion
 type Suggestion struct {
@@ -39,6 +44,7 @@ type Suggestion struct {
 	Description string
 	Confidence  float64
 	Reason      string
+}
 
 // NewCommandSuggester creates a new command suggester
 func NewCommandSuggester(terminal *Terminal) *CommandSuggester {
@@ -51,9 +57,10 @@ func NewCommandSuggester(terminal *Terminal) *CommandSuggester {
 		context:     &CommandContext{},
 		suggestions: make(map[string][]Suggestion),
 	}
-	
+
 	cs.initializeSuggestions()
 	return cs
+}
 
 // initializeSuggestions sets up suggestion patterns
 func (cs *CommandSuggester) initializeSuggestions() {
@@ -148,6 +155,7 @@ func (cs *CommandSuggester) initializeSuggestions() {
 			Reason:      "Learn about the tool",
 		},
 	}
+}
 
 // RecordCommand records a command execution
 func (cs *CommandSuggester) RecordCommand(command string, success bool, duration time.Duration) {
@@ -157,13 +165,14 @@ func (cs *CommandSuggester) RecordCommand(command string, success bool, duration
 		Success:   success,
 		Duration:  duration,
 	}
-	
+
 	cs.history.commands = append(cs.history.commands, entry)
-	
+
 	// Maintain history size
 	if len(cs.history.commands) > cs.history.maxEntries {
 		cs.history.commands = cs.history.commands[1:]
 	}
+}
 
 // UpdateContext updates command context
 func (cs *CommandSuggester) UpdateContext(key string, value interface{}) {
@@ -181,15 +190,16 @@ func (cs *CommandSuggester) UpdateContext(key string, value interface{}) {
 	case "current_scan":
 		cs.context.CurrentScan = value.(string)
 	}
+}
 
 // GetSuggestions returns relevant suggestions based on context
 func (cs *CommandSuggester) GetSuggestions() []Suggestion {
 	suggestions := make([]Suggestion, 0)
-	
+
 	// Check for error-based suggestions
 	if cs.context.LastError != nil {
 		errorStr := cs.context.LastError.Error()
-		
+
 		if strings.Contains(errorStr, "API key") || strings.Contains(errorStr, "unauthorized") {
 			suggestions = append(suggestions, cs.processsSuggestions("missing_api_key")...)
 		} else if strings.Contains(errorStr, "template not found") {
@@ -198,7 +208,7 @@ func (cs *CommandSuggester) GetSuggestions() []Suggestion {
 			suggestions = append(suggestions, cs.processsSuggestions("connection_failed")...)
 		}
 	}
-	
+
 	// Check for workflow suggestions
 	if cs.context.LastCommand != "" {
 		if strings.Contains(cs.context.LastCommand, "config init") {
@@ -207,59 +217,58 @@ func (cs *CommandSuggester) GetSuggestions() []Suggestion {
 			suggestions = append(suggestions, cs.processsSuggestions("after_scan_complete")...)
 		}
 	}
-	
+
 	// First run suggestions
 	if len(cs.history.commands) == 0 {
 		suggestions = append(suggestions, cs.processsSuggestions("first_run")...)
 	}
-	
+
 	// Get contextual suggestions
 	suggestions = append(suggestions, cs.getContextualSuggestions()...)
-	
+
 	// Sort by confidence
 	sortSuggestionsByConfidence(suggestions)
-	
+
 	// Limit to top suggestions
 	if len(suggestions) > 5 {
 		suggestions = suggestions[:5]
 	}
-	
+
 	return suggestions
+}
 
 // ShowSuggestions displays suggestions to the user
 func (cs *CommandSuggester) ShowSuggestions() {
 	suggestions := cs.GetSuggestions()
-	
+
 	if len(suggestions) == 0 {
 		return
 	}
-	
+
 	cs.terminal.Section("Suggested Commands")
-	
+
 	for i, suggestion := range suggestions {
 		// Format command with placeholders highlighted
 		command := cs.highlightPlaceholders(suggestion.Command)
-		
+
 		cs.terminal.Print("%d. %s", i+1, command)
-		cs.terminal.Print("   %s", cs.terminal.formatter.Muted(suggestion.Description))
-		
+		cs.terminal.Muted("   %s", suggestion.Description)
+
 		if suggestion.Reason != "" {
-			cs.terminal.Print("   %s %s", 
-				cs.terminal.formatter.Info("→"),
-				cs.terminal.formatter.Muted(suggestion.Reason),
-			)
+			cs.terminal.Info("   → %s", suggestion.Reason)
 		}
-		
+
 		fmt.Println()
 	}
-	
+
 	// Quick select option
 	cs.terminal.Info("Type a number to run the suggested command, or press Enter to continue")
+}
 
 // getContextualSuggestions returns suggestions based on current context
 func (cs *CommandSuggester) getContextualSuggestions() []Suggestion {
 	suggestions := make([]Suggestion, 0)
-	
+
 	// If a template is loaded but no scan running
 	if cs.context.LoadedTemplate != "" && cs.context.CurrentScan == "" {
 		suggestions = append(suggestions, Suggestion{
@@ -269,7 +278,7 @@ func (cs *CommandSuggester) getContextualSuggestions() []Suggestion {
 			Reason:      "Template loaded but not used",
 		})
 	}
-	
+
 	// If provider is set but not tested
 	if cs.context.ActiveProvider != "" && !cs.hasRecentProviderTest() {
 		suggestions = append(suggestions, Suggestion{
@@ -279,7 +288,7 @@ func (cs *CommandSuggester) getContextualSuggestions() []Suggestion {
 			Reason:      "Provider not recently tested",
 		})
 	}
-	
+
 	// Suggest frequently used commands
 	frequent := cs.getFrequentCommands()
 	for _, cmd := range frequent {
@@ -290,8 +299,9 @@ func (cs *CommandSuggester) getContextualSuggestions() []Suggestion {
 			Reason:      "Based on your history",
 		})
 	}
-	
+
 	return suggestions
+}
 
 // processsSuggestions processes suggestion templates
 func (cs *CommandSuggester) processsSuggestions(key string) []Suggestion {
@@ -299,20 +309,21 @@ func (cs *CommandSuggester) processsSuggestions(key string) []Suggestion {
 	if !exists {
 		return nil
 	}
-	
+
 	processed := make([]Suggestion, 0, len(templates))
-	
+
 	for _, template := range templates {
 		suggestion := template
-		
+
 		// Replace placeholders with context values
 		suggestion.Command = cs.replacePlaceholders(suggestion.Command)
 		suggestion.Description = cs.replacePlaceholders(suggestion.Description)
-		
+
 		processed = append(processed, suggestion)
 	}
-	
+
 	return processed
+}
 
 // replacePlaceholders replaces placeholders with actual values
 func (cs *CommandSuggester) replacePlaceholders(text string) string {
@@ -323,21 +334,22 @@ func (cs *CommandSuggester) replacePlaceholders(text string) string {
 		"{scan_id}":       cs.context.CurrentScan,
 		"{working_dir}":   cs.context.WorkingDir,
 	}
-	
+
 	// Handle next template suggestion
 	if strings.Contains(text, "{next_template}") {
 		nextTemplate := cs.suggestNextTemplate()
 		replacements["{next_template}"] = nextTemplate
 	}
-	
+
 	result := text
 	for placeholder, value := range replacements {
 		if value != "" {
 			result = strings.ReplaceAll(result, placeholder, value)
 		}
 	}
-	
+
 	return result
+}
 
 // highlightPlaceholders highlights placeholders in command
 func (cs *CommandSuggester) highlightPlaceholders(command string) string {
@@ -348,39 +360,42 @@ func (cs *CommandSuggester) highlightPlaceholders(command string) string {
 		"{template_name}",
 		"{scan_id}",
 	}
-	
+
 	result := command
 	for _, placeholder := range placeholders {
 		if strings.Contains(result, placeholder) {
-			highlighted := cs.terminal.formatter.Highlight(placeholder)
+			// Simple highlight replacement (no color formatting for now)
+			highlighted := fmt.Sprintf("[%s]", placeholder)
 			result = strings.ReplaceAll(result, placeholder, highlighted)
 		}
 	}
-	
+
 	return result
+}
 
 // Helper methods
 
 func (cs *CommandSuggester) hasRecentProviderTest() bool {
 	cutoff := time.Now().Add(-24 * time.Hour)
-	
+
 	for i := len(cs.history.commands) - 1; i >= 0; i-- {
 		cmd := cs.history.commands[i]
 		if cmd.Timestamp.Before(cutoff) {
 			break
 		}
-		
+
 		if strings.Contains(cmd.Command, "provider test") && cmd.Success {
 			return true
 		}
 	}
-	
+
 	return false
+}
 
 func (cs *CommandSuggester) getFrequentCommands() []string {
 	// Count command frequency
 	counts := make(map[string]int)
-	
+
 	for _, entry := range cs.history.commands {
 		// Extract base command (first word)
 		parts := strings.Fields(entry.Command)
@@ -389,18 +404,18 @@ func (cs *CommandSuggester) getFrequentCommands() []string {
 			counts[baseCmd]++
 		}
 	}
-	
+
 	// Find top commands
 	type cmdCount struct {
 		command string
 		count   int
 	}
-	
+
 	var sorted []cmdCount
 	for cmd, count := range counts {
 		sorted = append(sorted, cmdCount{cmd, count})
 	}
-	
+
 	// Sort by count
 	for i := 0; i < len(sorted)-1; i++ {
 		for j := i + 1; j < len(sorted); j++ {
@@ -409,14 +424,15 @@ func (cs *CommandSuggester) getFrequentCommands() []string {
 			}
 		}
 	}
-	
+
 	// Return top 3
 	result := make([]string, 0, 3)
 	for i := 0; i < 3 && i < len(sorted); i++ {
 		result = append(result, sorted[i].command)
 	}
-	
+
 	return result
+}
 
 func (cs *CommandSuggester) suggestNextTemplate() string {
 	// Suggest templates based on what's been run
@@ -427,7 +443,7 @@ func (cs *CommandSuggester) suggestNextTemplate() string {
 		"content-safety",
 		"dos-attacks",
 	}
-	
+
 	// Find templates not yet run
 	for _, template := range allTemplates {
 		found := false
@@ -437,13 +453,14 @@ func (cs *CommandSuggester) suggestNextTemplate() string {
 				break
 			}
 		}
-		
+
 		if !found {
 			return template
 		}
 	}
-	
+
 	return "advanced-tests"
+}
 
 func sortSuggestionsByConfidence(suggestions []Suggestion) {
 	for i := 0; i < len(suggestions)-1; i++ {
@@ -453,11 +470,13 @@ func sortSuggestionsByConfidence(suggestions []Suggestion) {
 			}
 		}
 	}
+}
 
 // InteractiveSuggestions provides interactive command selection
 type InteractiveSuggestions struct {
 	suggester *CommandSuggester
 	terminal  *Terminal
+}
 
 // NewInteractiveSuggestions creates interactive suggestions
 func NewInteractiveSuggestions(suggester *CommandSuggester, terminal *Terminal) *InteractiveSuggestions {
@@ -465,60 +484,62 @@ func NewInteractiveSuggestions(suggester *CommandSuggester, terminal *Terminal) 
 		suggester: suggester,
 		terminal:  terminal,
 	}
+}
 
 // ShowAndSelect shows suggestions and allows selection
 func (is *InteractiveSuggestions) ShowAndSelect() (string, bool) {
 	suggestions := is.suggester.GetSuggestions()
-	
+
 	if len(suggestions) == 0 {
 		return "", false
 	}
-	
+
 	is.terminal.Section("Command Suggestions")
-	
+
 	// Build options
 	options := make([]string, len(suggestions))
 	for i, suggestion := range suggestions {
 		options[i] = fmt.Sprintf("%s - %s", suggestion.Command, suggestion.Description)
 	}
-	
+
 	// Add skip option
 	options = append(options, "Skip suggestions")
-	
+
 	choice, err := is.terminal.Select("Select a command to run:", options)
 	if err != nil || choice == len(suggestions) {
 		return "", false
 	}
-	
+
 	selectedCmd := suggestions[choice].Command
-	
+
 	// Check if command has placeholders
 	if strings.Contains(selectedCmd, "YOUR_") || strings.Contains(selectedCmd, "{") {
 		is.terminal.Warning("This command contains placeholders that need to be filled:")
 		is.terminal.Code(selectedCmd)
-		
+
 		// Interactive placeholder filling
 		selectedCmd = is.fillPlaceholders(selectedCmd)
 	}
-	
+
 	// Confirm execution
 	is.terminal.Print("\nCommand to execute:")
 	is.terminal.Code(selectedCmd)
-	
+
 	confirm, _ := is.terminal.Confirm("Run this command?", true)
-	
+
 	return selectedCmd, confirm
+}
 
 // fillPlaceholders interactively fills command placeholders
 func (is *InteractiveSuggestions) fillPlaceholders(command string) string {
 	result := command
-	
+
 	// Find and replace YOUR_API_KEY
 	if strings.Contains(result, "YOUR_API_KEY") {
 		apiKey, _ := is.terminal.Prompt("Enter API key: ")
 		result = strings.ReplaceAll(result, "YOUR_API_KEY", apiKey)
 	}
-	
+
 	// Find and replace other placeholders
 	placeholders := []struct {
 		placeholder string
@@ -529,11 +550,13 @@ func (is *InteractiveSuggestions) fillPlaceholders(command string) string {
 		{"{scan_id}", "Enter scan ID: "},
 		{"{format}", "Enter output format: "},
 	}
-	
+
 	for _, p := range placeholders {
 		if strings.Contains(result, p.placeholder) {
 			value, _ := is.terminal.Prompt(p.prompt)
 			result = strings.ReplaceAll(result, p.placeholder, value)
 		}
 	}
-	
+
+	return result
+}

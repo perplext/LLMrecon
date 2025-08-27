@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 // NotificationScheduler handles scheduling and processing of notifications
@@ -28,6 +29,7 @@ func NewNotificationScheduler(manager *NotificationManager, checkInterval time.D
 		checkInterval: checkInterval,
 		done:          make(chan struct{}),
 	}
+}
 
 // Start starts the notification scheduler
 func (s *NotificationScheduler) Start(ctx context.Context) error {
@@ -48,6 +50,7 @@ func (s *NotificationScheduler) Start(ctx context.Context) error {
 	}()
 
 	return nil
+}
 
 // Stop stops the notification scheduler
 func (s *NotificationScheduler) Stop() error {
@@ -64,6 +67,7 @@ func (s *NotificationScheduler) Stop() error {
 	s.running = false
 
 	return nil
+}
 
 // run runs the notification scheduler
 func (s *NotificationScheduler) run(ctx context.Context) {
@@ -84,6 +88,7 @@ func (s *NotificationScheduler) run(ctx context.Context) {
 			return
 		}
 	}
+}
 
 // processNotifications processes scheduled notifications and purges expired ones
 func (s *NotificationScheduler) processNotifications(ctx context.Context) error {
@@ -98,6 +103,7 @@ func (s *NotificationScheduler) processNotifications(ctx context.Context) error 
 	}
 
 	return nil
+}
 
 // ScheduleRecurringNotification schedules a notification to recur at a specified interval
 func (s *NotificationScheduler) ScheduleRecurringNotification(
@@ -184,8 +190,5 @@ func (s *NotificationScheduler) ScheduleRecurringNotification(
 		}()
 	}
 
-}
-}
-}
-}
+	return nil
 }

@@ -9,25 +9,27 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
 
 // VersionCheckRequest represents a request to check for updates
 type VersionCheckRequest struct {
-	ClientID        string                     `json:"clientId"`
-	CurrentVersions map[string]string          `json:"currentVersions"`
-	Components      []string                   `json:"components"`
-	Timestamp       time.Time                  `json:"timestamp"`
-	Signature       string                     `json:"signature,omitempty"`
+	ClientID        string            `json:"clientId"`
+	CurrentVersions map[string]string `json:"currentVersions"`
+	Components      []string          `json:"components"`
+	Timestamp       time.Time         `json:"timestamp"`
+	Signature       string            `json:"signature,omitempty"`
 }
 
 // VersionCheckResponse represents a response from the version check API
 type VersionCheckResponse struct {
-	Versions        map[string]DetailedVersionInfo     `json:"versions"`
-	ServerTimestamp time.Time                  `json:"serverTimestamp"`
-	Signature       string                     `json:"signature,omitempty"`
+	Versions        map[string]DetailedVersionInfo `json:"versions"`
+	ServerTimestamp time.Time                      `json:"serverTimestamp"`
+	Signature       string                         `json:"signature,omitempty"`
 }
 
 // DetailedVersionInfo contains detailed information about a specific version
@@ -51,17 +53,19 @@ type VersionCheckService struct {
 	SecretKey       []byte
 	CurrentVersions map[string]version.Version
 	MaxClockSkew    time.Duration
+}
 
 // NewVersionCheckService creates a new VersionCheckService
 func NewVersionCheckService(baseURL, clientID string, secretKey []byte, currentVersions map[string]version.Version) *VersionCheckService {
 	return &VersionCheckService{
-		BaseURL:    baseURL,
-		HTTPClient: &http.Client{Timeout: 30 * time.Second},
-		ClientID:   clientID,
-		SecretKey:  secretKey,
+		BaseURL:         baseURL,
+		HTTPClient:      &http.Client{Timeout: 30 * time.Second},
+		ClientID:        clientID,
+		SecretKey:       secretKey,
 		CurrentVersions: currentVersions,
-		MaxClockSkew: 5 * time.Minute,
+		MaxClockSkew:    5 * time.Minute,
 	}
+}
 
 // CheckVersions checks for available updates with enhanced security
 func (s *VersionCheckService) CheckVersions(ctx context.Context, components []string) ([]UpdateInfo, error) {
@@ -90,6 +94,7 @@ func (s *VersionCheckService) CheckVersions(ctx context.Context, components []st
 	}
 
 	return updates, nil
+}
 
 // prepareVersionCheckRequest prepares a version check request
 func (s *VersionCheckService) prepareVersionCheckRequest(components []string) (VersionCheckRequest, error) {
@@ -117,6 +122,7 @@ func (s *VersionCheckService) prepareVersionCheckRequest(components []string) (V
 	}
 
 	return req, nil
+}
 
 // signRequest signs a version check request
 func (s *VersionCheckService) signRequest(req VersionCheckRequest) (string, error) {
@@ -136,6 +142,7 @@ func (s *VersionCheckService) signRequest(req VersionCheckRequest) (string, erro
 	signature := hex.EncodeToString(h.Sum(nil))
 
 	return signature, nil
+}
 
 // sendVersionCheckRequest sends a version check request to the server
 func (s *VersionCheckService) sendVersionCheckRequest(ctx context.Context, req VersionCheckRequest) (VersionCheckResponse, error) {
@@ -161,9 +168,14 @@ func (s *VersionCheckService) sendVersionCheckRequest(ctx context.Context, req V
 	if err != nil {
 		return resp, fmt.Errorf("failed to send HTTP request: %w", err)
 	}
-	defer func() { if err := httpResp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := httpResp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Check status code
 	if httpResp.StatusCode != http.StatusOK {
+		return resp, fmt.Errorf("HTTP request failed with status: %d", httpResp.StatusCode)
 	}
 
 	// Read response body
@@ -179,6 +191,7 @@ func (s *VersionCheckService) sendVersionCheckRequest(ctx context.Context, req V
 	}
 
 	return resp, nil
+}
 
 // verifyVersionCheckResponse verifies a version check response
 func (s *VersionCheckService) verifyVersionCheckResponse(resp VersionCheckResponse) error {
@@ -212,6 +225,7 @@ func (s *VersionCheckService) verifyVersionCheckResponse(resp VersionCheckRespon
 	}
 
 	return nil
+}
 
 // processVersionCheckResponse processes a version check response
 func (s *VersionCheckService) processVersionCheckResponse(resp VersionCheckResponse) ([]UpdateInfo, error) {
@@ -276,7 +290,5 @@ func (s *VersionCheckService) processVersionCheckResponse(resp VersionCheckRespo
 		}
 	}
 
-}
-}
-}
+	return updates, nil
 }

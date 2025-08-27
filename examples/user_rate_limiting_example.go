@@ -83,7 +83,7 @@ func main() {
 	// Create a sample template
 	template := &format.Template{
 		ID: "sample-template",
-		Info: format.TemplateInfo{
+		Info: &format.TemplateInfo{
 			Name:        "Sample Template",
 			Description: "A sample template for testing",
 			Version:     "1.0.0",
@@ -139,7 +139,7 @@ func main() {
 				// Create a template with a unique ID
 				userTemplate := &format.Template{
 					ID: fmt.Sprintf("%s-template-%d", userID, i),
-					Info: format.TemplateInfo{
+					Info: &format.TemplateInfo{
 						Name:        fmt.Sprintf("%s Template %d", userID, i),
 						Description: "A template for testing user rate limiting",
 						Version:     "1.0.0",
@@ -241,7 +241,7 @@ treturn err
 	for _, userID := range []string{"premium-user", "standard-user", "free-user"} {
 		userTemplate := &format.Template{
 			ID: fmt.Sprintf("%s-template", userID),
-			Info: format.TemplateInfo{
+			Info: &format.TemplateInfo{
 				Name:        fmt.Sprintf("%s Template", userID),
 				Description: "A template for testing adaptive rate limiting",
 				Version:     "1.0.0",
@@ -281,7 +281,7 @@ treturn err
 	for _, userID := range []string{"premium-user", "standard-user", "free-user"} {
 		userTemplate := &format.Template{
 			ID: fmt.Sprintf("%s-template-highload", userID),
-			Info: format.TemplateInfo{
+			Info: &format.TemplateInfo{
 				Name:        fmt.Sprintf("%s Template High Load", userID),
 				Description: "A template for testing dynamic load adjustment",
 				Version:     "1.0.0",

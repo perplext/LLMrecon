@@ -3,18 +3,20 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 )
 
 // HelpSystem provides context-aware help and documentation
 type HelpSystem struct {
-	terminal    *Terminal
-	suggester   *CommandSuggester
-	examples    map[string][]Example
-	tips        map[string][]string
-	faqs        map[string][]FAQ
-	context     *HelpContext
+	terminal  *Terminal
+	suggester *CommandSuggester
+	examples  map[string][]Example
+	tips      map[string][]string
+	faqs      map[string][]FAQ
+	context   *HelpContext
+}
 
 // HelpContext represents the current help context
 type HelpContext struct {
@@ -24,13 +26,7 @@ type HelpContext struct {
 	LastCommand   string
 	UserLevel     string // beginner, intermediate, expert
 	PreferredLang string
-
-// Example represents a command example
-type Example struct {
-	Command     string
-	Description string
-	Output      string
-	Tags        []string
+}
 
 // FAQ represents a frequently asked question
 type FAQ struct {
@@ -49,9 +45,10 @@ func NewHelpSystem(terminal *Terminal, suggester *CommandSuggester) *HelpSystem 
 		faqs:      make(map[string][]FAQ),
 		context:   &HelpContext{UserLevel: "intermediate"},
 	}
-	
+
 	hs.initializeContent()
 	return hs
+}
 
 // initializeContent sets up the help content
 func (hs *HelpSystem) initializeContent() {
@@ -60,32 +57,24 @@ func (hs *HelpSystem) initializeContent() {
 		{
 			Command:     "LLMrecon scan --template prompt-injection --target api.example.com",
 			Description: "Run a prompt injection scan against an API",
-			Output:      "Scanning api.example.com with prompt-injection template...\n✓ 15 test cases executed\n⚠ 3 vulnerabilities found",
-			Tags:        []string{"security", "api", "prompt-injection"},
 		},
 		{
 			Command:     "LLMrecon scan --owasp-category LLM01 --severity high",
 			Description: "Scan for high-severity OWASP LLM01 vulnerabilities",
-			Output:      "Loading templates for OWASP LLM01 (high severity)...\n✓ 8 templates loaded\n✓ Starting scan...",
-			Tags:        []string{"owasp", "compliance", "severity"},
 		},
 	}
-	
+
 	hs.examples["template"] = []Example{
 		{
 			Command:     "LLMrecon template list --category prompt-injection",
 			Description: "List all prompt injection templates",
-			Output:      "Available prompt-injection templates:\n- basic-injection-v1.0\n- indirect-injection-v2.0\n- jailbreak-attempts-v1.5",
-			Tags:        []string{"template", "list", "discovery"},
 		},
 		{
 			Command:     "LLMrecon template validate my-template.yaml",
 			Description: "Validate a custom template",
-			Output:      "Validating my-template.yaml...\n✓ Schema validation passed\n✓ Syntax check passed\n✓ Template is valid",
-			Tags:        []string{"template", "validation", "development"},
 		},
 	}
-	
+
 	// Tips
 	hs.tips["scan"] = []string{
 		"Use --parallel to run scans concurrently and reduce execution time",
@@ -94,7 +83,7 @@ func (hs *HelpSystem) initializeContent() {
 		"Combine multiple templates with --template template1,template2",
 		"Set --timeout to prevent long-running tests from blocking",
 	}
-	
+
 	hs.tips["template"] = []string{
 		"Templates can inherit from base templates to reduce duplication",
 		"Use variables in templates for dynamic test generation",
@@ -102,7 +91,7 @@ func (hs *HelpSystem) initializeContent() {
 		"Version your templates to track changes over time",
 		"Test templates locally before deploying to production",
 	}
-	
+
 	// FAQs
 	hs.faqs["general"] = []FAQ{
 		{
@@ -116,7 +105,7 @@ func (hs *HelpSystem) initializeContent() {
 			Related:  []string{"template", "test", "payload"},
 		},
 	}
-	
+
 	hs.faqs["security"] = []FAQ{
 		{
 			Question: "How are sensitive results protected?",
@@ -129,46 +118,48 @@ func (hs *HelpSystem) initializeContent() {
 			Related:  []string{"production", "safety", "rate-limiting"},
 		},
 	}
+}
 
 // ShowHelp displays context-aware help
 func (hs *HelpSystem) ShowHelp(cmd *cobra.Command, args []string) error {
 	// Update context
 	hs.updateContext(cmd, args)
-	
+
 	// Clear screen for better readability
 	hs.terminal.Clear()
-	
+
 	// Show command-specific help
 	hs.terminal.HeaderBox("Help: " + cmd.Name())
-	
+
 	// Basic usage
 	hs.showUsage(cmd)
-	
+
 	// Context-aware content
 	if hs.context.ErrorContext != "" {
 		hs.showErrorHelp()
 	}
-	
+
 	// Examples
 	hs.showExamples(cmd.Name())
-	
+
 	// Tips
 	hs.showTips(cmd.Name())
-	
+
 	// Related commands
 	hs.showRelatedCommands(cmd)
-	
+
 	// Quick actions
 	hs.showQuickActions(cmd)
-	
+
 	return nil
+}
 
 // ShowInteractiveHelp provides an interactive help experience
 func (hs *HelpSystem) ShowInteractiveHelp() error {
 	for {
 		hs.terminal.Clear()
 		hs.terminal.HeaderBox("Interactive Help System")
-		
+
 		options := []string{
 			"Browse Commands",
 			"Search Topics",
@@ -178,12 +169,12 @@ func (hs *HelpSystem) ShowInteractiveHelp() error {
 			"Quick Start Guide",
 			"Exit Help",
 		}
-		
+
 		choice, err := hs.terminal.Select("What would you like help with?", options)
 		if err != nil {
 			return err
 		}
-		
+
 		switch choice {
 		case 0:
 			hs.browseCommands()
@@ -201,19 +192,20 @@ func (hs *HelpSystem) ShowInteractiveHelp() error {
 			return nil
 		}
 	}
+}
 
 // browseCommands allows browsing through available commands
 func (hs *HelpSystem) browseCommands() {
 	categories := map[string][]string{
-		"Scanning": {"scan", "validate", "analyze"},
-		"Templates": {"template list", "template create", "template validate"},
+		"Scanning":      {"scan", "validate", "analyze"},
+		"Templates":     {"template list", "template create", "template validate"},
 		"Configuration": {"config init", "config set", "config show"},
-		"Reporting": {"report generate", "report export", "report view"},
-		"Security": {"auth login", "auth logout", "auth status"},
+		"Reporting":     {"report generate", "report export", "report view"},
+		"Security":      {"auth login", "auth logout", "auth status"},
 	}
-	
+
 	hs.terminal.Section("Command Categories")
-	
+
 	for category, commands := range categories {
 		hs.terminal.Subsection(category)
 		for _, cmd := range commands {
@@ -224,8 +216,9 @@ func (hs *HelpSystem) browseCommands() {
 		}
 		fmt.Println()
 	}
-	
+
 	hs.terminal.Prompt("Press Enter to continue...")
+}
 
 // searchTopics allows searching for help topics
 func (hs *HelpSystem) searchTopics() {
@@ -233,16 +226,16 @@ func (hs *HelpSystem) searchTopics() {
 	if err != nil {
 		return
 	}
-	
+
 	results := hs.searchContent(query)
-	
+
 	if len(results) == 0 {
 		hs.terminal.Warning("No results found for: " + query)
 		return
 	}
-	
+
 	hs.terminal.Section("Search Results for: " + query)
-	
+
 	for _, result := range results {
 		switch r := result.(type) {
 		case Example:
@@ -258,8 +251,9 @@ func (hs *HelpSystem) searchTopics() {
 		}
 		fmt.Println()
 	}
-	
+
 	hs.terminal.Prompt("Press Enter to continue...")
+}
 
 // viewExamples shows categorized examples
 func (hs *HelpSystem) viewExamples() {
@@ -267,35 +261,30 @@ func (hs *HelpSystem) viewExamples() {
 	for cat := range hs.examples {
 		categories = append(categories, cat)
 	}
-	
+
 	choice, err := hs.terminal.Select("Select example category:", categories)
 	if err != nil {
 		return
 	}
-	
+
 	category := categories[choice]
 	examples := hs.examples[category]
-	
+
 	hs.terminal.Section(fmt.Sprintf("%s Examples", strings.Title(category)))
-	
+
 	for i, ex := range examples {
 		hs.terminal.Subsection(fmt.Sprintf("Example %d: %s", i+1, ex.Description))
 		hs.terminal.Code(ex.Command)
-		if ex.Output != "" {
-			hs.terminal.Box("Expected Output", ex.Output)
-		}
-		if len(ex.Tags) > 0 {
-			hs.terminal.Muted("Tags: " + strings.Join(ex.Tags, ", "))
-		}
 		fmt.Println()
 	}
-	
+
 	hs.terminal.Prompt("Press Enter to continue...")
+}
 
 // showFAQ displays frequently asked questions
 func (hs *HelpSystem) showFAQ() {
 	hs.terminal.Section("Frequently Asked Questions")
-	
+
 	for category, faqs := range hs.faqs {
 		hs.terminal.Subsection(strings.Title(category))
 		for _, faq := range faqs {
@@ -307,8 +296,9 @@ func (hs *HelpSystem) showFAQ() {
 			fmt.Println()
 		}
 	}
-	
+
 	hs.terminal.Prompt("Press Enter to continue...")
+}
 
 // troubleshoot provides troubleshooting guidance
 func (hs *HelpSystem) troubleshoot() {
@@ -320,14 +310,14 @@ func (hs *HelpSystem) troubleshoot() {
 		"Permission denied errors",
 		"Out of memory errors",
 	}
-	
+
 	choice, err := hs.terminal.Select("What issue are you experiencing?", issues)
 	if err != nil {
 		return
 	}
-	
+
 	hs.terminal.Section("Troubleshooting: " + issues[choice])
-	
+
 	// Provide specific troubleshooting steps
 	switch choice {
 	case 0: // Slow scans
@@ -343,13 +333,14 @@ func (hs *HelpSystem) troubleshoot() {
 	case 5: // Memory errors
 		hs.showMemoryTroubleshooting()
 	}
-	
+
 	hs.terminal.Prompt("Press Enter to continue...")
+}
 
 // quickStart shows a quick start guide
 func (hs *HelpSystem) quickStart() {
 	hs.terminal.Section("Quick Start Guide")
-	
+
 	steps := []struct {
 		Title       string
 		Command     string
@@ -381,22 +372,23 @@ func (hs *HelpSystem) quickStart() {
 			Description: "Review the scan results and findings",
 		},
 	}
-	
+
 	for _, step := range steps {
 		hs.terminal.Subsection(step.Title)
 		hs.terminal.Code(step.Command)
 		hs.terminal.Info(step.Description)
 		fmt.Println()
 	}
-	
+
 	hs.terminal.Box("Next Steps", `
 • Explore more templates: LLMrecon template list --detailed
 • Create custom templates: LLMrecon template create
 • Set up continuous scanning: LLMrecon schedule create
 • Join the community: https://github.com/LLMrecon/community
 `)
-	
+
 	hs.terminal.Prompt("Press Enter to continue...")
+}
 
 // Helper methods
 
@@ -406,6 +398,7 @@ func (hs *HelpSystem) updateContext(cmd *cobra.Command, args []string) {
 		hs.context.Subcommand = args[0]
 	}
 	// Update other context as needed
+}
 
 func (hs *HelpSystem) showUsage(cmd *cobra.Command) {
 	hs.terminal.Section("Usage")
@@ -414,13 +407,14 @@ func (hs *HelpSystem) showUsage(cmd *cobra.Command) {
 		hs.terminal.Info(cmd.Long)
 	}
 	fmt.Println()
+}
 
 func (hs *HelpSystem) showErrorHelp() {
 	hs.terminal.Section("Error Resolution")
 	hs.terminal.Error("Last error: " + hs.context.ErrorContext)
-	
+
 	// Provide context-specific error help
-	suggestions := hs.suggester.GetErrorSuggestions(hs.context.ErrorContext)
+	suggestions := hs.suggester.GetSuggestions()
 	if len(suggestions) > 0 {
 		hs.terminal.Subsection("Suggested Solutions")
 		for _, sug := range suggestions {
@@ -431,6 +425,7 @@ func (hs *HelpSystem) showErrorHelp() {
 		}
 	}
 	fmt.Println()
+}
 
 func (hs *HelpSystem) showExamples(command string) {
 	if examples, ok := hs.examples[command]; ok && len(examples) > 0 {
@@ -442,6 +437,7 @@ func (hs *HelpSystem) showExamples(command string) {
 		}
 		fmt.Println()
 	}
+}
 
 func (hs *HelpSystem) showTips(command string) {
 	if tips, ok := hs.tips[command]; ok && len(tips) > 0 {
@@ -451,6 +447,7 @@ func (hs *HelpSystem) showTips(command string) {
 		}
 		fmt.Println()
 	}
+}
 
 func (hs *HelpSystem) showRelatedCommands(cmd *cobra.Command) {
 	if cmd.Parent() != nil && len(cmd.Parent().Commands()) > 1 {
@@ -464,6 +461,7 @@ func (hs *HelpSystem) showRelatedCommands(cmd *cobra.Command) {
 		}
 		fmt.Println()
 	}
+}
 
 func (hs *HelpSystem) showQuickActions(cmd *cobra.Command) {
 	hs.terminal.Section("Quick Actions")
@@ -476,11 +474,12 @@ func (hs *HelpSystem) showQuickActions(cmd *cobra.Command) {
 	for _, action := range actions {
 		hs.terminal.Muted(action)
 	}
+}
 
 func (hs *HelpSystem) searchContent(query string) []interface{} {
 	var results []interface{}
 	query = strings.ToLower(query)
-	
+
 	// Search examples
 	for _, examples := range hs.examples {
 		for _, ex := range examples {
@@ -490,7 +489,7 @@ func (hs *HelpSystem) searchContent(query string) []interface{} {
 			}
 		}
 	}
-	
+
 	// Search FAQs
 	for _, faqs := range hs.faqs {
 		for _, faq := range faqs {
@@ -500,7 +499,7 @@ func (hs *HelpSystem) searchContent(query string) []interface{} {
 			}
 		}
 	}
-	
+
 	// Search tips
 	for _, tips := range hs.tips {
 		for _, tip := range tips {
@@ -509,8 +508,9 @@ func (hs *HelpSystem) searchContent(query string) []interface{} {
 			}
 		}
 	}
-	
+
 	return results
+}
 
 // Troubleshooting methods
 
@@ -523,34 +523,36 @@ func (hs *HelpSystem) showSlowScanTroubleshooting() {
 		"5. Use local caching: --enable-cache",
 		"6. Monitor resource usage: LLMrecon debug stats",
 	}
-	
+
 	hs.terminal.Subsection("Troubleshooting Steps")
 	for _, step := range steps {
 		hs.terminal.Info(step)
 		time.Sleep(100 * time.Millisecond) // Visual effect
 	}
-	
+
 	hs.terminal.Box("Advanced Diagnostics", "Run 'LLMrecon debug performance' for detailed performance analysis")
+}
 
 func (hs *HelpSystem) showAuthTroubleshooting() {
 	hs.terminal.Subsection("Common Authentication Issues")
-	
+
 	issues := map[string]string{
-		"Invalid credentials":    "LLMrecon auth login --force",
-		"Expired token":          "LLMrecon auth refresh",
-		"Missing permissions":    "LLMrecon auth status",
-		"Configuration missing":  "LLMrecon config set auth.provider <provider>",
+		"Invalid credentials":   "LLMrecon auth login --force",
+		"Expired token":         "LLMrecon auth refresh",
+		"Missing permissions":   "LLMrecon auth status",
+		"Configuration missing": "LLMrecon config set auth.provider <provider>",
 	}
-	
+
 	for issue, solution := range issues {
 		hs.terminal.Bold(issue)
 		hs.terminal.Code(solution)
 		fmt.Println()
 	}
+}
 
 func (hs *HelpSystem) showTemplateValidationTroubleshooting() {
 	hs.terminal.Subsection("Template Validation Checklist")
-	
+
 	checklist := []string{
 		"✓ Verify YAML syntax is correct",
 		"✓ Check required fields are present",
@@ -558,16 +560,17 @@ func (hs *HelpSystem) showTemplateValidationTroubleshooting() {
 		"✓ Ensure template version compatibility",
 		"✓ Test with minimal template first",
 	}
-	
+
 	for _, item := range checklist {
 		hs.terminal.Info(item)
 	}
-	
+
 	hs.terminal.Code("LLMrecon template validate <template> --verbose")
+}
 
 func (hs *HelpSystem) showNetworkTroubleshooting() {
 	hs.terminal.Subsection("Network Diagnostics")
-	
+
 	commands := []struct {
 		Desc string
 		Cmd  string
@@ -578,19 +581,20 @@ func (hs *HelpSystem) showNetworkTroubleshooting() {
 		{"Test with proxy", "LLMrecon --proxy https://proxy:8080 scan ..."},
 		{"Bypass SSL verify", "LLMrecon --insecure scan ... (NOT for production)"},
 	}
-	
+
 	for _, cmd := range commands {
 		hs.terminal.Bold(cmd.Desc)
 		hs.terminal.Code(cmd.Cmd)
 		fmt.Println()
 	}
+}
 
 func (hs *HelpSystem) showPermissionTroubleshooting() {
 	hs.terminal.Subsection("Permission Issues")
-	
+
 	hs.terminal.Info("Common causes and solutions:")
 	fmt.Println()
-	
+
 	solutions := []struct {
 		Issue    string
 		Solution string
@@ -600,19 +604,20 @@ func (hs *HelpSystem) showPermissionTroubleshooting() {
 		{"Template directory", "LLMrecon config set template.path /path/to/writable/dir"},
 		{"System-wide install", "Use sudo for system-wide operations or install to user directory"},
 	}
-	
+
 	for _, sol := range solutions {
 		hs.terminal.Bold(sol.Issue)
 		hs.terminal.Code(sol.Solution)
 		fmt.Println()
 	}
+}
 
 func (hs *HelpSystem) showMemoryTroubleshooting() {
 	hs.terminal.Subsection("Memory Optimization")
-	
+
 	hs.terminal.Info("Reduce memory usage with these options:")
 	fmt.Println()
-	
+
 	optimizations := []string{
 		"--stream-results: Process results as they arrive",
 		"--max-concurrent 2: Limit parallel operations",
@@ -620,38 +625,10 @@ func (hs *HelpSystem) showMemoryTroubleshooting() {
 		"--light-mode: Use minimal UI features",
 		"--batch-size 10: Process in smaller batches",
 	}
-	
+
 	for _, opt := range optimizations {
 		hs.terminal.Code(opt)
 	}
-	
-	hs.terminal.Box("Monitor Memory", "LLMrecon debug memory --watch")
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	hs.terminal.Box("Monitor Memory", "LLMrecon debug memory --watch")
 }

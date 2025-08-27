@@ -585,3 +585,4 @@ func initSecurityCommands() {
 		},
 	}
 	securityCmd.AddCommand(scanCmd)
+}

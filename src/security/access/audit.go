@@ -5,7 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
+	"time"
 )
 
 // AuditAction represents the type of action being audited
@@ -82,12 +85,14 @@ type AuditLogFilter struct {
 type InMemoryAuditLogger struct {
 	logs []*AuditLog
 	mu   sync.RWMutex
+}
 
 // NewInMemoryAuditLogger creates a new in-memory audit logger
 func NewInMemoryAuditLogger() *InMemoryAuditLogger {
 	return &InMemoryAuditLogger{
 		logs: make([]*AuditLog, 0),
 	}
+}
 
 // LogAudit logs an audit event
 func (l *InMemoryAuditLogger) LogAudit(ctx context.Context, log *AuditLog) error {
@@ -108,6 +113,7 @@ func (l *InMemoryAuditLogger) LogAudit(ctx context.Context, log *AuditLog) error
 	l.logs = append(l.logs, log)
 
 	return nil
+}
 
 // GetAuditLogs retrieves audit logs
 func (l *InMemoryAuditLogger) GetAuditLogs(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*AuditLog, int, error) {
@@ -181,6 +187,7 @@ func (l *InMemoryAuditLogger) GetAuditLogs(ctx context.Context, filter map[strin
 	}
 
 	return filtered[start:end], totalCount, nil
+}
 
 // GetAuditLogByID retrieves an audit log by ID
 func (l *InMemoryAuditLogger) GetAuditLogByID(ctx context.Context, id string) (*AuditLog, error) {
@@ -194,16 +201,19 @@ func (l *InMemoryAuditLogger) GetAuditLogByID(ctx context.Context, id string) (*
 	}
 
 	return nil, fmt.Errorf("audit log not found: %s", id)
+}
 
 // Initialize initializes the audit logger
 func (l *InMemoryAuditLogger) Initialize(ctx context.Context) error {
 	// Nothing to initialize for in-memory logger
 	return nil
+}
 
 // Close closes the audit logger
 func (l *InMemoryAuditLogger) Close(ctx context.Context) error {
 	// Nothing to close for in-memory logger
 	return nil
+}
 
 // FileAuditLogger is a file-based implementation of AuditLogger
 type FileAuditLogger struct {
@@ -217,6 +227,7 @@ func NewFileAuditLogger(filePath string) *FileAuditLogger {
 	return &FileAuditLogger{
 		filePath: filePath,
 	}
+}
 
 // Initialize initializes the file audit logger
 func (l *FileAuditLogger) Initialize(ctx context.Context) error {
@@ -231,6 +242,7 @@ func (l *FileAuditLogger) Initialize(ctx context.Context) error {
 
 	l.file = file
 	return nil
+}
 
 // Close closes the file audit logger
 func (l *FileAuditLogger) Close(ctx context.Context) error {
@@ -245,6 +257,7 @@ func (l *FileAuditLogger) Close(ctx context.Context) error {
 	}
 
 	return nil
+}
 
 // LogAudit logs an audit event to the file
 func (l *FileAuditLogger) LogAudit(ctx context.Context, log *AuditLog) error {
@@ -278,6 +291,7 @@ func (l *FileAuditLogger) LogAudit(ctx context.Context, log *AuditLog) error {
 	}
 
 	return nil
+}
 
 // GetAuditLogs retrieves audit logs
 func (l *FileAuditLogger) GetAuditLogs(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*AuditLog, int, error) {
@@ -292,7 +306,11 @@ func (l *FileAuditLogger) GetAuditLogs(ctx context.Context, filter map[string]in
 		}
 		return nil, 0, fmt.Errorf("failed to open audit log file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read logs
 	logs := make([]*AuditLog, 0)
@@ -364,6 +382,7 @@ func (l *FileAuditLogger) GetAuditLogs(ctx context.Context, filter map[string]in
 	}
 
 	return logs[start:end], totalCount, nil
+}
 
 // GetAuditLogByID retrieves an audit log by ID
 func (l *FileAuditLogger) GetAuditLogByID(ctx context.Context, id string) (*AuditLog, error) {
@@ -375,7 +394,11 @@ func (l *FileAuditLogger) GetAuditLogByID(ctx context.Context, id string) (*Audi
 		}
 		return nil, fmt.Errorf("failed to open audit log file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Read logs and find the one with matching ID
 	decoder := json.NewDecoder(file)
@@ -391,6 +414,8 @@ func (l *FileAuditLogger) GetAuditLogByID(ctx context.Context, id string) (*Audi
 	}
 
 	return nil, fmt.Errorf("audit log not found: %s", id)
+}
+
 // MultiAuditLogger is an implementation of AuditLogger that logs to multiple loggers
 type MultiAuditLogger struct {
 	loggers []AuditLogger
@@ -401,6 +426,7 @@ func NewMultiAuditLogger(loggers ...AuditLogger) *MultiAuditLogger {
 	return &MultiAuditLogger{
 		loggers: loggers,
 	}
+}
 
 // LogAudit logs an audit event to all loggers
 func (l *MultiAuditLogger) LogAudit(ctx context.Context, log *AuditLog) error {
@@ -411,6 +437,7 @@ func (l *MultiAuditLogger) LogAudit(ctx context.Context, log *AuditLog) error {
 		}
 	}
 	return lastErr
+}
 
 // GetAuditLogs retrieves audit logs from the primary logger
 func (l *MultiAuditLogger) GetAuditLogs(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*AuditLog, int, error) {
@@ -418,6 +445,7 @@ func (l *MultiAuditLogger) GetAuditLogs(ctx context.Context, filter map[string]i
 		return []*AuditLog{}, 0, nil
 	}
 	return l.loggers[0].GetAuditLogs(ctx, filter, offset, limit)
+}
 
 // GetAuditLogByID retrieves an audit log by ID from the primary logger
 func (l *MultiAuditLogger) GetAuditLogByID(ctx context.Context, id string) (*AuditLog, error) {
@@ -425,6 +453,7 @@ func (l *MultiAuditLogger) GetAuditLogByID(ctx context.Context, id string) (*Aud
 		return nil, fmt.Errorf("no audit loggers configured")
 	}
 	return l.loggers[0].GetAuditLogByID(ctx, id)
+}
 
 // Initialize initializes all loggers
 func (l *MultiAuditLogger) Initialize(ctx context.Context) error {
@@ -435,6 +464,7 @@ func (l *MultiAuditLogger) Initialize(ctx context.Context) error {
 		}
 	}
 	return lastErr
+}
 
 // Close closes all loggers
 func (l *MultiAuditLogger) Close(ctx context.Context) error {
@@ -445,11 +475,13 @@ func (l *MultiAuditLogger) Close(ctx context.Context) error {
 		}
 	}
 	return lastErr
+}
 
 // AuditManager manages audit logging
 type AuditManager struct {
 	logger AuditLogger
 	config *AuditConfig
+}
 
 // NewAuditManager creates a new audit manager
 func NewAuditManager(logger AuditLogger, config *AuditConfig) (*AuditManager, error) {
@@ -466,6 +498,7 @@ func NewAuditManager(logger AuditLogger, config *AuditConfig) (*AuditManager, er
 		logger: logger,
 		config: config,
 	}, nil
+}
 
 // LogAudit logs an audit event
 func (m *AuditManager) LogAudit(ctx context.Context, log *AuditLog) error {
@@ -475,18 +508,22 @@ func (m *AuditManager) LogAudit(ctx context.Context, log *AuditLog) error {
 	}
 
 	return m.logger.LogAudit(ctx, log)
+}
 
 // GetAuditLogs retrieves audit logs
 func (m *AuditManager) GetAuditLogs(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*AuditLog, int, error) {
 	return m.logger.GetAuditLogs(ctx, filter, offset, limit)
+}
 
 // GetAuditLogByID retrieves an audit log by ID
 func (m *AuditManager) GetAuditLogByID(ctx context.Context, id string) (*AuditLog, error) {
 	return m.logger.GetAuditLogByID(ctx, id)
+}
 
 // Close closes the audit manager
 func (m *AuditManager) Close() error {
 	return m.logger.Close(context.Background())
+}
 
 // AuditConfig defines configuration for audit logging
 type AuditConfig struct {
@@ -509,6 +546,7 @@ func (c *AuditConfig) IsEnabled(severity AuditSeverity) bool {
 	}
 
 	return false
+}
 
 // DefaultAuditConfig returns the default audit configuration
 func DefaultAuditConfig() *AuditConfig {
@@ -524,23 +562,4 @@ func DefaultAuditConfig() *AuditConfig {
 		LogFilePath:   "audit.log",
 		RetentionDays: 90,
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

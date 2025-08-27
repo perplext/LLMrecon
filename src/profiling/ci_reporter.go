@@ -4,7 +4,10 @@ package profiling
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 // CIReporter generates performance reports for CI/CD pipelines
@@ -19,6 +22,7 @@ type CIReporter struct {
 	baselineData map[string]interface{}
 	// currentData stores current metrics
 	currentData map[string]interface{}
+}
 
 // CIReporterConfig contains configuration for the CI reporter
 type CIReporterConfig struct {
@@ -34,35 +38,37 @@ type CIReporterConfig struct {
 	FailOnThresholdExceeded bool
 	// PerformanceThresholds defines thresholds for metrics
 	PerformanceThresholds map[string]float64
+}
 
 // NewCIReporter creates a new CI reporter
 func NewCIReporter(profiler *Profiler, templateProfiler *TemplateProfiler, config *CIReporterConfig) *CIReporter {
 	// Set default values
 	if config == nil {
 		config = &CIReporterConfig{
-			ReportDir:              "performance-reports",
-			BaselineFile:           "baseline.json",
-			ThresholdFile:          "thresholds.json",
-			ReportFormats:          []string{"json", "txt", "html"},
+			ReportDir:               "performance-reports",
+			BaselineFile:            "baseline.json",
+			ThresholdFile:           "thresholds.json",
+			ReportFormats:           []string{"json", "txt", "html"},
 			FailOnThresholdExceeded: true,
 			PerformanceThresholds: map[string]float64{
-				"template.load.time":     200,  // 200ms
-				"template.execute.time":  500,  // 500ms
-				"template.throughput":    10,   // 10 ops/sec
-				"template.memory.usage":  100,  // 100MB
-				"template.error.rate":    1,    // 1%
+				"template.load.time":      200, // 200ms
+				"template.execute.time":   500, // 500ms
+				"template.throughput":     10,  // 10 ops/sec
+				"template.memory.usage":   100, // 100MB
+				"template.error.rate":     1,   // 1%
 				"template.cache.hit_rate": 90,  // 90%
 			},
 		}
 	}
 
 	return &CIReporter{
-		profiler:        profiler,
+		profiler:         profiler,
 		templateProfiler: templateProfiler,
-		config:          config,
-		baselineData:    make(map[string]interface{}),
-		currentData:     make(map[string]interface{}),
+		config:           config,
+		baselineData:     make(map[string]interface{}),
+		currentData:      make(map[string]interface{}),
 	}
+}
 
 // LoadBaseline loads baseline metrics from a file
 func (r *CIReporter) LoadBaseline() error {
@@ -76,7 +82,11 @@ func (r *CIReporter) LoadBaseline() error {
 	if err != nil {
 		return fmt.Errorf("failed to open baseline file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Decode baseline data
 	if err := json.NewDecoder(file).Decode(&r.baselineData); err != nil {
@@ -84,6 +94,7 @@ func (r *CIReporter) LoadBaseline() error {
 	}
 
 	return nil
+}
 
 // SaveBaseline saves baseline metrics to a file
 func (r *CIReporter) SaveBaseline() error {
@@ -100,7 +111,11 @@ func (r *CIReporter) SaveBaseline() error {
 	if err != nil {
 		return fmt.Errorf("failed to create baseline file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Encode baseline data
 	encoder := json.NewEncoder(file)
@@ -110,6 +125,8 @@ func (r *CIReporter) SaveBaseline() error {
 	}
 
 	return nil
+}
+
 // LoadThresholds loads performance thresholds from a file
 func (r *CIReporter) LoadThresholds() error {
 	// Check if threshold file exists
@@ -122,7 +139,11 @@ func (r *CIReporter) LoadThresholds() error {
 	if err != nil {
 		return fmt.Errorf("failed to open threshold file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Decode threshold data
 	var thresholds map[string]float64
@@ -132,6 +153,7 @@ func (r *CIReporter) LoadThresholds() error {
 	// Update thresholds
 	r.config.PerformanceThresholds = thresholds
 	return nil
+}
 
 // SaveThresholds saves performance thresholds to a file
 func (r *CIReporter) SaveThresholds() error {
@@ -145,7 +167,11 @@ func (r *CIReporter) SaveThresholds() error {
 	if err != nil {
 		return fmt.Errorf("failed to create threshold file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Encode threshold data
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
@@ -154,6 +180,7 @@ func (r *CIReporter) SaveThresholds() error {
 	}
 
 	return nil
+}
 
 // GenerateReports generates performance reports
 func (r *CIReporter) GenerateReports() error {
@@ -196,6 +223,7 @@ func (r *CIReporter) GenerateReports() error {
 	}
 
 	return nil
+}
 
 // generateJSONReport generates a JSON report
 func (r *CIReporter) generateJSONReport() error {
@@ -205,7 +233,11 @@ func (r *CIReporter) generateJSONReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create JSON report file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Encode report data
 	encoder := json.NewEncoder(file)
@@ -215,6 +247,7 @@ func (r *CIReporter) generateJSONReport() error {
 	}
 
 	return nil
+}
 
 // generateTextReport generates a text report
 func (r *CIReporter) generateTextReport() error {
@@ -224,7 +257,11 @@ func (r *CIReporter) generateTextReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create text report file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write report header
 	fmt.Fprintf(file, "Performance Report - %s\n", r.currentData["timestamp"])
@@ -270,6 +307,7 @@ func (r *CIReporter) generateTextReport() error {
 	}
 
 	return nil
+}
 
 // generateHTMLReport generates an HTML report
 func (r *CIReporter) generateHTMLReport() error {
@@ -279,7 +317,11 @@ func (r *CIReporter) generateHTMLReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create HTML report file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write HTML header
 	fmt.Fprintf(file, `<!DOCTYPE html>
@@ -426,6 +468,7 @@ func (r *CIReporter) generateHTMLReport() error {
 `)
 
 	return nil
+}
 
 // generateThresholdReport generates a threshold report
 func (r *CIReporter) generateThresholdReport() error {
@@ -435,7 +478,11 @@ func (r *CIReporter) generateThresholdReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create threshold report file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write report header
 	fmt.Fprintf(file, "Performance Threshold Report - %s\n", time.Now().Format(time.RFC3339))
@@ -449,7 +496,7 @@ func (r *CIReporter) generateThresholdReport() error {
 		if metricData, exists := metrics[name]; exists {
 			metric := metricData.(map[string]interface{})
 			value := metric["p95"].(float64)
-			
+
 			// For some metrics, higher is better (e.g., throughput, cache hit rate)
 			higherIsBetter := false
 			if strings.Contains(name, "throughput") || strings.Contains(name, "hit_rate") {
@@ -466,10 +513,10 @@ func (r *CIReporter) generateThresholdReport() error {
 
 			if exceeded {
 				thresholdExceeded = true
-				fmt.Fprintf(file, "❌ %s: %.2f %s (Threshold: %.2f) - EXCEEDED\n", 
+				fmt.Fprintf(file, "❌ %s: %.2f %s (Threshold: %.2f) - EXCEEDED\n",
 					name, value, metric["unit"], threshold)
 			} else {
-				fmt.Fprintf(file, "✅ %s: %.2f %s (Threshold: %.2f) - OK\n", 
+				fmt.Fprintf(file, "✅ %s: %.2f %s (Threshold: %.2f) - OK\n",
 					name, value, metric["unit"], threshold)
 			}
 		}
@@ -479,7 +526,7 @@ func (r *CIReporter) generateThresholdReport() error {
 	fmt.Fprintf(file, "\nSummary: ")
 	if thresholdExceeded {
 		fmt.Fprintf(file, "❌ Some thresholds were exceeded\n")
-		
+
 		// Exit with error if configured to fail on threshold exceeded
 		if r.config.FailOnThresholdExceeded {
 			fmt.Fprintf(file, "\nCI/CD pipeline should fail due to exceeded thresholds\n")
@@ -489,6 +536,7 @@ func (r *CIReporter) generateThresholdReport() error {
 	}
 
 	return nil
+}
 
 // generateComparisonReport generates a comparison report
 func (r *CIReporter) generateComparisonReport() error {
@@ -498,7 +546,11 @@ func (r *CIReporter) generateComparisonReport() error {
 	if err != nil {
 		return fmt.Errorf("failed to create comparison report file: %w", err)
 	}
-	defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Write report header
 	fmt.Fprintf(file, "Performance Comparison Report - %s\n", time.Now().Format(time.RFC3339))
@@ -527,13 +579,13 @@ func (r *CIReporter) generateComparisonReport() error {
 		maxDiff := calculatePercentageDiff(current["max"].(float64), baseline["max"].(float64))
 
 		fmt.Fprintf(file, "%s (%s):\n", name, current["description"])
-		fmt.Fprintf(file, "  Mean: %.2f -> %.2f (%+.2f%%)\n", 
+		fmt.Fprintf(file, "  Mean: %.2f -> %.2f (%+.2f%%)\n",
 			baseline["mean"].(float64), current["mean"].(float64), meanDiff)
-		fmt.Fprintf(file, "  P95: %.2f -> %.2f (%+.2f%%)\n", 
+		fmt.Fprintf(file, "  P95: %.2f -> %.2f (%+.2f%%)\n",
 			baseline["p95"].(float64), current["p95"].(float64), p95Diff)
-		fmt.Fprintf(file, "  Max: %.2f -> %.2f (%+.2f%%)\n", 
+		fmt.Fprintf(file, "  Max: %.2f -> %.2f (%+.2f%%)\n",
 			baseline["max"].(float64), current["max"].(float64), maxDiff)
-		
+
 		// Determine if performance improved or degraded
 		// For some metrics, higher is better (e.g., throughput, cache hit rate)
 		higherIsBetter := false
@@ -551,12 +603,13 @@ func (r *CIReporter) generateComparisonReport() error {
 	}
 
 	return nil
+}
 
 // CheckThresholds checks if any performance thresholds are exceeded
 func (r *CIReporter) CheckThresholds() (bool, map[string]interface{}) {
 	// Get current metrics
 	metrics := r.currentData["metrics"].(map[string]interface{})
-	
+
 	// Check thresholds
 	thresholdExceeded := false
 	results := make(map[string]interface{})
@@ -565,7 +618,7 @@ func (r *CIReporter) CheckThresholds() (bool, map[string]interface{}) {
 		if metricData, exists := metrics[name]; exists {
 			metric := metricData.(map[string]interface{})
 			value := metric["p95"].(float64)
-			
+
 			// For some metrics, higher is better (e.g., throughput, cache hit rate)
 			higherIsBetter := false
 			if strings.Contains(name, "throughput") || strings.Contains(name, "hit_rate") {
@@ -585,12 +638,22 @@ func (r *CIReporter) CheckThresholds() (bool, map[string]interface{}) {
 			}
 
 			results[name] = map[string]interface{}{
-				"value":      value,
-				"threshold":  threshold,
-				"unit":       metric["unit"],
-				"exceeded":   exceeded,
+				"value":            value,
+				"threshold":        threshold,
+				"unit":             metric["unit"],
+				"exceeded":         exceeded,
 				"higher_is_better": higherIsBetter,
 			}
 		}
 	}
 
+	return thresholdExceeded, results
+}
+
+// calculatePercentageDiff calculates the percentage difference between two values
+func calculatePercentageDiff(new, old float64) float64 {
+	if old == 0 {
+		return 0
+	}
+	return ((new - old) / old) * 100
+}

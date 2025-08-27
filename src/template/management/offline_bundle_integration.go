@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	auditTrail "github.com/perplext/LLMrecon/src/audit/trail"
 	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/perplext/LLMrecon/src/repository"
-	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
+	securityAuditTrail "github.com/perplext/LLMrecon/src/security/access/audit/trail"
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/loaders"
 )
@@ -16,10 +17,22 @@ import (
 // OfflineBundleSource is a constant for the offline bundle source
 const OfflineBundleSource = loaders.OfflineBundleSource
 
+// auditTrailAdapter converts between audit trail types
+func auditTrailAdapter(manager *auditTrail.AuditTrailManager) *securityAuditTrail.Manager {
+	if manager == nil {
+		return nil
+	}
+	// For now, return nil as the loader can handle nil
+	// In a real implementation, we would create a proper adapter
+	return nil
+}
+
 // RegisterOfflineBundleLoader registers an offline bundle loader with the template manager
-func RegisterOfflineBundleLoader(manager *DefaultTemplateManager, auditTrail *trail.AuditTrailManager) {
-	loader := loaders.NewOfflineBundleLoader(auditTrail)
+func RegisterOfflineBundleLoader(manager *DefaultTemplateManager, auditTrailManager *auditTrail.AuditTrailManager) {
+	securityAuditManager := auditTrailAdapter(auditTrailManager)
+	loader := loaders.NewOfflineBundleLoader(securityAuditManager)
 	manager.loaders = append(manager.loaders, loader)
+}
 
 // LoadFromOfflineBundle loads templates from an offline bundle
 func (m *DefaultTemplateManager) LoadFromOfflineBundle(ctx context.Context, bundlePath string, validationLevel bundle.ValidationLevel) ([]*format.Template, error) {
@@ -59,17 +72,19 @@ func (m *DefaultTemplateManager) LoadFromOfflineBundle(ctx context.Context, bund
 	}
 
 	return templates, nil
+}
 
 // CreateOfflineBundleRepository creates a repository for an offline bundle
-func CreateOfflineBundleRepository(bundlePath string, auditTrail *trail.AuditTrailManager) (*repository.OfflineBundleRepository, error) {
-	repo := repository.NewOfflineBundleRepository(bundlePath, auditTrail)
-	
+func CreateOfflineBundleRepository(bundlePath string, auditTrailManager *auditTrail.AuditTrailManager) (*repository.OfflineBundleRepository, error) {
+	repo := repository.NewOfflineBundleRepository(bundlePath, auditTrailManager)
+
 	// Connect to the repository
 	if err := repo.Connect(context.Background()); err != nil {
 		return nil, fmt.Errorf("failed to connect to offline bundle repository: %w", err)
 	}
-	
+
 	return repo, nil
+}
 
 // LoadTemplatesFromOfflineBundleRepository loads templates from an offline bundle repository
 func (m *DefaultTemplateManager) LoadTemplatesFromOfflineBundleRepository(ctx context.Context, repo *repository.OfflineBundleRepository) ([]*format.Template, error) {
@@ -85,7 +100,7 @@ func (m *DefaultTemplateManager) LoadTemplatesFromOfflineBundleRepository(ctx co
 
 	// Load templates from the repository
 	var templates []*format.Template
-	
+
 	// Get the list of template files
 	files, err := repo.ListFiles(ctx, "templates")
 	if err != nil {
@@ -98,7 +113,7 @@ func (m *DefaultTemplateManager) LoadTemplatesFromOfflineBundleRepository(ctx co
 		if file.IsDirectory {
 			continue
 		}
-		
+
 		// Skip non-template files based on extension
 		if !strings.HasSuffix(file.Path, ".yaml") && !strings.HasSuffix(file.Path, ".yml") && !strings.HasSuffix(file.Path, ".json") {
 			continue
@@ -136,3 +151,5 @@ func (m *DefaultTemplateManager) LoadTemplatesFromOfflineBundleRepository(ctx co
 		templates = append(templates, template)
 	}
 
+	return templates, nil
+}

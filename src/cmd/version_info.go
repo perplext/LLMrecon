@@ -3,9 +3,11 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"runtime"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/config"
 	"github.com/perplext/LLMrecon/src/version"
@@ -45,6 +47,7 @@ This command shows:
   # Output in JSON format
   LLMrecon version --json`,
 	RunE: runVersion,
+}
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
@@ -54,6 +57,7 @@ func init() {
 	versionCmd.Flags().StringP("component", "c", "all", "Component to show (all, binary, templates, modules)")
 	versionCmd.Flags().Bool("json", false, "Output in JSON format")
 	versionCmd.Flags().Bool("check-compatibility", false, "Check component compatibility")
+}
 
 func runVersion(cmd *cobra.Command, args []string) error {
 	// Get flags
@@ -91,6 +95,7 @@ func runVersion(cmd *cobra.Command, args []string) error {
 	}
 
 	return outputVersionTable(versionInfo, verboseFlag)
+}
 
 // VersionInfo contains all version information
 type VersionInfo struct {
@@ -122,6 +127,7 @@ type BuildInfo struct {
 	Number    string `json:"number"`
 	GoVersion string `json:"go_version"`
 	Compiler  string `json:"compiler"`
+}
 
 // SystemInfo contains system information
 type SystemInfo struct {
@@ -129,6 +135,7 @@ type SystemInfo struct {
 	Architecture string `json:"architecture"`
 	CPUs         int    `json:"cpus"`
 	GoMaxProcs   int    `json:"go_max_procs"`
+}
 
 // DependencyInfo contains dependency information
 type DependencyInfo struct {
@@ -197,6 +204,7 @@ func collectVersionInfo(cfg *config.Config) (*VersionInfo, error) {
 	}
 
 	return info, nil
+}
 
 func filterVersionInfo(info *VersionInfo, component string) *VersionInfo {
 	filtered := &VersionInfo{
@@ -222,6 +230,7 @@ func filterVersionInfo(info *VersionInfo, component string) *VersionInfo {
 	}
 
 	return filtered
+}
 
 func checkComponentCompatibility(info *VersionInfo) *CompatibilityReport {
 	report := &CompatibilityReport{
@@ -263,6 +272,7 @@ func checkComponentCompatibility(info *VersionInfo) *CompatibilityReport {
 	}
 
 	return report
+}
 
 func outputVersionTable(info *VersionInfo, verbose bool) error {
 	// Header
@@ -341,11 +351,13 @@ func outputVersionTable(info *VersionInfo, verbose bool) error {
 	}
 
 	return nil
+}
 
 func outputVersionJSON(info *VersionInfo) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(info)
+}
 
 func formatCommit(commit string) string {
 	if commit == "unknown" || commit == "" {
@@ -355,6 +367,7 @@ func formatCommit(commit string) string {
 		return commit[:7]
 	}
 	return commit
+}
 
 // Extended version check for CI/CD
 func CheckVersionForCI() (string, error) {
@@ -369,7 +382,5 @@ func CheckVersionForCI() (string, error) {
 		versionStr = fmt.Sprintf("%s-%s", versionStr, strings.ReplaceAll(info.Build.Branch, "/", "-"))
 	}
 
-}
-}
-}
+	return versionStr, nil
 }

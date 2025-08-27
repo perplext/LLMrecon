@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
 
@@ -21,6 +21,7 @@ type DataLeakageValidator struct {
 	trainingDataPatterns []*regexp.Regexp
 	// leakageIndicators contains keywords that might indicate data leakage
 	leakageIndicators []string
+}
 
 // NewDataLeakageValidator creates a new data leakage validator
 func NewDataLeakageValidator() *DataLeakageValidator {
@@ -111,6 +112,7 @@ func NewDataLeakageValidator() *DataLeakageValidator {
 		trainingDataPatterns:  trainingDataPatterns,
 		leakageIndicators:     leakageIndicators,
 	}
+}
 
 // ValidatePrompt validates a prompt for data leakage vulnerabilities
 func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string, options *PromptValidationOptions) ([]*ValidationResult, error) {
@@ -127,12 +129,12 @@ func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := prompt[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(prompt), endIndex+20)
 			context := prompt[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.SensitiveInformationDisclosure,
@@ -144,7 +146,7 @@ func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string
 			result.SetRemediation("Redact or anonymize personal data before sending prompts to LLM services.")
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -156,12 +158,12 @@ func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := prompt[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(prompt), endIndex+20)
 			context := prompt[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.SensitiveInformationDisclosure,
@@ -173,7 +175,7 @@ func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string
 			result.SetRemediation("Remove sensitive data from prompts. Consider implementing data filtering or masking before sending to LLM services.")
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -197,12 +199,12 @@ func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string
 			index := strings.Index(strings.ToLower(prompt), strings.ToLower(pattern))
 			startIndex := index
 			endIndex := index + len(pattern)
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(prompt), endIndex+20)
 			context := prompt[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.SensitiveInformationDisclosure,
@@ -213,12 +215,13 @@ func (v *DataLeakageValidator) ValidatePrompt(ctx context.Context, prompt string
 			result.SetLocation(startIndex, endIndex, context)
 			result.SetRemediation("Implement safeguards against training data extraction attempts.")
 			result.AddRawData("pattern", pattern)
-			
+
 			results = append(results, result)
 		}
 	}
 
 	return results, nil
+}
 
 // ValidateResponse validates a response for data leakage vulnerabilities
 func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response string, options *ResponseValidationOptions) ([]*ValidationResult, error) {
@@ -235,12 +238,12 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := response[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(response), endIndex+20)
 			context := response[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.SensitiveInformationDisclosure,
@@ -252,7 +255,7 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 			result.SetRemediation("Implement post-processing filters to redact personal data from responses.")
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -264,12 +267,12 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := response[startIndex:endIndex]
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-20)
 			contextEnd := min(len(response), endIndex+20)
 			context := response[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.SensitiveInformationDisclosure,
@@ -281,7 +284,7 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 			result.SetRemediation("Implement post-processing filters to remove sensitive data from responses.")
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -293,12 +296,12 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 			startIndex := match[0]
 			endIndex := match[1]
 			matchedText := response[startIndex:endIndex]
-			
+
 			// Extract context (larger context for training data leakage)
 			contextStart := max(0, startIndex-50)
 			contextEnd := min(len(response), endIndex+100)
 			context := response[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.SensitiveInformationDisclosure,
@@ -311,7 +314,7 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 			result.AddRawData("pattern", pattern.String())
 			result.AddRawData("matched_text", matchedText)
 			result.AddRawData("extended_context", context)
-			
+
 			results = append(results, result)
 		}
 	}
@@ -322,12 +325,12 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 			index := strings.Index(strings.ToLower(response), strings.ToLower(indicator))
 			startIndex := index
 			endIndex := index + len(indicator)
-			
+
 			// Extract context
 			contextStart := max(0, startIndex-30)
 			contextEnd := min(len(response), endIndex+50)
 			context := response[contextStart:contextEnd]
-			
+
 			result := CreateValidationResult(
 				true,
 				types.SensitiveInformationDisclosure,
@@ -339,8 +342,10 @@ func (v *DataLeakageValidator) ValidateResponse(ctx context.Context, response st
 			result.SetRemediation("Review the response for potential data leakage. Consider implementing content filtering.")
 			result.AddRawData("indicator", indicator)
 			result.AddRawData("context", context)
-			
+
 			results = append(results, result)
 		}
 	}
 
+	return results, nil
+}

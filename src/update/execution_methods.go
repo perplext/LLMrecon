@@ -3,6 +3,9 @@ package update
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 // ExecuteUpdate executes an update from the given package
@@ -118,7 +121,7 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 
 	if updateErr != nil {
 		e.Logger.Error("UpdateExecutor", fmt.Sprintf("Failed to apply update: %v", updateErr), transaction.ID, nil)
-		
+
 		// Rollback transaction
 		rollbackErr := transaction.Rollback()
 		if rollbackErr != nil {
@@ -157,3 +160,5 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 	// Log update success
 	e.Logger.Info("UpdateExecutor", "Update execution completed successfully", transaction.ID, transaction.GetSummary())
 
+	return nil
+}

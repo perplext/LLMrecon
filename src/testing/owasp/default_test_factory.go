@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // DefaultTestFactory is the default implementation of the TestFactory interface
@@ -16,12 +16,14 @@ type DefaultTestFactory struct {
 	complianceService interface{}
 	// mutex for thread safety
 	mu sync.RWMutex
+}
 
 // NewDefaultTestFactory creates a new default test factory
 func NewDefaultTestFactory() *DefaultTestFactory {
 	return &DefaultTestFactory{
 		validators: make(map[types.VulnerabilityType]interface{}),
 	}
+}
 
 // CreateTestCase creates a new test case with the specified vulnerability type, ID, name, and description
 func (f *DefaultTestFactory) CreateTestCase(vulnerabilityType types.VulnerabilityType, id string, name string, description string) (*types.TestCase, error) {
@@ -32,6 +34,7 @@ func (f *DefaultTestFactory) CreateTestCase(vulnerabilityType types.Vulnerabilit
 	builder.WithDescription(description)
 	builder.WithVulnerabilityType(vulnerabilityType)
 	return builder.Build()
+}
 
 // CreateTestSuite creates a new test suite with the specified ID, name, and description
 func (f *DefaultTestFactory) CreateTestSuite(id string, name string, description string) (*types.TestSuite, error) {
@@ -41,6 +44,7 @@ func (f *DefaultTestFactory) CreateTestSuite(id string, name string, description
 	builder.WithName(name)
 	builder.WithDescription(description)
 	return builder.Build()
+}
 
 // RegisterValidator registers a validator for a specific vulnerability type
 func (f *DefaultTestFactory) RegisterValidator(validator interface{}) error {
@@ -49,7 +53,9 @@ func (f *DefaultTestFactory) RegisterValidator(validator interface{}) error {
 	}
 
 	// Try to get the vulnerability type from the validator
-	if v, ok := validator.(interface{ GetVulnerabilityType() types.VulnerabilityType }); ok {
+	if v, ok := validator.(interface {
+		GetVulnerabilityType() types.VulnerabilityType
+	}); ok {
 		vulnType := v.GetVulnerabilityType()
 		f.mu.Lock()
 		defer f.mu.Unlock()
@@ -58,6 +64,7 @@ func (f *DefaultTestFactory) RegisterValidator(validator interface{}) error {
 	}
 
 	return fmt.Errorf("validator does not implement GetVulnerabilityType method")
+}
 
 // GetValidator returns the validator for a specific vulnerability type
 func (f *DefaultTestFactory) GetValidator(vulnerabilityType types.VulnerabilityType) (interface{}, error) {
@@ -70,6 +77,7 @@ func (f *DefaultTestFactory) GetValidator(vulnerabilityType types.VulnerabilityT
 	}
 
 	return validator, nil
+}
 
 // RegisterComplianceService registers a compliance service
 func (f *DefaultTestFactory) RegisterComplianceService(service interface{}) error {
@@ -81,6 +89,7 @@ func (f *DefaultTestFactory) RegisterComplianceService(service interface{}) erro
 	defer f.mu.Unlock()
 	f.complianceService = service
 	return nil
+}
 
 // GetComplianceService returns the registered compliance service
 func (f *DefaultTestFactory) GetComplianceService() (interface{}, error) {
@@ -91,3 +100,5 @@ func (f *DefaultTestFactory) GetComplianceService() (interface{}, error) {
 		return nil, fmt.Errorf("no compliance service registered")
 	}
 
+	return f.complianceService, nil
+}

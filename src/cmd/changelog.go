@@ -4,13 +4,29 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/fatih/color"
 	"github.com/perplext/LLMrecon/src/config"
 	"github.com/perplext/LLMrecon/src/version"
 	"github.com/spf13/cobra"
+)
+
+// Color functions for output formatting
+var (
+	bold    = color.New(color.Bold).SprintFunc()
+	cyan    = color.New(color.FgCyan).SprintFunc()
+	green   = color.New(color.FgGreen).SprintFunc()
+	yellow  = color.New(color.FgYellow).SprintFunc()
+	red     = color.New(color.FgRed).SprintFunc()
+	blue    = color.New(color.FgBlue).SprintFunc()
+	magenta = color.New(color.FgMagenta).SprintFunc()
+	dim     = color.New(color.Faint).SprintFunc()
 )
 
 // changelogCmd represents the changelog command
@@ -42,6 +58,7 @@ You can filter the changelog by component and version range.`,
   # Output in JSON format
   LLMrecon changelog --json`,
 	RunE: runChangelog,
+}
 
 func init() {
 	rootCmd.AddCommand(changelogCmd)
@@ -55,6 +72,7 @@ func init() {
 	changelogCmd.Flags().Bool("only-breaking", false, "Show only breaking changes")
 	changelogCmd.Flags().Bool("only-security", false, "Show only security updates")
 	changelogCmd.Flags().Duration("timeout", 30*time.Second, "Timeout for fetching changelog")
+}
 
 func runChangelog(cmd *cobra.Command, args []string) error {
 	// Get flags
@@ -99,6 +117,7 @@ func runChangelog(cmd *cobra.Command, args []string) error {
 	}
 
 	return outputChangelogText(filtered)
+}
 
 // ChangelogEntry represents a single changelog entry
 type ChangelogEntry struct {
@@ -149,8 +168,13 @@ func fetchChangelog(ctx context.Context, cfg *config.Config, component string) (
 	if err != nil {
 		return nil, fmt.Errorf("fetching changelog: %w", err)
 	}
-	defer func() { if err := resp.Body.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
 	}
 
 	// Parse response based on format
@@ -165,6 +189,7 @@ func fetchChangelog(ctx context.Context, cfg *config.Config, component string) (
 	}
 
 	return &changelog, nil
+}
 
 func parseGitHubReleases(r io.Reader, component string) (*Changelog, error) {
 	var releases []struct {
@@ -201,6 +226,7 @@ func parseGitHubReleases(r io.Reader, component string) (*Changelog, error) {
 	}
 
 	return changelog, nil
+}
 
 func parseReleaseBody(body string, entry *ChangelogEntry) {
 	lines := strings.Split(body, "\n")
@@ -238,6 +264,7 @@ func parseReleaseBody(body string, entry *ChangelogEntry) {
 			}
 		}
 	}
+}
 
 func loadLocalChangelog(component string) (*Changelog, error) {
 	// Try to load from local cache
@@ -258,6 +285,7 @@ func loadLocalChangelog(component string) (*Changelog, error) {
 	}
 
 	return &changelog, nil
+}
 
 func filterChangelog(changelog *Changelog, fromVersion, toVersion string, limit int, onlyBreaking, onlySecurity bool) *Changelog {
 	filtered := &Changelog{
@@ -329,6 +357,7 @@ func filterChangelog(changelog *Changelog, fromVersion, toVersion string, limit 
 	}
 
 	return filtered
+}
 
 func outputChangelogText(changelog *Changelog) error {
 	if len(changelog.Entries) == 0 {
@@ -403,10 +432,13 @@ func outputChangelogText(changelog *Changelog) error {
 	}
 
 	return nil
+}
+
 func outputChangelogJSON(changelog *Changelog) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(changelog)
+}
 
 // CacheChangelog saves changelog to local cache
 func CacheChangelog(changelog *Changelog) error {
@@ -426,11 +458,5 @@ func CacheChangelog(changelog *Changelog) error {
 		return err
 	}
 
-}
-}
-}
-}
-}
-}
-}
+	return os.WriteFile(filepath.Clean(cacheFile), data, 0600)
 }

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/repository"
 	"github.com/perplext/LLMrecon/src/template/management"
@@ -67,18 +69,14 @@ func main() {
 	// Save results to file if specified
 	if *outputFileFlag != "" {
 		if err := saveResults(results, *outputFileFlag); err != nil {
-if err != nil {
-treturn err
-}			fmt.Printf("Error saving results: %v\n", err)
+			fmt.Printf("Error saving results: %v\n", err)
 		} else {
 			fmt.Printf("Results saved to %s\n", *outputFileFlag)
 		}
 	}
 
 	// Compare with previous results if specified
-if err != nil {
-treturn err
-}	if *compareFlag != "" {
+	if *compareFlag != "" {
 		previousResults, err := loadResults(*compareFlag)
 		if err != nil {
 			fmt.Printf("Error loading previous results: %v\n", err)
@@ -126,9 +124,7 @@ func runBenchmark(ctx context.Context, monitor *monitoring.PerformanceMonitor) (
 	source := types.TemplateSource{
 		Path: *sourceFlag,
 		Type: *sourceTypeFlag,
-if err != nil {
-treturn err
-}	}
+	}
 
 	// Run benchmark suite
 	results, err := benchmark.RunBenchmarkSuite(ctx, manager, []types.TemplateSource{source}, nil)
@@ -142,18 +138,12 @@ treturn err
 	}
 
 	return results, nil
-if err != nil {
-treturn err
-}}
+}
 
-if err != nil {
-treturn err
-}// saveResults saves benchmark results to a file
+// saveResults saves benchmark results to a file
 func saveResults(results map[string]*benchmark.BenchmarkResult, filePath string) error {
 	// Create file
-if err != nil {
-treturn err
-}	file, err := os.Create(filePath)
+	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
@@ -161,17 +151,10 @@ treturn err
 
 	// Encode results as JSON
 	encoder := json.NewEncoder(file)
-if err != nil {
-treturn err
-}	encoder.SetIndent("", "  ")
+	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(results); err != nil {
-if err != nil {
-treturn err
-}		return fmt.Errorf("failed to encode results: %w", err)
+		return fmt.Errorf("failed to encode results: %w", err)
 	}
-if err != nil {
-treturn err
-}
 	return nil
 }
 

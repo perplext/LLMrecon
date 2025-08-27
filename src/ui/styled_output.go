@@ -2,7 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"io"
 	"strings"
+	"time"
 )
 
 // StyledOutput provides styled terminal output
@@ -23,15 +25,18 @@ func NewStyledOutput(writer io.Writer, colorEnabled bool, width int) *StyledOutp
 		boxChars:  DefaultBoxChars(),
 		width:     width,
 	}
+}
 
 // SetColorScheme sets the color scheme
 func (so *StyledOutput) SetColorScheme(scheme *ColorScheme) {
 	so.formatter.scheme = scheme
+}
 
 // SetASCIIMode enables ASCII-only mode
 func (so *StyledOutput) SetASCIIMode() {
 	so.icons = ASCIIIcons()
 	so.boxChars = ASCIIBoxChars()
+}
 
 // Banner prints a large banner
 func (so *StyledOutput) Banner(text string) {
@@ -42,7 +47,7 @@ func (so *StyledOutput) Banner(text string) {
 
 	border := strings.Repeat("═", width)
 	padding := (width - len(text) - 2) / 2
-	
+
 	fmt.Fprintln(so.writer, so.formatter.Header(border))
 	fmt.Fprintf(so.writer, "%s%s%s%s%s\n",
 		so.formatter.Header("║"),
@@ -52,6 +57,7 @@ func (so *StyledOutput) Banner(text string) {
 		so.formatter.Header("║"),
 	)
 	fmt.Fprintln(so.writer, so.formatter.Header(border))
+}
 
 // Section prints a section header
 func (so *StyledOutput) Section(title string) {
@@ -60,6 +66,7 @@ func (so *StyledOutput) Section(title string) {
 		so.formatter.Subheader(title),
 		so.formatter.Muted(strings.Repeat("─", len(title)+2)),
 	)
+}
 
 // StatusLine prints a status line with icon
 func (so *StyledOutput) StatusLine(status, message string, args ...interface{}) {
@@ -90,13 +97,15 @@ func (so *StyledOutput) StatusLine(status, message string, args ...interface{}) 
 	}
 
 	fmt.Fprintf(so.writer, "%s %s\n", format(icon, args...), fmt.Sprintf(message, args...))
+}
 
 // KeyValue prints a key-value pair
 func (so *StyledOutput) KeyValue(key string, value interface{}) {
-	fmt.Fprintf(so.writer, "%s: %s\n", 
+	fmt.Fprintf(so.writer, "%s: %s\n",
 		so.formatter.Label(key),
 		so.formatter.Value("%v", value),
 	)
+}
 
 // KeyValueList prints a list of key-value pairs
 func (so *StyledOutput) KeyValueList(pairs map[string]interface{}) {
@@ -113,6 +122,7 @@ func (so *StyledOutput) KeyValueList(pairs map[string]interface{}) {
 			so.formatter.Value("%v", value),
 		)
 	}
+}
 
 // VulnerabilityFinding prints a formatted vulnerability finding
 func (so *StyledOutput) VulnerabilityFinding(finding VulnerabilityFinding) {
@@ -156,6 +166,7 @@ func (so *StyledOutput) VulnerabilityFinding(finding VulnerabilityFinding) {
 	}
 
 	fmt.Fprintln(so.writer)
+}
 
 // VulnerabilityFinding represents a security finding
 type VulnerabilityFinding struct {
@@ -165,6 +176,7 @@ type VulnerabilityFinding struct {
 	TemplateID  string
 	Evidence    string
 	Remediation string
+}
 
 // ScanSummary prints a scan summary
 func (so *StyledOutput) ScanSummary(summary ScanSummary) {
@@ -176,18 +188,18 @@ func (so *StyledOutput) ScanSummary(summary ScanSummary) {
 		summary.Failed,
 		summary.Duration,
 	)
-	
+
 	box := RenderBox("Scan Summary", content, 40, so.boxChars, so.formatter)
 	fmt.Fprintln(so.writer, box)
 
 	// Severity distribution
 	if summary.Critical > 0 || summary.High > 0 || summary.Medium > 0 || summary.Low > 0 {
 		fmt.Fprintln(so.writer, "\nSeverity Distribution:")
-		
+
 		// Bar chart
 		bar := RenderSeverityBar(summary.Critical, summary.High, summary.Medium, summary.Low, 40, so.formatter)
 		fmt.Fprintln(so.writer, bar)
-		
+
 		// Legend
 		fmt.Fprintf(so.writer, "%s Critical: %d  %s High: %d  %s Medium: %d  %s Low: %d\n",
 			so.formatter.format(so.formatter.scheme.Critical, "█"),
@@ -207,11 +219,12 @@ func (so *StyledOutput) ScanSummary(summary ScanSummary) {
 		fmt.Fprintf(so.writer, "\nSuccess Rate: %s\n",
 			so.formatter.Value("%.1f%%", successRate),
 		)
-		
+
 		// Progress bar
 		bar := RenderProgressBar(summary.Passed, summary.TotalTests, 40, so.formatter)
 		fmt.Fprintln(so.writer, bar)
 	}
+}
 
 // ScanSummary represents scan results summary
 type ScanSummary struct {
@@ -223,6 +236,7 @@ type ScanSummary struct {
 	Medium     int
 	Low        int
 	Duration   time.Duration
+}
 
 // TemplateInfo prints template information
 func (so *StyledOutput) TemplateInfo(template TemplateInfo) {
@@ -237,7 +251,7 @@ func (so *StyledOutput) TemplateInfo(template TemplateInfo) {
 	so.KeyValue("Category", template.Category)
 	so.KeyValue("Severity", so.formatter.Severity(template.Severity))
 	so.KeyValue("Author", template.Author)
-	
+
 	// Description
 	if template.Description != "" {
 		fmt.Fprintf(so.writer, "\n%s\n", template.Description)
@@ -254,6 +268,7 @@ func (so *StyledOutput) TemplateInfo(template TemplateInfo) {
 		}
 		fmt.Fprintln(so.writer)
 	}
+}
 
 // TemplateInfo represents template information
 type TemplateInfo struct {
@@ -272,12 +287,13 @@ func (so *StyledOutput) CodeBlock(code string, indent string) {
 	for _, line := range lines {
 		fmt.Fprintf(so.writer, "%s%s\n", indent, so.formatter.Code(line))
 	}
+}
 
 // Quote prints a formatted quote
 func (so *StyledOutput) Quote(text string, author string) {
 	lines := strings.Split(text, "\n")
 	for _, line := range lines {
-		fmt.Fprintf(so.writer, "  %s %s\n", 
+		fmt.Fprintf(so.writer, "  %s %s\n",
 			so.formatter.Muted("│"),
 			so.formatter.Quote(line),
 		)
@@ -288,10 +304,12 @@ func (so *StyledOutput) Quote(text string, author string) {
 			so.formatter.Muted(author),
 		)
 	}
+}
 
 // Tree prints a tree structure
 func (so *StyledOutput) Tree(root TreeNode, indent string) {
 	so.printTreeNode(root, indent, true, true)
+}
 
 // TreeNode represents a node in a tree structure
 type TreeNode struct {
@@ -343,6 +361,7 @@ func (so *StyledOutput) printTreeNode(node TreeNode, indent string, isLast bool,
 		}
 		so.printTreeNode(child, childIndent, i == len(node.Children)-1, false)
 	}
+}
 
 // ComparisonTable prints a comparison table
 func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][]string) {
@@ -351,7 +370,7 @@ func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][
 	for i, header := range headers {
 		colWidths[i] = len(header)
 	}
-	
+
 	for _, row := range rows {
 		for i, cell := range row {
 			if i < len(colWidths) && len(cell) > colWidths[i] {
@@ -368,7 +387,7 @@ func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][
 	// Print header
 	var headerLine strings.Builder
 	var separatorLine strings.Builder
-	
+
 	for i, header := range headers {
 		if i > 0 {
 			headerLine.WriteString(" │ ")
@@ -377,19 +396,19 @@ func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][
 		headerLine.WriteString(so.formatter.Label(fmt.Sprintf("%-*s", colWidths[i], header)))
 		separatorLine.WriteString(strings.Repeat("─", colWidths[i]))
 	}
-	
+
 	fmt.Fprintln(so.writer, headerLine.String())
 	fmt.Fprintln(so.writer, so.formatter.Muted(separatorLine.String()))
 
 	// Print rows with alternating colors
-	for i, row := range rows {
+	for _, row := range rows {
 		var rowLine strings.Builder
-		
+
 		for j, cell := range row {
 			if j > 0 {
 				rowLine.WriteString(" │ ")
 			}
-			
+
 			// Apply special formatting
 			formatted := cell
 			if j == 0 {
@@ -402,16 +421,17 @@ func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][
 			} else if strings.Contains(strings.ToLower(cell), "warn") {
 				formatted = so.formatter.Warning(cell)
 			}
-			
+
 			if j < len(colWidths) {
 				rowLine.WriteString(fmt.Sprintf("%-*s", colWidths[j], formatted))
 			} else {
 				rowLine.WriteString(formatted)
 			}
 		}
-		
+
 		fmt.Fprintln(so.writer, rowLine.String())
 	}
+}
 
 // Alert prints an alert box
 func (so *StyledOutput) Alert(alertType, title, message string) {
@@ -438,31 +458,18 @@ func (so *StyledOutput) Alert(alertType, title, message string) {
 
 	// Box content
 	content := fmt.Sprintf("%s %s\n\n%s", icon, title, message)
-	
+
 	// Create colored box
 	width := 60
 	if so.width < 60 {
 		width = so.width - 4
 	}
-	
+
 	box := RenderBox("", content, width, so.boxChars, so.formatter)
-	
+
 	// Apply color to entire box
 	lines := strings.Split(box, "\n")
 	for _, line := range lines {
 		fmt.Fprintln(so.writer, colorFunc(line))
 	}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
 }

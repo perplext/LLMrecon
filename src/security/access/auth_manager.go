@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/security/access/common"
 	"github.com/perplext/LLMrecon/src/security/access/mfa"
@@ -53,11 +54,13 @@ func NewAuthManager(
 		mfaManager:   mfaManager,
 		config:       config,
 	}, nil
+}
 
 // Initialize initializes the authentication manager
 func (m *AuthManager) Initialize(ctx context.Context) error {
 	// Nothing to initialize for now
 	return nil
+}
 
 // CreateUser creates a new user
 func (m *AuthManager) CreateUser(ctx context.Context, username, email, password string, roles []string) (*User, error) {
@@ -68,7 +71,7 @@ func (m *AuthManager) CreateUser(ctx context.Context, username, email, password 
 	if email == "" {
 		return nil, errors.New("email is required")
 	}
-	if password := os.Getenv("PASSWORD") {
+	if password == "" {
 		return nil, errors.New("password is required")
 	}
 
@@ -137,18 +140,22 @@ func (m *AuthManager) CreateUser(ctx context.Context, username, email, password 
 	})
 
 	return user, nil
+}
 
 // GetUserByID retrieves a user by ID
 func (m *AuthManager) GetUserByID(ctx context.Context, id string) (*User, error) {
 	return m.userStore.GetUserByID(ctx, id)
+}
 
 // GetUserByUsername retrieves a user by username
 func (m *AuthManager) GetUserByUsername(ctx context.Context, username string) (*User, error) {
 	return m.userStore.GetUserByUsername(ctx, username)
+}
 
 // GetUserByEmail retrieves a user by email
 func (m *AuthManager) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	return m.userStore.GetUserByEmail(ctx, email)
+}
 
 // UpdateUser updates an existing user
 func (m *AuthManager) UpdateUser(ctx context.Context, user *User) error {
@@ -207,7 +214,7 @@ func (m *AuthManager) UpdateUser(ctx context.Context, user *User) error {
 	})
 
 	return nil
-	
+}
 
 // DeleteUser deletes a user
 func (m *AuthManager) DeleteUser(ctx context.Context, userID string) error {
@@ -234,6 +241,8 @@ func (m *AuthManager) DeleteUser(ctx context.Context, userID string) error {
 	})
 
 	return nil
+}
+
 // UpdateUserPassword updates a user's password
 func (m *AuthManager) UpdateUserPassword(ctx context.Context, userID, currentPassword, newPassword string) error {
 	// Check if user exists
@@ -275,6 +284,7 @@ func (m *AuthManager) UpdateUserPassword(ctx context.Context, userID, currentPas
 	})
 
 	return nil
+}
 
 // Login authenticates a user and creates a session
 func (m *AuthManager) Login(ctx context.Context, username, password, ipAddress, userAgent string) (*Session, error) {
@@ -409,7 +419,7 @@ func (m *AuthManager) Login(ctx context.Context, username, password, ipAddress, 
 	}
 
 	return session, nil
-	
+}
 
 // Logout ends a user session
 func (m *AuthManager) Logout(ctx context.Context, sessionID string) error {
@@ -439,6 +449,7 @@ func (m *AuthManager) Logout(ctx context.Context, sessionID string) error {
 	})
 
 	return nil
+}
 
 // VerifySession verifies a session token
 func (m *AuthManager) VerifySession(ctx context.Context, token string) (bool, error) {
@@ -467,6 +478,7 @@ func (m *AuthManager) VerifySession(ctx context.Context, token string) (bool, er
 	}
 
 	return true, nil
+}
 
 // RefreshSession refreshes a session using the refresh token
 func (m *AuthManager) RefreshSession(ctx context.Context, refreshToken string) (*Session, error) {
@@ -516,6 +528,7 @@ func (m *AuthManager) RefreshSession(ctx context.Context, refreshToken string) (
 		SessionID:   session.ID,
 	})
 	return session, nil
+}
 
 // VerifyMFA verifies a multi-factor authentication code
 func (m *AuthManager) VerifyMFA(ctx context.Context, sessionID, code string) error {
@@ -582,6 +595,7 @@ func (m *AuthManager) VerifyMFA(ctx context.Context, sessionID, code string) err
 	})
 
 	return nil
+}
 
 // EnableMFA enables multi-factor authentication for a user
 func (m *AuthManager) EnableMFA(ctx context.Context, userID string, method common.AuthMethod) error {
@@ -614,7 +628,7 @@ func (m *AuthManager) EnableMFA(ctx context.Context, userID string, method commo
 	user.MFAEnabled = true
 	user.MFAMethod = string(method)
 	user.MFAMethods = append(user.MFAMethods, string(method))
-	if secret := os.Getenv("SECRET_KEY") {
+	if secret != "" {
 		user.MFASecret = secret
 	}
 	user.UpdatedAt = time.Now()
@@ -633,6 +647,7 @@ func (m *AuthManager) EnableMFA(ctx context.Context, userID string, method commo
 	})
 
 	return nil
+}
 
 // DisableMFA disables multi-factor authentication for a user
 func (m *AuthManager) DisableMFA(ctx context.Context, userID string, method common.AuthMethod) error {
@@ -696,21 +711,26 @@ func (m *AuthManager) DisableMFA(ctx context.Context, userID string, method comm
 	})
 
 	return nil
+}
+
 // GetAllUsers returns all users
 func (m *AuthManager) GetAllUsers(ctx context.Context) ([]*User, error) {
 	return m.userStore.ListUsers(ctx)
+}
 
 // getSessionByToken retrieves a session by token
 func (m *AuthManager) getSessionByToken(ctx context.Context, token string) (*Session, error) {
 	// TODO: This is a temporary implementation. In production, we should have a way to
 	// lookup sessions by token directly or maintain a token->sessionID map
 	return nil, fmt.Errorf("getSessionByToken not implemented")
+}
 
 // getSessionByRefreshToken retrieves a session by refresh token
 func (m *AuthManager) getSessionByRefreshToken(ctx context.Context, refreshToken string) (*Session, error) {
 	// TODO: This is a temporary implementation. In production, we should have a way to
 	// lookup sessions by refresh token directly or maintain a refreshToken->sessionID map
 	return nil, fmt.Errorf("getSessionByRefreshToken not implemented")
+}
 
 // Close closes the auth manager
 func (m *AuthManager) Close() error {
@@ -731,6 +751,7 @@ func (m *AuthManager) Close() error {
 	}
 
 	return nil
+}
 
 // ValidateSession validates a session token and returns the session
 func (m *AuthManager) ValidateSession(ctx context.Context, token string) (*Session, error) {
@@ -749,12 +770,14 @@ func (m *AuthManager) ValidateSession(ctx context.Context, token string) (*Sessi
 		Token: token,
 		// Other fields would be populated from actual session storage
 	}, nil
+}
 
 // UpdateSession updates a session
 func (m *AuthManager) UpdateSession(ctx context.Context, sessionID string, updates map[string]interface{}) error {
 	// This is a placeholder implementation
 	// In a real implementation, this would update the session in storage
 	return nil
+}
 
 // HasRole checks if a user has a specific role
 func (m *AuthManager) HasRole(ctx context.Context, userID string, role string) (bool, error) {
@@ -770,6 +793,7 @@ func (m *AuthManager) HasRole(ctx context.Context, userID string, role string) (
 	}
 
 	return false, nil
+}
 
 // Helper functions
 
@@ -780,6 +804,7 @@ func generateID() (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
+}
 
 // generateToken generates a random token
 func generateToken(length int) (string, error) {
@@ -788,6 +813,7 @@ func generateToken(length int) (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
+}
 
 // getUserIDFromAuthContext gets the user ID from the context
 func getUserIDFromAuthContext(ctx context.Context) string {
@@ -800,28 +826,5 @@ func getUserIDFromAuthContext(ctx context.Context) string {
 		return ""
 	}
 
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
-}
+	return userID
 }

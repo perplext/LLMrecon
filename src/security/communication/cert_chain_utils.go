@@ -58,6 +58,7 @@ func ExportCertificate(cert *x509.Certificate, filePath string, format Certifica
 	}
 
 	return nil
+}
 
 // ImportCertificatesFromDirectory imports certificates from a directory
 func (m *TrustChainManager) ImportCertificatesFromDirectory(dirPath string, isRoot bool) error {
@@ -105,6 +106,7 @@ func (m *TrustChainManager) ImportCertificatesFromDirectory(dirPath string, isRo
 	}
 
 	return nil
+}
 
 // CreateCertificatePool creates an x509.CertPool from the trusted certificates
 func (m *TrustChainManager) CreateCertificatePool() *x509.CertPool {
@@ -121,6 +123,7 @@ func (m *TrustChainManager) CreateCertificatePool() *x509.CertPool {
 	}
 
 	return pool
+}
 
 // CreateTLSConfig creates a tls.Config with the trusted certificates
 func (m *TrustChainManager) CreateTLSConfig() *tls.Config {
@@ -129,6 +132,7 @@ func (m *TrustChainManager) CreateTLSConfig() *tls.Config {
 		MinVersion:         tls.VersionTLS12,
 		InsecureSkipVerify: false,
 	}
+}
 
 // CreateHTTPClient creates an HTTP client with the trusted certificates
 func (m *TrustChainManager) CreateHTTPClient() *http.Client {
@@ -138,6 +142,7 @@ func (m *TrustChainManager) CreateHTTPClient() *http.Client {
 		},
 		Timeout: 30 * time.Second,
 	}
+}
 
 // GetCertificateInfo returns information about a certificate
 func GetCertificateInfo(cert *x509.Certificate) map[string]interface{} {
@@ -199,6 +204,7 @@ func GetCertificateInfo(cert *x509.Certificate) map[string]interface{} {
 	info["IPAddresses"] = ips
 
 	return info
+}
 
 // FormatCertificateInfo formats certificate information as a string
 func FormatCertificateInfo(cert *x509.Certificate) string {
@@ -254,6 +260,7 @@ func FormatCertificateInfo(cert *x509.Certificate) string {
 	}
 
 	return builder.String()
+}
 
 // VerifyCertificateChain verifies a certificate chain
 func VerifyCertificateChain(certs []*x509.Certificate, roots *x509.CertPool) error {
@@ -282,6 +289,7 @@ func VerifyCertificateChain(certs []*x509.Certificate, roots *x509.CertPool) err
 	}
 
 	return nil
+}
 
 // GetCertificateChainFromPEM extracts a certificate chain from PEM data
 func GetCertificateChainFromPEM(pemData []byte) ([]*x509.Certificate, error) {
@@ -311,6 +319,7 @@ func GetCertificateChainFromPEM(pemData []byte) ([]*x509.Certificate, error) {
 	}
 
 	return certs, nil
+}
 
 // GetCertificateChainFromFile extracts a certificate chain from a file
 func GetCertificateChainFromFile(filePath string) ([]*x509.Certificate, error) {
@@ -319,3 +328,5 @@ func GetCertificateChainFromFile(filePath string) ([]*x509.Certificate, error) {
 		return nil, fmt.Errorf("failed to read certificate file: %w", err)
 	}
 
+	return GetCertificateChainFromPEM(pemData)
+}

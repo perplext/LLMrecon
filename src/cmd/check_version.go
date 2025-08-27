@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/perplext/LLMrecon/src/config"
 	"github.com/perplext/LLMrecon/src/update"
@@ -117,6 +118,7 @@ available updates including version differences, change types, and release notes
 			}
 		}
 	},
+}
 
 func init() {
 	rootCmd.AddCommand(checkVersionCmd)
@@ -124,6 +126,7 @@ func init() {
 	// Add flags
 	checkVersionCmd.Flags().BoolP("quiet", "q", false, "Suppress informational output")
 	checkVersionCmd.Flags().BoolP("json", "j", false, "Output results in JSON format")
+}
 
 // getLocalVersions retrieves the current versions of templates and modules
 func getLocalVersions() (version.Version, map[string]version.Version, error) {
@@ -140,6 +143,7 @@ func getLocalVersions() (version.Version, map[string]version.Version, error) {
 	moduleVersions["anthropic"] = anthropicVersion
 
 	return templateVersion, moduleVersions, nil
+}
 
 // mergeUpdates combines updates from multiple sources, with priority rules
 func mergeUpdates(githubUpdates, gitlabUpdates []update.UpdateInfo) []update.UpdateInfo {
@@ -171,8 +175,10 @@ func mergeUpdates(githubUpdates, gitlabUpdates []update.UpdateInfo) []update.Upd
 	}
 
 	return result
+}
 
 // outputJSON outputs the update information in JSON format
 func outputJSON(updates []update.UpdateInfo) {
 	// This would typically use json.Marshal and print the result
 	// For now, we'll just print a placeholder
+}

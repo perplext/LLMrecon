@@ -5,6 +5,10 @@ import (
 	"archive/zip"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 // OpenBundle opens a bundle from the given path
@@ -27,6 +31,7 @@ func OpenBundle(path string) (*Bundle, error) {
 	}
 
 	return bundle, nil
+}
 
 // readManifest reads the manifest from the bundle
 func (b *Bundle) readManifest() error {
@@ -44,7 +49,7 @@ func (b *Bundle) readManifest() error {
 	}
 
 	return nil
-	
+}
 
 // CreateBundle creates a new bundle with the given manifest and content
 func CreateBundle(manifest BundleManifest, contentDir, outputPath string) (*Bundle, error) {
@@ -87,7 +92,7 @@ func CreateBundle(manifest BundleManifest, contentDir, outputPath string) (*Bund
 		return nil, fmt.Errorf("failed to marshal manifest: %w", err)
 	}
 
-	err = os.WriteFile(filepath.Clean(manifestPath, manifestData, 0600))
+	err = os.WriteFile(filepath.Clean(manifestPath), manifestData, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write manifest: %w", err)
 	}
@@ -99,6 +104,7 @@ func CreateBundle(manifest BundleManifest, contentDir, outputPath string) (*Bund
 	}
 	// Open the created bundle
 	return OpenBundle(outputPath)
+}
 
 // copyPath copies a file or directory from src to dst
 func copyPath(src, dst string) error {
@@ -111,9 +117,10 @@ func copyPath(src, dst string) error {
 		// Copy directory
 		return copyDir(src, dst)
 	}
-	
+
 	// Copy file
 	return copyFile(src, dst)
+}
 
 // copyFile copies a file from src to dst
 func copyFile(src, dst string) error {
@@ -121,13 +128,21 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := srcFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := srcFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	dstFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer func() { if err := dstFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := dstFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	_, err = io.Copy(dstFile, srcFile)
 	if err != nil {
@@ -139,6 +154,7 @@ func copyFile(src, dst string) error {
 	}
 
 	return os.Chmod(dst, srcInfo.Mode())
+}
 
 // copyDir copies a directory from src to dst
 func copyDir(src, dst string) error {
@@ -175,6 +191,7 @@ func copyDir(src, dst string) error {
 	}
 
 	return nil
+}
 
 // createZipFromDir creates a zip file from a directory
 func createZipFromDir(src, dst string) error {
@@ -183,11 +200,19 @@ func createZipFromDir(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := zipFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := zipFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create zip writer
 	zipWriter := zip.NewWriter(zipFile)
-	defer func() { if err := zipWriter.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := zipWriter.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 	// Walk the directory
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -232,12 +257,17 @@ func createZipFromDir(src, dst string) error {
 		if err != nil {
 			return err
 		}
-		defer func() { if err := file.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+		defer func() {
+			if err := file.Close(); err != nil {
+				fmt.Printf("Failed to close: %v\n", err)
+			}
+		}()
 
 		// Copy file contents to zip
 		_, err = io.Copy(writer, file)
 		return err
 	})
+}
 
 // ExtractBundle extracts a bundle to the given directory
 func ExtractBundle(bundlePath, outputDir string) error {
@@ -246,7 +276,11 @@ func ExtractBundle(bundlePath, outputDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open bundle: %w", err)
 	}
-	defer func() { if err := reader.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := reader.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create output directory if it doesn't exist
 	err = os.MkdirAll(outputDir, 0700)
@@ -262,6 +296,7 @@ func ExtractBundle(bundlePath, outputDir string) error {
 	}
 
 	return nil
+}
 
 // extractFile extracts a file from a zip archive
 func extractFile(file *zip.File, outputDir string) error {
@@ -289,18 +324,27 @@ func extractFile(file *zip.File, outputDir string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { if err := rc.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create the file
 	outFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 	if err != nil {
 		return err
 	}
-	defer func() { if err := outFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := outFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Copy the file
 	_, err = io.Copy(outFile, rc)
 	return err
+}
 
 // isWithinDir checks if a path is within a directory
 func isWithinDir(dir, path string) bool {
@@ -315,6 +359,7 @@ func isWithinDir(dir, path string) bool {
 	}
 
 	return absPath == absDir || filepath.HasPrefix(absPath, absDir+string(filepath.Separator))
+}
 
 // GetContentPath returns the path to a content item in the bundle
 func (b *Bundle) GetContentPath(id string) string {
@@ -324,6 +369,7 @@ func (b *Bundle) GetContentPath(id string) string {
 		}
 	}
 	return ""
+}
 
 // GetContentItem returns a content item by ID
 func (b *Bundle) GetContentItem(id string) *ContentItem {
@@ -333,6 +379,7 @@ func (b *Bundle) GetContentItem(id string) *ContentItem {
 		}
 	}
 	return nil
+}
 
 // GetContentItemsByType returns content items by type
 func (b *Bundle) GetContentItemsByType(contentType ContentType) []ContentItem {
@@ -343,6 +390,7 @@ func (b *Bundle) GetContentItemsByType(contentType ContentType) []ContentItem {
 		}
 	}
 	return items
+}
 
 // CreateBundleManifest creates a new bundle manifest
 func CreateBundleManifest(name, description, version string, bundleType BundleType, author Author) BundleManifest {
@@ -363,6 +411,7 @@ func CreateBundleManifest(name, description, version string, bundleType BundleTy
 			MinVersion: "1.0.0",
 		},
 	}
+}
 
 // AddContentItem adds a content item to the manifest
 func (m *BundleManifest) AddContentItem(path string, contentType ContentType, id, version, description string) {
@@ -374,3 +423,6 @@ func (m *BundleManifest) AddContentItem(path string, contentType ContentType, id
 		Description: description,
 		Checksum:    "", // Will be calculated during bundle creation
 	}
+
+	m.Content = append(m.Content, item)
+}

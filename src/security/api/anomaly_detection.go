@@ -1,13 +1,12 @@
 // Package api provides API protection mechanisms for the LLMrecon tool.
 package api
 
-
 import (
-	"time"
 	"context"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 // AnomalyType represents the type of anomaly
@@ -68,6 +67,7 @@ type Anomaly struct {
 	Threshold int `json:"threshold,omitempty"`
 	// Duration is the duration associated with the anomaly
 	Duration time.Duration `json:"duration,omitempty"`
+}
 
 // AnomalyDetectorConfig represents the configuration for an anomaly detector
 type AnomalyDetectorConfig struct {
@@ -93,43 +93,42 @@ type AnomalyDetectorConfig struct {
 	LearningPeriod time.Duration
 	// AlertCallback is a callback function for anomaly alerts
 	AlertCallback func(anomaly *Anomaly)
+}
 
 // DefaultAnomalyDetectorConfig returns the default anomaly detector configuration
-}
 func DefaultAnomalyDetectorConfig() *AnomalyDetectorConfig {
 	return &AnomalyDetectorConfig{
-		Enabled:                  true,
-		WindowSize:               5 * time.Minute,
-		RateSpikeThreshold:       100,
-		UnusualPathThreshold:     10,
-		UnusualMethodThreshold:   5,
+		Enabled:                   true,
+		WindowSize:                5 * time.Minute,
+		RateSpikeThreshold:        100,
+		UnusualPathThreshold:      10,
+		UnusualMethodThreshold:    5,
 		UnusualUserAgentThreshold: 5,
-		UnusualIPThreshold:       10,
-		UnusualPatternThreshold:  10,
-		LearningMode:             true,
-		LearningPeriod:           24 * time.Hour,
+		UnusualIPThreshold:        10,
+		UnusualPatternThreshold:   10,
+		LearningMode:              true,
+		LearningPeriod:            24 * time.Hour,
 	}
+}
 
 // AnomalyDetector implements anomaly detection for API requests
 type AnomalyDetector struct {
-	config           *AnomalyDetectorConfig
-	startTime        time.Time
-	mu               sync.RWMutex
-	pathCounts       map[string]int
-	methodCounts     map[string]int
-	userAgentCounts  map[string]int
-	ipCounts         map[string]int
-	patternCounts    map[string]int
-	requestCounts    []int
-	requestTimes     []time.Time
-	anomalies        []*Anomaly
-	ctx              context.Context
-	cancel           context.CancelFunc
+	config          *AnomalyDetectorConfig
+	startTime       time.Time
+	mu              sync.RWMutex
+	pathCounts      map[string]int
+	methodCounts    map[string]int
+	userAgentCounts map[string]int
+	ipCounts        map[string]int
+	patternCounts   map[string]int
+	requestCounts   []int
+	requestTimes    []time.Time
+	anomalies       []*Anomaly
+	ctx             context.Context
+	cancel          context.CancelFunc
 }
 
-}
 // NewAnomalyDetector creates a new anomaly detector
-}
 func NewAnomalyDetector(config *AnomalyDetectorConfig) *AnomalyDetector {
 	if config == nil {
 		config = DefaultAnomalyDetectorConfig()
@@ -156,9 +155,9 @@ func NewAnomalyDetector(config *AnomalyDetectorConfig) *AnomalyDetector {
 	go detector.cleanup()
 
 	return detector
+}
 
 // cleanup periodically cleans up old data
-}
 func (ad *AnomalyDetector) cleanup() {
 	ticker := time.NewTicker(ad.config.WindowSize / 2)
 	defer ticker.Stop()
@@ -171,9 +170,9 @@ func (ad *AnomalyDetector) cleanup() {
 			return
 		}
 	}
+}
 
 // cleanupOldData removes data older than the window size
-}
 func (ad *AnomalyDetector) cleanupOldData() {
 	ad.mu.Lock()
 	defer ad.mu.Unlock()
@@ -202,14 +201,14 @@ func (ad *AnomalyDetector) cleanupOldData() {
 		}
 	}
 	ad.anomalies = newAnomalies
+}
 
 // Close stops the anomaly detector
-}
 func (ad *AnomalyDetector) Close() {
 	ad.cancel()
+}
 
 // RecordRequest records a request for anomaly detection
-}
 func (ad *AnomalyDetector) RecordRequest(r *http.Request) {
 	// Skip if not enabled
 	if !ad.config.Enabled {
@@ -251,9 +250,9 @@ func (ad *AnomalyDetector) RecordRequest(r *http.Request) {
 	if !ad.config.LearningMode || time.Since(ad.startTime) > ad.config.LearningPeriod {
 		ad.checkForAnomalies(r)
 	}
+}
 
 // checkForAnomalies checks for anomalies in the current request
-}
 func (ad *AnomalyDetector) checkForAnomalies(r *http.Request) {
 	// Get client IP
 	clientIP := r.RemoteAddr
@@ -380,9 +379,9 @@ func (ad *AnomalyDetector) checkForAnomalies(r *http.Request) {
 		}
 		ad.recordAnomaly(anomaly)
 	}
+}
 
 // recordAnomaly records an anomaly
-}
 func (ad *AnomalyDetector) recordAnomaly(anomaly *Anomaly) {
 	// Add to the list of anomalies
 	ad.anomalies = append(ad.anomalies, anomaly)
@@ -391,9 +390,9 @@ func (ad *AnomalyDetector) recordAnomaly(anomaly *Anomaly) {
 	if ad.config.AlertCallback != nil {
 		go ad.config.AlertCallback(anomaly)
 	}
+}
 
 // GetAnomalies returns the list of detected anomalies
-}
 func (ad *AnomalyDetector) GetAnomalies() []*Anomaly {
 	ad.mu.RLock()
 	defer ad.mu.RUnlock()
@@ -403,17 +402,17 @@ func (ad *AnomalyDetector) GetAnomalies() []*Anomaly {
 	copy(anomalies, ad.anomalies)
 
 	return anomalies
+}
 
 // ClearAnomalies clears the list of detected anomalies
-}
 func (ad *AnomalyDetector) ClearAnomalies() {
 	ad.mu.Lock()
 	defer ad.mu.Unlock()
 
 	ad.anomalies = make([]*Anomaly, 0)
+}
 
 // Middleware returns a middleware function for anomaly detection
-}
 func (ad *AnomalyDetector) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Record the request
@@ -422,3 +421,4 @@ func (ad *AnomalyDetector) Middleware(next http.Handler) http.Handler {
 		// Call the next handler
 		next.ServeHTTP(w, r)
 	})
+}

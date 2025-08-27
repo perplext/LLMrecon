@@ -22,6 +22,9 @@ type DefaultErrorHandler struct {
 	RecoveryStrategy RecoveryStrategy
 }
 
+// Ensure DefaultErrorHandler implements ErrorHandler interface
+var _ ErrorHandler = (*DefaultErrorHandler)(nil)
+
 // NewDefaultErrorHandler creates a new default error handler
 func NewDefaultErrorHandler() *DefaultErrorHandler {
 	return &DefaultErrorHandler{}
@@ -32,10 +35,10 @@ func (h *DefaultErrorHandler) HandleError(ctx context.Context, err error) error 
 	if err == nil {
 		return nil
 	}
-	
+
 	// Log the error
 	fmt.Printf("Error: %v\n", err)
-	
+
 	// Apply recovery strategy if available
 	if h.RecoveryStrategy != nil {
 		// Convert error to BundleError if needed
@@ -49,19 +52,27 @@ func (h *DefaultErrorHandler) HandleError(ctx context.Context, err error) error 
 				Cause:   err,
 			}
 		}
-		
+
 		recovered, recErr := h.RecoveryStrategy.Recover(ctx, bundleErr)
 		if recovered {
 			return recErr
 		}
 	}
-	
+
 	return err
 }
 
 // SetRecoveryStrategy sets the recovery strategy
 func (h *DefaultErrorHandler) SetRecoveryStrategy(strategy RecoveryStrategy) {
 	h.RecoveryStrategy = strategy
+}
+
+// ErrorMetrics contains error handling metrics
+type ErrorMetrics struct {
+	TotalErrors       int `json:"total_errors"`
+	RecoveredErrors   int `json:"recovered_errors"`
+	UnrecoveredErrors int `json:"unrecovered_errors"`
+	RetryAttempts     int `json:"retry_attempts"`
 }
 
 // EnhancedErrorHandler provides enhanced error handling capabilities
@@ -78,6 +89,8 @@ type EnhancedErrorHandler struct {
 	RateLimiter *TokenBucketRateLimiter
 	// Metrics tracks error metrics
 	Metrics map[string]int
+	// ErrorMetrics tracks detailed error metrics
+	ErrorMetrics *ErrorMetrics
 	// mutex protects concurrent access
 	mutex sync.Mutex
 }
@@ -137,6 +150,12 @@ func NewEnhancedErrorHandler() *EnhancedErrorHandler {
 		RetryPolicy:      NewRetryPolicy(3, 1*time.Second, 30*time.Second),
 		RateLimiter:      NewTokenBucketRateLimiter(100, 10),
 		Metrics:          make(map[string]int),
+		ErrorMetrics: &ErrorMetrics{
+			TotalErrors:       0,
+			RecoveredErrors:   0,
+			UnrecoveredErrors: 0,
+			RetryAttempts:     0,
+		},
 	}
 }
 
@@ -145,35 +164,39 @@ func (h *EnhancedErrorHandler) HandleError(ctx context.Context, err error) error
 	if err == nil {
 		return nil
 	}
-	
+
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-	
+
+	// Track total errors
+	h.ErrorMetrics.TotalErrors++
+
 	// Categorize the error
 	category, severity, recoverability := h.ErrorCategorizer.CategorizeError(err)
-	
+
 	// Update metrics
 	h.Metrics[string(category)]++
 	h.Metrics[string(severity)]++
-	
+
 	// Check circuit breaker
 	if h.CircuitBreaker != nil && !h.CircuitBreaker.CanProceed() {
 		return fmt.Errorf("circuit breaker open: %w", err)
 	}
-	
+
 	// Apply rate limiting
 	if h.RateLimiter != nil && !h.RateLimiter.Allow() {
 		return fmt.Errorf("rate limit exceeded: %w", err)
 	}
-	
+
 	// Handle based on recoverability
 	if recoverability == RecoverableError {
 		// Apply retry policy
 		if h.RetryPolicy != nil {
+			h.ErrorMetrics.RetryAttempts++
 			return h.RetryWithPolicy(ctx, err)
 		}
 	}
-	
+
 	// Apply recovery strategy
 	if h.RecoveryManager != nil {
 		// Convert error to BundleError if needed
@@ -187,18 +210,21 @@ func (h *EnhancedErrorHandler) HandleError(ctx context.Context, err error) error
 				Cause:   err,
 			}
 		}
-		
+
 		recovered, recErr := h.RecoveryManager.AttemptRecovery(ctx, bundleErr)
 		if recovered {
+			h.ErrorMetrics.RecoveredErrors++
 			return recErr
+		} else {
+			h.ErrorMetrics.UnrecoveredErrors++
 		}
 	}
-	
+
 	// Record failure in circuit breaker
 	if h.CircuitBreaker != nil {
 		h.CircuitBreaker.RecordFailure()
 	}
-	
+
 	return err
 }
 
@@ -207,9 +233,9 @@ func (h *EnhancedErrorHandler) RetryWithPolicy(ctx context.Context, err error) e
 	if h.RetryPolicy == nil {
 		return err
 	}
-	
+
 	delay := h.RetryPolicy.InitialDelay
-	
+
 	for i := 0; i < h.RetryPolicy.MaxRetries; i++ {
 		// Wait before retry
 		select {
@@ -217,20 +243,20 @@ func (h *EnhancedErrorHandler) RetryWithPolicy(ctx context.Context, err error) e
 		case <-ctx.Done():
 			return ctx.Err()
 		}
-		
+
 		// Update delay for next retry
 		delay = time.Duration(float64(delay) * h.RetryPolicy.Multiplier)
 		if delay > h.RetryPolicy.MaxDelay {
 			delay = h.RetryPolicy.MaxDelay
 		}
-		
+
 		// Add jitter if configured
 		if h.RetryPolicy.Jitter {
 			jitter := time.Duration(randFloat64() * float64(delay) * 0.1)
 			delay += jitter
 		}
 	}
-	
+
 	return err
 }
 
@@ -238,7 +264,7 @@ func (h *EnhancedErrorHandler) RetryWithPolicy(ctx context.Context, err error) e
 func (cb *CircuitBreaker) CanProceed() bool {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
-	
+
 	switch cb.State {
 	case "open":
 		// Check if timeout has passed
@@ -258,9 +284,9 @@ func (cb *CircuitBreaker) CanProceed() bool {
 func (cb *CircuitBreaker) RecordSuccess() {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
-	
+
 	cb.SuccessCount++
-	
+
 	if cb.State == "half-open" {
 		cb.State = "closed"
 		cb.FailureCount = 0
@@ -272,14 +298,14 @@ func (cb *CircuitBreaker) RecordSuccess() {
 func (cb *CircuitBreaker) RecordFailure() {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
-	
+
 	cb.FailureCount++
 	cb.LastFailureTime = time.Now()
-	
+
 	if cb.FailureCount >= cb.Threshold {
 		cb.State = "open"
 	}
-	
+
 	if cb.State == "half-open" {
 		cb.State = "open"
 	}
@@ -319,23 +345,23 @@ func NewTokenBucketRateLimiter(capacity, refillRate int) *TokenBucketRateLimiter
 func (rl *TokenBucketRateLimiter) Allow() bool {
 	rl.mutex.Lock()
 	defer rl.mutex.Unlock()
-	
+
 	// Refill tokens
 	now := time.Now()
 	elapsed := now.Sub(rl.LastRefill)
 	tokensToAdd := int(elapsed.Seconds()) * rl.RefillRate
-	
+
 	if tokensToAdd > 0 {
 		rl.Tokens = min(rl.Tokens+tokensToAdd, rl.Capacity)
 		rl.LastRefill = now
 	}
-	
+
 	// Check if token available
 	if rl.Tokens > 0 {
 		rl.Tokens--
 		return true
 	}
-	
+
 	return false
 }
 
@@ -343,13 +369,27 @@ func (rl *TokenBucketRateLimiter) Allow() bool {
 func (h *EnhancedErrorHandler) GetMetrics() map[string]int {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-	
+
 	metrics := make(map[string]int)
 	for k, v := range h.Metrics {
 		metrics[k] = v
 	}
-	
+
 	return metrics
+}
+
+// GetErrorMetrics returns detailed error metrics
+func (h *EnhancedErrorHandler) GetErrorMetrics() *ErrorMetrics {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	// Return a copy to avoid concurrent modification
+	return &ErrorMetrics{
+		TotalErrors:       h.ErrorMetrics.TotalErrors,
+		RecoveredErrors:   h.ErrorMetrics.RecoveredErrors,
+		UnrecoveredErrors: h.ErrorMetrics.UnrecoveredErrors,
+		RetryAttempts:     h.ErrorMetrics.RetryAttempts,
+	}
 }
 
 // min returns the minimum of two integers
@@ -372,29 +412,29 @@ func WrapWithContext(err error, ctx context.Context, operation string) error {
 	if err == nil {
 		return nil
 	}
-	
+
 	contextInfo := make(map[string]string)
-	
+
 	// Extract context values if available
 	if reqID := ctx.Value("request_id"); reqID != nil {
 		contextInfo["request_id"] = fmt.Sprintf("%v", reqID)
 	}
-	
+
 	if userID := ctx.Value("user_id"); userID != nil {
 		contextInfo["user_id"] = fmt.Sprintf("%v", userID)
 	}
-	
+
 	// Build context string
 	var contextParts []string
 	for k, v := range contextInfo {
 		contextParts = append(contextParts, fmt.Sprintf("%s=%s", k, v))
 	}
-	
+
 	contextStr := ""
 	if len(contextParts) > 0 {
 		contextStr = fmt.Sprintf(" [%s]", strings.Join(contextParts, ", "))
 	}
-	
+
 	return fmt.Errorf("%s%s: %w", operation, contextStr, err)
 }
 
@@ -403,11 +443,11 @@ func IsTemporaryError(err error) bool {
 	type temporary interface {
 		Temporary() bool
 	}
-	
+
 	if te, ok := err.(temporary); ok {
 		return te.Temporary()
 	}
-	
+
 	// Check for specific error types
 	errStr := err.Error()
 	temporaryPatterns := []string{
@@ -417,12 +457,12 @@ func IsTemporaryError(err error) bool {
 		"connection refused",
 		"unavailable",
 	}
-	
+
 	for _, pattern := range temporaryPatterns {
 		if strings.Contains(strings.ToLower(errStr), pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }

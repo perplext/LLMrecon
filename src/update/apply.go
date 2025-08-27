@@ -4,6 +4,9 @@ package update
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/perplext/LLMrecon/src/version"
@@ -21,6 +24,7 @@ type UpdateApplier struct {
 	CurrentVersions map[string]version.Version
 	// Logger is the logger for update operations
 	Logger io.Writer
+}
 
 // ApplierOptions contains options for the UpdateApplier
 type ApplierOptions struct {
@@ -34,6 +38,7 @@ type ApplierOptions struct {
 	CurrentVersions map[string]version.Version
 	// Logger is the logger for update operations
 	Logger io.Writer
+}
 
 // NewUpdateApplier creates a new UpdateApplier
 func NewUpdateApplier(options *ApplierOptions) (*UpdateApplier, error) {
@@ -74,6 +79,7 @@ func NewUpdateApplier(options *ApplierOptions) (*UpdateApplier, error) {
 		CurrentVersions: options.CurrentVersions,
 		Logger:          logger,
 	}, nil
+}
 
 // ApplyUpdate applies an update from the given package
 func (a *UpdateApplier) ApplyUpdate(ctx context.Context, pkg *UpdatePackage) error {
@@ -127,6 +133,7 @@ func (a *UpdateApplier) ApplyUpdate(ctx context.Context, pkg *UpdatePackage) err
 	// Log update success
 	fmt.Fprintf(a.Logger, "Successfully applied update from package %s\n", pkg.PackagePath)
 	return nil
+}
 
 // applyFullUpdate applies a full update from the package
 func (a *UpdateApplier) applyFullUpdate(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -161,7 +168,7 @@ func (a *UpdateApplier) applyFullUpdate(ctx context.Context, pkg *UpdatePackage,
 	}
 
 	return nil
-	
+}
 
 // applyDifferentialUpdate applies a differential update from the package
 func (a *UpdateApplier) applyDifferentialUpdate(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -184,6 +191,7 @@ func (a *UpdateApplier) applyDifferentialUpdate(ctx context.Context, pkg *Update
 	}
 
 	return nil
+}
 
 // updateBinary updates the binary component
 func (a *UpdateApplier) updateBinary(ctx context.Context, pkg *UpdatePackage, platform, sessionDir, backupDir string) error {
@@ -226,6 +234,7 @@ func (a *UpdateApplier) updateBinary(ctx context.Context, pkg *UpdatePackage, pl
 	a.CurrentVersions["core"] = binaryVersion
 
 	return nil
+}
 
 // updateTemplates updates the templates component
 func (a *UpdateApplier) updateTemplates(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -260,6 +269,7 @@ func (a *UpdateApplier) updateTemplates(ctx context.Context, pkg *UpdatePackage,
 	a.CurrentVersions["templates"] = templatesVersion
 
 	return nil
+}
 
 // updateModules updates the modules component
 func (a *UpdateApplier) updateModules(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -302,6 +312,7 @@ func (a *UpdateApplier) updateModules(ctx context.Context, pkg *UpdatePackage, s
 	}
 
 	return nil
+}
 
 // updateBinaryWithPatch updates the binary component using a patch
 func (a *UpdateApplier) updateBinaryWithPatch(ctx context.Context, pkg *UpdatePackage, platform, sessionDir, backupDir string) error {
@@ -392,6 +403,7 @@ func (a *UpdateApplier) updateBinaryWithPatch(ctx context.Context, pkg *UpdatePa
 	a.CurrentVersions["core"] = binaryVersion
 
 	return nil
+}
 
 // updateTemplatesWithPatch updates the templates component using a patch
 func (a *UpdateApplier) updateTemplatesWithPatch(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -461,6 +473,7 @@ func (a *UpdateApplier) updateTemplatesWithPatch(ctx context.Context, pkg *Updat
 	a.CurrentVersions["templates"] = templatesVersion
 
 	return nil
+}
 
 // updateModulesWithPatch updates the modules component using a patch
 func (a *UpdateApplier) updateModulesWithPatch(ctx context.Context, pkg *UpdatePackage, sessionDir, backupDir string) error {
@@ -471,7 +484,7 @@ func (a *UpdateApplier) updateModulesWithPatch(ctx context.Context, pkg *UpdateP
 		currentVersion, ok := a.CurrentVersions[fmt.Sprintf("module.%s", moduleID)]
 		if !ok {
 			// Skip modules that are not installed
-				continue
+			continue
 		}
 
 		// Check if patch is for current version
@@ -526,7 +539,7 @@ func (a *UpdateApplier) updateModulesWithPatch(ctx context.Context, pkg *UpdateP
 	}
 
 	return nil
-	
+}
 
 // restoreFromBackup restores files from backup
 func (a *UpdateApplier) restoreFromBackup(backupDir string) error {
@@ -576,6 +589,7 @@ func (a *UpdateApplier) restoreFromBackup(backupDir string) error {
 	}
 
 	return nil
+}
 
 // Helper functions
 
@@ -591,14 +605,22 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer func() { if err := srcFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := srcFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Create destination file
 	dstFile, err := os.Create(dst)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer func() { if err := dstFile.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
+	defer func() {
+		if err := dstFile.Close(); err != nil {
+			fmt.Printf("Failed to close: %v\n", err)
+		}
+	}()
 
 	// Copy file contents
 	if _, err := io.Copy(dstFile, srcFile); err != nil {
@@ -617,6 +639,7 @@ func copyFile(src, dst string) error {
 	}
 
 	return nil
+}
 
 // copyDir copies a directory from src to dst
 func copyDir(src, dst string) error {
@@ -656,6 +679,7 @@ func copyDir(src, dst string) error {
 	}
 
 	return nil
+}
 
 // replaceFile replaces dst with src
 func replaceFile(src, dst string) error {
@@ -663,24 +687,24 @@ func replaceFile(src, dst string) error {
 	if runtime.GOOS == "windows" {
 		// Create a temporary file name
 		tmpDst := dst + ".old"
-		
+
 		// Remove existing temporary file if it exists
 		os.Remove(tmpDst)
-		
+
 		// Rename destination to temporary file
 		if _, err := os.Stat(dst); err == nil {
 			if err := os.Rename(dst, tmpDst); err != nil {
 				return fmt.Errorf("failed to rename destination file: %w", err)
 			}
 		}
-		
+
 		// Rename source to destination
 		if err := os.Rename(src, dst); err != nil {
 			// Try to restore original file
 			os.Rename(tmpDst, dst)
 			return fmt.Errorf("failed to rename source file: %w", err)
 		}
-		
+
 		// Remove temporary file
 		os.Remove(tmpDst)
 	} else {
@@ -689,8 +713,9 @@ func replaceFile(src, dst string) error {
 			return fmt.Errorf("failed to replace file: %w", err)
 		}
 	}
-	
+
 	return nil
+}
 
 // replaceDir replaces dst with src
 func replaceDir(src, dst string) error {
@@ -712,14 +737,18 @@ func replaceDir(src, dst string) error {
 	}
 
 	return nil
+}
 
 // applyBinaryPatch applies a binary patch to a file
 func applyBinaryPatch(patchPath, filePath string) error {
 	// In a real implementation, this would use bsdiff or a similar binary diff tool
 	// For now, we'll just return an error
 	return fmt.Errorf("binary patching not implemented")
+}
 
 // applyDirectoryPatch applies a patch to a directory
 func applyDirectoryPatch(patchPath, dirPath string) error {
 	// In a real implementation, this would apply a JSON or YAML patch
 	// For now, we'll just return an error
+	return fmt.Errorf("directory patching not implemented")
+}

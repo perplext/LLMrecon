@@ -3,6 +3,7 @@ package security
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 )
@@ -14,14 +15,16 @@ type TemplateSecurityReporter interface {
 
 	// CalculateSummary calculates a summary of verification results
 	CalculateSummary(results []*VerificationResult) *VerificationSummary
+}
 
 // DefaultTemplateSecurityReporter is the default implementation of TemplateSecurityReporter
 type DefaultTemplateSecurityReporter struct {
-
 }
+
 // NewDefaultTemplateSecurityReporter creates a new default template security reporter
 func NewDefaultTemplateSecurityReporter() *DefaultTemplateSecurityReporter {
 	return &DefaultTemplateSecurityReporter{}
+}
 
 // VerificationReport represents a template security verification report
 type VerificationReport struct {
@@ -33,6 +36,7 @@ type VerificationReport struct {
 
 	// GeneratedAt is the timestamp when the report was generated
 	GeneratedAt time.Time
+}
 
 // VerificationSummary represents a summary of template security verification results
 type VerificationSummary struct {
@@ -59,6 +63,7 @@ type VerificationSummary struct {
 
 	// CompliancePercentage is the overall compliance percentage
 	CompliancePercentage float64
+}
 
 // GenerateReport generates a report from verification results
 func (r *DefaultTemplateSecurityReporter) GenerateReport(results []*VerificationResult) (*VerificationReport, error) {
@@ -75,6 +80,7 @@ func (r *DefaultTemplateSecurityReporter) GenerateReport(results []*Verification
 	}
 
 	return report, nil
+}
 
 // CalculateSummary calculates a summary of verification results
 func (r *DefaultTemplateSecurityReporter) CalculateSummary(results []*VerificationResult) *VerificationSummary {
@@ -130,6 +136,7 @@ func (r *DefaultTemplateSecurityReporter) CalculateSummary(results []*Verificati
 	summary.ComplianceStatus["Template Security Standard"] = summary.CompliancePercentage >= 95.0
 
 	return summary
+}
 
 // ConvertToTestResults converts a verification report to test results
 func (r *DefaultTemplateSecurityReporter) ConvertToTestResults(report *VerificationReport) []*common.TestResult {
@@ -192,7 +199,7 @@ func (r *DefaultTemplateSecurityReporter) ConvertToTestResults(report *Verificat
 			Severity:    common.Medium,
 			Category:    "template_security",
 			Status:      getComplianceStatus(report.Summary.ComplianceStatus["OWASP LLM Top 10"]),
-			Details:     fmt.Sprintf("Total templates: %d, Passed: %d, Failed: %d, Compliance: %.2f%%",
+			Details: fmt.Sprintf("Total templates: %d, Passed: %d, Failed: %d, Compliance: %.2f%%",
 				report.Summary.TotalTemplates,
 				report.Summary.PassedTemplates,
 				report.Summary.FailedTemplates,
@@ -209,8 +216,12 @@ func (r *DefaultTemplateSecurityReporter) ConvertToTestResults(report *Verificat
 	}
 
 	return testResults
+}
 
-// Note: getComplianceStatus function is defined in pipeline.go
-}
-}
+// getComplianceStatus converts boolean compliance status to string
+func getComplianceStatus(passed bool) string {
+	if passed {
+		return "passed"
+	}
+	return "failed"
 }

@@ -342,7 +342,7 @@ class LLMrecon2025:
                         user_id=None,
                         campaign_id=None
                     )
-                    self.data_pipeline.record_attack(attack_data)
+                    self.data_pipeline.collect(attack_data)
                     
                 except Exception as e:
                     logger.error(f"Test failed: {e}")

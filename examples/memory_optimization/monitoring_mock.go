@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 // MockMonitoringService is a simplified version of the monitoring service for the example

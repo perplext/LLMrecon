@@ -3,6 +3,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/perplext/LLMrecon/src/api"
@@ -83,6 +84,7 @@ var apiServerCmd = &cobra.Command{
 			os.Exit(1)
 		}
 	},
+}
 
 // splitAndTrim splits a string by a separator and trims spaces
 func splitAndTrim(s string, sep string) []string {
@@ -101,6 +103,7 @@ func splitAndTrim(s string, sep string) []string {
 	}
 
 	return result
+}
 
 func init() {
 	rootCmd.AddCommand(apiServerCmd)
@@ -118,3 +121,4 @@ func init() {
 	apiServerCmd.Flags().Int("rate-limit", 60, "Rate limit in requests per minute (0 to disable)")
 	apiServerCmd.Flags().String("ip-allowlist", "", "IP allowlist (comma-separated list or file path)")
 	apiServerCmd.Flags().Bool("dev-mode", false, "Enable development mode (more verbose errors)")
+}

@@ -20,9 +20,9 @@ func NewManager(logPath string) (*Manager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file logger: %w", err)
 	}
-	
+
 	trail := NewAuditTrail(logger)
-	
+
 	return &Manager{
 		trail:  trail,
 		logger: logger,
@@ -33,7 +33,7 @@ func NewManager(logPath string) (*Manager, error) {
 func (m *Manager) LogOperation(ctx context.Context, log *AuditLog) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	return m.trail.LogOperation(ctx, log)
 }
 
@@ -41,15 +41,15 @@ func (m *Manager) LogOperation(ctx context.Context, log *AuditLog) error {
 func (m *Manager) Close() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	if err := m.trail.Close(); err != nil {
 		return fmt.Errorf("failed to close audit trail: %w", err)
 	}
-	
+
 	if err := m.logger.Close(); err != nil {
 		return fmt.Errorf("failed to close logger: %w", err)
 	}
-	
+
 	return nil
 }
 
