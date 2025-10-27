@@ -6,8 +6,8 @@ github.com/Masterminds/semver/v3 v3.4.0 h1:Zog+i5UMtVoCU8oKka5P7i9q9HgrJeGzI9SA1
 github.com/Masterminds/semver/v3 v3.4.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 h1:+vx7roKuyA63nhn5WAunQHLTznkw5W8b1Xc0dNjp83s=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2/go.mod h1:HBCaDeC1lPdgDeDbhX8XFpy1jqjK0IBG8W5K+xYqA0w=
-github.com/aws/aws-sdk-go-v2 v1.38.2 h1:QUkLO1aTW0yqW95pVzZS0LGFanL71hJ0a49w4TJLMyM=
-github.com/aws/aws-sdk-go-v2 v1.38.2/go.mod h1:sDioUELIUO9Znk23YVmIk86/9DOpkbyyVb1i/gUNFXY=
+github.com/aws/aws-sdk-go-v2 v1.39.4 h1:qTsQKcdQPHnfGYBBs+Btl8QwxJeoWcOcPcixK90mRhg=
+github.com/aws/aws-sdk-go-v2 v1.39.4/go.mod h1:yWSxrnioGUZ4WVv9TgMrNUeLV3PFESn/v+6T/Su8gnM=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.0 h1:6GMWV6CNpA/6fbFHnoAjrv4+LGfyTqZz2LtCHnspgDg=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.0/go.mod h1:/mXlTIVG9jbxkqDnr5UQNQxW1HRYxeGklkM9vAFeabg=
 github.com/aws/aws-sdk-go-v2/config v1.31.4 h1:aY2IstXOfjdLtr1lDvxFBk5DpBnHgS5GS3jgR/0BmPw=
@@ -40,8 +40,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.34.1 h1:8yI3jK5JZ310S8RpgdZdzwvl
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.34.1/go.mod h1:HPzXfFgrLd02lYpcFYdDz5xZs94LOb+lWlvbAGaeMsk=
 github.com/aws/aws-sdk-go-v2/service/sts v1.38.1 h1:3kWmIg5iiWPMBJyq/I55Fki5fyfoMtrn/SkUIpxPwHQ=
 github.com/aws/aws-sdk-go-v2/service/sts v1.38.1/go.mod h1:yi0b3Qez6YamRVJ+Rbi19IgvjfjPODgVRhkWA6RTMUM=
-github.com/aws/smithy-go v1.23.0 h1:8n6I3gXzWJB2DxBDnfxgBaSX6oe0d/t10qGz7OKqMCE=
-github.com/aws/smithy-go v1.23.0/go.mod h1:t1ufH5HMublsJYulve2RKmHDC15xu1f26kHCp/HgceI=
+github.com/aws/smithy-go v1.23.1 h1:sLvcH6dfAFwGkHLZ7dGiYF7aK6mg4CgKA/iDKjLDt9M=
+github.com/aws/smithy-go v1.23.1/go.mod h1:LEj2LM3rBRQJxPZTB4KuzZkaZYnZPnvgIhb4pu07mx0=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1/go.mod h1:uYgXzlJ7ZpABp8OJ+exZzJJhRNQ2ASbcXHWsFqH8hp8=
 github.com/boombuler/barcode v1.0.0/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
