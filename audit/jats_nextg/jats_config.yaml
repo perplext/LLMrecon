@@ -1,0 +1,211 @@
+# =============================================================================
+# JATS-NextG Vulnerability Assessment Configuration
+# =============================================================================
+# Konfigurasi simulasi VA untuk Sistem Perdagangan Otomatis Jakarta (JATS)-NextG
+# Bursa Efek Indonesia (BEI) - Tim Audit IT & Cybersecurity
+# =============================================================================
+
+assessment:
+  name: "JATS-NextG Vulnerability Assessment"
+  type: "Simulation"
+  organization: "Bursa Efek Indonesia (BEI)"
+  department: "Tim Audit IT & Cybersecurity"
+  classification: "RAHASIA / CONFIDENTIAL"
+  version: "1.0"
+
+# Target System Information
+target:
+  system_name: "JATS-NextG"
+  full_name: "Sistem Perdagangan Otomatis Jakarta - Next Generation"
+  description: >
+    Sistem perdagangan elektronik berbasis komputer yang digunakan oleh
+    Bursa Efek Indonesia (BEI) sejak 22 Mei 1995 untuk mencocokkan
+    pesanan beli dan jual secara otomatis.
+  components:
+    - name: "Matching Engine"
+      criticality: "CRITICAL"
+      description: "Mesin pencocokan order beli/jual"
+    - name: "Remote Trading (RT) Gateway"
+      criticality: "CRITICAL"
+      description: "Gateway koneksi broker ke host BEI"
+    - name: "Order Management System"
+      criticality: "HIGH"
+      description: "Sistem manajemen order"
+    - name: "Market Data Distribution"
+      criticality: "HIGH"
+      description: "Distribusi data harga real-time"
+    - name: "Risk Management System"
+      criticality: "CRITICAL"
+      description: "Sistem manajemen risiko perdagangan"
+    - name: "Clearing Interface"
+      criticality: "HIGH"
+      description: "Interface ke KPEI/KSEI"
+    - name: "Market Surveillance"
+      criticality: "HIGH"
+      description: "Sistem pengawasan pasar"
+    - name: "Admin Console"
+      criticality: "MEDIUM"
+      description: "Console administrasi sistem"
+  network_type: "Closed System (Jaringan Tertutup)"
+  trading_protocol: "FIX Protocol"
+  broker_count: 155
+
+# Audit Domains
+domains:
+  network:
+    enabled: true
+    name: "Keamanan Jaringan (Network Security)"
+    checks:
+      - NET-01  # Segmentasi Jaringan & Isolasi VLAN
+      - NET-02  # Analisis Aturan Firewall
+      - NET-03  # Deteksi Rogue Access Point
+      - NET-04  # Keamanan RT Gateway
+      - NET-05  # Keamanan Leased Line / MPLS / VPN
+      - NET-06  # Kontrol Akses Fisik
+      - NET-07  # IDS/IPS Efektivitas
+      - NET-08  # DNS & Routing Security
+      - NET-09  # Network Device Hardening
+      - NET-10  # DDoS Protection
+
+  protocol:
+    enabled: true
+    name: "Keamanan Protokol Perdagangan (Protocol Security)"
+    checks:
+      - PROTO-01  # FIX Message Validation
+      - PROTO-02  # Session Layer Security
+      - PROTO-03  # Heartbeat Mechanism
+      - PROTO-04  # Order Routing Security
+      - PROTO-05  # Market Data Feed Integrity
+      - PROTO-06  # Message Injection Detection
+      - PROTO-07  # Protocol Fuzzing Resistance
+      - PROTO-08  # Replay Attack Protection
+
+  authentication:
+    enabled: true
+    name: "Otentikasi & Kontrol Akses (Authentication & Access Control)"
+    checks:
+      - AUTH-01  # Broker Authentication
+      - AUTH-02  # Multi-Factor Authentication
+      - AUTH-03  # Session Management
+      - AUTH-04  # RBAC
+      - AUTH-05  # Privileged Access Management
+      - AUTH-06  # Credential Policy
+      - AUTH-07  # PKI & Certificate Management
+      - AUTH-08  # API Authentication
+
+  application:
+    enabled: true
+    name: "Keamanan Aplikasi (Application Security)"
+    checks:
+      - APP-01  # Matching Engine Integrity
+      - APP-02  # Input Validation
+      - APP-03  # Error Handling
+      - APP-04  # Trading Limit Enforcement
+      - APP-05  # Risk Management Bypass
+      - APP-06  # Clearing System Security
+      - APP-07  # Market Surveillance Integrity
+      - APP-08  # Patch Management
+
+  data_integrity:
+    enabled: true
+    name: "Integritas Data & Enkripsi (Data Integrity & Encryption)"
+    checks:
+      - DATA-01  # Database Encryption
+      - DATA-02  # Transaction Log Integrity
+      - DATA-03  # Backup Security
+      - DATA-04  # Data Classification
+      - DATA-05  # Cryptographic Implementation
+      - DATA-06  # Key Management
+
+  infrastructure:
+    enabled: true
+    name: "Keamanan Infrastruktur (Infrastructure Security)"
+    checks:
+      - INFRA-01  # OS Hardening
+      - INFRA-02  # Patch Management
+      - INFRA-03  # Service Inventory
+      - INFRA-04  # Virtualization Security
+      - INFRA-05  # Disaster Recovery
+      - INFRA-06  # NTP Security
+
+  monitoring:
+    enabled: true
+    name: "Pemantauan & Respons Insiden (Monitoring & Incident Response)"
+    checks:
+      - MON-01  # SIEM Coverage
+      - MON-02  # Log Management
+      - MON-03  # Real-Time Alerting
+      - MON-04  # Incident Response
+      - MON-05  # Forensic Readiness
+      - MON-06  # SOC Effectiveness
+
+  compliance:
+    enabled: true
+    name: "Kepatuhan Regulasi (Regulatory Compliance)"
+    checks:
+      - COMP-01  # OJK POJK 38/2016
+      - COMP-02  # ISO 27001:2022
+      - COMP-03  # PCI DSS
+      - COMP-04  # Business Continuity
+      - COMP-05  # UU PDP
+      - COMP-06  # Vendor Risk Management
+
+# Risk Scoring Configuration
+risk_scoring:
+  # CVSS-like scoring 0-10
+  critical_threshold: 9.0
+  high_threshold: 7.0
+  medium_threshold: 4.0
+  low_threshold: 2.0
+
+# Compliance Frameworks
+compliance_frameworks:
+  - name: "OJK POJK 38/POJK.03/2016"
+    description: "Penerapan Manajemen Risiko dalam Penggunaan TI"
+    mandatory: true
+
+  - name: "ISO 27001:2022"
+    description: "Information Security Management System"
+    mandatory: true
+
+  - name: "ISO 22301:2019"
+    description: "Business Continuity Management"
+    mandatory: true
+
+  - name: "UU No. 27 Tahun 2022 (UU PDP)"
+    description: "Perlindungan Data Pribadi"
+    mandatory: true
+
+  - name: "PCI DSS v4.0"
+    description: "Payment Card Industry Data Security Standard"
+    mandatory: false  # Tergantung scoping
+
+  - name: "NIST Cybersecurity Framework"
+    description: "NIST CSF for reference"
+    mandatory: false
+
+  - name: "IOSCO Principles"
+    description: "International standards for securities regulators"
+    mandatory: false
+
+  - name: "CIS Benchmarks"
+    description: "Center for Internet Security Benchmarks"
+    mandatory: false
+
+# Report Configuration
+report:
+  output_dir: "./reports/jats_va"
+  formats:
+    - json
+    - markdown
+  include_evidence: true
+  include_recommendations: true
+  include_compliance_mapping: true
+  include_remediation_roadmap: true
+  classification_header: "RAHASIA / CONFIDENTIAL"
+  distribution_list:
+    - "Direktur Utama BEI"
+    - "Direktur Teknologi & Manajemen Risiko"
+    - "Kepala Divisi IT"
+    - "Kepala Divisi Manajemen Risiko"
+    - "Tim Audit IT & Cybersecurity"
