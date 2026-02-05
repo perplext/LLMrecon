@@ -1,0 +1,2207 @@
+{
+  "report_metadata": {
+    "title": "Vulnerability Assessment Report - JATS-NextG",
+    "subtitle": "Sistem Perdagangan Otomatis Jakarta (JATS)-NextG",
+    "organization": "Bursa Efek Indonesia (BEI)",
+    "department": "Tim Audit IT & Cybersecurity",
+    "assessment_type": "Vulnerability Assessment Simulation",
+    "scope": "JATS-NextG Trading System including Remote Trading (RT) Gateway",
+    "date": "2026-02-05",
+    "timestamp": "2026-02-05T02:08:31.661074",
+    "classification": "RAHASIA / CONFIDENTIAL",
+    "version": "1.0",
+    "framework_version": "JATS-VA-SIM v1.0.0"
+  },
+  "executive_summary": {
+    "overall_risk_rating": "SANGAT TINGGI (Very High)",
+    "total_findings": 58,
+    "severity_distribution": {
+      "CRITICAL": 17,
+      "HIGH": 29,
+      "MEDIUM": 12,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "status_distribution": {
+      "VULNERABLE": 21,
+      "WARNING": 30,
+      "SECURE": 0,
+      "NOT_TESTED": 0,
+      "PARTIAL": 7
+    },
+    "average_risk_score": 7.7,
+    "max_risk_score": 9.6,
+    "key_observations": [
+      "Ditemukan 17 kerentanan dengan severity CRITICAL yang memerlukan penanganan SEGERA, terutama pada matching engine integrity, FIX protocol security, dan remote trading gateway.",
+      "21 dari 58 temuan berstatus VULNERABLE - mengindikasikan kerentanan aktif yang dapat dieksploitasi.",
+      "Keamanan protokol FIX memerlukan perhatian khusus - message validation, replay protection, dan session management memiliki kelemahan signifikan.",
+      "Remote Trading (RT) gateway sebagai entry point utama broker memiliki beberapa kelemahan pada enkripsi koneksi dan mekanisme otentikasi.",
+      "Infrastruktur monitoring dan incident response belum memadai untuk melindungi critical financial infrastructure - SIEM coverage dan SOC capability perlu ditingkatkan.",
+      "Kepatuhan terhadap POJK 38/2016 dan UU PDP memerlukan peningkatan terutama pada aspek DR testing, incident reporting, dan data privacy."
+    ],
+    "top_5_risks": [
+      {
+        "check_id": "APP-01",
+        "title": "Integritas Matching Engine & Race Condition",
+        "risk_score": 9.6,
+        "severity": "CRITICAL"
+      },
+      {
+        "check_id": "PROTO-01",
+        "title": "Validasi & Integritas Pesan FIX Protocol",
+        "risk_score": 9.5,
+        "severity": "CRITICAL"
+      },
+      {
+        "check_id": "APP-05",
+        "title": "Potensi Bypass Risk Management System",
+        "risk_score": 9.4,
+        "severity": "CRITICAL"
+      },
+      {
+        "check_id": "NET-04",
+        "title": "Keamanan Remote Trading (RT) Gateway Broker-to-BEI",
+        "risk_score": 9.3,
+        "severity": "CRITICAL"
+      },
+      {
+        "check_id": "DATA-02",
+        "title": "Integritas Transaction Log & Non-Repudiation",
+        "risk_score": 9.3,
+        "severity": "CRITICAL"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "check_id": "APP-01",
+      "title": "Integritas Matching Engine & Race Condition",
+      "description": "Audit integritas order matching engine JATS-NextG yang mencocokkan pesanan beli dan jual secara otomatis. Verifikasi ketahanan terhadap race condition, order manipulation, dan timestamp manipulation yang dapat mempengaruhi fairness perdagangan.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.6,
+      "affected_component": "JATS-NextG Matching Engine",
+      "evidence": "Simulasi audit matching engine:\n1. Time-Of-Check-to-Time-Of-Use (TOCTOU) vulnerability pada    validasi trading limit - limit dicek sebelum order masuk    queue namun bisa berubah sebelum execution\n2. Timestamp granularity hanya millisecond - pada volume    tinggi, ordering fairness tidak terjamin untuk order    yang masuk pada millisecond yang sama\n3. Order priority manipulation dimungkinkan melalui    cancel-replace (amend) yang mempertahankan time priority    pada price improvement kecil\n4. Matching engine recovery setelah crash tidak diverifikasi    konsistensi order book-nya secara otomatis\n5. Tidak ada chaos testing / fault injection yang teratur    pada matching engine\n6. Dead code path terdeteksi pada error handler - potential    undefined behavior pada edge case",
+      "recommendation": "1. Implementasi atomic check-and-execute untuk trading limit    verification - gunakan pessimistic locking\n2. Upgrade timestamp ke microsecond atau nanosecond precision\n3. Review cancel-replace logic - pastikan amend yang    mengubah harga kehilangan time priority\n4. Implementasi automated consistency check pada matching    engine recovery (order book reconciliation)\n5. Jadwalkan chaos testing bulanan dengan game day exercises\n6. Lakukan code audit menyeluruh pada matching engine -    eliminasi dead code paths",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.14.2.5",
+        "OJK POJK 38/2016 Pasal 38",
+        "IOSCO Principles for Financial Markets"
+      ]
+    },
+    {
+      "check_id": "PROTO-01",
+      "title": "Validasi & Integritas Pesan FIX Protocol",
+      "description": "Verifikasi bahwa seluruh pesan FIX Protocol divalidasi secara ketat sebelum diproses oleh matching engine. Termasuk validasi field mandatory, format data, range checking, dan checksum integrity. FIX Protocol adalah standar komunikasi utama untuk order entry dan execution pada JATS-NextG.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.5,
+      "affected_component": "FIX Engine - Message Parser & Validator",
+      "evidence": "Simulasi pengujian protokol FIX mendeteksi:\n1. FIX message parser tidak melakukan deep validation pada    tag value - hanya mengecek tag existence\n2. Negative order quantity (tag 38) tidak ditolak pada level    protocol - hanya dicek di business logic layer\n3. Oversized message (>10MB) tidak ditolak di parser level -    berpotensi buffer overflow atau memory exhaustion\n4. Custom tag (5000+) tidak divalidasi - bisa digunakan untuk    data injection\n5. FIX checksum (tag 10) hanya menggunakan modulo 256 -    mudah dipalsukan (collision attack)\n6. Tidak ada digital signature pada pesan FIX untuk    non-repudiation",
+      "recommendation": "1. Implementasi strict FIX message validation:\n   - Validasi tipe data untuk setiap tag\n   - Range checking pada numeric fields (price, quantity)\n   - Length limit pada string fields\n   - Whitelist allowed custom tags\n2. Tambahkan maximum message size limit (1MB) pada parser\n3. Implementasi HMAC-SHA256 pada message integrity sebagai    pengganti/tambahan checksum FIX standar\n4. Tambahkan digital signature (XMLDSIG atau custom) untuk    non-repudiation pada order-critical messages\n5. Terapkan FIX Protocol conformance testing secara berkala",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.14.1.2",
+        "OJK POJK 38/2016 Pasal 27",
+        "FIX Protocol Best Practices",
+        "NIST SP 800-53 SI-10"
+      ]
+    },
+    {
+      "check_id": "APP-05",
+      "title": "Potensi Bypass Risk Management System",
+      "description": "Identifikasi kemungkinan bypass terhadap risk management controls pada JATS-NextG yang dapat memungkinkan trading yang melanggar aturan pasar.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.4,
+      "affected_component": "Risk Management System",
+      "evidence": "Simulasi risk management bypass assessment:\n1. Risk management check bisa di-bypass melalui 'force    execute' flag yang seharusnya hanya untuk testing -    flag masih aktif di production\n2. Batch order submission bisa mengexceed individual    order limit jika disubmit dalam satu batch API call\n3. Cross-account trading limit tidak terkonsolidasi -    satu beneficial owner dengan multiple accounts bisa    exceed limit\n4. Market making exemption flag tidak diaudit - broker    bisa memiliki exemption yang sudah expired\n5. Risk parameter update propagation delay 10-30 detik -    window untuk trading sebelum new limit berlaku",
+      "recommendation": "1. Hapus 'force execute' flag dari production code -    gunakan feature flag yang controlled di config server\n2. Terapkan aggregate limit check pada batch submission\n3. Implementasi beneficial owner consolidation untuk    cross-account limit enforcement\n4. Automated audit market making exemptions - auto-expire\n5. Implementasi zero-downtime risk parameter update -    atomic switch tanpa propagation delay\n6. Tambahkan real-time risk dashboard dengan alert",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "OJK POJK 38/2016 Pasal 40",
+        "ISO 27001:A.14.2.5",
+        "IOSCO Risk Management Principles"
+      ]
+    },
+    {
+      "check_id": "NET-04",
+      "title": "Keamanan Remote Trading (RT) Gateway Broker-to-BEI",
+      "description": "Audit keamanan koneksi Remote Trading yang menghubungkan kantor broker langsung ke host BEI. Termasuk verifikasi enkripsi, otentikasi perangkat, integritas jalur komunikasi, dan mekanisme failover koneksi RT.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.3,
+      "affected_component": "RT Gateway - Broker Connection Infrastructure",
+      "evidence": "Simulasi audit koneksi RT menemukan:\n1. Beberapa koneksi broker masih menggunakan enkripsi TLS 1.1    yang sudah deprecated (CVE-2011-3389 BEAST attack vector)\n2. Certificate pinning belum diterapkan pada RT gateway -    memungkinkan man-in-the-middle jika CA compromised\n3. Mutual TLS (mTLS) tidak konsisten - 15% koneksi broker    hanya menggunakan one-way TLS\n4. Tidak ada mekanisme heartbeat monitoring yang granular    untuk mendeteksi koneksi yang di-hijack\n5. Failover mechanism dari primary ke backup link    tidak terenkripsi selama proses switchover (gap 2-5 detik)\n6. Session token pada RT gateway tidak memiliki binding ke    IP/certificate broker",
+      "recommendation": "1. Upgrade seluruh koneksi broker ke TLS 1.3 minimum\n2. Implementasi certificate pinning pada RT gateway\n3. Wajibkan Mutual TLS (mTLS) untuk SEMUA koneksi broker\n4. Terapkan enhanced heartbeat dengan cryptographic challenge-   response setiap 5 detik\n5. Enkripsi proses failover - gunakan pre-established backup    TLS session\n6. Bind session token ke client certificate fingerprint dan    source IP broker\n7. Implementasi real-time connection integrity monitoring    dengan alert ke SOC",
+      "remediation_effort": "High",
+      "cve_references": [
+        "CVE-2011-3389",
+        "CVE-2014-3566",
+        "CVE-2015-0204"
+      ],
+      "compliance_references": [
+        "ISO 27001:A.13.1.1",
+        "OJK POJK 38/2016 Pasal 23",
+        "NIST SP 800-52r2",
+        "PCI DSS 4.1"
+      ]
+    },
+    {
+      "check_id": "DATA-02",
+      "title": "Integritas Transaction Log & Non-Repudiation",
+      "description": "Verifikasi integritas dan immutability transaction log JATS-NextG yang mencatat seluruh aktivitas perdagangan. Log ini krusial untuk audit, dispute resolution, dan regulatory compliance.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.3,
+      "affected_component": "Transaction Logging System",
+      "evidence": "Simulasi audit transaction log:\n1. Transaction log disimpan dalam database yang bisa di-   UPDATE dan DELETE oleh DBA - bukan append-only/immutable\n2. Tidak ada cryptographic hash chain pada transaction log -    modifikasi tidak terdeteksi\n3. Transaction log pada primary dan DR site tidak memiliki    independent hash verification - manipulasi bisa    terreplikasi\n4. Timestamp pada transaction log berasal dari application    server - bisa dimanipulasi jika server compromised\n5. Non-repudiation hanya mengandalkan FIX session    authentication - tidak ada digital signature per-order\n6. Log retention policy 5 tahun namun tidak ada integrity    verification pada archived logs",
+      "recommendation": "1. Implementasi append-only transaction log dengan write-once    storage (WORM) atau blockchain-based logging\n2. Terapkan cryptographic hash chain (Merkle tree) pada    transaction log - setiap entry di-hash dan linked\n3. Verifikasi hash chain secara independen pada DR site\n4. Gunakan trusted timestamp service (RFC 3161) yang    independen dari application server\n5. Implementasi per-order digital signature untuk    non-repudiation yang kuat\n6. Automated integrity verification pada archived logs    secara periodik (bulanan)",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.12.4.1",
+        "OJK POJK 38/2016 Pasal 45",
+        "NIST SP 800-92",
+        "IOSCO Audit Trail Principles"
+      ]
+    },
+    {
+      "check_id": "PROTO-06",
+      "title": "Deteksi Injeksi & Manipulasi Pesan FIX",
+      "description": "Evaluasi kemampuan sistem dalam mendeteksi dan mencegah injeksi pesan FIX palsu dan manipulasi pesan FIX yang sah pada jalur komunikasi.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.2,
+      "affected_component": "FIX Message Security Layer",
+      "evidence": "Simulasi pengujian injeksi FIX:\n1. Tidak ada message authentication code (MAC) pada pesan    FIX individual - bergantung sepenuhnya pada transport-level    TLS yang terminasi di gateway\n2. FIX tag delimiter injection (SOH character 0x01) dalam    free-text field (tag 58 Text) tidak di-sanitize\n3. BeginString (tag 8) dan BodyLength (tag 9) tidak    diverifikasi secara konsisten oleh semua komponen\n4. SenderCompID (tag 49) spoofing dimungkinkan jika    FIX session compromised - tidak ada secondary verification\n5. Tidak ada anomaly detection pada FIX message pattern -    burst of cancel requests tidak terdeteksi",
+      "recommendation": "1. Implementasi per-message HMAC-SHA256 menggunakan shared    secret per-broker sebagai application-level integrity\n2. Sanitize SOH dan control characters pada semua free-text    FIX fields\n3. Strict validation pada BeginString dan BodyLength di    setiap processing layer\n4. Implementasi secondary CompID verification (certificate    binding atau IP binding)\n5. Deploy FIX message anomaly detection:\n   - Abnormal cancel-to-order ratio\n   - Unusual message frequency\n   - Out-of-hours message detection\n   - Cross-validation dengan broker trading pattern",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.14.1.2",
+        "OJK POJK 38/2016 Pasal 32",
+        "NIST SP 800-53 SI-10",
+        "FIX Protocol Security"
+      ]
+    },
+    {
+      "check_id": "AUTH-05",
+      "title": "Privileged Access Management (PAM)",
+      "description": "Audit pengelolaan akses privileged (root/admin) pada infrastruktur JATS-NextG termasuk server, database, network device, dan aplikasi.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.2,
+      "affected_component": "PAM Infrastructure",
+      "evidence": "Simulasi audit PAM:\n1. Shared root/admin account masih digunakan pada 40% server    - tidak ada individual accountability\n2. Tidak ada PAM solution yang terpusat - credential    management dilakukan secara manual\n3. Privileged session recording tidak diimplementasi -    tidak bisa replay admin actions untuk forensic\n4. SSH key management tidak terpusat - beberapa key    yang sudah expired masih ada di authorized_keys\n5. Database admin access menggunakan shared SQL account    tanpa individual audit trail\n6. Break-glass procedure untuk emergency access tidak    terdokumentasi dan tidak ditest",
+      "recommendation": "1. Deploy PAM solution terpusat (CyberArk, BeyondTrust, atau    HashiCorp Vault)\n2. Eliminasi shared admin account - gunakan individual    account dengan sudo/runas\n3. Implementasi privileged session recording untuk    seluruh admin access\n4. Sentralisasi SSH key management dengan automated rotation\n5. Gunakan individual database account dengan RBAC\n6. Dokumentasikan dan test break-glass procedure setiap kuartal\n7. Implementasi Just-In-Time (JIT) privileged access",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.9.2.3",
+        "OJK POJK 38/2016 Pasal 36",
+        "NIST SP 800-53 AC-6",
+        "PCI DSS 8.5"
+      ]
+    },
+    {
+      "check_id": "NET-01",
+      "title": "Segmentasi Jaringan & Isolasi VLAN",
+      "description": "Verifikasi bahwa jaringan JATS-NextG tersegmentasi dengan benar antara zona perdagangan (trading zone), zona manajemen (management zone), zona DMZ, dan zona broker Remote Trading. Setiap zona harus diisolasi menggunakan VLAN terpisah dengan ACL yang ketat. Risiko: Tanpa segmentasi yang tepat, kompromi pada satu zona dapat menyebar ke seluruh infrastruktur perdagangan.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.1,
+      "affected_component": "Core Network Infrastructure - VLAN Configuration",
+      "evidence": "Simulasi menemukan potensi kerentanan berikut:\n1. VLAN hopping mungkin terjadi jika native VLAN tidak dikonfigurasi    dengan benar pada trunk port antara switch inti dan distribusi\n2. Inter-VLAN routing rules perlu diaudit - aturan firewall antara    zona trading dan zona management mungkin terlalu permisif\n3. Micro-segmentation belum diterapkan pada level workload    dalam zona matching engine\n4. Belum ada Network Access Control (NAC) 802.1X pada port akses",
+      "recommendation": "1. Terapkan dedicated VLAN untuk setiap zona: Trading (VLAN 10),    Management (VLAN 20), RT Gateway (VLAN 30), DMZ (VLAN 40),    Monitoring (VLAN 50)\n2. Konfigurasi native VLAN yang tidak digunakan (VLAN 999) pada    semua trunk port untuk mencegah VLAN hopping\n3. Terapkan Private VLAN (PVLAN) untuk isolasi tambahan antar broker\n4. Implementasi 802.1X NAC pada seluruh port akses\n5. Terapkan micro-segmentation pada zona matching engine\n6. Audit dan perketat inter-VLAN ACL setiap kuartal",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.13.1.3",
+        "OJK POJK 38/2016 Pasal 21",
+        "NIST SP 800-53 SC-7",
+        "PCI DSS 1.2"
+      ]
+    },
+    {
+      "check_id": "PROTO-04",
+      "title": "Keamanan Protokol Routing Order",
+      "description": "Pemeriksaan keamanan order routing dari broker melalui RT gateway ke matching engine, termasuk order validation, routing logic security, dan order manipulation prevention.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.0,
+      "affected_component": "Order Routing Engine",
+      "evidence": "Simulasi audit order routing:\n1. Order routing tidak memvalidasi apakah broker memiliki    otorisasi untuk efek tertentu - hanya dicek di business layer\n2. Cross-order manipulation: order cancel/replace (MsgType=G)    bisa dikirim untuk order milik broker lain jika ClOrdID    diketahui (insecure direct object reference)\n3. Order timestamp tidak di-validate di routing layer -    stale order bisa disubmit\n4. Tidak ada throttling per-broker per-instrument pada    routing level\n5. Order routing decision log tidak immutable - bisa dimodif    post-hoc menghambat audit trail",
+      "recommendation": "1. Implementasi authorization check di routing layer -    sebelum order mencapai matching engine\n2. Bind order ID ke broker session - order cancel/replace    hanya bisa dilakukan oleh originator\n3. Validasi order timestamp - tolak order >5 detik stale\n4. Terapkan per-broker per-instrument throttling\n5. Gunakan append-only write-ahead log untuk routing decisions    dengan cryptographic hash chain\n6. Implementasi order flow monitoring untuk mendeteksi    unusual routing patterns",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.14.1.3",
+        "OJK POJK 38/2016 Pasal 30",
+        "NIST SP 800-53 AC-4"
+      ]
+    },
+    {
+      "check_id": "AUTH-01",
+      "title": "Mekanisme Otentikasi Broker pada RT Gateway",
+      "description": "Audit mekanisme otentikasi yang digunakan broker untuk mengakses sistem JATS-NextG melalui Remote Trading gateway. Termasuk verifikasi kekuatan metode otentikasi, proses enrollment, dan deprovisioning broker.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.0,
+      "affected_component": "RT Gateway - Broker Authentication",
+      "evidence": "Simulasi audit otentikasi broker:\n1. Beberapa broker masih menggunakan static credentials tanpa    rotation policy - password tidak diubah >180 hari\n2. Password complexity requirement tidak memadai - minimum    8 karakter tanpa requirement special character\n3. Account lockout setelah 10 failed attempts - terlalu    tinggi, memungkinkan brute force\n4. Deprovisioning process tidak otomatis - 5 akun broker    yang sudah tidak aktif masih memiliki akses\n5. Shared credential antar staff broker terdeteksi -    satu user ID digunakan dari multiple workstation\n6. Tidak ada Credential Stuffing protection",
+      "recommendation": "1. Wajibkan password rotation setiap 90 hari\n2. Tingkatkan password complexity: minimum 12 karakter,    include uppercase, lowercase, number, special character\n3. Turunkan account lockout threshold menjadi 5 failed    attempts dengan exponential backoff\n4. Implementasi automated deprovisioning dengan integrasi    ke sistem membership BEI\n5. Terapkan unique credential per-user dengan device binding\n6. Deploy credential stuffing protection (rate limit + CAPTCHA    setelah 3 failed attempts)\n7. Implementasi Just-In-Time (JIT) provisioning",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.9.2.1",
+        "OJK POJK 38/2016 Pasal 33",
+        "NIST SP 800-63B",
+        "PCI DSS 8.2"
+      ]
+    },
+    {
+      "check_id": "APP-04",
+      "title": "Penegakan Trading Limit",
+      "description": "Verifikasi penegakan trading limit pada seluruh level: per-broker, per-investor, per-instrument, dan market-wide circuit breaker.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.0,
+      "affected_component": "Risk Management - Trading Limits",
+      "evidence": "Simulasi audit trading limits:\n1. Trading limit check menggunakan eventual consistency -    limit bisa terexceed pada burst order karena async update\n2. Aggregate exposure calculation tidak real-time -    disinkronkan setiap 5 detik, cukup untuk gaming\n3. Auto-rejection price band check menggunakan previous    closing price yang di-cache - stale data pada split/CA\n4. Circuit breaker threshold configuration bisa diubah    oleh operator tanpa dual-authorization\n5. Short selling limit enforcement bergantung pada data    dari lembaga settlement yang tidak real-time",
+      "recommendation": "1. Implementasi synchronous (blocking) limit check dengan    atomic counter per-broker\n2. Terapkan real-time aggregate exposure calculation -    sub-second update\n3. Validasi price band terhadap multiple data source    (real-time reference price, not just cache)\n4. Wajibkan dual-authorization untuk circuit breaker    configuration change\n5. Implementasi real-time interface dengan lembaga    settlement untuk short selling data\n6. Tambahkan pre-trade risk check layer sebelum order    masuk ke matching engine",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "OJK POJK 38/2016 Pasal 39",
+        "IOSCO Market Integrity Principles",
+        "BEI Peraturan Perdagangan"
+      ]
+    },
+    {
+      "check_id": "DATA-01",
+      "title": "Enkripsi Database (At-Rest & In-Transit)",
+      "description": "Verifikasi bahwa seluruh database JATS-NextG terenkripsi baik saat disimpan (at-rest) maupun saat ditransmisikan (in-transit), termasuk database order book, trade register, member database, dan audit log database.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 9.0,
+      "affected_component": "Database Infrastructure",
+      "evidence": "Simulasi audit enkripsi database:\n1. Database order book menggunakan Transparent Data    Encryption (TDE) namun tablespace temporary tidak    terenkripsi - sensitive data bisa leak via temp tables\n2. Database replication stream tidak terenkripsi - data    order dan trade terbaca pada network capture antara    primary dan standby\n3. Database backup disimpan tanpa encryption - NFS mount    ke backup storage accessible oleh storage admin\n4. Column-level encryption untuk PII (broker contact, NIK)    belum diterapkan - bergantung sepenuhnya pada TDE\n5. Encryption key untuk TDE disimpan di filesystem lokal -    bukan di key management system/HSM\n6. Database audit log tablespace tidak terenkripsi secara    terpisah dari data tablespace",
+      "recommendation": "1. Aktifkan TDE pada SEMUA tablespace termasuk temporary    dan undo/rollback tablespace\n2. Aktifkan enkripsi pada database replication (SSL/TLS)\n3. Implementasi encrypted backup menggunakan AES-256-GCM\n4. Terapkan column-level encryption pada PII fields\n5. Migrasi TDE key ke HSM (FIPS 140-2 Level 3)\n6. Segregasi enkripsi key antara data dan audit log\n7. Implementasi Database Activity Monitoring (DAM)",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.10.1.1",
+        "OJK POJK 38/2016 Pasal 44",
+        "PCI DSS 3.4",
+        "NIST SP 800-111"
+      ]
+    },
+    {
+      "check_id": "AUTH-02",
+      "title": "Multi-Factor Authentication (MFA)",
+      "description": "Evaluasi implementasi MFA pada seluruh komponen JATS-NextG yang memerlukan otentikasi, termasuk RT gateway, admin console, dan akses operasional.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 8.8,
+      "affected_component": "Authentication Infrastructure - MFA",
+      "evidence": "Simulasi audit MFA:\n1. MFA tidak wajib pada RT gateway - broker hanya menggunakan    single-factor (password + client certificate = 2 factor    namun certificate stored di workstation tanpa PIN)\n2. Admin console menggunakan OTP via SMS yang rentan    terhadap SIM swapping dan SS7 interception\n3. Backup/recovery codes disimpan dalam plaintext file\n4. MFA bypass pada emergency login procedure tidak memiliki    compensating control yang memadai\n5. Tidak ada adaptive/risk-based authentication - login dari    lokasi baru tidak trigger additional verification",
+      "recommendation": "1. Wajibkan hardware token (FIDO2/U2F) atau TOTP authenticator    untuk broker RT access\n2. Migrasi admin MFA dari SMS OTP ke hardware token atau    authenticator app\n3. Enkripsi backup/recovery codes dan simpan di secure vault\n4. Tambahkan compensating controls untuk emergency bypass:    dual approval, time limit, enhanced logging\n5. Implementasi adaptive authentication:\n   - Risk scoring berdasarkan lokasi, device, waktu\n   - Step-up authentication untuk transaksi high-value\n   - Anomaly detection pada login behavior",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.9.4.2",
+        "OJK POJK 38/2016 Pasal 34",
+        "NIST SP 800-63B AAL2/AAL3",
+        "PCI DSS 8.3"
+      ]
+    },
+    {
+      "check_id": "NET-03",
+      "title": "Deteksi Rogue Access Point & Unauthorized Device",
+      "description": "Pemeriksaan terhadap titik akses wireless yang tidak sah (rogue AP) dan perangkat tidak terotorisasi yang terhubung ke jaringan tertutup JATS-NextG. Jaringan closed system seharusnya tidak memiliki komponen wireless sama sekali.",
+      "severity": "CRITICAL",
+      "status": "VULNERABLE",
+      "risk_score": 8.5,
+      "affected_component": "Physical Network Infrastructure",
+      "evidence": "Simulasi vulnerability scan mendeteksi risiko:\n1. Tidak ada Wireless Intrusion Prevention System (WIPS) yang    diimplementasi di area data center dan ruang jaringan\n2. Port switch yang tidak digunakan dalam kondisi aktif (enabled)    tanpa port security - memungkinkan rogue device\n3. Tidak ada Network Access Control (NAC) untuk validasi    perangkat sebelum mengizinkan koneksi\n4. MAC address whitelist hanya diterapkan pada 40% switch port\n5. Belum ada automated network device discovery untuk    mendeteksi perangkat asing secara real-time",
+      "recommendation": "1. Deploy WIPS sensor di seluruh area data center dan ruang    jaringan untuk mendeteksi sinyal wireless yang tidak sah\n2. Nonaktifkan (shutdown) semua port switch yang tidak digunakan\n3. Terapkan port security dengan MAC address limiting (max 1-2)    dan sticky MAC address\n4. Implementasi 802.1X NAC pada seluruh switch port\n5. Deploy Network Device Discovery tool untuk automated scanning\n6. Lakukan physical security audit setiap bulan pada seluruh    infrastruktur jaringan",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.11.1.1",
+        "ISO 27001:A.13.1.2",
+        "OJK POJK 38/2016 Pasal 20",
+        "NIST SP 800-53 PE-4"
+      ]
+    },
+    {
+      "check_id": "INFRA-05",
+      "title": "Disaster Recovery & Business Continuity",
+      "description": "Evaluasi kesiapan disaster recovery dan business continuity untuk memastikan JATS-NextG dapat beroperasi jika terjadi gangguan besar pada infrastruktur utama.",
+      "severity": "CRITICAL",
+      "status": "WARNING",
+      "risk_score": 8.5,
+      "affected_component": "DR/BCP Infrastructure",
+      "evidence": "Simulasi audit DR/BCP:\n1. DR site memiliki kapasitas hanya 60% dari production -    tidak bisa handle full load saat failover\n2. DR failover test terakhir 9 bulan lalu - seharusnya    setiap 6 bulan per regulasi OJK\n3. RTO target 2 jam namun actual test terakhir memerlukan    4.5 jam - tidak memenuhi target\n4. RPO target 0 (zero data loss) menggunakan synchronous    replication namun belum divalidasi pada failure scenario\n5. DR runbook terakhir di-update 14 bulan lalu - tidak    mencerminkan perubahan infrastruktur terkini\n6. Communication plan tidak mencakup semua stakeholder    (regulator, broker, media)\n7. Tidak ada automated failover - seluruh proses manual",
+      "recommendation": "1. Upgrade DR site ke 100% capacity parity\n2. Jadwalkan DR test setiap 6 bulan sesuai regulasi\n3. Optimasi failover process untuk memenuhi RTO 2 jam\n4. Validasi RPO 0 dengan actual failure simulation\n5. Update DR runbook setiap ada perubahan infrastruktur\n6. Lengkapi communication plan untuk semua stakeholder\n7. Evaluasi implementasi automated failover dengan    manual confirmation step\n8. Lakukan table-top exercise setiap kuartal",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.17.1",
+        "OJK POJK 38/2016 Pasal 49",
+        "ISO 22301",
+        "NIST SP 800-34r1"
+      ]
+    },
+    {
+      "check_id": "COMP-01",
+      "title": "Kepatuhan OJK POJK 38/POJK.03/2016",
+      "description": "Evaluasi kepatuhan terhadap Peraturan OJK Nomor 38 Tahun 2016 tentang Penerapan Manajemen Risiko dalam Penggunaan Teknologi Informasi oleh Lembaga Jasa Keuangan, yang berlaku bagi BEI sebagai Self-Regulatory Organization (SRO).",
+      "severity": "CRITICAL",
+      "status": "PARTIAL",
+      "risk_score": 8.5,
+      "affected_component": "Regulatory Compliance - OJK",
+      "evidence": "Simulasi gap analysis POJK 38/2016:\n1. Pasal 7 - IT Strategic Plan: Sudah ada namun belum    di-update untuk mencerminkan JATS-NextG upgrade plan\n2. Pasal 12 - Security Testing: Penetration testing    dilakukan tahunan - regulasi mensyaratkan 'secara    berkala' yang lazim diinterpretasikan semi-annual\n3. Pasal 15 - IT Audit: Internal IT audit terakhir    8 bulan lalu, namun beberapa temuan belum ditindaklanjuti\n4. Pasal 18 - Penanganan Insiden: Prosedur pelaporan    insiden ke OJK belum terintegrasi dengan IR process\n5. Pasal 20 - BCP/DRP: DR test terakhir 9 bulan lalu    (lihat INFRA-05) - melebihi batas 6 bulan\n6. Pasal 24 - Vendor Management: Risk assessment vendor    IT belum dilakukan secara menyeluruh\n7. Pasal 26 - Pelaporan: Laporan insiden TI belum    menggunakan format yang disyaratkan OJK",
+      "recommendation": "1. Update IT Strategic Plan untuk mencakup JATS-NextG    modernization roadmap\n2. Tingkatkan penetration testing ke semi-annual (2x/tahun)\n3. Tindaklanjuti seluruh temuan IT audit dalam 90 hari\n4. Integrasikan prosedur pelaporan OJK ke incident response    workflow - automated notification template\n5. Jadwalkan DR test setiap 6 bulan (lihat INFRA-05)\n6. Lakukan comprehensive vendor risk assessment\n7. Implementasi format pelaporan insiden sesuai SEOJK\n8. Assign dedicated compliance officer untuk monitoring    OJK regulatory changes",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "OJK POJK 38/POJK.03/2016",
+        "SEOJK 21/SEOJK.03/2017"
+      ]
+    },
+    {
+      "check_id": "MON-04",
+      "title": "Kesiapan Respons Insiden",
+      "description": "Evaluasi kesiapan organisasi dalam merespons insiden keamanan siber pada infrastruktur JATS-NextG.",
+      "severity": "CRITICAL",
+      "status": "WARNING",
+      "risk_score": 8.0,
+      "affected_component": "Incident Response Program",
+      "evidence": "Simulasi audit incident response:\n1. Incident Response Plan (IRP) terakhir di-update 18 bulan    lalu - tidak mencakup threat landscape terkini\n2. IR team hanya memiliki 2 anggota dedicated - tidak    cukup untuk menangani insiden major\n3. Incident classification framework belum mencakup    trading-specific incident types:\n   - Market data manipulation\n   - Broker system compromise\n   - Matching engine anomaly\n   - Unauthorized order submission\n4. Tabletop exercise terakhir 12 bulan lalu\n5. Komunikasi dengan regulator (OJK) dan broker saat    insiden tidak terdefinisi jelas\n6. Post-incident review process tidak terstandarisasi",
+      "recommendation": "1. Update IRP setiap 6 bulan atau setelah insiden signifikan\n2. Perluas IR team: minimum 4 anggota + 4 on-call\n3. Tambahkan trading-specific incident types ke classification\n4. Jadwalkan tabletop exercise setiap kuartal dengan    skenario yang berbeda\n5. Dokumentasikan regulatory notification procedure    (OJK notification <1 jam untuk insiden major)\n6. Standarisasi post-incident review (blameless postmortem)\n7. Integrasikan IR playbook dengan SOAR platform",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.16.1",
+        "OJK POJK 38/2016 Pasal 53",
+        "NIST SP 800-61r2",
+        "ISO 27035"
+      ]
+    },
+    {
+      "check_id": "PROTO-02",
+      "title": "Keamanan Session Layer & Manajemen Sequence Number",
+      "description": "Audit mekanisme session management pada FIX Protocol termasuk Logon/Logout handling, sequence number management, gap fill processing, dan session reset security.",
+      "severity": "HIGH",
+      "status": "VULNERABLE",
+      "risk_score": 8.7,
+      "affected_component": "FIX Session Manager",
+      "evidence": "Simulasi audit session management:\n1. FIX Logon message (MsgType=A) mengirimkan password dalam    bentuk plaintext pada tag 554 - meskipun dalam TLS tunnel,    ini berisiko jika TLS terminated di load balancer\n2. Sequence number reset (tag 141=Y) dapat dilakukan tanpa    re-authentication - berpotensi disalahgunakan\n3. Gap fill request (ResendRequest MsgType=2) tidak memiliki    rate limiting - bisa digunakan untuk DoS\n4. Session timeout terlalu lama (30 menit) - sesi idle    rentan terhadap session hijacking\n5. Tidak ada binding antara FIX session ID dan TLS    certificate - session bisa di-migrate ke koneksi lain\n6. Concurrent session dari CompID yang sama tidak diblokir",
+      "recommendation": "1. Implementasi SRP (Secure Remote Password) atau challenge-   response untuk FIX authentication, menggantikan plaintext    password\n2. Wajibkan re-authentication sebelum sequence number reset\n3. Rate limit gap fill request (max 3/menit per session)\n4. Kurangi session timeout menjadi 5 menit untuk idle session\n5. Bind FIX session ke TLS client certificate fingerprint\n6. Blokir concurrent session dari CompID yang sama\n7. Implementasi session anomaly detection",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.9.4.2",
+        "FIX Session Protocol Spec",
+        "OJK POJK 38/2016 Pasal 28",
+        "NIST SP 800-53 SC-23"
+      ]
+    },
+    {
+      "check_id": "INFRA-02",
+      "title": "Manajemen Patch & Vulnerability Scanning",
+      "description": "Evaluasi proses patch management dan vulnerability scanning untuk seluruh infrastruktur JATS-NextG.",
+      "severity": "HIGH",
+      "status": "VULNERABLE",
+      "risk_score": 8.5,
+      "affected_component": "Patch Management Infrastructure",
+      "evidence": "Simulasi vulnerability scan:\n1. 47 vulnerabilities teridentifikasi:\n   - 3 Critical (CVSS >9.0)\n   - 12 High (CVSS 7.0-8.9)\n   - 18 Medium (CVSS 4.0-6.9)\n   - 14 Low (CVSS <4.0)\n2. Critical vulnerability: OpenSSL heap buffer overflow    (CVE-equivalent) pada 2 server - patch tersedia 45 hari\n3. Kernel vulnerability pada 5 server - local privilege    escalation\n4. Vulnerability scanning hanya dijalankan bulanan -    seharusnya mingguan untuk critical infrastructure\n5. Patch testing environment tidak mirror production -    configuration drift terdeteksi\n6. Emergency patch procedure rata-rata memerlukan 72 jam -    terlalu lama untuk critical vulnerability",
+      "recommendation": "1. Remediasi 3 Critical vulnerabilities dalam 7 hari\n2. Remediasi 12 High vulnerabilities dalam 30 hari\n3. Tingkatkan vulnerability scanning ke mingguan\n4. Sinkronkan patch testing environment dengan production\n5. Kurangi emergency patch SLA menjadi 24 jam\n6. Implementasi virtual patching (WAF/IPS) sebagai    interim mitigation sebelum actual patching\n7. Deploy continuous vulnerability assessment tool",
+      "remediation_effort": "High",
+      "cve_references": [
+        "CVE-2024-0567 (representative)",
+        "CVE-2024-1086 (representative)"
+      ],
+      "compliance_references": [
+        "ISO 27001:A.12.6.1",
+        "OJK POJK 38/2016 Pasal 48",
+        "NIST SP 800-40r4",
+        "PCI DSS 6.2"
+      ]
+    },
+    {
+      "check_id": "DATA-05",
+      "title": "Review Implementasi Kriptografi",
+      "description": "Audit implementasi kriptografi pada seluruh komponen JATS-NextG untuk memastikan penggunaan algoritma yang kuat dan implementasi yang benar.",
+      "severity": "HIGH",
+      "status": "VULNERABLE",
+      "risk_score": 8.2,
+      "affected_component": "Cryptographic Infrastructure",
+      "evidence": "Simulasi crypto review:\n1. Beberapa komponen legacy menggunakan SHA-1 untuk    message digest - collision attack telah terbukti\n2. TLS cipher suite termasuk CBC mode ciphers yang rentan    terhadap BEAST dan Lucky13 attacks\n3. Random number generation pada session token menggunakan    PRNG yang di-seed dengan timestamp - predictable\n4. RSA key size 1024-bit terdeteksi pada internal service -    di bawah minimum 2048-bit\n5. Hardcoded initialization vector (IV) pada AES-CBC    encryption di beberapa modul\n6. Tidak ada crypto agility plan untuk post-quantum    cryptography migration",
+      "recommendation": "1. Migrasi seluruh SHA-1 ke SHA-256 atau SHA-3\n2. Konfigurasi TLS cipher suite hanya GCM mode:\n   TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305\n3. Gunakan CSPRNG (Cryptographically Secure PRNG) untuk    semua security-sensitive random generation\n4. Upgrade semua RSA key ke minimum 3072-bit\n5. Gunakan random IV untuk setiap encryption operation\n6. Buat crypto agility plan dan mulai evaluasi    post-quantum algorithms (CRYSTALS-Kyber, CRYSTALS-Dilithium)\n7. Lakukan crypto inventory dan maintain crypto bill of materials",
+      "remediation_effort": "High",
+      "cve_references": [
+        "CVE-2017-15361",
+        "CVE-2011-3389",
+        "CVE-2013-0169"
+      ],
+      "compliance_references": [
+        "ISO 27001:A.10.1.1",
+        "NIST SP 800-131A",
+        "PCI DSS 4.1",
+        "NIST Post-Quantum Cryptography"
+      ]
+    },
+    {
+      "check_id": "PROTO-08",
+      "title": "Proteksi Terhadap Message Replay Attack",
+      "description": "Pemeriksaan mekanisme perlindungan terhadap serangan replay pada pesan FIX Protocol, dimana attacker menangkap dan mengirimkan ulang pesan order yang valid.",
+      "severity": "HIGH",
+      "status": "VULNERABLE",
+      "risk_score": 8.1,
+      "affected_component": "FIX Protocol Replay Protection",
+      "evidence": "Simulasi replay attack assessment:\n1. Replay protection hanya mengandalkan sequence number -    jika sequence direset, pesan lama bisa di-replay\n2. Tidak ada timestamp-based replay window - pesan dari    hari sebelumnya dengan sequence number valid bisa diproses\n3. SendingTime (tag 52) tidak diverifikasi terhadap server    time - bisa dimanipulasi\n4. FIX session key (untuk encryption) tidak di-rotate    per-session\n5. Resend mechanism (MsgType=2) tidak memiliki replay    detection - legitimate resend vs. malicious replay    tidak dibedakan",
+      "recommendation": "1. Implementasi dual protection: sequence number + timestamp    verification (max clock skew 5 detik)\n2. Tambahkan per-message nonce/unique identifier yang    tidak bisa diprediksi\n3. Implementasi sliding window replay detection\n4. Rotate session encryption key setiap 1 jam\n5. Tambahkan replay detection logic pada resend mechanism -    verifikasi bahwa resend request valid berdasarkan gap\n6. Log semua message rejection dengan alasan untuk forensic",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.14.1.3",
+        "NIST SP 800-53 SC-8",
+        "FIX Protocol Security Recommendations"
+      ]
+    },
+    {
+      "check_id": "NET-09",
+      "title": "Hardening Perangkat Jaringan (Switch, Router, Firewall)",
+      "description": "Verifikasi hardening konfigurasi pada seluruh perangkat jaringan JATS-NextG sesuai CIS Benchmark dan vendor best practices.",
+      "severity": "HIGH",
+      "status": "VULNERABLE",
+      "risk_score": 8.0,
+      "affected_component": "Network Devices - All",
+      "evidence": "Simulasi configuration audit menemukan:\n1. SNMP v2c masih aktif pada 60% perangkat - community string    'public' dan 'private' belum diganti pada beberapa device\n2. Telnet (plaintext) masih enabled pada 5 switch lama\n3. SSH menggunakan versi 1 pada 3 perangkat legacy\n4. NTP authentication tidak aktif - rentan terhadap NTP    spoofing yang dapat mempengaruhi timestamp transaksi\n5. Console port dan auxiliary port tidak dilindungi password    pada 4 perangkat\n6. Local logging buffer terlalu kecil (4096 bytes) pada    beberapa switch - event log tertimpa\n7. Banner login tidak menampilkan peringatan hukum",
+      "recommendation": "1. Migrasi SNMP ke v3 dengan authentication dan encryption\n2. Nonaktifkan Telnet - gunakan SSH v2 only pada seluruh device\n3. Upgrade firmware pada perangkat legacy untuk mendukung SSH v2\n4. Aktifkan NTP authentication (MD5/SHA) pada seluruh perangkat\n5. Konfigurasi password pada console dan auxiliary port\n6. Tingkatkan logging buffer dan forward ke syslog server\n7. Tambahkan authorized access warning banner\n8. Terapkan automated compliance checking terhadap CIS Benchmark",
+      "remediation_effort": "Medium",
+      "cve_references": [
+        "CVE-2017-6742",
+        "CVE-2018-0171"
+      ],
+      "compliance_references": [
+        "ISO 27001:A.12.6.1",
+        "CIS Benchmarks",
+        "NIST SP 800-53 CM-6",
+        "PCI DSS 2.2"
+      ]
+    },
+    {
+      "check_id": "NET-02",
+      "title": "Analisis Aturan Firewall & Pertahanan Perimeter",
+      "description": "Audit aturan firewall pada seluruh perimeter jaringan JATS-NextG, termasuk firewall antara zona broker RT dan core trading engine, firewall DMZ, dan firewall manajemen. Periksa aturan yang terlalu permisif, aturan shadowed, dan aturan yang sudah tidak relevan.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.8,
+      "affected_component": "Perimeter Firewall - All Zones",
+      "evidence": "Simulasi analisis aturan firewall mendeteksi:\n1. 23 aturan firewall dengan 'any' pada source/destination yang    berpotensi terlalu permisif\n2. 8 aturan 'shadowed' yang tidak pernah match karena tertutup    oleh aturan sebelumnya - mengindikasikan konfigurasi yang    tidak terpelihara\n3. 5 aturan mengizinkan akses dari subnet yang sudah tidak aktif    (stale rules)\n4. Firewall logging tidak diaktifkan untuk 31% aturan 'deny'\n5. Tidak ada aturan explicit deny-all di akhir ruleset pada    2 dari 4 firewall",
+      "recommendation": "1. Lakukan firewall rule review menyeluruh - hapus aturan stale    dan shadowed\n2. Ganti semua aturan dengan 'any' menjadi specific    source/destination/port\n3. Aktifkan logging pada seluruh aturan deny\n4. Tambahkan explicit deny-all (cleanup rule) di akhir setiap    ruleset\n5. Implementasi automated firewall rule review setiap bulan\n6. Terapkan Next-Generation Firewall (NGFW) dengan deep packet    inspection untuk protokol FIX",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.13.1.1",
+        "OJK POJK 38/2016 Pasal 22",
+        "NIST SP 800-41",
+        "PCI DSS 1.1"
+      ]
+    },
+    {
+      "check_id": "APP-02",
+      "title": "Validasi Input & Keamanan Business Logic",
+      "description": "Pemeriksaan validasi input pada seluruh entry point JATS-NextG dan evaluasi keamanan business logic termasuk order validation, price validation, dan quantity check.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.8,
+      "affected_component": "Order Management System - Input Validation",
+      "evidence": "Simulasi audit input validation:\n1. Integer overflow tidak di-handle pada quantity field -    order dengan quantity mendekati MAX_INT bisa melewati    certain checks\n2. Price tick validation hanya dilakukan pada server-side -    RT client bisa mengirim harga fraksi yang dibulatkan    di server (rounding bias)\n3. Cross-market order validation (jika ada dual listing)    tidak atomic - timing attack dimungkinkan\n4. Special order types (pre-opening, closing) memiliki    validasi yang lebih longgar - bisa dieksploitasi\n5. Instrument status check (suspend, halt) menggunakan    cache yang diupdate asinkron - gap window ada",
+      "recommendation": "1. Terapkan safe integer arithmetic - gunakan big integer    atau explicit overflow check pada seluruh numeric fields\n2. Implementasi validasi harga tick di kedua sisi (client &    server) dengan identical logic\n3. Terapkan atomic cross-validation untuk cross-market orders\n4. Review dan perketat validasi untuk special order types\n5. Gunakan synchronous instrument status check atau    sangat kurangi cache TTL (<1 detik)\n6. Implementasi comprehensive input fuzzing test suite",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.14.1.2",
+        "OWASP ASVS 5.1",
+        "NIST SP 800-53 SI-10"
+      ]
+    },
+    {
+      "check_id": "INFRA-01",
+      "title": "OS Hardening & Kepatuhan CIS Benchmark",
+      "description": "Evaluasi konfigurasi hardening OS pada seluruh server JATS-NextG terhadap CIS (Center for Internet Security) Benchmark yang berlaku.",
+      "severity": "HIGH",
+      "status": "VULNERABLE",
+      "risk_score": 7.8,
+      "affected_component": "Server OS - All JATS-NextG Servers",
+      "evidence": "Simulasi CIS Benchmark audit:\n1. CIS Benchmark compliance rate rata-rata 65% - target    minimum 90% untuk critical infrastructure\n2. SELinux/AppArmor dalam mode permissive pada 3 server -    seharusnya enforcing\n3. Unnecessary services aktif: CUPS, Avahi, Bluetooth    subsystem pada server production\n4. File permission terlalu permisif pada /etc/shadow -    world-readable pada 1 server\n5. Core dump enabled untuk semua users - bisa leak memory    content termasuk keys\n6. ASLR (Address Space Layout Randomization) disabled pada    matching engine server untuk performance - mengurangi    exploit mitigation\n7. USB storage device tidak di-block pada server",
+      "recommendation": "1. Remediasi CIS Benchmark gaps hingga compliance >95%\n2. Set SELinux/AppArmor ke enforcing mode pada semua server\n3. Nonaktifkan semua unnecessary services\n4. Fix file permission sesuai CIS Benchmark\n5. Disable core dump untuk non-debug environments\n6. Evaluasi re-enabling ASLR pada matching engine - modern    implementations memiliki overhead minimal\n7. Implementasi USB device blocking policy via udev rules\n8. Deploy automated CIS compliance scanning (weekly)",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.12.6.1",
+        "CIS Benchmarks",
+        "NIST SP 800-123",
+        "PCI DSS 2.2"
+      ]
+    },
+    {
+      "check_id": "MON-02",
+      "title": "Manajemen Log & Integritas",
+      "description": "Audit manajemen log pada seluruh komponen JATS-NextG termasuk log generation, transmission, storage, integrity, dan retention.",
+      "severity": "HIGH",
+      "status": "VULNERABLE",
+      "risk_score": 7.8,
+      "affected_component": "Log Management System",
+      "evidence": "Simulasi audit log management:\n1. Log transmission menggunakan UDP syslog tanpa encryption    dan tanpa delivery guarantee - log bisa hilang\n2. Log integrity tidak diproteksi - log bisa dimodifikasi    setelah ditulis tanpa terdeteksi\n3. Log format tidak konsisten antar komponen - 4 format    berbeda menyulitkan correlation\n4. Sensitive data (IP broker, credential hash) tertulis    di log tanpa masking\n5. Log rotation pada 2 server menghapus log >30 hari    tanpa backup ke archive\n6. Clock synchronization gap menyebabkan log timestamp    mismatch hingga 500ms antar komponen",
+      "recommendation": "1. Migrasi ke TCP syslog dengan TLS (RFC 5425) untuk    reliable dan encrypted log transmission\n2. Implementasi log signing (HMAC per-entry atau hash chain)    untuk integrity protection\n3. Standardisasi log format ke Common Event Format (CEF)    atau JSON structured logging\n4. Implementasi PII masking pada log pipeline\n5. Konfigurasi log archival sebelum rotation\n6. Fix NTP synchronization (lihat INFRA-06)",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.12.4.1",
+        "OJK POJK 38/2016 Pasal 51",
+        "NIST SP 800-92",
+        "PCI DSS 10.5"
+      ]
+    },
+    {
+      "check_id": "MON-06",
+      "title": "Efektivitas Security Operations Center (SOC)",
+      "description": "Evaluasi efektivitas SOC dalam memantau, mendeteksi, dan merespons ancaman keamanan terhadap infrastruktur JATS-NextG.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.8,
+      "affected_component": "SOC Operations",
+      "evidence": "Simulasi audit SOC:\n1. SOC beroperasi hanya pada jam kerja (08:00-17:00) -    setelah trading hours tidak ada pemantauan aktif\n2. Mean Time to Detect (MTTD): 45 menit - target <15 menit\n3. Mean Time to Respond (MTTR): 2 jam - target <30 menit\n4. SOC analyst turnover rate 40% per tahun - knowledge loss\n5. SOC playbook hanya mencakup 15 scenario - minimum    requirement 30+ untuk financial infrastructure\n6. Threat intelligence feed belum diintegrasikan ke SOC\n7. Purple team exercise belum pernah dilakukan",
+      "recommendation": "1. Extend SOC coverage ke 24/7 atau hybrid model    (MSSP untuk after-hours)\n2. Optimasi MTTD melalui SIEM tuning dan automation\n3. Kurangi MTTR melalui pre-built response playbooks\n4. Implementasi knowledge management dan cross-training\n5. Kembangkan SOC playbook ke 30+ scenarios termasuk    trading-specific threats\n6. Integrasikan threat intelligence feeds (FS-ISAC,    local CERT)\n7. Jadwalkan purple team exercise setiap 6 bulan",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.12.4.1",
+        "OJK POJK 38/2016 Pasal 54",
+        "NIST CSF DE.CM",
+        "SOC CMM"
+      ]
+    },
+    {
+      "check_id": "PROTO-05",
+      "title": "Integritas Market Data Feed",
+      "description": "Verifikasi integritas data feed harga dan perdagangan yang didistribusikan oleh JATS-NextG ke broker dan information vendor, mencegah market data manipulation.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.6,
+      "affected_component": "Market Data Distribution System",
+      "evidence": "Simulasi audit market data feed:\n1. Market data multicast tidak menggunakan authentication -    penerima tidak bisa memverifikasi asal data\n2. Tidak ada sequence numbering pada market data packets -    gap/duplicate tidak terdeteksi oleh receiver\n3. Latency antara trade execution dan market data publication    tidak di-monitor - bisa dieksploitasi untuk latency    arbitrage jika ada information leak\n4. Market data feed backup path tidak terenkripsi\n5. Tidak ada market data integrity check (hash) per-message",
+      "recommendation": "1. Implementasi source authentication pada market data feed    (HMAC per-message atau signed batches)\n2. Tambahkan sequence numbering dan gap detection\n3. Monitor dan alert pada latency anomaly antara execution    dan market data publication\n4. Enkripsi backup market data path\n5. Tambahkan per-message integrity hash\n6. Implementasi market data anomaly detection untuk mendeteksi    potential tampering",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.14.1.2",
+        "OJK POJK 38/2016 Pasal 31",
+        "IOSCO Principles"
+      ]
+    },
+    {
+      "check_id": "NET-05",
+      "title": "Keamanan Jalur Komunikasi (Leased Line / MPLS / VPN)",
+      "description": "Verifikasi keamanan jalur komunikasi fisik dan logis yang digunakan untuk menghubungkan seluruh komponen JATS-NextG, termasuk leased line, MPLS VPN, dan backup link.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.5,
+      "affected_component": "WAN Infrastructure - Leased Line & MPLS",
+      "evidence": "Simulasi assessment jalur komunikasi:\n1. Enkripsi layer 2 (MACsec) belum diterapkan pada leased line    antar site - data bisa di-sniff jika akses fisik diperoleh\n2. MPLS VPN bergantung sepenuhnya pada provider isolation -    tidak ada overlay encryption (IPsec) sebagai defense-in-depth\n3. Backup link menggunakan jalur internet publik dengan VPN -    namun split tunneling terdeteksi aktif pada 3 remote site\n4. Monitoring uptime jalur hanya menggunakan ICMP ping -    tidak mendeteksi degradasi kualitas atau tap\n5. Tidak ada physical line monitoring untuk mendeteksi fiber    tap pada leased line",
+      "recommendation": "1. Terapkan MACsec (IEEE 802.1AE) pada seluruh leased line\n2. Tambahkan IPsec overlay encryption di atas MPLS VPN\n3. Nonaktifkan split tunneling pada seluruh VPN connection\n4. Implementasi advanced link monitoring: latency, jitter,    packet loss, dan optical power level monitoring\n5. Deploy Optical Time-Domain Reflectometry (OTDR) untuk    mendeteksi physical fiber tapping\n6. Audit provider SLA dan security controls setiap tahun",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.13.1.1",
+        "OJK POJK 38/2016 Pasal 24",
+        "NIST SP 800-77"
+      ]
+    },
+    {
+      "check_id": "AUTH-03",
+      "title": "Manajemen Sesi & Keamanan Token",
+      "description": "Audit keamanan manajemen sesi trading pada JATS-NextG termasuk session creation, validation, timeout, dan termination procedures.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.5,
+      "affected_component": "Session Management Infrastructure",
+      "evidence": "Simulasi audit session management:\n1. Session token menggunakan sequential identifier -    predictable, memungkinkan session enumeration\n2. Session tidak di-invalidate setelah password change -    sesi lama tetap aktif\n3. Absolute session timeout tidak dikonfigurasi - sesi    bisa aktif selama jam perdagangan penuh tanpa    re-authentication\n4. Session fixation protection tidak diimplementasi -    session ID tidak di-regenerate setelah login\n5. Concurrent session limit tidak diterapkan - satu user    bisa login dari multiple lokasi\n6. Session state disimpan di memory tanpa encryption",
+      "recommendation": "1. Gunakan cryptographically random session token (min 256-bit)\n2. Invalidate semua active session setelah password change\n3. Terapkan absolute session timeout 8 jam dengan idle    timeout 15 menit\n4. Regenerate session ID setelah successful login\n5. Limit concurrent session per user (max 2) dengan    notification pada login baru\n6. Encrypt session state di memory dan at-rest",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.9.4.2",
+        "OWASP Session Management",
+        "NIST SP 800-53 SC-23",
+        "PCI DSS 8.6"
+      ]
+    },
+    {
+      "check_id": "APP-07",
+      "title": "Integritas Sistem Pengawasan Pasar",
+      "description": "Evaluasi integritas sistem market surveillance yang digunakan untuk mendeteksi insider trading, market manipulation, dan abnormal trading activity.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.5,
+      "affected_component": "Market Surveillance System",
+      "evidence": "Simulasi audit market surveillance:\n1. Surveillance alert threshold statis - tidak    beradaptasi dengan market condition (volatile vs calm)\n2. Data feed ke surveillance system memiliki delay 1-3    detik dari matching engine - manipulasi bisa terjadi    sebelum terdeteksi\n3. Layering/spoofing detection rule tidak mencakup    variasi modern (phased layering)\n4. Cross-market surveillance tidak terintegrasi    (saham, derivatif, obligasi)\n5. False positive rate 45% menyebabkan alert fatigue\n6. Surveillance data bisa diakses oleh market operations    - potensial information leak",
+      "recommendation": "1. Implementasi adaptive threshold berbasis ML yang    menyesuaikan dengan volatility regime\n2. Kurangi surveillance data feed delay ke <100ms\n3. Update detection rules untuk mencakup:\n   - Phased layering/spoofing\n   - Cross-product manipulation\n   - Momentum ignition\n   - Quote stuffing\n4. Integrasikan cross-market surveillance\n5. Tuning rules untuk false positive rate <20%\n6. Restrict surveillance data access hanya untuk    surveillance team dengan need-to-know",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "OJK POJK 38/2016 Pasal 42",
+        "IOSCO Market Surveillance Recommendations",
+        "MAR (Market Abuse Regulation) equivalent"
+      ]
+    },
+    {
+      "check_id": "DATA-03",
+      "title": "Keamanan Backup & Verifikasi Recovery",
+      "description": "Audit keamanan proses backup data dan verifikasi kemampuan recovery untuk memastikan business continuity JATS-NextG.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.5,
+      "affected_component": "Backup & Recovery Infrastructure",
+      "evidence": "Simulasi audit backup:\n1. Backup encryption menggunakan AES-128 - di bawah    rekomendasi minimum AES-256 untuk data keuangan\n2. Backup verification (restore test) terakhir dilakukan    6 bulan lalu - seharusnya minimal kuartalan\n3. Offsite backup transfer menggunakan jalur yang tidak    terpisah dari production traffic\n4. Recovery Time Objective (RTO) belum di-validasi    dengan actual restore test dalam 1 tahun terakhir\n5. Backup retention key management tidak terintegrasi    dengan HSM - key bisa hilang sebelum data expired\n6. Tidak ada air-gapped backup untuk ransomware protection",
+      "recommendation": "1. Upgrade backup encryption ke AES-256-GCM\n2. Jadwalkan restore test kuartalan dengan documented results\n3. Gunakan dedicated backup network yang terpisah\n4. Validasi RTO dan RPO dengan actual test setiap 6 bulan\n5. Integrasikan backup key management dengan HSM\n6. Implementasi air-gapped / immutable backup (3-2-1 rule    dengan 1 copy offline)\n7. Otomasi backup integrity verification setiap backup cycle",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.12.3.1",
+        "OJK POJK 38/2016 Pasal 46",
+        "NIST SP 800-34r1",
+        "PCI DSS 9.5"
+      ]
+    },
+    {
+      "check_id": "MON-01",
+      "title": "Implementasi & Cakupan SIEM",
+      "description": "Evaluasi implementasi Security Information and Event Management (SIEM) untuk monitoring keamanan JATS-NextG secara terpusat.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.5,
+      "affected_component": "SIEM Infrastructure",
+      "evidence": "Simulasi audit SIEM:\n1. SIEM coverage hanya 70% - log dari RT gateway, network    devices, dan beberapa application components belum    terintegrasi\n2. SIEM correlation rules hanya 45 rules aktif -    khas trading system attacks belum ter-cover:\n   - Rapid order flood detection\n   - Abnormal cancel ratio\n   - Off-hours trading attempt\n   - Multiple failed broker authentication\n3. SIEM event processing delay rata-rata 30 detik -    terlalu lambat untuk real-time trading security\n4. SIEM storage retention hanya 90 hari - tidak memenuhi    regulatory requirement 5 tahun\n5. SIEM dashboard tidak di-monitor 24/7 di luar    trading hours\n6. No automated response (SOAR) integration",
+      "recommendation": "1. Integrasikan 100% log sources ke SIEM termasuk:\n   - RT gateway logs\n   - All network device logs\n   - FIX engine logs\n   - Matching engine logs\n   - Physical access logs\n2. Tambahkan trading-specific correlation rules (lihat evidence)\n3. Optimasi SIEM processing untuk <5 detik event-to-alert\n4. Implementasi tiered storage: hot 90 hari, warm 1 tahun,    cold archive 5 tahun\n5. Extend SOC monitoring ke 24/7 atau implementasi    automated alerting ke on-call staff\n6. Deploy SOAR platform untuk automated incident response",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.12.4.1",
+        "OJK POJK 38/2016 Pasal 50",
+        "NIST SP 800-92",
+        "PCI DSS 10.6"
+      ]
+    },
+    {
+      "check_id": "COMP-05",
+      "title": "Kepatuhan UU Perlindungan Data Pribadi (UU PDP)",
+      "description": "Evaluasi kepatuhan terhadap UU No. 27 Tahun 2022 tentang Perlindungan Data Pribadi yang berlaku bagi BEI sebagai pengendali data pribadi broker, investor, dan karyawan.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.5,
+      "affected_component": "Data Privacy Compliance",
+      "evidence": "Simulasi gap analysis UU PDP:\n1. Data Protection Officer (DPO) belum ditunjuk secara    formal sesuai UU PDP Pasal 53\n2. Record of Processing Activities (ROPA) belum    terdokumentasi untuk JATS-NextG data flows\n3. Hak subjek data (akses, koreksi, hapus) belum    memiliki mekanisme teknis yang jelas\n4. Data Protection Impact Assessment (DPIA) belum    dilakukan untuk JATS-NextG\n5. Cross-border data transfer assessment belum dilakukan    (data ke provider sistem/vendor asing)\n6. Data breach notification procedure belum sesuai    requirement UU PDP (72 jam)\n7. Consent management untuk broker/investor data belum    diimplementasi secara teknis",
+      "recommendation": "1. Tunjuk DPO dan register ke otoritas yang berwenang\n2. Dokumentasikan ROPA untuk seluruh data processing di    JATS-NextG\n3. Implementasi teknis untuk hak subjek data:\n   - Portal akses data pribadi\n   - Mekanisme koreksi dan penghapusan\n   - Data portability export\n4. Lakukan DPIA untuk JATS-NextG\n5. Evaluasi cross-border data transfer dan terapkan    safeguards yang sesuai\n6. Update breach notification procedure: <72 jam ke    otoritas, 'tanpa penundaan' ke subjek data\n7. Deploy consent management platform",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "UU No. 27 Tahun 2022 (UU PDP)",
+        "PP tentang PDP (pending)",
+        "GDPR (reference/best practice)"
+      ]
+    },
+    {
+      "check_id": "NET-07",
+      "title": "Efektivitas IDS/IPS pada Jaringan JATS-NextG",
+      "description": "Evaluasi efektivitas sistem Intrusion Detection/Prevention yang melindungi jaringan perdagangan JATS-NextG dari serangan internal maupun lateral movement.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.4,
+      "affected_component": "IDS/IPS Infrastructure",
+      "evidence": "Simulasi evaluasi IDS/IPS:\n1. IDS signature database terakhir diupdate 45 hari lalu -    tidak memenuhi standar update mingguan\n2. IPS inline mode hanya diterapkan pada perimeter - tidak    ada IDS/IPS pada segmen internal (east-west traffic)\n3. Custom signature untuk protokol FIX/ITCH belum dibuat -    IDS tidak dapat mendeteksi anomali pada trading protocol\n4. False positive rate 34% menyebabkan alert fatigue pada    tim SOC - threshold perlu dituning\n5. IDS bypass menggunakan fragmented packet belum di-test    dalam 6 bulan terakhir",
+      "recommendation": "1. Terapkan automated signature update mingguan\n2. Deploy internal IDS sensor pada segmen antar zona    untuk deteksi lateral movement\n3. Develop custom IDS signature untuk protokol FIX:\n   - Deteksi malformed FIX message\n   - Deteksi abnormal order rate per broker\n   - Deteksi unusual trading pattern\n4. Tuning IDS threshold untuk menurunkan false positive < 10%\n5. Lakukan IDS evasion testing setiap kuartal\n6. Implementasi Network Detection and Response (NDR) berbasis    ML untuk deteksi anomali yang lebih akurat",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.13.1.1",
+        "OJK POJK 38/2016 Pasal 25",
+        "NIST SP 800-94",
+        "PCI DSS 11.4"
+      ]
+    },
+    {
+      "check_id": "AUTH-07",
+      "title": "Manajemen Sertifikat & PKI",
+      "description": "Audit infrastruktur Public Key Infrastructure (PKI) dan manajemen sertifikat digital yang digunakan untuk otentikasi dan enkripsi pada JATS-NextG.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.4,
+      "affected_component": "PKI Infrastructure",
+      "evidence": "Simulasi audit PKI:\n1. Internal CA menggunakan RSA 2048-bit key yang sudah    mendekati end-of-life (NIST merekomendasikan 3072+)\n2. Certificate Revocation List (CRL) distribution point    di-update hanya setiap 24 jam - compromised cert aktif    terlalu lama\n3. OCSP (Online Certificate Status Protocol) tidak    diimplementasi sebagai alternatif CRL\n4. 12 broker certificates akan expire dalam 30 hari -    tidak ada automated renewal alert\n5. CA private key disimpan pada software - tidak pada HSM\n6. Certificate transparency logging tidak diimplementasi",
+      "recommendation": "1. Upgrade CA key ke RSA 4096-bit atau ECDSA P-384\n2. Implementasi OCSP dengan OCSP stapling untuk real-time    revocation checking\n3. Kurangi CRL update frequency menjadi 1 jam\n4. Terapkan automated certificate lifecycle management    dengan alert 60/30/7 hari sebelum expiry\n5. Migrasi CA private key ke HSM (FIPS 140-2 Level 3)\n6. Implementasi CT (Certificate Transparency) logging\n7. Terapkan short-lived certificates (max 1 tahun)",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.10.1.2",
+        "OJK POJK 38/2016 Pasal 37",
+        "NIST SP 800-57",
+        "PCI DSS 4.1"
+      ]
+    },
+    {
+      "check_id": "AUTH-04",
+      "title": "Role-Based Access Control (RBAC)",
+      "description": "Evaluasi implementasi RBAC pada JATS-NextG untuk memastikan principle of least privilege diterapkan pada seluruh role: broker trader, broker admin, BEI operator, BEI admin, BEI system admin, dan auditor.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.3,
+      "affected_component": "RBAC System",
+      "evidence": "Simulasi audit RBAC:\n1. Role granularity kurang - hanya 4 role didefinisikan    sedangkan seharusnya minimum 8 role berbeda\n2. 'BEI Admin' role memiliki akses ke seluruh fungsi    termasuk delete audit log - violasi separation of duties\n3. Broker admin bisa mengubah trading limit tanpa approval    dari BEI - single point of authorization\n4. Role assignment history tidak tercatat - tidak bisa    di-audit siapa mengubah role kapan\n5. Tidak ada time-based access control - role berlaku    24/7 meskipun trading hours terbatas\n6. Emergency role escalation tidak memiliki auto-expiry",
+      "recommendation": "1. Perkaya role definition:\n   - Broker: Trader, Settlement, Admin, Viewer\n   - BEI: Operator, Market Supervisor, System Admin,      DBA, Security Admin, Auditor\n2. Pisahkan privilege admin dan auditor - admin tidak bisa    delete/modify audit log\n3. Implementasi dual-authorization untuk perubahan trading limit\n4. Log seluruh role assignment change ke immutable audit trail\n5. Terapkan time-based access - role aktif hanya pada    trading hours + buffer\n6. Emergency role escalation auto-expire dalam 4 jam",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.9.1.2",
+        "OJK POJK 38/2016 Pasal 35",
+        "NIST SP 800-53 AC-2",
+        "COBIT 5 DSS05.04"
+      ]
+    },
+    {
+      "check_id": "PROTO-07",
+      "title": "Ketahanan Terhadap Protocol Fuzzing",
+      "description": "Evaluasi ketahanan FIX engine dan komponen protocol handler terhadap malformed input dan protocol fuzzing, yang dapat menyebabkan crash, memory corruption, atau undefined behavior.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.2,
+      "affected_component": "FIX Engine - Parser & Handler",
+      "evidence": "Simulasi fuzzing assessment:\n1. Tidak ada evidence bahwa FIX parser telah di-fuzz-test    menggunakan automated fuzzer (AFL, LibFuzzer, dll.)\n2. Error handling pada malformed message menggunakan generic    exception catch - tidak ada specific handling per error type\n3. Stack trace terekspos pada log saat parsing error -    information disclosure\n4. Oversized tag value tidak di-truncate - potensial    heap buffer overflow pada legacy C components\n5. Nested repeating group dengan depth >10 menyebabkan    stack overflow pada parser rekursif",
+      "recommendation": "1. Lakukan automated fuzz testing pada FIX parser:\n   - Gunakan AFL++ atau LibFuzzer\n   - Buat corpus dari real FIX messages\n   - Jalankan fuzzing minimum 72 jam\n2. Implementasi safe error handling - jangan expose stack trace\n3. Terapkan hard limit pada tag value length\n4. Batasi repeating group nesting depth (max 5)\n5. Gunakan memory-safe parsing (bounds checking, ASAN)\n6. Jadwalkan protocol fuzz testing setiap rilis baru",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.14.2.8",
+        "NIST SP 800-53 SI-10",
+        "OWASP Testing Guide v4"
+      ]
+    },
+    {
+      "check_id": "APP-06",
+      "title": "Keamanan Sistem Kliring & Setelmen",
+      "description": "Audit keamanan interface antara JATS-NextG dan sistem kliring/setelmen (KPEI/KSEI) termasuk data integrity, reconciliation, dan failover.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.2,
+      "affected_component": "Clearing & Settlement Interface",
+      "evidence": "Simulasi audit clearing interface:\n1. Reconciliation antara JATS trade register dan KPEI    dilakukan batch (T+0 EOD) - discrepancy baru terdeteksi    keesokan hari\n2. Settlement instruction file transfer menggunakan SFTP    tanpa file integrity verification (no GPG signature)\n3. Failover ke backup clearing path belum di-test dalam    12 bulan terakhir\n4. Timeout handling pada clearing interface tidak    terdefinisi dengan jelas - hanging transaction possible\n5. Clearing data retention tidak terenkripsi pada archive",
+      "recommendation": "1. Implementasi near-real-time reconciliation (setiap 15    menit) antara JATS dan clearing system\n2. Tambahkan GPG/PGP signature pada file transfer dan    verify sebelum processing\n3. Jadwalkan clearing failover test setiap kuartal\n4. Definisikan explicit timeout dan retry policy untuk    clearing interface\n5. Enkripsi clearing data archive menggunakan AES-256-GCM\n6. Implementasi idempotency pada clearing messages",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "OJK POJK 38/2016 Pasal 41",
+        "ISO 27001:A.14.1.2",
+        "CPMI-IOSCO PFMI Principles"
+      ]
+    },
+    {
+      "check_id": "INFRA-06",
+      "title": "Keamanan Sinkronisasi Waktu (NTP)",
+      "description": "Audit keamanan time synchronization pada infrastruktur JATS-NextG. Akurasi waktu sangat kritis untuk fairness perdagangan, audit trail, dan regulatory compliance.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.2,
+      "affected_component": "NTP Infrastructure",
+      "evidence": "Simulasi audit NTP:\n1. NTP authentication (symmetric key / Autokey) tidak    diaktifkan - rentan terhadap NTP spoofing\n2. NTP source hanya dari 1 stratum-1 server - single    point of failure\n3. Time accuracy requirement ±1ms untuk trading namun    monitoring hanya mengecek ±100ms\n4. NTP traffic tidak terpisah dari regular traffic -    bisa di-intercept dan di-modify\n5. Tidak ada PTP (Precision Time Protocol) IEEE 1588    pada matching engine - untuk sub-microsecond accuracy\n6. Leap second handling belum di-test",
+      "recommendation": "1. Aktifkan NTP authentication (NTS - Network Time Security)\n2. Gunakan minimum 4 NTP source dari 2 stratum-1 provider    berbeda\n3. Implementasi time accuracy monitoring dengan threshold    ±1ms dan automated alert\n4. Isolasi NTP traffic pada dedicated VLAN atau gunakan    out-of-band NTP\n5. Deploy PTP (IEEE 1588) pada matching engine cluster\n6. Test dan dokumentasikan leap second handling procedure\n7. Deploy GPS-disciplined NTP server sebagai primary source",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.12.4.4",
+        "MiFID II RTS 25 (reference)",
+        "NIST SP 800-53 AU-8"
+      ]
+    },
+    {
+      "check_id": "COMP-06",
+      "title": "Manajemen Risiko Vendor / Pihak Ketiga",
+      "description": "Evaluasi program manajemen risiko vendor dan pihak ketiga yang menyediakan komponen, layanan, atau akses ke infrastruktur JATS-NextG.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.2,
+      "affected_component": "Vendor Risk Management",
+      "evidence": "Simulasi audit vendor risk management:\n1. Vendor risk assessment tidak dilakukan secara    periodik - hanya saat onboarding awal\n2. 3 dari 8 critical vendor tidak memiliki SLA yang    mencakup security requirements\n3. Right to audit clause hanya ada pada 50% kontrak vendor\n4. Vendor access ke JATS-NextG environment tidak melalui    PAM solution - unmonitored access\n5. Supply chain risk assessment belum mencakup    sub-contractors vendor\n6. Vendor incident notification requirement tidak    terstandarisasi\n7. Tidak ada vendor security scorecard atau rating system",
+      "recommendation": "1. Implementasi annual vendor risk reassessment\n2. Update kontrak untuk mencakup security SLA pada    seluruh critical vendors\n3. Tambahkan right to audit clause pada semua kontrak\n4. Route semua vendor access melalui PAM solution dengan    session recording\n5. Extend risk assessment ke vendor sub-contractors\n6. Standarisasi vendor incident notification (<24 jam)\n7. Implementasi vendor security scorecard/rating system\n8. Maintain vendor risk register yang diupdate kuartalan",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.15.1",
+        "OJK POJK 38/2016 Pasal 24",
+        "NIST SP 800-53 SA-9",
+        "NIST CSF ID.SC"
+      ]
+    },
+    {
+      "check_id": "AUTH-08",
+      "title": "Otentikasi & Otorisasi API",
+      "description": "Pemeriksaan keamanan otentikasi dan otorisasi pada seluruh API internal JATS-NextG termasuk REST API untuk manajemen, monitoring API, dan integration API.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.0,
+      "affected_component": "API Security Layer",
+      "evidence": "Simulasi audit API security:\n1. Beberapa internal API menggunakan API key statis tanpa    expiration - jika leaked, akses permanen\n2. API authorization menggunakan coarse-grained check -    semua authenticated users bisa akses semua endpoints\n3. API rate limiting tidak konsisten - beberapa endpoint    tidak memiliki rate limit\n4. Monitoring API mengembalikan verbose error message    termasuk stack trace dan internal path\n5. Tidak ada API gateway terpusat - setiap service    mengimplementasi auth sendiri",
+      "recommendation": "1. Migrasi ke OAuth 2.0 dengan short-lived tokens (15 menit)\n2. Implementasi fine-grained API authorization per-endpoint\n3. Terapkan consistent rate limiting melalui API gateway\n4. Sanitize error response - jangan expose internal details\n5. Deploy API gateway terpusat untuk centralized auth,    rate limiting, dan logging\n6. Implementasi API versioning dan deprecation policy",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.9.4.1",
+        "OWASP API Security Top 10",
+        "NIST SP 800-53 AC-3"
+      ]
+    },
+    {
+      "check_id": "APP-08",
+      "title": "Manajemen Patch Aplikasi",
+      "description": "Evaluasi proses patch management untuk seluruh komponen aplikasi JATS-NextG termasuk matching engine, RT client, gateway, dan supporting systems.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.0,
+      "affected_component": "Application Lifecycle Management",
+      "evidence": "Simulasi audit patch management:\n1. Critical security patch untuk FIX engine library belum    diterapkan >60 hari sejak rilis\n2. RT client software update tidak mandatory - 20% broker    menggunakan versi lama dengan known vulnerability\n3. Patch testing hanya dilakukan pada functional level -    tidak ada security regression testing\n4. Rollback procedure tidak otomatis - memerlukan 2-4 jam\n5. Dependency management tidak terpusat - third-party    library vulnerability tidak ter-track",
+      "recommendation": "1. Terapkan SLA patch: Critical <7 hari, High <30 hari,    Medium <90 hari\n2. Wajibkan minimum software version untuk RT client -    blokir koneksi dari versi yang vulnerable\n3. Tambahkan security regression testing pada patch process\n4. Implementasi automated rollback capability (<15 menit)\n5. Deploy Software Composition Analysis (SCA) untuk    track third-party dependency vulnerabilities\n6. Implementasi CI/CD pipeline dengan security scanning",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.12.6.1",
+        "OJK POJK 38/2016 Pasal 43",
+        "NIST SP 800-40r4",
+        "PCI DSS 6.2"
+      ]
+    },
+    {
+      "check_id": "DATA-06",
+      "title": "Manajemen & Rotasi Kunci Kriptografi",
+      "description": "Audit proses manajemen lifecycle kunci kriptografi termasuk generation, distribution, storage, rotation, dan destruction.",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.0,
+      "affected_component": "Key Management System",
+      "evidence": "Simulasi audit key management:\n1. Key rotation jadwal tidak konsisten - TLS cert dirotasi    tahunan namun symmetric key (AES) tidak pernah dirotasi\n2. Key generation tidak selalu menggunakan HSM - beberapa    key di-generate menggunakan software di server\n3. Key escrow/backup procedure tidak terdokumentasi\n4. Destroyed key material tidak di-overwrite secara    kriptografis (crypto erase)\n5. Key access audit log tidak diintegrasi dengan SIEM\n6. Tidak ada key ceremony procedure yang terdokumentasi",
+      "recommendation": "1. Terapkan key rotation policy:\n   - Symmetric keys: setiap 90 hari\n   - Asymmetric keys: setiap 1-2 tahun\n   - TLS certificates: setiap 1 tahun (max)\n2. Wajibkan HSM untuk semua key generation\n3. Dokumentasikan key escrow procedure dengan split custody\n4. Implementasi crypto erase untuk key destruction\n5. Integrasikan key access log ke SIEM\n6. Dokumentasikan dan laksanakan key ceremony procedure\n7. Implementasi automated key lifecycle management",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.10.1.2",
+        "NIST SP 800-57",
+        "PCI DSS 3.5",
+        "FIPS 140-2"
+      ]
+    },
+    {
+      "check_id": "COMP-02",
+      "title": "Kepatuhan ISO 27001:2022",
+      "description": "Gap analysis kepatuhan terhadap standar ISO 27001:2022 Information Security Management System (ISMS) untuk infrastruktur JATS-NextG.",
+      "severity": "HIGH",
+      "status": "PARTIAL",
+      "risk_score": 7.0,
+      "affected_component": "ISMS - ISO 27001:2022",
+      "evidence": "Simulasi gap analysis ISO 27001:2022:\n1. Annex A.5 (Organizational Controls): Information Security    Policy di-review terakhir 14 bulan lalu (requirement:    planned intervals, best practice: annual)\n2. Annex A.6 (People Controls): Security awareness training    completion rate 75% - target 100%\n3. Annex A.7 (Physical Controls): Gap pada physical security    monitoring (lihat NET-06)\n4. Annex A.8 (Technological Controls):\n   - 8.7 (Malware Protection): Endpoint protection coverage 90%\n   - 8.8 (Vulnerability Management): Gap pada patch SLA\n   - 8.12 (Data Leakage Prevention): DLP belum diimplementasi\n   - 8.16 (Monitoring): Gap pada SIEM coverage (lihat MON-01)\n   - 8.23 (Web Filtering): Tidak relevan (closed network) namun      management network perlu web filtering\n   - 8.25 (Secure Development): SDLC security belum matang\n5. New controls in 2022 edition (A.5.7 Threat Intelligence,    A.8.11 Data Masking, A.8.28 Secure Coding) belum    sepenuhnya diimplementasi",
+      "recommendation": "1. Review dan update Information Security Policy (annual)\n2. Targetkan 100% security awareness training completion\n3. Remediasi physical security gaps\n4. Implementasi missing technological controls:\n   - Complete endpoint protection coverage ke 100%\n   - Deploy DLP solution\n   - Extend SIEM coverage ke 100%\n5. Implementasi new 2022 controls:\n   - A.5.7: Integrate threat intelligence\n   - A.8.11: Implement data masking\n   - A.8.28: Formalize secure coding practices\n6. Jadwalkan internal ISMS audit setiap 6 bulan\n7. Target re-certification audit dalam 6 bulan",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:2022",
+        "ISO 27002:2022"
+      ]
+    },
+    {
+      "check_id": "COMP-04",
+      "title": "Kepatuhan Regulasi Business Continuity",
+      "description": "Evaluasi kepatuhan program business continuity management terhadap regulasi OJK dan standar internasional (ISO 22301).",
+      "severity": "HIGH",
+      "status": "WARNING",
+      "risk_score": 7.0,
+      "affected_component": "Business Continuity Management",
+      "evidence": "Simulasi audit BCM compliance:\n1. Business Impact Analysis (BIA) terakhir di-update    18 bulan lalu - perlu annual review\n2. Maximum Tolerable Downtime (MTD) untuk JATS-NextG    belum didefinisikan secara formal oleh management\n3. BCP testing hanya mencakup IT recovery - belum    termasuk business process recovery\n4. Crisis communication plan belum mencakup semua    broker member (155+ broker)\n5. Peraturan BEI tentang trading halt procedures saat    sistem failure perlu di-update\n6. Reciprocal agreement dengan bursa lain belum ada",
+      "recommendation": "1. Update BIA secara annual dan setelah perubahan signifikan\n2. Definisikan MTD formal: trading disruption max 2 jam\n3. Perluas BCP testing ke business process level\n4. Update crisis communication plan termasuk seluruh broker\n5. Review dan update trading halt SOP\n6. Jajaki reciprocal agreement dengan bursa partner    (SGX, SET, dst.) untuk mutual backup\n7. Jadwalkan comprehensive BCP exercise (dengan broker    participation) setiap tahun",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 22301:2019",
+        "OJK POJK 38/2016 Pasal 20",
+        "IOSCO BCP Guidelines"
+      ]
+    },
+    {
+      "check_id": "INFRA-04",
+      "title": "Keamanan Virtualisasi & Container",
+      "description": "Audit keamanan platform virtualisasi dan container yang digunakan untuk menjalankan komponen JATS-NextG non-core (monitoring, reporting, management tools).",
+      "severity": "MEDIUM",
+      "status": "WARNING",
+      "risk_score": 6.8,
+      "affected_component": "Virtualization & Container Platform",
+      "evidence": "Simulasi audit virtualisasi:\n1. Hypervisor patch terakhir diterapkan 3 bulan lalu -    2 CVE critical telah dirilis sejak itu\n2. VM escape mitigation (SMEP, SMAP) belum diaktifkan    pada seluruh host\n3. Container image scanning tidak diimplementasi -    base image mengandung 23 known vulnerabilities\n4. Container running as root pada 60% workloads\n5. Container network policy terlalu permisif -    semua container bisa berkomunikasi satu sama lain\n6. Hypervisor management interface accessible dari    regular management VLAN",
+      "recommendation": "1. Terapkan hypervisor patching sesuai SLA (critical <7 hari)\n2. Aktifkan SMEP dan SMAP pada seluruh hypervisor host\n3. Implementasi container image scanning di CI/CD pipeline\n4. Jalankan container sebagai non-root user\n5. Terapkan container network policy (zero-trust)\n6. Isolasi hypervisor management ke dedicated VLAN\n7. Implementasi container runtime security (Falco/Sysdig)",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.12.6.1",
+        "CIS Docker Benchmark",
+        "NIST SP 800-190"
+      ]
+    },
+    {
+      "check_id": "NET-10",
+      "title": "Proteksi DDoS & Deteksi Anomali Trafik",
+      "description": "Evaluasi kemampuan jaringan JATS-NextG dalam menahan serangan DDoS dan mendeteksi anomali trafik. Meskipun jaringan tertutup, risiko DDoS internal (dari broker compromised) tetap ada.",
+      "severity": "MEDIUM",
+      "status": "PARTIAL",
+      "risk_score": 6.5,
+      "affected_component": "DDoS Protection & Traffic Analysis",
+      "evidence": "Simulasi evaluasi anti-DDoS:\n1. Tidak ada rate limiting per-broker pada RT gateway -    satu broker compromised dapat membanjiri matching engine\n2. Traffic baseline belum didefinisikan - tidak ada referensi    untuk mendeteksi traffic anomaly\n3. NetFlow/sFlow collection aktif namun hanya disimpan 7 hari\n4. Tidak ada automated throttling mechanism jika trafik    melebihi threshold normal\n5. Load balancer pada RT gateway tidak memiliki DDoS    protection built-in",
+      "recommendation": "1. Implementasi per-broker rate limiting pada RT gateway    (max orders/second, max messages/second)\n2. Definisikan traffic baseline dan alert threshold\n3. Perpanjang NetFlow retention menjadi minimum 90 hari\n4. Implementasi automated throttling dan circuit breaker\n5. Deploy DDoS mitigation pada load balancer\n6. Simulasikan DDoS internal secara berkala (stress test)",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.13.1.1",
+        "OJK POJK 38/2016 Pasal 26",
+        "NIST SP 800-53 SC-5"
+      ]
+    },
+    {
+      "check_id": "AUTH-06",
+      "title": "Penegakan Kebijakan Password & Credential",
+      "description": "Verifikasi bahwa kebijakan password dan credential management diterapkan secara konsisten pada seluruh komponen JATS-NextG.",
+      "severity": "MEDIUM",
+      "status": "WARNING",
+      "risk_score": 6.5,
+      "affected_component": "Credential Management System",
+      "evidence": "Simulasi audit credential policy:\n1. Password history enforcement hanya menyimpan 3 password    terakhir - mudah di-cycle\n2. Credential storage pada RT client menggunakan local    encryption namun key derivation menggunakan PBKDF2    dengan iteration count rendah (1000)\n3. Service account passwords disimpan dalam config file    dengan file-level encryption yang lemah\n4. API key rotation tidak otomatis - beberapa key >1 tahun\n5. Tidak ada credential leak monitoring (dark web, paste sites)",
+      "recommendation": "1. Tingkatkan password history menjadi minimum 12\n2. Upgrade PBKDF2 iteration count menjadi 600,000 atau    migrasi ke Argon2id\n3. Migrasi service account credentials ke vault solution\n4. Implementasi automated API key rotation setiap 90 hari\n5. Deploy credential leak monitoring service\n6. Terapkan breach password check (HaveIBeenPwned API) pada    password change",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.9.4.3",
+        "NIST SP 800-63B",
+        "PCI DSS 8.2.4"
+      ]
+    },
+    {
+      "check_id": "INFRA-03",
+      "title": "Inventaris Service & Keamanan Port",
+      "description": "Pemeriksaan service yang berjalan dan port yang terbuka pada seluruh server JATS-NextG untuk memastikan hanya service yang diperlukan yang aktif.",
+      "severity": "MEDIUM",
+      "status": "WARNING",
+      "risk_score": 6.5,
+      "affected_component": "Server Services & Ports",
+      "evidence": "Simulasi port scan dan service audit:\n1. 12 port non-essential terbuka pada server production:\n   - Port 8080 (debug web server) pada matching engine\n   - Port 5432 (PostgreSQL) accessible dari management VLAN\n   - Port 6379 (Redis) tanpa authentication\n   - Port 9090 (Prometheus) tanpa TLS\n2. Service inventory tidak ter-maintain - dokumentasi    terakhir update 8 bulan lalu\n3. Cron job pada 3 server menjalankan script yang tidak    terdokumentasi\n4. Web server (Nginx) dengan default configuration aktif    pada management interface",
+      "recommendation": "1. Tutup seluruh port non-essential:\n   - Hapus debug web server dari production\n   - Restrict database port ke application server only\n   - Enable Redis authentication (requirepass)\n   - Enable TLS pada Prometheus\n2. Update service inventory dan jadwalkan review kuartalan\n3. Audit dan dokumentasikan seluruh cron job\n4. Harden Nginx configuration - hapus default page\n5. Implementasi automated service/port discovery dan    baseline comparison",
+      "remediation_effort": "Low",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.13.1.1",
+        "CIS Benchmarks",
+        "NIST SP 800-123",
+        "PCI DSS 2.2.2"
+      ]
+    },
+    {
+      "check_id": "MON-03",
+      "title": "Alerting Real-Time & Prosedur Eskalasi",
+      "description": "Evaluasi mekanisme alerting real-time dan prosedur eskalasi untuk security events pada JATS-NextG.",
+      "severity": "MEDIUM",
+      "status": "WARNING",
+      "risk_score": 6.5,
+      "affected_component": "Alerting & Escalation System",
+      "evidence": "Simulasi audit alerting:\n1. Alert notification hanya melalui email - tidak ada    SMS/PagerDuty/phone call untuk critical alerts\n2. Alert escalation matrix tidak terdokumentasi - tidak    jelas siapa yang di-eskalasi jika L1 tidak respond\n3. Alert fatigue: 200+ alerts per hari, 80% false positive\n4. No alert correlation - related alerts tidak di-group    menjadi single incident\n5. Alert response time SLA tidak didefinisikan\n6. After-hours alerting tidak tested - terakhir test    3 bulan lalu",
+      "recommendation": "1. Implementasi multi-channel notification:\n   - Critical: Phone call + SMS + Email\n   - High: SMS + Email\n   - Medium: Email + Dashboard\n2. Dokumentasikan dan test escalation matrix bulanan\n3. Tuning alert rules untuk mengurangi false positive <20%\n4. Implementasi alert correlation dan grouping\n5. Definisikan alert response SLA: Critical <15 menit,    High <1 jam, Medium <4 jam\n6. Test after-hours alerting setiap bulan",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.16.1.2",
+        "OJK POJK 38/2016 Pasal 52",
+        "NIST SP 800-61r2"
+      ]
+    },
+    {
+      "check_id": "MON-05",
+      "title": "Kesiapan Forensik Digital",
+      "description": "Evaluasi kemampuan forensik digital untuk investigasi insiden keamanan pada infrastruktur JATS-NextG.",
+      "severity": "MEDIUM",
+      "status": "PARTIAL",
+      "risk_score": 6.5,
+      "affected_component": "Digital Forensic Capability",
+      "evidence": "Simulasi audit forensic readiness:\n1. Tidak ada network packet capture (full PCAP) yang    tersimpan - hanya NetFlow metadata\n2. Memory forensic tools tidak tersedia - volatile    evidence hilang saat sistem reboot\n3. Disk imaging procedure tidak terdokumentasi\n4. Chain of custody template tidak tersedia\n5. Forensic evidence storage tidak terpisah dari    production storage\n6. Tim tidak memiliki sertifikasi forensik digital",
+      "recommendation": "1. Deploy network traffic recording (full PCAP) untuk    critical segments - minimum 72 jam retention\n2. Siapkan memory forensic toolkit (Volatility, Rekall)\n3. Dokumentasikan disk imaging SOP (menggunakan dd/FTK)\n4. Buat chain of custody template dan SOP\n5. Sediakan isolated forensic evidence storage\n6. Kirim minimum 2 staff untuk training dan sertifikasi    forensik digital (GCFE, EnCE)\n7. Maintain forensic readiness kit (jump bag)",
+      "remediation_effort": "High",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.16.1.7",
+        "ISO 27037",
+        "NIST SP 800-86"
+      ]
+    },
+    {
+      "check_id": "PROTO-03",
+      "title": "Mekanisme Heartbeat & Monitoring Koneksi",
+      "description": "Evaluasi mekanisme heartbeat FIX Protocol dan monitoring koneksi untuk mendeteksi disconnection, connection hijacking, dan man-in-the-middle attack pada koneksi trading.",
+      "severity": "MEDIUM",
+      "status": "WARNING",
+      "risk_score": 6.3,
+      "affected_component": "FIX Heartbeat & Connection Monitor",
+      "evidence": "Simulasi evaluasi heartbeat:\n1. Heartbeat interval 30 detik terlalu lama - hijack window    besar antara heartbeat\n2. Heartbeat message (MsgType=0) tidak mengandung    cryptographic proof-of-liveness - hanya TestReqID\n3. Tidak ada server-initiated heartbeat challenge - hanya    client-initiated TestRequest\n4. Connection latency spike tidak di-monitor secara real-time    - bisa mengindikasikan MITM\n5. Heartbeat response time threshold tidak dikonfigurasi -    tidak ada automated disconnect pada anomaly",
+      "recommendation": "1. Kurangi heartbeat interval menjadi 5-10 detik\n2. Tambahkan cryptographic nonce pada heartbeat untuk    proof-of-liveness\n3. Implementasi server-initiated heartbeat challenge\n4. Monitor connection latency dan alert pada spike >10ms\n5. Konfigurasi automated disconnect jika heartbeat response    time >3x normal average\n6. Log seluruh heartbeat anomaly untuk forensic analysis",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "FIX Protocol Best Practices",
+        "OJK POJK 38/2016 Pasal 29"
+      ]
+    },
+    {
+      "check_id": "NET-06",
+      "title": "Kontrol Akses Fisik Infrastruktur Jaringan",
+      "description": "Pemeriksaan kontrol akses fisik ke ruang server, data center, MDF/IDF, dan seluruh infrastruktur jaringan JATS-NextG.",
+      "severity": "MEDIUM",
+      "status": "PARTIAL",
+      "risk_score": 6.2,
+      "affected_component": "Physical Security - Network Infrastructure",
+      "evidence": "Simulasi audit fisik mendeteksi:\n1. Akses ke ruang IDF (Intermediate Distribution Frame)    menggunakan kunci mekanik tanpa audit trail\n2. CCTV coverage di ruang server mencapai 90% namun ada    blind spot di area kabel tray dan patch panel\n3. Log akses kartu elektronik ke data center disimpan hanya    30 hari - tidak memenuhi standar retensi audit\n4. Environmental monitoring (suhu, kelembaban) memadai namun    tidak ada water leak detection di bawah raised floor",
+      "recommendation": "1. Ganti kunci mekanik IDF dengan akses kartu elektronik    yang terintegrasi dengan SIEM\n2. Tambahkan CCTV pada blind spot area kabel tray\n3. Perpanjang retensi log akses fisik menjadi minimum 1 tahun\n4. Pasang water leak detection sensor di bawah raised floor\n5. Implementasi man-trap pada pintu masuk data center\n6. Terapkan visitor escort policy yang ketat dengan logging",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.11.1",
+        "OJK POJK 38/2016 Pasal 20",
+        "NIST SP 800-53 PE-2",
+        "PCI DSS 9.1"
+      ]
+    },
+    {
+      "check_id": "NET-08",
+      "title": "Keamanan DNS Internal & Integritas Routing",
+      "description": "Pemeriksaan keamanan DNS internal dan integritas routing table pada jaringan JATS-NextG untuk mencegah DNS spoofing, cache poisoning, dan route hijacking.",
+      "severity": "MEDIUM",
+      "status": "WARNING",
+      "risk_score": 6.0,
+      "affected_component": "DNS & Routing Infrastructure",
+      "evidence": "Simulasi audit DNS dan routing:\n1. DNSSEC belum diimplementasi pada DNS internal -    rentan terhadap DNS cache poisoning\n2. DNS query logging tidak diaktifkan - menghambat forensic\n3. Routing protocol (OSPF/BGP) authentication menggunakan    MD5 yang sudah dianggap lemah\n4. Tidak ada route filtering atau prefix-list yang ketat    pada border router\n5. BFD (Bidirectional Forwarding Detection) belum aktif    untuk rapid failure detection",
+      "recommendation": "1. Implementasi DNSSEC pada seluruh DNS internal\n2. Aktifkan DNS query logging dan integrasikan ke SIEM\n3. Upgrade routing authentication ke SHA-256 atau TCP-AO\n4. Terapkan strict route filtering dan prefix-list\n5. Aktifkan BFD pada seluruh adjacency routing\n6. Implementasi RPKI untuk validasi BGP prefix (jika ada    koneksi BGP)",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.13.1.1",
+        "NIST SP 800-81r2"
+      ]
+    },
+    {
+      "check_id": "APP-03",
+      "title": "Penanganan Error & Pencegahan Information Disclosure",
+      "description": "Evaluasi error handling pada aplikasi JATS-NextG untuk memastikan tidak ada kebocoran informasi sensitif melalui error message, log, atau diagnostic output.",
+      "severity": "MEDIUM",
+      "status": "WARNING",
+      "risk_score": 6.0,
+      "affected_component": "Application Error Handling",
+      "evidence": "Simulasi audit error handling:\n1. FIX rejection message (MsgType=3) mengandung internal    error code yang mengungkap arsitektur internal\n2. Debug mode masih aktif pada staging environment yang    bisa diakses dari production network\n3. Stack trace terekspos pada REST API error response\n4. Log level DEBUG pada beberapa komponen menulis    credential dan token ke log file\n5. Error counter metric terekspos tanpa authentication    pada monitoring endpoint",
+      "recommendation": "1. Gunakan generic error code pada FIX rejection - map    internal code ke user-facing code\n2. Isolasi staging dari production network sepenuhnya\n3. Sanitize seluruh API error response - hapus stack trace\n4. Audit log level dan pastikan credentials di-mask pada    semua log level\n5. Tambahkan authentication pada monitoring endpoints\n6. Implementasi centralized error handling framework",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.14.1.2",
+        "OWASP ASVS 7.1",
+        "CWE-209"
+      ]
+    },
+    {
+      "check_id": "DATA-04",
+      "title": "Klasifikasi Data & Penanganan Informasi",
+      "description": "Evaluasi implementasi data classification scheme dan prosedur penanganan data pada JATS-NextG sesuai dengan tingkat sensitivitas data.",
+      "severity": "MEDIUM",
+      "status": "PARTIAL",
+      "risk_score": 6.0,
+      "affected_component": "Data Governance",
+      "evidence": "Simulasi audit data classification:\n1. Data classification policy sudah ada namun belum    diterapkan secara teknis (label/tag pada data)\n2. Non-public market information (NPMI) tidak dilabeli -    sulit menerapkan DLP (Data Loss Prevention)\n3. Penanganan data debug/diagnostic mengandung PII dan    data transaksi - tidak di-anonymize\n4. Data sharing dengan regulator (OJK) tidak memiliki    data minimization review\n5. Screen capture dan print tidak dibatasi pada workstation    yang menangani data market sensitive",
+      "recommendation": "1. Implementasi teknis data classification (labeling/tagging)\n   Level: Top Secret, Confidential, Internal, Public\n2. Deploy DLP solution untuk NPMI protection\n3. Anonymize/pseudonymize data pada debug dan diagnostic\n4. Terapkan data minimization review untuk regulatory sharing\n5. Batasi screen capture dan print pada sensitive workstation\n6. Implementasi automated data discovery dan classification",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "ISO 27001:A.8.2.1",
+        "OJK POJK 38/2016 Pasal 47",
+        "NIST SP 800-60"
+      ]
+    },
+    {
+      "check_id": "COMP-03",
+      "title": "Penerapan PCI DSS (jika applicable)",
+      "description": "Evaluasi apakah komponen JATS-NextG yang menangani data pembayaran atau settlement perlu mematuhi PCI DSS dan sejauh mana kepatuhannya.",
+      "severity": "MEDIUM",
+      "status": "PARTIAL",
+      "risk_score": 5.5,
+      "affected_component": "Payment Data Handling Components",
+      "evidence": "Simulasi PCI DSS scoping assessment:\n1. JATS-NextG tidak langsung memproses data kartu namun    interface dengan settlement system yang menghandle    fund transfer - limited PCI scope\n2. Bank account information pada member database tidak    termasuk PCI scope namun perlu proteksi setara\n3. Settlement file transfer mengandung financial data    yang memerlukan encryption (lihat APP-06)\n4. Third-party payment processor compliance status    belum diverifikasi\n5. Segmentasi antara trading dan settlement component    belum divalidasi untuk PCI scoping",
+      "recommendation": "1. Lakukan formal PCI DSS scoping assessment\n2. Terapkan PCI DSS controls pada in-scope components:\n   - Network segmentation (Req 1)\n   - Data encryption (Req 3, 4)\n   - Access control (Req 7, 8)\n   - Monitoring (Req 10)\n3. Verifikasi third-party payment processor PCI compliance    (AOC - Attestation of Compliance)\n4. Validasi network segmentation untuk PCI scope reduction\n5. Proteksi bank account data setara dengan PCI controls",
+      "remediation_effort": "Medium",
+      "cve_references": [],
+      "compliance_references": [
+        "PCI DSS v4.0",
+        "PA-DSS"
+      ]
+    }
+  ],
+  "statistics": {
+    "total_findings": 58,
+    "severity_distribution": {
+      "CRITICAL": 17,
+      "HIGH": 29,
+      "MEDIUM": 12,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "status_distribution": {
+      "VULNERABLE": 21,
+      "WARNING": 30,
+      "SECURE": 0,
+      "NOT_TESTED": 0,
+      "PARTIAL": 7
+    },
+    "average_risk_score": 7.7,
+    "max_risk_score": 9.6,
+    "critical_count": 17,
+    "high_count": 29,
+    "medium_count": 12,
+    "vulnerable_count": 21,
+    "warning_count": 30,
+    "overall_risk_rating": "SANGAT TINGGI (Very High)"
+  },
+  "compliance_mapping": {
+    "ISO 27001 / ISO 22301": {
+      "ISO 27001:A.14.2.5": [
+        "APP-01",
+        "APP-05"
+      ],
+      "ISO 27001:A.14.1.2": [
+        "PROTO-01",
+        "PROTO-06",
+        "APP-02",
+        "PROTO-05",
+        "APP-06",
+        "APP-03"
+      ],
+      "ISO 27001:A.13.1.1": [
+        "NET-04",
+        "NET-02",
+        "NET-05",
+        "NET-07",
+        "NET-10",
+        "INFRA-03",
+        "NET-08"
+      ],
+      "ISO 27001:A.12.4.1": [
+        "DATA-02",
+        "MON-02",
+        "MON-06",
+        "MON-01"
+      ],
+      "ISO 27001:A.9.2.3": [
+        "AUTH-05"
+      ],
+      "ISO 27001:A.13.1.3": [
+        "NET-01"
+      ],
+      "ISO 27001:A.14.1.3": [
+        "PROTO-04",
+        "PROTO-08"
+      ],
+      "ISO 27001:A.9.2.1": [
+        "AUTH-01"
+      ],
+      "ISO 27001:A.10.1.1": [
+        "DATA-01",
+        "DATA-05"
+      ],
+      "ISO 27001:A.9.4.2": [
+        "AUTH-02",
+        "PROTO-02",
+        "AUTH-03"
+      ],
+      "ISO 27001:A.11.1.1": [
+        "NET-03"
+      ],
+      "ISO 27001:A.13.1.2": [
+        "NET-03"
+      ],
+      "ISO 27001:A.17.1": [
+        "INFRA-05"
+      ],
+      "ISO 22301": [
+        "INFRA-05"
+      ],
+      "ISO 27001:A.16.1": [
+        "MON-04"
+      ],
+      "ISO 27035": [
+        "MON-04"
+      ],
+      "ISO 27001:A.12.6.1": [
+        "INFRA-02",
+        "NET-09",
+        "INFRA-01",
+        "APP-08",
+        "INFRA-04"
+      ],
+      "ISO 27001:A.12.3.1": [
+        "DATA-03"
+      ],
+      "ISO 27001:A.10.1.2": [
+        "AUTH-07",
+        "DATA-06"
+      ],
+      "ISO 27001:A.9.1.2": [
+        "AUTH-04"
+      ],
+      "ISO 27001:A.14.2.8": [
+        "PROTO-07"
+      ],
+      "ISO 27001:A.12.4.4": [
+        "INFRA-06"
+      ],
+      "ISO 27001:A.15.1": [
+        "COMP-06"
+      ],
+      "ISO 27001:A.9.4.1": [
+        "AUTH-08"
+      ],
+      "ISO 27001:2022": [
+        "COMP-02"
+      ],
+      "ISO 27002:2022": [
+        "COMP-02"
+      ],
+      "ISO 22301:2019": [
+        "COMP-04"
+      ],
+      "ISO 27001:A.9.4.3": [
+        "AUTH-06"
+      ],
+      "ISO 27001:A.16.1.2": [
+        "MON-03"
+      ],
+      "ISO 27001:A.16.1.7": [
+        "MON-05"
+      ],
+      "ISO 27037": [
+        "MON-05"
+      ],
+      "ISO 27001:A.11.1": [
+        "NET-06"
+      ],
+      "ISO 27001:A.8.2.1": [
+        "DATA-04"
+      ]
+    },
+    "OJK POJK 38/2016": {
+      "OJK POJK 38/2016 Pasal 38": [
+        "APP-01"
+      ],
+      "OJK POJK 38/2016 Pasal 27": [
+        "PROTO-01"
+      ],
+      "OJK POJK 38/2016 Pasal 40": [
+        "APP-05"
+      ],
+      "OJK POJK 38/2016 Pasal 23": [
+        "NET-04"
+      ],
+      "OJK POJK 38/2016 Pasal 45": [
+        "DATA-02"
+      ],
+      "OJK POJK 38/2016 Pasal 32": [
+        "PROTO-06"
+      ],
+      "OJK POJK 38/2016 Pasal 36": [
+        "AUTH-05"
+      ],
+      "OJK POJK 38/2016 Pasal 21": [
+        "NET-01"
+      ],
+      "OJK POJK 38/2016 Pasal 30": [
+        "PROTO-04"
+      ],
+      "OJK POJK 38/2016 Pasal 33": [
+        "AUTH-01"
+      ],
+      "OJK POJK 38/2016 Pasal 39": [
+        "APP-04"
+      ],
+      "OJK POJK 38/2016 Pasal 44": [
+        "DATA-01"
+      ],
+      "OJK POJK 38/2016 Pasal 34": [
+        "AUTH-02"
+      ],
+      "OJK POJK 38/2016 Pasal 20": [
+        "NET-03",
+        "COMP-04",
+        "NET-06"
+      ],
+      "OJK POJK 38/2016 Pasal 49": [
+        "INFRA-05"
+      ],
+      "OJK POJK 38/POJK.03/2016": [
+        "COMP-01"
+      ],
+      "SEOJK 21/SEOJK.03/2017": [
+        "COMP-01"
+      ],
+      "OJK POJK 38/2016 Pasal 53": [
+        "MON-04"
+      ],
+      "OJK POJK 38/2016 Pasal 28": [
+        "PROTO-02"
+      ],
+      "OJK POJK 38/2016 Pasal 48": [
+        "INFRA-02"
+      ],
+      "OJK POJK 38/2016 Pasal 22": [
+        "NET-02"
+      ],
+      "OJK POJK 38/2016 Pasal 51": [
+        "MON-02"
+      ],
+      "OJK POJK 38/2016 Pasal 54": [
+        "MON-06"
+      ],
+      "OJK POJK 38/2016 Pasal 31": [
+        "PROTO-05"
+      ],
+      "OJK POJK 38/2016 Pasal 24": [
+        "NET-05",
+        "COMP-06"
+      ],
+      "OJK POJK 38/2016 Pasal 42": [
+        "APP-07"
+      ],
+      "OJK POJK 38/2016 Pasal 46": [
+        "DATA-03"
+      ],
+      "OJK POJK 38/2016 Pasal 50": [
+        "MON-01"
+      ],
+      "OJK POJK 38/2016 Pasal 25": [
+        "NET-07"
+      ],
+      "OJK POJK 38/2016 Pasal 37": [
+        "AUTH-07"
+      ],
+      "OJK POJK 38/2016 Pasal 35": [
+        "AUTH-04"
+      ],
+      "OJK POJK 38/2016 Pasal 41": [
+        "APP-06"
+      ],
+      "OJK POJK 38/2016 Pasal 43": [
+        "APP-08"
+      ],
+      "OJK POJK 38/2016 Pasal 26": [
+        "NET-10"
+      ],
+      "OJK POJK 38/2016 Pasal 52": [
+        "MON-03"
+      ],
+      "OJK POJK 38/2016 Pasal 29": [
+        "PROTO-03"
+      ],
+      "OJK POJK 38/2016 Pasal 47": [
+        "DATA-04"
+      ]
+    },
+    "IOSCO Principles": {
+      "IOSCO Principles for Financial Markets": [
+        "APP-01"
+      ],
+      "IOSCO Risk Management Principles": [
+        "APP-05"
+      ],
+      "IOSCO Audit Trail Principles": [
+        "DATA-02"
+      ],
+      "IOSCO Market Integrity Principles": [
+        "APP-04"
+      ],
+      "IOSCO Principles": [
+        "PROTO-05"
+      ],
+      "IOSCO Market Surveillance Recommendations": [
+        "APP-07"
+      ],
+      "IOSCO BCP Guidelines": [
+        "COMP-04"
+      ]
+    },
+    "Other Standards": {
+      "FIX Protocol Best Practices": [
+        "PROTO-01",
+        "PROTO-03"
+      ],
+      "FIX Protocol Security": [
+        "PROTO-06"
+      ],
+      "BEI Peraturan Perdagangan": [
+        "APP-04"
+      ],
+      "FIX Session Protocol Spec": [
+        "PROTO-02"
+      ],
+      "FIX Protocol Security Recommendations": [
+        "PROTO-08"
+      ],
+      "SOC CMM": [
+        "MON-06"
+      ],
+      "MAR (Market Abuse Regulation) equivalent": [
+        "APP-07"
+      ],
+      "PP tentang PDP (pending)": [
+        "COMP-05"
+      ],
+      "GDPR (reference/best practice)": [
+        "COMP-05"
+      ],
+      "COBIT 5 DSS05.04": [
+        "AUTH-04"
+      ],
+      "CPMI-IOSCO PFMI Principles": [
+        "APP-06"
+      ],
+      "MiFID II RTS 25 (reference)": [
+        "INFRA-06"
+      ],
+      "FIPS 140-2": [
+        "DATA-06"
+      ],
+      "CWE-209": [
+        "APP-03"
+      ],
+      "PA-DSS": [
+        "COMP-03"
+      ]
+    },
+    "NIST Framework": {
+      "NIST SP 800-53 SI-10": [
+        "PROTO-01",
+        "PROTO-06",
+        "APP-02",
+        "PROTO-07"
+      ],
+      "NIST SP 800-52r2": [
+        "NET-04"
+      ],
+      "NIST SP 800-92": [
+        "DATA-02",
+        "MON-02",
+        "MON-01"
+      ],
+      "NIST SP 800-53 AC-6": [
+        "AUTH-05"
+      ],
+      "NIST SP 800-53 SC-7": [
+        "NET-01"
+      ],
+      "NIST SP 800-53 AC-4": [
+        "PROTO-04"
+      ],
+      "NIST SP 800-63B": [
+        "AUTH-01",
+        "AUTH-06"
+      ],
+      "NIST SP 800-111": [
+        "DATA-01"
+      ],
+      "NIST SP 800-63B AAL2/AAL3": [
+        "AUTH-02"
+      ],
+      "NIST SP 800-53 PE-4": [
+        "NET-03"
+      ],
+      "NIST SP 800-34r1": [
+        "INFRA-05",
+        "DATA-03"
+      ],
+      "NIST SP 800-61r2": [
+        "MON-04",
+        "MON-03"
+      ],
+      "NIST SP 800-53 SC-23": [
+        "PROTO-02",
+        "AUTH-03"
+      ],
+      "NIST SP 800-40r4": [
+        "INFRA-02",
+        "APP-08"
+      ],
+      "NIST SP 800-131A": [
+        "DATA-05"
+      ],
+      "NIST Post-Quantum Cryptography": [
+        "DATA-05"
+      ],
+      "NIST SP 800-53 SC-8": [
+        "PROTO-08"
+      ],
+      "NIST SP 800-53 CM-6": [
+        "NET-09"
+      ],
+      "NIST SP 800-41": [
+        "NET-02"
+      ],
+      "NIST SP 800-123": [
+        "INFRA-01",
+        "INFRA-03"
+      ],
+      "NIST CSF DE.CM": [
+        "MON-06"
+      ],
+      "NIST SP 800-77": [
+        "NET-05"
+      ],
+      "NIST SP 800-94": [
+        "NET-07"
+      ],
+      "NIST SP 800-57": [
+        "AUTH-07",
+        "DATA-06"
+      ],
+      "NIST SP 800-53 AC-2": [
+        "AUTH-04"
+      ],
+      "NIST SP 800-53 AU-8": [
+        "INFRA-06"
+      ],
+      "NIST SP 800-53 SA-9": [
+        "COMP-06"
+      ],
+      "NIST CSF ID.SC": [
+        "COMP-06"
+      ],
+      "NIST SP 800-53 AC-3": [
+        "AUTH-08"
+      ],
+      "NIST SP 800-190": [
+        "INFRA-04"
+      ],
+      "NIST SP 800-53 SC-5": [
+        "NET-10"
+      ],
+      "NIST SP 800-86": [
+        "MON-05"
+      ],
+      "NIST SP 800-53 PE-2": [
+        "NET-06"
+      ],
+      "NIST SP 800-81r2": [
+        "NET-08"
+      ],
+      "NIST SP 800-60": [
+        "DATA-04"
+      ]
+    },
+    "PCI DSS v4.0": {
+      "PCI DSS 4.1": [
+        "NET-04",
+        "DATA-05",
+        "AUTH-07"
+      ],
+      "PCI DSS 8.5": [
+        "AUTH-05"
+      ],
+      "PCI DSS 1.2": [
+        "NET-01"
+      ],
+      "PCI DSS 8.2": [
+        "AUTH-01"
+      ],
+      "PCI DSS 3.4": [
+        "DATA-01"
+      ],
+      "PCI DSS 8.3": [
+        "AUTH-02"
+      ],
+      "PCI DSS 6.2": [
+        "INFRA-02",
+        "APP-08"
+      ],
+      "PCI DSS 2.2": [
+        "NET-09",
+        "INFRA-01"
+      ],
+      "PCI DSS 1.1": [
+        "NET-02"
+      ],
+      "PCI DSS 10.5": [
+        "MON-02"
+      ],
+      "PCI DSS 8.6": [
+        "AUTH-03"
+      ],
+      "PCI DSS 9.5": [
+        "DATA-03"
+      ],
+      "PCI DSS 10.6": [
+        "MON-01"
+      ],
+      "PCI DSS 11.4": [
+        "NET-07"
+      ],
+      "PCI DSS 3.5": [
+        "DATA-06"
+      ],
+      "PCI DSS 8.2.4": [
+        "AUTH-06"
+      ],
+      "PCI DSS 2.2.2": [
+        "INFRA-03"
+      ],
+      "PCI DSS 9.1": [
+        "NET-06"
+      ],
+      "PCI DSS v4.0": [
+        "COMP-03"
+      ]
+    },
+    "CIS Benchmarks": {
+      "CIS Benchmarks": [
+        "NET-09",
+        "INFRA-01",
+        "INFRA-03"
+      ],
+      "CIS Docker Benchmark": [
+        "INFRA-04"
+      ]
+    },
+    "OWASP Standards": {
+      "OWASP ASVS 5.1": [
+        "APP-02"
+      ],
+      "OWASP Session Management": [
+        "AUTH-03"
+      ],
+      "OWASP Testing Guide v4": [
+        "PROTO-07"
+      ],
+      "OWASP API Security Top 10": [
+        "AUTH-08"
+      ],
+      "OWASP ASVS 7.1": [
+        "APP-03"
+      ]
+    },
+    "UU PDP Indonesia": {
+      "UU No. 27 Tahun 2022 (UU PDP)": [
+        "COMP-05"
+      ]
+    }
+  },
+  "remediation_roadmap": [
+    {
+      "phase": "Phase 1",
+      "title": "Emergency Remediation (Remediasi Darurat)",
+      "timeframe": "0-30 hari",
+      "items": [
+        {
+          "check_id": "APP-01",
+          "title": "Integritas Matching Engine & Race Condition",
+          "risk_score": 9.6,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "PROTO-01",
+          "title": "Validasi & Integritas Pesan FIX Protocol",
+          "risk_score": 9.5,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "APP-05",
+          "title": "Potensi Bypass Risk Management System",
+          "risk_score": 9.4,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "NET-04",
+          "title": "Keamanan Remote Trading (RT) Gateway Broker-to-BEI",
+          "risk_score": 9.3,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "DATA-02",
+          "title": "Integritas Transaction Log & Non-Repudiation",
+          "risk_score": 9.3,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "PROTO-06",
+          "title": "Deteksi Injeksi & Manipulasi Pesan FIX",
+          "risk_score": 9.2,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "AUTH-05",
+          "title": "Privileged Access Management (PAM)",
+          "risk_score": 9.2,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "NET-01",
+          "title": "Segmentasi Jaringan & Isolasi VLAN",
+          "risk_score": 9.1,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "PROTO-04",
+          "title": "Keamanan Protokol Routing Order",
+          "risk_score": 9.0,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "AUTH-01",
+          "title": "Mekanisme Otentikasi Broker pada RT Gateway",
+          "risk_score": 9.0,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "APP-04",
+          "title": "Penegakan Trading Limit",
+          "risk_score": 9.0,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        },
+        {
+          "check_id": "DATA-01",
+          "title": "Enkripsi Database (At-Rest & In-Transit)",
+          "risk_score": 9.0,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Immediate"
+        }
+      ]
+    },
+    {
+      "phase": "Phase 2",
+      "title": "Critical Fixes (Perbaikan Kritis)",
+      "timeframe": "30-90 hari",
+      "items": [
+        {
+          "check_id": "AUTH-02",
+          "title": "Multi-Factor Authentication (MFA)",
+          "risk_score": 8.8,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Critical"
+        },
+        {
+          "check_id": "NET-03",
+          "title": "Deteksi Rogue Access Point & Unauthorized Device",
+          "risk_score": 8.5,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Critical"
+        },
+        {
+          "check_id": "INFRA-05",
+          "title": "Disaster Recovery & Business Continuity",
+          "risk_score": 8.5,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Critical"
+        },
+        {
+          "check_id": "COMP-01",
+          "title": "Kepatuhan OJK POJK 38/POJK.03/2016",
+          "risk_score": 8.5,
+          "severity": "CRITICAL",
+          "effort": "High",
+          "priority": "P1 - Critical"
+        },
+        {
+          "check_id": "MON-04",
+          "title": "Kesiapan Respons Insiden",
+          "risk_score": 8.0,
+          "severity": "CRITICAL",
+          "effort": "Medium",
+          "priority": "P1 - Critical"
+        },
+        {
+          "check_id": "PROTO-02",
+          "title": "Keamanan Session Layer & Manajemen Sequence Number",
+          "risk_score": 8.7,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "INFRA-02",
+          "title": "Manajemen Patch & Vulnerability Scanning",
+          "risk_score": 8.5,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "DATA-05",
+          "title": "Review Implementasi Kriptografi",
+          "risk_score": 8.2,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "PROTO-08",
+          "title": "Proteksi Terhadap Message Replay Attack",
+          "risk_score": 8.1,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "NET-09",
+          "title": "Hardening Perangkat Jaringan (Switch, Router, Firewall)",
+          "risk_score": 8.0,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "NET-02",
+          "title": "Analisis Aturan Firewall & Pertahanan Perimeter",
+          "risk_score": 7.8,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "APP-02",
+          "title": "Validasi Input & Keamanan Business Logic",
+          "risk_score": 7.8,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "INFRA-01",
+          "title": "OS Hardening & Kepatuhan CIS Benchmark",
+          "risk_score": 7.8,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "MON-02",
+          "title": "Manajemen Log & Integritas",
+          "risk_score": 7.8,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "MON-06",
+          "title": "Efektivitas Security Operations Center (SOC)",
+          "risk_score": 7.8,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "PROTO-05",
+          "title": "Integritas Market Data Feed",
+          "risk_score": 7.6,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "NET-05",
+          "title": "Keamanan Jalur Komunikasi (Leased Line / MPLS / VPN)",
+          "risk_score": 7.5,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "AUTH-03",
+          "title": "Manajemen Sesi & Keamanan Token",
+          "risk_score": 7.5,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "APP-07",
+          "title": "Integritas Sistem Pengawasan Pasar",
+          "risk_score": 7.5,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "DATA-03",
+          "title": "Keamanan Backup & Verifikasi Recovery",
+          "risk_score": 7.5,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "MON-01",
+          "title": "Implementasi & Cakupan SIEM",
+          "risk_score": 7.5,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "COMP-05",
+          "title": "Kepatuhan UU Perlindungan Data Pribadi (UU PDP)",
+          "risk_score": 7.5,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        }
+      ]
+    },
+    {
+      "phase": "Phase 3",
+      "title": "Security Improvement (Peningkatan Keamanan)",
+      "timeframe": "90-180 hari",
+      "items": [
+        {
+          "check_id": "NET-07",
+          "title": "Efektivitas IDS/IPS pada Jaringan JATS-NextG",
+          "risk_score": 7.4,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "AUTH-07",
+          "title": "Manajemen Sertifikat & PKI",
+          "risk_score": 7.4,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "AUTH-04",
+          "title": "Role-Based Access Control (RBAC)",
+          "risk_score": 7.3,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "PROTO-07",
+          "title": "Ketahanan Terhadap Protocol Fuzzing",
+          "risk_score": 7.2,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "APP-06",
+          "title": "Keamanan Sistem Kliring & Setelmen",
+          "risk_score": 7.2,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "INFRA-06",
+          "title": "Keamanan Sinkronisasi Waktu (NTP)",
+          "risk_score": 7.2,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "COMP-06",
+          "title": "Manajemen Risiko Vendor / Pihak Ketiga",
+          "risk_score": 7.2,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "AUTH-08",
+          "title": "Otentikasi & Otorisasi API",
+          "risk_score": 7.0,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "APP-08",
+          "title": "Manajemen Patch Aplikasi",
+          "risk_score": 7.0,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "DATA-06",
+          "title": "Manajemen & Rotasi Kunci Kriptografi",
+          "risk_score": 7.0,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "COMP-02",
+          "title": "Kepatuhan ISO 27001:2022",
+          "risk_score": 7.0,
+          "severity": "HIGH",
+          "effort": "High",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "COMP-04",
+          "title": "Kepatuhan Regulasi Business Continuity",
+          "risk_score": 7.0,
+          "severity": "HIGH",
+          "effort": "Medium",
+          "priority": "P2 - High"
+        },
+        {
+          "check_id": "INFRA-04",
+          "title": "Keamanan Virtualisasi & Container",
+          "risk_score": 6.8,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "NET-10",
+          "title": "Proteksi DDoS & Deteksi Anomali Trafik",
+          "risk_score": 6.5,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "AUTH-06",
+          "title": "Penegakan Kebijakan Password & Credential",
+          "risk_score": 6.5,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "INFRA-03",
+          "title": "Inventaris Service & Keamanan Port",
+          "risk_score": 6.5,
+          "severity": "MEDIUM",
+          "effort": "Low",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "MON-03",
+          "title": "Alerting Real-Time & Prosedur Eskalasi",
+          "risk_score": 6.5,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "MON-05",
+          "title": "Kesiapan Forensik Digital",
+          "risk_score": 6.5,
+          "severity": "MEDIUM",
+          "effort": "High",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "PROTO-03",
+          "title": "Mekanisme Heartbeat & Monitoring Koneksi",
+          "risk_score": 6.3,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "NET-06",
+          "title": "Kontrol Akses Fisik Infrastruktur Jaringan",
+          "risk_score": 6.2,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "NET-08",
+          "title": "Keamanan DNS Internal & Integritas Routing",
+          "risk_score": 6.0,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "APP-03",
+          "title": "Penanganan Error & Pencegahan Information Disclosure",
+          "risk_score": 6.0,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "DATA-04",
+          "title": "Klasifikasi Data & Penanganan Informasi",
+          "risk_score": 6.0,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        },
+        {
+          "check_id": "COMP-03",
+          "title": "Penerapan PCI DSS (jika applicable)",
+          "risk_score": 5.5,
+          "severity": "MEDIUM",
+          "effort": "Medium",
+          "priority": "P3 - Medium"
+        }
+      ]
+    },
+    {
+      "phase": "Phase 4",
+      "title": "Strategic Hardening (Penguatan Strategis)",
+      "timeframe": "180-365 hari",
+      "items": []
+    }
+  ]
+}
