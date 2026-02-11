@@ -61,7 +61,7 @@ type Server struct {
 	router *mux.Router
 
 	// Access control manager
-	accessManager access.AccessControlManager
+	accessManager *access.AccessControlManager
 
 	// Middleware
 	authMiddleware      *AuthMiddleware
@@ -71,7 +71,7 @@ type Server struct {
 }
 
 // NewServer creates a new API server
-func NewServer(config *APIConfig, accessManager access.AccessControlManager) *Server {
+func NewServer(config *APIConfig, accessManager *access.AccessControlManager) *Server {
 	router := mux.NewRouter()
 
 	// Create server
@@ -214,5 +214,5 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 func (s *Server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"ok"}`)) // nolint:errcheck
+	_, _ = w.Write([]byte(`{"status":"ok"}`)) // #nosec G104 -- error writing HTTP response is not recoverable
 }

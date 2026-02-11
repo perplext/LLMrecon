@@ -112,9 +112,9 @@ type Session struct {
 
 // AccessControlIntegration integrates RBAC, MFA, and audit logging
 type AccessControlIntegration struct {
-	rbacManager  rbac.RBACManager
+	rbacManager  *rbac.RBACManager
 	mfaManager   mfa.MFAManager
-	auditManager audit.AuditManager
+	auditManager *audit.AuditManager
 	userStore    UserStore
 	sessionStore SessionStore
 }
@@ -173,9 +173,9 @@ type SessionStore interface {
 
 // NewAccessControlIntegration creates a new access control integration
 func NewAccessControlIntegration(
-	rbacManager rbac.RBACManager,
+	rbacManager *rbac.RBACManager,
 	mfaManager mfa.MFAManager,
-	auditManager audit.AuditManager,
+	auditManager *audit.AuditManager,
 	userStore UserStore,
 	sessionStore SessionStore,
 ) *AccessControlIntegration {

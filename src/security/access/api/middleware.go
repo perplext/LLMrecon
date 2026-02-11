@@ -53,11 +53,11 @@ func WriteSuccessResponse(w http.ResponseWriter, statusCode int, message string,
 
 // AuthMiddleware handles authentication for API requests
 type AuthMiddleware struct {
-	accessManager access.AccessControlManager
+	accessManager *access.AccessControlManager
 }
 
 // NewAuthMiddleware creates a new authentication middleware
-func NewAuthMiddleware(accessManager access.AccessControlManager) *AuthMiddleware {
+func NewAuthMiddleware(accessManager *access.AccessControlManager) *AuthMiddleware {
 	return &AuthMiddleware{
 		accessManager: accessManager,
 	}
@@ -130,11 +130,11 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 // RBACMiddleware handles role-based access control for API requests
 type RBACMiddleware struct {
-	accessManager access.AccessControlManager
+	accessManager *access.AccessControlManager
 }
 
 // NewRBACMiddleware creates a new RBAC middleware
-func NewRBACMiddleware(accessManager access.AccessControlManager) *RBACMiddleware {
+func NewRBACMiddleware(accessManager *access.AccessControlManager) *RBACMiddleware {
 	return &RBACMiddleware{
 		accessManager: accessManager,
 	}
@@ -192,11 +192,11 @@ func (m *RBACMiddleware) RequireRole(role string) func(http.Handler) http.Handle
 
 // LoggingMiddleware handles logging of API requests
 type LoggingMiddleware struct {
-	accessManager access.AccessControlManager
+	accessManager *access.AccessControlManager
 }
 
 // NewLoggingMiddleware creates a new logging middleware
-func NewLoggingMiddleware(accessManager access.AccessControlManager) *LoggingMiddleware {
+func NewLoggingMiddleware(accessManager *access.AccessControlManager) *LoggingMiddleware {
 	return &LoggingMiddleware{
 		accessManager: accessManager,
 	}

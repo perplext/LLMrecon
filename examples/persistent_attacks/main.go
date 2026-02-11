@@ -23,7 +23,7 @@ func main() {
     engine := persistence.NewPersistenceEngine(config)
     ctx := context.Background()
 
-    fmt.Println("=== LLMrecon - Persistent Attack Examples ===\n")
+    fmt.Println("=== LLMrecon - Persistent Attack Examples ===")
 
     // Example 1: Memory Anchoring
     fmt.Println("1. Memory Anchoring Attack")
