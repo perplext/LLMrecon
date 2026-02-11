@@ -128,9 +128,77 @@ Run the compliance tests to verify the implementation:
 go test -v ./src/compliance
 ```
 
+---
+
+## OWASP Top 10 for Agentic Applications 2026
+
+LLMrecon v0.8.0 adds compliance mapping for the [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/), released December 2025 by 100+ industry experts. This framework targets autonomous agent systems that plan, act, use tools, maintain memory, and communicate with other agents.
+
+### ASI Categories
+
+| Category | Name | Description |
+|----------|------|-------------|
+| **ASI01** | Agent Goal Hijack | Manipulation of agent goals via direct/indirect instruction injection |
+| **ASI02** | Tool Misuse & Exploitation | Agents misuse legitimate tools due to injection or misalignment |
+| **ASI03** | Agent Identity & Privilege Abuse | Exploiting inherited credentials or delegated permissions |
+| **ASI04** | Agentic Supply Chain Compromise | Malicious tools, MCP servers, plugins, or prompt templates |
+| **ASI05** | Unexpected Code Execution | Agents generating/executing unsafe code without isolation |
+| **ASI06** | Memory & Context Poisoning | Persistent memory or RAG stores infected with malicious data |
+| **ASI07** | Insecure Inter-Agent Communication | Agent communication lacking authentication or validation |
+| **ASI08** | Cascading Agent Failures | Single faults propagating across autonomous agents |
+| **ASI09** | Human-Agent Trust Exploitation | Over-reliance on persuasive agents leading to unsafe approvals |
+| **ASI10** | Rogue Agents | Compromised agents diverging from intended behavior |
+
+### Implementation
+
+**Go constants and types**: `src/compliance/owasp_agentic.go`
+- `OWASPAgenticCategory` type with `ASI01`-`ASI10` constants
+- `AgenticCategoryInfo` struct with MITRE ATLAS tactics, MAESTRO layers, and LLM Top 10 overlap
+- `TechniqueToAgenticCategories(techniqueID)` bidirectional lookup function
+- `AgenticComplianceReport`, `AgenticCategoryCoverage`, `AgenticComplianceGap` types
+
+**YAML mapping**: `templates/owasp_agentic_2026.yaml`
+- Forward mapping: ASI category -> attack techniques with priority levels
+- Reverse mapping: technique ID -> ASI categories
+- 70 test cases (7 per category) with concrete attack scenarios
+- MITRE ATLAS cross-references (tactics and techniques)
+- MAESTRO layer mappings (L1-L7)
+
+### Cross-Framework References
+
+| Framework | Coverage |
+|-----------|----------|
+| **MITRE ATLAS** | 15 tactics, 66 techniques including 14 agent-specific additions (Oct 2025) |
+| **MAESTRO** | 7-layer threat model (Foundation Models → Agent Ecosystem) |
+| **OWASP LLM Top 10 2025** | Bidirectional overlap mapping (e.g., LLM01 <-> ASI01) |
+
+### Framework-Specific Testing
+
+Attack profiles for popular multi-agent frameworks (`templates/framework_profiles/`):
+
+| Framework | Profile | Key Vectors |
+|-----------|---------|-------------|
+| **OpenClaw** | `openclaw.yaml` | 512 CVEs, malicious skill marketplace, queue lane bypass |
+| **CrewAI** | `crewai.yaml` | No per-agent RBAC, raw output passing |
+| **LangGraph** | `langgraph.yaml` | State manipulation, recursive spawning |
+| **AutoGen** | `autogen.yaml` | Auto-execute code blocks, Docker sandbox escape |
+
+### Generating Agentic Compliance Reports
+
+```bash
+# Build compliance report tool
+go build -o compliance-report ./cmd/compliance-report
+
+# Test compliance module
+go test -v ./src/compliance/...
+```
+
 ## Documentation
 
-For detailed information about the OWASP LLM compliance mapping, see:
+For detailed information about the OWASP compliance mappings, see:
 
 - [OWASP LLM Compliance Mapping Documentation](docs/owasp_llm_compliance_mapping.md)
-- [OWASP Top 10 for LLM Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+- [OWASP Top 10 for LLM Applications 2025](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+- [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/)
+- [MITRE ATLAS](https://atlas.mitre.org/)
+- [MAESTRO Framework](https://github.com/CloudSecurityAlliance/MAESTRO)

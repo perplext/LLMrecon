@@ -97,6 +97,61 @@ The following table maps specific tool features to OWASP LLM Top 10 vulnerabilit
 | Cost control | Cost Management | Implements budget controls and limits |
 | DoS protection | DoS Protection | Implements protection against denial of service attacks |
 
+## OWASP Top 10 for Agentic Applications 2026 Compliance Mapping
+
+Released December 2025 by 100+ industry experts, this framework targets autonomous agent systems that plan, act, use tools, maintain memory, and communicate with other agents. Implementation in `src/compliance/owasp_agentic.go` and `templates/owasp_agentic_2026.yaml`.
+
+| OWASP Agentic Category | Tool Feature | Implementation Details |
+|------------------------|--------------|------------------------|
+| **ASI01: Agent Goal Hijack** | | |
+| Direct/indirect instruction injection | Multi-Turn Escalation Module | Crescendo, Skeleton Key, and Bad Likert Judge attacks that manipulate agent goals over multiple turns |
+| Goal confusion via prompt injection | Prompt Injection Testing | Tests agent resistance to goal redirection via user and system prompts |
+| Cross-framework goal manipulation | Framework Profiles | CrewAI role confusion, LangGraph state manipulation profiles |
+| **ASI02: Tool Misuse & Exploitation** | | |
+| Agents misuse legitimate tools | MCP Protocol Attacks | Tool poisoning via description injection, schema manipulation for parameter abuse |
+| Function call exploitation | Tool-Use Interface Module | iMIST function transform, AIShellJack agent shell injection |
+| Unrestricted tool access | Framework Profiles | CrewAI shared tool permissions, AutoGen registered function abuse |
+| **ASI03: Agent Identity & Privilege Abuse** | | |
+| Inherited credential exploitation | Agent Persistence Module | Credential harvesting, privilege escalation via delegated permissions |
+| Delegation without authorization | Multi-Agent Delegation | Delegation trust chain exploitation, privilege hop attacks |
+| Cross-agent identity spoofing | Inter-Agent Communication | Toxic agent flow testing, identity verification bypass |
+| **ASI04: Agentic Supply Chain Compromise** | | |
+| Malicious tools and plugins | Skill Injection Module | Marketplace skill poisoning, typosquatting attacks |
+| MCP server compromise | MCP Supply Chain Module | Malicious MCP server detection, dependency verification |
+| Poisoned prompt templates | Template Security | Template validation, integrity checking, schema enforcement |
+| **ASI05: Unexpected Code Execution** | | |
+| Unsafe code generation/execution | Browser Agent Module | DOM injection, navigation hijack, screenshot exfiltration |
+| Sandbox escape | Framework Profiles | AutoGen Docker sandbox escape, code block auto-execution |
+| RCE via tool chains | Agent Persistence Module | RCE tool chain escalation testing |
+| **ASI06: Memory & Context Poisoning** | | |
+| Persistent memory infection | RAG Pipeline Attacks | Document injection, vector embedding manipulation, knowledge graph poisoning |
+| RAG store poisoning | Cross-Encoder Module | Cross-encoder reranking manipulation for retrieval poisoning |
+| Checkpoint state manipulation | Framework Profiles | LangGraph checkpoint state poisoning testing |
+| **ASI07: Insecure Inter-Agent Communication** | | |
+| Unauthenticated agent messages | Multi-Agent Module | Toxic output cascade between agents without validation |
+| Message injection | Framework Profiles | AutoGen GroupChat trust, CrewAI raw output passing |
+| Protocol manipulation | Inter-Agent Testing | Communication channel integrity and authentication testing |
+| **ASI08: Cascading Agent Failures** | | |
+| Single fault propagation | Recursive Task Module | Recursive task bomb testing for cost/resource exhaustion |
+| Uncontrolled execution loops | Reasoning Exploitation | Reasoning loop resource exhaustion, infinite chain detection |
+| Cost explosion | Framework Profiles | LangGraph $38K recursive spawning incident-based testing |
+| **ASI09: Human-Agent Trust Exploitation** | | |
+| Over-reliance on agent output | Deceptive Alignment Module | Monitoring-aware deception, alignment faking detection |
+| Persuasive agent manipulation | Trust Exploitation Testing | Social engineering via agent-mediated interactions |
+| Unsafe approval patterns | Human-in-Loop Testing | Framework breakpoint/interrupt bypass testing |
+| **ASI10: Rogue Agents** | | |
+| Compromised agent divergence | Deceptive Alignment Module | Sandbagging detection, alignment faking identification |
+| Persistent compromise | Agent Persistence Module | Config/system prompt rewrite, persistent backdoor detection |
+| Behavioral divergence | Rogue Agent Detection | Monitoring for agents deviating from intended behavior |
+
+### Cross-Framework References
+
+| Reference Framework | Coverage in LLMrecon |
+|---------------------|---------------------|
+| **MITRE ATLAS** | 15 tactics, 66 techniques including 14 agent-specific additions (Oct 2025) |
+| **MAESTRO** | 7-layer threat model (L1 Foundation Models → L7 Agent Ecosystem) |
+| **OWASP LLM Top 10 2025** | Bidirectional overlap mapping (e.g., LLM01 ↔ ASI01, LLM06 ↔ ASI02) |
+
 ## Traceability Matrix
 
 The following matrix shows how test results from Tasks #18-20 map to specific compliance requirements:
