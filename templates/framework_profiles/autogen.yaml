@@ -1,0 +1,82 @@
+# AutoGen Framework Attack Profile
+#
+# AutoGen (Microsoft) enables multi-agent conversations with code execution
+# capabilities. Agents can write and execute code in Docker sandboxes,
+# but sandbox escape and inter-agent trust are key concerns.
+#
+# Source: Multi-Agent Security Survey (https://arxiv.org/html/2510.23883v1)
+
+profile_name: autogen
+framework: autogen
+description: >
+  Attack profile for Microsoft AutoGen multi-agent framework. AutoGen
+  enables agent-to-agent conversations with integrated code execution
+  in Docker sandboxes. Key attack surfaces: Docker sandbox escape,
+  code execution via conversation, and inter-agent trust assumptions.
+
+attack_sequence:
+  # Phase 1: Code Execution via Conversation
+  - step: 1
+    name: "Conversation-Triggered Code Execution"
+    technique: rce_tool_chain_escalation
+    description: "Inject code into agent conversation that gets auto-executed in sandbox"
+    notes: "AutoGen's UserProxyAgent auto-executes code blocks by default"
+
+  # Phase 2: Sandbox Escape
+  - step: 2
+    name: "Docker Sandbox Escape"
+    technique: rce_webpage_to_shell
+    description: "Escape Docker code execution sandbox via volume mount or kernel exploit"
+    notes: "Default Docker config may mount host directories"
+    depends_on: [1]
+
+  # Phase 3: Inter-Agent Manipulation
+  - step: 3
+    name: "GroupChat Message Injection"
+    technique: toxic_data_laundering
+    description: "Inject instructions through group chat messages between agents"
+    notes: "GroupChat manager trusts all agent messages equally"
+    depends_on: [1]
+
+  # Phase 4: Function Call Exploitation
+  - step: 4
+    name: "Registered Function Abuse"
+    technique: imist_function_transform
+    description: "Invoke registered functions with malicious parameters"
+    notes: "Functions registered for one agent may be callable by others"
+    depends_on: [3]
+
+framework_specific_vectors:
+  - name: "Auto-Execute Code Blocks"
+    description: "UserProxyAgent auto-executes code blocks in conversation without user confirmation"
+    severity: critical
+
+  - name: "Docker Volume Mount Escape"
+    description: "Default Docker configuration may mount host directories into sandbox"
+    severity: critical
+
+  - name: "GroupChat Trust"
+    description: "GroupChat manager treats all agent messages as equally trusted"
+    severity: high
+
+  - name: "Cross-Agent Function Access"
+    description: "Functions registered for one agent may be invocable by other agents in the group"
+    severity: high
+
+  - name: "Conversation History Injection"
+    description: "Prior conversation history can be manipulated to influence agent behavior"
+    severity: medium
+
+owasp_coverage:
+  - ASI02  # Tool misuse via function call exploitation
+  - ASI05  # Code execution via auto-execute
+  - ASI07  # Insecure inter-agent via GroupChat trust
+  - ASI08  # Cascading failures via uncontrolled execution
+
+recommended_defenses:
+  - "Disable auto-execute in UserProxyAgent (human_input_mode='ALWAYS')"
+  - "Use minimal Docker images with no host mounts"
+  - "Implement per-agent function allowlists"
+  - "Validate GroupChat messages before forwarding"
+  - "Set execution timeout and resource limits"
+  - "Sanitize conversation history between sessions"

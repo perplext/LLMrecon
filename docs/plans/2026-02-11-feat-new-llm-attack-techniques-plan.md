@@ -289,8 +289,8 @@ New attack domains requiring new package structure.
   - Source: [OpenReview](https://openreview.net/forum?id=yougZBoUY3)
 
 **Phase 2 Success Criteria:**
-- [ ] 4 new attack packages (`rag/`, `agentic/mcp/`, `agentic/browser/`, `audio/`)
-- [ ] 15 new Go attack modules
+- [x] 4 new attack packages (`rag/`, `agentic/mcp/`, `agentic/browser/`, `audio/`)
+- [x] 15 new Go attack modules
 - [ ] Integration tests for each new attack surface
 - [ ] Python template equivalents for ML pipeline
 - [ ] Documentation for each new attack category
@@ -382,10 +382,10 @@ Advanced techniques requiring more sophisticated implementation.
 - Note: May require optional Python ML dependency for diffusion model
 
 **Phase 3 Success Criteria:**
-- [ ] 9 new Go attack modules
-- [ ] Reasoning model orchestration working with at least 2 provider APIs
-- [ ] Adaptive optimizer framework with pluggable strategies
-- [ ] Defense-specific bypass modules for CaMel and LLM Salting
+- [x] 9 new Go attack modules
+- [x] Reasoning model orchestration working with at least 2 provider APIs
+- [x] Adaptive optimizer framework with pluggable strategies
+- [x] Defense-specific bypass modules for CaMel and LLM Salting
 - Estimated scope: ~12 new Go files, ~10 new YAML templates
 
 ### Research Insights: Phase 3
@@ -457,9 +457,9 @@ Update provider infrastructure for new model families.
   - Per-technique ASR data from Nature Communications, Unit 42, Anthropic research
 
 **Phase 4 Success Criteria:**
-- [ ] 7 provider adapters updated/created
-- [ ] Model-specific attack profiles for each model family
-- [ ] Benchmark database populated with published success rates
+- [x] 7 provider adapters updated/created
+- [x] Model-specific attack profiles for each model family
+- [x] Benchmark database populated with published success rates
 - [ ] Python harness updated to test against new models
 - Estimated scope: ~10 modified Go files, ~7 new profile YAML files
 
@@ -540,8 +540,8 @@ Update provider infrastructure for new model families.
 - OWASP compliance validation tests
 
 **Phase 5 Success Criteria:**
-- [ ] Full OWASP Agentic 2026 mapping complete
-- [ ] All attack techniques mapped to both LLM 2025 and Agentic 2026
+- [x] Full OWASP Agentic 2026 mapping complete
+- [x] All attack techniques mapped to both LLM 2025 and Agentic 2026
 - [ ] Documentation updated
 - [ ] Test coverage >80% for new code
 - Estimated scope: ~5 modified Go files, ~3 new test files, documentation updates
@@ -664,9 +664,9 @@ This belongs in LLMrecon (not a separate tool) because:
 - Automated malicious skill deployment to marketplaces (offensive, not defensive testing)
 
 **Phase 6 Success Criteria:**
-- [ ] 11 new Go attack modules across 4 sub-packages
-- [ ] Framework-specific profiles for OpenClaw, CrewAI, LangGraph, AutoGen
-- [ ] Integration with OWASP Agentic 2026 mapping (Phase 5)
+- [x] 11 new Go attack modules across 4 sub-packages
+- [x] Framework-specific profiles for OpenClaw, CrewAI, LangGraph, AutoGen
+- [x] Integration with OWASP Agentic 2026 mapping (Phase 5)
 - [ ] Delegation escalation and toxic agent flow demonstrated in test harness
 - Estimated scope: ~15 new Go files, ~8 new YAML templates
 
