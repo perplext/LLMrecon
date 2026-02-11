@@ -1,14 +1,14 @@
 package extraction
 
 import (
-	"crypto/rand"
 	"fmt"
 	"math"
-	"math/big"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/perplext/LLMrecon/src/attacks/common"
 )
 
 // KnowledgeExtractor extracts training data and model knowledge
@@ -567,7 +567,7 @@ type DirectExtractionStrategy struct {
 func (d *DirectExtractionStrategy) Name() string { return "direct_extraction" }
 
 func (d *DirectExtractionStrategy) Extract(target interface{}, topic string) (ExtractionResult, error) {
-	prompt := d.prompts[randInt(len(d.prompts))]
+	prompt := d.prompts[common.RandInt(len(d.prompts))]
 	prompt = strings.Replace(prompt, "[TOPIC]", topic, -1)
 
 	// Execute extraction
@@ -593,7 +593,7 @@ func (c *CompletionAttackStrategy) Name() string { return "completion_attack" }
 
 func (c *CompletionAttackStrategy) Extract(target interface{}, topic string) (ExtractionResult, error) {
 	// Find known prefixes for the topic
-	prefix := c.prefixes[randInt(len(c.prefixes))]
+	prefix := c.prefixes[common.RandInt(len(c.prefixes))]
 	_ = fmt.Sprintf("%s [First few words about %s from training]", prefix, topic)
 
 	// Execute extraction
@@ -673,11 +673,11 @@ type TemplateExtractionStrategy struct {
 func (t *TemplateExtractionStrategy) Name() string { return "template_extraction" }
 
 func (t *TemplateExtractionStrategy) Extract(target interface{}, topic string) (ExtractionResult, error) {
-	template := t.templates[randInt(len(t.templates))]
+	template := t.templates[common.RandInt(len(t.templates))]
 
 	// Try different sources
 	sources := []string{"Wikipedia", "textbooks", "research papers", "documentation"}
-	source := sources[randInt(len(sources))]
+	source := sources[common.RandInt(len(sources))]
 
 	prompt := strings.Replace(template, "[SOURCE]", source, -1)
 	prompt = strings.Replace(prompt, "[TOPIC]", topic, -1)
@@ -797,12 +797,3 @@ func generateReportID() string {
 	return fmt.Sprintf("knowledge_report_%d", time.Now().UnixNano())
 }
 
-// randInt generates a cryptographically secure random integer
-func randInt(max int) int {
-	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
-	if err != nil {
-		// Fallback to timestamp-based selection if crypto/rand fails
-		return int(time.Now().UnixNano()) % max
-	}
-	return int(n.Int64())
-}

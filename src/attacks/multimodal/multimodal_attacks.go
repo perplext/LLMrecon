@@ -3,7 +3,6 @@ package multimodal
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	cryptorand "crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -16,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/perplext/LLMrecon/src/attacks/common"
 )
 
 // MultiModalAttacker performs attacks using multiple input modalities
@@ -322,7 +323,7 @@ func NewMultiModalAttacker(config MultiModalConfig) *MultiModalAttacker {
 // ExecuteAttack performs a multi-modal attack
 func (mma *MultiModalAttacker) ExecuteAttack(ctx context.Context, request AttackRequest) (*AttackResponse, error) {
 	attack := &MultiModalAttack{
-		ID:         generateAttackID(),
+		ID:         common.GenerateAttackID(),
 		Type:       request.Type,
 		Modalities: request.Modalities,
 		Status:     StatusPreparing,
@@ -536,7 +537,7 @@ func (om *OCRManipulator) homoglyphSubstitution(text string) string {
 	result := []rune{}
 	for _, char := range text {
 		if alternatives, exists := homoglyphs[char]; exists && randFloat64() < 0.3 {
-			result = append(result, alternatives[randInt(len(alternatives))])
+			result = append(result, alternatives[common.RandInt(len(alternatives))])
 		} else {
 			result = append(result, char)
 		}
@@ -553,7 +554,7 @@ func (om *OCRManipulator) addZeroWidthChars(text string) string {
 	for i, char := range text {
 		result = append(result, char)
 		if i < len(text)-1 && randFloat64() < 0.3 {
-			result = append(result, zeroWidth[randInt(len(zeroWidth))])
+			result = append(result, zeroWidth[common.RandInt(len(zeroWidth))])
 		}
 	}
 
@@ -1095,10 +1096,6 @@ func loadCombinators() []PayloadCombinator {
 	return []PayloadCombinator{}
 }
 
-func generateAttackID() string {
-	return fmt.Sprintf("attack_%d", time.Now().UnixNano())
-}
-
 func generatePayloadID() string {
 	return fmt.Sprintf("payload_%d", time.Now().UnixNano())
 }
@@ -1128,17 +1125,8 @@ func secureRandomInt(max int) (int, error) {
 	return int(nBig.Int64()), nil
 }
 
-// Secure random number generation helpers
-func randInt(max int) int {
-	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
-	if err != nil {
-		panic(err)
-	}
-	return int(n.Int64())
-}
-
 func randInt64(max int64) int64 {
-	n, err := rand.Int(rand.Reader, big.NewInt(max))
+	n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(max))
 	if err != nil {
 		panic(err)
 	}
@@ -1146,8 +1134,8 @@ func randInt64(max int64) int64 {
 }
 
 func randFloat64() float64 {
-	bytes := make([]byte, 8)
-	_, _ = rand.Read(bytes) // #nosec G104 -- crypto/rand.Read always returns len(b) and nil error on supported platforms
+	b := make([]byte, 8)
+	_, _ = cryptorand.Read(b) // #nosec G104 -- crypto/rand.Read always returns len(b) and nil error on supported platforms
 	// Convert to float64
-	return float64(bytes[0]) / 255.0
+	return float64(b[0]) / 255.0
 }

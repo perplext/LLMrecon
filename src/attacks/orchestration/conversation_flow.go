@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/perplext/LLMrecon/src/attacks/common"
 )
 
 // FlowController manages conversation flow and branching logic
@@ -688,7 +690,7 @@ func generateLongBenignText(length int) string {
 
 	text := ""
 	for len(text) < length {
-		text += topics[randInt(len(topics))] + ". "
+		text += topics[common.RandInt(len(topics))] + ". "
 	}
 
 	return text[:length]
@@ -713,15 +715,6 @@ func secureRandomInt(max int) (int, error) {
 		return 0, err
 	}
 	return int(nBig.Int64()), nil
-}
-
-// Secure random number generation helpers
-func randInt(max int) int {
-	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
-	if err != nil {
-		panic(err)
-	}
-	return int(n.Int64())
 }
 
 func randInt64(max int64) int64 {

@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/perplext/LLMrecon/src/attacks/common"
 )
 
 // PersistentAttack represents a persistent attack mechanism
@@ -97,7 +99,7 @@ func NewPersistenceEngine(config PersistenceConfig) *PersistenceEngine {
 // ImplantPersistentAttack creates and implants a persistent attack
 func (pe *PersistenceEngine) ImplantPersistentAttack(ctx context.Context, attackType PersistenceType, payload string, trigger *TriggerCondition) (*PersistentAttack, error) {
 	attack := &PersistentAttack{
-		ID:               generateAttackID(),
+		ID:               common.GenerateAttackID(),
 		Type:             attackType,
 		Payload:          payload,
 		TriggerCondition: trigger,
@@ -521,11 +523,6 @@ func (pe *PersistenceEngine) shouldActivate(attack *PersistentAttack, input stri
 }
 
 // Helper functions
-func generateAttackID() string {
-	b := make([]byte, 16)
-	_, _ = rand.Read(b) // #nosec G104 -- crypto/rand.Read always returns len(b) and nil error on supported platforms
-	return base64.URLEncoding.EncodeToString(b)
-}
 func generateAnchorPattern(payload string) string {
 	// Generate unique pattern for memory anchoring
 	h := fnv32a(payload)
