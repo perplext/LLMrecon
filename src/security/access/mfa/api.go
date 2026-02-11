@@ -47,7 +47,7 @@ func (h *MFAHandler) SetupTOTPHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Return TOTP configuration
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"secret":  totpConfig.Secret,
 		"qr_code": totpConfig.QRCodeURL,
 	})
@@ -93,7 +93,7 @@ func (h *MFAHandler) VerifyTOTPSetupHandler(w http.ResponseWriter, r *http.Reque
 
 	// Return success
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
 		"message": "TOTP setup verified successfully",
 	})
@@ -129,7 +129,7 @@ func (h *MFAHandler) GenerateBackupCodesHandler(w http.ResponseWriter, r *http.R
 
 	// Return backup codes
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"backup_codes": codes,
 	})
 }
@@ -180,7 +180,7 @@ func (h *MFAHandler) VerifyMFAHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Return success
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
 		"message": "MFA verified successfully",
 	})
@@ -210,7 +210,7 @@ func (h *MFAHandler) DisableMFAHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Return success
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
 		"message": "MFA disabled successfully",
 	})
@@ -240,7 +240,7 @@ func (h *MFAHandler) GetMFASettingsHandler(w http.ResponseWriter, r *http.Reques
 
 	// Return MFA settings
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(settings) // #nosec G104 -- HTTP response write error is non-actionable
+	_ = json.NewEncoder(w).Encode(settings) // Best effort, headers already sent
 }
 
 // Helper function to get session from request

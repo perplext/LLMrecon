@@ -386,7 +386,7 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	zipFile, err := os.Create(filepath.Clean(outputPath)) // #nosec G304 -- outputPath is caller-provided bundle output path
+	zipFile, err := os.Create(outputPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bundle file: %w", err)
 	}
@@ -444,12 +444,8 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 	}
 
 	// Get final file size
-	if err := zipWriter.Close(); err != nil {
-		return nil, fmt.Errorf("failed to close ZIP writer: %w", err)
-	}
-	if err := zipFile.Close(); err != nil {
-		return nil, fmt.Errorf("failed to close ZIP file: %w", err)
-	}
+	zipWriter.Close()
+	zipFile.Close()
 
 	finalInfo, err := os.Stat(outputPath)
 	if err != nil {
@@ -545,7 +541,7 @@ func (bm *BundleManager) extractBundleFile(file *zip.File, destDir string) error
 		}
 	}()
 
-	destFile, err := os.Create(filepath.Clean(destPath)) // #nosec G304 -- path validated against traversal above
+	destFile, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
@@ -555,16 +551,8 @@ func (bm *BundleManager) extractBundleFile(file *zip.File, destDir string) error
 		}
 	}()
 
-	// G110 protection: use io.CopyN to cap decompressed size (100MB max)
-	const maxBundleFileSize int64 = 100 * 1024 * 1024 // 100MB
-	written, err := io.CopyN(destFile, reader, maxBundleFileSize+1)
-	if err != nil && err != io.EOF {
-		return err
-	}
-	if written > maxBundleFileSize {
-		return fmt.Errorf("extracted file exceeds maximum allowed size of %d bytes", maxBundleFileSize)
-	}
-	return nil
+	_, err = io.Copy(destFile, reader)
+	return err
 }
 
 // checkVersionCompatibility checks if bundle is compatible

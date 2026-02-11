@@ -2,7 +2,6 @@ package optimization
 
 import (
 	"context"
-	"math"
 	"runtime"
 	"sync"
 	"time"
@@ -137,8 +136,7 @@ func (mo *MemoryOptimizer) OptimizeMemory(ctx context.Context) error {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	allocMB := m.Alloc / 1024 / 1024
-	currentMemoryMB := int64(min(allocMB, uint64(math.MaxInt64)))
+	currentMemoryMB := int64(m.Alloc / 1024 / 1024)
 
 	if currentMemoryMB > mo.maxMemoryMB {
 		// Force garbage collection
@@ -148,8 +146,7 @@ func (mo *MemoryOptimizer) OptimizeMemory(ctx context.Context) error {
 		// Update stats
 		runtime.ReadMemStats(&m)
 		mo.stats.GCRuns++
-		freedBytes := beforeGC - m.Alloc
-		mo.stats.MemoryFreed += int64(min(freedBytes, uint64(math.MaxInt64)))
+		mo.stats.MemoryFreed += int64(beforeGC - m.Alloc)
 	}
 
 	return nil
@@ -163,7 +160,7 @@ func (mo *MemoryOptimizer) backgroundOptimization() {
 	for {
 		select {
 		case <-ticker.C:
-			_ = mo.OptimizeMemory(mo.ctx) // #nosec G104 -- background optimization errors are non-fatal
+			mo.OptimizeMemory(mo.ctx)
 		case <-mo.ctx.Done():
 			return
 		}
@@ -179,8 +176,7 @@ func (mo *MemoryOptimizer) GetStats() OptimizationStats {
 func (mo *MemoryOptimizer) GetMemoryUsage() int64 {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	allocMB := m.Alloc / 1024 / 1024
-	return int64(min(allocMB, uint64(math.MaxInt64)))
+	return int64(m.Alloc / 1024 / 1024)
 }
 
 // SetMaxMemory updates the maximum memory threshold

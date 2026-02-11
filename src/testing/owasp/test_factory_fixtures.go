@@ -3,7 +3,7 @@ package owasp
 
 import (
 	"github.com/perplext/LLMrecon/src/testing/owasp/fixtures"
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // FixtureBasedTestCaseFactory is an implementation of the TestCaseFactory interface that uses test fixtures

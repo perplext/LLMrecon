@@ -94,7 +94,10 @@ func NewComparativeAnalyzer(config *Config, storage DataStorage, trendAnalyzer *
 
 // CompareTimePeriods compares metrics across different time periods
 func (ca *ComparativeAnalyzer) CompareTimePeriods(ctx context.Context, metricName string, baselineRange, comparisonRange TimeWindow) (*ComparisonResult, error) {
-	ca.logger.Info(fmt.Sprintf("Starting time period comparison metric=%s baseline=%v comparison=%v", metricName, baselineRange, comparisonRange))
+	ca.logger.Info("Starting time period comparison",
+		"metric", metricName,
+		"baseline", baselineRange,
+		"comparison", comparisonRange)
 
 	// Get data for both periods
 	baselineData, err := ca.historicalData.GetHistoricalData(ctx, metricName, baselineRange)
@@ -137,7 +140,10 @@ func (ca *ComparativeAnalyzer) CompareTimePeriods(ctx context.Context, metricNam
 
 // CompareMetrics compares different metrics over the same time period
 func (ca *ComparativeAnalyzer) CompareMetrics(ctx context.Context, baselineMetric, comparisonMetric string, timeRange TimeWindow) (*ComparisonResult, error) {
-	ca.logger.Info(fmt.Sprintf("Starting metrics comparison baseline=%s comparison=%s timeRange=%v", baselineMetric, comparisonMetric, timeRange))
+	ca.logger.Info("Starting metrics comparison",
+		"baseline", baselineMetric,
+		"comparison", comparisonMetric,
+		"timeRange", timeRange)
 
 	// Get data for both metrics
 	baselineData, err := ca.storage.GetMetricsByNameAndTimeRange(ctx, baselineMetric, timeRange.Start, timeRange.End)
@@ -176,7 +182,10 @@ func (ca *ComparativeAnalyzer) CompareMetrics(ctx context.Context, baselineMetri
 
 // CompareAgainstBaseline compares current metrics against established baselines
 func (ca *ComparativeAnalyzer) CompareAgainstBaseline(ctx context.Context, metricName string, currentRange TimeWindow, baselineValue float64) (*ComparisonResult, error) {
-	ca.logger.Info(fmt.Sprintf("Starting baseline comparison metric=%s timeRange=%v baseline=%v", metricName, currentRange, baselineValue))
+	ca.logger.Info("Starting baseline comparison",
+		"metric", metricName,
+		"timeRange", currentRange,
+		"baseline", baselineValue)
 
 	// Get current data
 	currentData, err := ca.storage.GetMetricsByNameAndTimeRange(ctx, metricName, currentRange.Start, currentRange.End)
@@ -213,7 +222,10 @@ func (ca *ComparativeAnalyzer) CompareAgainstBaseline(ctx context.Context, metri
 
 // CompareAnomalyPatterns compares anomaly patterns between different time periods
 func (ca *ComparativeAnalyzer) CompareAnomalyPatterns(ctx context.Context, metricName string, baselineRange, comparisonRange TimeWindow) (*ComparisonResult, error) {
-	ca.logger.Info(fmt.Sprintf("Starting anomaly pattern comparison metric=%s baseline=%v comparison=%v", metricName, baselineRange, comparisonRange))
+	ca.logger.Info("Starting anomaly pattern comparison",
+		"metric", metricName,
+		"baseline", baselineRange,
+		"comparison", comparisonRange)
 
 	// Get anomalies for both periods
 	baselineAnomalies, err := ca.trendAnalyzer.DetectAnomalies(ctx, metricName, baselineRange)

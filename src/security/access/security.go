@@ -39,28 +39,28 @@ type VulnerabilityStore interface {
 
 // LocalIncidentFilter defines filters for querying security incidents (local version)
 type LocalIncidentFilter struct {
-	Severity   string    `json:"severity,omitempty"`
-	Status     string    `json:"status,omitempty"`
-	AssignedTo string    `json:"assigned_to,omitempty"`
-	ReportedBy string    `json:"reported_by,omitempty"`
-	StartTime  time.Time `json:"start_time,omitempty"`
-	EndTime    time.Time `json:"end_time,omitempty"`
-	Limit      int       `json:"limit,omitempty"`
-	Offset     int       `json:"offset,omitempty"`
+	Severity   AuditSeverity  `json:"severity,omitempty"`
+	Status     IncidentStatus `json:"status,omitempty"`
+	AssignedTo string         `json:"assigned_to,omitempty"`
+	ReportedBy string         `json:"reported_by,omitempty"`
+	StartTime  time.Time      `json:"start_time,omitempty"`
+	EndTime    time.Time      `json:"end_time,omitempty"`
+	Limit      int            `json:"limit,omitempty"`
+	Offset     int            `json:"offset,omitempty"`
 }
 
 // LocalVulnerabilityFilter defines filters for querying vulnerabilities (local version)
 type LocalVulnerabilityFilter struct {
-	Severity       string    `json:"severity,omitempty"`
-	Status         string    `json:"status,omitempty"`
-	AssignedTo     string    `json:"assigned_to,omitempty"`
-	ReportedBy     string    `json:"reported_by,omitempty"`
-	AffectedSystem string    `json:"affected_system,omitempty"`
-	CVE            string    `json:"cve,omitempty"`
-	StartTime      time.Time `json:"start_time,omitempty"`
-	EndTime        time.Time `json:"end_time,omitempty"`
-	Limit          int       `json:"limit,omitempty"`
-	Offset         int       `json:"offset,omitempty"`
+	Severity       AuditSeverity       `json:"severity,omitempty"`
+	Status         VulnerabilityStatus `json:"status,omitempty"`
+	AssignedTo     string              `json:"assigned_to,omitempty"`
+	ReportedBy     string              `json:"reported_by,omitempty"`
+	AffectedSystem string              `json:"affected_system,omitempty"`
+	CVE            string              `json:"cve,omitempty"`
+	StartTime      time.Time           `json:"start_time,omitempty"`
+	EndTime        time.Time           `json:"end_time,omitempty"`
+	Limit          int                 `json:"limit,omitempty"`
+	Offset         int                 `json:"offset,omitempty"`
 }
 
 // NewSecurityManager creates a new security manager
@@ -88,8 +88,8 @@ func (m *BasicSecurityManager) CreateIncident(ctx context.Context, title, descri
 		ID:          generateRandomID(),
 		Title:       title,
 		Description: description,
-		Severity:    string(severity),
-		Status:      string(IncidentStatusNew),
+		Severity:    severity,
+		Status:      IncidentStatusNew,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 		ReportedBy:  reportedBy,
@@ -103,7 +103,7 @@ func (m *BasicSecurityManager) CreateIncident(ctx context.Context, title, descri
 	}
 
 	// Log incident creation
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      reportedBy,
 		Action:      AuditActionCreate,
@@ -133,7 +133,7 @@ func (m *BasicSecurityManager) UpdateIncidentStatus(ctx context.Context, id stri
 	}
 
 	// Update incident
-	incident.Status = string(status)
+	incident.Status = status
 	incident.UpdatedAt = time.Now()
 
 	// Set assigned to if provided
@@ -153,7 +153,7 @@ func (m *BasicSecurityManager) UpdateIncidentStatus(ctx context.Context, id stri
 	}
 
 	// Log incident update
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      updatedBy,
 		Action:      AuditActionUpdate,
@@ -198,8 +198,8 @@ func (m *BasicSecurityManager) CreateVulnerability(ctx context.Context, title, d
 		ID:             generateRandomID(),
 		Title:          title,
 		Description:    description,
-		Severity:       string(severity),
-		Status:         string(VulnerabilityStatusNew),
+		Severity:       severity,
+		Status:         VulnerabilityStatusNew,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 		ReportedBy:     reportedBy,
@@ -214,7 +214,7 @@ func (m *BasicSecurityManager) CreateVulnerability(ctx context.Context, title, d
 	}
 
 	// Log vulnerability creation
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      reportedBy,
 		Action:      AuditActionCreate,
@@ -246,7 +246,7 @@ func (m *BasicSecurityManager) UpdateVulnerabilityStatus(ctx context.Context, id
 	}
 
 	// Update vulnerability
-	vulnerability.Status = string(status)
+	vulnerability.Status = status
 	vulnerability.UpdatedAt = time.Now()
 
 	// Set assigned to if provided
@@ -271,7 +271,7 @@ func (m *BasicSecurityManager) UpdateVulnerabilityStatus(ctx context.Context, id
 	}
 
 	// Log vulnerability update
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      updatedBy,
 		Action:      AuditActionUpdate,

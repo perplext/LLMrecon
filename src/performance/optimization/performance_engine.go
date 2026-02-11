@@ -3,7 +3,6 @@ package optimization
 import (
 	"context"
 	"fmt"
-	"math"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -522,8 +521,8 @@ func (sp *SystemProfiler) ProfileMemory() *MemoryProfile {
 		StackInUse:  m.StackInuse,
 		GCStats: GCStatistics{
 			NumGC:      m.NumGC,
-			PauseTotal: time.Duration(min(m.PauseTotalNs, uint64(math.MaxInt64))),
-			LastGC:     time.Unix(0, int64(min(m.LastGC, uint64(math.MaxInt64)))),
+			PauseTotal: time.Duration(m.PauseTotalNs),
+			LastGC:     time.Unix(0, int64(m.LastGC)),
 		},
 	}
 
@@ -655,7 +654,7 @@ func (ro *ResourceOptimizer) AnalyzeMemory(profile *MemoryProfile) []MemoryOppor
 		opportunities = append(opportunities, MemoryOpportunity{
 			Type:        "gc_pressure",
 			Description: "High GC pause times",
-			Potential:   int64(min(profile.HeapInUse, uint64(math.MaxInt64))) / 4,
+			Potential:   int64(profile.HeapInUse) / 4,
 			Risk:        RiskLow,
 		})
 	}
@@ -1099,7 +1098,7 @@ func (pe *PerformanceEngine) performAutoTuning(metrics SystemMetrics) {
 	}
 
 	// Start optimization
-	pe.StartOptimization(ctx, target) // #nosec G104 -- best-effort auto-tuning optimization
+	pe.StartOptimization(ctx, target)
 }
 
 // identifyBottleneck finds performance bottleneck
@@ -1135,7 +1134,7 @@ func (pe *PerformanceEngine) captureMetrics() SystemMetrics {
 
 	return SystemMetrics{
 		CPUUsage:          pe.getCurrentCPUUsage(),
-		MemoryUsage:       int64(min(m.HeapInuse, uint64(math.MaxInt64))),
+		MemoryUsage:       int64(m.HeapInuse),
 		GoroutineCount:    runtime.NumGoroutine(),
 		RequestsPerSecond: pe.monitor.GetRequestRate(),
 		AverageLatency:    pe.monitor.GetAverageLatency(),

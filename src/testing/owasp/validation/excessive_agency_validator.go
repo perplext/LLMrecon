@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
 
@@ -367,3 +367,17 @@ func (v *ExcessiveAgencyValidator) ValidateResponse(ctx context.Context, respons
 	return results, nil
 }
 
+// Helper functions for min/max
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}

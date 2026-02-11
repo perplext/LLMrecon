@@ -160,7 +160,7 @@ func exportConfiguration(memConfig *config.MemoryConfig, filePath string) {
 	
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0750); err != nil {
+	if err := os.MkdirAll(dir, 0755); err != nil {
 		fmt.Printf("Failed to create directory: %v\n", err)
 		os.Exit(1)
 	}
@@ -205,22 +205,22 @@ func compareConfigurations() {
 	
 	// Reset to load dev configuration
 	config.ResetConfig()
-	os.Setenv("APP_ENV", string(config.Development)) // #nosec G104 -- environment variable set for config comparison demo
+	os.Setenv("APP_ENV", string(config.Development))
 	devConfig := config.GetMemoryConfig()
 	
 	// Reset to load test configuration
 	config.ResetConfig()
-	os.Setenv("APP_ENV", string(config.Testing)) // #nosec G104 -- environment variable set for config comparison demo
+	os.Setenv("APP_ENV", string(config.Testing))
 	testConfig := config.GetMemoryConfig()
 	
 	// Reset to load prod configuration
 	config.ResetConfig()
-	os.Setenv("APP_ENV", string(config.Production)) // #nosec G104 -- environment variable set for config comparison demo
+	os.Setenv("APP_ENV", string(config.Production))
 	prodConfig := config.GetMemoryConfig()
 	
 	// Restore current environment
 	config.ResetConfig()
-	os.Setenv("APP_ENV", string(currentEnv)) // #nosec G104 -- restoring original environment variable
+	os.Setenv("APP_ENV", string(currentEnv))
 	
 	fmt.Println("Configuration Comparison:")
 	fmt.Println("------------------------")

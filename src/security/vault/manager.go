@@ -79,7 +79,7 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 		AlertCallback: func(credential *Credential, daysUntilExpiration int) {
 			// Log alert about credential rotation
 			if options.AuditLogger != nil {
-				options.AuditLogger.LogAlert( // #nosec G104 -- best-effort audit logging
+				options.AuditLogger.LogAlert(
 					fmt.Sprintf("Credential '%s' for service '%s' needs rotation in %d days",
 						credential.Name,
 						credential.Service,
@@ -197,11 +197,8 @@ func (m *CredentialManager) InstallGitHookInDir(customDir string) error {
 
 		// Backup existing hook
 		backupPath := hookPath + ".backup"
-		if err := os.WriteFile(filepath.Clean(backupPath), existingHook, 0600); err != nil {
+		if err := os.WriteFile(filepath.Clean(backupPath), existingHook, 0700); err != nil {
 			return fmt.Errorf("failed to backup existing git hook: %w", err)
-		}
-		if err := os.Chmod(filepath.Clean(backupPath), 0700); err != nil {
-			return fmt.Errorf("failed to set backup hook permissions: %w", err)
 		}
 	}
 
@@ -239,12 +236,9 @@ fi
 exit 0
 `
 
-	// Write hook with restrictive permissions, then make executable
-	if err := os.WriteFile(filepath.Clean(hookPath), []byte(hookContent), 0600); err != nil {
+	// Write hook
+	if err := os.WriteFile(filepath.Clean(hookPath), []byte(hookContent), 0700); err != nil {
 		return fmt.Errorf("failed to write git hook: %w", err)
-	}
-	if err := os.Chmod(filepath.Clean(hookPath), 0700); err != nil {
-		return fmt.Errorf("failed to set git hook permissions: %w", err)
 	}
 	return nil
 }

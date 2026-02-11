@@ -76,17 +76,8 @@ func GenerateQRCodeURL(config *TOTPConfig, accountName string) string {
 
 // GenerateTOTPCode generates a TOTP code for the given time
 func GenerateTOTPCode(config *TOTPConfig, t time.Time) (string, error) {
-	// Calculate counter: period is always a small positive int (typically 30),
-	// and Unix time is positive for any valid TOTP timestamp
-	period := int64(config.Period)
-	if period <= 0 {
-		period = int64(DefaultPeriod)
-	}
-	steps := t.Unix() / period
-	if steps < 0 {
-		steps = 0
-	}
-	counter := uint64(steps)
+	// Calculate counter
+	counter := uint64(t.Unix() / int64(config.Period))
 
 	// Generate HOTP code
 	return generateHOTP(config, counter)
@@ -95,32 +86,11 @@ func GenerateTOTPCode(config *TOTPConfig, t time.Time) (string, error) {
 // VerifyTOTPCode verifies a TOTP code
 func VerifyTOTPCode(config *TOTPConfig, code string, t time.Time, window int) bool {
 	// Calculate counter
-	period := int64(config.Period)
-	if period <= 0 {
-		period = int64(DefaultPeriod)
-	}
-	steps := t.Unix() / period
-	if steps < 0 {
-		steps = 0
-	}
-	counter := uint64(steps)
+	counter := uint64(t.Unix() / int64(config.Period))
 
 	// Check codes within window
 	for i := -window; i <= window; i++ {
-		// Use safe arithmetic for counter offset: if i is negative and would
-		// underflow, wrap around per TOTP RFC 6238 semantics
-		var adjustedCounter uint64
-		if i >= 0 {
-			adjustedCounter = counter + uint64(i)
-		} else {
-			offset := uint64(-i)
-			if offset > counter {
-				adjustedCounter = 0
-			} else {
-				adjustedCounter = counter - offset
-			}
-		}
-		c, err := generateHOTP(config, adjustedCounter)
+		c, err := generateHOTP(config, counter+uint64(i))
 		if err != nil {
 			continue
 		}

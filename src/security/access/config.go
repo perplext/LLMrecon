@@ -130,21 +130,18 @@ type VulnerabilityConfig struct {
 
 // SecurityIncident represents a security incident
 type SecurityIncident struct {
-	ID                string                 `json:"id"`
-	Title             string                 `json:"title"`
-	Description       string                 `json:"description"`
-	Severity          string                 `json:"severity"`
-	Status            string                 `json:"status"`
-	CreatedAt         time.Time              `json:"created_at"`
-	UpdatedAt         time.Time              `json:"updated_at"`
-	ResolvedAt        time.Time              `json:"resolved_at,omitempty"`
-	AssignedTo        string                 `json:"assigned_to,omitempty"`
-	ReportedBy        string                 `json:"reported_by,omitempty"`
-	AuditLogIDs       []string               `json:"audit_log_ids,omitempty"`
-	ResolutionNotes   string                 `json:"resolution_notes,omitempty"`
-	AffectedResources []string               `json:"affected_resources,omitempty"`
-	Tags              []string               `json:"tags,omitempty"`
-	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+	ID          string                 `json:"id"`
+	Title       string                 `json:"title"`
+	Description string                 `json:"description"`
+	Severity    AuditSeverity          `json:"severity"`
+	Status      IncidentStatus         `json:"status"`
+	CreatedAt   time.Time              `json:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at"`
+	ResolvedAt  time.Time              `json:"resolved_at,omitempty"`
+	AssignedTo  string                 `json:"assigned_to,omitempty"`
+	ReportedBy  string                 `json:"reported_by,omitempty"`
+	AuditLogIDs []string               `json:"audit_log_ids,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // IncidentStatus represents the status of a security incident
@@ -161,26 +158,20 @@ const (
 
 // Vulnerability represents a security vulnerability
 type Vulnerability struct {
-	ID               string                 `json:"id"`
-	Title            string                 `json:"title"`
-	Description      string                 `json:"description"`
-	Severity         string                 `json:"severity"`
-	Status           string                 `json:"status"`
-	CreatedAt        time.Time              `json:"created_at"`
-	UpdatedAt        time.Time              `json:"updated_at"`
-	ResolvedAt       time.Time              `json:"resolved_at,omitempty"`
-	PatchedAt        time.Time              `json:"patched_at,omitempty"`
-	AssignedTo       string                 `json:"assigned_to,omitempty"`
-	ReportedBy       string                 `json:"reported_by,omitempty"`
-	AffectedSystem   string                 `json:"affected_system,omitempty"`
-	AffectedSystems  []string               `json:"affected_systems,omitempty"`
-	CVE              string                 `json:"cve,omitempty"`
-	CVEID            string                 `json:"cve_id,omitempty"`
-	RemediationPlan  string                 `json:"remediation_plan,omitempty"`
-	RemediationSteps string                 `json:"remediation_steps,omitempty"`
-	PatchNotes       string                 `json:"patch_notes,omitempty"`
-	Tags             []string               `json:"tags,omitempty"`
-	Metadata         map[string]interface{} `json:"metadata,omitempty"`
+	ID              string                 `json:"id"`
+	Title           string                 `json:"title"`
+	Description     string                 `json:"description"`
+	Severity        AuditSeverity          `json:"severity"`
+	Status          VulnerabilityStatus    `json:"status"`
+	CreatedAt       time.Time              `json:"created_at"`
+	UpdatedAt       time.Time              `json:"updated_at"`
+	ResolvedAt      time.Time              `json:"resolved_at,omitempty"`
+	AssignedTo      string                 `json:"assigned_to,omitempty"`
+	ReportedBy      string                 `json:"reported_by,omitempty"`
+	AffectedSystem  string                 `json:"affected_system,omitempty"`
+	CVE             string                 `json:"cve,omitempty"`
+	RemediationPlan string                 `json:"remediation_plan,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // VulnerabilityStatus represents the status of a vulnerability

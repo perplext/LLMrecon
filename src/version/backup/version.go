@@ -254,20 +254,3 @@ func FormatVersionDiff(oldV, newV Version) string {
 		return fmt.Sprintf("%s (No Change)", oldV.String())
 	}
 }
-
-// GreaterThan checks if this version is greater than the other version.
-func (v *Version) GreaterThan(other *Version) bool {
-	if v == nil || other == nil {
-		return false
-	}
-	return Compare(*v, *other) > 0
-}
-
-// IsCompatible checks if this version is compatible with the other version.
-// Two versions are compatible if they have the same major version.
-func (v *Version) IsCompatible(other *Version) bool {
-	if v == nil || other == nil {
-		return false
-	}
-	return v.Major == other.Major
-}

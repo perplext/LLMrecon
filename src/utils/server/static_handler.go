@@ -341,11 +341,11 @@ func (h *StaticFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					fmt.Printf("Failed to close: %v\n", err)
 				}
 			}()
-			_, _ = gzipWriter.Write(cacheEntry.data) // #nosec G104 -- error writing HTTP response is not recoverable
+			gzipWriter.Write(cacheEntry.data)
 		} else {
 			// Serve uncompressed
 			w.Header().Set("Content-Length", strconv.FormatInt(int64(len(cacheEntry.data)), 10))
-			_, _ = w.Write(cacheEntry.data) // #nosec G104 -- error writing HTTP response is not recoverable
+			w.Write(cacheEntry.data)
 		}
 		return
 	}
@@ -374,11 +374,11 @@ func (h *StaticFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("Failed to close: %v\n", err)
 			}
 		}()
-		_, _ = io.Copy(gzipWriter, file) // #nosec G104 -- error writing HTTP response is not recoverable
+		io.Copy(gzipWriter, file)
 	} else {
 		// Set Content-Length header
 		w.Header().Set("Content-Length", strconv.FormatInt(cacheEntry.size, 10))
-		_, _ = io.Copy(w, file) // #nosec G104 -- error writing HTTP response is not recoverable
+		io.Copy(w, file)
 	}
 }
 

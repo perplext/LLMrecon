@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	"github.com/perplext/LLMrecon/src/attacks/common"
 )
 
 // StateManager handles persistence and recovery of conversation states
@@ -109,7 +107,7 @@ func NewStateManager(config StateConfig, store StateStore) *StateManager {
 // CreateAttackState initializes a new attack state
 func (sm *StateManager) CreateAttackState(targetModel, attackType string) *AttackState {
 	return &AttackState{
-		ID:              common.GenerateAttackID(),
+		ID:              generateAttackID(),
 		TargetModel:     targetModel,
 		AttackType:      attackType,
 		StartTime:       time.Now(),
@@ -302,7 +300,7 @@ func (sm *StateManager) checkpointRoutine() {
 		for _, state := range states {
 			if sm.shouldCheckpoint(state) {
 				sm.mu.Lock()
-				_ = sm.createCheckpoint(state) // #nosec G104 -- checkpoint creation is best-effort in background goroutine
+				sm.createCheckpoint(state)
 				sm.mu.Unlock()
 			}
 		}
@@ -476,6 +474,10 @@ func encrypt(data []byte) []byte {
 func decrypt(data []byte) []byte {
 	// Implement decryption
 	return data
+}
+
+func generateAttackID() string {
+	return fmt.Sprintf("attack_%d", time.Now().UnixNano())
 }
 
 func generateVulnID() string {

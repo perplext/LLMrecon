@@ -584,7 +584,7 @@ func (tis *ThreatIntelligenceSystem) ImportIndicators(ctx context.Context, indic
 		tis.indicators[indicator.ID] = indicator
 
 		// Store in repository
-		_ = tis.repository.Store("indicator", indicator.ID, indicator) // #nosec G104 -- best-effort storage, indicator already in memory map
+		tis.repository.Store("indicator", indicator.ID, indicator)
 	}
 
 	// Trigger correlation if enabled

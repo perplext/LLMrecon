@@ -194,9 +194,7 @@ func (l *EnhancedInjectionPatternLibrary) loadPatternsFromDisk() error {
 					Description: pattern.Description,
 					Confidence:  0.8,
 				}
-				if err := l.AddPattern(patternObj); err != nil {
-					fmt.Printf("Failed to add custom pattern: %v\n", err)
-				}
+				l.AddPattern(patternObj)
 			}
 		}
 	}
@@ -391,9 +389,7 @@ func (l *EnhancedInjectionPatternLibrary) AddCustomPattern(pattern string, descr
 		Description: description,
 		Confidence:  0.8,
 	}
-	if err := l.AddPattern(patternObj); err != nil {
-		return fmt.Errorf("failed to add pattern to base library: %w", err)
-	}
+	l.AddPattern(patternObj)
 
 	// Save to disk
 	return l.savePatternsToDisc()
@@ -416,9 +412,7 @@ func (l *EnhancedInjectionPatternLibrary) ValidateEmergingPattern(pattern string
 					Description: p.Description,
 					Confidence:  p.Confidence,
 				}
-				if err := l.AddPattern(patternObj); err != nil {
-					return fmt.Errorf("failed to add validated pattern to base library: %w", err)
-				}
+				l.AddPattern(patternObj)
 			}
 
 			// Save to disk

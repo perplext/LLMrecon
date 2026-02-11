@@ -1,7 +1,7 @@
 package reporting
 
 import (
-	"github.com/perplext/LLMrecon/src/reporting/common"
+	"github.com/perplext/LLMrecon/src/security/access/common"
 	// Import formats package to ensure formatters are registered
 	_ "github.com/perplext/LLMrecon/src/reporting/formats"
 )

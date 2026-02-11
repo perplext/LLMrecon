@@ -261,26 +261,26 @@ func (m *MetricsManager) CollectSystemMetrics() {
 	runtime.ReadMemStats(&memStats)
 
 	// Update memory metrics
-	_ = m.SetGauge("system.memory.alloc", float64(memStats.Alloc))           // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.total_alloc", float64(memStats.TotalAlloc)) // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.sys", float64(memStats.Sys))               // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.mallocs", float64(memStats.Mallocs))       // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.frees", float64(memStats.Frees))           // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.heap_alloc", float64(memStats.HeapAlloc))  // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.heap_sys", float64(memStats.HeapSys))      // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.heap_idle", float64(memStats.HeapIdle))    // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.heap_inuse", float64(memStats.HeapInuse))  // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.heap_released", float64(memStats.HeapReleased)) // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.memory.heap_objects", float64(memStats.HeapObjects))   // #nosec G104 -- best-effort metrics collection
+	m.SetGauge("system.memory.alloc", float64(memStats.Alloc))
+	m.SetGauge("system.memory.total_alloc", float64(memStats.TotalAlloc))
+	m.SetGauge("system.memory.sys", float64(memStats.Sys))
+	m.SetGauge("system.memory.mallocs", float64(memStats.Mallocs))
+	m.SetGauge("system.memory.frees", float64(memStats.Frees))
+	m.SetGauge("system.memory.heap_alloc", float64(memStats.HeapAlloc))
+	m.SetGauge("system.memory.heap_sys", float64(memStats.HeapSys))
+	m.SetGauge("system.memory.heap_idle", float64(memStats.HeapIdle))
+	m.SetGauge("system.memory.heap_inuse", float64(memStats.HeapInuse))
+	m.SetGauge("system.memory.heap_released", float64(memStats.HeapReleased))
+	m.SetGauge("system.memory.heap_objects", float64(memStats.HeapObjects))
 
 	// Update GC metrics
-	_ = m.SetGauge("system.gc.next", float64(memStats.NextGC))              // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.gc.last", float64(memStats.LastGC))              // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.gc.num", float64(memStats.NumGC))                // #nosec G104 -- best-effort metrics collection
-	_ = m.SetGauge("system.gc.cpu_fraction", float64(memStats.GCCPUFraction)) // #nosec G104 -- best-effort metrics collection
+	m.SetGauge("system.gc.next", float64(memStats.NextGC))
+	m.SetGauge("system.gc.last", float64(memStats.LastGC))
+	m.SetGauge("system.gc.num", float64(memStats.NumGC))
+	m.SetGauge("system.gc.cpu_fraction", float64(memStats.GCCPUFraction))
 
 	// Update goroutine metrics
-	_ = m.SetGauge("system.goroutines", float64(runtime.NumGoroutine())) // #nosec G104 -- best-effort metrics collection
+	m.SetGauge("system.goroutines", float64(runtime.NumGoroutine()))
 }
 
 // StartCollectingSystemMetrics starts collecting system metrics at the specified interval

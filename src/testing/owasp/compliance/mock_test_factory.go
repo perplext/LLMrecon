@@ -3,7 +3,7 @@ package compliance
 import (
 	"fmt"
 
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // MockTestFactory is a mock implementation of the TestFactory interface for testing

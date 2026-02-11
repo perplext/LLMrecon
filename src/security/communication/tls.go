@@ -199,8 +199,12 @@ func ConfigureTLSForServer(config *TLSConfig) (*tls.Config, error) {
 		return nil, fmt.Errorf("TLS configuration is nil")
 	}
 
+	minVersion := config.MinVersion
+	if minVersion < tls.VersionTLS12 {
+		minVersion = tls.VersionTLS12 // Enforce minimum TLS 1.2
+	}
 	tlsConfig := &tls.Config{
-		MinVersion: max(config.MinVersion, tls.VersionTLS12), // Enforce minimum TLS 1.2
+		MinVersion: minVersion,
 	}
 
 	// Load certificates if provided

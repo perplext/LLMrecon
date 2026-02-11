@@ -1,7 +1,7 @@
 // Package validation provides methods to validate and detect OWASP LLM vulnerabilities
 package validation
 
-import "github.com/perplext/LLMrecon/src/testing/owasp/types"
+import "github.com/perplext/LLMrecon/src/security/access/types"
 
 // CreateValidator creates a validator for the specified vulnerability type
 func CreateValidator(vulnerabilityType types.VulnerabilityType) Validator {

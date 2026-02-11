@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -181,7 +182,7 @@ func (tw *TableWidget) Render(data interface{}, style WidgetStyle) (string, erro
 		return "", fmt.Errorf("invalid data type for table widget")
 	}
 
-	output := fmt.Sprintf(`
+	html := fmt.Sprintf(`
 <div class="table-widget" style="border: %dpx %s %s; border-radius: %dpx; background-color: %s; padding: 16px;">
 	<table style="width: 100%%; border-collapse: collapse; color: %s; font-family: %s; font-size: %dpx;">
 		<thead>
@@ -194,11 +195,11 @@ func (tw *TableWidget) Render(data interface{}, style WidgetStyle) (string, erro
 
 	// Add headers
 	for _, header := range tableData.Headers {
-		output += fmt.Sprintf(`<th style="padding: 8px; border: 1px solid %s; color: white;">%s</th>`,
+		html += fmt.Sprintf(`<th style="padding: 8px; border: 1px solid %s; color: white;">%s</th>`,
 			style.Borders.Color, html.EscapeString(header))
 	}
 
-	output += `</tr></thead><tbody>`
+	html += `</tr></thead><tbody>`
 
 	// Add rows
 	for i, row := range tableData.Rows {
@@ -207,17 +208,17 @@ func (tw *TableWidget) Render(data interface{}, style WidgetStyle) (string, erro
 			bgColor = "rgba(0,0,0,0.05)"
 		}
 
-		output += fmt.Sprintf(`<tr style="background-color: %s;">`, bgColor)
+		html += fmt.Sprintf(`<tr style="background-color: %s;">`, bgColor)
 		for _, cell := range row {
-			output += fmt.Sprintf(`<td style="padding: 8px; border: 1px solid %s;">%s</td>`,
+			html += fmt.Sprintf(`<td style="padding: 8px; border: 1px solid %s;">%s</td>`,
 				style.Borders.Color, html.EscapeString(fmt.Sprintf("%v", cell)))
 		}
-		output += `</tr>`
+		html += `</tr>`
 	}
 
-	output += `</tbody></table></div>`
+	html += `</tbody></table></div>`
 
-	return output, nil
+	return html, nil
 }
 
 func (tw *TableWidget) Validate(config map[string]interface{}) error {

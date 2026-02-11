@@ -53,5 +53,5 @@ func (l *AuditLogger) LogEventWithStatus(event, component, id, status string, de
 	}
 	entry += "\n"
 
-	_, _ = l.writer.Write([]byte(entry)) // #nosec G104 -- best-effort audit logging, errors not recoverable
+	l.writer.Write([]byte(entry))
 }

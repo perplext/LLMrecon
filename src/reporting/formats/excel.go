@@ -34,31 +34,31 @@ func (f *ExcelFormatter) FormatReport(results api.TestResults, writer io.Writer)
 
 	// Create summary sheet
 	summarySheet := "Summary"
-	excel.SetSheetName("Sheet1", summarySheet) // #nosec G104 -- excelize SetSheetName error is non-critical for report generation
+	excel.SetSheetName("Sheet1", summarySheet)
 
 	// Add title
-	excel.SetCellValue(summarySheet, "A1", "Test Results Report")   // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
-	excel.MergeCell(summarySheet, "A1", "D1")                       // #nosec G104 -- excelize MergeCell error is non-critical for report generation
+	excel.SetCellValue(summarySheet, "A1", "Test Results Report")
+	excel.MergeCell(summarySheet, "A1", "D1")
 
 	// Add generation timestamp
-	excel.SetCellValue(summarySheet, "A2", fmt.Sprintf("Generated: %s", time.Now().Format(time.RFC3339))) // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
-	excel.MergeCell(summarySheet, "A2", "D2")                                                              // #nosec G104 -- excelize MergeCell error is non-critical for report generation
+	excel.SetCellValue(summarySheet, "A2", fmt.Sprintf("Generated: %s", time.Now().Format(time.RFC3339)))
+	excel.MergeCell(summarySheet, "A2", "D2")
 
 	// Add headers
 	headers := []string{"ID", "Name", "Severity", "Status", "Category"}
 	for i, header := range headers {
 		cell := fmt.Sprintf("%c4", 'A'+i)
-		excel.SetCellValue(summarySheet, cell, header) // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
+		excel.SetCellValue(summarySheet, cell, header)
 	}
 
 	// Add test results
 	row := 5
 	for _, result := range results {
-		excel.SetCellValue(summarySheet, fmt.Sprintf("A%d", row), result.ID)              // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
-		excel.SetCellValue(summarySheet, fmt.Sprintf("B%d", row), result.Name)            // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
-		excel.SetCellValue(summarySheet, fmt.Sprintf("C%d", row), string(result.Severity)) // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
-		excel.SetCellValue(summarySheet, fmt.Sprintf("D%d", row), result.Status)           // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
-		excel.SetCellValue(summarySheet, fmt.Sprintf("E%d", row), result.Category)         // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
+		excel.SetCellValue(summarySheet, fmt.Sprintf("A%d", row), result.ID)
+		excel.SetCellValue(summarySheet, fmt.Sprintf("B%d", row), result.Name)
+		excel.SetCellValue(summarySheet, fmt.Sprintf("C%d", row), string(result.Severity))
+		excel.SetCellValue(summarySheet, fmt.Sprintf("D%d", row), result.Status)
+		excel.SetCellValue(summarySheet, fmt.Sprintf("E%d", row), result.Category)
 		row++
 	}
 
@@ -74,16 +74,16 @@ func (f *ExcelFormatter) FormatReport(results api.TestResults, writer io.Writer)
 		detailHeaders := []string{"ID", "Name", "Description", "Details"}
 		for i, header := range detailHeaders {
 			cell := fmt.Sprintf("%c1", 'A'+i)
-			excel.SetCellValue(detailsSheet, cell, header) // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
+			excel.SetCellValue(detailsSheet, cell, header)
 		}
 
 		// Add detailed information
 		detailRow := 2
 		for _, result := range results {
-			excel.SetCellValue(detailsSheet, fmt.Sprintf("A%d", detailRow), result.ID)          // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
-			excel.SetCellValue(detailsSheet, fmt.Sprintf("B%d", detailRow), result.Name)        // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
-			excel.SetCellValue(detailsSheet, fmt.Sprintf("C%d", detailRow), result.Description) // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
-			excel.SetCellValue(detailsSheet, fmt.Sprintf("D%d", detailRow), result.Details)     // #nosec G104 -- excelize SetCellValue error is non-critical for report generation
+			excel.SetCellValue(detailsSheet, fmt.Sprintf("A%d", detailRow), result.ID)
+			excel.SetCellValue(detailsSheet, fmt.Sprintf("B%d", detailRow), result.Name)
+			excel.SetCellValue(detailsSheet, fmt.Sprintf("C%d", detailRow), result.Description)
+			excel.SetCellValue(detailsSheet, fmt.Sprintf("D%d", detailRow), result.Details)
 			detailRow++
 		}
 	}
@@ -130,7 +130,7 @@ func (f *ExcelFormatter) WriteToFile(ctx context.Context, reportInterface interf
 	}
 
 	// Create the file
-	file, err := os.Create(filepath.Clean(filePath)) // #nosec G304 -- filePath is caller-provided report output path
+	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", filePath, err)
 	}

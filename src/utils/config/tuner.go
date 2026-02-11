@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -327,7 +326,7 @@ func (t *ConfigTuner) SaveConfigToFile(filename string) error {
 	defer t.mutex.RUnlock()
 
 	// Create file
-	f, err := os.Create(filepath.Clean(filename)) // #nosec G304 -- filename is caller-provided output path
+	f, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}

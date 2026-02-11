@@ -2,7 +2,7 @@
 package fixtures
 
 import (
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // init registers all test fixtures with the testing framework

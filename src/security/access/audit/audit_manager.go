@@ -51,11 +51,6 @@ func (m *AuditManager) LogSecurity(ctx context.Context, eventType, details strin
 	return nil
 }
 
-// LogAudit logs an audit event (alias for LogEvent)
-func (m *AuditManager) LogAudit(ctx context.Context, event *AuditEvent) error {
-	return m.LogEvent(ctx, event)
-}
-
 // LogEvent logs an audit event
 func (m *AuditManager) LogEvent(ctx context.Context, event *AuditEvent) error {
 	if m.logger == nil {

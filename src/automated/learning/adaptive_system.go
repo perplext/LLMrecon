@@ -327,7 +327,7 @@ func (as *AdaptiveSystem) selectPolicy(target interface{}) *Policy {
 // selectAction chooses action based on policy
 func (as *AdaptiveSystem) selectAction(state State, policy *Policy) Action {
 	// Epsilon-greedy exploration
-	if rand.Float64() < as.config.ExplorationRate { // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
+	if rand.Float64() < as.config.ExplorationRate {
 		// Explore: random action
 		return as.generateRandomAction()
 	}
@@ -1226,13 +1226,12 @@ func (ee *EvolutionEngine) createInitialPopulation() []Individual {
 
 // randomGenome creates random genes
 func (ee *EvolutionEngine) randomGenome() map[string]float64 {
-	// #nosec G404 -- math/rand used for non-security randomization (evolutionary simulation)
 	genes := map[string]float64{
-		"aggression":  rand.Float64(), // #nosec G404
-		"stealth":     rand.Float64(), // #nosec G404
-		"persistence": rand.Float64(), // #nosec G404
-		"creativity":  rand.Float64(), // #nosec G404
-		"adaptation":  rand.Float64(), // #nosec G404
+		"aggression":  rand.Float64(),
+		"stealth":     rand.Float64(),
+		"persistence": rand.Float64(),
+		"creativity":  rand.Float64(),
+		"adaptation":  rand.Float64(),
 	}
 	return genes
 }
@@ -1283,7 +1282,7 @@ func (ee *EvolutionEngine) selection() []Individual {
 		// Random tournament
 		tournament := []Individual{}
 		for j := 0; j < tournamentSize; j++ {
-			idx := rand.Intn(len(ee.population)) // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
+			idx := rand.Intn(len(ee.population))
 			tournament = append(tournament, ee.population[idx])
 		}
 
@@ -1306,7 +1305,7 @@ func (ee *EvolutionEngine) reproduce(parents []Individual) []Individual {
 
 	for i := 0; i < len(parents)-1; i += 2 {
 		// Crossover
-		if rand.Float64() < ee.config.CrossoverRate { // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
+		if rand.Float64() < ee.config.CrossoverRate {
 			child1, child2 := ee.crossover(parents[i], parents[i+1])
 			offspring = append(offspring, child1, child2)
 		} else {
@@ -1316,7 +1315,7 @@ func (ee *EvolutionEngine) reproduce(parents []Individual) []Individual {
 
 	// Mutation
 	for i := range offspring {
-		if rand.Float64() < ee.config.MutationRate { // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
+		if rand.Float64() < ee.config.MutationRate {
 			offspring[i] = ee.mutate(offspring[i])
 		}
 	}
@@ -1339,7 +1338,7 @@ func (ee *EvolutionEngine) crossover(parent1, parent2 Individual) (Individual, I
 
 	// Uniform crossover
 	for gene := range parent1.Genome.Genes {
-		if rand.Float64() < 0.5 { // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
+		if rand.Float64() < 0.5 {
 			child1.Genome.Genes[gene] = parent1.Genome.Genes[gene]
 			child2.Genome.Genes[gene] = parent2.Genome.Genes[gene]
 		} else {
@@ -1357,8 +1356,8 @@ func (ee *EvolutionEngine) mutate(individual Individual) Individual {
 
 	// Gaussian mutation
 	for gene := range mutated.Genome.Genes {
-		if rand.Float64() < 0.2 { // 20% chance per gene // #nosec G404 -- math/rand used for non-security randomization
-			delta := rand.NormFloat64() * 0.1 // #nosec G404 -- math/rand used for non-security randomization
+		if rand.Float64() < 0.2 { // 20% chance per gene
+			delta := rand.NormFloat64() * 0.1
 			mutated.Genome.Genes[gene] += delta
 
 			// Clamp to [0,1]
@@ -1420,15 +1419,15 @@ func (as *AdaptiveSystem) generateRandomAction() Action {
 	}
 
 	return Action{
-		Type:       actions[rand.Intn(len(actions))],  // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
-		Confidence: rand.Float64(),                     // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
+		Type:       actions[rand.Intn(len(actions))],
+		Confidence: rand.Float64(),
 		Parameters: make(map[string]interface{}),
 	}
 }
 
 func (as *AdaptiveSystem) sampleAction(probs map[ActionType]float64) Action {
 	// Weighted random sampling
-	r := rand.Float64() // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
+	r := rand.Float64()
 	cumulative := 0.0
 
 	for actionType, prob := range probs {
@@ -1752,14 +1751,14 @@ func generateID() string {
 }
 
 func randomFloat64() float64 {
-	return float64(rand.Intn(100)) / 100.0 // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
+	return float64(rand.Intn(100)) / 100.0
 }
 
 func randomNormFloat64() float64 {
 	// Simple normal distribution approximation
 	sum := 0.0
 	for i := 0; i < 12; i++ {
-		sum += rand.Float64() // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
+		sum += rand.Float64()
 	}
 	return sum - 6.0
 }

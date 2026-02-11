@@ -82,8 +82,6 @@ type SecureVault struct {
 	filePath string
 	// encryptionKey is the key used for encryption
 	encryptionKey []byte
-	// salt is the random salt used for key derivation (stored alongside vault data)
-	salt []byte
 	// credentials is the in-memory cache of credentials
 	credentials map[string]*Credential
 	// mutex protects the credentials map
@@ -98,14 +96,6 @@ type SecureVault struct {
 	rotationChecker *time.Ticker
 	// alertCallback is called when credentials need rotation
 	alertCallback func(credential *Credential, daysUntilExpiration int)
-}
-
-// vaultEnvelope is the on-disk JSON format that stores the random salt alongside
-// the encrypted credential data. Version 2 replaces the hardcoded salt used in v1.
-type vaultEnvelope struct {
-	Version int    `json:"version"`
-	Salt    string `json:"salt"`
-	Data    string `json:"data"`
 }
 
 // VaultOptions contains options for creating a new vault
@@ -130,6 +120,13 @@ func NewSecureVault(filePath string, options VaultOptions) (*SecureVault, error)
 		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}
 
+	// Derive encryption key from passphrase
+	salt := []byte("LLMrecon-secure-vault-salt") // In a production system, this should be unique and stored securely
+	key, err := deriveKey(options.Passphrase, salt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to derive encryption key: %w", err)
+	}
+
 	// Set default rotation check interval if not specified
 	rotationCheckInterval := options.RotationCheckInterval
 	if rotationCheckInterval == 0 {
@@ -138,6 +135,7 @@ func NewSecureVault(filePath string, options VaultOptions) (*SecureVault, error)
 
 	vault := &SecureVault{
 		filePath:              filePath,
+		encryptionKey:         key,
 		credentials:           make(map[string]*Credential),
 		auditLogger:           options.AuditLogger,
 		autoSave:              options.AutoSave,
@@ -145,22 +143,11 @@ func NewSecureVault(filePath string, options VaultOptions) (*SecureVault, error)
 		alertCallback:         options.AlertCallback,
 	}
 
-	// Load credentials from file if it exists (this also recovers the salt)
+	// Load credentials from file if it exists
 	if _, err := os.Stat(filePath); err == nil {
-		if err := vault.loadWithPassphrase(options.Passphrase); err != nil {
+		if err := vault.load(); err != nil {
 			return nil, fmt.Errorf("failed to load credentials: %w", err)
 		}
-	} else {
-		// New vault: generate a cryptographically random salt
-		vault.salt = make([]byte, 32)
-		if _, err := io.ReadFull(rand.Reader, vault.salt); err != nil {
-			return nil, fmt.Errorf("failed to generate salt: %w", err)
-		}
-		key, err := deriveKey(options.Passphrase, vault.salt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to derive encryption key: %w", err)
-		}
-		vault.encryptionKey = key
 	}
 
 	// Start rotation checker if interval is specified
@@ -281,41 +268,15 @@ func (v *SecureVault) decrypt(encryptedData string) ([]byte, error) {
 }
 
 // load loads credentials from the file
-// loadWithPassphrase reads the vault file, extracts the salt, derives the key,
-// and decrypts the credentials. Supports both v2 (JSON envelope with random salt)
-// and legacy v1 (raw encrypted data with hardcoded salt) formats.
-func (v *SecureVault) loadWithPassphrase(passphrase string) error {
+func (v *SecureVault) load() error {
+	// Read file
 	data, err := os.ReadFile(filepath.Clean(v.filePath))
 	if err != nil {
 		return err
 	}
 
-	var encryptedData string
-
-	// Try v2 envelope format first
-	var envelope vaultEnvelope
-	if err := json.Unmarshal(data, &envelope); err == nil && envelope.Version >= 2 {
-		saltBytes, err := base64.StdEncoding.DecodeString(envelope.Salt)
-		if err != nil {
-			return fmt.Errorf("failed to decode salt: %w", err)
-		}
-		v.salt = saltBytes
-		encryptedData = envelope.Data
-	} else {
-		// Legacy v1: use the old hardcoded salt for backward compatibility
-		v.salt = []byte("LLMrecon-secure-vault-salt-v1pad") // 32 bytes, matches old behavior
-		encryptedData = string(data)
-	}
-
-	// Derive key from passphrase + salt
-	key, err := deriveKey(passphrase, v.salt)
-	if err != nil {
-		return fmt.Errorf("failed to derive encryption key: %w", err)
-	}
-	v.encryptionKey = key
-
 	// Decrypt data
-	decryptedData, err := v.decrypt(encryptedData)
+	decryptedData, err := v.decrypt(string(data))
 	if err != nil {
 		return err
 	}
@@ -362,19 +323,8 @@ func (v *SecureVault) Save() error {
 		return err
 	}
 
-	// Write v2 envelope with random salt
-	envelope := vaultEnvelope{
-		Version: 2,
-		Salt:    base64.StdEncoding.EncodeToString(v.salt),
-		Data:    encryptedData,
-	}
-	envelopeData, err := json.Marshal(envelope)
-	if err != nil {
-		return err
-	}
-
 	// Write to file with secure permissions
-	return os.WriteFile(filepath.Clean(v.filePath), envelopeData, 0600)
+	return os.WriteFile(filepath.Clean(v.filePath), []byte(encryptedData), 0600)
 }
 
 // GetCredential gets a credential by ID
@@ -389,7 +339,7 @@ func (v *SecureVault) GetCredential(id string) (*Credential, error) {
 
 	// Log access
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess(id, cred.Service, "get") // #nosec G104 -- best-effort audit logging
+		v.auditLogger.LogCredentialAccess(id, cred.Service, "get")
 	}
 
 	// Update last used timestamp
@@ -444,7 +394,7 @@ func (v *SecureVault) StoreCredential(cred *Credential) error {
 		if isNew {
 			operation = "create"
 		}
-		v.auditLogger.LogCredentialAccess(credID, credService, operation) // #nosec G104 -- best-effort audit logging
+		v.auditLogger.LogCredentialAccess(credID, credService, operation)
 	}
 
 	// Save to file if auto-save is enabled - outside the lock
@@ -490,7 +440,7 @@ func (v *SecureVault) DeleteCredential(id string) error {
 	if credFound {
 		// Log operation outside the lock
 		if v.auditLogger != nil {
-			v.auditLogger.LogCredentialAccess(id, credService, "delete") // #nosec G104 -- best-effort audit logging
+			v.auditLogger.LogCredentialAccess(id, credService, "delete")
 		}
 
 		// Save to file if auto-save is enabled - outside the lock
@@ -509,27 +459,15 @@ func (v *SecureVault) ListCredentials() ([]*Credential, error) {
 
 	var credentials []*Credential
 	for _, cred := range v.credentials {
-		// Return a copy with the value masked to prevent accidental exposure
-		credCopy := *cred
-		credCopy.Value = maskValue(cred.Value)
-		credentials = append(credentials, &credCopy)
+		credentials = append(credentials, cred)
 	}
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("all", "", "list") // #nosec G104 -- best-effort audit logging
+		v.auditLogger.LogCredentialAccess("all", "", "list")
 	}
 
 	return credentials, nil
-}
-
-// maskValue returns a masked version of a credential value, showing only the
-// last 4 characters. Values shorter than 8 characters are fully masked.
-func maskValue(value string) string {
-	if len(value) < 8 {
-		return "****"
-	}
-	return "****" + value[len(value)-4:]
 }
 
 // ListCredentialsByService lists credentials for a specific service
@@ -540,15 +478,13 @@ func (v *SecureVault) ListCredentialsByService(service string) ([]*Credential, e
 	var credentials []*Credential
 	for _, cred := range v.credentials {
 		if cred.Service == service {
-			credCopy := *cred
-			credCopy.Value = maskValue(cred.Value)
-			credentials = append(credentials, &credCopy)
+			credentials = append(credentials, cred)
 		}
 	}
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("service:"+service, service, "list") // #nosec G104 -- best-effort audit logging
+		v.auditLogger.LogCredentialAccess("service:"+service, service, "list")
 	}
 
 	return credentials, nil
@@ -562,15 +498,13 @@ func (v *SecureVault) ListCredentialsByType(credType CredentialType) ([]*Credent
 	var credentials []*Credential
 	for _, cred := range v.credentials {
 		if cred.Type == credType {
-			credCopy := *cred
-			credCopy.Value = maskValue(cred.Value)
-			credentials = append(credentials, &credCopy)
+			credentials = append(credentials, cred)
 		}
 	}
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("type:"+string(credType), "", "list") // #nosec G104 -- best-effort audit logging
+		v.auditLogger.LogCredentialAccess("type:"+string(credType), "", "list")
 	}
 
 	return credentials, nil
@@ -585,9 +519,7 @@ func (v *SecureVault) ListCredentialsByTag(tag string) ([]*Credential, error) {
 	for _, cred := range v.credentials {
 		for _, t := range cred.Tags {
 			if t == tag {
-				credCopy := *cred
-				credCopy.Value = maskValue(cred.Value)
-				credentials = append(credentials, &credCopy)
+				credentials = append(credentials, cred)
 				break
 			}
 		}
@@ -595,7 +527,7 @@ func (v *SecureVault) ListCredentialsByTag(tag string) ([]*Credential, error) {
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("tag:"+tag, "", "list") // #nosec G104 -- best-effort audit logging
+		v.auditLogger.LogCredentialAccess("tag:"+tag, "", "list")
 	}
 
 	return credentials, nil
@@ -621,7 +553,7 @@ func (v *SecureVault) RotateCredential(id string, newValue string) error {
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess(id, cred.Service, "rotate") // #nosec G104 -- best-effort audit logging
+		v.auditLogger.LogCredentialAccess(id, cred.Service, "rotate")
 	}
 
 	// Save to file if auto-save is enabled
@@ -662,7 +594,7 @@ func (v *SecureVault) GetCredentialsNeedingRotation() ([]*Credential, error) {
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("rotation-check", "", "list") // #nosec G104 -- best-effort audit logging
+		v.auditLogger.LogCredentialAccess("rotation-check", "", "list")
 	}
 
 	return credentials, nil

@@ -286,9 +286,7 @@ func (pm *ProtectionManager) Close() error {
 	}
 
 	if pm.reportingSystem != nil {
-		if err := pm.reportingSystem.Close(); err != nil {
-			return err
-		}
+		pm.reportingSystem.Close()
 	}
 
 	return nil

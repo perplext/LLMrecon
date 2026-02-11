@@ -3,9 +3,6 @@ package core
 
 import (
 	"context"
-	"fmt"
-	"net/url"
-	"strings"
 	"time"
 )
 
@@ -41,32 +38,6 @@ const (
 	LocalProvider ProviderType = "local"
 	// CustomProvider represents a custom provider
 	CustomProvider ProviderType = "custom"
-	// GoogleProvider represents the Google provider (e.g., Gemini)
-	GoogleProvider ProviderType = "google"
-	// DeepSeekProvider represents the DeepSeek provider (R1, V3)
-	DeepSeekProvider ProviderType = "deepseek"
-	// MetaProvider represents the Meta/Llama provider (Llama 4)
-	MetaProvider ProviderType = "meta"
-	// XAIProvider represents the xAI provider (Grok 3)
-	XAIProvider ProviderType = "xai"
-	// AlibabaProvider represents the Alibaba/Qwen provider (Qwen3)
-	AlibabaProvider ProviderType = "alibaba"
-)
-
-// SeverityLevel represents the severity level of a finding
-type SeverityLevel string
-
-const (
-	// SeverityCritical represents a critical severity level
-	SeverityCritical SeverityLevel = "critical"
-	// SeverityHigh represents a high severity level
-	SeverityHigh SeverityLevel = "high"
-	// SeverityMedium represents a medium severity level
-	SeverityMedium SeverityLevel = "medium"
-	// SeverityLow represents a low severity level
-	SeverityLow SeverityLevel = "low"
-	// SeverityInfo represents an informational severity level
-	SeverityInfo SeverityLevel = "info"
 )
 
 // ModelCapability represents a capability of a model
@@ -91,14 +62,6 @@ const (
 	ToolUseCapability ModelCapability = "tool-use"
 	// JSONModeCapability represents the capability to output JSON
 	JSONModeCapability ModelCapability = "json-mode"
-	// ReasoningCapability represents the capability for extended thinking / chain-of-thought
-	ReasoningCapability ModelCapability = "reasoning"
-	// AudioInputCapability represents the capability to process audio input
-	AudioInputCapability ModelCapability = "audio-input"
-	// LongContextCapability represents support for 100K+ token context windows
-	LongContextCapability ModelCapability = "long-context"
-	// MCPToolUseCapability represents the capability to use MCP tools
-	MCPToolUseCapability ModelCapability = "mcp-tool-use"
 )
 
 // Message represents a message in a conversation
@@ -116,9 +79,6 @@ type Message struct {
 	// Timestamp is the timestamp of the message
 	Timestamp time.Time `json:"timestamp,omitempty"`
 }
-
-// ChatMessage is an alias for Message used in chat completion contexts
-type ChatMessage = Message
 
 // FunctionCall represents a function call
 type FunctionCall struct {
@@ -184,10 +144,6 @@ type TextCompletionRequest struct {
 	User string `json:"user,omitempty"`
 	// Model is the model to use
 	Model string `json:"model,omitempty"`
-	// ModelID is an alias for Model used by some components
-	ModelID string `json:"model_id,omitempty"`
-	// Metadata is optional metadata for the request
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // TextCompletionResponse represents a response from text completion
@@ -266,8 +222,6 @@ type ChatCompletionRequest struct {
 	ResponseFormat map[string]string `json:"response_format,omitempty"`
 	// Model is the model to use
 	Model string `json:"model,omitempty"`
-	// ModelID is an alias for Model used by some components
-	ModelID string `json:"model_id,omitempty"`
 	// Metadata is optional metadata for the request
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
@@ -301,11 +255,9 @@ type ChatCompletionChoice struct {
 // EmbeddingRequest represents a request for embeddings
 type EmbeddingRequest struct {
 	// Input is the input to embed
-	Input []string `json:"input"`
+	Input interface{} `json:"input"`
 	// Model is the model to use
 	Model string `json:"model"`
-	// ModelID is an alias for Model used by some components
-	ModelID string `json:"model_id,omitempty"`
 	// EncodingFormat is the encoding format
 	EncodingFormat string `json:"encoding_format,omitempty"`
 	// User is an optional user identifier
@@ -368,26 +320,6 @@ type ProviderConfig struct {
 	AdditionalHeaders map[string]string `json:"additional_headers,omitempty"`
 	// AdditionalParams is a map of additional parameters to include in requests
 	AdditionalParams map[string]interface{} `json:"additional_params,omitempty"`
-}
-
-// Validate checks the provider configuration for security issues.
-// It returns an error if the BaseURL uses plaintext HTTP (except for
-// localhost/127.0.0.1, which are allowed for local testing).
-func (c *ProviderConfig) Validate() error {
-	if c.BaseURL == "" {
-		return nil
-	}
-	parsed, err := url.Parse(c.BaseURL)
-	if err != nil {
-		return fmt.Errorf("invalid base URL: %w", err)
-	}
-	if parsed.Scheme == "http" {
-		host := strings.Split(parsed.Hostname(), ":")[0]
-		if host != "localhost" && host != "127.0.0.1" && host != "::1" {
-			return fmt.Errorf("base URL %q uses plaintext HTTP; use HTTPS for non-local endpoints", c.BaseURL)
-		}
-	}
-	return nil
 }
 
 // RetryConfig represents the configuration for retries

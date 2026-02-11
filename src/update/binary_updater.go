@@ -256,7 +256,7 @@ func (bu *BinaryUpdater) testBinary(binaryPath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, binaryPath, "--version") // #nosec G204 -- binaryPath is the downloaded update binary, verified before execution
+	cmd := exec.CommandContext(ctx, binaryPath, "--version")
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("binary test failed: %w", err)
@@ -329,7 +329,7 @@ func (bu *BinaryUpdater) applyWindowsUpdate(newBinaryPath, execPath, backupPath 
 	oldPath := execPath + ".old"
 
 	// Remove any existing .old file
-	os.Remove(oldPath) // #nosec G104 -- best-effort cleanup of old backup file
+	os.Remove(oldPath)
 
 	// Rename current binary
 	if err := os.Rename(execPath, oldPath); err != nil {
@@ -339,7 +339,7 @@ func (bu *BinaryUpdater) applyWindowsUpdate(newBinaryPath, execPath, backupPath 
 	// Copy new binary in place
 	if err := bu.copyFile(newBinaryPath, execPath); err != nil {
 		// Rollback: restore original binary
-		os.Rename(oldPath, execPath) // #nosec G104 -- best-effort rollback on error path
+		os.Rename(oldPath, execPath)
 		return fmt.Errorf("failed to copy new binary: %w", err)
 	}
 
@@ -361,7 +361,7 @@ func (bu *BinaryUpdater) applyUnixUpdate(newBinaryPath, execPath, backupPath str
 
 	// Atomic rename
 	if err := os.Rename(tempPath, execPath); err != nil {
-		os.Remove(tempPath) // #nosec G104 -- best-effort cleanup on error path
+		os.Remove(tempPath) // Cleanup
 		return fmt.Errorf("failed to replace binary: %w", err)
 	}
 
@@ -417,7 +417,7 @@ del "%%~f0" >nul 2>&1`, filePath)
 		batchPath := filePath + "_cleanup.bat"
 		if err := os.WriteFile(filepath.Clean(batchPath), []byte(batchContent), 0600); err == nil {
 			go func() {
-				exec.Command("cmd", "/C", batchPath).Start() // #nosec G104,G204 -- best-effort cleanup; batchPath is a cleanup script we just wrote to a controlled temp location
+				exec.Command("cmd", "/C", batchPath).Start()
 			}()
 		}
 	}
@@ -445,7 +445,7 @@ func (bu *BinaryUpdater) RestartApplication() error {
 	bu.logger.Info("Restarting application with new binary...")
 
 	// Start new process
-	cmd := exec.Command(execPath, args...) // #nosec G204 -- execPath is our own binary from os.Executable(), args from os.Args
+	cmd := exec.Command(execPath, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -500,7 +500,7 @@ func (bu *BinaryUpdater) CanSelfUpdate() error {
 		return fmt.Errorf("insufficient permissions to update binary: %w", err)
 	}
 
-	os.Remove(testFile) // #nosec G104 -- best-effort cleanup of permission test file
+	os.Remove(testFile)
 	return nil
 }
 
@@ -522,7 +522,7 @@ func (bu *BinaryUpdater) GetUpdatePermissions() *UpdatePermissions {
 		permissions.CanWriteDirectory = false
 		permissions.RequiresElevation = true
 	} else {
-		os.Remove(testFile) // #nosec G104 -- best-effort cleanup of permission test file
+		os.Remove(testFile)
 	}
 
 	// On Unix, check if we're running as root
@@ -565,19 +565,11 @@ func (bu *BinaryUpdater) elevateWindows(args []string) error {
 		return err
 	}
 
-	// Sanitize arguments to prevent PowerShell injection
-	sanitizedArgs := make([]string, len(args))
-	for i, arg := range args {
-		// Escape single quotes for PowerShell by doubling them
-		sanitizedArgs[i] = strings.ReplaceAll(arg, "'", "''")
-	}
+	// Use PowerShell to elevate
+	psScript := fmt.Sprintf(`Start-Process -FilePath "%s" -ArgumentList "%s" -Verb RunAs`,
+		execPath, strings.Join(args, " "))
 
-	// Use PowerShell to elevate with properly escaped arguments
-	psScript := fmt.Sprintf(`Start-Process -FilePath '%s' -ArgumentList '%s' -Verb RunAs`,
-		strings.ReplaceAll(execPath, "'", "''"),
-		strings.Join(sanitizedArgs, "','"))
-
-	cmd := exec.Command("powershell", "-Command", psScript) // #nosec G204 -- args are sanitized above, execPath from os.Executable()
+	cmd := exec.Command("powershell", "-Command", psScript)
 	return cmd.Run()
 }
 
@@ -588,21 +580,10 @@ func (bu *BinaryUpdater) elevateDarwin(args []string) error {
 		return err
 	}
 
-	// Sanitize arguments to prevent shell injection in osascript
-	sanitizedArgs := make([]string, len(args))
-	for i, arg := range args {
-		// Escape backslashes and double quotes for AppleScript shell context
-		escaped := strings.ReplaceAll(arg, `\`, `\\`)
-		escaped = strings.ReplaceAll(escaped, `"`, `\"`)
-		sanitizedArgs[i] = escaped
-	}
-	escapedExecPath := strings.ReplaceAll(execPath, `\`, `\\`)
-	escapedExecPath = strings.ReplaceAll(escapedExecPath, `"`, `\"`)
-
 	script := fmt.Sprintf(`do shell script "%s %s" with administrator privileges`,
-		escapedExecPath, strings.Join(sanitizedArgs, " "))
+		execPath, strings.Join(args, " "))
 
-	cmd := exec.Command("osascript", "-e", script) // #nosec G204 -- args are sanitized above, execPath from os.Executable()
+	cmd := exec.Command("osascript", "-e", script)
 	return cmd.Run()
 }
 
@@ -614,7 +595,7 @@ func (bu *BinaryUpdater) elevateLinux(args []string) error {
 	}
 
 	sudoArgs := append([]string{execPath}, args...)
-	cmd := exec.Command("sudo", sudoArgs...) // #nosec G204 -- sudo passes args directly without shell interpretation; execPath from os.Executable()
+	cmd := exec.Command("sudo", sudoArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -633,7 +614,7 @@ func (bu *BinaryUpdater) ValidateUpdate(expectedVersion string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, execPath, "--version") // #nosec G204 -- execPath from os.Executable()
+	cmd := exec.CommandContext(ctx, execPath, "--version")
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to validate update: %w", err)
@@ -652,7 +633,7 @@ func isElevated() bool {
 	switch runtime.GOOS {
 	case "windows":
 		// Check if running as administrator
-		cmd := exec.Command("net", "session") // #nosec G204 -- hardcoded command and argument to check admin privileges
+		cmd := exec.Command("net", "session")
 		err := cmd.Run()
 		return err == nil
 	default:

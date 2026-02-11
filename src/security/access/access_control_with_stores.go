@@ -43,15 +43,21 @@ func NewAccessControlSystemWithStores(
 
 	// Create the security manager
 	// Note: We don't use these managers directly as we create simpleRBACManager and simpleSecurityManager below
-	_ = NewSecurityManager(
+	_, err := NewSecurityManager(
 		config,
 		incidentStore,
 		vulnerabilityStore,
 		auditLogger,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create security manager: %w", err)
+	}
 
 	// Create the RBAC manager
-	_ = NewRBACManager(config)
+	_, err = NewRBACManager(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create RBAC manager: %w", err)
+	}
 
 	// Create the auth manager
 	// Extract auth config from AccessControlConfig

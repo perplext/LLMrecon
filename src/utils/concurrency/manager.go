@@ -3,7 +3,6 @@ package concurrency
 import (
 	"context"
 	"fmt"
-	"math"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -380,11 +379,7 @@ func (m *ConcurrencyManager) adjustWorkerCount() {
 	utilization := float64(pendingTasks) / float64(activeWorkers)
 
 	// Scale up if utilization is high
-	maxW := m.config.MaxWorkers
-	if maxW > math.MaxInt32 {
-		maxW = math.MaxInt32
-	}
-	if utilization >= m.config.ScaleUpThreshold && activeWorkers < int32(maxW) {
+	if utilization >= m.config.ScaleUpThreshold && activeWorkers < int32(m.config.MaxWorkers) {
 		workersToAdd := m.config.ScaleUpStep
 		if int(activeWorkers)+workersToAdd > m.config.MaxWorkers {
 			workersToAdd = m.config.MaxWorkers - int(activeWorkers)
@@ -400,11 +395,7 @@ func (m *ConcurrencyManager) adjustWorkerCount() {
 	}
 
 	// Scale down if utilization is low
-	minW := m.config.MinWorkers
-	if minW > math.MaxInt32 {
-		minW = math.MaxInt32
-	}
-	if utilization <= m.config.ScaleDownThreshold && activeWorkers > int32(minW) {
+	if utilization <= m.config.ScaleDownThreshold && activeWorkers > int32(m.config.MinWorkers) {
 		// We don't need to do anything here, workers will timeout and exit
 		m.stats.WorkerScalingEvents++
 		m.stats.LastScaleDownTime = time.Now()
@@ -418,11 +409,7 @@ func (m *ConcurrencyManager) shouldScaleDown() bool {
 	defer m.mutex.RUnlock()
 
 	// Check if we're at the minimum number of workers
-	minWorkers := m.config.MinWorkers
-	if minWorkers > math.MaxInt32 {
-		minWorkers = math.MaxInt32
-	}
-	if atomic.LoadInt32(&m.activeWorkers) <= int32(minWorkers) {
+	if atomic.LoadInt32(&m.activeWorkers) <= int32(m.config.MinWorkers) {
 		return false
 	}
 
@@ -450,7 +437,7 @@ func (m *ConcurrencyManager) GetStats() *ConcurrencyStats {
 		MaxTaskDuration:     m.stats.MaxTaskDuration,
 		MinTaskDuration:     m.stats.MinTaskDuration,
 		TotalTaskDuration:   m.stats.TotalTaskDuration,
-		QueuedTasks:         int32(min(len(m.taskQueue), math.MaxInt32)),
+		QueuedTasks:         int32(len(m.taskQueue)),
 		WorkerScalingEvents: m.stats.WorkerScalingEvents,
 		LastScaleUpTime:     m.stats.LastScaleUpTime,
 		LastScaleDownTime:   m.stats.LastScaleDownTime,

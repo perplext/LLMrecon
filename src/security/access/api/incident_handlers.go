@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	access "github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
 
 // CreateIncidentRequest represents a request to create a new security incident
@@ -64,8 +64,7 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionSecurityIncidentView)
-	if err != nil || !hasPermission {
+	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentView) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -116,10 +115,18 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 	filter.Offset = (page - 1) * limit
 	filter.Limit = limit
 
-	// Get security incidents via AccessControlManager
-	incidents, err := s.accessManager.ListIncidents(r.Context(), filter)
+	// Get security incidents
+	securityManager := s.accessManager.GetSecurityManager()
+	incidents, err := securityManager.ListIncidents(r.Context(), filter)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to list security incidents")
+		return
+	}
+
+	// Get total count
+	totalCount, err := securityManager.CountIncidents(r.Context(), filter)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to count security incidents")
 		return
 	}
 
@@ -128,8 +135,6 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 	for _, incident := range incidents {
 		incidentResponses = append(incidentResponses, convertIncidentToResponse(incident))
 	}
-
-	totalCount := int64(len(incidentResponses))
 
 	// Create response
 	resp := struct {
@@ -161,8 +166,7 @@ func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionSecurityIncidentCreate)
-	if err != nil || !hasPermission {
+	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentCreate) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -202,24 +206,23 @@ func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create incident via AccessControlManager
-	incident, err := s.accessManager.CreateIncident(
-		r.Context(),
-		req.Title,
-		req.Description,
-		access.AuditSeverity(req.Severity),
-		currentUser.ID,
-		nil,
-		req.Metadata,
-	)
-	if err != nil {
+	// Create incident
+	incident := &access.SecurityIncident{
+		Title:             req.Title,
+		Description:       req.Description,
+		Severity:          req.Severity,
+		Status:            access.StatusOpen,
+		ReportedBy:        currentUser.ID,
+		AffectedResources: req.AffectedResources,
+		Tags:              req.Tags,
+		Metadata:          req.Metadata,
+	}
+
+	securityManager := s.accessManager.GetSecurityManager()
+	if err := securityManager.CreateIncident(r.Context(), incident); err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to create security incident")
 		return
 	}
-
-	// Set additional fields
-	incident.AffectedResources = req.AffectedResources
-	incident.Tags = req.Tags
 
 	// Return success response
 	WriteSuccessResponse(w, http.StatusCreated, "Security incident created successfully", convertIncidentToResponse(incident))
@@ -236,8 +239,7 @@ func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionSecurityIncidentView)
-	if err != nil || !hasPermission {
+	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentView) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -249,9 +251,9 @@ func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 		WriteErrorResponse(w, http.StatusBadRequest, "Incident ID is required")
 		return
 	}
-
-	// Get incident via AccessControlManager
-	incident, err := s.accessManager.GetIncident(r.Context(), incidentID)
+	// Get incident
+	securityManager := s.accessManager.GetSecurityManager()
+	incident, err := securityManager.GetIncident(r.Context(), incidentID)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Security incident not found")
 		return
@@ -272,8 +274,7 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionSecurityIncidentUpdate)
-	if err != nil || !hasPermission {
+	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentUpdate) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -293,8 +294,9 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get incident via AccessControlManager
-	incident, err := s.accessManager.GetIncident(r.Context(), incidentID)
+	// Get incident
+	securityManager := s.accessManager.GetSecurityManager()
+	incident, err := securityManager.GetIncident(r.Context(), incidentID)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Security incident not found")
 		return
@@ -367,6 +369,14 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.AssignedTo != "" {
+		// Validate that the assigned user exists
+		userManager := s.accessManager.GetUserManager()
+		_, err := userManager.GetUserByID(r.Context(), req.AssignedTo)
+		if err != nil {
+			WriteErrorResponse(w, http.StatusBadRequest, "Assigned user does not exist")
+			return
+		}
+
 		incident.AssignedTo = req.AssignedTo
 	}
 
@@ -389,14 +399,8 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 	// Update timestamp
 	incident.UpdatedAt = time.Now()
 
-	// Update incident status via AccessControlManager
-	if err := s.accessManager.UpdateIncidentStatus(
-		r.Context(),
-		incidentID,
-		access.IncidentStatus(incident.Status),
-		incident.AssignedTo,
-		currentUser.ID,
-	); err != nil {
+	// Update incident
+	if err := securityManager.UpdateIncident(r.Context(), incident); err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to update security incident")
 		return
 	}
@@ -416,12 +420,10 @@ func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionSecurityIncidentDelete)
-	if err != nil || !hasPermission {
+	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentDelete) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
-
 	// Get incident ID from URL
 	vars := mux.Vars(r)
 	incidentID := vars["id"]
@@ -430,27 +432,14 @@ func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify the incident exists
-	_, err = s.accessManager.GetIncident(r.Context(), incidentID)
-	if err != nil {
+	// Delete incident
+	securityManager := s.accessManager.GetSecurityManager()
+	if err := securityManager.DeleteIncident(r.Context(), incidentID); err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			WriteErrorResponse(w, http.StatusNotFound, "Security incident not found")
 		} else {
 			WriteErrorResponse(w, http.StatusInternalServerError, "Failed to delete security incident")
 		}
-		return
-	}
-
-	// Note: AccessControlManager doesn't have a DeleteIncident method,
-	// so we mark it as closed instead
-	if err := s.accessManager.UpdateIncidentStatus(
-		r.Context(),
-		incidentID,
-		access.IncidentStatusClosed,
-		"",
-		currentUser.ID,
-	); err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to delete security incident")
 		return
 	}
 

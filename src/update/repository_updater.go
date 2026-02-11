@@ -207,7 +207,7 @@ func (ru *RepositoryUpdater) downloadRepositoryArchive(ctx context.Context, url,
 	// Download with progress
 	_, err = io.Copy(tempFile, resp.Body)
 	if err != nil {
-		os.Remove(tempFile.Name()) // #nosec G104 -- best-effort cleanup on error path
+		os.Remove(tempFile.Name())
 		return "", fmt.Errorf("failed to download archive: %w", err)
 	}
 
@@ -319,7 +319,7 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 		}
 	}()
 
-	destFile, err := os.Create(filepath.Clean(destPath)) // #nosec G304 -- path validated against traversal above
+	destFile, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
@@ -329,14 +329,9 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 		}
 	}()
 
-	// G110 protection: use io.CopyN to cap decompressed size (500MB max)
-	const maxExtractFileSize int64 = 500 * 1024 * 1024 // 500MB
-	written, err := io.CopyN(destFile, reader, maxExtractFileSize+1)
-	if err != nil && err != io.EOF {
+	_, err = io.Copy(destFile, reader)
+	if err != nil {
 		return err
-	}
-	if written > maxExtractFileSize {
-		return fmt.Errorf("extracted file exceeds maximum allowed size of %d bytes", maxExtractFileSize)
 	}
 
 	// Set file permissions
@@ -399,12 +394,9 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 
 	destPath := filepath.Join(destDir, cleanPath)
 
-	// Mask mode to standard Unix permission bits to safely convert int64 -> uint32
-	fileMode := os.FileMode(header.Mode & 0o7777)
-
 	switch header.Typeflag {
 	case tar.TypeDir:
-		return os.MkdirAll(destPath, fileMode)
+		return os.MkdirAll(destPath, os.FileMode(header.Mode))
 	case tar.TypeReg:
 		// Create directory if needed
 		if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
@@ -412,7 +404,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		}
 
 		// Extract file
-		destFile, err := os.Create(filepath.Clean(destPath)) // #nosec G304 -- path validated against traversal above
+		destFile, err := os.Create(destPath)
 		if err != nil {
 			return err
 		}
@@ -428,7 +420,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		}
 
 		// Set file permissions
-		return os.Chmod(destPath, fileMode)
+		return os.Chmod(destPath, os.FileMode(header.Mode))
 	default:
 		// Skip other file types (symlinks, etc.)
 		return nil

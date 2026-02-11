@@ -266,10 +266,11 @@ func (m *ConnectionPoolManager) createProviderPool(providerType ProviderType, co
 		DisableCompression:    config.DisableCompression,
 	}
 
-	// Configure TLS settings
-	transport.TLSClientConfig = &tls.Config{
-		InsecureSkipVerify: config.InsecureSkipVerify, // #nosec G402 -- Controlled by pool configuration for non-production/testing environments
-		MinVersion:         tls.VersionTLS12,
+	// Configure TLS if needed
+	if config.InsecureSkipVerify {
+		transport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: false, // Fixed: Enable cert validation
+		}
 	}
 
 	// Create HTTP client

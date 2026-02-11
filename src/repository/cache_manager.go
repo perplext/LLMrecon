@@ -301,7 +301,7 @@ func (c *CacheManager) GetFile(ctx context.Context, path string) (io.ReadCloser,
 	}
 
 	// Close the reader
-	_ = reader.Close() // #nosec G104 -- reader already fully consumed
+	reader.Close()
 
 	// Cache the file content
 	c.fileCache.Set(key, content)
@@ -368,7 +368,7 @@ func (c *CacheManager) GetFileFromRepo(ctx context.Context, repoName, path strin
 	}
 
 	// Close the reader
-	_ = reader.Close() // #nosec G104 -- reader already fully consumed
+	reader.Close()
 
 	// Cache the file content
 	c.fileCache.Set(key, content)

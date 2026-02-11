@@ -53,16 +53,12 @@ type Vulnerability struct {
 
 // Metric represents a custom metric data point
 type Metric struct {
-	ID        string            `json:"id"`
 	Name      string            `json:"name"`
 	Value     float64           `json:"value"`
 	Unit      string            `json:"unit"`
-	Type      string            `json:"type"`
 	Tags      map[string]string `json:"tags"`
-	Labels    map[string]string `json:"labels"`
 	Timestamp time.Time         `json:"timestamp"`
-	Source    string                 `json:"source"`
-	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+	Source    string            `json:"source"`
 }
 
 // AggregatedMetric represents an aggregated metric over a time window
@@ -182,20 +178,11 @@ type Trend struct {
 
 // TrendSummary represents overall trend summary
 type TrendSummary struct {
-	OverallDirection   string   `json:"overall_direction"`
-	StrongestTrend     string   `json:"strongest_trend"`
-	WeakestTrend       string   `json:"weakest_trend"`
-	AverageChange      float64  `json:"average_change"`
-	Volatility         float64  `json:"volatility"`
-	Metric             string   `json:"metric,omitempty"`
-	Direction          string   `json:"direction,omitempty"`
-	Strength           string   `json:"strength,omitempty"`
-	Confidence         float64  `json:"confidence,omitempty"`
-	Description        string   `json:"description,omitempty"`
-	AnomalyCount       int      `json:"anomaly_count,omitempty"`
-	PrimaryTrend       string   `json:"primary_trend,omitempty"`
-	TrendStrength      string   `json:"trend_strength,omitempty"`
-	RecommendedActions []string `json:"recommended_actions,omitempty"`
+	OverallDirection string  `json:"overall_direction"`
+	StrongestTrend   string  `json:"strongest_trend"`
+	WeakestTrend     string  `json:"weakest_trend"`
+	AverageChange    float64 `json:"average_change"`
+	Volatility       float64 `json:"volatility"`
 }
 
 // ForecastPoint represents a forecasted data point
@@ -397,8 +384,6 @@ type DataStorage interface {
 	StoreAggregatedMetric(ctx context.Context, metric AggregatedMetric) error
 	DeleteMetricsByTimeRange(ctx context.Context, start, end time.Time) error
 	CountMetricsByTimeRange(ctx context.Context, start, end time.Time) (int, error)
-	GetScanResultsByTimeRange(ctx context.Context, start, end time.Time) ([]ScanResult, error)
-	GetAggregatedMetricsByTimeRange(ctx context.Context, start, end time.Time) ([]AggregatedMetric, error)
 }
 
 // ReportGenerator interface for generating reports
@@ -423,11 +408,10 @@ const (
 
 // Constants for metric types (if needed by collector)
 const (
-	MetricTypeEvent     = "event"
-	MetricTypeGauge     = "gauge"
-	MetricTypeCounter   = "counter"
-	MetricTypeCustom    = "custom"
-	MetricTypeHistogram = "histogram"
+	MetricTypeEvent   = "event"
+	MetricTypeGauge   = "gauge"
+	MetricTypeCounter = "counter"
+	MetricTypeCustom  = "custom"
 )
 
 // Constants for severities

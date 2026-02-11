@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/reporting/common"
+	"github.com/perplext/LLMrecon/src/security/access/common"
 	"github.com/perplext/LLMrecon/src/template/management/types"
 )
 

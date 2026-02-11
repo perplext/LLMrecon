@@ -394,35 +394,35 @@ func (l *AuditLogger) generateSummaryReport(events []AuditEvent, writer io.Write
 	defer csv.Flush()
 
 	// Write header
-	_ = csv.Write([]string{"Report Type", "Generated At", "Total Events"})                                                                                      // #nosec G104 -- CSV write errors are checked via csv.Flush
-	_ = csv.Write([]string{string(summary.ReportType), summary.GeneratedAt.Format(time.RFC3339), fmt.Sprintf("%d", summary.TotalEvents)}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	_ = csv.Write([]string{"Report Type", "Generated At", "Total Events"})
+	_ = csv.Write([]string{string(summary.ReportType), summary.GeneratedAt.Format(time.RFC3339), fmt.Sprintf("%d", summary.TotalEvents)})
 
 	// Write time range
-	_ = csv.Write([]string{"Time Range Start", "Time Range End"})                                                                                  // #nosec G104 -- CSV write errors are checked via csv.Flush
-	_ = csv.Write([]string{summary.TimeRange.Start.Format(time.RFC3339), summary.TimeRange.End.Format(time.RFC3339)}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	_ = csv.Write([]string{"Time Range Start", "Time Range End"})
+	_ = csv.Write([]string{summary.TimeRange.Start.Format(time.RFC3339), summary.TimeRange.End.Format(time.RFC3339)})
 
 	// Write event counts
-	_ = csv.Write([]string{"Event Type", "Count"}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	_ = csv.Write([]string{"Event Type", "Count"})
 	for eventType, count := range summary.EventCounts {
-		_ = csv.Write([]string{eventType, fmt.Sprintf("%d", count)}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+		_ = csv.Write([]string{eventType, fmt.Sprintf("%d", count)})
 	}
 
 	// Write bundle counts
-	_ = csv.Write([]string{"Bundle ID", "Count"}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	csv.Write([]string{"Bundle ID", "Count"})
 	for bundleID, count := range summary.BundleCounts {
-		_ = csv.Write([]string{bundleID, fmt.Sprintf("%d", count)}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+		csv.Write([]string{bundleID, fmt.Sprintf("%d", count)})
 	}
 
 	// Write status counts
-	_ = csv.Write([]string{"Status", "Count"}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	csv.Write([]string{"Status", "Count"})
 	for status, count := range summary.StatusCounts {
-		_ = csv.Write([]string{status, fmt.Sprintf("%d", count)}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+		csv.Write([]string{status, fmt.Sprintf("%d", count)})
 	}
 
 	// Write user counts
-	_ = csv.Write([]string{"User", "Count"}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	csv.Write([]string{"User", "Count"})
 	for user, count := range summary.UserCounts {
-		_ = csv.Write([]string{user, fmt.Sprintf("%d", count)}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+		csv.Write([]string{user, fmt.Sprintf("%d", count)})
 	}
 
 	return nil
@@ -472,15 +472,15 @@ func (l *AuditLogger) generateActivityReport(events []AuditEvent, writer io.Writ
 	defer csv.Flush()
 
 	// Write header
-	_ = csv.Write([]string{"Report Type", "Generated At", "Total Events"})                                                                                      // #nosec G104 -- CSV write errors are checked via csv.Flush
-	_ = csv.Write([]string{string(activityReport.ReportType), activityReport.GeneratedAt.Format(time.RFC3339), fmt.Sprintf("%d", activityReport.TotalEvents)}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	csv.Write([]string{"Report Type", "Generated At", "Total Events"})
+	csv.Write([]string{string(activityReport.ReportType), activityReport.GeneratedAt.Format(time.RFC3339), fmt.Sprintf("%d", activityReport.TotalEvents)})
 
 	// Write time range
-	_ = csv.Write([]string{"Time Range Start", "Time Range End"})                                                                                  // #nosec G104 -- CSV write errors are checked via csv.Flush
-	_ = csv.Write([]string{activityReport.TimeRange.Start.Format(time.RFC3339), activityReport.TimeRange.End.Format(time.RFC3339)}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	csv.Write([]string{"Time Range Start", "Time Range End"})
+	csv.Write([]string{activityReport.TimeRange.Start.Format(time.RFC3339), activityReport.TimeRange.End.Format(time.RFC3339)})
 
 	// Write activities by day
-	_ = csv.Write([]string{"Date", "Timestamp", "Event Type", "Component", "ID", "User", "Status", "Details"}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	csv.Write([]string{"Date", "Timestamp", "Event Type", "Component", "ID", "User", "Status", "Details"})
 	for day, activities := range activityReport.Activities {
 		for _, activity := range activities {
 			// Format details as string
@@ -489,7 +489,7 @@ func (l *AuditLogger) generateActivityReport(events []AuditEvent, writer io.Writ
 				detailsStr += fmt.Sprintf("%s=%v; ", k, v)
 			}
 
-			_ = csv.Write([]string{ // #nosec G104 -- CSV write errors are checked via csv.Flush
+			csv.Write([]string{
 				day,
 				activity.Timestamp.Format(time.RFC3339),
 				activity.EventType,
@@ -511,7 +511,7 @@ func (l *AuditLogger) exportEventsListAsCSV(events []AuditEvent, writer io.Write
 	defer csv.Flush()
 
 	// Write header
-	_ = csv.Write([]string{"Timestamp", "Event Type", "Component", "ID", "User", "Status", "Details"}) // #nosec G104 -- CSV write errors are checked via csv.Flush
+	csv.Write([]string{"Timestamp", "Event Type", "Component", "ID", "User", "Status", "Details"})
 
 	// Write events
 	for _, event := range events {
@@ -521,7 +521,7 @@ func (l *AuditLogger) exportEventsListAsCSV(events []AuditEvent, writer io.Write
 			detailsStr += fmt.Sprintf("%s=%v; ", k, v)
 		}
 
-		_ = csv.Write([]string{ // #nosec G104 -- CSV write errors are checked via csv.Flush
+		csv.Write([]string{
 			event.Timestamp.Format(time.RFC3339),
 			event.EventType,
 			event.Component,

@@ -4,7 +4,7 @@ package compliance
 import (
 	"fmt"
 
-	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/security/access/types"
 )
 
 // RegisterDefaultWithTestFactory registers the provided compliance service with the test factory

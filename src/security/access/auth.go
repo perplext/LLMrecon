@@ -5,12 +5,15 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base32"
+	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -86,7 +89,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) {
 			// Log failed login attempt
-			_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+			m.auditLogger.LogAudit(ctx, &AuditLog{
 				Timestamp:   time.Now(),
 				Action:      AuditActionLogin,
 				Resource:    "user",
@@ -107,7 +110,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	// Check if user is active
 	if !user.Active {
 		// Log failed login attempt
-		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
 			UserID:      user.ID,
 			Username:    user.Username,
@@ -126,7 +129,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	// Check if user is locked
 	if user.Locked {
 		// Log failed login attempt
-		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
 			UserID:      user.ID,
 			Username:    user.Username,
@@ -159,7 +162,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 		}
 
 		// Log failed login attempt
-		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
 			UserID:      user.ID,
 			Username:    user.Username,
@@ -236,7 +239,7 @@ func (m *LegacyAuthManager) Login(ctx context.Context, username, password string
 	}
 
 	// Log successful login
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      user.ID,
 		Username:    user.Username,
@@ -286,7 +289,7 @@ func (m *LegacyAuthManager) VerifyMFA(ctx context.Context, sessionID, code strin
 	valid, err := m.mfaManager.VerifyMFA(ctx, user.ID, mfa.MFAMethod(method), code)
 	if err != nil || !valid {
 		// Log failed MFA attempt
-		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
 			UserID:      user.ID,
 			Username:    user.Username,
@@ -311,7 +314,7 @@ func (m *LegacyAuthManager) VerifyMFA(ctx context.Context, sessionID, code strin
 	}
 
 	// Log successful MFA verification
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      user.ID,
 		Username:    user.Username,
@@ -358,7 +361,7 @@ func (m *LegacyAuthManager) Logout(ctx context.Context, sessionID string) error 
 	}
 
 	// Log logout
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      user.ID,
 		Username:    user.Username,
@@ -392,7 +395,7 @@ func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, toke
 	// Check if session has expired
 	if time.Now().After(session.ExpiresAt) {
 		// Delete expired session
-		_ = m.sessionStore.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of expired session
+		m.sessionStore.DeleteSession(ctx, sessionID)
 		return nil, ErrSessionExpired
 	}
 
@@ -404,7 +407,7 @@ func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, toke
 	// Check IP binding if enabled
 	if m.config != nil && m.config.SessionPolicy.EnforceIPBinding && session.IPAddress != ipAddress {
 		// Log suspicious activity
-		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
 			UserID:      session.UserID,
 			Action:      AuditActionLogin,
@@ -427,7 +430,7 @@ func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, toke
 	// Check user agent binding if enabled
 	if m.config != nil && m.config.SessionPolicy.EnforceUserAgentBinding && session.UserAgent != userAgent {
 		// Log suspicious activity
-		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+		m.auditLogger.LogAudit(ctx, &AuditLog{
 			Timestamp:   time.Now(),
 			UserID:      session.UserID,
 			Action:      AuditActionLogin,
@@ -452,7 +455,7 @@ func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, toke
 		inactivityTimeout := time.Duration(m.config.SessionPolicy.InactivityTimeout) * time.Minute
 		if time.Since(session.LastActivity) > inactivityTimeout {
 			// Delete inactive session
-			_ = m.sessionStore.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of inactive session
+			m.sessionStore.DeleteSession(ctx, sessionID)
 			return nil, ErrSessionExpired
 		}
 	}
@@ -465,14 +468,14 @@ func (m *LegacyAuthManager) ValidateSession(ctx context.Context, sessionID, toke
 	// Check if user is still active
 	if !user.Active {
 		// Delete session
-		_ = m.sessionStore.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of session for inactive user
+		m.sessionStore.DeleteSession(ctx, sessionID)
 		return nil, ErrUserInactive
 	}
 
 	// Check if user is locked
 	if user.Locked {
 		// Delete session
-		_ = m.sessionStore.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of session for locked user
+		m.sessionStore.DeleteSession(ctx, sessionID)
 		return nil, ErrUserLocked
 	}
 
@@ -501,7 +504,7 @@ func (m *LegacyAuthManager) RefreshSession(ctx context.Context, sessionID, refre
 	// Check if session has expired
 	if time.Now().After(session.ExpiresAt) {
 		// Delete expired session
-		_ = m.sessionStore.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of expired session
+		m.sessionStore.DeleteSession(ctx, sessionID)
 		return nil, ErrSessionExpired
 	}
 
@@ -514,14 +517,14 @@ func (m *LegacyAuthManager) RefreshSession(ctx context.Context, sessionID, refre
 	// Check if user is still active
 	if !user.Active {
 		// Delete session
-		_ = m.sessionStore.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of session for inactive user
+		m.sessionStore.DeleteSession(ctx, sessionID)
 		return nil, ErrUserInactive
 	}
 
 	// Check if user is locked
 	if user.Locked {
 		// Delete session
-		_ = m.sessionStore.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of session for locked user
+		m.sessionStore.DeleteSession(ctx, sessionID)
 		return nil, ErrUserLocked
 	}
 
@@ -543,7 +546,7 @@ func (m *LegacyAuthManager) RefreshSession(ctx context.Context, sessionID, refre
 	}
 
 	// Log session refresh
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      user.ID,
 		Username:    user.Username,
@@ -645,7 +648,7 @@ func (m *LegacyAuthManager) UpdateUserPassword(ctx context.Context, userID, curr
 	}
 
 	for _, session := range sessions {
-		_ = m.sessionStore.DeleteSession(ctx, session.ID) // #nosec G104 -- best-effort cleanup of sessions after password change
+		m.sessionStore.DeleteSession(ctx, session.ID)
 	}
 
 	return nil
@@ -820,7 +823,7 @@ func verifyTOTPCode(secret, code string) bool {
 		binary.BigEndian.PutUint64(counterBytes, counter)
 
 		// Calculate HMAC
-		h := hmac.New(sha256.New, secretBytes)
+		h := hmac.New(sha1.New, secretBytes)
 		h.Write(counterBytes)
 		hash := h.Sum(nil)
 

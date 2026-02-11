@@ -106,16 +106,8 @@ func (h *GzipHandler) Decompress(src io.Reader, dst io.Writer) error {
 		}
 	}()
 
-	// G110 protection: use io.CopyN to cap decompressed size (100MB max)
-	const maxDecompressSize int64 = 100 * 1024 * 1024 // 100MB
-	written, err := io.CopyN(dst, gzReader, maxDecompressSize+1)
-	if err != nil && err != io.EOF {
-		return err
-	}
-	if written > maxDecompressSize {
-		return fmt.Errorf("decompressed data exceeds maximum allowed size of %d bytes", maxDecompressSize)
-	}
-	return nil
+	_, err = io.Copy(dst, gzReader)
+	return err
 }
 
 func (h *GzipHandler) GetExtension() string {
@@ -444,7 +436,7 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 	}
 
 	// Create output file
-	outputFile, err := os.Create(filepath.Clean(outputPath)) // #nosec G304 -- outputPath is caller-provided output destination
+	outputFile, err := os.Create(outputPath)
 	if err != nil {
 		return err
 	}
@@ -469,7 +461,7 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 		if err != nil {
 			return err
 		}
-		defer func() { _ = os.Remove(tempFile.Name()) }() // #nosec G104 -- best-effort temp file cleanup
+		defer os.Remove(tempFile.Name())
 		writer = tempFile
 	}
 
@@ -484,7 +476,7 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 	}
 	// Apply encryption if requested
 	if options.Encryption != nil {
-		_ = writer.Close() // #nosec G104 -- file will be re-opened for reading; close error is non-critical
+		writer.Close()
 
 		// Read compressed data
 		compressedFile, err := os.Open(filepath.Clean(writer.(*os.File).Name()))
@@ -498,10 +490,7 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 		}()
 
 		// Encrypt and write to final output
-		encHandler, err := c.encryptionFactory.GetHandler(options.Encryption.Algorithm)
-		if err != nil {
-			return fmt.Errorf("failed to get encryption handler: %w", err)
-		}
+		encHandler, _ := c.encryptionFactory.GetHandler(options.Encryption.Algorithm)
 		err = encHandler.EncryptStream(compressedFile, outputFile, options.Encryption.Password)
 		if err != nil {
 			return err
@@ -552,15 +541,15 @@ func (c *BundleCompressor) DecompressBundle(archivePath string, outputPath strin
 		if err != nil {
 			return err
 		}
-		defer func() { _ = os.Remove(tempFile.Name()) }() // #nosec G104 -- best-effort temp file cleanup
+		defer os.Remove(tempFile.Name())
 		// Skip header and decrypt
-		_, _ = archiveFile.Seek(int64(encInfo.HeaderSize), 0) // #nosec G104 -- seek error will surface in subsequent DecryptStream call
+		archiveFile.Seek(int64(encInfo.HeaderSize), 0)
 		err = encHandler.DecryptStream(archiveFile, tempFile, options.Password)
 		if err != nil {
 			return err
 		}
 
-		_ = tempFile.Close() // #nosec G104 -- file will be re-opened for reading immediately after
+		tempFile.Close()
 		reader, err = os.Open(filepath.Clean(tempFile.Name()))
 		if err != nil {
 			return err

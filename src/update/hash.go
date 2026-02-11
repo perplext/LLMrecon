@@ -1,6 +1,8 @@
 package update
 
 import (
+	"crypto/md5"
+	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
@@ -65,9 +67,9 @@ func NewHashGenerator(algorithm HashAlgorithm) (*HashGenerator, error) {
 	case SHA512:
 		h = sha512.New()
 	case SHA1:
-		h = sha256.New() // SHA1 requests now use SHA-256 for stronger security
+		h = sha1.New()
 	case MD5:
-		h = sha256.New() // MD5 requests now use SHA-256 for stronger security
+		h = md5.New()
 	case BLAKE2b:
 		h, err = blake2b.New512(nil)
 		if err != nil {

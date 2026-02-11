@@ -89,7 +89,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 	defer l.mu.Unlock()
 
 	// Direct prompt injection patterns
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "pi-001",
 		Name:        "Ignore Previous Instructions",
 		Description: "Attempts to make the model ignore previous instructions",
@@ -107,7 +107,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "pi-002",
 		Name:        "Disregard Previous Instructions",
 		Description: "Attempts to make the model disregard previous instructions",
@@ -125,7 +125,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "pi-003",
 		Name:        "Forget Previous Instructions",
 		Description: "Attempts to make the model forget previous instructions",
@@ -144,7 +144,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 	})
 
 	// Role change patterns
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "rc-001",
 		Name:        "You Are Now",
 		Description: "Attempts to change the model's role using 'you are now'",
@@ -162,7 +162,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "rc-002",
 		Name:        "Act As",
 		Description: "Attempts to change the model's role using 'act as'",
@@ -181,7 +181,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 	})
 
 	// System prompt patterns
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "sp-001",
 		Name:        "System Prompt Colon",
 		Description: "Attempts to inject a system prompt using 'system:'",
@@ -199,7 +199,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "sp-002",
 		Name:        "System Prompt Tags",
 		Description: "Attempts to inject a system prompt using XML-like tags",
@@ -218,7 +218,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 	})
 
 	// Jailbreak patterns
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "jb-001",
 		Name:        "DAN (Do Anything Now)",
 		Description: "Attempts to jailbreak the model using the DAN technique",
@@ -236,7 +236,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "jb-002",
 		Name:        "Waluigi Effect",
 		Description: "Attempts to jailbreak the model using the Waluigi effect",
@@ -255,7 +255,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 	})
 
 	// Delimiter patterns
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "dl-001",
 		Name:        "Triple Backticks",
 		Description: "Use of triple backticks which may be used for prompt injection",
@@ -274,7 +274,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 	})
 
 	// Indirect prompt injection patterns
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "ipi-001",
 		Name:        "Process External Content",
 		Description: "Attempts to make the model process external content",
@@ -292,7 +292,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "ipi-002",
 		Name:        "URL Fetching Request",
 		Description: "Attempts to make the model fetch and process URL content",
@@ -310,7 +310,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "ipi-003",
 		Name:        "Document Processing Injection",
 		Description: "Hidden instructions in document processing requests",
@@ -328,7 +328,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "ipi-004",
 		Name:        "API Response Manipulation",
 		Description: "Injection through API or database responses",
@@ -346,7 +346,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "ipi-005",
 		Name:        "Email Thread Manipulation",
 		Description: "Injection through email threads or messages",
@@ -364,7 +364,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "ipi-006",
 		Name:        "Code Comment Injection",
 		Description: "Hidden instructions in code comments",
@@ -382,7 +382,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "ipi-007",
 		Name:        "Multi-Stage Attack Pattern",
 		Description: "Detects multi-stage indirect injection attempts",
@@ -400,7 +400,7 @@ func (l *InjectionPatternLibrary) initializeDefaultPatterns() {
 		Enabled:   true,
 	})
 
-	l.addPatternInternal(&InjectionPattern{ // #nosec G104 -- hardcoded default patterns are valid
+	l.addPatternInternal(&InjectionPattern{
 		ID:          "ipi-008",
 		Name:        "Data URI Injection",
 		Description: "Injection through data URIs",

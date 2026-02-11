@@ -1,5 +1,3 @@
-//go:build ignore
-
 // Package main provides a CLI tool for benchmarking template operations.
 package main
 
@@ -9,9 +7,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
+	"github.com/perplext/LLMrecon/src/repository"
 	"github.com/perplext/LLMrecon/src/template/management"
 	"github.com/perplext/LLMrecon/src/template/management/benchmark"
 	"github.com/perplext/LLMrecon/src/template/management/monitoring"
@@ -145,7 +143,7 @@ func runBenchmark(ctx context.Context, monitor *monitoring.PerformanceMonitor) (
 // saveResults saves benchmark results to a file
 func saveResults(results map[string]*benchmark.BenchmarkResult, filePath string) error {
 	// Create file
-	file, err := os.Create(filepath.Clean(filePath)) // #nosec G304 -- filePath is caller-provided output path
+	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
@@ -163,7 +161,7 @@ func saveResults(results map[string]*benchmark.BenchmarkResult, filePath string)
 // loadResults loads benchmark results from a file
 func loadResults(filePath string) (map[string]*benchmark.BenchmarkResult, error) {
 	// Open file
-	file, err := os.Open(filepath.Clean(filePath)) // #nosec G304 -- filePath is caller-provided input path
+	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}

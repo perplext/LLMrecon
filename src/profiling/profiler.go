@@ -4,7 +4,6 @@ package profiling
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"sync"
@@ -186,7 +185,7 @@ func (p *Profiler) Start() error {
 			return fmt.Errorf("failed to create CPU profile file: %w", err)
 		}
 		if err := pprof.StartCPUProfile(p.cpuProfileFile); err != nil {
-			_ = p.cpuProfileFile.Close() // #nosec G104 -- best-effort cleanup on error path
+			p.cpuProfileFile.Close()
 			return fmt.Errorf("failed to start CPU profile: %w", err)
 		}
 	}
@@ -210,7 +209,7 @@ func (p *Profiler) Stop() error {
 	if p.config.EnableCPUProfiling {
 		pprof.StopCPUProfile()
 		if p.cpuProfileFile != nil {
-			_ = p.cpuProfileFile.Close() // #nosec G104 -- best-effort cleanup during profiler stop
+			p.cpuProfileFile.Close()
 			p.cpuProfileFile = nil
 		}
 	}
@@ -425,7 +424,7 @@ func (p *Profiler) SaveReport(filePath string) error {
 	report := p.GetReport()
 
 	// Create file
-	file, err := os.Create(filepath.Clean(filePath)) // #nosec G304 -- filePath is caller-provided output path
+	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create report file: %w", err)
 	}
@@ -480,7 +479,7 @@ func (p *Profiler) SaveReport(filePath string) error {
 // CaptureMemoryProfile captures a memory profile
 func (p *Profiler) CaptureMemoryProfile(filePath string) error {
 	// Create file
-	file, err := os.Create(filepath.Clean(filePath)) // #nosec G304 -- filePath is caller-provided output path
+	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create memory profile file: %w", err)
 	}
@@ -502,7 +501,7 @@ func (p *Profiler) CaptureMemoryProfile(filePath string) error {
 // CaptureCPUProfile captures a CPU profile
 func (p *Profiler) CaptureCPUProfile(filePath string, duration time.Duration) error {
 	// Create file
-	file, err := os.Create(filepath.Clean(filePath)) // #nosec G304 -- filePath is caller-provided output path
+	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create CPU profile file: %w", err)
 	}

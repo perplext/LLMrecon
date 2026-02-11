@@ -3,7 +3,6 @@ package performance
 import (
 	"context"
 	"fmt"
-	"math"
 	"runtime"
 	"sync"
 	"time"
@@ -446,17 +445,17 @@ func (e *ConcurrencyEngine) Stop() error {
 	// Stop all worker pools
 	e.mutex.Lock()
 	for _, pool := range e.workerPools {
-		pool.Stop() // #nosec G104 -- best-effort cleanup during shutdown
+		pool.Stop()
 	}
 	for _, pipeline := range e.pipelines {
-		pipeline.Stop() // #nosec G104 -- best-effort cleanup during shutdown
+		pipeline.Stop()
 	}
 	e.mutex.Unlock()
 
 	// Stop components
-	e.coordinator.Stop() // #nosec G104 -- best-effort cleanup during shutdown
-	e.scheduler.Stop()   // #nosec G104 -- best-effort cleanup during shutdown
-	e.balancer.Stop()    // #nosec G104 -- best-effort cleanup during shutdown
+	e.coordinator.Stop()
+	e.scheduler.Stop()
+	e.balancer.Stop()
 
 	e.wg.Wait()
 
@@ -611,7 +610,7 @@ func (e *ConcurrencyEngine) scaleUp() {
 
 	for _, pool := range e.workerPools {
 		if len(pool.workers) < e.config.MaxWorkers {
-			pool.AddWorker() // #nosec G104 -- best-effort scaling, non-critical
+			pool.AddWorker()
 			e.logger.Info("Scaled up worker pool", "pool", pool.name, "workers", len(pool.workers))
 		}
 	}
@@ -624,7 +623,7 @@ func (e *ConcurrencyEngine) scaleDown() {
 
 	for _, pool := range e.workerPools {
 		if len(pool.workers) > e.config.MinWorkers {
-			pool.RemoveWorker() // #nosec G104 -- best-effort scaling, non-critical
+			pool.RemoveWorker()
 			e.logger.Info("Scaled down worker pool", "pool", pool.name, "workers", len(pool.workers))
 		}
 	}
@@ -641,8 +640,8 @@ func (e *ConcurrencyEngine) updateResourceMetrics() {
 		Goroutines:  runtime.NumGoroutine(),
 		GCStats: GCStats{
 			NumGC:       m.NumGC,
-			PauseTotal:  time.Duration(min(m.PauseTotalNs, uint64(math.MaxInt64))),
-			LastPause:   time.Duration(min(m.PauseNs[(m.NumGC+255)%256], uint64(math.MaxInt64))),
+			PauseTotal:  time.Duration(m.PauseTotalNs),
+			LastPause:   time.Duration(m.PauseNs[(m.NumGC+255)%256]),
 			HeapSize:    m.HeapAlloc,
 			HeapObjects: m.HeapObjects,
 		},

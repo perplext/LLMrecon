@@ -116,53 +116,11 @@ func (m *AccessControlManager) GetRBACManager() RBACManager {
 	return m.rbacManager
 }
 
-// GetAuditLogger returns the audit logger
-func (m *AccessControlManager) GetAuditLogger() AuditLogger {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.auditLogger
-}
-
 // GetUserManager returns the user manager
 func (m *AccessControlManager) GetUserManager() UserManager {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.userManager
-}
-
-// GetAuthManager returns the auth manager
-func (m *AccessControlManager) GetAuthManager() *AuthManager {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.authManager
-}
-
-// GetSessionManager returns the session manager
-func (m *AccessControlManager) GetSessionManager() *SessionManager {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.sessionManager
-}
-
-// GetSecurityManager returns the security manager
-func (m *AccessControlManager) GetSecurityManager() SecurityManager {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.securityManager
-}
-
-// GetIncidentStore returns the incident store
-func (m *AccessControlManager) GetIncidentStore() IncidentStore {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.incidentStore
-}
-
-// GetVulnerabilityStore returns the vulnerability store
-func (m *AccessControlManager) GetVulnerabilityStore() VulnerabilityStore {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.vulnStore
 }
 
 // Initialize initializes the access control system
@@ -179,7 +137,7 @@ func (m *AccessControlManager) Initialize(ctx context.Context) error {
 	}
 
 	// Log initialization
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		Action:      AuditActionSystem,
 		Resource:    "access_control",
@@ -205,7 +163,7 @@ func (m *AccessControlManager) Close(ctx context.Context) error {
 	}
 
 	// Log shutdown
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging during shutdown
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		Action:      AuditActionSystem,
 		Resource:    "access_control",
@@ -449,8 +407,8 @@ func (m *AccessControlManager) CreateIncident(ctx context.Context, title, descri
 		ID:          modelsIncident.ID,
 		Title:       modelsIncident.Title,
 		Description: modelsIncident.Description,
-		Severity:    string(modelsIncident.Severity),
-		Status:      string(modelsIncident.Status),
+		Severity:    AuditSeverity(modelsIncident.Severity),
+		Status:      IncidentStatus(modelsIncident.Status),
 		CreatedAt:   modelsIncident.ReportedAt,
 		ReportedBy:  modelsIncident.ReportedBy,
 		AuditLogIDs: auditLogIDs,
@@ -485,8 +443,8 @@ func (m *AccessControlManager) GetIncident(ctx context.Context, id string) (*Sec
 		ID:          modelsIncident.ID,
 		Title:       modelsIncident.Title,
 		Description: modelsIncident.Description,
-		Severity:    string(modelsIncident.Severity),
-		Status:      string(modelsIncident.Status),
+		Severity:    AuditSeverity(modelsIncident.Severity),
+		Status:      IncidentStatus(modelsIncident.Status),
 		CreatedAt:   modelsIncident.ReportedAt,
 		ReportedBy:  modelsIncident.ReportedBy,
 	}, nil
@@ -521,8 +479,8 @@ func (m *AccessControlManager) ListIncidents(ctx context.Context, filter *Incide
 			ID:          modelsIncident.ID,
 			Title:       modelsIncident.Title,
 			Description: modelsIncident.Description,
-			Severity:    string(modelsIncident.Severity),
-			Status:      string(modelsIncident.Status),
+			Severity:    AuditSeverity(modelsIncident.Severity),
+			Status:      IncidentStatus(modelsIncident.Status),
 			CreatedAt:   modelsIncident.ReportedAt,
 			ReportedBy:  modelsIncident.ReportedBy,
 		}
@@ -543,8 +501,8 @@ func (m *AccessControlManager) CreateVulnerability(ctx context.Context, title, d
 		ID:             modelsVuln.ID,
 		Title:          modelsVuln.Title,
 		Description:    modelsVuln.Description,
-		Severity:       string(modelsVuln.Severity),
-		Status:         string(modelsVuln.Status),
+		Severity:       AuditSeverity(modelsVuln.Severity),
+		Status:         VulnerabilityStatus(modelsVuln.Status),
 		CreatedAt:      modelsVuln.ReportedAt,
 		ReportedBy:     modelsVuln.ReportedBy,
 		AffectedSystem: affectedSystem,
@@ -580,8 +538,8 @@ func (m *AccessControlManager) GetVulnerability(ctx context.Context, id string) 
 		ID:          modelsVuln.ID,
 		Title:       modelsVuln.Title,
 		Description: modelsVuln.Description,
-		Severity:    string(modelsVuln.Severity),
-		Status:      string(modelsVuln.Status),
+		Severity:    AuditSeverity(modelsVuln.Severity),
+		Status:      VulnerabilityStatus(modelsVuln.Status),
 		CreatedAt:   modelsVuln.ReportedAt,
 		ReportedBy:  modelsVuln.ReportedBy,
 	}, nil
@@ -618,8 +576,8 @@ func (m *AccessControlManager) ListVulnerabilities(ctx context.Context, filter *
 			ID:          modelsVuln.ID,
 			Title:       modelsVuln.Title,
 			Description: modelsVuln.Description,
-			Severity:    string(modelsVuln.Severity),
-			Status:      string(modelsVuln.Status),
+			Severity:    AuditSeverity(modelsVuln.Severity),
+			Status:      VulnerabilityStatus(modelsVuln.Status),
 			CreatedAt:   modelsVuln.ReportedAt,
 			ReportedBy:  modelsVuln.ReportedBy,
 		}
@@ -671,7 +629,7 @@ func (m *AccessControlManager) createAdminUser(ctx context.Context) error {
 	}
 
 	// Log admin user creation
-	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
+	m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		Action:      AuditActionCreate,
 		Resource:    "user",

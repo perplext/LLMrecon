@@ -332,7 +332,15 @@ func (p *MockLLMProviderImpl) CreateEmbedding(ctx context.Context, request *core
 	}
 
 	// Generate mock embeddings
-	inputs := request.Input
+	var inputs []string
+	switch v := request.Input.(type) {
+	case string:
+		inputs = []string{v}
+	case []string:
+		inputs = v
+	default:
+		return nil, fmt.Errorf("unsupported input type: %T", request.Input)
+	}
 
 	embeddings := make([]core.Embedding, len(inputs))
 	for i, input := range inputs {
@@ -469,7 +477,7 @@ func generateMockEmbedding(input string, dimensions int) []float64 {
 	for i, c := range input {
 		seed += int64(c) * int64(i+1)
 	}
-	r := mathrand.New(mathrand.NewSource(seed)) // #nosec G404 -- math/rand used intentionally for test data generation, not security
+	r := mathrand.New(mathrand.NewSource(seed))
 
 	// Generate random embedding values
 	embedding := make([]float64, dimensions)

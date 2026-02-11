@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -197,7 +196,7 @@ func copyDir(src, dst string) error {
 // createZipFromDir creates a zip file from a directory
 func createZipFromDir(src, dst string) error {
 	// Create destination file
-	zipFile, err := os.Create(filepath.Clean(dst)) // #nosec G304 -- dst is an internally constructed output path
+	zipFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
@@ -301,21 +300,21 @@ func ExtractBundle(bundlePath, outputDir string) error {
 
 // extractFile extracts a file from a zip archive
 func extractFile(file *zip.File, outputDir string) error {
-	// G305 (zip slip) protection: validate the extracted file path stays within outputDir
+	// Create the file path
 	filePath := filepath.Join(outputDir, file.Name)
-	cleanDest := filepath.Clean(filePath)
-	cleanOutputDir := filepath.Clean(outputDir) + string(os.PathSeparator)
-	if !strings.HasPrefix(cleanDest, cleanOutputDir) && cleanDest != filepath.Clean(outputDir) {
-		return fmt.Errorf("illegal file path (zip slip): %s", file.Name)
+
+	// Check for directory traversal
+	if !isWithinDir(outputDir, filePath) {
+		return fmt.Errorf("illegal file path: %s", file.Name)
 	}
 
 	// Create directory for file if needed
 	if file.FileInfo().IsDir() {
-		return os.MkdirAll(cleanDest, file.Mode())
+		return os.MkdirAll(filePath, file.Mode())
 	}
 
 	// Create parent directory if needed
-	err := os.MkdirAll(filepath.Dir(cleanDest), 0700)
+	err := os.MkdirAll(filepath.Dir(filePath), 0700)
 	if err != nil {
 		return err
 	}
@@ -332,7 +331,7 @@ func extractFile(file *zip.File, outputDir string) error {
 	}()
 
 	// Create the file
-	outFile, err := os.OpenFile(cleanDest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode()) // #nosec G304 -- path validated against zip slip above
+	outFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 	if err != nil {
 		return err
 	}
@@ -342,20 +341,12 @@ func extractFile(file *zip.File, outputDir string) error {
 		}
 	}()
 
-	// G110 protection: use io.CopyN to cap decompressed size (100MB max)
-	const maxBundleFileSize int64 = 100 * 1024 * 1024 // 100MB
-	written, err := io.CopyN(outFile, rc, maxBundleFileSize+1)
-	if err != nil && err != io.EOF {
-		return err
-	}
-	if written > maxBundleFileSize {
-		return fmt.Errorf("file %s exceeds maximum allowed size of %d bytes", file.Name, maxBundleFileSize)
-	}
-	return nil
+	// Copy the file
+	_, err = io.Copy(outFile, rc)
+	return err
 }
 
-// isWithinDir checks if a path is within a directory using filepath.Rel
-// to avoid the deprecated filepath.HasPrefix and prevent zip slip attacks
+// isWithinDir checks if a path is within a directory
 func isWithinDir(dir, path string) bool {
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
@@ -367,13 +358,7 @@ func isWithinDir(dir, path string) bool {
 		return false
 	}
 
-	// Use Rel to compute relative path; if it starts with ".." it escapes the directory
-	rel, err := filepath.Rel(absDir, absPath)
-	if err != nil {
-		return false
-	}
-
-	return !strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel)
+	return absPath == absDir || filepath.HasPrefix(absPath, absDir+string(filepath.Separator))
 }
 
 // GetContentPath returns the path to a content item in the bundle

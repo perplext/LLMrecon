@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	_ "net/http/pprof" // #nosec G108 - Profiling endpoint for development only
 	"os"
@@ -691,18 +690,18 @@ func (p *PerformanceProfiler) Stop() error {
 	if p.server != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		p.server.Shutdown(ctx) // #nosec G104 -- best-effort shutdown of HTTP server
+		p.server.Shutdown(ctx)
 	}
 
 	// Stop components
-	p.alerts.Stop()   // #nosec G104 -- best-effort cleanup during shutdown
-	p.reporter.Stop() // #nosec G104 -- best-effort cleanup during shutdown
-	p.analyzer.Stop() // #nosec G104 -- best-effort cleanup during shutdown
-	p.optimizer.Stop() // #nosec G104 -- best-effort cleanup during shutdown
+	p.alerts.Stop()
+	p.reporter.Stop()
+	p.analyzer.Stop()
+	p.optimizer.Stop()
 
 	// Stop all profilers
 	for _, profiler := range p.profilers {
-		profiler.Stop() // #nosec G104 -- best-effort cleanup during shutdown
+		profiler.Stop()
 	}
 
 	p.wg.Wait()
@@ -751,8 +750,8 @@ func (p *PerformanceProfiler) CollectMetrics() *PerformanceMetrics {
 		GC: GCMetrics{
 			NumGC:         m.NumGC,
 			NumForcedGC:   m.NumForcedGC,
-			PauseTotal:    time.Duration(min(m.PauseTotalNs, uint64(math.MaxInt64))),
-			LastGC:        time.Unix(0, int64(min(m.LastGC, uint64(math.MaxInt64)))),
+			PauseTotal:    time.Duration(m.PauseTotalNs),
+			LastGC:        time.Unix(0, int64(m.LastGC)),
 			GCCPUFraction: m.GCCPUFraction,
 		},
 	}
@@ -811,9 +810,8 @@ func (p *PerformanceProfiler) setupServer() {
 
 	addr := fmt.Sprintf("%s:%d", p.config.ServerHost, p.config.ServerPort)
 	p.server = &http.Server{
-		Addr:              addr,
-		Handler:           p.router,
-		ReadHeaderTimeout: 10 * time.Second,
+		Addr:    addr,
+		Handler: p.router,
 	}
 }
 
@@ -1027,7 +1025,7 @@ type CPUProfiler struct {
 
 func (cp *CPUProfiler) Start() error {
 	filename := filepath.Join(cp.dir, fmt.Sprintf("cpu_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filepath.Clean(filename)) // #nosec G304 -- path constructed from internal profiler directory
+	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
@@ -1064,7 +1062,7 @@ func (mp *MemoryProfiler) Stop() error  { return nil }
 
 func (mp *MemoryProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(mp.dir, fmt.Sprintf("memory_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filepath.Clean(filename)) // #nosec G304 -- path constructed from internal profiler directory
+	file, err := os.Create(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -1101,7 +1099,7 @@ func (gp *GoroutineProfiler) Stop() error  { return nil }
 
 func (gp *GoroutineProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(gp.dir, fmt.Sprintf("goroutine_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filepath.Clean(filename)) // #nosec G304 -- path constructed from internal profiler directory
+	file, err := os.Create(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -1145,7 +1143,7 @@ func (bp *BlockProfiler) Stop() error {
 
 func (bp *BlockProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(bp.dir, fmt.Sprintf("block_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filepath.Clean(filename)) // #nosec G304 -- path constructed from internal profiler directory
+	file, err := os.Create(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -1189,7 +1187,7 @@ func (mp *MutexProfiler) Stop() error {
 
 func (mp *MutexProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(mp.dir, fmt.Sprintf("mutex_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filepath.Clean(filename)) // #nosec G304 -- path constructed from internal profiler directory
+	file, err := os.Create(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -1224,7 +1222,7 @@ type TraceProfiler struct {
 
 func (tp *TraceProfiler) Start() error {
 	filename := filepath.Join(tp.dir, fmt.Sprintf("trace_profile_%d.trace", time.Now().Unix()))
-	file, err := os.Create(filepath.Clean(filename)) // #nosec G304 -- path constructed from internal profiler directory
+	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}

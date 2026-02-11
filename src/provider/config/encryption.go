@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -12,19 +13,12 @@ import (
 	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"golang.org/x/crypto/argon2"
 )
 
-// EncryptData encrypts data using AES-GCM with Argon2id key derivation.
-// The output format is: base64(salt || nonce || ciphertext).
+// EncryptData encrypts data using AES-GCM
 func EncryptData(plaintext []byte, passphrase string) ([]byte, error) {
-	// Generate random salt for Argon2id
-	salt := make([]byte, 16)
-	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-		return nil, fmt.Errorf("failed to generate salt: %w", err)
-	}
-
-	key := deriveKey(passphrase, salt)
+	// Create a new AES cipher using the key
+	key := deriveKey(passphrase)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -45,18 +39,14 @@ func EncryptData(plaintext []byte, passphrase string) ([]byte, error) {
 	// Encrypt the data
 	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
 
-	// Prepend salt so decryption can re-derive the same key
-	combined := append(salt, ciphertext...)
-
 	// Encode as base64
-	encoded := make([]byte, base64.StdEncoding.EncodedLen(len(combined)))
-	base64.StdEncoding.Encode(encoded, combined)
+	encoded := make([]byte, base64.StdEncoding.EncodedLen(len(ciphertext)))
+	base64.StdEncoding.Encode(encoded, ciphertext)
 
 	return encoded, nil
 }
 
-// DecryptData decrypts data using AES-GCM with Argon2id key derivation.
-// Expects format: base64(salt || nonce || ciphertext).
+// DecryptData decrypts data using AES-GCM
 func DecryptData(ciphertext []byte, passphrase string) ([]byte, error) {
 	// Decode from base64
 	decoded := make([]byte, base64.StdEncoding.DecodedLen(len(ciphertext)))
@@ -65,17 +55,8 @@ func DecryptData(ciphertext []byte, passphrase string) ([]byte, error) {
 		return nil, err
 	}
 	decoded = decoded[:n]
-
-	// Extract salt (first 16 bytes)
-	const saltSize = 16
-	if len(decoded) < saltSize {
-		return nil, fmt.Errorf("ciphertext too short: missing salt")
-	}
-	salt := decoded[:saltSize]
-	decoded = decoded[saltSize:]
-
-	// Derive key using the extracted salt
-	key := deriveKey(passphrase, salt)
+	// Create a new AES cipher using the key
+	key := deriveKey(passphrase)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -104,10 +85,10 @@ func DecryptData(ciphertext []byte, passphrase string) ([]byte, error) {
 	return plaintext, nil
 }
 
-// deriveKey derives a 32-byte key from a passphrase using Argon2id.
-// Parameters follow OWASP recommendations: 64 MiB memory, 3 iterations, 4 threads.
-func deriveKey(passphrase string, salt []byte) []byte {
-	return argon2.IDKey([]byte(passphrase), salt, 3, 64*1024, 4, 32)
+// deriveKey derives a 32-byte key from a passphrase using SHA-256
+func deriveKey(passphrase string) []byte {
+	hash := sha256.Sum256([]byte(passphrase))
+	return hash[:]
 }
 
 // GenerateEncryptionKey generates a random encryption key

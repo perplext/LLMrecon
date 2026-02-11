@@ -92,10 +92,10 @@ func (p *MemoryProfiler) CaptureHeapProfile(label string) (string, error) {
 	// Create profile file
 	timestamp := time.Now().Format("20060102-150405")
 	filename := fmt.Sprintf("heap-%s-%s-%d.pprof", label, timestamp, p.profileCount)
-	profilePath := filepath.Clean(filepath.Join(p.outputDir, filename))
+	filepath := filepath.Join(p.outputDir, filename)
 
 	// Create file
-	f, err := os.Create(profilePath) // #nosec G304 -- path constructed from internal profiler output directory
+	f, err := os.Create(filepath)
 	if err != nil {
 		return "", fmt.Errorf("failed to create profile file: %w", err)
 	}
@@ -113,7 +113,7 @@ func (p *MemoryProfiler) CaptureHeapProfile(label string) (string, error) {
 	// Update last capture time
 	p.lastCapture = time.Now()
 
-	return profilePath, nil
+	return filepath, nil
 }
 
 // StartAutomaticProfiling starts automatic profiling

@@ -130,7 +130,7 @@ func (l *FileLogger) openLogFile() error {
 	filename := fmt.Sprintf("audit-%s.log", timestamp)
 	filePath := filepath.Join(l.directory, filename)
 
-	file, err := os.OpenFile(filepath.Clean(filePath), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600) // #nosec G304 -- path constructed from internal log directory
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}

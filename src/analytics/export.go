@@ -145,7 +145,7 @@ func NewExportManager(config *Config, storage DataStorage, reportGenerator *Exec
 func (em *ExportManager) ExportData(ctx context.Context, request ExportRequest, writer io.Writer) (*ExportResult, error) {
 	startTime := time.Now()
 
-	em.logger.Info(fmt.Sprintf("Starting data export id=%s format=%s dataType=%s", request.ID, request.Format, request.DataType))
+	em.logger.Info("Starting data export", "id", request.ID, "format", request.Format, "dataType", request.DataType)
 
 	// Get exporter for format
 	exporter, exists := em.exporters[string(request.Format)]
@@ -180,7 +180,7 @@ func (em *ExportManager) ExportData(ctx context.Context, request ExportRequest, 
 		ExpiresAt:   time.Now().Add(24 * time.Hour), // Default 24-hour expiry
 	}
 
-	em.logger.Info(fmt.Sprintf("Data export completed id=%s duration=%v", request.ID, duration))
+	em.logger.Info("Data export completed", "id", request.ID, "duration", duration)
 
 	return result, nil
 }
@@ -213,13 +213,13 @@ func (em *ExportManager) SendToIntegration(ctx context.Context, integrationName 
 		return fmt.Errorf("integration is disabled: %s", integrationName)
 	}
 
-	em.logger.Info(fmt.Sprintf("Sending data to integration integration=%s", integrationName))
+	em.logger.Info("Sending data to integration", "integration", integrationName)
 
 	if err := integration.Send(ctx, data); err != nil {
 		return fmt.Errorf("failed to send to integration %s: %w", integrationName, err)
 	}
 
-	em.logger.Info(fmt.Sprintf("Data sent successfully to integration integration=%s", integrationName))
+	em.logger.Info("Data sent successfully to integration", "integration", integrationName)
 
 	return nil
 }
@@ -227,13 +227,13 @@ func (em *ExportManager) SendToIntegration(ctx context.Context, integrationName 
 // RegisterExporter adds a custom exporter
 func (em *ExportManager) RegisterExporter(exporter Exporter) {
 	em.exporters[string(exporter.GetFormat())] = exporter
-	em.logger.Info(fmt.Sprintf("Registered exporter format=%s", exporter.GetFormat()))
+	em.logger.Info("Registered exporter", "format", exporter.GetFormat())
 }
 
 // RegisterIntegration adds a custom integration
 func (em *ExportManager) RegisterIntegration(integration Integration) {
 	em.integrations[integration.GetName()] = integration
-	em.logger.Info(fmt.Sprintf("Registered integration name=%s", integration.GetName()))
+	em.logger.Info("Registered integration", "name", integration.GetName())
 }
 
 // GetSupportedFormats returns list of supported export formats

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"gopkg.in/yaml.v3"
 )
 
 // ModuleType represents the type of a module
@@ -72,13 +70,4 @@ func (m *Module) Save(dir string) error {
 // LoadModuleFromFile loads a module from a file (alias for LoadModule)
 func LoadModuleFromFile(path string) (*Module, error) {
 	return LoadModule(path)
-}
-
-// ParseModule parses module content from YAML/JSON bytes
-func ParseModule(content []byte) (*Module, error) {
-	var module Module
-	if err := yaml.Unmarshal(content, &module); err != nil {
-		return nil, fmt.Errorf("failed to parse module content: %w", err)
-	}
-	return &module, nil
 }

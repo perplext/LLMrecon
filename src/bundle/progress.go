@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -116,11 +115,7 @@ func (p *ProgressTracker) SetStage(stage ProgressStage, operation string) {
 func (p *ProgressTracker) SetTotal(bytes int64, items int) {
 	p.mu.Lock()
 	p.bytesTotal = bytes
-	safeItems := items
-	if safeItems > math.MaxInt32 {
-		safeItems = math.MaxInt32
-	}
-	atomic.StoreInt32(&p.itemsTotal, int32(safeItems))
+	atomic.StoreInt32(&p.itemsTotal, int32(items))
 	p.mu.Unlock()
 
 	p.sendUpdate()
@@ -133,11 +128,7 @@ func (p *ProgressTracker) UpdateBytes(bytes int64) {
 
 // UpdateItems updates items processed
 func (p *ProgressTracker) UpdateItems(count int) {
-	safeCount := count
-	if safeCount > math.MaxInt32 {
-		safeCount = math.MaxInt32
-	}
-	atomic.AddInt32(&p.itemsProcessed, int32(safeCount))
+	atomic.AddInt32(&p.itemsProcessed, int32(count))
 }
 
 // SetCurrentFile sets the current file being processed

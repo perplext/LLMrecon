@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/perplext/LLMrecon/src/reporting/common"
+	"github.com/perplext/LLMrecon/src/security/access/common"
 )
 
 // DefaultReportGenerator is the default implementation of ReportGenerator

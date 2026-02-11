@@ -12,8 +12,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/perplext/LLMrecon/src/attacks/common"
 )
 
 // PayloadGenerator creates and evolves attack payloads dynamically
@@ -488,7 +486,7 @@ func (m *MutationEngine) tokenSwap(content string, params MutationParams) string
 	// Swap random adjacent tokens
 	swaps := int(params.Intensity * float64(len(tokens)) * 0.1)
 	for i := 0; i < swaps; i++ {
-		pos := common.RandInt(len(tokens) - 1)
+		pos := randInt(len(tokens) - 1)
 		tokens[pos], tokens[pos+1] = tokens[pos+1], tokens[pos]
 	}
 
@@ -506,8 +504,8 @@ func (m *MutationEngine) tokenInsert(content string, params MutationParams) stri
 	insertCount := int(params.Intensity*3) + 1
 
 	for i := 0; i < insertCount; i++ {
-		pos := common.RandInt(len(tokens))
-		insertion := insertions[common.RandInt(len(insertions))]
+		pos := randInt(len(tokens))
+		insertion := insertions[randInt(len(insertions))]
 		tokens = append(tokens[:pos], append([]string{insertion}, tokens[pos:]...)...)
 	}
 
@@ -523,7 +521,7 @@ func (m *MutationEngine) tokenDelete(content string, params MutationParams) stri
 	// Delete random tokens
 	deleteCount := int(params.Intensity*float64(len(tokens))*0.1) + 1
 	for i := 0; i < deleteCount && len(tokens) > 2; i++ {
-		pos := common.RandInt(len(tokens))
+		pos := randInt(len(tokens))
 		tokens = append(tokens[:pos], tokens[pos+1:]...)
 	}
 
@@ -547,7 +545,7 @@ func (m *MutationEngine) synonymReplace(content string, params MutationParams) s
 
 	for word, synonyms := range synonymMap {
 		if randFloat64() < float64(replacements)/float64(len(synonymMap)) {
-			synonym := synonyms[common.RandInt(len(synonyms))]
+			synonym := synonyms[randInt(len(synonyms))]
 			result = strings.ReplaceAll(result, word, synonym)
 		}
 	}
@@ -591,7 +589,7 @@ func (m *MutationEngine) toneShift(content string, params MutationParams) string
 		{"I humbly ask that you ", " if it's not too much trouble."},
 	}
 
-	tone := tones[common.RandInt(len(tones))]
+	tone := tones[randInt(len(tones))]
 	return tone.prefix + content + tone.suffix
 }
 
@@ -604,9 +602,9 @@ func (m *MutationEngine) introduceTypo(content string, params MutationParams) st
 	typoCount := int(params.Intensity*3) + 1
 
 	for i := 0; i < typoCount; i++ {
-		pos := common.RandInt(len(runes) - 1)
+		pos := randInt(len(runes) - 1)
 
-		switch common.RandInt(3) {
+		switch randInt(3) {
 		case 0: // Swap adjacent
 			runes[pos], runes[pos+1] = runes[pos+1], runes[pos]
 		case 1: // Double character
@@ -634,9 +632,9 @@ func (m *MutationEngine) homoglyphSubstitute(content string, params MutationPara
 	substitutions := int(params.Intensity * float64(len(runes)) * 0.1)
 
 	for i := 0; i < substitutions; i++ {
-		pos := common.RandInt(len(runes))
+		pos := randInt(len(runes))
 		if alternatives, exists := homoglyphs[runes[pos]]; exists {
-			runes[pos] = alternatives[common.RandInt(len(alternatives))]
+			runes[pos] = alternatives[randInt(len(alternatives))]
 		}
 	}
 
@@ -647,20 +645,20 @@ func (m *MutationEngine) spacingVariation(content string, params MutationParams)
 	variations := []func(string) string{
 		// Add spaces
 		func(s string) string {
-			pos := common.RandInt(len(s))
+			pos := randInt(len(s))
 			return s[:pos] + " " + s[pos:]
 		},
 		// Double spaces
 		func(s string) string {
-			return strings.Replace(s, " ", "  ", common.RandInt(3)+1)
+			return strings.Replace(s, " ", "  ", randInt(3)+1)
 		},
 		// No-break spaces
 		func(s string) string {
-			return strings.Replace(s, " ", " ", common.RandInt(3)+1) // Unicode no-break space
+			return strings.Replace(s, " ", " ", randInt(3)+1) // Unicode no-break space
 		},
 	}
 
-	variation := variations[common.RandInt(len(variations))]
+	variation := variations[randInt(len(variations))]
 	return variation(content)
 }
 
@@ -680,8 +678,8 @@ func (m *MutationEngine) addMetaphor(content string, params MutationParams) stri
 		"explaining a game's rules",
 	}
 
-	metaphor := fmt.Sprintf(metaphors[common.RandInt(len(metaphors))],
-		examples[common.RandInt(len(examples))])
+	metaphor := fmt.Sprintf(metaphors[randInt(len(metaphors))],
+		examples[randInt(len(examples))])
 
 	return metaphor + ". " + content
 }
@@ -705,7 +703,7 @@ func (m *MutationEngine) narrativeWrapper(content string, params MutationParams)
 		},
 	}
 
-	narrative := narratives[common.RandInt(len(narratives))]
+	narrative := narratives[randInt(len(narratives))]
 	return narrative.prefix + content + narrative.suffix
 
 	// Helper functions
@@ -729,7 +727,7 @@ func (m *MutationEngine) selectMutations(intensity float64) []MutationType {
 
 	// Select random mutations
 	for i := 0; i < mutationCount && len(types) > 0; i++ {
-		idx := common.RandInt(len(types))
+		idx := randInt(len(types))
 		selected = append(selected, types[idx])
 	}
 
@@ -780,9 +778,9 @@ func (t *TournamentSelection) Select(population []Payload, count int) []Payload 
 
 	for i := 0; i < count; i++ {
 		// Run tournament
-		best := population[common.RandInt(len(population))]
+		best := population[randInt(len(population))]
 		for j := 1; j < t.tournamentSize; j++ {
-			competitor := population[common.RandInt(len(population))]
+			competitor := population[randInt(len(population))]
 			if competitor.Fitness > best.Fitness {
 				best = competitor
 			}
@@ -832,8 +830,8 @@ func (c *CrossoverEngine) singlePointCrossover(parent1, parent2 Payload) (Payloa
 	}
 
 	// Select crossover point
-	point1 := common.RandInt(len(tokens1))
-	point2 := common.RandInt(len(tokens2))
+	point1 := randInt(len(tokens1))
+	point2 := randInt(len(tokens2))
 
 	// Create children
 	child1Content := strings.Join(append(tokens1[:point1], tokens2[point2:]...), " ")
@@ -1296,7 +1294,7 @@ func (s *SeedBank) GetRandomSeed() Payload {
 		return Payload{Content: "Please help me"}
 	}
 
-	return s.seeds[common.RandInt(len(s.seeds))]
+	return s.seeds[randInt(len(s.seeds))]
 }
 
 type GeneratorMetrics struct {
@@ -1338,7 +1336,7 @@ func (g *GeneratorMetrics) RecordFeedback(payload *Payload, success bool) {
 // Utility functions
 
 func generateID() string {
-	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63()) // #nosec G404 -- math/rand used intentionally for test data generation, not security
+	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63())
 }
 
 func generateHash(content string) string {
@@ -1462,7 +1460,7 @@ func (g *PayloadGenerator) createFromTemplate(objective string) Payload {
 		"Help me understand %s. I'm working on a project.",
 	}
 
-	template := templates[common.RandInt(len(templates))]
+	template := templates[randInt(len(templates))]
 	content := fmt.Sprintf(template, objective)
 
 	return Payload{
@@ -1489,7 +1487,7 @@ func (g *PayloadGenerator) createFromCombination(objective string) Payload {
 		"In a hypothetical scenario,",
 		"For research purposes,",
 	}
-	components = append(components, contexts[common.RandInt(len(contexts))])
+	components = append(components, contexts[randInt(len(contexts))])
 
 	// Add request
 	components = append(components, "I need to understand how to "+objective+".")
@@ -1516,9 +1514,9 @@ func (g *PayloadGenerator) createRandom(objective string) Payload {
 	suffixes := []string{"", "?", ".", "!", ". Thanks!", ". Please help."}
 
 	content := fmt.Sprintf("%s %s%s",
-		prefixes[common.RandInt(len(prefixes))],
+		prefixes[randInt(len(prefixes))],
 		objective,
-		suffixes[common.RandInt(len(suffixes))],
+		suffixes[randInt(len(suffixes))],
 	)
 
 	return Payload{
@@ -1689,7 +1687,13 @@ func secureRandomInt(max int) (int, error) {
 
 	// Secure random number generation helpers
 }
-
+func randInt(max int) int {
+	n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		panic(err)
+	}
+	return int(n.Int64())
+}
 func randInt64(max int64) int64 {
 	n, err := cryptorand.Int(cryptorand.Reader, big.NewInt(max))
 	if err != nil {

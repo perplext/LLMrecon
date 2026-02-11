@@ -11,11 +11,8 @@ import (
 	"sync"
 	"time"
 
-	access "github.com/perplext/LLMrecon/src/security/access"
+	".."
 )
-
-// Permission is a type alias for permission strings used in middleware
-type Permission = string
 
 // Response is a standard API response format
 type Response struct {
@@ -53,11 +50,11 @@ func WriteSuccessResponse(w http.ResponseWriter, statusCode int, message string,
 
 // AuthMiddleware handles authentication for API requests
 type AuthMiddleware struct {
-	accessManager *access.AccessControlManager
+	accessManager access.AccessControlManager
 }
 
 // NewAuthMiddleware creates a new authentication middleware
-func NewAuthMiddleware(accessManager *access.AccessControlManager) *AuthMiddleware {
+func NewAuthMiddleware(accessManager access.AccessControlManager) *AuthMiddleware {
 	return &AuthMiddleware{
 		accessManager: accessManager,
 	}
@@ -82,26 +79,23 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 		token := parts[1]
 
-		// Validate the token via AuthManager
-		authManager := m.accessManager.GetAuthManager()
-		session, err := authManager.ValidateSession(r.Context(), token)
+		// Validate the token
+		sessionManager := m.accessManager.GetSessionManager()
+		session, err := sessionManager.ValidateToken(r.Context(), token)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusUnauthorized, "Invalid or expired token")
 			return
 		}
 
 		// Check if MFA is required but not completed
-		if !session.MFACompleted {
-			// Get the user to check if MFA is enabled
-			user, err := authManager.GetUserByID(r.Context(), session.UserID)
-			if err == nil && user.MFAEnabled {
-				WriteErrorResponse(w, http.StatusForbidden, "MFA verification required")
-				return
-			}
+		if sessionManager.RequiresMFA(r.Context(), session) && !session.MFACompleted {
+			WriteErrorResponse(w, http.StatusForbidden, "MFA verification required")
+			return
 		}
 
 		// Get the user
-		user, err := authManager.GetUserByID(r.Context(), session.UserID)
+		userManager := m.accessManager.GetUserManager()
+		user, err := userManager.GetUserByID(r.Context(), session.UserID)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusUnauthorized, "User not found")
 			return
@@ -119,6 +113,13 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// Update session last activity
+		session.LastActivity = time.Now()
+		if err := sessionManager.UpdateSession(r.Context(), session); err != nil {
+			// Log the error but don't fail the request
+			fmt.Printf("Failed to update session: %v\n", err)
+		}
+
 		// Store user and session in request context
 		ctx := context.WithValue(r.Context(), "user", user)
 		ctx = context.WithValue(ctx, "session", session)
@@ -130,18 +131,18 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 // RBACMiddleware handles role-based access control for API requests
 type RBACMiddleware struct {
-	accessManager *access.AccessControlManager
+	accessManager access.AccessControlManager
 }
 
 // NewRBACMiddleware creates a new RBAC middleware
-func NewRBACMiddleware(accessManager *access.AccessControlManager) *RBACMiddleware {
+func NewRBACMiddleware(accessManager access.AccessControlManager) *RBACMiddleware {
 	return &RBACMiddleware{
 		accessManager: accessManager,
 	}
 }
 
 // RequirePermission returns a middleware function that requires a specific permission
-func (m *RBACMiddleware) RequirePermission(permission string) func(http.Handler) http.Handler {
+func (m *RBACMiddleware) RequirePermission(permission access.Permission) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Get user from context
@@ -153,8 +154,7 @@ func (m *RBACMiddleware) RequirePermission(permission string) func(http.Handler)
 
 			// Check if the user has the required permission
 			rbacManager := m.accessManager.GetRBACManager()
-			hasPermission, err := rbacManager.HasPermission(user.ID, permission)
-			if err != nil || !hasPermission {
+			if !rbacManager.HasPermission(r.Context(), user, permission) {
 				WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 				return
 			}
@@ -178,8 +178,7 @@ func (m *RBACMiddleware) RequireRole(role string) func(http.Handler) http.Handle
 
 			// Check if the user has the required role
 			rbacManager := m.accessManager.GetRBACManager()
-			hasRole, err := rbacManager.HasRole(user.ID, role)
-			if err != nil || !hasRole {
+			if !rbacManager.HasRole(r.Context(), user, role) {
 				WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 				return
 			}
@@ -192,11 +191,11 @@ func (m *RBACMiddleware) RequireRole(role string) func(http.Handler) http.Handle
 
 // LoggingMiddleware handles logging of API requests
 type LoggingMiddleware struct {
-	accessManager *access.AccessControlManager
+	accessManager access.AccessControlManager
 }
 
 // NewLoggingMiddleware creates a new logging middleware
-func NewLoggingMiddleware(accessManager *access.AccessControlManager) *LoggingMiddleware {
+func NewLoggingMiddleware(accessManager access.AccessControlManager) *LoggingMiddleware {
 	return &LoggingMiddleware{
 		accessManager: accessManager,
 	}
@@ -229,16 +228,16 @@ func (m *LoggingMiddleware) Middleware(next http.Handler) http.Handler {
 		ip := getClientIP(r)
 
 		// Log the request to the audit log
-		auditLog := &access.AuditLog{
-			Action:     access.AuditActionRead,
+		event := &access.AuditEvent{
+			Action:     "API_REQUEST",
 			Resource:   "API",
 			ResourceID: r.URL.Path,
-			Severity:   access.AuditSeverityInfo,
+			Severity:   access.SeverityInfo,
 			Status:     fmt.Sprintf("%d", rw.statusCode),
 			UserID:     userID,
 			IPAddress:  ip,
 			UserAgent:  r.UserAgent(),
-			Metadata: map[string]interface{}{
+			Details: map[string]interface{}{
 				"method":   r.Method,
 				"path":     r.URL.Path,
 				"query":    r.URL.RawQuery,
@@ -250,7 +249,7 @@ func (m *LoggingMiddleware) Middleware(next http.Handler) http.Handler {
 		// Only log errors or important requests to the audit log
 		if rw.statusCode >= 400 || strings.Contains(r.URL.Path, "/auth/") {
 			auditLogger := m.accessManager.GetAuditLogger()
-			if err := auditLogger.LogAudit(r.Context(), auditLog); err != nil {
+			if err := auditLogger.LogEvent(r.Context(), event); err != nil {
 				fmt.Printf("Failed to log audit event: %v\n", err)
 			}
 		}

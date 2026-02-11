@@ -19,38 +19,8 @@ type templateVerifierAdapter struct {
 	verifier *security.Verifier
 }
 
-// VerifyTemplateDirectory verifies all templates in a directory
-func (t *templateVerifierAdapter) VerifyTemplateDirectory(ctx context.Context, directoryPath string, options *security.VerificationOptions) ([]*security.VerificationResult, error) {
-	return []*security.VerificationResult{}, nil
-}
-
-// RegisterCheck registers a custom security check by name
-func (t *templateVerifierAdapter) RegisterCheck(name string, check security.SecurityCheck) {
-	// No-op for this adapter
-}
-
-// GetChecks returns all registered security checks
-func (t *templateVerifierAdapter) GetChecks() map[string]security.SecurityCheck {
-	return make(map[string]security.SecurityCheck)
-}
-
 // VerifyTemplate verifies a template
-func (t *templateVerifierAdapter) VerifyTemplate(ctx context.Context, templateObj interface{}, options *security.VerificationOptions) (*security.VerificationResult, error) {
-	template, ok := templateObj.(*format.Template)
-	if !ok {
-		return &security.VerificationResult{
-			Passed:   true,
-			Score:    100.0,
-			MaxScore: 100.0,
-			Issues:   make([]*security.SecurityIssue, 0),
-			Metadata: make(map[string]interface{}),
-		}, nil
-	}
-	return t.verifyFormatTemplate(ctx, template, options)
-}
-
-// verifyFormatTemplate verifies a format.Template
-func (t *templateVerifierAdapter) verifyFormatTemplate(ctx context.Context, template *format.Template, options *security.VerificationOptions) (*security.VerificationResult, error) {
+func (t *templateVerifierAdapter) VerifyTemplate(ctx context.Context, template *format.Template, options *security.VerificationOptions) (*security.VerificationResult, error) {
 	// Convert the template to TemplateInfo
 	templateInfo := &security.TemplateInfo{
 		Name:        template.Name,
@@ -518,7 +488,7 @@ func (f *SecurityFramework) logExecutionResult(result *ExecutionResult, template
 // appendToLogFile appends a log entry to a file
 func (f *SecurityFramework) appendToLogFile(logFile, logEntry string) {
 	// Open the log file in append mode
-	file, err := os.OpenFile(filepath.Clean(logFile), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304 -- path constructed from internal log directory
+	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return
 	}
@@ -529,7 +499,7 @@ func (f *SecurityFramework) appendToLogFile(logFile, logEntry string) {
 	}()
 
 	// Write the log entry
-	_, _ = file.WriteString(logEntry) // #nosec G104 -- best-effort log writing, errors are non-fatal
+	file.WriteString(logEntry)
 }
 
 // GetMetrics returns the metrics from the metrics collector

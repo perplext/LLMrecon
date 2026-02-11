@@ -1,8 +1,6 @@
 // Package access provides access control and security auditing functionality
 package access
 
-import "time"
-
 // UserFilter defines filters for querying users
 type UserFilter struct {
 	Username  string   `json:"username,omitempty"`
@@ -33,36 +31,27 @@ type SessionFilter struct {
 
 // IncidentFilter defines filters for querying security incidents
 type IncidentFilter struct {
-	Severity      string     `json:"severity,omitempty"`
-	Status        string     `json:"status,omitempty"`
-	AssigneeID    string     `json:"assignee_id,omitempty"`
-	ReportedBy    string     `json:"reported_by,omitempty"`
-	AssignedTo    string     `json:"assigned_to,omitempty"`
-	ReportedAfter string     `json:"reported_after,omitempty"`
-	StartDate     *time.Time `json:"start_date,omitempty"`
-	EndDate       *time.Time `json:"end_date,omitempty"`
-	SortBy        string     `json:"sort_by,omitempty"`
-	SortOrder     string     `json:"sort_order,omitempty"`
-	Offset        int        `json:"offset,omitempty"`
-	Limit         int        `json:"limit,omitempty"`
+	Severity      string `json:"severity,omitempty"`
+	Status        string `json:"status,omitempty"`
+	AssigneeID    string `json:"assignee_id,omitempty"`
+	ReportedAfter string `json:"reported_after,omitempty"`
+	SortBy        string `json:"sort_by,omitempty"`
+	SortOrder     string `json:"sort_order,omitempty"`
+	Offset        int    `json:"offset,omitempty"`
+	Limit         int    `json:"limit,omitempty"`
 }
 
 // VulnerabilityFilter defines filters for querying vulnerabilities
 type VulnerabilityFilter struct {
-	Severity      string     `json:"severity,omitempty"`
-	Status        string     `json:"status,omitempty"`
-	CveID         string     `json:"cve_id,omitempty"`
-	CVEID         string     `json:"cveid,omitempty"`
-	Component     string     `json:"component,omitempty"`
-	ReportedBy    string     `json:"reported_by,omitempty"`
-	AssignedTo    string     `json:"assigned_to,omitempty"`
-	ReportedAfter string     `json:"reported_after,omitempty"`
-	StartDate     *time.Time `json:"start_date,omitempty"`
-	EndDate       *time.Time `json:"end_date,omitempty"`
-	SortBy        string     `json:"sort_by,omitempty"`
-	SortOrder     string     `json:"sort_order,omitempty"`
-	Offset        int        `json:"offset,omitempty"`
-	Limit         int        `json:"limit,omitempty"`
+	Severity      string `json:"severity,omitempty"`
+	Status        string `json:"status,omitempty"`
+	CveID         string `json:"cve_id,omitempty"`
+	Component     string `json:"component,omitempty"`
+	ReportedAfter string `json:"reported_after,omitempty"`
+	SortBy        string `json:"sort_by,omitempty"`
+	SortOrder     string `json:"sort_order,omitempty"`
+	Offset        int    `json:"offset,omitempty"`
+	Limit         int    `json:"limit,omitempty"`
 }
 
 // AuditEventFilter defines filters for querying audit events

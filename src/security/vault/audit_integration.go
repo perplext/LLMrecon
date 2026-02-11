@@ -58,10 +58,10 @@ func (a *AuditIntegration) WrapManager() {
 func (a *AuditIntegration) GetCredential(id string) (*Credential, error) {
 	cred, err := a.originalMethods.getCredential(id)
 	if err != nil {
-		a.auditLogger.LogCredentialError(id, "", "get", err) // #nosec G104 -- best-effort audit logging
+		a.auditLogger.LogCredentialError(id, "", "get", err)
 		return nil, err
 	}
-	a.auditLogger.LogCredentialAccess(id, cred.Service, "get") // #nosec G104 -- best-effort audit logging
+	a.auditLogger.LogCredentialAccess(id, cred.Service, "get")
 	return cred, nil
 }
 
@@ -69,10 +69,10 @@ func (a *AuditIntegration) GetCredential(id string) (*Credential, error) {
 func (a *AuditIntegration) StoreCredential(cred *Credential) error {
 	err := a.originalMethods.storeCredential(cred)
 	if err != nil {
-		a.auditLogger.LogCredentialError(cred.ID, cred.Service, "store", err) // #nosec G104 -- best-effort audit logging
+		a.auditLogger.LogCredentialError(cred.ID, cred.Service, "store", err)
 		return err
 	}
-	a.auditLogger.LogCredentialAccess(cred.ID, cred.Service, "store") // #nosec G104 -- best-effort audit logging
+	a.auditLogger.LogCredentialAccess(cred.ID, cred.Service, "store")
 	return nil
 }
 
@@ -81,16 +81,16 @@ func (a *AuditIntegration) DeleteCredential(id string) error {
 	// Get credential before deleting to log service
 	cred, err := a.originalMethods.getCredential(id)
 	if err != nil {
-		a.auditLogger.LogCredentialError(id, "", "delete", err) // #nosec G104 -- best-effort audit logging
+		a.auditLogger.LogCredentialError(id, "", "delete", err)
 		return err
 	}
 
 	err = a.originalMethods.deleteCredential(id)
 	if err != nil {
-		a.auditLogger.LogCredentialError(id, cred.Service, "delete", err) // #nosec G104 -- best-effort audit logging
+		a.auditLogger.LogCredentialError(id, cred.Service, "delete", err)
 		return err
 	}
-	a.auditLogger.LogCredentialAccess(id, cred.Service, "delete") // #nosec G104 -- best-effort audit logging
+	a.auditLogger.LogCredentialAccess(id, cred.Service, "delete")
 	return nil
 }
 
@@ -99,16 +99,16 @@ func (a *AuditIntegration) RotateCredential(id string, newValue string) error {
 	// Get credential before rotating to log service
 	cred, err := a.originalMethods.getCredential(id)
 	if err != nil {
-		a.auditLogger.LogCredentialError(id, "", "rotate", err) // #nosec G104 -- best-effort audit logging
+		a.auditLogger.LogCredentialError(id, "", "rotate", err)
 		return err
 	}
 
 	err = a.originalMethods.rotateCredential(id, newValue)
 	if err != nil {
-		a.auditLogger.LogCredentialError(id, cred.Service, "rotate", err) // #nosec G104 -- best-effort audit logging
+		a.auditLogger.LogCredentialError(id, cred.Service, "rotate", err)
 		return err
 	}
-	a.auditLogger.LogCredentialAccess(id, cred.Service, "rotate") // #nosec G104 -- best-effort audit logging
+	a.auditLogger.LogCredentialAccess(id, cred.Service, "rotate")
 	return nil
 }
 
@@ -116,7 +116,7 @@ func (a *AuditIntegration) RotateCredential(id string, newValue string) error {
 func (a *AuditIntegration) GetAPIKey(provider core.ProviderType) (string, error) {
 	apiKey, err := a.originalMethods.getAPIKey(provider)
 	if err != nil {
-		a.auditLogger.LogCredentialError("", string(provider), "get_api_key", err) // #nosec G104 -- best-effort audit logging
+		a.auditLogger.LogCredentialError("", string(provider), "get_api_key", err)
 		return apiKey, err
 	}
 
@@ -127,7 +127,7 @@ func (a *AuditIntegration) GetAPIKey(provider core.ProviderType) (string, error)
 		credID = creds[0].ID
 	}
 
-	a.auditLogger.LogCredentialAccess(credID, string(provider), "get_api_key") // #nosec G104 -- best-effort audit logging
+	a.auditLogger.LogCredentialAccess(credID, string(provider), "get_api_key")
 	return apiKey, nil
 }
 
@@ -135,7 +135,7 @@ func (a *AuditIntegration) GetAPIKey(provider core.ProviderType) (string, error)
 func (a *AuditIntegration) SetAPIKey(provider core.ProviderType, apiKey string, description string) error {
 	err := a.originalMethods.setAPIKey(provider, apiKey, description)
 	if err != nil {
-		a.auditLogger.LogCredentialError("", string(provider), "set_api_key", err) // #nosec G104 -- best-effort audit logging
+		a.auditLogger.LogCredentialError("", string(provider), "set_api_key", err)
 		return err
 	}
 
@@ -146,7 +146,7 @@ func (a *AuditIntegration) SetAPIKey(provider core.ProviderType, apiKey string, 
 		credID = creds[0].ID
 	}
 
-	a.auditLogger.LogCredentialAccess(credID, string(provider), "set_api_key") // #nosec G104 -- best-effort audit logging
+	a.auditLogger.LogCredentialAccess(credID, string(provider), "set_api_key")
 	return nil
 }
 
@@ -255,7 +255,7 @@ func (a *AuditIntegration) GetCredentialsWithAnomalousAccess(threshold int) ([]*
 			anomalous = append(anomalous, cred)
 
 			// Log alert
-			a.auditLogger.LogAlert( // #nosec G104 -- best-effort audit logging
+			a.auditLogger.LogAlert(
 				fmt.Sprintf("Anomalous access pattern detected for credential %s", cred.ID),
 				"anomalous_access",
 				map[string]string{
@@ -309,7 +309,7 @@ func (a *AuditIntegration) GetUnusedCredentials(days int) ([]*Credential, error)
 			unusedCreds = append(unusedCreds, cred)
 
 			// Log alert for unused credential
-			a.auditLogger.LogAlert( // #nosec G104 -- best-effort audit logging
+			a.auditLogger.LogAlert(
 				fmt.Sprintf("Credential %s hasn't been used in %d days", cred.ID, days),
 				"unused_credential",
 				map[string]string{

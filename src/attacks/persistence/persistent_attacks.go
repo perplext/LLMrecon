@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	"github.com/perplext/LLMrecon/src/attacks/common"
 )
 
 // PersistentAttack represents a persistent attack mechanism
@@ -99,7 +97,7 @@ func NewPersistenceEngine(config PersistenceConfig) *PersistenceEngine {
 // ImplantPersistentAttack creates and implants a persistent attack
 func (pe *PersistenceEngine) ImplantPersistentAttack(ctx context.Context, attackType PersistenceType, payload string, trigger *TriggerCondition) (*PersistentAttack, error) {
 	attack := &PersistentAttack{
-		ID:               common.GenerateAttackID(),
+		ID:               generateAttackID(),
 		Type:             attackType,
 		Payload:          payload,
 		TriggerCondition: trigger,
@@ -523,6 +521,11 @@ func (pe *PersistenceEngine) shouldActivate(attack *PersistentAttack, input stri
 }
 
 // Helper functions
+func generateAttackID() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return base64.URLEncoding.EncodeToString(b)
+}
 func generateAnchorPattern(payload string) string {
 	// Generate unique pattern for memory anchoring
 	h := fnv32a(payload)
@@ -530,13 +533,13 @@ func generateAnchorPattern(payload string) string {
 }
 func generatePersistenceToken() string {
 	b := make([]byte, 32)
-	_, _ = rand.Read(b) // #nosec G104 -- crypto/rand.Read always returns len(b) and nil error on supported platforms
+	rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
 }
 func generateBackdoorTrigger() string {
 	// Generate obfuscated backdoor trigger
 	b := make([]byte, 8)
-	_, _ = rand.Read(b) // #nosec G104 -- crypto/rand.Read always returns len(b) and nil error on supported platforms
+	rand.Read(b)
 	return fmt.Sprintf("BD_%s", base64.URLEncoding.EncodeToString(b)[:8])
 }
 func fnv32a(text string) uint32 {

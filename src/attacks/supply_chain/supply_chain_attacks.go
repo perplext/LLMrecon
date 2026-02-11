@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	"github.com/perplext/LLMrecon/src/attacks/common"
 )
 
 // SupplyChainAttack represents a supply chain attack vector
@@ -134,7 +132,7 @@ func NewSupplyChainAttacker(config AttackerConfig) *SupplyChainAttacker {
 // LaunchAttack launches a supply chain attack
 func (sca *SupplyChainAttacker) LaunchAttack(ctx context.Context, attackType AttackType, target TargetComponent, payload string) (*SupplyChainAttack, error) {
 	attack := &SupplyChainAttack{
-		ID:        common.GenerateAttackID(),
+		ID:        generateAttackID(),
 		Type:      attackType,
 		Target:    target,
 		Payload:   payload,
@@ -836,6 +834,9 @@ func (ct *ConfigTamperer) TamperConfig(attack *SupplyChainAttack) error {
 }
 
 // Helper functions
+func generateAttackID() string {
+	return fmt.Sprintf("sca-%d-%s", time.Now().Unix(), generateRandomString(8))
+}
 func generateHash(data string) string {
 	hash := sha256.Sum256([]byte(data))
 	return hex.EncodeToString(hash[:])

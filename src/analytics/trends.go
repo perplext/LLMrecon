@@ -173,26 +173,15 @@ func NewTrendAnalyzer(config *Config, storage DataStorage, logger Logger) *Trend
 	return analyzer
 }
 
-// Start starts the trend analyzer
-func (ta *TrendAnalyzer) Start(ctx context.Context, storage DataStorage) error {
-	ta.storage = storage
-	return nil
-}
-
-// Stop stops the trend analyzer
-func (ta *TrendAnalyzer) Stop() error {
-	return nil
-}
-
 // AnalyzeTrends performs comprehensive trend analysis for a metric
 func (ta *TrendAnalyzer) AnalyzeTrends(ctx context.Context, metricName string, timeRange TimeWindow) (*TrendAnalysisResult, error) {
 	// Check cache first
 	if cached := ta.getCachedAnalysis(metricName); cached != nil {
-		ta.logger.Debug(fmt.Sprintf("Using cached trend analysis for %s", metricName))
+		ta.logger.Debug("Using cached trend analysis", "metric", metricName)
 		return cached.Analysis, nil
 	}
 
-	ta.logger.Info(fmt.Sprintf("Starting trend analysis for %s", metricName))
+	ta.logger.Info("Starting trend analysis", "metric", metricName, "timeRange", timeRange)
 
 	// Get data points
 	dataPoints, err := ta.getDataPoints(ctx, metricName, timeRange)
@@ -250,7 +239,7 @@ func (ta *TrendAnalyzer) GetTrendSummary(ctx context.Context, metricNames []stri
 	for _, metricName := range metricNames {
 		analysis, err := ta.AnalyzeTrends(ctx, metricName, timeRange)
 		if err != nil {
-			ta.logger.Warn(fmt.Sprintf("Failed to analyze trend for metric %s: %v", metricName, err))
+			ta.logger.Warn("Failed to analyze trend for metric", "metric", metricName, "error", err)
 			continue
 		}
 
@@ -307,7 +296,7 @@ func (ta *TrendAnalyzer) PredictFuture(ctx context.Context, metricName string, h
 // RegisterDetector adds a custom trend detector
 func (ta *TrendAnalyzer) RegisterDetector(name string, detector TrendDetector) {
 	ta.detectors[name] = detector
-	ta.logger.Info(fmt.Sprintf("Registered trend detector %s", name))
+	ta.logger.Info("Registered trend detector", "name", name, "type", detector.GetType())
 }
 
 // Internal methods
@@ -420,7 +409,7 @@ func (ta *TrendAnalyzer) generateSummary(overallTrend *TrendResult, segmentTrend
 	if overallTrend != nil {
 		summary.PrimaryTrend = string(overallTrend.Direction)
 		summary.TrendStrength = ta.classifyTrendStrength(overallTrend.Strength)
-		summary.Volatility = 1.0 - overallTrend.RSquared
+		summary.Volatility = ta.classifyVolatility(overallTrend.RSquared)
 	}
 
 	// Generate recommendations

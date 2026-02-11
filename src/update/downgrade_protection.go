@@ -555,7 +555,7 @@ func (dp *DowngradeProtection) CreateSecureClient() (*SecureClient, error) {
 		client: &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
-					MinVersion:   max(options.MinTLSVersion, tls.VersionTLS12),
+					MinVersion:   options.MinTLSVersion,
 					CipherSuites: options.CipherSuites,
 				},
 			},

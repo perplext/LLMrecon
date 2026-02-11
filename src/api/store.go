@@ -220,7 +220,7 @@ func (m *MockScanService) executeScan(id string) {
 	scan.Status = ScanStatusRunning
 	now := time.Now()
 	scan.StartedAt = &now
-	_ = m.store.Update(scan) // #nosec G104 -- best-effort status update in mock
+	m.store.Update(scan)
 
 	// Simulate scan execution
 	time.Sleep(5 * time.Second)
@@ -273,5 +273,5 @@ func (m *MockScanService) executeScan(id string) {
 	completedAt := time.Now()
 	scan.CompletedAt = &completedAt
 	scan.Duration = completedAt.Sub(*scan.StartedAt).String()
-	_ = m.store.Update(scan) // #nosec G104 -- best-effort status update in mock
+	m.store.Update(scan)
 }
