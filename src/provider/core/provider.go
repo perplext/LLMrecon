@@ -80,6 +80,14 @@ const (
 	ToolUseCapability ModelCapability = "tool-use"
 	// JSONModeCapability represents the capability to output JSON
 	JSONModeCapability ModelCapability = "json-mode"
+	// ReasoningCapability represents the capability for extended thinking / chain-of-thought
+	ReasoningCapability ModelCapability = "reasoning"
+	// AudioInputCapability represents the capability to process audio input
+	AudioInputCapability ModelCapability = "audio-input"
+	// LongContextCapability represents support for 100K+ token context windows
+	LongContextCapability ModelCapability = "long-context"
+	// MCPToolUseCapability represents the capability to use MCP tools
+	MCPToolUseCapability ModelCapability = "mcp-tool-use"
 )
 
 // Message represents a message in a conversation
