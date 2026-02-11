@@ -192,11 +192,11 @@ New techniques that build on existing infrastructure with minimal new dependenci
   - Source: [arXiv 2412.03556](https://arxiv.org/html/2412.03556v1)
 
 **Phase 1 Success Criteria:**
-- [ ] All 9 attack types implemented with Go modules and YAML templates
+- [x] All 9 attack types implemented with Go modules (YAML templates and Python deferred to Phase 5)
 - [ ] Python template equivalents added for ML pipeline integration
 - [ ] Unit tests for each attack module
-- [ ] OWASP LLM 2025 mapping updated for new techniques
-- Estimated scope: ~15 new Go files, ~9 new YAML templates, ~9 new Python templates
+- [x] OWASP LLM 2025 mapping included in TechniqueInfo for all new modules
+- Actual scope: 8 new Go files implementing 9 attack types with 19 technique variants, all self-registering via init()
 
 ### Research Insights: Phase 1
 
