@@ -111,6 +111,12 @@ type AttackConfig struct {
 	Metadata map[string]string      `json:"metadata,omitempty"`
 }
 
+// CostExceeded reports whether accumulatedCost has reached the configured ceiling.
+// Returns false if no ceiling is set (MaxCostUSD <= 0).
+func (c AttackConfig) CostExceeded(accumulatedCost float64) bool {
+	return c.MaxCostUSD > 0 && accumulatedCost >= c.MaxCostUSD
+}
+
 // AttackResult contains the outcome of an attack execution.
 type AttackResult struct {
 	// Identification

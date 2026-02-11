@@ -3,6 +3,9 @@ package core
 
 import (
 	"context"
+	"fmt"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -357,6 +360,26 @@ type ProviderConfig struct {
 	AdditionalHeaders map[string]string `json:"additional_headers,omitempty"`
 	// AdditionalParams is a map of additional parameters to include in requests
 	AdditionalParams map[string]interface{} `json:"additional_params,omitempty"`
+}
+
+// Validate checks the provider configuration for security issues.
+// It returns an error if the BaseURL uses plaintext HTTP (except for
+// localhost/127.0.0.1, which are allowed for local testing).
+func (c *ProviderConfig) Validate() error {
+	if c.BaseURL == "" {
+		return nil
+	}
+	parsed, err := url.Parse(c.BaseURL)
+	if err != nil {
+		return fmt.Errorf("invalid base URL: %w", err)
+	}
+	if parsed.Scheme == "http" {
+		host := strings.Split(parsed.Hostname(), ":")[0]
+		if host != "localhost" && host != "127.0.0.1" && host != "::1" {
+			return fmt.Errorf("base URL %q uses plaintext HTTP; use HTTPS for non-local endpoints", c.BaseURL)
+		}
+	}
+	return nil
 }
 
 // RetryConfig represents the configuration for retries
