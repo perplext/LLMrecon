@@ -43,6 +43,14 @@ const (
 	CustomProvider ProviderType = "custom"
 	// GoogleProvider represents the Google provider (e.g., Gemini)
 	GoogleProvider ProviderType = "google"
+	// DeepSeekProvider represents the DeepSeek provider (R1, V3)
+	DeepSeekProvider ProviderType = "deepseek"
+	// MetaProvider represents the Meta/Llama provider (Llama 4)
+	MetaProvider ProviderType = "meta"
+	// XAIProvider represents the xAI provider (Grok 3)
+	XAIProvider ProviderType = "xai"
+	// AlibabaProvider represents the Alibaba/Qwen provider (Qwen3)
+	AlibabaProvider ProviderType = "alibaba"
 )
 
 // SeverityLevel represents the severity level of a finding
