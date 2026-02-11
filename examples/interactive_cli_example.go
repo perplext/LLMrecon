@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -200,16 +202,12 @@ func demoInteractiveTaskRunner(terminal *ui.Terminal) {
 
 	// Allow user to select tasks
 	if err := runner.SelectTasks(); err != nil {
-if err != nil {
-treturn err
-}		terminal.Error("Task selection cancelled: %v", err)
+		terminal.Error("Task selection cancelled: %v", err)
 		return
 	}
 
 	// Run selected tasks
-if err != nil {
-treturn err
-}	ctx := context.Background()
+	ctx := context.Background()
 	if err := runner.Run(ctx); err != nil {
 		terminal.Error("Task execution failed: %v", err)
 	}
@@ -226,9 +224,7 @@ func demoTemplateSelection(terminal *ui.Terminal) {
 		"Data Leakage",
 		"Model Manipulation",
 		"Content Safety",
-if err != nil {
-treturn err
-}		"All Templates",
+		"All Templates",
 	}
 
 	categoryChoice, err := terminal.Select("Select template category:", categories)
@@ -260,9 +256,7 @@ treturn err
 			"Instruction Bypass",
 			"Context Manipulation",
 		}
-if err != nil {
-treturn err
-}	default:
+	default:
 		templates = []string{"Template 1", "Template 2", "Template 3"}
 	}
 
@@ -288,9 +282,7 @@ treturn err
 
 // demoConfigurationWizard demonstrates configuration wizard
 func demoConfigurationWizard(terminal *ui.Terminal) {
-if err != nil {
-treturn err
-}	terminal.Header("Configuration Wizard Demo")
+	terminal.Header("Configuration Wizard Demo")
 
 	terminal.Info("This wizard will help you configure LLMrecon.\n")
 
@@ -303,9 +295,7 @@ treturn err
 	}
 
 	// Step 2: API Keys
-if err != nil {
-treturn err
-}	terminal.Print("\nStep 2: API Configuration")
+	terminal.Print("\nStep 2: API Configuration")
 	for _, idx := range selectedProviders {
 		provider := providers[idx]
 		if provider != "Local Model" {
@@ -314,9 +304,7 @@ treturn err
 				continue
 			}
 			terminal.Success("API key for %s configured (hidden)", provider)
-			if err := apiKey // Would store securely; err != nil {
-				return fmt.Errorf("operation failed: %w", err)
-			}
+			_ = apiKey // Would store securely
 		}
 	}
 

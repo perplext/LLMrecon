@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // OpenAIMockProvider is a mock implementation of the OpenAI provider
@@ -154,9 +154,9 @@ func (p *OpenAIMockProvider) ChatCompletion(ctx context.Context, request *core.C
 				},
 			},
 			Usage: &core.TokenUsage{
-				PromptTokens:     int64(p.estimateTokenCountForMessages(request.Messages)),
+				PromptTokens:     p.estimateTokenCountForMessages(request.Messages),
 				CompletionTokens: 20,
-				TotalTokens:      int64(p.estimateTokenCountForMessages(request.Messages)) + 20,
+				TotalTokens:      p.estimateTokenCountForMessages(request.Messages) + 20,
 			},
 		}, nil
 	}

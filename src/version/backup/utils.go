@@ -8,15 +8,7 @@ import (
 // Additional utility functions for the version package can be added here
 // Note: ComputeHash and ReadFileContent are already defined in diff.go
 
-// matchPattern checks if a path matches a glob pattern
-func matchPattern(path, pattern string) bool {
-	matched, err := filepath.Match(pattern, filepath.Base(path))
-	if err != nil {
-		return false
-	}
-
-	return matched
-}
+// matchPattern is defined in analyzer.go
 
 // GetFileExtension gets the extension of a file
 func GetFileExtension(path string) string {

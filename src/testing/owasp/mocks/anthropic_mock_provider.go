@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // AnthropicMockProvider is a mock implementation of the Anthropic provider
@@ -159,9 +159,9 @@ func (p *AnthropicMockProvider) ChatCompletion(ctx context.Context, request *cor
 				},
 			},
 			Usage: &core.TokenUsage{
-				PromptTokens:     int64(p.estimateTokenCountForMessages(request.Messages)),
+				PromptTokens:     p.estimateTokenCountForMessages(request.Messages),
 				CompletionTokens: 40,
-				TotalTokens:      int64(p.estimateTokenCountForMessages(request.Messages)) + 40,
+				TotalTokens:      p.estimateTokenCountForMessages(request.Messages) + 40,
 			},
 		}, nil
 	}

@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // BaseMockProviderImpl is a concrete implementation of the BaseMockProvider
@@ -429,9 +429,9 @@ func (p *BaseMockProviderImpl) CreateEmbedding(ctx context.Context, request *cor
 	}
 
 	tokenUsage := &core.TokenUsage{
-		PromptTokens:     int64(tokenCount),
+		PromptTokens:     tokenCount,
 		CompletionTokens: 0,
-		TotalTokens:      int64(tokenCount),
+		TotalTokens:      tokenCount,
 	}
 
 	// Update usage metrics
@@ -515,7 +515,7 @@ func (p *BaseMockProviderImpl) getResponseForChatRequest(request *core.ChatCompl
 	defer p.mu.RUnlock()
 
 	if p.config.VulnerabilityBehaviors != nil && lastUserMessage != "" {
-		for vulnType, behavior := range p.config.VulnerabilityBehaviors {
+		for _, behavior := range p.config.VulnerabilityBehaviors {
 			if behavior.Enabled && MessageTriggerVulnerability(lastUserMessage, behavior) {
 				if pattern := GetRandomResponsePattern(behavior); pattern != "" {
 					return pattern
@@ -534,9 +534,9 @@ func (p *BaseMockProviderImpl) getTokenUsage(prompt, completion string) *core.To
 	completionTokens := p.estimateTokenCount(completion)
 
 	return &core.TokenUsage{
-		PromptTokens:     int64(promptTokens),
-		CompletionTokens: int64(completionTokens),
-		TotalTokens:      int64(promptTokens + completionTokens),
+		PromptTokens:     promptTokens,
+		CompletionTokens: completionTokens,
+		TotalTokens:      promptTokens + completionTokens,
 	}
 }
 
@@ -550,9 +550,9 @@ func (p *BaseMockProviderImpl) getTokenUsageForChat(messages []core.ChatMessage,
 	completionTokens := p.estimateTokenCount(completion)
 
 	return &core.TokenUsage{
-		PromptTokens:     int64(promptTokens),
-		CompletionTokens: int64(completionTokens),
-		TotalTokens:      int64(promptTokens + completionTokens),
+		PromptTokens:     promptTokens,
+		CompletionTokens: completionTokens,
+		TotalTokens:      promptTokens + completionTokens,
 	}
 }
 
@@ -586,7 +586,7 @@ func (p *BaseMockProviderImpl) splitResponseIntoChunks(response string, chunkSiz
 }
 
 // generateMockEmbedding generates a mock embedding vector
-func (p *BaseMockProviderImpl) generateMockEmbedding(text string, dimension int) []float32 {
+func (p *BaseMockProviderImpl) generateMockEmbedding(text string, dimension int) []float64 {
 	// Use the text as a seed for deterministic but seemingly random embeddings
 	seed := int64(0)
 	for i, c := range text {
@@ -598,20 +598,20 @@ func (p *BaseMockProviderImpl) generateMockEmbedding(text string, dimension int)
 	rng := mathrand.New(source)
 
 	// Generate the embedding vector
-	embedding := make([]float32, dimension)
+	embedding := make([]float64, dimension)
 	for i := 0; i < dimension; i++ {
-		embedding[i] = float32(rng.Float64()*2 - 1) // Values between -1 and 1
+		embedding[i] = rng.Float64()*2 - 1 // Values between -1 and 1
 	}
 
 	// Normalize the vector
-	sum := float32(0)
+	sum := float64(0)
 	for _, v := range embedding {
 		sum += v * v
 	}
 
-	magnitude := float32(0)
+	magnitude := float64(0)
 	if sum > 0 {
-		magnitude = float32(1.0 / float64(sum))
+		magnitude = 1.0 / sum
 	}
 
 	for i := range embedding {
@@ -622,7 +622,7 @@ func (p *BaseMockProviderImpl) generateMockEmbedding(text string, dimension int)
 }
 
 // updateUsageMetrics updates the usage metrics for a model
-func (p *BaseMockProviderImpl) updateUsageMetrics(modelID string, tokens int64, duration time.Duration, err error) {
+func (p *BaseMockProviderImpl) updateUsageMetrics(modelID string, tokens int, duration time.Duration, err error) {
 	p.usageMetricsMutex.Lock()
 	defer p.usageMetricsMutex.Unlock()
 
@@ -632,23 +632,23 @@ func (p *BaseMockProviderImpl) updateUsageMetrics(modelID string, tokens int64, 
 		p.usageMetrics[modelID] = metrics
 	}
 
-	metrics.AddRequest(tokens, duration, err)
+	metrics.AddRequest(int64(tokens), duration, err)
 }
 
 // GetUsageMetrics gets the usage metrics for a model
-func (p *BaseMockProviderImpl) GetUsageMetrics(modelID string) *core.UsageMetrics {
+func (p *BaseMockProviderImpl) GetUsageMetrics(modelID string) (*core.UsageMetrics, error) {
 	p.usageMetricsMutex.RLock()
 	defer p.usageMetricsMutex.RUnlock()
 
 	if metrics, ok := p.usageMetrics[modelID]; ok {
-		return metrics
+		return metrics, nil
 	}
 
-	return core.NewUsageMetrics(modelID)
+	return core.NewUsageMetrics(modelID), nil
 }
 
 // GetAllUsageMetrics gets all usage metrics
-func (p *BaseMockProviderImpl) GetAllUsageMetrics() map[string]*core.UsageMetrics {
+func (p *BaseMockProviderImpl) GetAllUsageMetrics() (map[string]*core.UsageMetrics, error) {
 	p.usageMetricsMutex.RLock()
 	defer p.usageMetricsMutex.RUnlock()
 
@@ -658,7 +658,7 @@ func (p *BaseMockProviderImpl) GetAllUsageMetrics() map[string]*core.UsageMetric
 		metricsCopy[k] = v
 	}
 
-	return metricsCopy
+	return metricsCopy, nil
 }
 
 // Secure random number generation helpers

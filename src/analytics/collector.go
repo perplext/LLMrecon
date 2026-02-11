@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/template/management/execution"
 )
 
 // MetricsCollector handles the collection and processing of various metrics
@@ -337,6 +336,37 @@ func (mc *MetricsCollector) Shutdown(timeout time.Duration) error {
 		mc.logger.Warn("Metrics collector shutdown timed out")
 		return fmt.Errorf("shutdown timed out after %v", timeout)
 	}
+}
+
+// Start starts the metrics collector with the given storage backend
+func (mc *MetricsCollector) Start(ctx context.Context, storage DataStorage) error {
+	mc.storage = storage
+	if !mc.enabled {
+		mc.enabled = true
+		mc.startWorkers()
+	}
+	return nil
+}
+
+// Stop stops the metrics collector
+func (mc *MetricsCollector) Stop() error {
+	return mc.Shutdown(10 * time.Second)
+}
+
+// RecordScanResult records a scan result
+func (mc *MetricsCollector) RecordScanResult(result *ScanResult) error {
+	if mc.storage == nil {
+		return nil
+	}
+	return mc.storage.StoreScanResult(result)
+}
+
+// RecordMetric records a metric
+func (mc *MetricsCollector) RecordMetric(metric *Metric) error {
+	if !mc.enabled || metric == nil {
+		return nil
+	}
+	return mc.collectMetric(*metric)
 }
 
 // Internal methods

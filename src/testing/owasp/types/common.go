@@ -25,6 +25,20 @@ const (
 	ModelTheft                     VulnerabilityType = "model_theft"
 )
 
+// Aliases for backward compatibility with mock providers
+const (
+	PromptInjectionVulnerability        = PromptInjection
+	InsecureOutputHandlingVulnerability  = InsecureOutputHandling
+	TrainingDataPoisoningVulnerability   = TrainingDataPoisoning
+	ModelDenialOfServiceVulnerability    = ModelDOS
+	SupplyChainVulnerabilityType        = SupplyChainVulnerabilities
+	SensitiveInfoDisclosureVulnerability = SensitiveInformationDisclosure
+	InsecurePluginDesignVulnerability    = InsecurePluginDesign
+	ExcessiveAgencyVulnerability         = ExcessiveAgency
+	OverrelianceVulnerability            = Overreliance
+	ModelTheftVulnerability              = ModelTheft
+)
+
 // Report formats as string constants
 const (
 	JSONFormat     string = "json"

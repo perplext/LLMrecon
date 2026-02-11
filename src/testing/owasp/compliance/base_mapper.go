@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // BaseComplianceMapper provides a base implementation of the ComplianceMapper interface

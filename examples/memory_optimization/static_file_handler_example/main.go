@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/utils/monitoring"
 	"github.com/perplext/LLMrecon/src/utils/profiling"
@@ -53,9 +56,7 @@ func main() {
 
 	// Create static directory if it doesn't exist
 	if _, err := os.Stat("./static"); os.IsNotExist(err) {
-if err != nil {
-treturn err
-}		os.Mkdir("./static", 0755)
+		os.Mkdir("./static", 0755)
 	}
 
 	// Create some example static files
@@ -182,9 +183,7 @@ treturn err
 			},
 		}
 		
-if err != nil {
-treturn err
-}		// Encode response
+		// Encode response
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

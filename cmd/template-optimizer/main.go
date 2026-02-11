@@ -4,8 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"runtime"
-	"strings"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/repository"
 	"github.com/perplext/LLMrecon/src/template/format"
@@ -165,9 +166,7 @@ func runBenchmark(ctx context.Context, loader *loader.ResourceEfficientLoader, s
 func saveOptimizedTemplates(templates []*format.Template, outputDir string, verbose bool) {
 	// Create output directory if it doesn't exist
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
-if err != nil {
-treturn err
-}		fmt.Printf("Error creating output directory: %v\n", err)
+		fmt.Printf("Error creating output directory: %v\n", err)
 		return
 	}
 
@@ -175,25 +174,14 @@ treturn err
 
 	// Save templates
 	for _, template := range templates {
-		// Create filename
-		filename := template.ID
-		if !strings.HasSuffix(filename, ".yaml") && !strings.HasSuffix(filename, ".yml") && !strings.HasSuffix(filename, ".json") {
-			filename += ".yaml"
-		}
-		
-		// Create file path
-		filePath := filepath.Join(outputDir, filename)
-		
-if err != nil {
-treturn err
-}		// Save template
-		if err := template.SaveToFile(filePath); err != nil {
+		// Save template to output directory
+		if err := template.Save(outputDir); err != nil {
 			fmt.Printf("Error saving template %s: %v\n", template.ID, err)
 			continue
 		}
 		
 		if verbose {
-			fmt.Printf("Saved template %s to %s\n", template.ID, filePath)
+			fmt.Printf("Saved template %s to %s\n", template.ID, outputDir)
 		}
 	}
 

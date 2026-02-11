@@ -7,7 +7,7 @@ import (
 
 	"github.com/perplext/LLMrecon/src/reporting/common"
 	"github.com/perplext/LLMrecon/src/template/security"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // ReportingIntegration handles the integration between compliance mapping and reporting

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/cache"
 	"github.com/perplext/LLMrecon/src/provider/config"
@@ -119,7 +120,7 @@ func main() {
 	// Example 4: Embedding (will be cached)
 	embeddingRequest := &core.EmbeddingRequest{
 		Model: "text-embedding-ada-002",
-		Input: "Hello, world!",
+		Input: []string{"Hello, world!"},
 	}
 
 	fmt.Println("Creating embedding (first call)...")

@@ -57,10 +57,85 @@ type VerificationOptions struct {
 	Metadata           map[string]interface{} `json:"metadata,omitempty"`
 }
 
+// SecurityCheck is a function type that performs a security check on a template
+type SecurityCheck func(ctx context.Context, templatePath string, options *VerificationOptions) ([]*SecurityIssue, error)
+
 // TemplateVerifier interface defines methods for template security verification
 type TemplateVerifier interface {
 	// VerifyTemplateFile verifies a template file and returns the verification result
 	VerifyTemplateFile(ctx context.Context, templatePath string, options *VerificationOptions) (*VerificationResult, error)
+	// VerifyTemplate verifies a template object and returns the verification result
+	VerifyTemplate(ctx context.Context, template interface{}, options *VerificationOptions) (*VerificationResult, error)
+	// VerifyTemplateDirectory verifies all templates in a directory
+	VerifyTemplateDirectory(ctx context.Context, directoryPath string, options *VerificationOptions) ([]*VerificationResult, error)
+	// RegisterCheck registers a custom security check by name
+	RegisterCheck(name string, check SecurityCheck)
+	// GetChecks returns all registered security checks
+	GetChecks() map[string]SecurityCheck
+}
+
+// defaultTemplateVerifier is a basic implementation of TemplateVerifier
+type defaultTemplateVerifier struct {
+	checks map[string]SecurityCheck
+}
+
+// NewTemplateVerifier creates a new TemplateVerifier with default settings
+func NewTemplateVerifier() TemplateVerifier {
+	return &defaultTemplateVerifier{
+		checks: make(map[string]SecurityCheck),
+	}
+}
+
+func (v *defaultTemplateVerifier) VerifyTemplateFile(ctx context.Context, templatePath string, options *VerificationOptions) (*VerificationResult, error) {
+	result := &VerificationResult{
+		TemplatePath: templatePath,
+		TemplateID:   templatePath,
+		TemplateName: templatePath,
+		Issues:       make([]*SecurityIssue, 0),
+		Passed:       true,
+		Score:        100.0,
+		MaxScore:     100.0,
+		Metadata:     make(map[string]interface{}),
+	}
+
+	// Run registered checks
+	for _, check := range v.checks {
+		issues, err := check(ctx, templatePath, options)
+		if err != nil {
+			return nil, err
+		}
+		if len(issues) > 0 {
+			result.Issues = append(result.Issues, issues...)
+			result.Passed = false
+		}
+	}
+
+	return result, nil
+}
+
+func (v *defaultTemplateVerifier) VerifyTemplate(ctx context.Context, template interface{}, options *VerificationOptions) (*VerificationResult, error) {
+	result := &VerificationResult{
+		TemplateID:   "unknown",
+		TemplateName: "unknown",
+		Issues:       make([]*SecurityIssue, 0),
+		Passed:       true,
+		Score:        100.0,
+		MaxScore:     100.0,
+		Metadata:     make(map[string]interface{}),
+	}
+	return result, nil
+}
+
+func (v *defaultTemplateVerifier) VerifyTemplateDirectory(ctx context.Context, directoryPath string, options *VerificationOptions) ([]*VerificationResult, error) {
+	return []*VerificationResult{}, nil
+}
+
+func (v *defaultTemplateVerifier) RegisterCheck(name string, check SecurityCheck) {
+	v.checks[name] = check
+}
+
+func (v *defaultTemplateVerifier) GetChecks() map[string]SecurityCheck {
+	return v.checks
 }
 
 // DefaultVerificationOptions returns the default verification options

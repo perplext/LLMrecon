@@ -38,6 +38,24 @@ const (
 	LocalProvider ProviderType = "local"
 	// CustomProvider represents a custom provider
 	CustomProvider ProviderType = "custom"
+	// GoogleProvider represents the Google provider (e.g., Gemini)
+	GoogleProvider ProviderType = "google"
+)
+
+// SeverityLevel represents the severity level of a finding
+type SeverityLevel string
+
+const (
+	// SeverityCritical represents a critical severity level
+	SeverityCritical SeverityLevel = "critical"
+	// SeverityHigh represents a high severity level
+	SeverityHigh SeverityLevel = "high"
+	// SeverityMedium represents a medium severity level
+	SeverityMedium SeverityLevel = "medium"
+	// SeverityLow represents a low severity level
+	SeverityLow SeverityLevel = "low"
+	// SeverityInfo represents an informational severity level
+	SeverityInfo SeverityLevel = "info"
 )
 
 // ModelCapability represents a capability of a model
@@ -79,6 +97,9 @@ type Message struct {
 	// Timestamp is the timestamp of the message
 	Timestamp time.Time `json:"timestamp,omitempty"`
 }
+
+// ChatMessage is an alias for Message used in chat completion contexts
+type ChatMessage = Message
 
 // FunctionCall represents a function call
 type FunctionCall struct {
@@ -144,6 +165,10 @@ type TextCompletionRequest struct {
 	User string `json:"user,omitempty"`
 	// Model is the model to use
 	Model string `json:"model,omitempty"`
+	// ModelID is an alias for Model used by some components
+	ModelID string `json:"model_id,omitempty"`
+	// Metadata is optional metadata for the request
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // TextCompletionResponse represents a response from text completion
@@ -222,6 +247,8 @@ type ChatCompletionRequest struct {
 	ResponseFormat map[string]string `json:"response_format,omitempty"`
 	// Model is the model to use
 	Model string `json:"model,omitempty"`
+	// ModelID is an alias for Model used by some components
+	ModelID string `json:"model_id,omitempty"`
 	// Metadata is optional metadata for the request
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
@@ -255,9 +282,11 @@ type ChatCompletionChoice struct {
 // EmbeddingRequest represents a request for embeddings
 type EmbeddingRequest struct {
 	// Input is the input to embed
-	Input interface{} `json:"input"`
+	Input []string `json:"input"`
 	// Model is the model to use
 	Model string `json:"model"`
+	// ModelID is an alias for Model used by some components
+	ModelID string `json:"model_id,omitempty"`
 	// EncodingFormat is the encoding format
 	EncodingFormat string `json:"encoding_format,omitempty"`
 	// User is an optional user identifier

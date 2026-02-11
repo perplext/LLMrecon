@@ -117,7 +117,7 @@ func (erg *ExecutiveReportGenerator) GenerateCustomReport(ctx context.Context, t
 // Internal methods
 
 func (erg *ExecutiveReportGenerator) generateReport(ctx context.Context, title string, period TimeWindow, generatedBy string) (*ExecutiveReport, error) {
-	erg.logger.Info("Generating executive report", "title", title, "period", period)
+	erg.logger.Info(fmt.Sprintf("Generating executive report title=%s period=%v", title, period))
 
 	// Generate executive summary
 	summary := erg.generateExecutiveSummary(ctx, period)
@@ -159,7 +159,7 @@ func (erg *ExecutiveReportGenerator) generateReport(ctx context.Context, title s
 		GeneratedBy:      generatedBy,
 	}
 
-	erg.logger.Info("Executive report generated successfully", "id", report.ID)
+	erg.logger.Info(fmt.Sprintf("Executive report generated successfully id=%s", report.ID))
 
 	return report, nil
 }

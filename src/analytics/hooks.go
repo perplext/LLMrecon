@@ -20,20 +20,17 @@ func NewLoggingHook(logger Logger) *LoggingHook {
 }
 
 func (lh *LoggingHook) PreCollection(ctx context.Context, scanID string) error {
-	lh.logger.Info("Starting metrics collection", "scanID", scanID, "timestamp", time.Now())
+	lh.logger.Info(fmt.Sprintf("Starting metrics collection for scan %s", scanID))
 	return nil
 }
 
 func (lh *LoggingHook) PostCollection(ctx context.Context, scanID string, metrics []Metric) error {
-	lh.logger.Info("Completed metrics collection",
-		"scanID", scanID,
-		"metricsCount", len(metrics),
-		"timestamp", time.Now())
+	lh.logger.Info(fmt.Sprintf("Completed metrics collection for scan %s: %d metrics", scanID, len(metrics)))
 	return nil
 }
 
 func (lh *LoggingHook) OnError(ctx context.Context, err error, scanID string) {
-	lh.logger.Error("Metrics collection error", "error", err, "scanID", scanID)
+	lh.logger.Error(fmt.Sprintf("Metrics collection error for scan %s", scanID), err)
 }
 
 // NotificationHook sends notifications for important events
@@ -283,18 +280,10 @@ func (ph *PerformanceHook) PostCollection(ctx context.Context, scanID string, me
 	duration := time.Since(startTime)
 
 	if duration > ph.slowThreshold {
-		ph.performanceLogger.Warn("Slow metrics collection detected",
-			"scanID", scanID,
-			"duration", duration,
-			"metricsCount", len(metrics),
-			"threshold", ph.slowThreshold)
+		ph.performanceLogger.Warn(fmt.Sprintf("Slow metrics collection detected for scan %s: duration=%v, metrics=%d, threshold=%v", scanID, duration, len(metrics), ph.slowThreshold))
 	}
 
-	ph.performanceLogger.Debug("Metrics collection performance",
-		"scanID", scanID,
-		"duration", duration,
-		"metricsCount", len(metrics),
-		"metricsPerSecond", float64(len(metrics))/duration.Seconds())
+	ph.performanceLogger.Debug(fmt.Sprintf("Metrics collection performance for scan %s: duration=%v, metrics=%d, rate=%.2f/s", scanID, duration, len(metrics), float64(len(metrics))/duration.Seconds()))
 
 	return nil
 }
@@ -314,10 +303,7 @@ func (ph *PerformanceHook) OnError(ctx context.Context, err error, scanID string
 		duration = time.Since(startTime)
 	}
 
-	ph.performanceLogger.Error("Metrics collection failed",
-		"scanID", scanID,
-		"duration", duration,
-		"error", err)
+	ph.performanceLogger.Error(fmt.Sprintf("Metrics collection failed for scan %s (duration=%v)", scanID, duration), err)
 }
 
 // ComplianceHook ensures compliance with regulations
@@ -445,7 +431,7 @@ func NewSimpleNotifier(logger Logger) *SimpleNotifier {
 }
 
 func (sn *SimpleNotifier) SendNotification(ctx context.Context, message string, severity string) error {
-	sn.logger.Info("Notification", "message", message, "severity", severity)
+	sn.logger.Info(fmt.Sprintf("[%s] Notification: %s", severity, message))
 	return nil
 }
 
@@ -459,11 +445,7 @@ func NewSimpleAuditLogger(logger Logger) *SimpleAuditLogger {
 }
 
 func (sal *SimpleAuditLogger) LogAuditEvent(ctx context.Context, event AuditEvent) error {
-	sal.logger.Info("Audit Event",
-		"eventID", event.EventID,
-		"eventType", event.EventType,
-		"scanID", event.ScanID,
-		"timestamp", event.Timestamp)
+	sal.logger.Info(fmt.Sprintf("Audit Event: id=%s type=%s scan=%s", event.EventID, event.EventType, event.ScanID))
 	return nil
 }
 
@@ -491,7 +473,7 @@ func (scv *SimpleComplianceValidator) ValidateCompliance(ctx context.Context, sc
 		}
 	}
 
-	scv.logger.Info("Compliance validation passed", "scanID", scanID, "regulations", regulations)
+	scv.logger.Info(fmt.Sprintf("Compliance validation passed for scan %s", scanID))
 	return nil
 }
 

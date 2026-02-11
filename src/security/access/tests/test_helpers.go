@@ -14,7 +14,6 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 
 	"github.com/perplext/LLMrecon/src/security/access"
-	"github.com/perplext/LLMrecon/src/security/access/adapters"
 	"github.com/perplext/LLMrecon/src/security/access/db"
 	"github.com/perplext/LLMrecon/src/security/access/interfaces"
 	"github.com/perplext/LLMrecon/src/security/access/models"
@@ -488,6 +487,15 @@ func (m *MockVulnerabilityStore) ListVulnerabilities(ctx context.Context, filter
 	return vulnerabilities[offset:end], total, nil
 }
 
+func (m *MockVulnerabilityStore) GetVulnerabilityByCVE(ctx context.Context, cve string) (*models.Vulnerability, error) {
+	for _, vulnerability := range m.vulnerabilities {
+		if vulnerability.CVE == cve {
+			return vulnerability, nil
+		}
+	}
+	return nil, fmt.Errorf("vulnerability not found for CVE: %s", cve)
+}
+
 func (m *MockVulnerabilityStore) Close() error {
 	return nil
 }
@@ -876,12 +884,6 @@ func (m *MockSecurityManager) UpdateVulnerabilityStatus(ctx context.Context, id 
 		return err
 	}
 	vulnerability.Status = status
-	// Add timestamp to metadata if it doesn't exist
-	if vulnerability.Metadata == nil {
-		vulnerability.Metadata = make(map[string]interface{})
-	}
-	vulnerability.Metadata["updated_at"] = time.Now()
-
 	// Set appropriate timestamps based on status
 	if status == models.VulnerabilityStatusResolved {
 		vulnerability.ResolvedAt = time.Now()
@@ -1003,7 +1005,7 @@ type TestContext struct {
 	DBFilePath string
 
 	// Access control components
-	Manager          *access.DBAccessControlManager
+	Manager          *access.AccessControlManager
 	AuditLogger      interfaces.AuditLogger
 	AdminPass        string
 	AdminUser        *models.User
@@ -1057,24 +1059,11 @@ func NewTestContext(t *testing.T) *TestContext {
 		t.Fatalf("Failed to open database: %v", err)
 	}
 
-	// Create a compatible interfaces.DBConfig from the db.DBConfig
-	interfaceDBConfig := &interfaces.DBConfig{
-		Driver:       dbConfig.Driver,
-		DSN:          dbConfig.DSN,
-		MaxOpenConns: dbConfig.MaxOpenConns,
-		MaxIdleConns: dbConfig.MaxIdleConns,
-	}
-
 	// Create access control manager config
-	accessConfig := &access.DBAccessControlConfig{
-		DBConfig:             interfaceDBConfig,
-		DefaultAdminUsername: "admin",
-		DefaultAdminPassword: "Admin123!",
-		DefaultAdminEmail:    "admin@example.com",
-	}
+	accessConfig := access.DefaultAccessControlConfig()
 
 	// Create access control manager
-	manager, err := access.NewDBAccessControlManager(accessConfig)
+	manager, err := access.NewAccessControlManager(accessConfig)
 	if err != nil {
 		database.Close()
 		os.RemoveAll(tempDir)
@@ -1083,7 +1072,7 @@ func NewTestContext(t *testing.T) *TestContext {
 
 	// Create cleanup function
 	cleanupFn := func() {
-		manager.Close()
+		manager.Close(context.Background())
 		database.Close()
 		os.RemoveAll(tempDir)
 	}
@@ -1102,7 +1091,7 @@ func NewTestContext(t *testing.T) *TestContext {
 		DBFilePath:  dbFilePath,
 		Manager:     manager,
 		AuditLogger: mockAuditLogger,
-		AdminPass:   accessConfig.DefaultAdminPassword,
+		AdminPass:   "Admin123!",
 		TestUsers:   make(map[string]*models.User),
 	}
 
@@ -1116,10 +1105,8 @@ func NewTestContext(t *testing.T) *TestContext {
 	mockUserManager := &MockUserManager{userStore: mockUserStore}
 	ctx.UserManager = mockUserManager
 
-	// Create a real RBAC manager with adapter instead of the mock
-	roleStore := access.NewInMemoryRoleStore()
-	rbacManager := access.NewRBACManager(mockUserManager, roleStore, mockAuditLogger)
-	ctx.RBACManager = adapters.CreateRBACManagerAdapter(rbacManager)
+	// Use mock RBAC manager for testing
+	ctx.RBACManager = NewMockRBACManager()
 
 	ctx.SessionManager = &MockSessionManager{sessionStore: mockSessionStore}
 	ctx.SecurityManager = &MockSecurityManager{incidentStore: mockIncidentStore, vulnerabilityStore: mockVulnerabilityStore}
@@ -1133,7 +1120,7 @@ func NewTestContext(t *testing.T) *TestContext {
 	ctx.VulnerabilityStore = mockVulnerabilityStore
 
 	// Create admin user
-	ctx.AdminUser, _ = ctx.UserStore.GetUserByUsername(context.Background(), accessConfig.DefaultAdminUsername)
+	ctx.AdminUser, _ = ctx.UserStore.GetUserByUsername(context.Background(), "admin")
 
 	return ctx
 }
@@ -1195,7 +1182,6 @@ func (c *TestContext) CreateTestVulnerability(title, description, severity, repo
 		ReportedBy:      reportedBy,
 		AffectedSystems: affectedSystems,
 		CVE:             "", // Initialize with empty string
-		Metadata:        make(map[string]interface{}),
 	}
 
 	err := c.SecurityManager.CreateVulnerability(context.Background(), vulnerability)
@@ -1275,10 +1261,6 @@ func (m *MockSecurityManager) AddRemediationPlan(ctx context.Context, id string,
 		return err
 	}
 
-	if vulnerability.Metadata == nil {
-		vulnerability.Metadata = make(map[string]interface{})
-	}
-	vulnerability.Metadata["remediation_plan"] = plan
 	vulnerability.Mitigation = plan
 
 	return m.vulnerabilityStore.UpdateVulnerability(ctx, vulnerability)
@@ -1293,12 +1275,6 @@ func (m *MockSecurityManager) MarkVulnerabilityRemediated(ctx context.Context, i
 
 	vulnerability.Status = models.VulnerabilityStatusResolved
 	vulnerability.ResolvedAt = time.Now()
-
-	if vulnerability.Metadata == nil {
-		vulnerability.Metadata = make(map[string]interface{})
-	}
-	vulnerability.Metadata["resolution"] = details
-	vulnerability.Metadata["resolved_at"] = time.Now()
 
 	return m.vulnerabilityStore.UpdateVulnerability(ctx, vulnerability)
 }

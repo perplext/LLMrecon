@@ -2,7 +2,6 @@ package analytics
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -16,7 +15,7 @@ type Manager struct {
 	collector       *MetricsCollector
 	storage         DataStorage
 	trendAnalyzer   *TrendAnalyzer
-	reportGenerator *ReportGenerator
+	reportGenerator ReportGenerator
 	dashboardEngine *DashboardEngine
 	logger          Logger
 	mu              sync.RWMutex
@@ -108,6 +107,14 @@ type RetentionPolicy struct {
 	TrendDataDays     int
 	CompressAfterDays int
 	ArchiveAfterDays  int
+
+	// Fields used by HistoricalDataManager
+	DataType       string        `json:"data_type,omitempty"`
+	HotRetention   time.Duration `json:"hot_retention,omitempty"`
+	WarmRetention  time.Duration `json:"warm_retention,omitempty"`
+	ColdRetention  time.Duration `json:"cold_retention,omitempty"`
+	CompressionAge time.Duration `json:"compression_age,omitempty"`
+	DeletionAge    time.Duration `json:"deletion_age,omitempty"`
 }
 
 // Logger interface for analytics logging
@@ -130,13 +137,14 @@ func NewManager(config *Config, logger Logger) (*Manager, error) {
 		return nil, fmt.Errorf("failed to initialize storage: %w", err)
 	}
 
+	trendAnalyzer := NewTrendAnalyzer(config, storage, logger)
 	manager := &Manager{
 		config:          config,
-		collector:       NewMetricsCollector(config, logger),
+		collector:       NewMetricsCollector(config, storage, logger),
 		storage:         storage,
-		trendAnalyzer:   NewTrendAnalyzer(config, storage, logger),
+		trendAnalyzer:   trendAnalyzer,
 		reportGenerator: NewBasicReportGenerator(config, logger),
-		dashboardEngine: NewDashboardEngine(config, logger),
+		dashboardEngine: NewDashboardEngine(config, storage, trendAnalyzer, logger),
 		logger:          logger,
 	}
 
@@ -281,7 +289,20 @@ func (m *Manager) GetDashboard(timeRange TimeRange) (*Dashboard, error) {
 
 // GetTrends returns trend analysis data
 func (m *Manager) GetTrends(params *TrendParams) (*TrendAnalysis, error) {
-	return m.trendAnalyzer.AnalyzeTrends(params)
+	ctx := context.Background()
+	metricName := ""
+	if len(params.Metrics) > 0 {
+		metricName = params.Metrics[0]
+	}
+	timeWindow := TimeWindow{Start: params.TimeRange.Start, End: params.TimeRange.End}
+	result, err := m.trendAnalyzer.AnalyzeTrends(ctx, metricName, timeWindow)
+	if err != nil {
+		return nil, err
+	}
+	return &TrendAnalysis{
+		Params:  params,
+		Summary: result.Summary,
+	}, nil
 }
 
 // GetReport generates an analytics report
@@ -334,13 +355,9 @@ func (m *Manager) GetAnalyticsSummary() (*AnalyticsSummary, error) {
 	}
 
 	// Get trends
-	if trends, err := m.trendAnalyzer.AnalyzeTrends(&TrendParams{
-		TimeRange: TimeRange{
-			Start: time.Now().AddDate(0, 0, -7),
-			End:   time.Now(),
-		},
-		Metrics: []string{"vulnerability_count", "scan_duration"},
-	}); err == nil {
+	trendCtx := context.Background()
+	trendWindow := TimeWindow{Start: time.Now().AddDate(0, 0, -7), End: time.Now()}
+	if trends, err := m.trendAnalyzer.AnalyzeTrends(trendCtx, "vulnerability_count", trendWindow); err == nil {
 		summary.TrendData = trends.Summary
 	}
 
@@ -396,12 +413,6 @@ func (m *Manager) performCleanup() error {
 
 // performComparison performs comparative analysis
 func (m *Manager) performComparison(params *ComparisonParams) (*ComparisonResult, error) {
-	result := &ComparisonResult{
-		ComparisonType: params.Type,
-		GeneratedAt:    time.Now(),
-		Comparisons:    make([]Comparison, 0),
-	}
-
 	switch params.Type {
 	case ComparisonTypeTimeRange:
 		return m.compareTimeRanges(params)
@@ -500,10 +511,12 @@ func (m *Manager) gatherExportData(params *ExportParams) (interface{}, error) {
 			Metrics:   params.Metrics,
 		})
 	case "trends":
-		return m.trendAnalyzer.AnalyzeTrends(&TrendParams{
-			TimeRange: params.TimeRange,
-			Metrics:   params.Metrics,
-		})
+		metricName := ""
+		if len(params.Metrics) > 0 {
+			metricName = params.Metrics[0]
+		}
+		tw := TimeWindow{Start: params.TimeRange.Start, End: params.TimeRange.End}
+		return m.trendAnalyzer.AnalyzeTrends(context.Background(), metricName, tw)
 	default:
 		return nil, fmt.Errorf("unsupported data type: %s", params.DataType)
 	}

@@ -4,6 +4,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/anthropic"
 	"github.com/perplext/LLMrecon/src/provider/config"
@@ -27,9 +29,7 @@ func main() {
 
 	// Load configurations from environment variables
 	if err := configManager.LoadFromEnv(); err != nil {
-if err != nil {
-treturn err
-}		fmt.Printf("Failed to load configurations from environment variables: %v\n", err)
+		fmt.Printf("Failed to load configurations from environment variables: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -46,16 +46,12 @@ treturn err
 	// Create a model registry
 	modelRegistry := registry.NewModelRegistry()
 
-if err != nil {
-treturn err
-}	// Get OpenAI provider
+	// Get OpenAI provider
 	openaiProvider, err := providerFactory.GetProvider(core.OpenAIProvider)
 	if err != nil {
 		fmt.Printf("Failed to get OpenAI provider: %v\n", err)
 		os.Exit(1)
-if err != nil {
-treturn err
-}	}
+	}
 
 	// Get Anthropic provider
 	anthropicProvider, err := providerFactory.GetProvider(core.AnthropicProvider)
@@ -64,9 +60,7 @@ treturn err
 		os.Exit(1)
 	}
 
-if err != nil {
-treturn err
-}	// Register providers
+	// Register providers
 	providerRegistry.RegisterProvider(openaiProvider)
 	providerRegistry.RegisterProvider(anthropicProvider)
 
@@ -78,9 +72,7 @@ treturn err
 
 	// Get all models
 	models := modelRegistry.GetAllModels()
-if err != nil {
-treturn err
-}	fmt.Printf("Available models: %d\n", len(models))
+	fmt.Printf("Available models: %d\n", len(models))
 	for _, model := range models {
 		fmt.Printf("- %s (%s): %s\n", model.ID, model.Provider, model.Type)
 	}
@@ -101,9 +93,7 @@ treturn err
 		},
 		MaxTokens:   100,
 		Temperature: 0.7,
-if err != nil {
-treturn err
-}	})
+	})
 	if err != nil {
 		fmt.Printf("Failed to generate chat completion with OpenAI: %v\n", err)
 	} else {
@@ -120,26 +110,20 @@ treturn err
 				Content: "Hello, who are you?",
 			},
 		},
-if err != nil {
-treturn err
-}		MaxTokens:   100,
+		MaxTokens:   100,
 		Temperature: 0.7,
 	})
 	if err != nil {
 		fmt.Printf("Failed to generate chat completion with Anthropic: %v\n", err)
 	} else {
 		fmt.Printf("Response: %s\n", anthropicChatResponse.Choices[0].Message.Content)
-if err != nil {
-treturn err
-}	}
+	}
 
 	// Example: Get provider by capability
 	fmt.Println("\nGet provider by capability:")
 	embeddingProvider, err := providerRegistry.GetProviderByCapability(core.EmbeddingCapability)
 	if err != nil {
-if err != nil {
-treturn err
-}		fmt.Printf("Failed to get provider by capability: %v\n", err)
+		fmt.Printf("Failed to get provider by capability: %v\n", err)
 	} else {
 		fmt.Printf("Provider for embedding: %s\n", embeddingProvider.GetType())
 	}

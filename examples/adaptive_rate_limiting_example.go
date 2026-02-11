@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Example demonstrating advanced adaptive rate limiting for LLM template execution
 package main
 

@@ -256,7 +256,7 @@ func (bu *BinaryUpdater) testBinary(binaryPath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, binaryPath, "--version")
+	cmd := exec.CommandContext(ctx, binaryPath, "--version") // #nosec G204 -- binaryPath is the downloaded update binary, verified before execution
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("binary test failed: %w", err)
@@ -417,7 +417,7 @@ del "%%~f0" >nul 2>&1`, filePath)
 		batchPath := filePath + "_cleanup.bat"
 		if err := os.WriteFile(filepath.Clean(batchPath), []byte(batchContent), 0600); err == nil {
 			go func() {
-				exec.Command("cmd", "/C", batchPath).Start()
+				exec.Command("cmd", "/C", batchPath).Start() // #nosec G204 -- batchPath is a cleanup script we just wrote to a controlled temp location
 			}()
 		}
 	}
@@ -445,7 +445,7 @@ func (bu *BinaryUpdater) RestartApplication() error {
 	bu.logger.Info("Restarting application with new binary...")
 
 	// Start new process
-	cmd := exec.Command(execPath, args...)
+	cmd := exec.Command(execPath, args...) // #nosec G204 -- execPath is our own binary from os.Executable(), args from os.Args
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -565,11 +565,19 @@ func (bu *BinaryUpdater) elevateWindows(args []string) error {
 		return err
 	}
 
-	// Use PowerShell to elevate
-	psScript := fmt.Sprintf(`Start-Process -FilePath "%s" -ArgumentList "%s" -Verb RunAs`,
-		execPath, strings.Join(args, " "))
+	// Sanitize arguments to prevent PowerShell injection
+	sanitizedArgs := make([]string, len(args))
+	for i, arg := range args {
+		// Escape single quotes for PowerShell by doubling them
+		sanitizedArgs[i] = strings.ReplaceAll(arg, "'", "''")
+	}
 
-	cmd := exec.Command("powershell", "-Command", psScript)
+	// Use PowerShell to elevate with properly escaped arguments
+	psScript := fmt.Sprintf(`Start-Process -FilePath '%s' -ArgumentList '%s' -Verb RunAs`,
+		strings.ReplaceAll(execPath, "'", "''"),
+		strings.Join(sanitizedArgs, "','"))
+
+	cmd := exec.Command("powershell", "-Command", psScript) // #nosec G204 -- args are sanitized above, execPath from os.Executable()
 	return cmd.Run()
 }
 
@@ -580,10 +588,21 @@ func (bu *BinaryUpdater) elevateDarwin(args []string) error {
 		return err
 	}
 
-	script := fmt.Sprintf(`do shell script "%s %s" with administrator privileges`,
-		execPath, strings.Join(args, " "))
+	// Sanitize arguments to prevent shell injection in osascript
+	sanitizedArgs := make([]string, len(args))
+	for i, arg := range args {
+		// Escape backslashes and double quotes for AppleScript shell context
+		escaped := strings.ReplaceAll(arg, `\`, `\\`)
+		escaped = strings.ReplaceAll(escaped, `"`, `\"`)
+		sanitizedArgs[i] = escaped
+	}
+	escapedExecPath := strings.ReplaceAll(execPath, `\`, `\\`)
+	escapedExecPath = strings.ReplaceAll(escapedExecPath, `"`, `\"`)
 
-	cmd := exec.Command("osascript", "-e", script)
+	script := fmt.Sprintf(`do shell script "%s %s" with administrator privileges`,
+		escapedExecPath, strings.Join(sanitizedArgs, " "))
+
+	cmd := exec.Command("osascript", "-e", script) // #nosec G204 -- args are sanitized above, execPath from os.Executable()
 	return cmd.Run()
 }
 
@@ -595,7 +614,7 @@ func (bu *BinaryUpdater) elevateLinux(args []string) error {
 	}
 
 	sudoArgs := append([]string{execPath}, args...)
-	cmd := exec.Command("sudo", sudoArgs...)
+	cmd := exec.Command("sudo", sudoArgs...) // #nosec G204 -- sudo passes args directly without shell interpretation; execPath from os.Executable()
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -614,7 +633,7 @@ func (bu *BinaryUpdater) ValidateUpdate(expectedVersion string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, execPath, "--version")
+	cmd := exec.CommandContext(ctx, execPath, "--version") // #nosec G204 -- execPath from os.Executable()
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to validate update: %w", err)

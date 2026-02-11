@@ -4,11 +4,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/testing/owasp/examples"
 	"github.com/perplext/LLMrecon/src/testing/owasp"
+	"github.com/perplext/LLMrecon/src/testing/owasp/examples"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 func main() {
@@ -42,7 +44,7 @@ func main() {
 		}
 		
 		// Run vulnerability test
-		examples.RunCustomVulnerabilityTest(vulnerabilityType)
+		examples.RunCustomVulnerabilityTest(types.VulnerabilityType(vulnerabilityType))
 	case "provider":
 		// Validate provider type
 		if *providerPtr == "" {

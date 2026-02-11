@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package main is a template for implementing a new provider plugin.
 package main
 
@@ -139,9 +141,7 @@ func (p *CustomProvider) updateModels(ctx context.Context) error {
 func (p *CustomProvider) TextCompletion(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
 	// Execute with resilience
 	result, err := p.executeWithResilience(ctx, "TextCompletion", request, func(ctx context.Context) (interface{}, error) {
-if err != nil {
-treturn err
-}		return p.textCompletionFromAPI(ctx, request)
+		return p.textCompletionFromAPI(ctx, request)
 	})
 
 	if err != nil {
@@ -177,9 +177,7 @@ func (p *CustomProvider) textCompletionFromAPI(ctx context.Context, request *cor
 
 // ChatCompletion generates a chat completion
 func (p *CustomProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
-if err != nil {
-treturn err
-}	// Execute with resilience
+	// Execute with resilience
 	result, err := p.executeWithResilience(ctx, "ChatCompletion", request, func(ctx context.Context) (interface{}, error) {
 		return p.chatCompletionFromAPI(ctx, request)
 	})
@@ -221,9 +219,7 @@ func (p *CustomProvider) chatCompletionFromAPI(ctx context.Context, request *cor
 // StreamingChatCompletion generates a streaming chat completion
 func (p *CustomProvider) StreamingChatCompletion(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
 	// Set streaming flag
-if err != nil {
-treturn err
-}	request.Stream = true
+	request.Stream = true
 
 	// Execute with resilience
 	_, err := p.executeWithResilience(ctx, "StreamingChatCompletion", request, func(ctx context.Context) (interface{}, error) {
@@ -250,9 +246,7 @@ func (p *CustomProvider) streamingChatCompletionFromAPI(ctx context.Context, req
 				},
 				Index:        0,
 				FinishReason: "stop",
-if err != nil {
-treturn err
-}			},
+			},
 		},
 	}
 
@@ -260,9 +254,6 @@ treturn err
 	if err := callback(response); err != nil {
 		return fmt.Errorf("callback error: %w", err)
 	}
-if err != nil {
-treturn err
-}
 	return nil
 }
 
@@ -331,9 +322,7 @@ func (p *CustomProvider) handleErrorResponse(statusCode int, body []byte) error 
 
 // executeWithResilience executes a function with resilience
 func (p *CustomProvider) executeWithResilience(ctx context.Context, operation string, request interface{}, fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
-if err != nil {
-treturn err
-}	// Log request
+	// Log request
 	requestID := p.loggingMiddleware.LogRequest(ctx, p.GetType(), operation, request, nil)
 
 	// Record start time
@@ -349,9 +338,7 @@ treturn err
 
 		// Execute the function
 		return fn(ctx)
-if err != nil {
-treturn err
-}	}
+	}
 
 	// Create a function that executes with circuit breaker
 	circuitBreakerFn := func(ctx context.Context) (interface{}, error) {

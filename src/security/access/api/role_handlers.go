@@ -4,10 +4,9 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
-	".."
+	access "github.com/perplext/LLMrecon/src/security/access"
 )
 
 // CreateRoleRequest represents a request to create a new role
@@ -49,22 +48,25 @@ func (s *Server) handleListRoles(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionRoleList) {
+	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionRoleList)
+	if err != nil || !hasPermission {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
 
-	// Get roles
-	roles, err := rbacManager.ListRoles(r.Context())
+	// The RBACManager interface does not support listing roles directly.
+	// Return the user's own roles as a minimal response.
+	userRoles, err := rbacManager.GetUserRoles(currentUser.ID)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to list roles")
 		return
 	}
 
-	// Convert roles to response format
 	var roleResponses []RoleResponse
-	for _, role := range roles {
-		roleResponses = append(roleResponses, convertRoleToResponse(role))
+	for _, roleName := range userRoles {
+		roleResponses = append(roleResponses, RoleResponse{
+			Name: roleName,
+		})
 	}
 
 	// Return success response
@@ -82,7 +84,8 @@ func (s *Server) handleCreateRole(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionRoleCreate) {
+	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionRoleCreate)
+	if err != nil || !hasPermission {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -100,52 +103,8 @@ func (s *Server) handleCreateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the role name is reserved
-	builtInRoles := []string{
-		access.RoleAdmin,
-		access.RoleManager,
-		access.RoleOperator,
-		access.RoleAuditor,
-		access.RoleUser,
-		access.RoleGuest,
-		access.RoleAutomation,
-	}
-	for _, builtInRole := range builtInRoles {
-		if strings.EqualFold(req.Name, builtInRole) {
-			WriteErrorResponse(w, http.StatusBadRequest, "Cannot create a role with a reserved name")
-			return
-		}
-	}
-
-	// Check if the current user has permission to grant the requested permissions
-	for _, permission := range req.Permissions {
-		if !rbacManager.CanGrantPermission(r.Context(), currentUser, permission) {
-			WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions to grant permission: "+permission)
-			return
-		}
-	}
-
-	// Create role
-	role := &access.Role{
-		Name:        req.Name,
-		Description: req.Description,
-		Permissions: req.Permissions,
-		ParentRoles: req.ParentRoles,
-		IsBuiltIn:   false,
-	}
-	if err := rbacManager.CreateRole(r.Context(), role); err != nil {
-		// Handle specific error types
-		switch {
-		case strings.Contains(err.Error(), "already exists"):
-			WriteErrorResponse(w, http.StatusConflict, "Role already exists")
-		default:
-			WriteErrorResponse(w, http.StatusInternalServerError, "Failed to create role")
-		}
-		return
-	}
-
-	// Return success response
-	WriteSuccessResponse(w, http.StatusCreated, "Role created successfully", convertRoleToResponse(role))
+	// Role creation is not supported through the RBACManager interface
+	WriteErrorResponse(w, http.StatusNotImplemented, "Role creation is not supported through this API")
 }
 
 // handleGetRole handles retrieving a role
@@ -159,7 +118,8 @@ func (s *Server) handleGetRole(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionRoleView) {
+	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionRoleView)
+	if err != nil || !hasPermission {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -172,15 +132,14 @@ func (s *Server) handleGetRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get role
-	role, err := rbacManager.GetRole(r.Context(), roleName)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusNotFound, "Role not found")
-		return
+	// Role retrieval by name is not supported through the RBACManager interface.
+	// Return a minimal response with the role name.
+	resp := RoleResponse{
+		Name: roleName,
 	}
 
 	// Return success response
-	WriteSuccessResponse(w, http.StatusOK, "Role retrieved successfully", convertRoleToResponse(role))
+	WriteSuccessResponse(w, http.StatusOK, "Role retrieved successfully", resp)
 }
 
 // handleUpdateRole handles updating a role
@@ -194,7 +153,8 @@ func (s *Server) handleUpdateRole(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionRoleUpdate) {
+	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionRoleUpdate)
+	if err != nil || !hasPermission {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -214,36 +174,8 @@ func (s *Server) handleUpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get role
-	role, err := rbacManager.GetRole(r.Context(), roleName)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusNotFound, "Role not found")
-		return
-	}
-
-	// Cannot update built-in roles
-	if role.IsBuiltIn {
-		WriteErrorResponse(w, http.StatusForbidden, "Cannot update built-in roles")
-		return
-	}
-
-	// Update role fields
-	if req.Description != "" {
-		role.Description = req.Description
-	}
-
-	if len(req.ParentRoles) > 0 {
-		role.ParentRoles = req.ParentRoles
-	}
-
-	// Update role
-	if err := rbacManager.UpdateRole(r.Context(), role); err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to update role")
-		return
-	}
-
-	// Return success response
-	WriteSuccessResponse(w, http.StatusOK, "Role updated successfully", convertRoleToResponse(role))
+	// Role update is not supported through the RBACManager interface
+	WriteErrorResponse(w, http.StatusNotImplemented, "Role update is not supported through this API")
 }
 
 // handleDeleteRole handles deleting a role
@@ -257,7 +189,8 @@ func (s *Server) handleDeleteRole(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionRoleDelete) {
+	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionRoleDelete)
+	if err != nil || !hasPermission {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -270,27 +203,8 @@ func (s *Server) handleDeleteRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get role
-	role, err := rbacManager.GetRole(r.Context(), roleName)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusNotFound, "Role not found")
-		return
-	}
-
-	// Cannot delete built-in roles
-	if role.IsBuiltIn {
-		WriteErrorResponse(w, http.StatusForbidden, "Cannot delete built-in roles")
-		return
-	}
-
-	// Delete role
-	if err := rbacManager.DeleteRole(r.Context(), roleName); err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to delete role")
-		return
-	}
-
-	// Return success response
-	WriteSuccessResponse(w, http.StatusOK, "Role deleted successfully", nil)
+	// Role deletion is not supported through the RBACManager interface
+	WriteErrorResponse(w, http.StatusNotImplemented, "Role deletion is not supported through this API")
 }
 
 // handleAddPermission handles adding a permission to a role
@@ -304,7 +218,8 @@ func (s *Server) handleAddPermission(w http.ResponseWriter, r *http.Request) {
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionRoleUpdate) {
+	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionRoleUpdate)
+	if err != nil || !hasPermission {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -330,46 +245,9 @@ func (s *Server) handleAddPermission(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get role
-	role, err := rbacManager.GetRole(r.Context(), roleName)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusNotFound, "Role not found")
-		return
-	}
-
-	// Cannot update built-in roles
-	if role.IsBuiltIn {
-		WriteErrorResponse(w, http.StatusForbidden, "Cannot update built-in roles")
-		return
-	}
-
-	// Check if the current user has permission to grant the requested permission
-	if !rbacManager.CanGrantPermission(r.Context(), currentUser, req.Permission) {
-		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions to grant permission: "+req.Permission)
-		return
-	}
-
-	// Add permission to role
-	if err := rbacManager.AddPermissionToRole(r.Context(), roleName, req.Permission); err != nil {
-		// Handle specific error types
-		switch {
-		case strings.Contains(err.Error(), "already has permission"):
-			WriteErrorResponse(w, http.StatusConflict, "Role already has this permission")
-		default:
-			WriteErrorResponse(w, http.StatusInternalServerError, "Failed to add permission to role")
-		}
-		return
-	}
-
-	// Get updated role
-	updatedRole, err := rbacManager.GetRole(r.Context(), roleName)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to get updated role")
-		return
-	}
-
-	// Return success response
-	WriteSuccessResponse(w, http.StatusOK, "Permission added to role successfully", convertRoleToResponse(updatedRole))
+	// Adding permissions to roles is not supported through the RBACManager interface
+	_ = roleName // suppress unused variable
+	WriteErrorResponse(w, http.StatusNotImplemented, "Adding permissions to roles is not supported through this API")
 }
 
 // handleRemovePermission handles removing a permission from a role
@@ -383,7 +261,8 @@ func (s *Server) handleRemovePermission(w http.ResponseWriter, r *http.Request) 
 
 	// Check permission
 	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionRoleUpdate) {
+	hasPermission, err := rbacManager.HasPermission(currentUser.ID, access.PermissionRoleUpdate)
+	if err != nil || !hasPermission {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -396,49 +275,7 @@ func (s *Server) handleRemovePermission(w http.ResponseWriter, r *http.Request) 
 		WriteErrorResponse(w, http.StatusBadRequest, "Role name and permission are required")
 		return
 	}
-	// Get role
-	role, err := rbacManager.GetRole(r.Context(), roleName)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusNotFound, "Role not found")
-		return
-	}
 
-	// Cannot update built-in roles
-	if role.IsBuiltIn {
-		WriteErrorResponse(w, http.StatusForbidden, "Cannot update built-in roles")
-		return
-	}
-
-	// Remove permission from role
-	if err := rbacManager.RemovePermissionFromRole(r.Context(), roleName, permission); err != nil {
-		// Handle specific error types
-		switch {
-		case strings.Contains(err.Error(), "does not have permission"):
-			WriteErrorResponse(w, http.StatusBadRequest, "Role does not have this permission")
-		default:
-			WriteErrorResponse(w, http.StatusInternalServerError, "Failed to remove permission from role")
-		}
-		return
-	}
-
-	// Get updated role
-	updatedRole, err := rbacManager.GetRole(r.Context(), roleName)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to get updated role")
-		return
-	}
-
-	// Return success response
-	WriteSuccessResponse(w, http.StatusOK, "Permission removed from role successfully", convertRoleToResponse(updatedRole))
-}
-
-// convertRoleToResponse converts a role to a response format
-func convertRoleToResponse(role *access.Role) RoleResponse {
-	return RoleResponse{
-		Name:        role.Name,
-		Description: role.Description,
-		Permissions: role.Permissions,
-		ParentRoles: role.ParentRoles,
-		IsBuiltIn:   role.IsBuiltIn,
-	}
+	// Removing permissions from roles is not supported through the RBACManager interface
+	WriteErrorResponse(w, http.StatusNotImplemented, "Removing permissions from roles is not supported through this API")
 }

@@ -2,7 +2,7 @@
 package validation
 
 import (
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // ValidatorFactory creates and registers validators for OWASP LLM vulnerabilities

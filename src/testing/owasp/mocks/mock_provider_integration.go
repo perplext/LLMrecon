@@ -7,7 +7,7 @@ import (
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/fixtures"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // TestRunnerWithMockProviders is a test runner that uses mock providers for OWASP testing
@@ -15,7 +15,7 @@ type TestRunnerWithMockProviders struct {
 	// Factory for creating mock providers
 	ProviderFactory *MockProviderFactory
 	// Test fixtures for OWASP vulnerabilities
-	Fixtures map[types.VulnerabilityType][]fixtures.TestFixture
+	Fixtures map[types.VulnerabilityType]fixtures.TestFixtures
 	// Default provider type to use
 	DefaultProviderType core.ProviderType
 }
@@ -24,13 +24,13 @@ type TestRunnerWithMockProviders struct {
 func NewTestRunnerWithMockProviders() *TestRunnerWithMockProviders {
 	return &TestRunnerWithMockProviders{
 		ProviderFactory:     NewMockProviderFactory(),
-		Fixtures:            make(map[types.VulnerabilityType][]fixtures.TestFixture),
+		Fixtures:            make(map[types.VulnerabilityType]fixtures.TestFixtures),
 		DefaultProviderType: core.OpenAIProvider,
 	}
 }
 
 // RegisterFixtures registers test fixtures for a vulnerability type
-func (r *TestRunnerWithMockProviders) RegisterFixtures(vulnerabilityType types.VulnerabilityType, fixturesList []fixtures.TestFixture) {
+func (r *TestRunnerWithMockProviders) RegisterFixtures(vulnerabilityType types.VulnerabilityType, fixturesList fixtures.TestFixtures) {
 	r.Fixtures[vulnerabilityType] = fixturesList
 }
 
@@ -40,7 +40,7 @@ func (r *TestRunnerWithMockProviders) RegisterAllFixtures() {
 	r.RegisterFixtures(types.PromptInjectionVulnerability, fixtures.GetPromptInjectionFixtures())
 	r.RegisterFixtures(types.InsecureOutputHandlingVulnerability, fixtures.GetInsecureOutputFixtures())
 	r.RegisterFixtures(types.TrainingDataPoisoningVulnerability, fixtures.GetTrainingDataPoisoningFixtures())
-	r.RegisterFixtures(types.ModelDenialOfServiceVulnerability, fixtures.GetModelDosFixtures())
+	r.RegisterFixtures(types.ModelDenialOfServiceVulnerability, fixtures.GetModelDoSFixtures())
 	r.RegisterFixtures(types.SupplyChainVulnerabilityType, fixtures.GetSupplyChainFixtures())
 	r.RegisterFixtures(types.SensitiveInfoDisclosureVulnerability, fixtures.GetSensitiveInfoDisclosureFixtures())
 	r.RegisterFixtures(types.InsecurePluginDesignVulnerability, fixtures.GetInsecurePluginFixtures())
@@ -65,7 +65,7 @@ func (r *TestRunnerWithMockProviders) SetupMockProvidersForVulnerability(vulnera
 
 	// Set up test case responses for each fixture
 	for _, fixture := range fixturesList {
-		for providerType, provider := range r.ProviderFactory.GetAllProviders() {
+		for _, provider := range r.ProviderFactory.GetAllProviders() {
 			// Get existing responses or create new map
 			responses := make(map[string]string)
 			for testCaseID, response := range provider.(*BaseMockProviderImpl).config.VulnerableResponses {
@@ -84,7 +84,7 @@ func (r *TestRunnerWithMockProviders) SetupMockProvidersForVulnerability(vulnera
 // createVulnerabilityBehaviorFromFixtures creates a vulnerability behavior based on fixtures
 func (r *TestRunnerWithMockProviders) createVulnerabilityBehaviorFromFixtures(
 	vulnerabilityType types.VulnerabilityType,
-	fixturesList []fixtures.TestFixture,
+	fixturesList fixtures.TestFixtures,
 ) *VulnerabilityBehavior {
 	// Extract response patterns and trigger phrases from fixtures
 	var responsePatterns []string
@@ -128,7 +128,7 @@ func (r *TestRunnerWithMockProviders) createVulnerabilityBehaviorFromFixtures(
 // RunTest runs a test for a specific fixture
 func (r *TestRunnerWithMockProviders) RunTest(
 	ctx context.Context,
-	fixture fixtures.TestFixture,
+	fixture *fixtures.TestFixture,
 	providerType core.ProviderType,
 ) (*TestResult, error) {
 	// Get provider
@@ -166,7 +166,7 @@ func (r *TestRunnerWithMockProviders) RunTest(
 func (r *TestRunnerWithMockProviders) runAttackVector(
 	ctx context.Context,
 	provider MockProvider,
-	fixture fixtures.TestFixture,
+	fixture *fixtures.TestFixture,
 	vector fixtures.AttackVector,
 ) (*AttackResult, error) {
 	// Create chat request

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,6 +14,9 @@ import (
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+// validTableName matches only alphanumeric characters and underscores
+var validTableName = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 
 // DatabaseType represents the type of database
 type DatabaseType string
@@ -118,6 +122,11 @@ func parseDatabaseURL(urlStr string) (DatabaseType, string, string, error) {
 	if idx := strings.LastIndex(connStrAndTable, "#"); idx != -1 {
 		tableName = connStrAndTable[idx+1:]
 		connStrAndTable = connStrAndTable[:idx]
+	}
+
+	// Validate table name to prevent SQL injection
+	if !validTableName.MatchString(tableName) {
+		return "", "", "", fmt.Errorf("invalid table name: %q (must be alphanumeric with underscores)", tableName)
 	}
 
 	return dbType, tableName, connStrAndTable, nil

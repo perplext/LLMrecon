@@ -80,7 +80,7 @@ func (hdm *HistoricalDataManager) Archive(ctx context.Context) error {
 
 	for dataType, policy := range hdm.policies {
 		if err := hdm.archiveDataType(ctx, dataType, policy); err != nil {
-			hdm.logger.Error("Failed to archive data type", "dataType", dataType, "error", err)
+			hdm.logger.Error(fmt.Sprintf("Failed to archive data type %s", dataType), err)
 			continue
 		}
 	}
@@ -98,7 +98,7 @@ func (hdm *HistoricalDataManager) GetHistoricalData(ctx context.Context, metricN
 	// Get data from primary storage (hot data)
 	hotData, err := hdm.storage.GetMetricsByNameAndTimeRange(ctx, metricName, timeRange.Start, timeRange.End)
 	if err != nil {
-		hdm.logger.Warn("Failed to get hot data", "error", err)
+		hdm.logger.Warn(fmt.Sprintf("Failed to get hot data: %v", err))
 	} else {
 		allMetrics = append(allMetrics, hotData...)
 	}
@@ -106,7 +106,7 @@ func (hdm *HistoricalDataManager) GetHistoricalData(ctx context.Context, metricN
 	// Get data from archive storage (cold data)
 	coldData, err := hdm.getArchivedData(ctx, metricName, timeRange)
 	if err != nil {
-		hdm.logger.Warn("Failed to get cold data", "error", err)
+		hdm.logger.Warn(fmt.Sprintf("Failed to get cold data: %v", err))
 	} else {
 		allMetrics = append(allMetrics, coldData...)
 	}
@@ -124,7 +124,7 @@ func (hdm *HistoricalDataManager) GetRetentionStatus(ctx context.Context) (map[s
 	for dataType, policy := range hdm.policies {
 		retentionStatus, err := hdm.calculateRetentionStatus(ctx, dataType, policy)
 		if err != nil {
-			hdm.logger.Error("Failed to calculate retention status", "dataType", dataType, "error", err)
+			hdm.logger.Error(fmt.Sprintf("Failed to calculate retention status for %s", dataType), err)
 			continue
 		}
 		status[dataType] = retentionStatus
@@ -136,7 +136,7 @@ func (hdm *HistoricalDataManager) GetRetentionStatus(ctx context.Context) (map[s
 // SetRetentionPolicy sets a custom retention policy
 func (hdm *HistoricalDataManager) SetRetentionPolicy(dataType string, policy RetentionPolicy) {
 	hdm.policies[dataType] = policy
-	hdm.logger.Info("Set retention policy", "dataType", dataType, "policy", policy)
+	hdm.logger.Info(fmt.Sprintf("Set retention policy for %s", dataType))
 }
 
 // Cleanup removes expired data according to retention policies
@@ -145,7 +145,7 @@ func (hdm *HistoricalDataManager) Cleanup(ctx context.Context) error {
 
 	for dataType, policy := range hdm.policies {
 		if err := hdm.cleanupDataType(ctx, dataType, policy); err != nil {
-			hdm.logger.Error("Failed to cleanup data type", "dataType", dataType, "error", err)
+			hdm.logger.Error(fmt.Sprintf("Failed to cleanup data type %s", dataType), err)
 			continue
 		}
 	}
@@ -211,10 +211,10 @@ func (hdm *HistoricalDataManager) archiveDataType(ctx context.Context, dataType 
 
 	// Remove from primary storage
 	if err := hdm.storage.DeleteMetricsByTimeRange(ctx, time.Time{}, cutoffTime); err != nil {
-		hdm.logger.Warn("Failed to delete archived metrics from primary storage", "error", err)
+		hdm.logger.Warn(fmt.Sprintf("Failed to delete archived metrics from primary storage: %v", err))
 	}
 
-	hdm.logger.Info("Archived data", "dataType", dataType, "count", len(oldMetrics), "path", archivePath)
+	hdm.logger.Info(fmt.Sprintf("Archived %d records of type %s to %s", len(oldMetrics), dataType, archivePath))
 
 	return nil
 }
@@ -235,7 +235,7 @@ func (hdm *HistoricalDataManager) getArchivedData(ctx context.Context, metricNam
 		if hdm.overlapsTimeRange(archive, timeRange) {
 			metrics, err := hdm.archiver.Retrieve(ctx, archive.Path, timeRange)
 			if err != nil {
-				hdm.logger.Warn("Failed to retrieve from archive", "path", archive.Path, "error", err)
+				hdm.logger.Warn(fmt.Sprintf("Failed to retrieve from archive %s: %v", archive.Path, err))
 				continue
 			}
 			allMetrics = append(allMetrics, metrics...)
@@ -280,7 +280,7 @@ func (hdm *HistoricalDataManager) cleanupDataType(ctx context.Context, dataType 
 	for _, archive := range archives {
 		if archive.EndTime.Before(deletionCutoff) {
 			if err := hdm.archiver.Delete(ctx, archive.Path); err != nil {
-				hdm.logger.Warn("Failed to delete archive", "path", archive.Path, "error", err)
+				hdm.logger.Warn(fmt.Sprintf("Failed to delete archive %s: %v", archive.Path, err))
 				continue
 			}
 			deletedCount++
@@ -288,7 +288,7 @@ func (hdm *HistoricalDataManager) cleanupDataType(ctx context.Context, dataType 
 	}
 
 	if deletedCount > 0 {
-		hdm.logger.Info("Deleted expired archives", "dataType", dataType, "count", deletedCount)
+		hdm.logger.Info(fmt.Sprintf("Deleted %d expired archives for %s", deletedCount, dataType))
 	}
 
 	return nil
@@ -327,13 +327,13 @@ type FileSystemArchiver struct {
 
 func (fsa *FileSystemArchiver) Archive(ctx context.Context, data []Metric, archivePath string) error {
 	// Mock implementation - would actually write to filesystem
-	fsa.logger.Info("Archiving data to filesystem", "path", archivePath, "count", len(data))
+	fsa.logger.Info(fmt.Sprintf("Archiving %d records to filesystem at %s", len(data), archivePath))
 	return nil
 }
 
 func (fsa *FileSystemArchiver) Retrieve(ctx context.Context, archivePath string, timeRange TimeWindow) ([]Metric, error) {
 	// Mock implementation - would actually read from filesystem
-	fsa.logger.Info("Retrieving data from archive", "path", archivePath)
+	fsa.logger.Info(fmt.Sprintf("Retrieving data from archive %s", archivePath))
 	return []Metric{}, nil
 }
 
@@ -344,7 +344,7 @@ func (fsa *FileSystemArchiver) List(ctx context.Context, pattern string) ([]Arch
 
 func (fsa *FileSystemArchiver) Delete(ctx context.Context, archivePath string) error {
 	// Mock implementation - would actually delete file
-	fsa.logger.Info("Deleting archive", "path", archivePath)
+	fsa.logger.Info(fmt.Sprintf("Deleting archive %s", archivePath))
 	return nil
 }
 

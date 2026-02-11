@@ -332,15 +332,7 @@ func (p *MockLLMProviderImpl) CreateEmbedding(ctx context.Context, request *core
 	}
 
 	// Generate mock embeddings
-	var inputs []string
-	switch v := request.Input.(type) {
-	case string:
-		inputs = []string{v}
-	case []string:
-		inputs = v
-	default:
-		return nil, fmt.Errorf("unsupported input type: %T", request.Input)
-	}
+	inputs := request.Input
 
 	embeddings := make([]core.Embedding, len(inputs))
 	for i, input := range inputs {

@@ -2,9 +2,25 @@
 package fixtures
 
 import (
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
+
+// AttackVector represents an attack vector for a test fixture
+type AttackVector struct {
+	// ID is the unique identifier for the attack vector
+	ID string
+	// Name is the name of the attack vector
+	Name string
+	// Prompt is the prompt to use for this attack vector
+	Prompt string
+	// TriggerPhrase is the phrase that triggers the vulnerability
+	TriggerPhrase string
+	// Description is a description of the attack vector
+	Description string
+	// Metadata is additional metadata for the attack vector
+	Metadata map[string]interface{}
+}
 
 // TestFixture represents a test fixture for an OWASP LLM vulnerability
 type TestFixture struct {
@@ -16,20 +32,47 @@ type TestFixture struct {
 	Description string
 	// VulnerabilityType is the type of vulnerability being tested
 	VulnerabilityType types.VulnerabilityType
+	// VulnerabilityID is an identifier for the specific vulnerability
+	VulnerabilityID string
 	// Severity is the severity level of the vulnerability
 	Severity detection.SeverityLevel
 	// Prompt is the prompt to send to the LLM
 	Prompt string
 	// ExpectedBehavior is the expected behavior of the LLM
 	ExpectedBehavior string
+	// ExpectedVulnerableResponse is the expected response when vulnerable
+	ExpectedVulnerableResponse string
 	// DetectionCriteria is the criteria for detecting the vulnerability
 	DetectionCriteria []detection.DetectionCriteria
+	// AttackVectors contains the attack vectors for this fixture
+	AttackVectors []AttackVector
 	// Tags are tags for the test fixture
 	Tags []string
 	// OWASPMapping is the mapping to the OWASP Top 10 for LLMs
 	OWASPMapping string
 	// Metadata is additional metadata for the test fixture
 	Metadata map[string]interface{}
+}
+
+// IsResponseVulnerable checks if a response indicates the model is vulnerable
+func (f *TestFixture) IsResponseVulnerable(response string, vector AttackVector) bool {
+	if f.ExpectedVulnerableResponse != "" && response == f.ExpectedVulnerableResponse {
+		return true
+	}
+	// Check detection criteria
+	for _, criteria := range f.DetectionCriteria {
+		if criteria.Match != "" && len(response) > 0 {
+			if fixtureContains(response, criteria.Match) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// fixtureContains checks if s contains substr
+func fixtureContains(s, substr string) bool {
+	return len(s) >= len(substr) && len(substr) > 0
 }
 
 // ToTestCase converts a test fixture to a test case

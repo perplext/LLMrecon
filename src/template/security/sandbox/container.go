@@ -204,9 +204,9 @@ echo "Done."
 	// Create the command
 	switch s.containerEngine {
 	case "docker":
-		cmd = exec.CommandContext(ctx, "docker", args...)
+		cmd = exec.CommandContext(ctx, "docker", args...) // #nosec G204 -- engine validated by switch, args constructed from validated config
 	case "podman":
-		cmd = exec.CommandContext(ctx, "podman", args...)
+		cmd = exec.CommandContext(ctx, "podman", args...) // #nosec G204 -- engine validated by switch, args constructed from validated config
 	default:
 		return nil, fmt.Errorf("unsupported container engine: %s", s.containerEngine)
 	}

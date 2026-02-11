@@ -10,7 +10,7 @@ import (
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/fixtures"
 	"github.com/perplext/LLMrecon/src/testing/owasp/mocks"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // RunMockProviderExample demonstrates how to use mock providers for OWASP testing
@@ -93,7 +93,7 @@ func RunCustomVulnerabilityTest(vulnerabilityType types.VulnerabilityType) {
 	case types.TrainingDataPoisoningVulnerability:
 		runner.RegisterFixtures(vulnerabilityType, fixtures.GetTrainingDataPoisoningFixtures())
 	case types.ModelDenialOfServiceVulnerability:
-		runner.RegisterFixtures(vulnerabilityType, fixtures.GetModelDosFixtures())
+		runner.RegisterFixtures(vulnerabilityType, fixtures.GetModelDoSFixtures())
 	case types.SupplyChainVulnerabilityType:
 		runner.RegisterFixtures(vulnerabilityType, fixtures.GetSupplyChainFixtures())
 	case types.SensitiveInfoDisclosureVulnerability:
@@ -210,7 +210,7 @@ func RunCustomProviderTest(providerType core.ProviderType) {
 	}
 
 	// Print usage metrics
-	metrics := provider.(*mocks.BaseMockProviderImpl).GetUsageMetrics(provider.GetConfig().DefaultModel)
+	metrics, _ := provider.(*mocks.BaseMockProviderImpl).GetUsageMetrics(provider.GetConfig().DefaultModel)
 	fmt.Printf("Usage Metrics:\n")
 	fmt.Printf("  Requests: %d\n", metrics.Requests)
 	fmt.Printf("  Tokens: %d\n", metrics.Tokens)

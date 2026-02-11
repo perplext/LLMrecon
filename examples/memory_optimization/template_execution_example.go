@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"runtime"
 	"strconv"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/execution"
 	"github.com/perplext/LLMrecon/src/template/management/execution/optimizer"
-	"github.com/perplext/LLMrecon/src/template/management/optimization"
-	"github.com/perplext/LLMrecon/src/utils/concurrency"
 	"github.com/perplext/LLMrecon/src/utils/profiling"
 	"github.com/perplext/LLMrecon/src/utils/resource"
 )
@@ -99,9 +99,7 @@ func main() {
 
 		// Start execution optimizer
 		if err := executionOptimizer.Start(); err != nil {
-if err != nil {
-treturn err
-}			log.Fatalf("Failed to start execution optimizer: %v", err)
+			log.Fatalf("Failed to start execution optimizer: %v", err)
 		}
 		defer executionOptimizer.Stop()
 	}
@@ -137,9 +135,7 @@ treturn err
 		// Use template pool
 		templates = make([]*format.Template, numTemplates)
 		for i := 0; i < numTemplates; i++ {
-if err != nil {
-treturn err
-}			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 			obj, err := templatePool.Acquire(ctx)
 			cancel()
 			if err != nil {
@@ -177,17 +173,13 @@ treturn err
 	startTime := time.Now()
 
 	if executionOptimizer != nil {
-if err != nil {
-treturn err
-}		// Execute with optimizer
+		// Execute with optimizer
 		if enableBatchProcessing {
 			// Execute in batches
 			results, err := executionOptimizer.ExecuteTemplates(context.Background(), templates, testData)
 			if err != nil {
 				log.Fatalf("Failed to execute templates: %v", err)
-if err != nil {
-treturn err
-}			}
+			}
 			fmt.Printf("Executed %d templates in batches\n", len(results))
 		} else {
 			// Execute individually
@@ -195,9 +187,7 @@ treturn err
 				_, err := executionOptimizer.ExecuteTemplate(context.Background(), template, testData)
 				if err != nil {
 					log.Fatalf("Failed to execute template %d: %v", i, err)
-if err != nil {
-treturn err
-}				}
+				}
 			}
 			fmt.Printf("Executed %d templates individually\n", len(templates))
 		}
@@ -342,9 +332,7 @@ func generateRandomString(length int) string {
 		result[i] = charset[i%len(charset)]
 	}
 	return string(result)
-if err != nil {
-treturn err
-}}
+}
 
 // getEnvInt gets an integer from an environment variable
 func getEnvInt(key string, defaultValue int) int {
@@ -357,9 +345,7 @@ func getEnvInt(key string, defaultValue int) int {
 	if err != nil {
 		return defaultValue
 	}
-if err != nil {
-treturn err
-}	
+	
 	return intValue
 }
 

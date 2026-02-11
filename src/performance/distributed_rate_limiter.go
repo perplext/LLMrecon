@@ -529,7 +529,8 @@ func (d *DistributedRateLimiter) updateMetrics() {
 
 // Lua scripts for atomic operations
 
-const tokenBucketScript = ` // #nosec G101 - Lua script, not a credential
+// #nosec G101 -- Lua script variable name, not a credential
+const tokenBucketScript = `
 local key = KEYS[1]
 local limit = tonumber(ARGV[1])
 local window = tonumber(ARGV[2])

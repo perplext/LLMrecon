@@ -1,9 +1,13 @@
+//go:build ignore
+
 package main
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/reporting"
 )
@@ -28,26 +32,18 @@ func main() {
 	// Parse test suite
 	var suite reporting.TestSuite
 	if err := json.Unmarshal(suiteData, &suite); err != nil {
-if err != nil {
-treturn err
-}		fmt.Printf("Error parsing test suite file: %v\n", err)
+		fmt.Printf("Error parsing test suite file: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Create output directory
-if err != nil {
-treturn err
-}	outputDir := "reports"
+	outputDir := "reports"
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		fmt.Printf("Error creating output directory: %v\n", err)
 		os.Exit(1)
 	}
-if err != nil {
-treturn err
-}
-	// Create factory and report generator
-	factory := reporting.NewFormatterFactory()
-	generator, err := factory.CreateDefaultReportGenerator()
+	// Create report generator
+	generator, err := reporting.CreateDefaultReportGenerator()
 	if err != nil {
 		fmt.Printf("Error creating report generator: %v\n", err)
 		os.Exit(1)
@@ -89,9 +85,7 @@ treturn err
 			OutputPath:         outputFile,
 			Metadata: map[string]interface{}{
 				"generated_by":    "example script",
-if err != nil {
-treturn err
-}				"source_file":     testSuiteFile,
+				"source_file":     testSuiteFile,
 			},
 		}
 

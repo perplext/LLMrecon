@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -346,7 +347,8 @@ func extractFile(file *zip.File, outputDir string) error {
 	return err
 }
 
-// isWithinDir checks if a path is within a directory
+// isWithinDir checks if a path is within a directory using filepath.Rel
+// to avoid the deprecated filepath.HasPrefix and prevent zip slip attacks
 func isWithinDir(dir, path string) bool {
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
@@ -358,7 +360,13 @@ func isWithinDir(dir, path string) bool {
 		return false
 	}
 
-	return absPath == absDir || filepath.HasPrefix(absPath, absDir+string(filepath.Separator))
+	// Use Rel to compute relative path; if it starts with ".." it escapes the directory
+	rel, err := filepath.Rel(absDir, absPath)
+	if err != nil {
+		return false
+	}
+
+	return !strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel)
 }
 
 // GetContentPath returns the path to a content item in the bundle

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // GeminiMockProvider is a mock implementation of the Google Gemini provider
@@ -158,9 +158,9 @@ func (p *GeminiMockProvider) ChatCompletion(ctx context.Context, request *core.C
 				},
 			},
 			Usage: &core.TokenUsage{
-				PromptTokens:     int64(p.estimateTokenCountForMessages(request.Messages)),
+				PromptTokens:     p.estimateTokenCountForMessages(request.Messages),
 				CompletionTokens: 35,
-				TotalTokens:      int64(p.estimateTokenCountForMessages(request.Messages)) + 35,
+				TotalTokens:      p.estimateTokenCountForMessages(request.Messages) + 35,
 			},
 		}, nil
 	}
@@ -249,9 +249,9 @@ func (p *GeminiMockProvider) generateMultimodalResponse(request *core.ChatComple
 			},
 		},
 		Usage: &core.TokenUsage{
-			PromptTokens:     int64(p.estimateTokenCountForMessages(request.Messages)) + 500, // Add tokens for image
+			PromptTokens:     p.estimateTokenCountForMessages(request.Messages) + 500, // Add tokens for image
 			CompletionTokens: 100,
-			TotalTokens:      int64(p.estimateTokenCountForMessages(request.Messages)) + 600,
+			TotalTokens:      p.estimateTokenCountForMessages(request.Messages) + 600,
 		},
 	}, nil
 }

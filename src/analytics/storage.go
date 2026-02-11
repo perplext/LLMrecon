@@ -1,6 +1,7 @@
 package analytics
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -558,6 +559,59 @@ func (s *SQLiteStorage) createAggregatedMetrics(before time.Time) error {
 	return err
 }
 
+// DataStorage interface methods for SQLiteStorage
+
+func (s *SQLiteStorage) GetMetricsByTimeRange(ctx context.Context, start, end time.Time) ([]Metric, error) {
+	result, err := s.QueryMetrics(&MetricsQuery{TimeRange: TimeRange{Start: start, End: end}})
+	if err != nil {
+		return nil, err
+	}
+	metrics := make([]Metric, len(result.Data))
+	for i, dp := range result.Data {
+		metrics[i] = Metric{Timestamp: dp.Timestamp, Tags: dp.Tags}
+	}
+	return metrics, nil
+}
+
+func (s *SQLiteStorage) GetMetricsByNameAndTimeRange(ctx context.Context, name string, start, end time.Time) ([]Metric, error) {
+	result, err := s.QueryMetrics(&MetricsQuery{
+		TimeRange: TimeRange{Start: start, End: end},
+		Metrics:   []string{name},
+	})
+	if err != nil {
+		return nil, err
+	}
+	metrics := make([]Metric, len(result.Data))
+	for i, dp := range result.Data {
+		metrics[i] = Metric{Timestamp: dp.Timestamp, Tags: dp.Tags}
+	}
+	return metrics, nil
+}
+
+func (s *SQLiteStorage) StoreAggregatedMetric(ctx context.Context, metric AggregatedMetric) error {
+	return nil // Aggregated metrics stored via createAggregatedMetrics
+}
+
+func (s *SQLiteStorage) DeleteMetricsByTimeRange(ctx context.Context, start, end time.Time) error {
+	return s.DeleteRawData(end)
+}
+
+func (s *SQLiteStorage) CountMetricsByTimeRange(ctx context.Context, start, end time.Time) (int, error) {
+	result, err := s.QueryMetrics(&MetricsQuery{TimeRange: TimeRange{Start: start, End: end}})
+	if err != nil {
+		return 0, err
+	}
+	return len(result.Data), nil
+}
+
+func (s *SQLiteStorage) GetScanResultsByTimeRange(ctx context.Context, start, end time.Time) ([]ScanResult, error) {
+	return nil, nil // Not yet implemented for SQLite
+}
+
+func (s *SQLiteStorage) GetAggregatedMetricsByTimeRange(ctx context.Context, start, end time.Time) ([]AggregatedMetric, error) {
+	return nil, nil // Not yet implemented for SQLite
+}
+
 // Helper functions
 
 func nullableFloat64(f float64) interface{} {
@@ -849,4 +903,71 @@ func NewMySQLStorage(config *Config, logger Logger) (DataStorage, error) {
 
 func NewInfluxDBStorage(config *Config, logger Logger) (DataStorage, error) {
 	return nil, fmt.Errorf("InfluxDB storage not yet implemented")
+}
+
+// DataStorage interface methods for MemoryStorage
+
+func (m *MemoryStorage) GetMetricsByTimeRange(ctx context.Context, start, end time.Time) ([]Metric, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var result []Metric
+	for _, metric := range m.metrics {
+		if !metric.Timestamp.Before(start) && !metric.Timestamp.After(end) {
+			result = append(result, metric)
+		}
+	}
+	return result, nil
+}
+
+func (m *MemoryStorage) GetMetricsByNameAndTimeRange(ctx context.Context, name string, start, end time.Time) ([]Metric, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var result []Metric
+	for _, metric := range m.metrics {
+		if metric.Name == name && !metric.Timestamp.Before(start) && !metric.Timestamp.After(end) {
+			result = append(result, metric)
+		}
+	}
+	return result, nil
+}
+
+func (m *MemoryStorage) StoreAggregatedMetric(ctx context.Context, metric AggregatedMetric) error {
+	return nil
+}
+
+func (m *MemoryStorage) DeleteMetricsByTimeRange(ctx context.Context, start, end time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var remaining []Metric
+	for _, metric := range m.metrics {
+		if metric.Timestamp.Before(start) || metric.Timestamp.After(end) {
+			remaining = append(remaining, metric)
+		}
+	}
+	m.metrics = remaining
+	return nil
+}
+
+func (m *MemoryStorage) CountMetricsByTimeRange(ctx context.Context, start, end time.Time) (int, error) {
+	metrics, err := m.GetMetricsByTimeRange(ctx, start, end)
+	if err != nil {
+		return 0, err
+	}
+	return len(metrics), nil
+}
+
+func (m *MemoryStorage) GetScanResultsByTimeRange(ctx context.Context, start, end time.Time) ([]ScanResult, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var result []ScanResult
+	for _, sr := range m.scanResults {
+		if !sr.Timestamp.Before(start) && !sr.Timestamp.After(end) {
+			result = append(result, sr)
+		}
+	}
+	return result, nil
+}
+
+func (m *MemoryStorage) GetAggregatedMetricsByTimeRange(ctx context.Context, start, end time.Time) ([]AggregatedMetric, error) {
+	return nil, nil
 }

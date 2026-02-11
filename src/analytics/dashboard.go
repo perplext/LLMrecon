@@ -2,7 +2,6 @@ package analytics
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -289,6 +288,27 @@ func NewDashboardEngine(config *Config, storage DataStorage, trendAnalyzer *Tren
 	go engine.processUpdates()
 
 	return engine
+}
+
+// Start starts the dashboard engine
+func (de *DashboardEngine) Start(ctx context.Context, storage DataStorage) error {
+	de.storage = storage
+	return nil
+}
+
+// Stop stops the dashboard engine
+func (de *DashboardEngine) Stop() error {
+	de.Shutdown()
+	return nil
+}
+
+// GenerateDashboard generates a dashboard for the given time range
+func (de *DashboardEngine) GenerateDashboard(timeRange TimeRange) (*Dashboard, error) {
+	// Return the first available dashboard or create a default one
+	for _, dashboard := range de.dashboards {
+		return dashboard, nil
+	}
+	return de.CreateDashboard("Default", "Auto-generated dashboard", "system")
 }
 
 // CreateDashboard creates a new dashboard
@@ -613,7 +633,7 @@ func (de *DashboardEngine) sendUpdate(update DashboardUpdate) {
 	case de.updateChannel <- update:
 		// Update sent successfully
 	default:
-		de.logger.Warn("Update channel full, dropping update", "dashboardID", update.DashboardID)
+		de.logger.Warn(fmt.Sprintf("Update channel full, dropping update dashboardID=%s", update.DashboardID))
 	}
 }
 
@@ -624,9 +644,7 @@ func (de *DashboardEngine) processUpdates() {
 		for _, subscriber := range subscribers {
 			go func(sub DashboardSubscriber) {
 				if err := sub.OnDashboardUpdate(update); err != nil {
-					de.logger.Error("Failed to send update to subscriber",
-						"subscriberID", sub.GetSubscriptionID(),
-						"error", err)
+					de.logger.Error(fmt.Sprintf("Failed to send update to subscriber subscriberID=%s", sub.GetSubscriptionID()), err)
 				}
 			}(subscriber)
 		}
