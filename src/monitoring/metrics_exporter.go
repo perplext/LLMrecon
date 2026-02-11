@@ -168,7 +168,7 @@ func (m *MetricsExporter) servePrometheusMetrics(w http.ResponseWriter, r *http.
 }
 func (m *MetricsExporter) serveJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(m.GetMetrics()) // Best effort, headers already sent
+	_ = json.NewEncoder(w).Encode(m.GetMetrics()) // #nosec G104 -- HTTP response write error is non-actionable
 
 	// serveStatus serves a simple health status
 }

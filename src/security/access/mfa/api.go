@@ -240,7 +240,7 @@ func (h *MFAHandler) GetMFASettingsHandler(w http.ResponseWriter, r *http.Reques
 
 	// Return MFA settings
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(settings) // Best effort, headers already sent
+	_ = json.NewEncoder(w).Encode(settings) // #nosec G104 -- HTTP response write error is non-actionable
 }
 
 // Helper function to get session from request

@@ -325,7 +325,7 @@ func exportAuditLogsToJSON(w http.ResponseWriter, logs []*access.AuditLog) {
 	}
 
 	// Write JSON
-	_ = json.NewEncoder(w).Encode(logResponses) // Best effort, headers already sent
+	_ = json.NewEncoder(w).Encode(logResponses) // #nosec G104 -- HTTP response write error is non-actionable
 }
 
 // convertAuditLogToResponse converts an audit log to a response format

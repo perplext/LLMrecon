@@ -112,7 +112,7 @@ func (h *MFAHandler) handleMFAStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response) // #nosec G104 -- HTTP response write error is non-actionable
 }
 
 // handleEnableMFA handles the enable MFA endpoint
@@ -173,7 +173,7 @@ func (h *MFAHandler) handleEnableMFA(w http.ResponseWriter, r *http.Request) {
 
 	// Send success response
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"success": true}`))
+	_, _ = w.Write([]byte(`{"success": true}`)) // #nosec G104 -- HTTP response write error is non-actionable
 }
 
 // handleDisableMFA handles the disable MFA endpoint
@@ -208,7 +208,7 @@ func (h *MFAHandler) handleDisableMFA(w http.ResponseWriter, r *http.Request) {
 
 	// Send success response
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"success": true}`))
+	_, _ = w.Write([]byte(`{"success": true}`)) // #nosec G104 -- HTTP response write error is non-actionable
 }
 
 // handleVerifyMFA handles the verify MFA endpoint
@@ -244,7 +244,7 @@ func (h *MFAHandler) handleVerifyMFA(w http.ResponseWriter, r *http.Request) {
 
 	// Send success response
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"success": true}`))
+	_, _ = w.Write([]byte(`{"success": true}`)) // #nosec G104 -- HTTP response write error is non-actionable
 }
 
 // handleTOTPSetup handles the TOTP setup endpoint
@@ -301,7 +301,7 @@ func (h *MFAHandler) handleTOTPVerify(w http.ResponseWriter, r *http.Request) {
 
 	// Send success response
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"success": true}`))
+	_, _ = w.Write([]byte(`{"success": true}`)) // #nosec G104 -- HTTP response write error is non-actionable
 }
 
 // handleGenerateBackupCodes handles the generate backup codes endpoint
@@ -447,7 +447,7 @@ func (h *MFAHandler) handleSMSVerify(w http.ResponseWriter, r *http.Request) {
 
 	// Send success response
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"success": true}`))
+	_, _ = w.Write([]byte(`{"success": true}`)) // #nosec G104 -- HTTP response write error is non-actionable
 }
 
 // Helper functions
