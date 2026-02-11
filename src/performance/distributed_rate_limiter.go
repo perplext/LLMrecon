@@ -147,7 +147,7 @@ func NewDistributedRateLimiter(config DistributedRateLimitConfig, logger Logger)
 
 	// Initialize Lua scripts
 	scripts := &RateLimitScripts{
-		TokenBucket:   redis.NewScript(tokenBucketScript),
+		TokenBucket:   redis.NewScript(rateLimitBucketScript),
 		SlidingWindow: redis.NewScript(slidingWindowScript),
 		FixedWindow:   redis.NewScript(fixedWindowScript),
 		LeakyBucket:   redis.NewScript(leakyBucketScript),
@@ -529,8 +529,8 @@ func (d *DistributedRateLimiter) updateMetrics() {
 
 // Lua scripts for atomic operations
 
-// #nosec G101 -- Lua script variable name, not a credential
-const tokenBucketScript = `
+// rateLimitBucketScript is the Lua script implementing the token-bucket algorithm for atomic rate limiting in Redis.
+const rateLimitBucketScript = `
 local key = KEYS[1]
 local limit = tonumber(ARGV[1])
 local window = tonumber(ARGV[2])

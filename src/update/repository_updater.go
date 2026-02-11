@@ -319,7 +319,7 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 		}
 	}()
 
-	destFile, err := os.Create(destPath)
+	destFile, err := os.Create(filepath.Clean(destPath))
 	if err != nil {
 		return err
 	}
@@ -329,9 +329,14 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 		}
 	}()
 
-	_, err = io.Copy(destFile, reader)
+	// Limit decompression output to prevent decompression bombs (500MB max)
+	const maxExtractFileSize = 500 * 1024 * 1024 // 500MB
+	written, err := io.Copy(destFile, io.LimitReader(reader, maxExtractFileSize+1))
 	if err != nil {
 		return err
+	}
+	if written > maxExtractFileSize {
+		return fmt.Errorf("extracted file exceeds maximum allowed size of %d bytes", maxExtractFileSize)
 	}
 
 	// Set file permissions
@@ -396,7 +401,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 
 	switch header.Typeflag {
 	case tar.TypeDir:
-		return os.MkdirAll(destPath, os.FileMode(header.Mode))
+		return os.MkdirAll(destPath, os.FileMode(header.Mode)) // #nosec G115 -- tar file mode represents Unix permissions, always fits in uint32
 	case tar.TypeReg:
 		// Create directory if needed
 		if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
@@ -404,7 +409,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		}
 
 		// Extract file
-		destFile, err := os.Create(destPath)
+		destFile, err := os.Create(filepath.Clean(destPath))
 		if err != nil {
 			return err
 		}
@@ -420,7 +425,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		}
 
 		// Set file permissions
-		return os.Chmod(destPath, os.FileMode(header.Mode))
+		return os.Chmod(destPath, os.FileMode(header.Mode)) // #nosec G115 -- tar file mode represents Unix permissions, always fits in uint32
 	default:
 		// Skip other file types (symlinks, etc.)
 		return nil

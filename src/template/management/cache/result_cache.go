@@ -468,12 +468,15 @@ func (c *ResultCache) decompressResult(result *types.TemplateResult) *types.Temp
 		Output:       result.Output,
 	}
 
+	// Limit decompression output to prevent decompression bombs (50MB max)
+	const maxCacheDecompressSize = 50 * 1024 * 1024 // 50MB
+
 	// Decompress the response
 	if result.Response != "" {
 		gzr, err := gzip.NewReader(bytes.NewReader([]byte(result.Response)))
 		if err == nil {
 			var decompressed bytes.Buffer
-			_, err = io.Copy(&decompressed, gzr)
+			_, err = io.Copy(&decompressed, io.LimitReader(gzr, maxCacheDecompressSize))
 			gzr.Close()
 			if err == nil {
 				decompressedResult.Response = decompressed.String()
@@ -494,7 +497,7 @@ func (c *ResultCache) decompressResult(result *types.TemplateResult) *types.Temp
 			gzr, err := gzip.NewReader(bytes.NewReader(compressed))
 			if err == nil {
 				var decompressed bytes.Buffer
-				_, err = io.Copy(&decompressed, gzr)
+				_, err = io.Copy(&decompressed, io.LimitReader(gzr, maxCacheDecompressSize))
 				gzr.Close()
 				if err == nil {
 					var details map[string]interface{}

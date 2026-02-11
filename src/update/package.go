@@ -365,10 +365,15 @@ func (p *UpdatePackage) verifyFileChecksum(path, expectedChecksum string) error 
 		}
 	}()
 
-	// Calculate checksum
+	// Calculate checksum with size limit to prevent decompression bombs (500MB max)
+	const maxPackageFileSize = 500 * 1024 * 1024 // 500MB
 	hash := sha256.New()
-	if _, err := io.Copy(hash, rc); err != nil {
+	written, err := io.Copy(hash, io.LimitReader(rc, maxPackageFileSize+1))
+	if err != nil {
 		return fmt.Errorf("failed to calculate checksum: %w", err)
+	}
+	if written > maxPackageFileSize {
+		return fmt.Errorf("file %s exceeds maximum allowed size of %d bytes", path, maxPackageFileSize)
 	}
 
 	// Verify checksum
@@ -407,11 +412,17 @@ func (p *UpdatePackage) verifyDirectoryChecksum(dirPath, expectedChecksum string
 			return fmt.Errorf("failed to open file %s: %w", file.Name, err)
 		}
 
-		// Update hash with filename and content
+		// Update hash with filename and content, with size limit (500MB max per file)
+		const maxPackageFileSize = 500 * 1024 * 1024 // 500MB
 		hash.Write([]byte(file.Name))
-		if _, err := io.Copy(hash, rc); err != nil {
+		written, err := io.Copy(hash, io.LimitReader(rc, maxPackageFileSize+1))
+		if err != nil {
 			rc.Close()
 			return fmt.Errorf("failed to calculate checksum for %s: %w", file.Name, err)
+		}
+		if written > maxPackageFileSize {
+			rc.Close()
+			return fmt.Errorf("file %s exceeds maximum allowed size of %d bytes", file.Name, maxPackageFileSize)
 		}
 		rc.Close()
 	}
@@ -590,7 +601,7 @@ func (p *UpdatePackage) ExtractFile(filePath, destPath string) error {
 	}()
 
 	// Create destination file
-	dest, err := os.Create(destPath)
+	dest, err := os.Create(filepath.Clean(destPath))
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
@@ -600,9 +611,14 @@ func (p *UpdatePackage) ExtractFile(filePath, destPath string) error {
 		}
 	}()
 
-	// Copy file contents
-	if _, err := io.Copy(dest, src); err != nil {
+	// Copy file contents with size limit to prevent decompression bombs (500MB max)
+	const maxPackageFileSize = 500 * 1024 * 1024 // 500MB
+	written, err := io.Copy(dest, io.LimitReader(src, maxPackageFileSize+1))
+	if err != nil {
 		return fmt.Errorf("failed to copy file contents: %w", err)
+	}
+	if written > maxPackageFileSize {
+		return fmt.Errorf("file exceeds maximum allowed size of %d bytes", maxPackageFileSize)
 	}
 
 	// Set permissions
@@ -661,16 +677,23 @@ func (p *UpdatePackage) ExtractDirectory(dirPath, destPath string) error {
 		}
 
 		// Create destination file
-		dest, err := os.Create(destFilePath)
+		dest, err := os.Create(filepath.Clean(destFilePath))
 		if err != nil {
 			src.Close()
 			return fmt.Errorf("failed to create destination file: %w", err)
 		}
-		// Copy file contents
-		if _, err := io.Copy(dest, src); err != nil {
+		// Copy file contents with size limit to prevent decompression bombs (500MB max)
+		const maxPackageFileSize = 500 * 1024 * 1024 // 500MB
+		written, err := io.Copy(dest, io.LimitReader(src, maxPackageFileSize+1))
+		if err != nil {
 			src.Close()
 			dest.Close()
 			return fmt.Errorf("failed to copy file contents: %w", err)
+		}
+		if written > maxPackageFileSize {
+			src.Close()
+			dest.Close()
+			return fmt.Errorf("file %s exceeds maximum allowed size of %d bytes", file.Name, maxPackageFileSize)
 		}
 
 		// Close files

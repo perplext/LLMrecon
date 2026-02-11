@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/security/sandbox"
 )
@@ -55,7 +56,15 @@ func (s *DashboardServer) Start() error {
 	// Start the server
 	addr := fmt.Sprintf(":%d", s.port)
 	fmt.Printf("Starting dashboard server on http://localhost%s\n", addr)
-	return http.ListenAndServe(addr, nil)
+	server := &http.Server{
+		Addr:              addr,
+		Handler:           nil,
+		ReadTimeout:       15 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	return server.ListenAndServe()
 }
 
 // createTemplates creates the HTML templates

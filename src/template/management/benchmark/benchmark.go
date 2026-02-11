@@ -58,7 +58,7 @@ func TemplateLoadBenchmark(ctx context.Context, loader types.TemplateLoader, sou
 	// Get final memory stats
 	var memStatsAfter runtime.MemStats
 	runtime.ReadMemStats(&memStatsAfter)
-	result.MemoryUsage = int64(memStatsAfter.Alloc - memStatsBefore.Alloc)
+	result.MemoryUsage = int64(memStatsAfter.Alloc - memStatsBefore.Alloc) // #nosec G115 -- memory difference will not exceed int64 max on any real system
 
 	// Record end time
 	endTime := time.Now()
@@ -102,7 +102,7 @@ func TemplateExecuteBenchmark(ctx context.Context, executor interfaces.TemplateE
 	// Get final memory stats
 	var memStatsAfter runtime.MemStats
 	runtime.ReadMemStats(&memStatsAfter)
-	result.MemoryUsage = int64(memStatsAfter.Alloc - memStatsBefore.Alloc)
+	result.MemoryUsage = int64(memStatsAfter.Alloc - memStatsBefore.Alloc) // #nosec G115 -- memory difference will not exceed int64 max on any real system
 
 	// Record end time
 	endTime := time.Now()

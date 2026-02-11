@@ -162,7 +162,8 @@ func (v *Verifier) verifySignature(filePath, signatureURL string) error {
 	return fmt.Errorf("signature verification failed with all keys: %w", lastError)
 }
 
-// downloadSignature downloads a signature from URL
+// downloadSignature downloads a signature from URL.
+// The signatureURL is derived from trusted update server configuration, not user input.
 func (v *Verifier) downloadSignature(signatureURL string) ([]byte, error) {
 	// Validate URL to prevent SSRF
 	parsedURL, err := url.Parse(signatureURL)

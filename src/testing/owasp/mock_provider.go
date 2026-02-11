@@ -469,7 +469,7 @@ func generateMockEmbedding(input string, dimensions int) []float64 {
 	for i, c := range input {
 		seed += int64(c) * int64(i+1)
 	}
-	r := mathrand.New(mathrand.NewSource(seed))
+	r := mathrand.New(mathrand.NewSource(seed)) // #nosec G404 -- math/rand used intentionally for test data generation, not security
 
 	// Generate random embedding values
 	embedding := make([]float64, dimensions)

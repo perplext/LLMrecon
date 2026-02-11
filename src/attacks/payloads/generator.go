@@ -1336,7 +1336,7 @@ func (g *GeneratorMetrics) RecordFeedback(payload *Payload, success bool) {
 // Utility functions
 
 func generateID() string {
-	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63())
+	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63()) // #nosec G404 -- math/rand used intentionally for test data generation, not security
 }
 
 func generateHash(content string) string {

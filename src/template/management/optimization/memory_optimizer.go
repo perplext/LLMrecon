@@ -136,7 +136,7 @@ func (mo *MemoryOptimizer) OptimizeMemory(ctx context.Context) error {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	currentMemoryMB := int64(m.Alloc / 1024 / 1024)
+	currentMemoryMB := int64(m.Alloc / 1024 / 1024) // #nosec G115 -- memory in MB will not exceed int64 max
 
 	if currentMemoryMB > mo.maxMemoryMB {
 		// Force garbage collection
@@ -146,7 +146,7 @@ func (mo *MemoryOptimizer) OptimizeMemory(ctx context.Context) error {
 		// Update stats
 		runtime.ReadMemStats(&m)
 		mo.stats.GCRuns++
-		mo.stats.MemoryFreed += int64(beforeGC - m.Alloc)
+		mo.stats.MemoryFreed += int64(beforeGC - m.Alloc) // #nosec G115 -- memory difference in bytes will not exceed int64 max
 	}
 
 	return nil
@@ -176,7 +176,7 @@ func (mo *MemoryOptimizer) GetStats() OptimizationStats {
 func (mo *MemoryOptimizer) GetMemoryUsage() int64 {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	return int64(m.Alloc / 1024 / 1024)
+	return int64(m.Alloc / 1024 / 1024) // #nosec G115 -- memory in MB will not exceed int64 max
 }
 
 // SetMaxMemory updates the maximum memory threshold

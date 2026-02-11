@@ -76,9 +76,9 @@ func checkContainerEngine(engine string) error {
 
 	switch engine {
 	case "docker":
-		cmd = exec.Command("docker", "version")
+		cmd = exec.Command("docker", "version") // #nosec G204 -- command is a hardcoded string literal selected by switch
 	case "podman":
-		cmd = exec.Command("podman", "version")
+		cmd = exec.Command("podman", "version") // #nosec G204 -- command is a hardcoded string literal selected by switch
 	default:
 		return fmt.Errorf("unsupported container engine: %s", engine)
 	}
@@ -167,8 +167,11 @@ cat template.txt
 echo "Done."
 `
 
-	if err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0700); err != nil {
+	if err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write script file: %w", err)
+	}
+	if err := os.Chmod(scriptFile, 0700); err != nil {
+		return nil, fmt.Errorf("failed to set script file permissions: %w", err)
 	}
 
 	// Build the container command
@@ -259,9 +262,9 @@ func (s *ContainerSandbox) cleanupContainer(containerName string) {
 
 	switch s.containerEngine {
 	case "docker":
-		cmd = exec.CommandContext(ctx, "docker", "rm", "-f", containerName)
+		cmd = exec.CommandContext(ctx, "docker", "rm", "-f", containerName) // #nosec G204 -- engine validated by switch, containerName generated internally
 	case "podman":
-		cmd = exec.CommandContext(ctx, "podman", "rm", "-f", containerName)
+		cmd = exec.CommandContext(ctx, "podman", "rm", "-f", containerName) // #nosec G204 -- engine validated by switch, containerName generated internally
 	default:
 		return
 	}

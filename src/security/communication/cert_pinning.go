@@ -202,6 +202,7 @@ func FetchCertificatePin(hostname string, port int) (string, error) {
 	// Connect to the host
 	conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%d", hostname, port), &tls.Config{
 		InsecureSkipVerify: false, // Fixed: Enable cert validation
+		MinVersion:         tls.VersionTLS12,
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to %s:%d: %w", hostname, port, err)

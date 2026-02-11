@@ -48,7 +48,7 @@ func (m *RetryMiddleware) Execute(ctx context.Context, fn func(ctx context.Conte
 	var attempt int
 
 	// Initialize random number generator for jitter
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	rng := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
 
 	// Try the operation until max retries or success
 	for attempt = 0; attempt <= m.config.MaxRetries; attempt++ {

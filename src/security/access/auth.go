@@ -5,7 +5,7 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec G505 -- SHA1 required for TOTP per RFC 6238 (HMAC-SHA1)
 	"crypto/subtle"
 	"encoding/base32"
 	"encoding/binary"
@@ -820,7 +820,7 @@ func verifyTOTPCode(secret, code string) bool {
 		binary.BigEndian.PutUint64(counterBytes, counter)
 
 		// Calculate HMAC
-		h := hmac.New(sha1.New, secretBytes)
+		h := hmac.New(sha1.New, secretBytes) // #nosec G401 -- SHA1 required for TOTP per RFC 6238
 		h.Write(counterBytes)
 		hash := h.Sum(nil)
 

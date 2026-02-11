@@ -750,8 +750,8 @@ func (p *PerformanceProfiler) CollectMetrics() *PerformanceMetrics {
 		GC: GCMetrics{
 			NumGC:         m.NumGC,
 			NumForcedGC:   m.NumForcedGC,
-			PauseTotal:    time.Duration(m.PauseTotalNs),
-			LastGC:        time.Unix(0, int64(m.LastGC)),
+			PauseTotal:    time.Duration(m.PauseTotalNs), // #nosec G115 -- GC pause total in nanoseconds will not exceed int64 max in practice
+			LastGC:        time.Unix(0, int64(m.LastGC)),  // #nosec G115 -- LastGC is a Unix nanosecond timestamp, fits in int64 until year 2262
 			GCCPUFraction: m.GCCPUFraction,
 		},
 	}
@@ -810,8 +810,9 @@ func (p *PerformanceProfiler) setupServer() {
 
 	addr := fmt.Sprintf("%s:%d", p.config.ServerHost, p.config.ServerPort)
 	p.server = &http.Server{
-		Addr:    addr,
-		Handler: p.router,
+		Addr:              addr,
+		Handler:           p.router,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 }
 
@@ -1025,7 +1026,7 @@ type CPUProfiler struct {
 
 func (cp *CPUProfiler) Start() error {
 	filename := filepath.Join(cp.dir, fmt.Sprintf("cpu_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filepath.Clean(filename))
 	if err != nil {
 		return err
 	}
@@ -1062,7 +1063,7 @@ func (mp *MemoryProfiler) Stop() error  { return nil }
 
 func (mp *MemoryProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(mp.dir, fmt.Sprintf("memory_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filepath.Clean(filename))
 	if err != nil {
 		return nil, err
 	}
@@ -1099,7 +1100,7 @@ func (gp *GoroutineProfiler) Stop() error  { return nil }
 
 func (gp *GoroutineProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(gp.dir, fmt.Sprintf("goroutine_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filepath.Clean(filename))
 	if err != nil {
 		return nil, err
 	}
@@ -1143,7 +1144,7 @@ func (bp *BlockProfiler) Stop() error {
 
 func (bp *BlockProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(bp.dir, fmt.Sprintf("block_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filepath.Clean(filename))
 	if err != nil {
 		return nil, err
 	}
@@ -1187,7 +1188,7 @@ func (mp *MutexProfiler) Stop() error {
 
 func (mp *MutexProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(mp.dir, fmt.Sprintf("mutex_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filepath.Clean(filename))
 	if err != nil {
 		return nil, err
 	}
@@ -1222,7 +1223,7 @@ type TraceProfiler struct {
 
 func (tp *TraceProfiler) Start() error {
 	filename := filepath.Join(tp.dir, fmt.Sprintf("trace_profile_%d.trace", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filepath.Clean(filename))
 	if err != nil {
 		return err
 	}

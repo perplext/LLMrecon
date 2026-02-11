@@ -197,7 +197,7 @@ func copyDir(src, dst string) error {
 // createZipFromDir creates a zip file from a directory
 func createZipFromDir(src, dst string) error {
 	// Create destination file
-	zipFile, err := os.Create(dst)
+	zipFile, err := os.Create(filepath.Clean(dst))
 	if err != nil {
 		return err
 	}
@@ -301,11 +301,23 @@ func ExtractBundle(bundlePath, outputDir string) error {
 
 // extractFile extracts a file from a zip archive
 func extractFile(file *zip.File, outputDir string) error {
-	// Create the file path
-	filePath := filepath.Join(outputDir, file.Name)
+	// Sanitize file name and create the file path
+	cleanName := filepath.Clean(file.Name)
+	if strings.Contains(cleanName, "..") {
+		return fmt.Errorf("illegal file path: %s", file.Name)
+	}
+	filePath := filepath.Join(outputDir, cleanName)
 
-	// Check for directory traversal
-	if !isWithinDir(outputDir, filePath) {
+	// Verify the resolved path is within the output directory
+	absOutputDir, err := filepath.Abs(outputDir)
+	if err != nil {
+		return fmt.Errorf("failed to resolve output directory: %w", err)
+	}
+	absFilePath, err := filepath.Abs(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to resolve file path: %w", err)
+	}
+	if !strings.HasPrefix(absFilePath, absOutputDir+string(os.PathSeparator)) && absFilePath != absOutputDir {
 		return fmt.Errorf("illegal file path: %s", file.Name)
 	}
 
@@ -315,7 +327,7 @@ func extractFile(file *zip.File, outputDir string) error {
 	}
 
 	// Create parent directory if needed
-	err := os.MkdirAll(filepath.Dir(filePath), 0700)
+	err = os.MkdirAll(filepath.Dir(filePath), 0700)
 	if err != nil {
 		return err
 	}
@@ -332,7 +344,7 @@ func extractFile(file *zip.File, outputDir string) error {
 	}()
 
 	// Create the file
-	outFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+	outFile, err := os.OpenFile(filepath.Clean(filePath), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 	if err != nil {
 		return err
 	}
@@ -342,9 +354,16 @@ func extractFile(file *zip.File, outputDir string) error {
 		}
 	}()
 
-	// Copy the file
-	_, err = io.Copy(outFile, rc)
-	return err
+	// Copy the file with size limit to prevent decompression bombs (100MB max)
+	const maxBundleFileSize = 100 * 1024 * 1024 // 100MB
+	written, err := io.Copy(outFile, io.LimitReader(rc, maxBundleFileSize+1))
+	if err != nil {
+		return err
+	}
+	if written > maxBundleFileSize {
+		return fmt.Errorf("file %s exceeds maximum allowed size of %d bytes", file.Name, maxBundleFileSize)
+	}
+	return nil
 }
 
 // isWithinDir checks if a path is within a directory using filepath.Rel

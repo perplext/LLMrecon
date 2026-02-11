@@ -305,5 +305,13 @@ func main() {
 	http.HandleFunc("/api/v1/deployments/health", tracker.handleGetHealth)
 	
 	log.Println("Deployment tracker starting on :8091")
-	log.Fatal(http.ListenAndServe(":8091", nil))
+	server := &http.Server{
+		Addr:              ":8091",
+		Handler:           nil,
+		ReadTimeout:       15 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	log.Fatal(server.ListenAndServe())
 }

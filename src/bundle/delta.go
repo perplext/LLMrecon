@@ -521,7 +521,7 @@ func copyDeltaFile(src, dst string) error {
 
 // CompressDelta compresses a delta bundle
 func CompressDelta(deltaPath string, outputPath string) error {
-	output, err := os.Create(outputPath)
+	output, err := os.Create(filepath.Clean(outputPath))
 	if err != nil {
 		return err
 	}

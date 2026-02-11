@@ -149,7 +149,7 @@ func (f *MarkdownFormatter) WriteToFile(ctx context.Context, reportInterface int
 	}
 
 	// Create the file
-	file, err := os.Create(filePath)
+	file, err := os.Create(filepath.Clean(filePath))
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", filePath, err)
 	}

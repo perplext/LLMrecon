@@ -386,7 +386,7 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	zipFile, err := os.Create(outputPath)
+	zipFile, err := os.Create(filepath.Clean(outputPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bundle file: %w", err)
 	}
@@ -541,7 +541,7 @@ func (bm *BundleManager) extractBundleFile(file *zip.File, destDir string) error
 		}
 	}()
 
-	destFile, err := os.Create(destPath)
+	destFile, err := os.Create(filepath.Clean(destPath))
 	if err != nil {
 		return err
 	}
@@ -551,8 +551,16 @@ func (bm *BundleManager) extractBundleFile(file *zip.File, destDir string) error
 		}
 	}()
 
-	_, err = io.Copy(destFile, reader)
-	return err
+	// Limit decompression output to prevent decompression bombs (100MB max)
+	const maxBundleFileSize = 100 * 1024 * 1024 // 100MB
+	written, err := io.Copy(destFile, io.LimitReader(reader, maxBundleFileSize+1))
+	if err != nil {
+		return err
+	}
+	if written > maxBundleFileSize {
+		return fmt.Errorf("extracted file exceeds maximum allowed size of %d bytes", maxBundleFileSize)
+	}
+	return nil
 }
 
 // checkVersionCompatibility checks if bundle is compatible

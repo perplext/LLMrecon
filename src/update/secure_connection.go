@@ -129,12 +129,8 @@ func NewSecureClient(options *ConnectionSecurityOptions) (*SecureClient, error) 
 	}
 
 	// Create TLS config
-	minVersion := options.MinTLSVersion
-	if minVersion < tls.VersionTLS12 {
-		minVersion = tls.VersionTLS12 // Enforce minimum TLS 1.2
-	}
 	tlsConfig := &tls.Config{
-		MinVersion: minVersion,
+		MinVersion: max(options.MinTLSVersion, tls.VersionTLS12), // Enforce minimum TLS 1.2
 		RootCAs:    rootCAs,
 	}
 
@@ -274,10 +270,10 @@ func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
 
 			// Calculate delay with exponential backoff if enabled
 			if retryConfig.UseExponentialBackoff {
-				backoffFactor := 1 << uint(attempt-1)
+				backoffFactor := 1 << uint(attempt-1) // #nosec G115 -- attempt > 0 so attempt-1 is always non-negative
 				delay = time.Duration(float64(retryConfig.InitialDelay) * jitter * float64(backoffFactor))
 			} else {
-				delay = time.Duration(float64(retryConfig.InitialDelay) * jitter)
+				delay = time.Duration(float64(retryConfig.InitialDelay) * jitter) // #nosec G115 -- float64 to int64 conversion for time.Duration; values are bounded by delay caps
 			}
 
 			// Cap delay at max delay

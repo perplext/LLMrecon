@@ -60,6 +60,7 @@ func NewDownloader(options *DownloadOptions) *Downloader {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: !options.VerifyCertificate,
+			MinVersion:         tls.VersionTLS12,
 		},
 		// Set reasonable defaults for production use
 		MaxIdleConns:        100,
@@ -104,7 +105,7 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 		if stat, err := os.Stat(destPath); err == nil {
 			startOffset = stat.Size()
 			if startOffset < fileSize {
-				file, err = os.OpenFile(destPath, os.O_APPEND|os.O_WRONLY, 0600)
+				file, err = os.OpenFile(filepath.Clean(destPath), os.O_APPEND|os.O_WRONLY, 0600)
 				if err != nil {
 					// If we can't open for appending, start from scratch
 					startOffset = 0
@@ -118,7 +119,7 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 
 	// If file wasn't opened for appending, create a new one
 	if file == nil {
-		file, err = os.Create(destPath)
+		file, err = os.Create(filepath.Clean(destPath))
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
@@ -135,7 +136,7 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 	for attempt := 0; attempt <= options.RetryAttempts; attempt++ {
 		if attempt > 0 {
 			// Wait before retry with exponential backoff
-			retryDelay := options.RetryDelay * time.Duration(1<<uint(attempt-1))
+			retryDelay := options.RetryDelay * time.Duration(1<<uint(attempt-1)) // #nosec G115 -- attempt > 0 so attempt-1 is always non-negative
 			select {
 			case <-time.After(retryDelay):
 			case <-ctx.Done():
@@ -147,7 +148,7 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 			if err == nil && newFileSize != fileSize {
 				// File has changed on the server, start over
 				file.Close()
-				file, err = os.Create(destPath)
+				file, err = os.Create(filepath.Clean(destPath))
 				if err != nil {
 					return fmt.Errorf("failed to recreate file: %w", err)
 				}

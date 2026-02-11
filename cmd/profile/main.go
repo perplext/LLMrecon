@@ -179,5 +179,5 @@ func createTemplateManager() (types.TemplateManager, error) {
 // ensureDirectoryExists ensures a directory exists
 func ensureDirectoryExists(path string) error {
 	dir := filepath.Dir(path)
-	return os.MkdirAll(dir, 0755)
+	return os.MkdirAll(dir, 0750)
 }

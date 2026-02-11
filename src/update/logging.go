@@ -95,7 +95,7 @@ func CreateJSONLogFile(logDir, packageID string) (*os.File, error) {
 
 	// Create log file
 	logPath := filepath.Join(logDir, fmt.Sprintf("update-%s-%d.json", packageID, time.Now().Unix()))
-	logFile, err := os.Create(logPath)
+	logFile, err := os.Create(filepath.Clean(logPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create log file: %w", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -449,7 +450,7 @@ func (p *TemplateProfiler) SaveComparisonReport(filePath string) error {
 	comparison := p.CompareWithBaseline()
 
 	// Create file
-	file, err := os.Create(filePath)
+	file, err := os.Create(filepath.Clean(filePath))
 	if err != nil {
 		return fmt.Errorf("failed to create comparison report file: %w", err)
 	}

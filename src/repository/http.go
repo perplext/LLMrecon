@@ -71,6 +71,7 @@ func (r *HTTPRepository) Connect(ctx context.Context) error {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: r.config.InsecureSkipVerify,
+			MinVersion:         tls.VersionTLS12,
 		},
 		MaxIdleConns:        r.config.MaxConnections,
 		MaxIdleConnsPerHost: r.config.MaxConnections,

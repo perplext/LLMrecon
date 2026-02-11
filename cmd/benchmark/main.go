@@ -9,6 +9,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/perplext/LLMrecon/src/template/management"
@@ -144,7 +145,7 @@ func runBenchmark(ctx context.Context, monitor *monitoring.PerformanceMonitor) (
 // saveResults saves benchmark results to a file
 func saveResults(results map[string]*benchmark.BenchmarkResult, filePath string) error {
 	// Create file
-	file, err := os.Create(filePath)
+	file, err := os.Create(filepath.Clean(filePath))
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
@@ -162,7 +163,7 @@ func saveResults(results map[string]*benchmark.BenchmarkResult, filePath string)
 // loadResults loads benchmark results from a file
 func loadResults(filePath string) (map[string]*benchmark.BenchmarkResult, error) {
 	// Open file
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}

@@ -18,6 +18,13 @@ import (
 // validTableName matches only alphanumeric characters and underscores
 var validTableName = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 
+// quotedTableName returns the table name wrapped in double quotes for safe SQL identifier usage.
+// The table name is already validated against validTableName regex in parseDatabaseURL,
+// ensuring it contains only alphanumeric characters and underscores.
+func quotedTableName(name string) string {
+	return `"` + name + `"`
+}
+
 // DatabaseType represents the type of database
 type DatabaseType string
 
@@ -293,12 +300,13 @@ func (r *DatabaseRepository) ListFiles(ctx context.Context, pattern string) ([]F
 		var query string
 		var args []interface{}
 
+		tbl := quotedTableName(r.tableName)
 		if pattern != "" {
 			// Use LIKE for pattern matching
-			query = fmt.Sprintf("SELECT path, name, size, is_directory, last_modified FROM %s WHERE name LIKE ?", r.tableName)
+			query = "SELECT path, name, size, is_directory, last_modified FROM " + tbl + " WHERE name LIKE ?"
 			args = append(args, "%"+strings.ReplaceAll(pattern, "*", "%")+"%")
 		} else {
-			query = fmt.Sprintf("SELECT path, name, size, is_directory, last_modified FROM %s", r.tableName)
+			query = "SELECT path, name, size, is_directory, last_modified FROM " + tbl
 		}
 
 		// Execute query
@@ -359,7 +367,7 @@ func (r *DatabaseRepository) GetFile(ctx context.Context, path string) (io.ReadC
 	var content []byte
 	err := r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf("SELECT content FROM %s WHERE path = ?", r.tableName)
+		query := "SELECT content FROM " + quotedTableName(r.tableName) + " WHERE path = ?"
 
 		// Execute query
 		row := r.db.QueryRowContext(ctx, query, path)
@@ -411,7 +419,7 @@ func (r *DatabaseRepository) FileExists(ctx context.Context, path string) (bool,
 	var exists bool
 	err := r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE path = ?)", r.tableName)
+		query := "SELECT EXISTS(SELECT 1 FROM " + quotedTableName(r.tableName) + " WHERE path = ?)"
 
 		// Execute query
 		row := r.db.QueryRowContext(ctx, query, path)
@@ -455,7 +463,7 @@ func (r *DatabaseRepository) GetLastModified(ctx context.Context, path string) (
 	var lastModified time.Time
 	err := r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf("SELECT last_modified FROM %s WHERE path = ?", r.tableName)
+		query := "SELECT last_modified FROM " + quotedTableName(r.tableName) + " WHERE path = ?"
 
 		// Execute query
 		row := r.db.QueryRowContext(ctx, query, path)
@@ -492,8 +500,9 @@ func (r *DatabaseRepository) StoreFile(ctx context.Context, path string, name st
 	// Use WithRetry for the operation
 	return r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf(`
-			INSERT INTO %s (path, name, content, size, is_directory, last_modified)
+		tbl := quotedTableName(r.tableName)
+		query := `
+			INSERT INTO ` + tbl + ` (path, name, content, size, is_directory, last_modified)
 			VALUES (?, ?, ?, ?, ?, ?)
 			ON CONFLICT (path) DO UPDATE SET
 				name = EXCLUDED.name,
@@ -501,14 +510,14 @@ func (r *DatabaseRepository) StoreFile(ctx context.Context, path string, name st
 				size = EXCLUDED.size,
 				is_directory = EXCLUDED.is_directory,
 				last_modified = EXCLUDED.last_modified
-		`, r.tableName)
+		`
 
 		// For SQLite, use a different syntax for upsert
 		if r.dbType == SQLite {
-			query = fmt.Sprintf(`
-				INSERT OR REPLACE INTO %s (path, name, content, size, is_directory, last_modified)
+			query = `
+				INSERT OR REPLACE INTO ` + tbl + ` (path, name, content, size, is_directory, last_modified)
 				VALUES (?, ?, ?, ?, ?, ?)
-			`, r.tableName)
+			`
 		}
 
 		// Execute query
@@ -548,7 +557,7 @@ func (r *DatabaseRepository) DeleteFile(ctx context.Context, path string) error 
 	// Use WithRetry for the operation
 	return r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf("DELETE FROM %s WHERE path = ?", r.tableName)
+		query := "DELETE FROM " + quotedTableName(r.tableName) + " WHERE path = ?"
 
 		// Execute query
 		_, err := r.db.ExecContext(ctx, query, path)

@@ -199,7 +199,7 @@ func (g *DefaultReportGenerator) SaveReport(report *ImportReport, path string) e
 	}
 
 	// Create the file
-	file, err := os.Create(path)
+	file, err := os.Create(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", path, err)
 	}

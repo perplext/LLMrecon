@@ -94,7 +94,7 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 		if stat, err := os.Stat(destPath); err == nil {
 			startOffset = stat.Size()
 			if startOffset < fileSize {
-				file, err = os.OpenFile(destPath, os.O_APPEND|os.O_WRONLY, 0600)
+				file, err = os.OpenFile(filepath.Clean(destPath), os.O_APPEND|os.O_WRONLY, 0600)
 				if err != nil {
 					// If we can't open for appending, start from scratch
 					startOffset = 0
@@ -111,7 +111,7 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 
 	// If file wasn't opened for appending, create a new one
 	if file == nil {
-		file, err = os.Create(destPath)
+		file, err = os.Create(filepath.Clean(destPath))
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}

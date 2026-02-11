@@ -652,7 +652,7 @@ func isElevated() bool {
 	switch runtime.GOOS {
 	case "windows":
 		// Check if running as administrator
-		cmd := exec.Command("net", "session")
+		cmd := exec.Command("net", "session") // #nosec G204 -- hardcoded command and argument to check admin privileges
 		err := cmd.Run()
 		return err == nil
 	default:

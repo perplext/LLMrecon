@@ -224,7 +224,7 @@ func main() {
 	fmt.Println("======================================")
 
 	// Seed random number generator
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
 
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)

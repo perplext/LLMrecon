@@ -106,8 +106,16 @@ func (h *GzipHandler) Decompress(src io.Reader, dst io.Writer) error {
 		}
 	}()
 
-	_, err = io.Copy(dst, gzReader)
-	return err
+	// Limit decompression output to prevent decompression bombs (100MB max)
+	const maxDecompressSize = 100 * 1024 * 1024 // 100MB
+	written, err := io.Copy(dst, io.LimitReader(gzReader, maxDecompressSize+1))
+	if err != nil {
+		return err
+	}
+	if written > maxDecompressSize {
+		return fmt.Errorf("decompressed data exceeds maximum allowed size of %d bytes", maxDecompressSize)
+	}
+	return nil
 }
 
 func (h *GzipHandler) GetExtension() string {
@@ -436,7 +444,7 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 	}
 
 	// Create output file
-	outputFile, err := os.Create(outputPath)
+	outputFile, err := os.Create(filepath.Clean(outputPath))
 	if err != nil {
 		return err
 	}

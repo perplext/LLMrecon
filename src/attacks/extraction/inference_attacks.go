@@ -1,7 +1,7 @@
 package extraction
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec G501 -- weak crypto used intentionally for security testing
 	"encoding/hex"
 	"fmt"
 	"math"
@@ -1209,7 +1209,7 @@ func (ia *InferenceAttacker) generateSignature(results []InferenceResult) string
 		}
 	}
 
-	hash := md5.Sum([]byte(data))
+	hash := md5.Sum([]byte(data)) // #nosec G401 -- weak crypto used intentionally for security testing
 	return hex.EncodeToString(hash[:])
 }
 

@@ -14,8 +14,18 @@ import (
 
 // validateRepositoryURL validates a repository URL to prevent command injection
 func validateRepositoryURL(repoURL string) error {
+	// Reject URLs starting with a dash (git flag injection)
+	if strings.HasPrefix(repoURL, "-") {
+		return fmt.Errorf("invalid repository URL: must not start with a dash")
+	}
+
 	// Allow local file paths
 	if filepath.IsAbs(repoURL) {
+		// Reject path traversal
+		cleaned := filepath.Clean(repoURL)
+		if cleaned != repoURL {
+			return fmt.Errorf("invalid repository path: must not contain path traversal")
+		}
 		return nil
 	}
 
@@ -33,6 +43,23 @@ func validateRepositoryURL(repoURL string) error {
 		return fmt.Errorf("unsupported URL scheme: %s", parsed.Scheme)
 	}
 
+	return nil
+}
+
+// validateLocalPath validates a local path to prevent command injection via git arguments
+func validateLocalPath(localPath string) error {
+	if localPath == "" {
+		return fmt.Errorf("local path must not be empty")
+	}
+	// Reject paths starting with a dash (git flag injection)
+	if strings.HasPrefix(filepath.Base(localPath), "-") {
+		return fmt.Errorf("invalid local path: base name must not start with a dash")
+	}
+	// Ensure the path is clean (no .. traversal)
+	cleaned := filepath.Clean(localPath)
+	if cleaned != localPath {
+		return fmt.Errorf("invalid local path: must not contain path traversal")
+	}
 	return nil
 }
 
@@ -112,6 +139,14 @@ func (rm *RepositoryManager) SyncRepository(name string) error {
 		return fmt.Errorf("repository '%s' not found", name)
 	}
 
+	// Validate paths before passing to git subprocess
+	if err := validateRepositoryURL(repo.URL); err != nil {
+		return fmt.Errorf("invalid repository URL: %w", err)
+	}
+	if err := validateLocalPath(repo.LocalPath); err != nil {
+		return fmt.Errorf("invalid local path: %w", err)
+	}
+
 	// Create parent directories if they don't exist
 	if err := os.MkdirAll(filepath.Dir(repo.LocalPath), 0700); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
@@ -120,13 +155,13 @@ func (rm *RepositoryManager) SyncRepository(name string) error {
 	// Check if repository already exists locally
 	if _, err := os.Stat(filepath.Join(repo.LocalPath, ".git")); os.IsNotExist(err) {
 		// Repository doesn't exist, clone it
-		cmd := exec.Command("git", "clone", repo.URL, repo.LocalPath) // #nosec G204 -- URL validated in AddRepository
+		cmd := exec.Command("git", "clone", repo.URL, repo.LocalPath) // #nosec G204 -- URL and LocalPath validated above
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to clone repository: %w", err)
 		}
 	} else {
 		// Repository exists, pull latest changes
-		cmd := exec.Command("git", "-C", repo.LocalPath, "pull") // #nosec G204 -- LocalPath constructed from validated base dir
+		cmd := exec.Command("git", "-C", repo.LocalPath, "pull") // #nosec G204 -- LocalPath validated above via validateLocalPath
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to pull repository: %w", err)
 		}
@@ -147,8 +182,13 @@ func (rm *RepositoryManager) updateRepositoryInfo(name string) error {
 		return fmt.Errorf("repository '%s' not found", name)
 	}
 
+	// Validate local path before passing to git subprocess
+	if err := validateLocalPath(repo.LocalPath); err != nil {
+		return fmt.Errorf("invalid local path: %w", err)
+	}
+
 	// Get current commit hash
-	cmd := exec.Command("git", "-C", repo.LocalPath, "rev-parse", "HEAD") // #nosec G204 -- LocalPath constructed from validated base dir
+	cmd := exec.Command("git", "-C", repo.LocalPath, "rev-parse", "HEAD") // #nosec G204 -- LocalPath validated above via validateLocalPath
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to get current commit hash: %w", err)
@@ -156,7 +196,7 @@ func (rm *RepositoryManager) updateRepositoryInfo(name string) error {
 	repo.CurrentVersion = strings.TrimSpace(string(output))
 
 	// Get latest commit hash from remote
-	cmd = exec.Command("git", "-C", repo.LocalPath, "ls-remote", "origin", "HEAD") // #nosec G204 -- LocalPath constructed from validated base dir
+	cmd = exec.Command("git", "-C", repo.LocalPath, "ls-remote", "origin", "HEAD") // #nosec G204 -- LocalPath validated above via validateLocalPath
 	output, err = cmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to get latest commit hash: %w", err)

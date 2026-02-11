@@ -427,8 +427,10 @@ func (c *QueryCache) decompress(value interface{}) interface{} {
 		return value
 	}
 
+	// Limit decompression output to prevent decompression bombs (50MB max)
+	const maxCacheDecompressSize = 50 * 1024 * 1024 // 50MB
 	var decompressed bytes.Buffer
-	_, err = io.Copy(&decompressed, gzr)
+	_, err = io.Copy(&decompressed, io.LimitReader(gzr, maxCacheDecompressSize))
 	gzr.Close()
 	if err != nil {
 		return value

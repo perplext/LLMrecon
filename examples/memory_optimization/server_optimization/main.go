@@ -633,7 +633,15 @@ func startHTTPServer(port int, staticFileHandler *server.StaticFileHandler, serv
 	fmt.Printf("Starting HTTP server on %s\n", serverAddr)
 	fmt.Printf("Open http://localhost:%d in your browser\n", port)
 	
-	if err := http.ListenAndServe(serverAddr, mux); err != nil { // #nosec G114 - Example code
+	server := &http.Server{
+		Addr:              serverAddr,
+		Handler:           mux,
+		ReadTimeout:       15 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to start HTTP server: %v", err)
 	}
 }

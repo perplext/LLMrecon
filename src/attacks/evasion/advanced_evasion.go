@@ -489,9 +489,9 @@ func (he *HomoglyphEngine) ApplyHomoglyphs(text string, level int) string {
 	result := []rune{}
 
 	for _, char := range text {
-		if alternatives, exists := he.mappings[unicode.ToLower(char)]; exists && math_rand.Float64() < float64(level)*0.2 {
+		if alternatives, exists := he.mappings[unicode.ToLower(char)]; exists && math_rand.Float64() < float64(level)*0.2 { // #nosec G404 -- math/rand used intentionally for test data generation, not security
 			// Select random alternative
-			alt := alternatives[math_rand.Intn(len(alternatives))]
+			alt := alternatives[math_rand.Intn(len(alternatives))] // #nosec G404 -- math/rand used intentionally for test data generation, not security
 
 			// Preserve case
 			if unicode.IsUpper(char) {
@@ -568,7 +568,7 @@ func (un *UnicodeNormalization) Obfuscate(text string) string {
 
 	for _, char := range text {
 		// Add combining characters
-		if math_rand.Float64() < 0.2 {
+		if math_rand.Float64() < 0.2 { // #nosec G404 -- math/rand used intentionally for test data generation, not security
 			result = append(result, char)
 			// Add zero-width joiner
 			result = append(result, '\u200D')
@@ -594,7 +594,7 @@ func (do *DirectionalOverride) Obfuscate(text string) string {
 	result := []string{}
 
 	for i, word := range words {
-		if i > 0 && math_rand.Float64() < 0.3 {
+		if i > 0 && math_rand.Float64() < 0.3 { // #nosec G404 -- math/rand used intentionally for test data generation, not security
 			// Insert RTL override
 			result = append(result, "\u202E"+word+"\u202C")
 		} else {
@@ -720,7 +720,7 @@ func (te *TimingEvasion) registerStrategies() {
 // ApplyTimingEvasion fragments payload with delays
 func (te *TimingEvasion) ApplyTimingEvasion(payload string) []Fragment {
 	// Select strategy
-	strategy := te.delayStrategies[math_rand.Intn(len(te.delayStrategies))]
+	strategy := te.delayStrategies[math_rand.Intn(len(te.delayStrategies))] // #nosec G404 -- math/rand used intentionally for test data generation, not security
 
 	return strategy.Fragment(payload)
 }
@@ -732,7 +732,7 @@ type RandomDelay struct {
 
 func (rd *RandomDelay) CalculateDelay(payload string) time.Duration {
 	// Random delay within variance
-	return time.Duration(math_rand.Int63n(int64(rd.variance)))
+	return time.Duration(math_rand.Int63n(int64(rd.variance))) // #nosec G404 -- math/rand used intentionally for test data generation, not security
 }
 func (rd *RandomDelay) Fragment(payload string) []Fragment {
 	// Fragment into words with random delays
@@ -915,7 +915,7 @@ func (ae *AdvancedEvasion) adaptEvasion(ctx context.Context, payload string, ses
 func (ae *AdvancedEvasion) fragmentPayload(payload string) []string {
 	// Fragment into semantic chunks
 	words := strings.Fields(payload)
-	chunkSize := 3 + math_rand.Intn(3)
+	chunkSize := 3 + math_rand.Intn(3) // #nosec G404 -- math/rand used intentionally for test data generation, not security
 	fragments := []string{}
 
 	for i := 0; i < len(words); i += chunkSize {

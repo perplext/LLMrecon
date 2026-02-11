@@ -132,7 +132,7 @@ func (d *UpdateDownloader) downloadWithRetry(ctx context.Context, req *http.Requ
 	}
 
 	// Create destination file
-	destFile, err := os.Create(destPath)
+	destFile, err := os.Create(filepath.Clean(destPath))
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}

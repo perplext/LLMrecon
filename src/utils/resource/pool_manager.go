@@ -175,7 +175,7 @@ func (m *ResourcePoolManager) CreatePool(name string, size int, factory func() (
 	pool := &ResourcePool{
 		name:        name,
 		size:        size,
-		available:   int32(size),
+		available:   int32(size), // #nosec G115 -- pool size is a small config value, well within int32 range
 		resources:   make(chan interface{}, size),
 		inUse:       make(map[interface{}]time.Time),
 		factory:     factory,

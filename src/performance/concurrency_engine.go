@@ -640,8 +640,8 @@ func (e *ConcurrencyEngine) updateResourceMetrics() {
 		Goroutines:  runtime.NumGoroutine(),
 		GCStats: GCStats{
 			NumGC:       m.NumGC,
-			PauseTotal:  time.Duration(m.PauseTotalNs),
-			LastPause:   time.Duration(m.PauseNs[(m.NumGC+255)%256]),
+			PauseTotal:  time.Duration(m.PauseTotalNs),  // #nosec G115 -- GC pause total in nanoseconds will not exceed int64 max in practice
+			LastPause:   time.Duration(m.PauseNs[(m.NumGC+255)%256]), // #nosec G115 -- individual GC pause in nanoseconds will not exceed int64 max
 			HeapSize:    m.HeapAlloc,
 			HeapObjects: m.HeapObjects,
 		},

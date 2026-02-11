@@ -189,7 +189,7 @@ func (r *DefaultImportReportingSystem) SaveReport(report *EnhancedImportReport, 
 	}
 
 	// Create the file
-	file, err := os.Create(path)
+	file, err := os.Create(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", path, err)
 	}
@@ -276,7 +276,7 @@ func (r *DefaultImportReportingSystem) AssessSystemImpact(result *ImportResult) 
 	// Get memory usage (approximate)
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	impact.MemoryUsage = int64(m.Alloc)
+	impact.MemoryUsage = int64(m.Alloc) // #nosec G115 -- memory allocation in bytes will not exceed int64 max on any real system
 
 	// Estimate CPU usage (this would be more accurate in a real system)
 	impact.CPUUsage = 50.0 // Placeholder value
