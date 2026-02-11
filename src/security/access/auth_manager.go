@@ -129,7 +129,7 @@ func (m *AuthManager) CreateUser(ctx context.Context, username, email, password 
 	}
 
 	// Log the action
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   now,
 		UserID:      getUserIDFromAuthContext(ctx),
 		Action:      AuditActionCreate,
@@ -203,7 +203,7 @@ func (m *AuthManager) UpdateUser(ctx context.Context, user *User) error {
 	}
 
 	// Log the action
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		UserID:      getUserIDFromAuthContext(ctx),
 		Action:      AuditActionUpdate,
@@ -230,7 +230,7 @@ func (m *AuthManager) DeleteUser(ctx context.Context, userID string) error {
 	}
 
 	// Log the action
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		UserID:      getUserIDFromAuthContext(ctx),
 		Action:      AuditActionDelete,
@@ -273,7 +273,7 @@ func (m *AuthManager) UpdateUserPassword(ctx context.Context, userID, currentPas
 	}
 
 	// Log the action
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		UserID:      getUserIDFromAuthContext(ctx),
 		Action:      AuditActionUpdate,
@@ -296,7 +296,7 @@ func (m *AuthManager) Login(ctx context.Context, username, password, ipAddress, 
 
 	// Check if user is locked
 	if user.Locked {
-		m.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      user.ID,
 			Action:      AuditActionUnauthorized,
@@ -312,7 +312,7 @@ func (m *AuthManager) Login(ctx context.Context, username, password, ipAddress, 
 
 	// Check if user is active
 	if !user.Active {
-		m.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      user.ID,
 			Action:      AuditActionUnauthorized,
@@ -339,10 +339,10 @@ func (m *AuthManager) Login(ctx context.Context, username, password, ipAddress, 
 		}
 
 		// Update user
-		m.userStore.UpdateUser(ctx, user)
+		_ = m.userStore.UpdateUser(ctx, user) // #nosec G104 -- best-effort update of failed login counter
 
 		// Log the failed login
-		m.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      user.ID,
 			Action:      AuditActionUnauthorized,
@@ -361,7 +361,7 @@ func (m *AuthManager) Login(ctx context.Context, username, password, ipAddress, 
 	user.FailedLoginAttempts = 0
 	user.LastLogin = time.Now()
 	user.UpdatedAt = time.Now()
-	m.userStore.UpdateUser(ctx, user)
+	_ = m.userStore.UpdateUser(ctx, user) // #nosec G104 -- best-effort update of login metadata
 
 	// Generate session ID
 	sessionID, err := generateID()
@@ -400,7 +400,7 @@ func (m *AuthManager) Login(ctx context.Context, username, password, ipAddress, 
 	}
 
 	// Log the login
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   now,
 		UserID:      user.ID,
 		Action:      AuditActionLogin,
@@ -435,7 +435,7 @@ func (m *AuthManager) Logout(ctx context.Context, sessionID string) error {
 	}
 
 	// Log the logout
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		UserID:      session.UserID,
 		Action:      AuditActionLogout,
@@ -462,7 +462,7 @@ func (m *AuthManager) VerifySession(ctx context.Context, token string) (bool, er
 	// Check if session has expired
 	if time.Now().After(session.ExpiresAt) {
 		// Delete the expired session
-		m.sessionStore.DeleteSession(ctx, session.ID)
+		_ = m.sessionStore.DeleteSession(ctx, session.ID) // #nosec G104 -- best-effort cleanup of expired session
 		return false, ErrSessionExpired
 	}
 
@@ -491,7 +491,7 @@ func (m *AuthManager) RefreshSession(ctx context.Context, refreshToken string) (
 	// Check if session has expired
 	if time.Now().After(session.ExpiresAt) {
 		// Delete the expired session
-		m.sessionStore.DeleteSession(ctx, session.ID)
+		_ = m.sessionStore.DeleteSession(ctx, session.ID) // #nosec G104 -- best-effort cleanup of expired session
 		return nil, ErrSessionExpired
 	}
 
@@ -515,7 +515,7 @@ func (m *AuthManager) RefreshSession(ctx context.Context, refreshToken string) (
 	}
 
 	// Log the refresh
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		UserID:      session.UserID,
 		Action:      AuditActionUpdate,
@@ -559,7 +559,7 @@ func (m *AuthManager) VerifyMFA(ctx context.Context, sessionID, code string) err
 	}
 	if !valid {
 		// Log the failed MFA verification
-		m.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      user.ID,
 			Action:      AuditActionUnauthorized,
@@ -581,7 +581,7 @@ func (m *AuthManager) VerifyMFA(ctx context.Context, sessionID, code string) err
 	}
 
 	// Log the successful MFA verification
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		UserID:      user.ID,
 		Action:      AuditActionAuthorize,
@@ -636,7 +636,7 @@ func (m *AuthManager) EnableMFA(ctx context.Context, userID string, method commo
 		return fmt.Errorf("error updating user: %w", err)
 	}
 	// Log the action
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		UserID:      getUserIDFromAuthContext(ctx),
 		Action:      AuditActionUpdate,
@@ -700,7 +700,7 @@ func (m *AuthManager) DisableMFA(ctx context.Context, userID string, method comm
 	}
 
 	// Log the action
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		UserID:      getUserIDFromAuthContext(ctx),
 		Action:      AuditActionUpdate,

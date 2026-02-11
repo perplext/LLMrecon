@@ -132,7 +132,7 @@ func (d *UpdateDownloader) downloadWithRetry(ctx context.Context, req *http.Requ
 	}
 
 	// Create destination file
-	destFile, err := os.Create(filepath.Clean(destPath))
+	destFile, err := os.Create(filepath.Clean(destPath)) // #nosec G304 -- destPath is caller-provided download destination
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
@@ -162,7 +162,7 @@ func (d *UpdateDownloader) downloadWithRetry(ctx context.Context, req *http.Requ
 	// Copy with progress
 	_, err = io.Copy(destFile, reader)
 	if err != nil {
-		os.Remove(destPath) // Clean up on error
+		os.Remove(destPath) // #nosec G104 -- best-effort cleanup on error path
 		return fmt.Errorf("failed to download file: %w", err)
 	}
 

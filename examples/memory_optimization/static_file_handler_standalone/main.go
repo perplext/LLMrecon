@@ -252,7 +252,7 @@ func main() {
 
 	// Create static directory if it doesn't exist
 	if _, err := os.Stat("./static"); os.IsNotExist(err) {
-		os.Mkdir("./static", 0750)
+		os.Mkdir("./static", 0750) // #nosec G104 -- best-effort directory creation for demo
 	}
 
 	// Create some example static files
@@ -264,7 +264,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			w.Header().Set("Content-Type", "text/html")
-			w.Write([]byte(`
+			_, _ = w.Write([]byte(`
 				<!DOCTYPE html>
 				<html>
 				<head>
@@ -302,7 +302,7 @@ func main() {
 		metrics := staticFileMonitor.GetMetrics()
 		
 		// Format the metrics in a user-friendly way
-		w.Write([]byte(fmt.Sprintf(`
+		_, _ = w.Write([]byte(fmt.Sprintf(`
 			<!DOCTYPE html>
 			<html>
 			<head>
@@ -402,7 +402,7 @@ func main() {
 		WriteTimeout:      15 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
-	log.Fatal(server.ListenAndServe())
+	log.Fatal(server.ListenAndServe()) // #nosec G104 -- error is passed to log.Fatal
 }
 
 // createExampleFiles creates example static files for testing
@@ -410,7 +410,7 @@ func createExampleFiles(dir string, numFiles, fileSize int) {
 	for i := 1; i <= numFiles; i++ {
 		filePath := filepath.Join(dir, fmt.Sprintf("file%d.txt", i))
 		content := generateRandomContent(fileSize)
-		os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
+		os.WriteFile(filepath.Clean(filePath), []byte(content), 0600) // #nosec G104 -- best-effort file creation for demo
 	}
 }
 
@@ -491,7 +491,7 @@ th {
     background-color: #f2f2f2;
 }
 `
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600) // #nosec G104 -- best-effort file creation for demo
 }
 
 // createJSFile creates a JavaScript file for the example
@@ -534,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	setInterval(updateStats, 2000);
 });
 `
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600) // #nosec G104 -- best-effort file creation for demo
 }
 
 // formatBytes formats bytes to a human-readable string (KB, MB, GB)

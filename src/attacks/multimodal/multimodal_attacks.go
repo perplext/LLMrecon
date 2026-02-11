@@ -830,7 +830,7 @@ func (mma *MultiModalAttacker) embedLSB(img image.Image, data []byte) {
 	}
 
 	dataIndex := 0
-	bitIndex := 0
+	bitIndex := uint(0)
 
 	for y := bounds.Min.Y; y < bounds.Max.Y && dataIndex < len(data); y++ {
 		for x := bounds.Min.X; x < bounds.Max.X && dataIndex < len(data); x++ {
@@ -838,7 +838,7 @@ func (mma *MultiModalAttacker) embedLSB(img image.Image, data []byte) {
 
 			// Embed bits in RGB channels
 			if bitIndex < 8 {
-				bit := (data[dataIndex] >> uint(7-bitIndex)) & 1 // #nosec G115 -- bitIndex ranges 0-7, so 7-bitIndex is always non-negative
+				bit := (data[dataIndex] >> (7 - bitIndex)) & 1
 				pixel.R = (pixel.R & 0xFE) | bit
 			}
 			bitIndex++
@@ -881,7 +881,7 @@ func (mma *MultiModalAttacker) executePayload(ctx context.Context, payload inter
 func (mma *MultiModalAttacker) executeImagePayload(ctx context.Context, payload *ImagePayload, request AttackRequest) AttackResult {
 	// Convert image to base64
 	var buf bytes.Buffer
-	png.Encode(&buf, payload.Image)
+	_ = png.Encode(&buf, payload.Image) // #nosec G104 -- encoding to in-memory buffer; failure means empty payload which is handled downstream
 	imageData := base64.StdEncoding.EncodeToString(buf.Bytes())
 
 	// Prepare prompt with image
@@ -1147,7 +1147,7 @@ func randInt64(max int64) int64 {
 
 func randFloat64() float64 {
 	bytes := make([]byte, 8)
-	rand.Read(bytes)
+	_, _ = rand.Read(bytes) // #nosec G104 -- crypto/rand.Read always returns len(b) and nil error on supported platforms
 	// Convert to float64
 	return float64(bytes[0]) / 255.0
 }

@@ -198,7 +198,9 @@ func (r *EnhancedReportingSystem) ReportInjectionEnhanced(ctx context.Context, d
 		}
 
 		// Save to disk
-		r.saveReportToDisk(report)
+		if err := r.saveReportToDisk(report); err != nil {
+			fmt.Printf("Failed to save report to disk: %v\n", err)
+		}
 
 		// Process with report handlers
 		for _, handler := range r.reportHandlers {

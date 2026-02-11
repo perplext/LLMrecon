@@ -58,7 +58,7 @@ func main() {
 
 	// Create output directory if it doesn't exist
 	if outputDir != "" {
-		if err := os.MkdirAll(outputDir, 0755); err != nil {
+		if err := os.MkdirAll(outputDir, 0750); err != nil {
 			fmt.Printf("Error creating output directory: %v\n", err)
 			os.Exit(1)
 		}
@@ -128,7 +128,7 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 		if err != nil {
 			return fmt.Errorf("failed to marshal verification result: %w", err)
 		}
-		if err := os.WriteFile(verificationResultPath, verificationResultJSON, 0644); err != nil {
+		if err := os.WriteFile(verificationResultPath, verificationResultJSON, 0600); err != nil {
 			return fmt.Errorf("failed to save verification result: %w", err)
 		}
 		fmt.Printf("Verification result saved to %s\n", verificationResultPath)
@@ -140,7 +140,7 @@ func verifyTemplate(ctx context.Context, verifier security.TemplateVerifier, opt
 		if err != nil {
 			return fmt.Errorf("failed to marshal compliance result: %w", err)
 		}
-		if err := os.WriteFile(complianceResultPath, complianceResultJSON, 0644); err != nil {
+		if err := os.WriteFile(complianceResultPath, complianceResultJSON, 0600); err != nil {
 			return fmt.Errorf("failed to save compliance result: %w", err)
 		}
 		fmt.Printf("Compliance result saved to %s\n", complianceResultPath)

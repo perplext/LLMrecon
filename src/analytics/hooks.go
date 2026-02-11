@@ -72,7 +72,7 @@ func (nh *NotificationHook) PostCollection(ctx context.Context, scanID string, m
 			if metric.Value > threshold {
 				message := fmt.Sprintf("Threshold exceeded for %s: %.2f > %.2f (Scan: %s)",
 					metric.Name, metric.Value, threshold, scanID)
-				nh.notifier.SendNotification(ctx, message, "warning")
+				_ = nh.notifier.SendNotification(ctx, message, "warning") // #nosec G104 -- best-effort notification in loop
 			}
 		}
 	}
@@ -97,7 +97,7 @@ func (nh *NotificationHook) OnError(ctx context.Context, err error, scanID strin
 	}
 
 	message := fmt.Sprintf("Scan error in %s: %v", scanID, err)
-	nh.notifier.SendNotification(ctx, message, "error")
+	_ = nh.notifier.SendNotification(ctx, message, "error") // #nosec G104 -- best-effort notification in OnError handler
 }
 
 func (nh *NotificationHook) countVulnerabilities(metrics []Metric) int {
@@ -209,7 +209,7 @@ func (ah *AuditHook) OnError(ctx context.Context, err error, scanID string) {
 		},
 	}
 
-	ah.auditLogger.LogAuditEvent(ctx, event)
+	_ = ah.auditLogger.LogAuditEvent(ctx, event) // #nosec G104 -- best-effort audit logging in OnError handler
 }
 
 func (ah *AuditHook) summarizeMetrics(metrics []Metric) map[string]interface{} {

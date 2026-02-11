@@ -349,7 +349,7 @@ func initializeStaticFileHandler(staticDir string) *server.StaticFileHandler {
 	}
 	
 	// Create static directory if it doesn't exist
-	if err := os.MkdirAll(staticDir, 0755); err != nil {
+	if err := os.MkdirAll(staticDir, 0750); err != nil {
 		log.Fatalf("Failed to create static directory: %v", err)
 	}
 	
@@ -448,12 +448,12 @@ func createSampleStaticFiles(staticDir string) {
 func writeFile(filePath, content string) {
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		log.Fatalf("Failed to create directory: %v", err)
 	}
 	
 	// Write file
-	if err := os.WriteFile(filepath.Clean(filePath), []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(filePath), []byte(content), 0600); err != nil {
 		log.Fatalf("Failed to write file: %v", err)
 	}
 }
@@ -607,16 +607,16 @@ func startHTTPServer(port int, staticFileHandler *server.StaticFileHandler, serv
 	mux.HandleFunc("/tune", func(w http.ResponseWriter, r *http.Request) {
 		if serverConfigTuner != nil {
 			serverConfigTuner.TuneServerConfig()
-			w.Write([]byte("Server configuration tuned"))
+			_, _ = w.Write([]byte("Server configuration tuned")) // #nosec G104 -- error writing HTTP response is not recoverable
 		} else {
-			w.Write([]byte("Server configuration tuner not enabled"))
+			_, _ = w.Write([]byte("Server configuration tuner not enabled")) // #nosec G104 -- error writing HTTP response is not recoverable
 		}
 	})
 	
 	// Register GC endpoint
 	mux.HandleFunc("/gc", func(w http.ResponseWriter, r *http.Request) {
 		runtime.GC()
-		w.Write([]byte("Garbage collection triggered"))
+		_, _ = w.Write([]byte("Garbage collection triggered")) // #nosec G104 -- error writing HTTP response is not recoverable
 	})
 	
 	// Register root endpoint

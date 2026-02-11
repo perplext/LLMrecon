@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"net/http"
 	"sync"
@@ -270,10 +271,19 @@ func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
 
 			// Calculate delay with exponential backoff if enabled
 			if retryConfig.UseExponentialBackoff {
-				backoffFactor := 1 << uint(attempt-1) // #nosec G115 -- attempt > 0 so attempt-1 is always non-negative
+				shift := attempt - 1 // attempt > 0 guaranteed by enclosing if
+				if shift < 0 {
+					shift = 0
+				}
+				backoffFactor := 1 << uint(shift)
 				delay = time.Duration(float64(retryConfig.InitialDelay) * jitter * float64(backoffFactor))
 			} else {
-				delay = time.Duration(float64(retryConfig.InitialDelay) * jitter) // #nosec G115 -- float64 to int64 conversion for time.Duration; values are bounded by delay caps
+				delayFloat := float64(retryConfig.InitialDelay) * jitter
+				if delayFloat > float64(math.MaxInt64) {
+					delay = time.Duration(math.MaxInt64)
+				} else {
+					delay = time.Duration(delayFloat)
+				}
 			}
 
 			// Cap delay at max delay
@@ -325,7 +335,7 @@ func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
 
 		// Check if we should retry based on status code
 		if isRetryableStatusCode(resp.StatusCode, retryConfig.RetryableStatusCodes) {
-			resp.Body.Close() // Close the body before retry
+			resp.Body.Close() // #nosec G104 -- closing body before retry; error is not actionable
 			continue
 		}
 
@@ -335,7 +345,7 @@ func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
 
 	// If we get here, all retries failed
 	if resp != nil {
-		resp.Body.Close()
+		resp.Body.Close() // #nosec G104 -- closing body on final failure; error is not actionable
 	}
 
 	if err != nil {

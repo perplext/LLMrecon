@@ -56,7 +56,7 @@ func main() {
 
 	// Create static directory if it doesn't exist
 	if _, err := os.Stat("./static"); os.IsNotExist(err) {
-		os.Mkdir("./static", 0755)
+		os.Mkdir("./static", 0750)
 	}
 
 	// Create some example static files
@@ -205,7 +205,7 @@ func createExampleFiles(dir string, numFiles, fileSize int) {
 	for i := 1; i <= numFiles; i++ {
 		filePath := filepath.Join(dir, fmt.Sprintf("file%d.txt", i))
 		content := generateRandomContent(fileSize)
-		os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
+		os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
 	}
 }
 
@@ -270,7 +270,7 @@ pre {
     overflow-x: auto;
 }
 `
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
 }
 
 // createJSFile creates a JavaScript file for the example
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 `
 
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
 }
 
 // formatBytes formats bytes to a human-readable string (KB, MB, GB)

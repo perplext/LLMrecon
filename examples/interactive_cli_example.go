@@ -88,29 +88,29 @@ func demoProgressIndicators(terminal *ui.Terminal) {
 	// Simulate concurrent tasks
 	go func() {
 		task1 := multiProg.AddTask("task1", "Loading templates")
-		multiProg.UpdateTask(task1.ID, ui.TaskRunning, 0.0, "Fetching from repository...")
+		multiProg.UpdateTask(task1.ID, ui.TaskRunning, 0.0, "Fetching from repository...") // #nosec G104 -- demo UI progress update
 		time.Sleep(1 * time.Second)
-		multiProg.UpdateTask(task1.ID, ui.TaskRunning, 0.5, "Parsing YAML files...")
+		multiProg.UpdateTask(task1.ID, ui.TaskRunning, 0.5, "Parsing YAML files...") // #nosec G104 -- demo UI progress update
 		time.Sleep(1 * time.Second)
-		multiProg.UpdateTask(task1.ID, ui.TaskCompleted, 1.0, "156 templates loaded")
+		multiProg.UpdateTask(task1.ID, ui.TaskCompleted, 1.0, "156 templates loaded") // #nosec G104 -- demo UI progress update
 	}()
 
 	go func() {
 		time.Sleep(500 * time.Millisecond)
 		task2 := multiProg.AddTask("task2", "Initializing providers")
-		multiProg.UpdateTask(task2.ID, ui.TaskRunning, 0.0, "Setting up OpenAI...")
+		multiProg.UpdateTask(task2.ID, ui.TaskRunning, 0.0, "Setting up OpenAI...") // #nosec G104 -- demo UI progress update
 		time.Sleep(1500 * time.Millisecond)
-		multiProg.UpdateTask(task2.ID, ui.TaskRunning, 0.7, "Configuring rate limits...")
+		multiProg.UpdateTask(task2.ID, ui.TaskRunning, 0.7, "Configuring rate limits...") // #nosec G104 -- demo UI progress update
 		time.Sleep(1 * time.Second)
-		multiProg.UpdateTask(task2.ID, ui.TaskCompleted, 1.0, "3 providers ready")
+		multiProg.UpdateTask(task2.ID, ui.TaskCompleted, 1.0, "3 providers ready") // #nosec G104 -- demo UI progress update
 	}()
 
 	go func() {
 		time.Sleep(1 * time.Second)
 		task3 := multiProg.AddTask("task3", "Validating configuration")
-		multiProg.UpdateTask(task3.ID, ui.TaskRunning, 0.0, "Checking API keys...")
+		multiProg.UpdateTask(task3.ID, ui.TaskRunning, 0.0, "Checking API keys...") // #nosec G104 -- demo UI progress update
 		time.Sleep(2 * time.Second)
-		multiProg.UpdateTask(task3.ID, ui.TaskFailed, 0.8, "Invalid API key format")
+		multiProg.UpdateTask(task3.ID, ui.TaskFailed, 0.8, "Invalid API key format") // #nosec G104 -- demo UI progress update
 	}()
 
 	// Show progress updates

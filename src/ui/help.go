@@ -217,7 +217,7 @@ func (hs *HelpSystem) browseCommands() {
 		fmt.Println()
 	}
 
-	hs.terminal.Prompt("Press Enter to continue...")
+	hs.terminal.Prompt("Press Enter to continue...") // #nosec G104 -- interactive prompt, error is non-fatal
 }
 
 // searchTopics allows searching for help topics
@@ -252,7 +252,7 @@ func (hs *HelpSystem) searchTopics() {
 		fmt.Println()
 	}
 
-	hs.terminal.Prompt("Press Enter to continue...")
+	hs.terminal.Prompt("Press Enter to continue...") // #nosec G104 -- interactive prompt, error is non-fatal
 }
 
 // viewExamples shows categorized examples
@@ -278,7 +278,7 @@ func (hs *HelpSystem) viewExamples() {
 		fmt.Println()
 	}
 
-	hs.terminal.Prompt("Press Enter to continue...")
+	hs.terminal.Prompt("Press Enter to continue...") // #nosec G104 -- interactive prompt, error is non-fatal
 }
 
 // showFAQ displays frequently asked questions
@@ -297,7 +297,7 @@ func (hs *HelpSystem) showFAQ() {
 		}
 	}
 
-	hs.terminal.Prompt("Press Enter to continue...")
+	hs.terminal.Prompt("Press Enter to continue...") // #nosec G104 -- interactive prompt, error is non-fatal
 }
 
 // troubleshoot provides troubleshooting guidance
@@ -334,7 +334,7 @@ func (hs *HelpSystem) troubleshoot() {
 		hs.showMemoryTroubleshooting()
 	}
 
-	hs.terminal.Prompt("Press Enter to continue...")
+	hs.terminal.Prompt("Press Enter to continue...") // #nosec G104 -- interactive prompt, error is non-fatal
 }
 
 // quickStart shows a quick start guide
@@ -387,7 +387,7 @@ func (hs *HelpSystem) quickStart() {
 • Join the community: https://github.com/LLMrecon/community
 `)
 
-	hs.terminal.Prompt("Press Enter to continue...")
+	hs.terminal.Prompt("Press Enter to continue...") // #nosec G104 -- interactive prompt, error is non-fatal
 }
 
 // Helper methods

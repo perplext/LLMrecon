@@ -87,9 +87,9 @@ func (g *ManifestGenerator) GenerateEnhancedManifest(name, description, version 
 // GenerateIncrementalManifest generates an incremental bundle manifest
 func (g *ManifestGenerator) GenerateIncrementalManifest(baseManifest *EnhancedBundleManifest, newVersion string, changes []string) *EnhancedBundleManifest {
 	// Create a copy of the base manifest
-	manifestData, _ := json.Marshal(baseManifest)
+	manifestData, _ := json.Marshal(baseManifest) // #nosec G104 -- marshaling a known struct type will not fail
 	var incrementalManifest EnhancedBundleManifest
-	json.Unmarshal(manifestData, &incrementalManifest)
+	_ = json.Unmarshal(manifestData, &incrementalManifest) // #nosec G104 -- unmarshaling data just marshaled from same struct type
 
 	// Update version and creation time
 	incrementalManifest.Version = newVersion

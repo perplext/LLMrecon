@@ -67,7 +67,7 @@ func main() {
 	}
 
 	// Start memory profiling
-	profiler.StartAutomaticProfiling()
+	profiler.StartAutomaticProfiling() // #nosec G104 -- non-critical profiling, failure is acceptable
 	defer profiler.StopAutomaticProfiling()
 
 	// Create resource pool manager if enabled

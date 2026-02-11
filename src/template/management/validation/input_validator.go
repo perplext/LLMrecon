@@ -31,13 +31,13 @@ func NewInputValidator(strictMode bool) *InputValidator {
 		rules:      make([]interfaces.InputValidationRule, 0),
 	}
 	// Add default rules
-	validator.AddRule(NewNoJailbreakPatternRule())
-	validator.AddRule(NewNoSensitiveDataRule())
-	validator.AddRule(NewMaxPromptLengthRule(8000)) // Reasonable default for most LLMs
-	validator.AddRule(NewSanitizeHTMLRule())
-	validator.AddRule(NewSanitizeScriptRule())
-	validator.AddRule(NewNoSQLInjectionRule())
-	validator.AddRule(NewNoCommandInjectionRule())
+	_ = validator.AddRule(NewNoJailbreakPatternRule())            // #nosec G104 -- AddRule always returns nil
+	_ = validator.AddRule(NewNoSensitiveDataRule())               // #nosec G104 -- AddRule always returns nil
+	_ = validator.AddRule(NewMaxPromptLengthRule(8000))           // #nosec G104 -- AddRule always returns nil; reasonable default for most LLMs
+	_ = validator.AddRule(NewSanitizeHTMLRule())                  // #nosec G104 -- AddRule always returns nil
+	_ = validator.AddRule(NewSanitizeScriptRule())                // #nosec G104 -- AddRule always returns nil
+	_ = validator.AddRule(NewNoSQLInjectionRule())                // #nosec G104 -- AddRule always returns nil
+	_ = validator.AddRule(NewNoCommandInjectionRule())            // #nosec G104 -- AddRule always returns nil
 	return validator
 }
 

@@ -549,9 +549,9 @@ func (lb *AdvancedLoadBalancer) Stop() error {
 	lb.cancel()
 
 	// Stop components
-	lb.health.Stop()
-	lb.scaler.Stop()
-	lb.predictor.Stop()
+	lb.health.Stop()    // #nosec G104 -- best-effort cleanup during shutdown
+	lb.scaler.Stop()    // #nosec G104 -- best-effort cleanup during shutdown
+	lb.predictor.Stop() // #nosec G104 -- best-effort cleanup during shutdown
 
 	lb.wg.Wait()
 

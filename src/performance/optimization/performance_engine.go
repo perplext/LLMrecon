@@ -3,6 +3,7 @@ package optimization
 import (
 	"context"
 	"fmt"
+	"math"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -521,8 +522,8 @@ func (sp *SystemProfiler) ProfileMemory() *MemoryProfile {
 		StackInUse:  m.StackInuse,
 		GCStats: GCStatistics{
 			NumGC:      m.NumGC,
-			PauseTotal: time.Duration(m.PauseTotalNs), // #nosec G115 -- GC pause total in nanoseconds will not exceed int64 max in practice
-			LastGC:     time.Unix(0, int64(m.LastGC)),  // #nosec G115 -- LastGC is a Unix nanosecond timestamp, fits in int64 until year 2262
+			PauseTotal: time.Duration(min(m.PauseTotalNs, uint64(math.MaxInt64))),
+			LastGC:     time.Unix(0, int64(min(m.LastGC, uint64(math.MaxInt64)))),
 		},
 	}
 
@@ -654,7 +655,7 @@ func (ro *ResourceOptimizer) AnalyzeMemory(profile *MemoryProfile) []MemoryOppor
 		opportunities = append(opportunities, MemoryOpportunity{
 			Type:        "gc_pressure",
 			Description: "High GC pause times",
-			Potential:   int64(profile.HeapInUse) / 4, // #nosec G115 -- heap size will not exceed int64 max on any real system
+			Potential:   int64(min(profile.HeapInUse, uint64(math.MaxInt64))) / 4,
 			Risk:        RiskLow,
 		})
 	}
@@ -1098,7 +1099,7 @@ func (pe *PerformanceEngine) performAutoTuning(metrics SystemMetrics) {
 	}
 
 	// Start optimization
-	pe.StartOptimization(ctx, target)
+	pe.StartOptimization(ctx, target) // #nosec G104 -- best-effort auto-tuning optimization
 }
 
 // identifyBottleneck finds performance bottleneck
@@ -1134,7 +1135,7 @@ func (pe *PerformanceEngine) captureMetrics() SystemMetrics {
 
 	return SystemMetrics{
 		CPUUsage:          pe.getCurrentCPUUsage(),
-		MemoryUsage:       int64(m.HeapInuse), // #nosec G115 -- heap size will not exceed int64 max on any real system
+		MemoryUsage:       int64(min(m.HeapInuse, uint64(math.MaxInt64))),
 		GoroutineCount:    runtime.NumGoroutine(),
 		RequestsPerSecond: pe.monitor.GetRequestRate(),
 		AverageLatency:    pe.monitor.GetAverageLatency(),

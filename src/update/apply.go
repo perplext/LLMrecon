@@ -689,7 +689,7 @@ func replaceFile(src, dst string) error {
 		tmpDst := dst + ".old"
 
 		// Remove existing temporary file if it exists
-		os.Remove(tmpDst)
+		os.Remove(tmpDst) // #nosec G104 -- best-effort cleanup of old temp file
 
 		// Rename destination to temporary file
 		if _, err := os.Stat(dst); err == nil {
@@ -701,12 +701,12 @@ func replaceFile(src, dst string) error {
 		// Rename source to destination
 		if err := os.Rename(src, dst); err != nil {
 			// Try to restore original file
-			os.Rename(tmpDst, dst)
+			os.Rename(tmpDst, dst) // #nosec G104 -- best-effort rollback on error path
 			return fmt.Errorf("failed to rename source file: %w", err)
 		}
 
 		// Remove temporary file
-		os.Remove(tmpDst)
+		os.Remove(tmpDst) // #nosec G104 -- best-effort cleanup of temp file
 	} else {
 		// On Unix-like systems, we can use os.Rename to replace the file
 		if err := os.Rename(src, dst); err != nil {

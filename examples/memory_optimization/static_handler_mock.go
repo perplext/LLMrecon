@@ -81,7 +81,7 @@ func (h *MockFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	
 	// Simulate file serving
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(fmt.Sprintf("Mock file content for %s", r.URL.Path)))
+	_, _ = w.Write([]byte(fmt.Sprintf("Mock file content for %s", r.URL.Path))) // #nosec G104 -- error writing HTTP response is not recoverable
 }
 
 // GetStats returns the current stats

@@ -584,7 +584,7 @@ func findDependencyPath(ctx context.Context, repo interfaces.Repository, depID s
 			}
 
 			content, err := io.ReadAll(reader)
-			reader.Close()
+			_ = reader.Close() // #nosec G104 -- reader already fully consumed
 			if err != nil {
 				continue
 			}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -115,7 +116,11 @@ func (p *ProgressTracker) SetStage(stage ProgressStage, operation string) {
 func (p *ProgressTracker) SetTotal(bytes int64, items int) {
 	p.mu.Lock()
 	p.bytesTotal = bytes
-	atomic.StoreInt32(&p.itemsTotal, int32(items)) // #nosec G115 -- item count is bounded by practical import limits, well within int32 range
+	safeItems := items
+	if safeItems > math.MaxInt32 {
+		safeItems = math.MaxInt32
+	}
+	atomic.StoreInt32(&p.itemsTotal, int32(safeItems))
 	p.mu.Unlock()
 
 	p.sendUpdate()
@@ -128,7 +133,11 @@ func (p *ProgressTracker) UpdateBytes(bytes int64) {
 
 // UpdateItems updates items processed
 func (p *ProgressTracker) UpdateItems(count int) {
-	atomic.AddInt32(&p.itemsProcessed, int32(count)) // #nosec G115 -- count is a small increment, well within int32 range
+	safeCount := count
+	if safeCount > math.MaxInt32 {
+		safeCount = math.MaxInt32
+	}
+	atomic.AddInt32(&p.itemsProcessed, int32(safeCount))
 }
 
 // SetCurrentFile sets the current file being processed

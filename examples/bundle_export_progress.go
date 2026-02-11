@@ -13,7 +13,7 @@ import (
 func main() {
 	// Create output directory
 	outputDir := "./export_demo"
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0750); err != nil {
 		log.Fatal(err)
 	}
 	

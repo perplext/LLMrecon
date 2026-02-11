@@ -240,8 +240,8 @@ func (t *ServerConfigTuner) tuneWorkerCount(metrics map[string]*monitoring.Metri
 		}
 
 		// Apply changes to environment variables for immediate effect
-		os.Setenv("MAX_WORKERS", strconv.Itoa(newMaxWorkers))
-		os.Setenv("MIN_WORKERS", strconv.Itoa(newMinWorkers))
+		_ = os.Setenv("MAX_WORKERS", strconv.Itoa(newMaxWorkers)) // #nosec G104 -- best-effort env var update
+		_ = os.Setenv("MIN_WORKERS", strconv.Itoa(newMinWorkers)) // #nosec G104 -- best-effort env var update
 	}
 }
 
@@ -292,7 +292,7 @@ func (t *ServerConfigTuner) tuneConnectionPoolSize(metrics map[string]*monitorin
 		}
 
 		// Apply changes to environment variables for immediate effect
-		os.Setenv("CONNECTION_POOL_SIZE", strconv.Itoa(newPoolSize))
+		_ = os.Setenv("CONNECTION_POOL_SIZE", strconv.Itoa(newPoolSize)) // #nosec G104 -- best-effort env var update
 	}
 }
 
@@ -395,7 +395,7 @@ func (t *ServerConfigTuner) tuneBufferSizes(metrics map[string]*monitoring.Metri
 		}
 
 		// Apply changes to environment variables for immediate effect
-		os.Setenv("BUFFER_POOL_SIZE", strconv.Itoa(newBufferPoolSize))
+		_ = os.Setenv("BUFFER_POOL_SIZE", strconv.Itoa(newBufferPoolSize)) // #nosec G104 -- best-effort env var update
 	}
 }
 

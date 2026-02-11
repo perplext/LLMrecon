@@ -110,7 +110,7 @@ func (r *DefaultErrorReporter) GenerateErrorReport(ctx context.Context, errors [
 	}
 
 	// Create or open the output file
-	file, err := os.Create(filepath.Clean(outputPath))
+	file, err := os.Create(filepath.Clean(outputPath)) // #nosec G304 -- outputPath is caller-provided output destination
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
 	}

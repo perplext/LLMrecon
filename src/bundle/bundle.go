@@ -197,7 +197,7 @@ func copyDir(src, dst string) error {
 // createZipFromDir creates a zip file from a directory
 func createZipFromDir(src, dst string) error {
 	// Create destination file
-	zipFile, err := os.Create(filepath.Clean(dst))
+	zipFile, err := os.Create(filepath.Clean(dst)) // #nosec G304 -- dst is an internally constructed output path
 	if err != nil {
 		return err
 	}
@@ -301,33 +301,21 @@ func ExtractBundle(bundlePath, outputDir string) error {
 
 // extractFile extracts a file from a zip archive
 func extractFile(file *zip.File, outputDir string) error {
-	// Sanitize file name and create the file path
-	cleanName := filepath.Clean(file.Name)
-	if strings.Contains(cleanName, "..") {
-		return fmt.Errorf("illegal file path: %s", file.Name)
-	}
-	filePath := filepath.Join(outputDir, cleanName)
-
-	// Verify the resolved path is within the output directory
-	absOutputDir, err := filepath.Abs(outputDir)
-	if err != nil {
-		return fmt.Errorf("failed to resolve output directory: %w", err)
-	}
-	absFilePath, err := filepath.Abs(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to resolve file path: %w", err)
-	}
-	if !strings.HasPrefix(absFilePath, absOutputDir+string(os.PathSeparator)) && absFilePath != absOutputDir {
-		return fmt.Errorf("illegal file path: %s", file.Name)
+	// G305 (zip slip) protection: validate the extracted file path stays within outputDir
+	filePath := filepath.Join(outputDir, file.Name)
+	cleanDest := filepath.Clean(filePath)
+	cleanOutputDir := filepath.Clean(outputDir) + string(os.PathSeparator)
+	if !strings.HasPrefix(cleanDest, cleanOutputDir) && cleanDest != filepath.Clean(outputDir) {
+		return fmt.Errorf("illegal file path (zip slip): %s", file.Name)
 	}
 
 	// Create directory for file if needed
 	if file.FileInfo().IsDir() {
-		return os.MkdirAll(filePath, file.Mode())
+		return os.MkdirAll(cleanDest, file.Mode())
 	}
 
 	// Create parent directory if needed
-	err = os.MkdirAll(filepath.Dir(filePath), 0700)
+	err := os.MkdirAll(filepath.Dir(cleanDest), 0700)
 	if err != nil {
 		return err
 	}
@@ -344,7 +332,7 @@ func extractFile(file *zip.File, outputDir string) error {
 	}()
 
 	// Create the file
-	outFile, err := os.OpenFile(filepath.Clean(filePath), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+	outFile, err := os.OpenFile(cleanDest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode()) // #nosec G304 -- path validated against zip slip above
 	if err != nil {
 		return err
 	}
@@ -354,10 +342,10 @@ func extractFile(file *zip.File, outputDir string) error {
 		}
 	}()
 
-	// Copy the file with size limit to prevent decompression bombs (100MB max)
-	const maxBundleFileSize = 100 * 1024 * 1024 // 100MB
-	written, err := io.Copy(outFile, io.LimitReader(rc, maxBundleFileSize+1))
-	if err != nil {
+	// G110 protection: use io.CopyN to cap decompressed size (100MB max)
+	const maxBundleFileSize int64 = 100 * 1024 * 1024 // 100MB
+	written, err := io.CopyN(outFile, rc, maxBundleFileSize+1)
+	if err != nil && err != io.EOF {
 		return err
 	}
 	if written > maxBundleFileSize {

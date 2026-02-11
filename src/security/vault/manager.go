@@ -79,7 +79,7 @@ func NewCredentialManager(options ManagerOptions) (*CredentialManager, error) {
 		AlertCallback: func(credential *Credential, daysUntilExpiration int) {
 			// Log alert about credential rotation
 			if options.AuditLogger != nil {
-				options.AuditLogger.LogAlert(
+				options.AuditLogger.LogAlert( // #nosec G104 -- best-effort audit logging
 					fmt.Sprintf("Credential '%s' for service '%s' needs rotation in %d days",
 						credential.Name,
 						credential.Service,

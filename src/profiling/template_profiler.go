@@ -320,7 +320,7 @@ func (p *TemplateProfiler) EstablishBaseline(ctx context.Context, sources []type
 
 	// Reset profiler
 	p.profiler = NewProfiler(p.config.ProfilerConfig)
-	p.Start()
+	_ = p.Start() // #nosec G104 -- profiler start failure is non-critical for baseline establishment
 
 	// Load and execute templates from each source
 	for _, source := range sources {
@@ -362,7 +362,7 @@ func (p *TemplateProfiler) EstablishBaseline(ctx context.Context, sources []type
 	}
 
 	// Stop profiler
-	p.Stop()
+	_ = p.Stop() // #nosec G104 -- profiler stop failure is non-critical
 
 	fmt.Println("Baseline established successfully")
 	return nil
@@ -450,7 +450,7 @@ func (p *TemplateProfiler) SaveComparisonReport(filePath string) error {
 	comparison := p.CompareWithBaseline()
 
 	// Create file
-	file, err := os.Create(filepath.Clean(filePath))
+	file, err := os.Create(filepath.Clean(filePath)) // #nosec G304 -- filePath is caller-provided output path
 	if err != nil {
 		return fmt.Errorf("failed to create comparison report file: %w", err)
 	}
@@ -556,7 +556,7 @@ func (p *TemplateProfiler) startContinuousMonitoring() {
 
 			// Save report periodically
 			if p.config.ReportFilePath != "" {
-				p.profiler.SaveReport(p.config.ReportFilePath)
+				_ = p.profiler.SaveReport(p.config.ReportFilePath) // #nosec G104 -- best-effort periodic report save
 			}
 		}
 	}

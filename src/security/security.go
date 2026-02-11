@@ -100,7 +100,7 @@ func NewSecurityManager(config *SecurityConfig) (*SecurityManager, error) {
 	secureLogger, err := api.NewSecureLogger(config.SecureLoggerConfig)
 	if err != nil {
 		if logFile != nil {
-			logFile.Close()
+			_ = logFile.Close() // #nosec G104 -- cleanup on error path
 		}
 		return nil, err
 	}

@@ -835,7 +835,7 @@ func (a *ResponseAnalyzer) AnalyzeResponse(response string) (bool, float64) {
 
 // Helper functions
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) // #nosec G404 -- intentional use of deterministic randomness for attack simulation
 }
 
 // GetAvailableTechniques returns all registered technique IDs

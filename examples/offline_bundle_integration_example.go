@@ -89,7 +89,7 @@ func loadTemplatesDirectly(templateManager types.TemplateManager, auditTrailMana
 	// In a real application, this would be provided by the user
 	bundlePath := "./examples/bundles/offline_bundle"
 	// Ensure the bundle path exists
-	if err := os.MkdirAll(bundlePath, 0755); err != nil {
+	if err := os.MkdirAll(bundlePath, 0750); err != nil {
 		return fmt.Errorf("failed to create bundle directory: %w", err)
 	}
 
@@ -172,10 +172,10 @@ func convertAndLoadBundle(templateManager types.TemplateManager, auditTrailManag
 	offlineBundlePath := "./examples/bundles/converted_bundle"
 
 	// Ensure the bundle paths exist
-	if err := os.MkdirAll(standardBundlePath, 0755); err != nil {
+	if err := os.MkdirAll(standardBundlePath, 0750); err != nil {
 		return fmt.Errorf("failed to create standard bundle directory: %w", err)
 	}
-	if err := os.MkdirAll(offlineBundlePath, 0755); err != nil {
+	if err := os.MkdirAll(offlineBundlePath, 0750); err != nil {
 		return fmt.Errorf("failed to create offline bundle directory: %w", err)
 	}
 
@@ -262,10 +262,10 @@ func createSampleOfflineBundle(bundlePath string, auditTrailManager *trail.Audit
 
 	// Write the template to a file
 	templatePath := filepath.Join(bundlePath, "templates", "test-template-1.json")
-	if err := os.MkdirAll(filepath.Dir(templatePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(templatePath), 0750); err != nil {
 		return fmt.Errorf("failed to create template directory: %w", err)
 	}
-	if err := os.WriteFile(filepath.Clean(templatePath), []byte(templateContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(templatePath), []byte(templateContent), 0600); err != nil {
 		return fmt.Errorf("failed to write template file: %w", err)
 	}
 
@@ -297,10 +297,10 @@ func createSampleOfflineBundle(bundlePath string, auditTrailManager *trail.Audit
 	// Add documentation
 	docContent := "# Test Template 1\n\nThis is documentation for the test template."
 	docPath := filepath.Join(bundlePath, "documentation", "test-template-1.md")
-	if err := os.MkdirAll(filepath.Dir(docPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(docPath), 0750); err != nil {
 		return fmt.Errorf("failed to create documentation directory: %w", err)
 	}
-	if err := os.WriteFile(filepath.Clean(docPath), []byte(docContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(docPath), []byte(docContent), 0600); err != nil {
 		return fmt.Errorf("failed to write documentation file: %w", err)
 	}
 
@@ -350,10 +350,10 @@ func createSampleStandardBundle(bundlePath string) error {
 
 	// Write the template to a file
 	templatePath := filepath.Join(bundlePath, "templates", "test-template-2.json")
-	if err := os.MkdirAll(filepath.Dir(templatePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(templatePath), 0750); err != nil {
 		return fmt.Errorf("failed to create template directory: %w", err)
 	}
-	if err := os.WriteFile(filepath.Clean(templatePath), []byte(templateContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(templatePath), []byte(templateContent), 0600); err != nil {
 		return fmt.Errorf("failed to write template file: %w", err)
 	}
 

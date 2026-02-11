@@ -45,7 +45,7 @@ func DownloadWithProgressBar(ctx context.Context, url, destPath string) error {
 	}
 
 	// Create the destination file
-	out, err := os.Create(filepath.Clean(destPath))
+	out, err := os.Create(filepath.Clean(destPath)) // #nosec G304 -- destPath is caller-provided download destination
 	if err != nil {
 		return fmt.Errorf("creating file: %w", err)
 	}

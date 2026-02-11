@@ -3,6 +3,7 @@ package resource
 import (
 	"context"
 	"fmt"
+	"math"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -175,7 +176,7 @@ func (m *ResourcePoolManager) CreatePool(name string, size int, factory func() (
 	pool := &ResourcePool{
 		name:        name,
 		size:        size,
-		available:   int32(size), // #nosec G115 -- pool size is a small config value, well within int32 range
+		available:   int32(min(size, math.MaxInt32)),
 		resources:   make(chan interface{}, size),
 		inUse:       make(map[interface{}]time.Time),
 		factory:     factory,

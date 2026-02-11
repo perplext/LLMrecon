@@ -441,7 +441,7 @@ func (ec *ExportConfigurator) QuickExport(preset string, data interface{}) (*Exp
 	if config, ok := presets[preset]; ok {
 		// Show preview
 		ec.terminal.Info("Using preset: " + preset)
-		ec.preview.ShowPreview(config.Format, data)
+		ec.preview.ShowPreview(config.Format, data) // #nosec G104 -- preview display error is non-fatal
 
 		// Confirm
 		if confirmed, _ := ec.terminal.Confirm("Use this preset?", true); confirmed {

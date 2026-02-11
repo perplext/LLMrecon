@@ -186,11 +186,11 @@ func main() {
 	exampleDir := filepath.Join(localRepoPath, "version_example")
 	remoteExampleDir := filepath.Join(remoteRepoPath, "version_example")
 	
-	if err := os.MkdirAll(exampleDir, 0755); err != nil {
+	if err := os.MkdirAll(exampleDir, 0750); err != nil {
 		fmt.Printf("Failed to create example directory: %v\n", err)
 	}
 	
-	if err := os.MkdirAll(remoteExampleDir, 0755); err != nil {
+	if err := os.MkdirAll(remoteExampleDir, 0750); err != nil {
 		fmt.Printf("Failed to create remote example directory: %v\n", err)
 	}
 	
@@ -222,11 +222,11 @@ dependencies:
 	localTemplatePath := filepath.Join(exampleDir, "basic_prompt_injection.yaml")
 	remoteTemplatePath := filepath.Join(remoteExampleDir, "basic_prompt_injection.yaml")
 	
-	if err := os.WriteFile(filepath.Clean(localTemplatePath), []byte(localTemplateContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(localTemplatePath), []byte(localTemplateContent), 0600); err != nil {
 		fmt.Printf("Failed to write local template file: %v\n", err)
 	}
 	
-	if err := os.WriteFile(filepath.Clean(remoteTemplatePath), []byte(remoteTemplateContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(remoteTemplatePath), []byte(remoteTemplateContent), 0600); err != nil {
 		fmt.Printf("Failed to write remote template file: %v\n", err)
 	}
 	

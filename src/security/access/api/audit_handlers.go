@@ -291,7 +291,7 @@ func exportAuditLogsToCSV(w http.ResponseWriter, logs []*access.AuditLog) {
 		"ID", "Timestamp", "UserID", "Username", "Action", "Resource", "ResourceID",
 		"Severity", "Status", "IPAddress", "UserAgent", "Metadata",
 	}
-	writer.Write(header)
+	_ = writer.Write(header) // #nosec G104 -- error writing HTTP response is not recoverable
 
 	// Write data
 	for _, log := range logs {
@@ -312,7 +312,7 @@ func exportAuditLogsToCSV(w http.ResponseWriter, logs []*access.AuditLog) {
 			log.UserAgent,
 			string(metadataJSON),
 		}
-		writer.Write(row)
+		_ = writer.Write(row) // #nosec G104 -- error writing HTTP response is not recoverable
 	}
 }
 

@@ -1048,14 +1048,14 @@ func NewTestContext(t *testing.T) *TestContext {
 	// Create database factory
 	factory, err := db.NewFactory(dbConfig)
 	if err != nil {
-		os.RemoveAll(tempDir)
+		_ = os.RemoveAll(tempDir) // #nosec G104 -- best-effort cleanup in error path
 		t.Fatalf("Failed to create database factory: %v", err)
 	}
 
 	// Open database connection
 	database, err := sql.Open(dbConfig.Driver, dbConfig.DSN)
 	if err != nil {
-		os.RemoveAll(tempDir)
+		_ = os.RemoveAll(tempDir) // #nosec G104 -- best-effort cleanup in error path
 		t.Fatalf("Failed to open database: %v", err)
 	}
 
@@ -1065,16 +1065,16 @@ func NewTestContext(t *testing.T) *TestContext {
 	// Create access control manager
 	manager, err := access.NewAccessControlManager(accessConfig)
 	if err != nil {
-		database.Close()
-		os.RemoveAll(tempDir)
+		_ = database.Close()      // #nosec G104 -- best-effort cleanup in error path
+		_ = os.RemoveAll(tempDir) // #nosec G104 -- best-effort cleanup in error path
 		t.Fatalf("Failed to create access control manager: %v", err)
 	}
 
 	// Create cleanup function
 	cleanupFn := func() {
-		manager.Close(context.Background())
-		database.Close()
-		os.RemoveAll(tempDir)
+		_ = manager.Close(context.Background()) // #nosec G104 -- best-effort cleanup
+		_ = database.Close()                    // #nosec G104 -- best-effort cleanup
+		_ = os.RemoveAll(tempDir)               // #nosec G104 -- best-effort cleanup
 	}
 
 	// Create mock audit logger

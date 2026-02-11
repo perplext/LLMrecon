@@ -300,7 +300,7 @@ func (sm *StateManager) checkpointRoutine() {
 		for _, state := range states {
 			if sm.shouldCheckpoint(state) {
 				sm.mu.Lock()
-				sm.createCheckpoint(state)
+				_ = sm.createCheckpoint(state) // #nosec G104 -- checkpoint creation is best-effort in background goroutine
 				sm.mu.Unlock()
 			}
 		}

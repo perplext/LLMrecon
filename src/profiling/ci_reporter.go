@@ -229,7 +229,7 @@ func (r *CIReporter) GenerateReports() error {
 func (r *CIReporter) generateJSONReport() error {
 	// Create report file
 	reportPath := filepath.Join(r.config.ReportDir, "performance-report.json")
-	file, err := os.Create(filepath.Clean(reportPath))
+	file, err := os.Create(filepath.Clean(reportPath)) // #nosec G304 -- path constructed from internal report directory config
 	if err != nil {
 		return fmt.Errorf("failed to create JSON report file: %w", err)
 	}
@@ -253,7 +253,7 @@ func (r *CIReporter) generateJSONReport() error {
 func (r *CIReporter) generateTextReport() error {
 	// Create report file
 	reportPath := filepath.Join(r.config.ReportDir, "performance-report.txt")
-	file, err := os.Create(filepath.Clean(reportPath))
+	file, err := os.Create(filepath.Clean(reportPath)) // #nosec G304 -- path constructed from internal report directory config
 	if err != nil {
 		return fmt.Errorf("failed to create text report file: %w", err)
 	}
@@ -313,7 +313,7 @@ func (r *CIReporter) generateTextReport() error {
 func (r *CIReporter) generateHTMLReport() error {
 	// Create report file
 	reportPath := filepath.Join(r.config.ReportDir, "performance-report.html")
-	file, err := os.Create(filepath.Clean(reportPath))
+	file, err := os.Create(filepath.Clean(reportPath)) // #nosec G304 -- path constructed from internal report directory config
 	if err != nil {
 		return fmt.Errorf("failed to create HTML report file: %w", err)
 	}
@@ -474,7 +474,7 @@ func (r *CIReporter) generateHTMLReport() error {
 func (r *CIReporter) generateThresholdReport() error {
 	// Create report file
 	reportPath := filepath.Join(r.config.ReportDir, "threshold-report.txt")
-	file, err := os.Create(filepath.Clean(reportPath))
+	file, err := os.Create(filepath.Clean(reportPath)) // #nosec G304 -- path constructed from internal report directory config
 	if err != nil {
 		return fmt.Errorf("failed to create threshold report file: %w", err)
 	}
@@ -542,7 +542,7 @@ func (r *CIReporter) generateThresholdReport() error {
 func (r *CIReporter) generateComparisonReport() error {
 	// Create report file
 	reportPath := filepath.Join(r.config.ReportDir, "comparison-report.txt")
-	file, err := os.Create(filepath.Clean(reportPath))
+	file, err := os.Create(filepath.Clean(reportPath)) // #nosec G304 -- path constructed from internal report directory config
 	if err != nil {
 		return fmt.Errorf("failed to create comparison report file: %w", err)
 	}

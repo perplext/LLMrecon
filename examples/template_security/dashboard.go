@@ -37,7 +37,7 @@ func NewDashboardServer(framework *sandbox.SecurityFramework, port int, template
 // Start starts the dashboard server
 func (s *DashboardServer) Start() error {
 	// Create the template directory if it doesn't exist
-	if err := os.MkdirAll(s.templateDir, 0755); err != nil {
+	if err := os.MkdirAll(s.templateDir, 0750); err != nil {
 		return fmt.Errorf("failed to create template directory: %w", err)
 	}
 
@@ -71,7 +71,7 @@ func (s *DashboardServer) Start() error {
 func (s *DashboardServer) createTemplates() error {
 	// Create the index template
 	indexTemplate := filepath.Join(s.templateDir, "index.html")
-	if err := os.WriteFile(filepath.Clean(indexTemplate), []byte(indexHTML), 0644); err != nil {
+	if err := os.WriteFile(filepath.Clean(indexTemplate), []byte(indexHTML), 0600); err != nil {
 		return fmt.Errorf("failed to create index template: %w", err)
 	}
 

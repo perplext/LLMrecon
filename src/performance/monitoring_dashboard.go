@@ -204,13 +204,13 @@ func (d *MonitoringDashboard) Stop() error {
 	if d.server != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		d.server.Shutdown(ctx)
+		d.server.Shutdown(ctx) // #nosec G104 -- best-effort shutdown of HTTP server
 	}
 
 	// Close all client connections
 	d.mutex.Lock()
 	for _, client := range d.clients {
-		client.Conn.Close()
+		client.Conn.Close() // #nosec G104 -- best-effort cleanup during shutdown
 	}
 	d.mutex.Unlock()
 
@@ -352,12 +352,12 @@ func (d *MonitoringDashboard) handleClient(client *DashboardClient) {
 		delete(d.clients, client.ID)
 		d.mutex.Unlock()
 
-		client.Conn.Close()
+		client.Conn.Close() // #nosec G104 -- best-effort cleanup on disconnect
 		d.logger.Info("Client disconnected", "id", client.ID)
 	}()
 
 	// Set read deadline
-	client.Conn.SetReadDeadline(time.Now().Add(d.config.ClientTimeout))
+	client.Conn.SetReadDeadline(time.Now().Add(d.config.ClientTimeout)) // #nosec G104 -- non-critical deadline setting
 
 	for {
 		var msg map[string]interface{}
@@ -377,7 +377,7 @@ func (d *MonitoringDashboard) handleClient(client *DashboardClient) {
 		d.handleClientMessage(client, msg)
 
 		// Reset read deadline
-		client.Conn.SetReadDeadline(time.Now().Add(d.config.ClientTimeout))
+		client.Conn.SetReadDeadline(time.Now().Add(d.config.ClientTimeout)) // #nosec G104 -- non-critical deadline setting
 	}
 }
 
@@ -507,7 +507,7 @@ func (d *MonitoringDashboard) cleanupStaleClients() {
 	d.mutex.Lock()
 	for id, client := range d.clients {
 		if client.LastSeen.Before(threshold) {
-			client.Conn.Close()
+			client.Conn.Close() // #nosec G104 -- best-effort cleanup of stale client
 			delete(d.clients, id)
 			d.logger.Info("Removed stale client", "id", id)
 		}
@@ -564,7 +564,7 @@ func (d *MonitoringDashboard) handleGetStatus(w http.ResponseWriter, r *http.Req
 func (d *MonitoringDashboard) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
+	json.NewEncoder(w).Encode(map[string]string{ // #nosec G104 -- error writing HTTP response is not recoverable
 		"status": "healthy",
 	})
 }
@@ -573,7 +573,7 @@ func (d *MonitoringDashboard) handleHealthCheck(w http.ResponseWriter, r *http.R
 func (d *MonitoringDashboard) handleGetMetricsHistory(w http.ResponseWriter, r *http.Request) {
 	// Placeholder for historical metrics implementation
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
 		"message": "Historical metrics not implemented yet",
 	})
 }
@@ -587,7 +587,7 @@ func (d *MonitoringDashboard) handleExportMetrics(w http.ResponseWriter, r *http
 
 	// Placeholder for metrics export implementation
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
 		"message": "Metrics export not implemented yet",
 	})
 }
@@ -601,7 +601,7 @@ func (d *MonitoringDashboard) handleExportLogs(w http.ResponseWriter, r *http.Re
 
 	// Placeholder for logs export implementation
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
 		"message": "Logs export not implemented yet",
 	})
 }

@@ -594,8 +594,8 @@ func (p *BaseMockProviderImpl) generateMockEmbedding(text string, dimension int)
 	}
 
 	// Create a new random source with the seed
-	source := mathrand.NewSource(seed)
-	rng := mathrand.New(source) // #nosec G404 -- math/rand used intentionally for test data generation, not security
+	source := mathrand.NewSource(seed) // #nosec G404 -- non-security-sensitive mock/test randomness
+	rng := mathrand.New(source)        // #nosec G404 -- non-security-sensitive mock/test randomness
 
 	// Generate the embedding vector
 	embedding := make([]float64, dimension)

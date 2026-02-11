@@ -174,7 +174,7 @@ func (m *MetricsExporter) serveJSONMetrics(w http.ResponseWriter, r *http.Reques
 }
 func (m *MetricsExporter) serveStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
 		"status": "healthy",
 		"uptime": time.Since(m.startTime).String(),
 	})

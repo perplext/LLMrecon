@@ -38,7 +38,7 @@ func main() {
 
 	// Create output directory
 	outputDir := "reports"
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0750); err != nil {
 		fmt.Printf("Error creating output directory: %v\n", err)
 		os.Exit(1)
 	}

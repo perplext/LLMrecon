@@ -305,7 +305,7 @@ func (s *SQLiteStorage) QueryMetrics(query *MetricsQuery) (*MetricsResult, error
 		}
 
 		var tags map[string]string
-		json.Unmarshal([]byte(tagsJSON), &tags)
+		_ = json.Unmarshal([]byte(tagsJSON), &tags) // #nosec G104 -- tags are optional, unmarshal failure results in nil map which is acceptable
 
 		// Find or create data point for this timestamp
 		var dataPoint *DataPoint

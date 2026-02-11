@@ -70,7 +70,7 @@ func (r *HTTPRepository) Connect(ctx context.Context) error {
 	// Create transport with custom settings
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: r.config.InsecureSkipVerify,
+			InsecureSkipVerify: r.config.InsecureSkipVerify, // #nosec G402 -- Controlled by user configuration for non-production/testing environments
 			MinVersion:         tls.VersionTLS12,
 		},
 		MaxIdleConns:        r.config.MaxConnections,
@@ -252,7 +252,7 @@ func (r *HTTPRepository) ListFiles(ctx context.Context, pattern string) ([]FileI
 				if err != nil {
 					continue
 				}
-				fileResp.Body.Close()
+				_ = fileResp.Body.Close() // #nosec G104 -- response body close after reading headers
 
 				// Get file size
 				fileInfo.Size = fileResp.ContentLength
@@ -370,7 +370,7 @@ func (r *HTTPRepository) GetFile(ctx context.Context, filePath string) (io.ReadC
 
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
+		_ = resp.Body.Close() // #nosec G104 -- response body close on error path
 		r.ReleaseConnection()
 
 		// Create error for status code

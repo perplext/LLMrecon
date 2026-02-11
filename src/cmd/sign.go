@@ -82,7 +82,7 @@ If no private key is provided, the command can generate a new key pair.`,
 				fmt.Fprintf(os.Stderr, "Error writing private key: %v\n", err)
 				os.Exit(1)
 			}
-			if err := os.WriteFile(publicKeyPath, []byte(publicKeyPEM), 0644); err != nil {
+			if err := os.WriteFile(publicKeyPath, []byte(publicKeyPEM), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing public key: %v\n", err)
 				os.Exit(1)
 			}

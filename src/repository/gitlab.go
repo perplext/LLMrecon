@@ -263,7 +263,7 @@ func (r *GitLabRepository) GetFile(ctx context.Context, path string) (io.ReadClo
 		if fetchErr != nil {
 			pw.CloseWithError(fetchErr)
 		} else {
-			pw.Close()
+			_ = pw.Close() // #nosec G104 -- pipe writer close error is not actionable
 		}
 	}()
 

@@ -518,7 +518,7 @@ func (f *SecurityFramework) logExecutionResult(result *ExecutionResult, template
 // appendToLogFile appends a log entry to a file
 func (f *SecurityFramework) appendToLogFile(logFile, logEntry string) {
 	// Open the log file in append mode
-	file, err := os.OpenFile(filepath.Clean(logFile), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	file, err := os.OpenFile(filepath.Clean(logFile), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304 -- path constructed from internal log directory
 	if err != nil {
 		return
 	}
@@ -529,7 +529,7 @@ func (f *SecurityFramework) appendToLogFile(logFile, logEntry string) {
 	}()
 
 	// Write the log entry
-	file.WriteString(logEntry)
+	_, _ = file.WriteString(logEntry) // #nosec G104 -- best-effort log writing, errors are non-fatal
 }
 
 // GetMetrics returns the metrics from the metrics collector

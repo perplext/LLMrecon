@@ -228,7 +228,7 @@ func (s *AccessControlSystem) CreateUser(ctx context.Context, username, email, p
 
 	// Log the action if security manager is available
 	if s.securityManager != nil && user != nil {
-		s.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = s.securityManager.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      getUserIDFromContext(ctx),
 			Action:      AuditAction(common.AuditActionUserCreate),
@@ -263,7 +263,7 @@ func (a *AccessControlSystem) UpdateUser(ctx context.Context, user *User) error 
 	// Log the action
 	changes := getChanges(oldUser, user)
 	if a.securityManager != nil {
-		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      getUserIDFromContext(ctx),
 			Action:      AuditAction(common.AuditActionUserUpdate),
@@ -293,7 +293,7 @@ func (a *AccessControlSystem) DeleteUser(ctx context.Context, userID string) err
 
 	// Log the action
 	if a.securityManager != nil && user != nil {
-		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      getUserIDFromContext(ctx),
 			Action:      AuditAction(common.AuditActionUserDelete),
@@ -322,7 +322,7 @@ func (a *AccessControlSystem) UpdateUserPassword(ctx context.Context, userID, cu
 
 	// Log the action
 	if a.securityManager != nil && user != nil {
-		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      getUserIDFromContext(ctx),
 			Action:      AuditAction(common.AuditActionUserPasswordChange),
@@ -351,7 +351,7 @@ func (a *AccessControlSystem) EnableMFA(ctx context.Context, userID string, meth
 
 	// Log the action
 	if a.securityManager != nil && user != nil {
-		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      getUserIDFromContext(ctx),
 			Action:      AuditAction(common.AuditActionMfaEnable),
@@ -384,7 +384,7 @@ func (a *AccessControlSystem) DisableMFA(ctx context.Context, userID string, met
 
 	// Log the action
 	if a.securityManager != nil && user != nil {
-		a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = a.securityManager.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      getUserIDFromContext(ctx),
 			Action:      AuditAction(common.AuditActionMfaDisable),

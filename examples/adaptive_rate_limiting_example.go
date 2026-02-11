@@ -49,7 +49,7 @@ func (p *MockLLMProvider) SendPrompt(ctx context.Context, prompt string, options
 	processingTime := time.Duration(float64(baseProcessingTime) * currentLoad)
 	
 	// Add some randomness (±20%)
-	randomFactor := 0.8 + (mathrand.Float64() * 0.4) // 0.8 to 1.2 #nosec G404
+	randomFactor := 0.8 + (mathrand.Float64() * 0.4) // #nosec G404 -- example code, not security-sensitive (0.8 to 1.2 range)
 	processingTime = time.Duration(float64(processingTime) * randomFactor)
 
 	fmt.Printf("[%s] Processing request from user %s (load: %.2f, time: %v)\n", 

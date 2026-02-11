@@ -720,8 +720,8 @@ func (ra *ResourceAllocator) initializePools() {
 	runtime.ReadMemStats(&m)
 	ra.pools["memory"] = &ResourcePool{
 		Type:        "memory",
-		TotalSize:   int64(m.Sys),                // #nosec G115 -- system memory in bytes will not exceed int64 max on any real system
-		Available:   int64(m.Sys - m.HeapAlloc), // #nosec G115 -- system memory in bytes will not exceed int64 max on any real system
+		TotalSize:   int64(min(m.Sys, uint64(math.MaxInt64))),
+		Available:   int64(min(m.Sys-m.HeapAlloc, uint64(math.MaxInt64))),
 		Allocations: make(map[string]int64),
 	}
 
@@ -813,7 +813,7 @@ func (ra *ResourceAllocator) rollbackAllocation(allocation *ResourceAllocation) 
 // scheduleRelease schedules automatic release
 func (ra *ResourceAllocator) scheduleRelease(allocation *ResourceAllocation) {
 	time.Sleep(time.Until(allocation.ExpiryTime))
-	ra.Release(allocation.ID)
+	ra.Release(allocation.ID) // #nosec G104 -- best-effort scheduled release of expired allocation
 }
 
 // Release frees allocated resources
@@ -996,7 +996,7 @@ func (rm *ResourceManager) monitorAllocation(ctx context.Context, allocation *Re
 	for {
 		select {
 		case <-ctx.Done():
-			rm.allocator.Release(allocation.ID)
+			rm.allocator.Release(allocation.ID) // #nosec G104 -- best-effort release on context cancellation
 			return
 		case <-ticker.C:
 			if allocation.Status != AllocationActive {
@@ -1040,7 +1040,7 @@ func (rm *ResourceManager) triggerPredictiveScaling(resource string, predicted f
 		Value:  math.Ceil(predicted / rm.config.ScalingThresholds.ScaleUpCPU),
 	}
 
-	rm.executeAction(action)
+	rm.executeAction(action) // #nosec G104 -- best-effort predictive scaling action
 }
 
 func (rm *ResourceManager) getMetricValue(metric string) float64 {

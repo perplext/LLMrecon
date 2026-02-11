@@ -488,15 +488,15 @@ func (c *RedisClusterCache) Stop() error {
 
 	// Stop components
 	if c.warmer != nil {
-		c.warmer.Stop()
+		c.warmer.Stop() // #nosec G104 -- best-effort cleanup during shutdown
 	}
-	c.invalidator.Stop()
-	c.partitioner.Stop()
+	c.invalidator.Stop()  // #nosec G104 -- best-effort cleanup during shutdown
+	c.partitioner.Stop()  // #nosec G104 -- best-effort cleanup during shutdown
 
 	// Close Redis connections
-	c.primary.Close()
+	c.primary.Close() // #nosec G104 -- best-effort cleanup during shutdown
 	for _, replica := range c.replicas {
-		replica.Close()
+		replica.Close() // #nosec G104 -- best-effort cleanup during shutdown
 	}
 
 	c.wg.Wait()

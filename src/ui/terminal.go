@@ -331,14 +331,14 @@ func (t *Terminal) StartProgress(id, description string, total int64) {
 // UpdateProgress updates a progress bar
 func (t *Terminal) UpdateProgress(id string, current int64) {
 	if t.progressMgr != nil {
-		t.progressMgr.Update(id, current)
+		t.progressMgr.Update(id, current) // #nosec G104 -- progress display error is non-fatal
 	}
 }
 
 // FinishProgress finishes a progress bar
 func (t *Terminal) FinishProgress(id string) {
 	if t.progressMgr != nil {
-		t.progressMgr.Finish(id)
+		t.progressMgr.Finish(id) // #nosec G104 -- progress display error is non-fatal
 	}
 }
 
@@ -493,20 +493,20 @@ func (t *Terminal) ProgressDemo() {
 		task3 := t.multiProg.AddTask("scan3", "Model Manipulation Tests")
 
 		// Update task states
-		t.multiProg.UpdateTask(task1.ID, TaskRunning, 0.0, "Initializing...")
+		t.multiProg.UpdateTask(task1.ID, TaskRunning, 0.0, "Initializing...")   // #nosec G104 -- demo progress display
 		time.Sleep(500 * time.Millisecond)
 
-		t.multiProg.UpdateTask(task1.ID, TaskRunning, 0.5, "Running test suite...")
-		t.multiProg.UpdateTask(task2.ID, TaskRunning, 0.0, "Preparing payloads...")
+		t.multiProg.UpdateTask(task1.ID, TaskRunning, 0.5, "Running test suite...")  // #nosec G104 -- demo progress display
+		t.multiProg.UpdateTask(task2.ID, TaskRunning, 0.0, "Preparing payloads...")  // #nosec G104 -- demo progress display
 		time.Sleep(1 * time.Second)
 
-		t.multiProg.UpdateTask(task1.ID, TaskCompleted, 1.0, "15 tests passed")
-		t.multiProg.UpdateTask(task2.ID, TaskRunning, 0.7, "Analyzing responses...")
-		t.multiProg.UpdateTask(task3.ID, TaskRunning, 0.2, "Testing boundaries...")
+		t.multiProg.UpdateTask(task1.ID, TaskCompleted, 1.0, "15 tests passed")      // #nosec G104 -- demo progress display
+		t.multiProg.UpdateTask(task2.ID, TaskRunning, 0.7, "Analyzing responses...") // #nosec G104 -- demo progress display
+		t.multiProg.UpdateTask(task3.ID, TaskRunning, 0.2, "Testing boundaries...")  // #nosec G104 -- demo progress display
 		time.Sleep(1 * time.Second)
 
-		t.multiProg.UpdateTask(task2.ID, TaskCompleted, 1.0, "8 tests passed")
-		t.multiProg.UpdateTask(task3.ID, TaskFailed, 0.8, "Connection timeout")
+		t.multiProg.UpdateTask(task2.ID, TaskCompleted, 1.0, "8 tests passed")      // #nosec G104 -- demo progress display
+		t.multiProg.UpdateTask(task3.ID, TaskFailed, 0.8, "Connection timeout")      // #nosec G104 -- demo progress display
 
 		// Render final state
 		t.Print("\n%s", t.multiProg.Render())

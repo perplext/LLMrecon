@@ -179,7 +179,7 @@ func (m *AccessControlManager) Initialize(ctx context.Context) error {
 	}
 
 	// Log initialization
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		Action:      AuditActionSystem,
 		Resource:    "access_control",
@@ -205,7 +205,7 @@ func (m *AccessControlManager) Close(ctx context.Context) error {
 	}
 
 	// Log shutdown
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging during shutdown
 		Timestamp:   time.Now(),
 		Action:      AuditActionSystem,
 		Resource:    "access_control",
@@ -671,7 +671,7 @@ func (m *AccessControlManager) createAdminUser(ctx context.Context) error {
 	}
 
 	// Log admin user creation
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 		Timestamp:   time.Now(),
 		Action:      AuditActionCreate,
 		Resource:    "user",

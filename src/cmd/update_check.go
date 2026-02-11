@@ -271,7 +271,7 @@ func outputTable(updates []update.ExtendedUpdateInfo, verbose bool) error {
 			formatUpdateSize(u.Size))
 	}
 
-	w.Flush()
+	w.Flush() // #nosec G104 -- error flushing tabwriter to stdout is not recoverable
 
 	// Verbose output
 	if verbose {

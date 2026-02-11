@@ -3,6 +3,7 @@ package performance
 import (
 	"context"
 	"fmt"
+	"math"
 	"runtime"
 	"sync"
 	"time"
@@ -445,17 +446,17 @@ func (e *ConcurrencyEngine) Stop() error {
 	// Stop all worker pools
 	e.mutex.Lock()
 	for _, pool := range e.workerPools {
-		pool.Stop()
+		pool.Stop() // #nosec G104 -- best-effort cleanup during shutdown
 	}
 	for _, pipeline := range e.pipelines {
-		pipeline.Stop()
+		pipeline.Stop() // #nosec G104 -- best-effort cleanup during shutdown
 	}
 	e.mutex.Unlock()
 
 	// Stop components
-	e.coordinator.Stop()
-	e.scheduler.Stop()
-	e.balancer.Stop()
+	e.coordinator.Stop() // #nosec G104 -- best-effort cleanup during shutdown
+	e.scheduler.Stop()   // #nosec G104 -- best-effort cleanup during shutdown
+	e.balancer.Stop()    // #nosec G104 -- best-effort cleanup during shutdown
 
 	e.wg.Wait()
 
@@ -610,7 +611,7 @@ func (e *ConcurrencyEngine) scaleUp() {
 
 	for _, pool := range e.workerPools {
 		if len(pool.workers) < e.config.MaxWorkers {
-			pool.AddWorker()
+			pool.AddWorker() // #nosec G104 -- best-effort scaling, non-critical
 			e.logger.Info("Scaled up worker pool", "pool", pool.name, "workers", len(pool.workers))
 		}
 	}
@@ -623,7 +624,7 @@ func (e *ConcurrencyEngine) scaleDown() {
 
 	for _, pool := range e.workerPools {
 		if len(pool.workers) > e.config.MinWorkers {
-			pool.RemoveWorker()
+			pool.RemoveWorker() // #nosec G104 -- best-effort scaling, non-critical
 			e.logger.Info("Scaled down worker pool", "pool", pool.name, "workers", len(pool.workers))
 		}
 	}
@@ -640,8 +641,8 @@ func (e *ConcurrencyEngine) updateResourceMetrics() {
 		Goroutines:  runtime.NumGoroutine(),
 		GCStats: GCStats{
 			NumGC:       m.NumGC,
-			PauseTotal:  time.Duration(m.PauseTotalNs),  // #nosec G115 -- GC pause total in nanoseconds will not exceed int64 max in practice
-			LastPause:   time.Duration(m.PauseNs[(m.NumGC+255)%256]), // #nosec G115 -- individual GC pause in nanoseconds will not exceed int64 max
+			PauseTotal:  time.Duration(min(m.PauseTotalNs, uint64(math.MaxInt64))),
+			LastPause:   time.Duration(min(m.PauseNs[(m.NumGC+255)%256], uint64(math.MaxInt64))),
 			HeapSize:    m.HeapAlloc,
 			HeapObjects: m.HeapObjects,
 		},

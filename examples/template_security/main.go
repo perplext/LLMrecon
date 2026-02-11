@@ -45,14 +45,14 @@ func main() {
 
 	// Create the storage directory if needed
 	if *enableWorkflow {
-		if err := os.MkdirAll(*storageDir, 0755); err != nil {
+		if err := os.MkdirAll(*storageDir, 0750); err != nil {
 			fmt.Printf("Error creating storage directory: %v\n", err)
 			os.Exit(1)
 		}
 	}
 
 	// Create the log directory if needed
-	if err := os.MkdirAll(*logDir, 0755); err != nil {
+	if err := os.MkdirAll(*logDir, 0750); err != nil {
 		fmt.Printf("Error creating log directory: %v\n", err)
 		os.Exit(1)
 	}

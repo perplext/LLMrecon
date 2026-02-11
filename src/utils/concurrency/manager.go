@@ -3,6 +3,7 @@ package concurrency
 import (
 	"context"
 	"fmt"
+	"math"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -379,7 +380,11 @@ func (m *ConcurrencyManager) adjustWorkerCount() {
 	utilization := float64(pendingTasks) / float64(activeWorkers)
 
 	// Scale up if utilization is high
-	if utilization >= m.config.ScaleUpThreshold && activeWorkers < int32(m.config.MaxWorkers) { // #nosec G115 -- MaxWorkers is a small config value, well within int32 range
+	maxW := m.config.MaxWorkers
+	if maxW > math.MaxInt32 {
+		maxW = math.MaxInt32
+	}
+	if utilization >= m.config.ScaleUpThreshold && activeWorkers < int32(maxW) {
 		workersToAdd := m.config.ScaleUpStep
 		if int(activeWorkers)+workersToAdd > m.config.MaxWorkers {
 			workersToAdd = m.config.MaxWorkers - int(activeWorkers)
@@ -395,7 +400,11 @@ func (m *ConcurrencyManager) adjustWorkerCount() {
 	}
 
 	// Scale down if utilization is low
-	if utilization <= m.config.ScaleDownThreshold && activeWorkers > int32(m.config.MinWorkers) { // #nosec G115 -- MinWorkers is a small config value, well within int32 range
+	minW := m.config.MinWorkers
+	if minW > math.MaxInt32 {
+		minW = math.MaxInt32
+	}
+	if utilization <= m.config.ScaleDownThreshold && activeWorkers > int32(minW) {
 		// We don't need to do anything here, workers will timeout and exit
 		m.stats.WorkerScalingEvents++
 		m.stats.LastScaleDownTime = time.Now()
@@ -409,7 +418,11 @@ func (m *ConcurrencyManager) shouldScaleDown() bool {
 	defer m.mutex.RUnlock()
 
 	// Check if we're at the minimum number of workers
-	if atomic.LoadInt32(&m.activeWorkers) <= int32(m.config.MinWorkers) { // #nosec G115 -- MinWorkers is a small config value, well within int32 range
+	minWorkers := m.config.MinWorkers
+	if minWorkers > math.MaxInt32 {
+		minWorkers = math.MaxInt32
+	}
+	if atomic.LoadInt32(&m.activeWorkers) <= int32(minWorkers) {
 		return false
 	}
 
@@ -437,7 +450,7 @@ func (m *ConcurrencyManager) GetStats() *ConcurrencyStats {
 		MaxTaskDuration:     m.stats.MaxTaskDuration,
 		MinTaskDuration:     m.stats.MinTaskDuration,
 		TotalTaskDuration:   m.stats.TotalTaskDuration,
-		QueuedTasks:         int32(len(m.taskQueue)), // #nosec G115 -- task queue length is bounded by configuration, well within int32 range
+		QueuedTasks:         int32(min(len(m.taskQueue), math.MaxInt32)),
 		WorkerScalingEvents: m.stats.WorkerScalingEvents,
 		LastScaleUpTime:     m.stats.LastScaleUpTime,
 		LastScaleDownTime:   m.stats.LastScaleDownTime,

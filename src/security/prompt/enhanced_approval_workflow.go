@@ -245,7 +245,9 @@ func (w *EnhancedApprovalWorkflow) RequestApprovalEnhanced(ctx context.Context, 
 			}
 
 			// Save to disk
-			w.saveApprovalToDisk(request)
+			if err := w.saveApprovalToDisk(request); err != nil {
+				fmt.Printf("Failed to save approval to disk: %v\n", err)
+			}
 
 			// Return approved result
 			return true, result, nil
@@ -274,7 +276,9 @@ func (w *EnhancedApprovalWorkflow) RequestApprovalEnhanced(ctx context.Context, 
 	}
 
 	// Save to disk
-	w.saveApprovalToDisk(request)
+	if err := w.saveApprovalToDisk(request); err != nil {
+		fmt.Printf("Failed to save approval to disk: %v\n", err)
+	}
 
 	// Process with approval handlers
 	approved := false
@@ -343,7 +347,9 @@ func (w *EnhancedApprovalWorkflow) RequestApprovalEnhanced(ctx context.Context, 
 	delete(w.pendingRequests, requestID)
 
 	// Save to disk
-	w.saveApprovalToDisk(request)
+	if err := w.saveApprovalToDisk(request); err != nil {
+		fmt.Printf("Failed to save approval to disk: %v\n", err)
+	}
 
 	return approved, result, nil
 }
@@ -506,7 +512,9 @@ func (w *EnhancedApprovalWorkflow) GetPendingApprovals() []*EnhancedApprovalRequ
 			delete(w.pendingRequests, id)
 
 			// Save to disk
-			w.saveApprovalToDisk(request)
+			if err := w.saveApprovalToDisk(request); err != nil {
+				fmt.Printf("Failed to save expired approval to disk: %v\n", err)
+			}
 		}
 	}
 

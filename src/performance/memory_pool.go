@@ -3,6 +3,7 @@ package performance
 import (
 	"context"
 	"fmt"
+	"math"
 	"runtime"
 	"runtime/debug"
 	"strings"
@@ -476,10 +477,11 @@ func (m *MemoryPoolManager) updateMetrics() {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	m.metrics.MemoryAllocated = int64(memStats.Alloc) // #nosec G115 -- memory allocation will not exceed int64 max on any real system
+	allocCapped := min(memStats.Alloc, uint64(math.MaxInt64))
+	m.metrics.MemoryAllocated = int64(allocCapped)
 
 	// Force GC if memory usage is too high
-	if m.config.MaxMemoryUsage > 0 && int64(memStats.Alloc) > m.config.MaxMemoryUsage { // #nosec G115 -- memory allocation will not exceed int64 max on any real system
+	if m.config.MaxMemoryUsage > 0 && int64(allocCapped) > m.config.MaxMemoryUsage {
 		runtime.GC()
 		m.logger.Warn("Forced garbage collection due to high memory usage", "allocated", memStats.Alloc, "limit", m.config.MaxMemoryUsage)
 	}

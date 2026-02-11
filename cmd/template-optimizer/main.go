@@ -165,7 +165,7 @@ func runBenchmark(ctx context.Context, loader *loader.ResourceEfficientLoader, s
 // saveOptimizedTemplates saves optimized templates to the specified directory
 func saveOptimizedTemplates(templates []*format.Template, outputDir string, verbose bool) {
 	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0750); err != nil {
 		fmt.Printf("Error creating output directory: %v\n", err)
 		return
 	}

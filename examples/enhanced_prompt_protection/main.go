@@ -118,7 +118,7 @@ func runInteractiveMode(ctx context.Context, manager *prompt.EnhancedProtectionM
 		// Read prompt from user
 		fmt.Print("> ")
 		var input string
-		fmt.Scanln(&input)
+		fmt.Scanln(&input) // #nosec G104 -- interactive CLI input, error is not actionable
 		// Exit if user types 'exit'
 		if input == "exit" {
 			break
@@ -204,7 +204,7 @@ func processPrompts(ctx context.Context, manager *prompt.EnhancedProtectionManag
 	userID := "batch-user"
 
 	// Create results file
-	resultsFile, err := os.Create(filepath.Clean(filepath.Join(outputDir, "results.txt")))
+	resultsFile, err := os.Create(filepath.Clean(filepath.Join(outputDir, "results.txt"))) // #nosec G304 -- path constructed from internal output directory
 	if err != nil {
 		log.Fatalf("Failed to create results file: %v", err)
 	}

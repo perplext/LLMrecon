@@ -329,7 +329,7 @@ func (bu *BinaryUpdater) applyWindowsUpdate(newBinaryPath, execPath, backupPath 
 	oldPath := execPath + ".old"
 
 	// Remove any existing .old file
-	os.Remove(oldPath)
+	os.Remove(oldPath) // #nosec G104 -- best-effort cleanup of old backup file
 
 	// Rename current binary
 	if err := os.Rename(execPath, oldPath); err != nil {
@@ -339,7 +339,7 @@ func (bu *BinaryUpdater) applyWindowsUpdate(newBinaryPath, execPath, backupPath 
 	// Copy new binary in place
 	if err := bu.copyFile(newBinaryPath, execPath); err != nil {
 		// Rollback: restore original binary
-		os.Rename(oldPath, execPath)
+		os.Rename(oldPath, execPath) // #nosec G104 -- best-effort rollback on error path
 		return fmt.Errorf("failed to copy new binary: %w", err)
 	}
 
@@ -361,7 +361,7 @@ func (bu *BinaryUpdater) applyUnixUpdate(newBinaryPath, execPath, backupPath str
 
 	// Atomic rename
 	if err := os.Rename(tempPath, execPath); err != nil {
-		os.Remove(tempPath) // Cleanup
+		os.Remove(tempPath) // #nosec G104 -- best-effort cleanup on error path
 		return fmt.Errorf("failed to replace binary: %w", err)
 	}
 
@@ -417,7 +417,7 @@ del "%%~f0" >nul 2>&1`, filePath)
 		batchPath := filePath + "_cleanup.bat"
 		if err := os.WriteFile(filepath.Clean(batchPath), []byte(batchContent), 0600); err == nil {
 			go func() {
-				exec.Command("cmd", "/C", batchPath).Start() // #nosec G204 -- batchPath is a cleanup script we just wrote to a controlled temp location
+				exec.Command("cmd", "/C", batchPath).Start() // #nosec G104,G204 -- best-effort cleanup; batchPath is a cleanup script we just wrote to a controlled temp location
 			}()
 		}
 	}
@@ -500,7 +500,7 @@ func (bu *BinaryUpdater) CanSelfUpdate() error {
 		return fmt.Errorf("insufficient permissions to update binary: %w", err)
 	}
 
-	os.Remove(testFile)
+	os.Remove(testFile) // #nosec G104 -- best-effort cleanup of permission test file
 	return nil
 }
 
@@ -522,7 +522,7 @@ func (bu *BinaryUpdater) GetUpdatePermissions() *UpdatePermissions {
 		permissions.CanWriteDirectory = false
 		permissions.RequiresElevation = true
 	} else {
-		os.Remove(testFile)
+		os.Remove(testFile) // #nosec G104 -- best-effort cleanup of permission test file
 	}
 
 	// On Unix, check if we're running as root

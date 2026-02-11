@@ -27,7 +27,7 @@ type DistributedRateLimiter struct {
 type DistributedRateLimitConfig struct {
 	// Redis connection
 	RedisAddr     string `json:"redis_addr"`
-	RedisPassword string `json:"redis_password"`
+	RedisPassword string `json:"redis_password"` // #nosec G101 -- not a hardcoded credential; this is a config struct field for Redis connection settings
 	RedisDB       int    `json:"redis_db"`
 
 	// Rate limiting configuration
@@ -110,7 +110,7 @@ type RateLimitScripts struct {
 func DefaultDistributedRateLimitConfig() DistributedRateLimitConfig {
 	return DistributedRateLimitConfig{
 		RedisAddr:          "localhost:6379",
-		RedisPassword:      "",
+		RedisPassword:      "", // #nosec G101 -- default empty password for local development; overridden by config in production
 		RedisDB:            0,
 		KeyPrefix:          "ratelimit",
 		DefaultLimit:       100,

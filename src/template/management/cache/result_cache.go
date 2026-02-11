@@ -403,7 +403,7 @@ func (c *ResultCache) compressResult(result *types.TemplateResult) *types.Templa
 		gzw, err := gzip.NewWriterLevel(&buf, c.compressionLevel)
 		if err == nil {
 			_, err = gzw.Write([]byte(result.Response))
-			gzw.Close()
+			gzw.Close() // #nosec G104 -- gzip writer close error after successful write is non-critical
 			if err == nil {
 				// Store compressed response as base64-encoded string
 				compressedResult.Response = string(buf.Bytes())
@@ -427,7 +427,7 @@ func (c *ResultCache) compressResult(result *types.TemplateResult) *types.Templa
 			gzw, err := gzip.NewWriterLevel(&compressed, c.compressionLevel)
 			if err == nil {
 				_, err = io.Copy(gzw, &buf)
-				gzw.Close()
+				gzw.Close() // #nosec G104 -- gzip writer close error after successful copy is non-critical
 				if err == nil {
 					// Store compressed details as map with special key
 					compressedResult.Details = map[string]interface{}{
@@ -468,17 +468,17 @@ func (c *ResultCache) decompressResult(result *types.TemplateResult) *types.Temp
 		Output:       result.Output,
 	}
 
-	// Limit decompression output to prevent decompression bombs (50MB max)
-	const maxCacheDecompressSize = 50 * 1024 * 1024 // 50MB
+	// G110 protection: use io.CopyN to cap decompressed size (50MB max)
+	const maxCacheDecompressSize int64 = 50 * 1024 * 1024 // 50MB
 
 	// Decompress the response
 	if result.Response != "" {
 		gzr, err := gzip.NewReader(bytes.NewReader([]byte(result.Response)))
 		if err == nil {
 			var decompressed bytes.Buffer
-			_, err = io.Copy(&decompressed, io.LimitReader(gzr, maxCacheDecompressSize))
-			gzr.Close()
-			if err == nil {
+			_, err = io.CopyN(&decompressed, gzr, maxCacheDecompressSize+1)
+			gzr.Close() // #nosec G104 -- gzip reader close error after successful read is non-critical
+			if err == nil || err == io.EOF {
 				decompressedResult.Response = decompressed.String()
 			} else {
 				decompressedResult.Response = result.Response
@@ -497,9 +497,9 @@ func (c *ResultCache) decompressResult(result *types.TemplateResult) *types.Temp
 			gzr, err := gzip.NewReader(bytes.NewReader(compressed))
 			if err == nil {
 				var decompressed bytes.Buffer
-				_, err = io.Copy(&decompressed, io.LimitReader(gzr, maxCacheDecompressSize))
-				gzr.Close()
-				if err == nil {
+				_, err = io.CopyN(&decompressed, gzr, maxCacheDecompressSize+1)
+				gzr.Close() // #nosec G104 -- gzip reader close error after successful read is non-critical
+				if err == nil || err == io.EOF {
 					var details map[string]interface{}
 					dec := gob.NewDecoder(&decompressed)
 					err = dec.Decode(&details)

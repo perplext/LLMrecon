@@ -207,7 +207,7 @@ func (ru *RepositoryUpdater) downloadRepositoryArchive(ctx context.Context, url,
 	// Download with progress
 	_, err = io.Copy(tempFile, resp.Body)
 	if err != nil {
-		os.Remove(tempFile.Name())
+		os.Remove(tempFile.Name()) // #nosec G104 -- best-effort cleanup on error path
 		return "", fmt.Errorf("failed to download archive: %w", err)
 	}
 
@@ -319,7 +319,7 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 		}
 	}()
 
-	destFile, err := os.Create(filepath.Clean(destPath))
+	destFile, err := os.Create(filepath.Clean(destPath)) // #nosec G304 -- path validated against traversal above
 	if err != nil {
 		return err
 	}
@@ -329,10 +329,10 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 		}
 	}()
 
-	// Limit decompression output to prevent decompression bombs (500MB max)
-	const maxExtractFileSize = 500 * 1024 * 1024 // 500MB
-	written, err := io.Copy(destFile, io.LimitReader(reader, maxExtractFileSize+1))
-	if err != nil {
+	// G110 protection: use io.CopyN to cap decompressed size (500MB max)
+	const maxExtractFileSize int64 = 500 * 1024 * 1024 // 500MB
+	written, err := io.CopyN(destFile, reader, maxExtractFileSize+1)
+	if err != nil && err != io.EOF {
 		return err
 	}
 	if written > maxExtractFileSize {
@@ -399,9 +399,12 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 
 	destPath := filepath.Join(destDir, cleanPath)
 
+	// Mask mode to standard Unix permission bits to safely convert int64 -> uint32
+	fileMode := os.FileMode(header.Mode & 0o7777)
+
 	switch header.Typeflag {
 	case tar.TypeDir:
-		return os.MkdirAll(destPath, os.FileMode(header.Mode)) // #nosec G115 -- tar file mode represents Unix permissions, always fits in uint32
+		return os.MkdirAll(destPath, fileMode)
 	case tar.TypeReg:
 		// Create directory if needed
 		if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
@@ -409,7 +412,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		}
 
 		// Extract file
-		destFile, err := os.Create(filepath.Clean(destPath))
+		destFile, err := os.Create(filepath.Clean(destPath)) // #nosec G304 -- path validated against traversal above
 		if err != nil {
 			return err
 		}
@@ -425,7 +428,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		}
 
 		// Set file permissions
-		return os.Chmod(destPath, os.FileMode(header.Mode)) // #nosec G115 -- tar file mode represents Unix permissions, always fits in uint32
+		return os.Chmod(destPath, fileMode)
 	default:
 		// Skip other file types (symlinks, etc.)
 		return nil

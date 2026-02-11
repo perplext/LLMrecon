@@ -466,7 +466,7 @@ func RollbackUpdate(ctx *UpdateContext, backup *Backup) error {
 	for _, op := range ctx.AppliedOperations {
 		if op.Type == "add" {
 			targetPath := filepath.Join(ctx.BundlePath, op.Path)
-			os.Remove(targetPath) // Ignore errors
+			_ = os.Remove(targetPath) // #nosec G104 -- best-effort cleanup of added files during rollback
 		}
 	}
 
@@ -521,7 +521,7 @@ func copyDeltaFile(src, dst string) error {
 
 // CompressDelta compresses a delta bundle
 func CompressDelta(deltaPath string, outputPath string) error {
-	output, err := os.Create(filepath.Clean(outputPath))
+	output, err := os.Create(filepath.Clean(outputPath)) // #nosec G304 -- outputPath is caller-provided output destination
 	if err != nil {
 		return err
 	}
