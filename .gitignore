@@ -28,6 +28,10 @@ node_modules/
 tasks.json
 tasks/ 
 
+# Go workspace (local dev files)
+go.work
+go.work.sum
+
 # Development artifacts
 *.test
 *.bak
