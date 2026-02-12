@@ -160,8 +160,12 @@ func (d *MonitoringDashboard) Start() error {
 		Handler:           d.router,
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       15 * time.Second,
-		WriteTimeout:      30 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		// WriteTimeout intentionally omitted: this server upgrades connections
+		// to WebSocket, and a global WriteTimeout sets a deadline on the
+		// underlying net.Conn that persists after upgrade, killing long-lived
+		// WebSocket connections. Write deadlines are managed per-write in
+		// sendToClient instead.
+		IdleTimeout: 60 * time.Second,
 	}
 
 	// Start metrics broadcasting
@@ -478,6 +482,8 @@ func (d *MonitoringDashboard) sendToClient(client *DashboardClient, msg interfac
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
+	// Set a per-write deadline instead of relying on server-level WriteTimeout
+	client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	err := client.Conn.WriteJSON(msg)
 	if err != nil {
 		d.logger.Error("Failed to send message to client", "client", client.ID, "error", err)

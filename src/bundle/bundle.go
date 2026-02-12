@@ -346,8 +346,15 @@ func extractFile(file *zip.File, outputDir string) error {
 	}()
 
 	// Copy the file with a size limit to prevent decompression bombs (G110)
-	_, err = io.Copy(outFile, io.LimitReader(rc, maxDecompressSize))
-	return err
+	limited := io.LimitReader(rc, maxDecompressSize+1)
+	n, err := io.Copy(outFile, limited)
+	if err != nil {
+		return err
+	}
+	if n > maxDecompressSize {
+		return fmt.Errorf("file exceeds maximum decompressed size of %d bytes", maxDecompressSize)
+	}
+	return nil
 }
 
 // isWithinDir checks if a path is within a directory
@@ -367,8 +374,9 @@ func isWithinDir(dir, path string) bool {
 	if err != nil {
 		return false
 	}
-	// If the relative path starts with "..", the path escapes the directory
-	return !strings.HasPrefix(rel, "..") && rel != ".."
+	// If the relative path is ".." or starts with "../", the path escapes the directory.
+	// We check for the separator to avoid false positives on filenames like "..myfile".
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(os.PathSeparator))
 }
 
 // GetContentPath returns the path to a content item in the bundle
