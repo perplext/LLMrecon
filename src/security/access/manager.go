@@ -3,8 +3,11 @@ package access
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -12,6 +15,7 @@ import (
 	"github.com/perplext/LLMrecon/src/security/access/mfa"
 	"github.com/perplext/LLMrecon/src/security/access/models"
 	"github.com/perplext/LLMrecon/src/security/access/rbac"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // AccessControlManager is the main entry point for the access control system
@@ -621,12 +625,30 @@ func (m *AccessControlManager) createAdminUser(ctx context.Context) error {
 		return err
 	}
 
+	// Determine admin password from environment or generate a secure random one
+	adminPassword := os.Getenv("LLMRECON_ADMIN_PASSWORD")
+	if adminPassword == "" {
+		// Generate a secure random password
+		randomBytes := make([]byte, 16)
+		if _, err := rand.Read(randomBytes); err != nil {
+			return fmt.Errorf("failed to generate random admin password: %w", err)
+		}
+		adminPassword = hex.EncodeToString(randomBytes)
+		fmt.Fprintf(os.Stderr, "WARNING: No LLMRECON_ADMIN_PASSWORD set. Generated random admin password: %s\n", adminPassword)
+	}
+
+	// Hash the password with bcrypt
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash admin password: %w", err)
+	}
+
 	// Create admin user
 	adminUser := &User{
 		ID:                  generateRandomID(),
 		Username:            "admin",
 		Email:               "admin@example.com",
-		PasswordHash:        "admin", // This should be properly hashed in a real implementation
+		PasswordHash:        string(hashedPassword),
 		Roles:               []string{RoleAdmin},
 		MFAEnabled:          false,
 		FailedLoginAttempts: 0,
