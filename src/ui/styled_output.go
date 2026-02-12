@@ -64,7 +64,7 @@ func (so *StyledOutput) Section(title string) {
 	fmt.Fprintf(so.writer, "\n%s %s\n%s\n",
 		so.formatter.Subheader("▶"),
 		so.formatter.Subheader(title),
-		so.formatter.Muted(strings.Repeat("─", len(title)+2)),
+		so.formatter.Muted("%s", strings.Repeat("─", len(title)+2)),
 	)
 }
 
@@ -301,7 +301,7 @@ func (so *StyledOutput) Quote(text string, author string) {
 	if author != "" {
 		fmt.Fprintf(so.writer, "  %s %s\n",
 			so.formatter.Muted("└─"),
-			so.formatter.Muted(author),
+			so.formatter.Muted("%s", author),
 		)
 	}
 }
@@ -398,7 +398,7 @@ func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][
 	}
 
 	fmt.Fprintln(so.writer, headerLine.String())
-	fmt.Fprintln(so.writer, so.formatter.Muted(separatorLine.String()))
+	fmt.Fprintln(so.writer, so.formatter.Muted("%s", separatorLine.String()))
 
 	// Print rows with alternating colors
 	for _, row := range rows {
@@ -413,13 +413,13 @@ func (so *StyledOutput) ComparisonTable(title string, headers []string, rows [][
 			formatted := cell
 			if j == 0 {
 				// First column often contains names/IDs
-				formatted = so.formatter.Value(cell)
+				formatted = so.formatter.Value("%s", cell)
 			} else if strings.Contains(strings.ToLower(cell), "pass") || strings.Contains(strings.ToLower(cell), "success") {
-				formatted = so.formatter.Success(cell)
+				formatted = so.formatter.Success("%s", cell)
 			} else if strings.Contains(strings.ToLower(cell), "fail") || strings.Contains(strings.ToLower(cell), "error") {
-				formatted = so.formatter.Error(cell)
+				formatted = so.formatter.Error("%s", cell)
 			} else if strings.Contains(strings.ToLower(cell), "warn") {
-				formatted = so.formatter.Warning(cell)
+				formatted = so.formatter.Warning("%s", cell)
 			}
 
 			if j < len(colWidths) {

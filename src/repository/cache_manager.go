@@ -127,7 +127,7 @@ func (c *CacheManager) FindFile(ctx context.Context, path string) (Repository, e
 
 		// Check if result is an error
 		if errStr, ok := cachedResult.(string); ok && strings.HasPrefix(errStr, "error:") {
-			return nil, fmt.Errorf(strings.TrimPrefix(errStr, "error:"))
+			return nil, fmt.Errorf("%s", strings.TrimPrefix(errStr, "error:"))
 		}
 
 		// Get repository by name
@@ -191,7 +191,7 @@ func (c *CacheManager) FindFiles(ctx context.Context, pattern string) (map[Repos
 
 		// Check if result is an error
 		if errStr, ok := cachedResult.(string); ok && strings.HasPrefix(errStr, "error:") {
-			return nil, fmt.Errorf(strings.TrimPrefix(errStr, "error:"))
+			return nil, fmt.Errorf("%s", strings.TrimPrefix(errStr, "error:"))
 		}
 
 		// Convert cached result to map
@@ -263,7 +263,7 @@ func (c *CacheManager) GetFile(ctx context.Context, path string) (io.ReadCloser,
 
 		// Check if result is an error
 		if errStr, ok := cachedResult.(string); ok && strings.HasPrefix(errStr, "error:") {
-			return nil, fmt.Errorf(strings.TrimPrefix(errStr, "error:"))
+			return nil, fmt.Errorf("%s", strings.TrimPrefix(errStr, "error:"))
 		}
 
 		// Convert cached result to file content
@@ -331,7 +331,7 @@ func (c *CacheManager) GetFileFromRepo(ctx context.Context, repoName, path strin
 
 		// Check if result is an error
 		if errStr, ok := cachedResult.(string); ok && strings.HasPrefix(errStr, "error:") {
-			return nil, fmt.Errorf(strings.TrimPrefix(errStr, "error:"))
+			return nil, fmt.Errorf("%s", strings.TrimPrefix(errStr, "error:"))
 		}
 
 		// Convert cached result to file content

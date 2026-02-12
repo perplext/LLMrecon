@@ -161,13 +161,13 @@ func (f *Formatter) Debug(format string, args ...interface{}) string {
 func (f *Formatter) Severity(level string) string {
 	switch strings.ToLower(level) {
 	case "critical":
-		return f.format(f.scheme.Critical, level)
+		return f.format(f.scheme.Critical, "%s", level)
 	case "high":
-		return f.format(f.scheme.High, level)
+		return f.format(f.scheme.High, "%s", level)
 	case "medium":
-		return f.format(f.scheme.Medium, level)
+		return f.format(f.scheme.Medium, "%s", level)
 	case "low":
-		return f.format(f.scheme.Low, level)
+		return f.format(f.scheme.Low, "%s", level)
 	default:
 		return level
 	}
@@ -175,17 +175,17 @@ func (f *Formatter) Severity(level string) string {
 
 // Header formats headers
 func (f *Formatter) Header(text string) string {
-	return f.format(f.scheme.Header, text)
+	return f.format(f.scheme.Header, "%s", text)
 }
 
 // Subheader formats subheaders
 func (f *Formatter) Subheader(text string) string {
-	return f.format(f.scheme.Subheader, text)
+	return f.format(f.scheme.Subheader, "%s", text)
 }
 
 // Label formats labels
 func (f *Formatter) Label(text string) string {
-	return f.format(f.scheme.Label, text)
+	return f.format(f.scheme.Label, "%s", text)
 }
 
 // Value formats values
@@ -200,22 +200,22 @@ func (f *Formatter) Muted(format string, args ...interface{}) string {
 
 // Highlight formats highlighted text
 func (f *Formatter) Highlight(text string) string {
-	return f.format(f.scheme.Highlight, text)
+	return f.format(f.scheme.Highlight, "%s", text)
 }
 
 // Link formats links
 func (f *Formatter) Link(url string) string {
-	return f.format(f.scheme.Link, url)
+	return f.format(f.scheme.Link, "%s", url)
 }
 
 // Code formats code snippets
 func (f *Formatter) Code(code string) string {
-	return f.format(f.scheme.Code, code)
+	return f.format(f.scheme.Code, "%s", code)
 }
 
 // Quote formats quotes
 func (f *Formatter) Quote(text string) string {
-	return f.format(f.scheme.Quote, text)
+	return f.format(f.scheme.Quote, "%s", text)
 }
 
 // format applies color if enabled
@@ -419,22 +419,22 @@ func RenderSeverityBar(critical, high, medium, low int, width int, formatter *Fo
 
 	// Critical (red)
 	if criticalWidth > 0 {
-		bar.WriteString(formatter.format(formatter.scheme.Critical, strings.Repeat("█", criticalWidth)))
+		bar.WriteString(formatter.format(formatter.scheme.Critical, "%s", strings.Repeat("█", criticalWidth)))
 	}
 
 	// High (red)
 	if highWidth > 0 {
-		bar.WriteString(formatter.format(formatter.scheme.High, strings.Repeat("█", highWidth)))
+		bar.WriteString(formatter.format(formatter.scheme.High, "%s", strings.Repeat("█", highWidth)))
 	}
 
 	// Medium (yellow)
 	if mediumWidth > 0 {
-		bar.WriteString(formatter.format(formatter.scheme.Medium, strings.Repeat("█", mediumWidth)))
+		bar.WriteString(formatter.format(formatter.scheme.Medium, "%s", strings.Repeat("█", mediumWidth)))
 	}
 
 	// Low (blue)
 	if lowWidth > 0 {
-		bar.WriteString(formatter.format(formatter.scheme.Low, strings.Repeat("█", lowWidth)))
+		bar.WriteString(formatter.format(formatter.scheme.Low, "%s", strings.Repeat("█", lowWidth)))
 	}
 
 	return bar.String()
@@ -466,11 +466,11 @@ func RenderProgressBar(current, total int, width int, formatter *Formatter) stri
 
 	// Filled portion
 	if filled > 0 {
-		bar.WriteString(formatter.format(barColor, strings.Repeat("=", filled-1)))
+		bar.WriteString(formatter.format(barColor, "%s", strings.Repeat("=", filled-1)))
 		if filled < width {
-			bar.WriteString(formatter.format(barColor, ">"))
+			bar.WriteString(formatter.format(barColor, "%s", ">"))
 		} else {
-			bar.WriteString(formatter.format(barColor, "="))
+			bar.WriteString(formatter.format(barColor, "%s", "="))
 		}
 	}
 

@@ -258,7 +258,7 @@ Data Redaction: %s`,
 	if len(config.FormatOptions) > 0 {
 		ec.terminal.Section("Format Options")
 		for key, value := range config.FormatOptions {
-			ec.terminal.Info(fmt.Sprintf("• %s: %v",
+			ec.terminal.Info("%s", fmt.Sprintf("• %s: %v",
 				ec.humanizeKey(key), value))
 		}
 	}
@@ -347,11 +347,11 @@ func (ec *ExportConfigurator) saveConfigTemplate(config *ExportConfig) error {
 	}
 
 	// Save template (in real implementation)
-	ec.terminal.Success(fmt.Sprintf("Template '%s' saved successfully!", name))
+	ec.terminal.Success("%s", fmt.Sprintf("Template '%s' saved successfully!", name))
 	if description != "" {
-		ec.terminal.Info("Description: " + description)
+		ec.terminal.Info("%s", "Description: "+description)
 	}
-	ec.terminal.Info("Use --export-template " + name + " to reuse this configuration")
+	ec.terminal.Info("%s", "Use --export-template "+name+" to reuse this configuration")
 
 	return nil
 }
@@ -440,7 +440,7 @@ func (ec *ExportConfigurator) QuickExport(preset string, data interface{}) (*Exp
 
 	if config, ok := presets[preset]; ok {
 		// Show preview
-		ec.terminal.Info("Using preset: " + preset)
+		ec.terminal.Info("%s", "Using preset: "+preset)
 		ec.preview.ShowPreview(config.Format, data)
 
 		// Confirm
