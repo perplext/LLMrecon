@@ -8,8 +8,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
+
+// maxDecompressSize is the maximum allowed size for decompressed content (1 GB)
+const maxDecompressSize = 1 << 30
 
 // OpenBundle opens a bundle from the given path
 func OpenBundle(path string) (*Bundle, error) {
@@ -341,8 +345,8 @@ func extractFile(file *zip.File, outputDir string) error {
 		}
 	}()
 
-	// Copy the file
-	_, err = io.Copy(outFile, rc)
+	// Copy the file with a size limit to prevent decompression bombs (G110)
+	_, err = io.Copy(outFile, io.LimitReader(rc, maxDecompressSize))
 	return err
 }
 
@@ -358,7 +362,13 @@ func isWithinDir(dir, path string) bool {
 		return false
 	}
 
-	return absPath == absDir || filepath.HasPrefix(absPath, absDir+string(filepath.Separator))
+	// Use filepath.Rel to safely check containment (filepath.HasPrefix is deprecated and unreliable)
+	rel, err := filepath.Rel(absDir, absPath)
+	if err != nil {
+		return false
+	}
+	// If the relative path starts with "..", the path escapes the directory
+	return !strings.HasPrefix(rel, "..") && rel != ".."
 }
 
 // GetContentPath returns the path to a content item in the bundle

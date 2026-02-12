@@ -106,7 +106,8 @@ func (h *GzipHandler) Decompress(src io.Reader, dst io.Writer) error {
 		}
 	}()
 
-	_, err = io.Copy(dst, gzReader)
+	// Limit decompressed size to prevent decompression bombs (G110)
+	_, err = io.Copy(dst, io.LimitReader(gzReader, maxDecompressSize))
 	return err
 }
 
@@ -141,7 +142,8 @@ func (h *ZstdHandler) Decompress(src io.Reader, dst io.Writer) error {
 	}
 	defer decoder.Close()
 
-	_, err = io.Copy(dst, decoder)
+	// Limit decompressed size to prevent decompression bombs (G110)
+	_, err = io.Copy(dst, io.LimitReader(decoder, maxDecompressSize))
 	return err
 }
 

@@ -156,8 +156,12 @@ func (d *MonitoringDashboard) Start() error {
 	// Create HTTP server
 	addr := fmt.Sprintf("%s:%d", d.config.Host, d.config.Port)
 	d.server = &http.Server{
-		Addr:    addr,
-		Handler: d.router,
+		Addr:              addr,
+		Handler:           d.router,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	// Start metrics broadcasting
