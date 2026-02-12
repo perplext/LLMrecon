@@ -198,7 +198,7 @@ Now that you've completed your first scan:
 - 📖 [Full Documentation](../README.md)
 - 💬 [GitHub Discussions](https://github.com/perplext/LLMrecon/discussions)
 - 🐛 [Report Issues](https://github.com/perplext/LLMrecon/issues)
-- 📧 Contact: security@llmrecon.io
+- 📧 Contact: security@llmrecon.com
 
 ---
 

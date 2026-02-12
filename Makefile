@@ -2,7 +2,7 @@
 
 # Variables
 BINARY_NAME=LLMrecon
-VERSION?=0.1.0
+VERSION?=$(shell cat VERSION 2>/dev/null || echo "0.8.0")
 BUILD_DIR=build
 MAIN_PATH=src/main.go
 GOCMD=go
