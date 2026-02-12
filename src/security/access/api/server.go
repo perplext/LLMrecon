@@ -61,7 +61,7 @@ type Server struct {
 	router *mux.Router
 
 	// Access control manager
-	accessManager access.AccessControlManager
+	accessManager *access.AccessControlManager
 
 	// Middleware
 	authMiddleware      *AuthMiddleware
@@ -71,7 +71,7 @@ type Server struct {
 }
 
 // NewServer creates a new API server
-func NewServer(config *APIConfig, accessManager access.AccessControlManager) *Server {
+func NewServer(config *APIConfig, accessManager *access.AccessControlManager) *Server {
 	router := mux.NewRouter()
 
 	// Create server
