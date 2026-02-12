@@ -70,7 +70,8 @@ func (r *HTTPRepository) Connect(ctx context.Context) error {
 	// Create transport with custom settings
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: r.config.InsecureSkipVerify,
+			InsecureSkipVerify: r.config.InsecureSkipVerify, // #nosec G402 -- Controlled by repository config for testing
+			MinVersion:         tls.VersionTLS12,
 		},
 		MaxIdleConns:        r.config.MaxConnections,
 		MaxIdleConnsPerHost: r.config.MaxConnections,

@@ -270,6 +270,7 @@ func (m *ConnectionPoolManager) createProviderPool(providerType ProviderType, co
 	if config.InsecureSkipVerify {
 		transport.TLSClientConfig = &tls.Config{
 			InsecureSkipVerify: false, // Fixed: Enable cert validation
+			MinVersion:         tls.VersionTLS12,
 		}
 	}
 
