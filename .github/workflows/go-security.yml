@@ -28,7 +28,7 @@ jobs:
           go-version: '1.24'
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@v2.22.11
+        uses: securego/gosec@v2.23.0
         with:
           args: '-no-fail -nosec -exclude=G201 -fmt sarif -out gosec-results.sarif ./...'
           
