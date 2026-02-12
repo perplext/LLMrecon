@@ -37,8 +37,14 @@ tasks/
 memory-benchmark
 test_section
 
-# Binary files (exclude compiled binaries)
-.!*!*
+# Compiled Go binaries
+main
+compliance-report
+config-manager
+llm-red-team
+*.exe
+*.so
+*.dylib
 
 # Development environment files
 .cursor/
@@ -54,10 +60,25 @@ credentials.enc
 users.json
 .LLMrecon.yaml
 
-# Test artifacts
+# Test artifacts and results
 test_results_*/
-qwen_security_results.json
-llmrecon
+*_results.json
+*_report.json
+validation-report-*.txt
+detection_criteria*.json
+detection_results.json
+
+# SQLite databases
+*.db
+
+# Scratch/temp files
+scratch-*.md
+
+# Screenshot artifacts
+*.png
+
+# Serena
+.serena/
 
 # Python cache
 __pycache__/
