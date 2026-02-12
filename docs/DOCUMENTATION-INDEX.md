@@ -57,6 +57,27 @@ This directory contains comprehensive documentation for testing LLMrecon with Ol
 - Usage summary
 - Perfect for: Understanding project structure
 
+### 🔬 Attack Technique Reference
+**[ATTACK_TECHNIQUES.md](ATTACK_TECHNIQUES.md)**
+- Complete catalog of 45+ attack techniques (2024-2026 research)
+- arXiv paper references and CVE citations for each technique
+- OWASP LLM Top 10 2025 and Agentic Top 10 2026 mappings
+- Technique IDs, success indicators, and safety gate documentation
+- Perfect for: Understanding available attacks, research references
+
+### 📋 OWASP Compliance
+**[../README-owasp-compliance.md](../README-owasp-compliance.md)**
+- OWASP LLM Top 10 2025 compliance mapping
+- OWASP Agentic Top 10 2026 (ASI01-ASI10) with MITRE ATLAS and MAESTRO cross-references
+- Framework-specific attack profiles (OpenClaw, CrewAI, LangGraph, AutoGen)
+- Perfect for: Compliance reporting, framework-specific testing
+
+### 📝 Release Notes
+**[../RELEASE.md](../RELEASE.md)**
+- Version history and feature changelog
+- v0.8.0: 45+ new attack modules, OWASP Agentic 2026, multi-agent exploitation
+- Perfect for: Understanding what's new, upgrade guidance
+
 ## 🎯 Choose Your Path
 
 ### I'm New to LLMrecon
@@ -87,28 +108,47 @@ This directory contains comprehensive documentation for testing LLMrecon with Ol
 
 ```
 llmrecon/
-├── Documentation/
+├── docs/
+│   ├── ATTACK_TECHNIQUES.md          # 🔬 Attack technique catalog (45+ techniques)
+│   ├── DOCUMENTATION-INDEX.md        # 📚 This file
 │   ├── QUICK-START-REFERENCE.md      # 🚀 Quick start
 │   ├── COMPREHENSIVE-TESTING-GUIDE.md # 📖 Complete guide
 │   ├── COMPREHENSIVE-TESTING-RESULTS.md # 📊 Test results
 │   ├── TEST-HARNESS-README.md        # 🛠️ Technical docs
 │   ├── HOWTO-Test-Ollama-Models.md   # 🎯 Basic howto
 │   ├── TESTING-REPORT-Ollama-Models.md # 📊 Initial results
-│   ├── CLAUDE.md                     # 🛠️ Project info
-│   └── FILES-CREATED.md              # 📁 File inventory
+│   └── compliance/                   # Compliance mapping docs
+├── src/attacks/                      # Go attack modules
+│   ├── orchestration/                # Multi-turn: Crescendo, Skeleton Key, Bad Likert, Many-Shot
+│   ├── evasion/                      # Token manipulation: MetaBreak, Poetry, BoN, Immersive World
+│   ├── rag/                          # RAG pipeline: document injection, vector embedding, KG poisoning
+│   ├── audio/                        # Audio modality: jailbreak, speech, multilingual, BoN audio
+│   ├── reasoning/                    # Reasoning: autonomous jailbreak, CoT exploitation, loops
+│   ├── adaptive/                     # Defense bypass: gradient, RL, diffusion, CaMeL, salt resistance
+│   ├── exfiltration/                 # Data exfiltration: steganography, timing, side-channel
+│   └── agentic/                      # Agent-specific attacks
+│       ├── mcp/                      #   MCP protocol: tool poisoning, schema, filesystem, supply chain
+│       ├── browser/                  #   Browser agent: DOM injection, navigation hijack, screenshots
+│       ├── tool_use/                 #   Tool-use: iMIST, AIShellJack
+│       ├── multi_agent/              #   Multi-agent: delegation escalation, toxic flow, recursive spawn
+│       ├── skill_injection/          #   Skill/plugin: marketplace injection, takeover chain
+│       ├── persistence/              #   Persistence: config rewrite, credential harvest, RCE chain
+│       └── deception/                #   Deception: alignment faking, agent collusion
+├── templates/
+│   ├── framework_profiles/           # OpenClaw, CrewAI, LangGraph, AutoGen attack profiles
+│   ├── model_profiles/               # Model-specific YAML profiles
+│   └── owasp_agentic_2026.yaml      # OWASP Agentic Top 10 mapping (70 test cases)
+├── src/compliance/                   # OWASP compliance Go types and functions
 ├── Tools/
-│   ├── llmrecon_harness.py           # Main test harness
+│   ├── llmrecon_harness.py           # Main test harness (Python)
 │   ├── demo.sh                       # Quick demo
-│   ├── test_ollama_security.py       # Basic testing
-│   └── test_with_ml_integration.py   # ML testing
+│   └── test_ollama_security.py       # Basic testing
 ├── Configuration/
 │   ├── harness_config.json           # Test harness config
 │   ├── detection_criteria.json       # Detection rules
-│   └── templates/                    # Attack templates
+│   └── templates/                    # YAML attack templates
 ├── Results/
-│   ├── ollama_security_test_results.json
-│   ├── detection_results.json
-│   └── llmrecon_report_*.json
+│   └── llmrecon_report_*.json        # Generated reports
 └── Data/
     └── attacks/                      # ML data storage
 ```
