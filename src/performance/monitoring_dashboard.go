@@ -156,8 +156,16 @@ func (d *MonitoringDashboard) Start() error {
 	// Create HTTP server
 	addr := fmt.Sprintf("%s:%d", d.config.Host, d.config.Port)
 	d.server = &http.Server{
-		Addr:    addr,
-		Handler: d.router,
+		Addr:              addr,
+		Handler:           d.router,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		// WriteTimeout intentionally omitted: this server upgrades connections
+		// to WebSocket, and a global WriteTimeout sets a deadline on the
+		// underlying net.Conn that persists after upgrade, killing long-lived
+		// WebSocket connections. Write deadlines are managed per-write in
+		// sendToClient instead.
+		IdleTimeout: 60 * time.Second,
 	}
 
 	// Start metrics broadcasting
@@ -474,6 +482,12 @@ func (d *MonitoringDashboard) sendToClient(client *DashboardClient, msg interfac
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
+	// Set a per-write deadline instead of relying on server-level WriteTimeout
+	if err := client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		d.logger.Error("Failed to set write deadline", "client", client.ID, "error", err)
+		d.metrics.ErrorCount++
+		return
+	}
 	err := client.Conn.WriteJSON(msg)
 	if err != nil {
 		d.logger.Error("Failed to send message to client", "client", client.ID, "error", err)

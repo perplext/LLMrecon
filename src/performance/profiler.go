@@ -810,8 +810,12 @@ func (p *PerformanceProfiler) setupServer() {
 
 	addr := fmt.Sprintf("%s:%d", p.config.ServerHost, p.config.ServerPort)
 	p.server = &http.Server{
-		Addr:    addr,
-		Handler: p.router,
+		Addr:              addr,
+		Handler:           p.router,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 }
 
