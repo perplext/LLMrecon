@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package examples provides examples of using mock providers for OWASP testing
 package examples
 
@@ -10,7 +12,7 @@ import (
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/fixtures"
 	"github.com/perplext/LLMrecon/src/testing/owasp/mocks"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // RunMockProviderExample demonstrates how to use mock providers for OWASP testing

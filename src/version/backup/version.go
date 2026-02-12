@@ -73,6 +73,15 @@ func (v Version) String() string {
 	return result
 }
 
+// IsCompatible checks if this version is compatible with the other version
+// (same major version)
+func (v *Version) IsCompatible(other *Version) bool {
+	if v == nil || other == nil {
+		return false
+	}
+	return v.Major == other.Major
+}
+
 // Compare compares two versions
 // Returns:
 //

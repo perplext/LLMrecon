@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package main provides a CLI tool for benchmarking template operations.
 package main
 
@@ -9,7 +11,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/repository"
 	"github.com/perplext/LLMrecon/src/template/management"
 	"github.com/perplext/LLMrecon/src/template/management/benchmark"
 	"github.com/perplext/LLMrecon/src/template/management/monitoring"
@@ -113,7 +114,7 @@ func runBenchmark(ctx context.Context, monitor *monitoring.PerformanceMonitor) (
 		manager, err = management.NewOptimizedTemplateManager(config)
 	} else {
 		// Create standard template manager
-		manager, err = management.NewTemplateManager()
+		manager, err = management.NewTemplateManager(&management.TemplateManagerOptions{})
 	}
 
 	if err != nil {

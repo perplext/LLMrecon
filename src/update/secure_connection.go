@@ -275,7 +275,10 @@ func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
 				if shift < 0 {
 					shift = 0
 				}
-				backoffFactor := 1 << uint(shift)
+				if shift > 30 {
+					shift = 30 // cap to prevent overflow
+				}
+				backoffFactor := 1 << uint(shift) // #nosec G115 -- shift capped at 30
 				delay = time.Duration(float64(retryConfig.InitialDelay) * jitter * float64(backoffFactor))
 			} else {
 				delayFloat := float64(retryConfig.InitialDelay) * jitter

@@ -140,7 +140,10 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 			if shift < 0 {
 				shift = 0
 			}
-			retryDelay := options.RetryDelay * time.Duration(1<<uint(shift))
+			if shift > 30 {
+				shift = 30 // cap to prevent overflow
+			}
+			retryDelay := options.RetryDelay * time.Duration(1<<uint(shift)) // #nosec G115 -- shift capped at 30
 			select {
 			case <-time.After(retryDelay):
 			case <-ctx.Done():

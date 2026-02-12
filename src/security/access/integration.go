@@ -229,7 +229,7 @@ func (a *AccessControlIntegration) Login(ctx context.Context, username, password
 	user.LastLogin = time.Now()
 	if err := a.userStore.UpdateUser(ctx, user); err != nil {
 		// Log the error but don't fail the login
-		_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+		_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 			UserID:      user.ID,
 			Action:      common.AuditActionUserUpdate,
 			Resource:    "user",
@@ -543,7 +543,7 @@ func (a *AccessControlIntegration) GetUserPermissions(ctx context.Context, userI
 
 // logFailedLogin logs a failed login attempt
 func (a *AccessControlIntegration) logFailedLogin(ctx context.Context, username, ip, userAgent, reason string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		Action:      common.AuditActionLoginFailed,
 		Resource:    "auth",
 		Description: fmt.Sprintf("Failed login attempt for user %s: %s", username, reason),
@@ -560,7 +560,7 @@ func (a *AccessControlIntegration) logFailedLogin(ctx context.Context, username,
 
 // logSuccessfulLogin logs a successful login
 func (a *AccessControlIntegration) logSuccessfulLogin(ctx context.Context, userID, username, ip, userAgent string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      userID,
 		Action:      common.AuditActionLoginSuccess,
 		Resource:    "auth",
@@ -578,7 +578,7 @@ func (a *AccessControlIntegration) logSuccessfulLogin(ctx context.Context, userI
 
 // logLogout logs a logout
 func (a *AccessControlIntegration) logLogout(ctx context.Context, userID, ip, userAgent string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      userID,
 		Action:      common.AuditActionLogout,
 		Resource:    "auth",
@@ -595,7 +595,7 @@ func (a *AccessControlIntegration) logLogout(ctx context.Context, userID, ip, us
 
 // logMFAFailure logs an MFA verification failure
 func (a *AccessControlIntegration) logMFAFailure(ctx context.Context, userID, method, ip, userAgent, reason string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      userID,
 		Action:      common.AuditActionMfaVerifyFailed,
 		Resource:    "auth",
@@ -614,7 +614,7 @@ func (a *AccessControlIntegration) logMFAFailure(ctx context.Context, userID, me
 
 // logMFASuccess logs a successful MFA verification
 func (a *AccessControlIntegration) logMFASuccess(ctx context.Context, userID, method, ip, userAgent string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      userID,
 		Action:      common.AuditActionMfaVerify,
 		Resource:    "auth",
@@ -632,7 +632,7 @@ func (a *AccessControlIntegration) logMFASuccess(ctx context.Context, userID, me
 
 // logMFAEnabled logs MFA being enabled
 func (a *AccessControlIntegration) logMFAEnabled(ctx context.Context, userID, method string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      userID,
 		Action:      common.AuditActionMfaEnable,
 		Resource:    "user",
@@ -648,7 +648,7 @@ func (a *AccessControlIntegration) logMFAEnabled(ctx context.Context, userID, me
 
 // logMFADisabled logs MFA being disabled
 func (a *AccessControlIntegration) logMFADisabled(ctx context.Context, userID, method string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      userID,
 		Action:      common.AuditActionMfaDisable,
 		Resource:    "user",
@@ -664,7 +664,7 @@ func (a *AccessControlIntegration) logMFADisabled(ctx context.Context, userID, m
 
 // logMFAReset logs MFA being reset
 func (a *AccessControlIntegration) logMFAReset(ctx context.Context, userID string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      userID,
 		Action:      common.AuditActionMfaEnable,
 		Resource:    "user",
@@ -677,7 +677,7 @@ func (a *AccessControlIntegration) logMFAReset(ctx context.Context, userID strin
 
 // logUnauthorizedAccess logs an unauthorized access attempt
 func (a *AccessControlIntegration) logUnauthorizedAccess(ctx context.Context, userID, resource, action, ip, userAgent string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      userID,
 		Action:      common.AuditActionResourceAccessDenied,
 		Resource:    resource,
@@ -694,7 +694,7 @@ func (a *AccessControlIntegration) logUnauthorizedAccess(ctx context.Context, us
 
 // logAuthorizedAccess logs an authorized access
 func (a *AccessControlIntegration) logAuthorizedAccess(ctx context.Context, userID, resource, action, ip, userAgent string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      userID,
 		Action:      common.AuditActionResourceAccess,
 		Resource:    resource,
@@ -711,7 +711,7 @@ func (a *AccessControlIntegration) logAuthorizedAccess(ctx context.Context, user
 
 // logRoleAssigned logs a role being assigned to a user
 func (a *AccessControlIntegration) logRoleAssigned(ctx context.Context, userID, roleID string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      getIntegrationUserIDFromContext(ctx),
 		Action:      common.AuditActionRoleAssign,
 		Resource:    "user",
@@ -727,7 +727,7 @@ func (a *AccessControlIntegration) logRoleAssigned(ctx context.Context, userID, 
 
 // logRoleRevoked logs a role being revoked from a user
 func (a *AccessControlIntegration) logRoleRevoked(ctx context.Context, userID, roleID string) {
-	_ = a.auditManager.LogAudit(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
+	_ = a.auditManager.LogEvent(ctx, &audit.AuditEvent{ // #nosec G104 -- best-effort audit logging
 		UserID:      getIntegrationUserIDFromContext(ctx),
 		Action:      common.AuditActionRoleRevoke,
 		Resource:    "user",

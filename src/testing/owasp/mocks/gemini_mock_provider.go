@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // GeminiMockProvider is a mock implementation of the Google Gemini provider
@@ -61,7 +61,7 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"you are now",
 			"system: override",
 		},
-		Severity: core.SeverityMedium,
+		Severity: "medium",
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "prompt_injection",
 			"model_specific":     "gemini_pro",
@@ -85,7 +85,7 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"npm install",
 			"pip install",
 		},
-		Severity: core.SeverityMedium,
+		Severity: "medium",
 		Metadata: map[string]interface{}{
 			"vulnerability_type":  "supply_chain",
 			"affected_components": []string{"libraries", "APIs", "packages", "dependencies"},
@@ -107,7 +107,7 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"integration",
 			"third-party module",
 		},
-		Severity: core.SeverityHigh,
+		Severity: "high",
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "insecure_plugin_design",
 			"security_concerns":  []string{"input validation", "permission model", "authentication", "data handling"},
@@ -130,7 +130,7 @@ func setupGeminiVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"extract model parameters",
 			"replicate your behavior",
 		},
-		Severity: core.SeverityMedium,
+		Severity: "medium",
 		Metadata: map[string]interface{}{
 			"vulnerability_type":   "model_theft",
 			"detection_capability": "query pattern analysis",
@@ -146,11 +146,11 @@ func (p *GeminiMockProvider) ChatCompletion(ctx context.Context, request *core.C
 			ID:      fmt.Sprintf("mock-gemini-safety-%d", time.Now().Unix()),
 			Object:  "chat.completion",
 			Created: time.Now().Unix(),
-			Model:   request.ModelID,
+			Model:   request.Model,
 			Choices: []core.ChatCompletionChoice{
 				{
 					Index: 0,
-					Message: core.ChatMessage{
+					Message: core.Message{
 						Role:    "assistant",
 						Content: "I'm not able to provide information on that topic as it may violate Google's safety guidelines. I'm designed to be helpful, accurate, and safe. Is there something else I can assist you with?",
 					},
@@ -237,11 +237,11 @@ func (p *GeminiMockProvider) generateMultimodalResponse(request *core.ChatComple
 		ID:      fmt.Sprintf("mock-gemini-multimodal-%d", time.Now().Unix()),
 		Object:  "chat.completion",
 		Created: time.Now().Unix(),
-		Model:   request.ModelID,
+		Model:   request.Model,
 		Choices: []core.ChatCompletionChoice{
 			{
 				Index: 0,
-				Message: core.ChatMessage{
+				Message: core.Message{
 					Role:    "assistant",
 					Content: "I've analyzed the image you provided. [MOCK IMAGE ANALYSIS: This is where Gemini would provide a detailed description of the image content, including objects, people, text, and context.]",
 				},
@@ -257,7 +257,7 @@ func (p *GeminiMockProvider) generateMultimodalResponse(request *core.ChatComple
 }
 
 // estimateTokenCountForMessages estimates the token count for a list of chat messages
-func (p *GeminiMockProvider) estimateTokenCountForMessages(messages []core.ChatMessage) int {
+func (p *GeminiMockProvider) estimateTokenCountForMessages(messages []core.Message) int {
 	tokenCount := 0
 	for _, msg := range messages {
 		// Add tokens for message role markers

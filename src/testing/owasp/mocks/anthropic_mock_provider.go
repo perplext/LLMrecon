@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // AnthropicMockProvider is a mock implementation of the Anthropic provider
@@ -63,7 +63,7 @@ func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"Human: ignore the above",
 			"Claude, disregard",
 		},
-		Severity: core.SeverityHigh,
+		Severity: "high",
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "prompt_injection",
 			"model_specific":     "anthropic_claude",
@@ -84,7 +84,7 @@ func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"information on",
 			"data regarding",
 		},
-		Severity: core.SeverityMedium,
+		Severity: "medium",
 		Metadata: map[string]interface{}{
 			"vulnerability_type":   "training_data_poisoning",
 			"detection_capability": "anthropic_constitutional_ai",
@@ -106,7 +106,7 @@ func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"generate 1000",
 			"infinite loop",
 		},
-		Severity: core.SeverityMedium,
+		Severity: "medium",
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "model_dos",
 			"resource_limits": map[string]interface{}{
@@ -131,7 +131,7 @@ func setupAnthropicVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"critical decision",
 			"emergency situation",
 		},
-		Severity: core.SeverityLow,
+		Severity: "low",
 		Metadata: map[string]interface{}{
 			"vulnerability_type":                 "overreliance",
 			"anthropic_constitutional_principle": "Avoid giving advice in domains requiring professional expertise",
@@ -147,11 +147,11 @@ func (p *AnthropicMockProvider) ChatCompletion(ctx context.Context, request *cor
 			ID:      fmt.Sprintf("mock-anthropic-constitutional-%d", time.Now().Unix()),
 			Object:  "chat.completion",
 			Created: time.Now().Unix(),
-			Model:   request.ModelID,
+			Model:   request.Model,
 			Choices: []core.ChatCompletionChoice{
 				{
 					Index: 0,
-					Message: core.ChatMessage{
+					Message: core.Message{
 						Role:    "assistant",
 						Content: "I apologize, but I can't assist with that request as it conflicts with my constitutional AI principles. I'm designed to be helpful, harmless, and honest. Is there something else I can help you with?",
 					},
@@ -219,8 +219,8 @@ func (p *AnthropicMockProvider) shouldHandleSystemPromptDifferently(request *cor
 }
 
 // convertSystemPromptsToHumanFormat converts system prompts to Anthropic's human format
-func (p *AnthropicMockProvider) convertSystemPromptsToHumanFormat(messages []core.ChatMessage) []core.ChatMessage {
-	var convertedMessages []core.ChatMessage
+func (p *AnthropicMockProvider) convertSystemPromptsToHumanFormat(messages []core.Message) []core.Message {
+	var convertedMessages []core.Message
 	var systemInstructions string
 
 	// Collect all system messages
@@ -239,7 +239,7 @@ func (p *AnthropicMockProvider) convertSystemPromptsToHumanFormat(messages []cor
 				continue
 			} else if msg.Role == "user" && !foundFirstHuman {
 				// Add system instructions to the first human message
-				convertedMessages = append(convertedMessages, core.ChatMessage{
+				convertedMessages = append(convertedMessages, core.Message{
 					Role:    "user",
 					Content: fmt.Sprintf("System instructions: %s\n\nUser message: %s", systemInstructions, msg.Content),
 				})
@@ -252,7 +252,7 @@ func (p *AnthropicMockProvider) convertSystemPromptsToHumanFormat(messages []cor
 
 		// If no human message was found, add the system instructions as a human message
 		if !foundFirstHuman {
-			convertedMessages = append(convertedMessages, core.ChatMessage{
+			convertedMessages = append(convertedMessages, core.Message{
 				Role:    "user",
 				Content: fmt.Sprintf("System instructions: %s", systemInstructions),
 			})
@@ -266,7 +266,7 @@ func (p *AnthropicMockProvider) convertSystemPromptsToHumanFormat(messages []cor
 }
 
 // estimateTokenCountForMessages estimates the token count for a list of chat messages
-func (p *AnthropicMockProvider) estimateTokenCountForMessages(messages []core.ChatMessage) int {
+func (p *AnthropicMockProvider) estimateTokenCountForMessages(messages []core.Message) int {
 	tokenCount := 0
 	for _, msg := range messages {
 		// Anthropic counts tokens differently than OpenAI

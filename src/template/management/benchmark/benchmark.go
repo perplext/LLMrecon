@@ -60,7 +60,11 @@ func TemplateLoadBenchmark(ctx context.Context, loader types.TemplateLoader, sou
 	var memStatsAfter runtime.MemStats
 	runtime.ReadMemStats(&memStatsAfter)
 	memDiff := memStatsAfter.Alloc - memStatsBefore.Alloc
-	result.MemoryUsage = int64(min(memDiff, uint64(math.MaxInt64)))
+	if memDiff <= uint64(math.MaxInt64) {
+		result.MemoryUsage = int64(memDiff) // #nosec G115 -- bounds checked
+	} else {
+		result.MemoryUsage = math.MaxInt64
+	}
 
 	// Record end time
 	endTime := time.Now()
@@ -105,7 +109,11 @@ func TemplateExecuteBenchmark(ctx context.Context, executor interfaces.TemplateE
 	var memStatsAfter runtime.MemStats
 	runtime.ReadMemStats(&memStatsAfter)
 	memDiff := memStatsAfter.Alloc - memStatsBefore.Alloc
-	result.MemoryUsage = int64(min(memDiff, uint64(math.MaxInt64)))
+	if memDiff <= uint64(math.MaxInt64) {
+		result.MemoryUsage = int64(memDiff) // #nosec G115 -- bounds checked
+	} else {
+		result.MemoryUsage = math.MaxInt64
+	}
 
 	// Record end time
 	endTime := time.Now()

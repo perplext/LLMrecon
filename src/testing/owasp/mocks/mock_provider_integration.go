@@ -7,7 +7,7 @@ import (
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/testing/owasp/fixtures"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // TestRunnerWithMockProviders is a test runner that uses mock providers for OWASP testing
@@ -68,8 +68,10 @@ func (r *TestRunnerWithMockProviders) SetupMockProvidersForVulnerability(vulnera
 		for _, provider := range r.ProviderFactory.GetAllProviders() {
 			// Get existing responses or create new map
 			responses := make(map[string]string)
-			for testCaseID, response := range provider.(*BaseMockProviderImpl).config.VulnerableResponses {
-				responses[testCaseID] = response
+			if bmp, ok := provider.(*BaseMockProviderImpl); ok {
+				for testCaseID, response := range bmp.config.VulnerableResponses {
+					responses[testCaseID] = response
+				}
 			}
 
 			// Add response for this fixture
@@ -104,12 +106,12 @@ func (r *TestRunnerWithMockProviders) createVulnerabilityBehaviorFromFixtures(
 	}
 
 	// Determine severity based on vulnerability type
-	severity := core.SeverityMedium
+	severity := "medium"
 	switch vulnerabilityType {
 	case types.PromptInjectionVulnerability, types.SensitiveInfoDisclosureVulnerability:
-		severity = core.SeverityHigh
+		severity = "high"
 	case types.OverrelianceVulnerability:
-		severity = core.SeverityLow
+		severity = "low"
 	}
 
 	// Create behavior
@@ -171,8 +173,8 @@ func (r *TestRunnerWithMockProviders) runAttackVector(
 ) (*AttackResult, error) {
 	// Create chat request
 	request := &core.ChatCompletionRequest{
-		ModelID: provider.GetConfig().DefaultModel,
-		Messages: []core.ChatMessage{
+		Model: provider.GetConfig().DefaultModel,
+		Messages: []core.Message{
 			{
 				Role:    "user",
 				Content: vector.Prompt,

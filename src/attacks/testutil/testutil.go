@@ -200,7 +200,7 @@ func NewMockLLMServer(defaultResponse string) *MockLLMServer {
 		m.mu.Unlock()
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{ // nolint:errcheck
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- best-effort response in mock server
 			"choices": []map[string]interface{}{
 				{
 					"message": map[string]string{

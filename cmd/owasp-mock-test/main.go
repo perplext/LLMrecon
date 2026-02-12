@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package main provides a command-line application for testing OWASP vulnerabilities with mock providers
 package main
 

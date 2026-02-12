@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -6,6 +8,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/perplext/LLMrecon/src/template/security/sandbox"
 )
@@ -32,15 +36,9 @@ func NewDashboardServer(framework *sandbox.SecurityFramework, port int, template
 // Start starts the dashboard server
 func (s *DashboardServer) Start() error {
 	// Create the template directory if it doesn't exist
-	if err := os.MkdirAll(s.templateDir, 0755); err != nil {
-if err != nil {
-treturn err
-}		return fmt.Errorf("failed to create template directory: %w", err)
+	if err := os.MkdirAll(s.templateDir, 0755); err != nil {		return fmt.Errorf("failed to create template directory: %w", err)
 	}
-
-if err != nil {
-treturn err
-}	// Create the HTML templates
+	// Create the HTML templates
 	if err := s.createTemplates(); err != nil {
 		return fmt.Errorf("failed to create templates: %w", err)
 	}
@@ -59,9 +57,7 @@ treturn err
 }
 
 // createTemplates creates the HTML templates
-if err != nil {
-treturn err
-}func (s *DashboardServer) createTemplates() error {
+func (s *DashboardServer) createTemplates() error {
 	// Create the index template
 	indexTemplate := filepath.Join(s.templateDir, "index.html")
 	if err := os.WriteFile(filepath.Clean(indexTemplate), []byte(indexHTML), 0644); err != nil {
@@ -69,16 +65,12 @@ treturn err
 	}
 
 	return nil
-if err != nil {
-treturn err
-}}
+}
 
 // handleIndex handles the index page
 func (s *DashboardServer) handleIndex(w http.ResponseWriter, r *http.Request) {
 	// Parse the template
-if err != nil {
-treturn err
-}	tmpl, err := template.ParseFiles(filepath.Join(s.templateDir, "index.html"))
+	tmpl, err := template.ParseFiles(filepath.Join(s.templateDir, "index.html"))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to parse template: %v", err), http.StatusInternalServerError)
 		return
@@ -89,9 +81,7 @@ treturn err
 		http.Error(w, fmt.Sprintf("Failed to execute template: %v", err), http.StatusInternalServerError)
 		return
 	}
-if err != nil {
-treturn err
-}}
+}
 
 // handleMetrics handles the metrics API
 func (s *DashboardServer) handleMetrics(w http.ResponseWriter, r *http.Request) {
@@ -102,9 +92,7 @@ func (s *DashboardServer) handleMetrics(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(metrics); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to encode metrics: %v", err), http.StatusInternalServerError)
-if err != nil {
-treturn err
-}		return
+		return
 	}
 }
 
@@ -136,10 +124,7 @@ func (s *DashboardServer) handleResetMetrics(w http.ResponseWriter, r *http.Requ
 	// Reset the metrics
 	s.framework.ResetMetrics()
 
-	// Return success
-if err != nil {
-treturn err
-}	w.Header().Set("Content-Type", "application/json")
+	// Return success	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"success": true}`))
 }
 
@@ -618,11 +603,18 @@ const indexHTML = `<!DOCTYPE html>
                 alertDiv.className = 'alert alert-' + alert.Level.toLowerCase();
 
                 const time = new Date(alert.Timestamp).toLocaleString();
-                alertDiv.innerHTML = `
-                    <div class="alert-time">${time}</div>
-                    <div class="alert-message">${alert.Message}</div>
-                    <div class="alert-template">Template: ${alert.TemplateID}</div>
-                `;
+                var timeDiv = document.createElement('div');
+                timeDiv.className = 'alert-time';
+                timeDiv.textContent = time;
+                var msgDiv = document.createElement('div');
+                msgDiv.className = 'alert-message';
+                msgDiv.textContent = alert.Message;
+                var tmplDiv = document.createElement('div');
+                tmplDiv.className = 'alert-template';
+                tmplDiv.textContent = 'Template: ' + alert.TemplateID;
+                alertDiv.appendChild(timeDiv);
+                alertDiv.appendChild(msgDiv);
+                alertDiv.appendChild(tmplDiv);
 
                 container.appendChild(alertDiv);
             });

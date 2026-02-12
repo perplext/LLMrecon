@@ -15,12 +15,17 @@ func getDiskSpaceAvailable(dir string) int64 {
 
 	var stat syscall.Statfs_t
 	if err := syscall.Statfs(dir, &stat); err == nil {
-		bavail := min(stat.Bavail, uint64(math.MaxInt64))
+		bavail := stat.Bavail
 		bsize := stat.Bsize
 		if bsize < 0 {
 			bsize = 0
 		}
-		return int64(bavail) * int64(bsize)
+		// Safe conversion: clamp to MaxInt64 to prevent overflow
+		maxBlocks := uint64(math.MaxInt64) / uint64(bsize+1)
+		if bavail > maxBlocks {
+			return math.MaxInt64
+		}
+		return int64(bavail) * int64(bsize) // #nosec G115 -- overflow prevented by clamp above
 	}
 	return 0
 }

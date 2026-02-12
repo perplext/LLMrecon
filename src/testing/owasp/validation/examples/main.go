@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
-	"github.com/perplext/LLMrecon/src/template/management/validation"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/validation"
 )
 
 func main() {

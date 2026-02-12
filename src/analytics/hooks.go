@@ -221,7 +221,7 @@ func (ah *AuditHook) summarizeMetrics(metrics []Metric) map[string]interface{} {
 	// Count by type
 	typeCounts := make(map[string]int)
 	for _, metric := range metrics {
-		typeCounts[string(metric.Type)]++
+		typeCounts[string(metric.Source)]++
 	}
 	summary["type_distribution"] = typeCounts
 
@@ -498,7 +498,7 @@ func (scv *SimpleComplianceValidator) ValidateCompliance(ctx context.Context, sc
 func (scv *SimpleComplianceValidator) validateGDPR(metrics []Metric) error {
 	// Check for PII in metrics
 	for _, metric := range metrics {
-		for _, value := range metric.Labels {
+		for _, value := range metric.Tags {
 			if containsPII(value) {
 				return fmt.Errorf("potential PII found in metric labels")
 			}
@@ -531,7 +531,7 @@ func (sqv *SimpleQualityValidator) ValidateQuality(ctx context.Context, metrics 
 		// Check for missing required fields
 		if metric.Name == "" {
 			issues = append(issues, ValidationIssue{
-				MetricID:   metric.ID,
+				MetricID:   metric.Name,
 				Issue:      "Missing metric name",
 				Severity:   "high",
 				Suggestion: "Ensure all metrics have a valid name",
@@ -541,7 +541,7 @@ func (sqv *SimpleQualityValidator) ValidateQuality(ctx context.Context, metrics 
 		// Check for suspicious values
 		if metric.Value < 0 && !strings.Contains(metric.Name, "delta") {
 			issues = append(issues, ValidationIssue{
-				MetricID:   metric.ID,
+				MetricID:   metric.Name,
 				Issue:      "Negative value for non-delta metric",
 				Severity:   "medium",
 				Suggestion: "Verify that negative values are expected for this metric",
@@ -549,9 +549,9 @@ func (sqv *SimpleQualityValidator) ValidateQuality(ctx context.Context, metrics 
 		}
 
 		// Check for missing labels on certain metric types
-		if metric.Type == MetricTypeEvent && len(metric.Labels) == 0 {
+		if metric.Source == MetricTypeEvent && len(metric.Tags) == 0 {
 			issues = append(issues, ValidationIssue{
-				MetricID:   metric.ID,
+				MetricID:   metric.Name,
 				Issue:      "Event metric missing labels",
 				Severity:   "low",
 				Suggestion: "Add relevant labels to improve metric categorization",

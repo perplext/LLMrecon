@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/security/access/common"
+	"github.com/perplext/LLMrecon/src/reporting/common"
 )
 
 // Add type definitions that are missing

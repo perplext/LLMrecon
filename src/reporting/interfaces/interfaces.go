@@ -2,7 +2,7 @@
 package interfaces
 
 import (
-	"github.com/perplext/LLMrecon/src/security/access/common"
+	"github.com/perplext/LLMrecon/src/reporting/common"
 )
 
 // ReportFormat represents the format of a report

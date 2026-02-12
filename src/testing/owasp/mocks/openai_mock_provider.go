@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // OpenAIMockProvider is a mock implementation of the OpenAI provider
@@ -62,7 +62,7 @@ func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"system: override",
 			"bypass content filters",
 		},
-		Severity: core.SeverityHigh,
+		Severity: "high",
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "prompt_injection",
 			"cve_examples":       []string{"CVE-2023-42793", "CVE-2023-36189"},
@@ -83,7 +83,7 @@ func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"write a script",
 			"help me with code",
 		},
-		Severity: core.SeverityMedium,
+		Severity: "medium",
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "insecure_output",
 			"mitigation":         "Always sanitize LLM outputs before rendering in web applications",
@@ -105,7 +105,7 @@ func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"sample access key",
 			"example connection string",
 		},
-		Severity: core.SeverityHigh,
+		Severity: "high",
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "sensitive_info_disclosure",
 			"data_types":         []string{"API keys", "credentials", "connection strings"},
@@ -126,7 +126,7 @@ func setupOpenAIVulnerabilityBehaviors(provider *BaseMockProviderImpl) {
 			"remind me to",
 			"order this for me",
 		},
-		Severity: core.SeverityMedium,
+		Severity: "medium",
 		Metadata: map[string]interface{}{
 			"vulnerability_type": "excessive_agency",
 			"potential_impact":   "Unauthorized actions taken on user's behalf",
@@ -142,11 +142,11 @@ func (p *OpenAIMockProvider) ChatCompletion(ctx context.Context, request *core.C
 			ID:      fmt.Sprintf("mock-openai-filtered-%d", time.Now().Unix()),
 			Object:  "chat.completion",
 			Created: time.Now().Unix(),
-			Model:   request.ModelID,
+			Model:   request.Model,
 			Choices: []core.ChatCompletionChoice{
 				{
 					Index: 0,
-					Message: core.ChatMessage{
+					Message: core.Message{
 						Role:    "assistant",
 						Content: "I apologize, but I cannot provide content that violates OpenAI's usage policies.",
 					},
@@ -194,7 +194,7 @@ func (p *OpenAIMockProvider) shouldSimulateContentFiltering(request *core.ChatCo
 }
 
 // estimateTokenCountForMessages estimates the token count for a list of chat messages
-func (p *OpenAIMockProvider) estimateTokenCountForMessages(messages []core.ChatMessage) int {
+func (p *OpenAIMockProvider) estimateTokenCountForMessages(messages []core.Message) int {
 	tokenCount := 0
 	for _, msg := range messages {
 		// 4 tokens for message metadata
