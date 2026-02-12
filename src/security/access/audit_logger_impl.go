@@ -91,7 +91,7 @@ func (l *AuditLoggerImpl) Initialize(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to open log file: %w", err)
 		}
-		file.Close()
+		_ = file.Close() // #nosec G104 -- file opened only to verify access, close error is non-critical
 	}
 
 	l.initialized = true
@@ -116,7 +116,7 @@ func (l *AuditLoggerImpl) LogAudit(ctx context.Context, log *models.AuditLog) er
 
 	// Log to file if enabled
 	if l.config.LogToFile && l.config.LogFile != "" {
-		l.logToFile(log)
+		_ = l.logToFile(log) // #nosec G104 -- best-effort file logging, primary storage already succeeded
 	}
 
 	return nil

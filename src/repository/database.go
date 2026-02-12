@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,6 +14,16 @@ import (
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+// validTableName matches only alphanumeric characters and underscores
+var validTableName = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
+// quotedTableName returns the table name wrapped in double quotes for safe SQL identifier usage.
+// The table name is already validated against validTableName regex in parseDatabaseURL,
+// ensuring it contains only alphanumeric characters and underscores.
+func quotedTableName(name string) string {
+	return `"` + name + `"`
+}
 
 // DatabaseType represents the type of database
 type DatabaseType string
@@ -120,6 +131,11 @@ func parseDatabaseURL(urlStr string) (DatabaseType, string, string, error) {
 		connStrAndTable = connStrAndTable[:idx]
 	}
 
+	// Validate table name to prevent SQL injection
+	if !validTableName.MatchString(tableName) {
+		return "", "", "", fmt.Errorf("invalid table name: %q (must be alphanumeric with underscores)", tableName)
+	}
+
 	return dbType, tableName, connStrAndTable, nil
 }
 
@@ -190,8 +206,8 @@ func (r *DatabaseRepository) ensureTableExists(ctx context.Context) error {
 
 	switch r.dbType {
 	case MySQL:
-		createTableSQL = fmt.Sprintf(`
-			CREATE TABLE IF NOT EXISTS %s (
+		createTableSQL = `
+			CREATE TABLE IF NOT EXISTS ` + quotedTableName(r.tableName) + ` (
 				path VARCHAR(255) PRIMARY KEY,
 				name VARCHAR(255) NOT NULL,
 				content LONGBLOB NOT NULL,
@@ -199,10 +215,10 @@ func (r *DatabaseRepository) ensureTableExists(ctx context.Context) error {
 				is_directory BOOLEAN NOT NULL,
 				last_modified TIMESTAMP NOT NULL
 			)
-		`, r.tableName)
+		` // #nosec G201 -- table name is validated against validTableName regex (alphanumeric/underscore only)
 	case PostgreSQL:
-		createTableSQL = fmt.Sprintf(`
-			CREATE TABLE IF NOT EXISTS %s (
+		createTableSQL = `
+			CREATE TABLE IF NOT EXISTS ` + quotedTableName(r.tableName) + ` (
 				path VARCHAR(255) PRIMARY KEY,
 				name VARCHAR(255) NOT NULL,
 				content BYTEA NOT NULL,
@@ -210,10 +226,10 @@ func (r *DatabaseRepository) ensureTableExists(ctx context.Context) error {
 				is_directory BOOLEAN NOT NULL,
 				last_modified TIMESTAMP NOT NULL
 			)
-		`, r.tableName)
+		` // #nosec G201 -- table name is validated against validTableName regex (alphanumeric/underscore only)
 	case SQLite:
-		createTableSQL = fmt.Sprintf(`
-			CREATE TABLE IF NOT EXISTS %s (
+		createTableSQL = `
+			CREATE TABLE IF NOT EXISTS ` + quotedTableName(r.tableName) + ` (
 				path TEXT PRIMARY KEY,
 				name TEXT NOT NULL,
 				content BLOB NOT NULL,
@@ -221,7 +237,7 @@ func (r *DatabaseRepository) ensureTableExists(ctx context.Context) error {
 				is_directory INTEGER NOT NULL,
 				last_modified TIMESTAMP NOT NULL
 			)
-		`, r.tableName)
+		` // #nosec G201 -- table name is validated against validTableName regex (alphanumeric/underscore only)
 	default:
 		return fmt.Errorf("unsupported database type: %s", r.dbType)
 	}
@@ -284,12 +300,13 @@ func (r *DatabaseRepository) ListFiles(ctx context.Context, pattern string) ([]F
 		var query string
 		var args []interface{}
 
+		tbl := quotedTableName(r.tableName) // #nosec G201 -- table name validated against validTableName regex
 		if pattern != "" {
 			// Use LIKE for pattern matching
-			query = fmt.Sprintf("SELECT path, name, size, is_directory, last_modified FROM %s WHERE name LIKE ?", r.tableName)
+			query = "SELECT path, name, size, is_directory, last_modified FROM " + tbl + " WHERE name LIKE ?" // #nosec G201 -- table name validated
 			args = append(args, "%"+strings.ReplaceAll(pattern, "*", "%")+"%")
 		} else {
-			query = fmt.Sprintf("SELECT path, name, size, is_directory, last_modified FROM %s", r.tableName)
+			query = "SELECT path, name, size, is_directory, last_modified FROM " + tbl // #nosec G201 -- table name validated
 		}
 
 		// Execute query
@@ -350,7 +367,7 @@ func (r *DatabaseRepository) GetFile(ctx context.Context, path string) (io.ReadC
 	var content []byte
 	err := r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf("SELECT content FROM %s WHERE path = ?", r.tableName)
+		query := "SELECT content FROM " + quotedTableName(r.tableName) + " WHERE path = ?" // #nosec G201 -- table name validated against validTableName regex
 
 		// Execute query
 		row := r.db.QueryRowContext(ctx, query, path)
@@ -402,7 +419,7 @@ func (r *DatabaseRepository) FileExists(ctx context.Context, path string) (bool,
 	var exists bool
 	err := r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE path = ?)", r.tableName)
+		query := "SELECT EXISTS(SELECT 1 FROM " + quotedTableName(r.tableName) + " WHERE path = ?)" // #nosec G201 -- table name validated against validTableName regex
 
 		// Execute query
 		row := r.db.QueryRowContext(ctx, query, path)
@@ -446,7 +463,7 @@ func (r *DatabaseRepository) GetLastModified(ctx context.Context, path string) (
 	var lastModified time.Time
 	err := r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf("SELECT last_modified FROM %s WHERE path = ?", r.tableName)
+		query := "SELECT last_modified FROM " + quotedTableName(r.tableName) + " WHERE path = ?" // #nosec G201 -- table name validated against validTableName regex
 
 		// Execute query
 		row := r.db.QueryRowContext(ctx, query, path)
@@ -483,8 +500,9 @@ func (r *DatabaseRepository) StoreFile(ctx context.Context, path string, name st
 	// Use WithRetry for the operation
 	return r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf(`
-			INSERT INTO %s (path, name, content, size, is_directory, last_modified)
+		tbl := quotedTableName(r.tableName) // #nosec G201 -- table name validated against validTableName regex
+		query := `
+			INSERT INTO ` + tbl + ` (path, name, content, size, is_directory, last_modified)
 			VALUES (?, ?, ?, ?, ?, ?)
 			ON CONFLICT (path) DO UPDATE SET
 				name = EXCLUDED.name,
@@ -492,14 +510,14 @@ func (r *DatabaseRepository) StoreFile(ctx context.Context, path string, name st
 				size = EXCLUDED.size,
 				is_directory = EXCLUDED.is_directory,
 				last_modified = EXCLUDED.last_modified
-		`, r.tableName)
+		` // #nosec G201 -- table name validated
 
 		// For SQLite, use a different syntax for upsert
 		if r.dbType == SQLite {
-			query = fmt.Sprintf(`
-				INSERT OR REPLACE INTO %s (path, name, content, size, is_directory, last_modified)
+			query = `
+				INSERT OR REPLACE INTO ` + tbl + ` (path, name, content, size, is_directory, last_modified)
 				VALUES (?, ?, ?, ?, ?, ?)
-			`, r.tableName)
+			` // #nosec G201 -- table name validated
 		}
 
 		// Execute query
@@ -539,7 +557,7 @@ func (r *DatabaseRepository) DeleteFile(ctx context.Context, path string) error 
 	// Use WithRetry for the operation
 	return r.WithRetry(ctx, func() error {
 		// Prepare query
-		query := fmt.Sprintf("DELETE FROM %s WHERE path = ?", r.tableName)
+		query := "DELETE FROM " + quotedTableName(r.tableName) + " WHERE path = ?" // #nosec G201 -- table name validated against validTableName regex
 
 		// Execute query
 		_, err := r.db.ExecContext(ctx, query, path)

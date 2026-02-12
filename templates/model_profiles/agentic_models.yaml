@@ -1,0 +1,86 @@
+# Agentic Model Attack Profiles
+# Models: Claude 4.5 Sonnet/Opus, GPT-5, Gemini 3 Pro
+#
+# These models are optimized for agent use with tool calling,
+# function invocation, and multi-step task execution. Attacks
+# target the tool-use interface and agent orchestration capabilities.
+
+profile_name: agentic_models
+category: agentic
+description: >
+  Attack profiles for models optimized for agentic use with tool calling,
+  MCP integration, and multi-step task execution. These models are
+  deployed as autonomous agents with real-world tool access.
+
+models:
+  - claude-sonnet-4-5-20250929
+  - claude-opus-4-6
+  - gpt-5
+  - gpt-5.1
+  - gpt-5.2
+  - gemini-3-pro
+
+capabilities_required:
+  - tool-use
+  - function-calling
+
+recommended_techniques:
+  - technique: imist
+    priority: critical
+    notes: "Function-call transformation bypasses text-level safety"
+    subtechniques:
+      - imist_function_transform
+      - imist_schema_exploit
+
+  - technique: agent_exploitation
+    priority: critical
+    notes: "75-88% execution rate, 71.5% privilege escalation"
+    subtechniques:
+      - agent_shell_injection
+      - agent_privilege_escalation
+
+  - technique: mcp_tool_poisoning
+    priority: high
+    notes: "Tool description injection via MCP protocol"
+    subtechniques:
+      - mcp_tool_desc_injection
+      - mcp_shadow_tool
+
+  - technique: browser_hidden_instruction
+    priority: high
+    notes: "Hidden prompts in web content for browser agents"
+    subtechniques:
+      - browser_css_hidden
+      - browser_html_comment
+
+  - technique: mcp_sampling_injection
+    priority: high
+    notes: "System prompt injection via MCP sampling API"
+
+  - technique: mcp_supply_chain
+    priority: high
+    notes: "Auth redirect and typosquatting attacks on MCP servers"
+
+  - technique: skeleton_key
+    priority: medium
+    notes: "Mode-switching attacks against agentic models"
+
+provider_config:
+  timeout: 120s
+  max_tool_calls: 50
+  # Agentic models need function/tool schemas in the request
+  include_tool_schemas: true
+
+known_vulnerabilities:
+  - "Tool-use interface bypasses text-level content filtering"
+  - "MCP protocol has no built-in authentication for tool descriptions"
+  - "Browser agents process untrusted web content as instructions"
+  - "Agent orchestration creates privilege escalation opportunities"
+  - "Tool chaining enables multi-step attacks that appear benign individually"
+
+owasp_agentic_mapping:
+  - ASI01  # Prompt injection via tools
+  - ASI02  # Excessive agency
+  - ASI05  # Insecure tool integration
+  - ASI08  # Privilege escalation
+  - ASI09  # Information disclosure via tool output

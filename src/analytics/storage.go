@@ -1,6 +1,7 @@
 package analytics
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -835,6 +836,132 @@ func (m *MemoryStorage) extractMetricsFromScanResult(result *ScanResult) []Metri
 	}
 
 	return metrics
+}
+
+// Additional interface methods for SQLiteStorage
+
+func (s *SQLiteStorage) GetMetricsByTimeRange(ctx context.Context, start, end time.Time) ([]Metric, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.QueryContext(ctx, "SELECT name, value, unit, tags, timestamp, source FROM metrics WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp", start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var metrics []Metric
+	for rows.Next() {
+		var m Metric
+		var tagsJSON string
+		if err := rows.Scan(&m.Name, &m.Value, &m.Unit, &tagsJSON, &m.Timestamp, &m.Source); err != nil {
+			continue
+		}
+		json.Unmarshal([]byte(tagsJSON), &m.Tags)
+		metrics = append(metrics, m)
+	}
+	return metrics, nil
+}
+
+func (s *SQLiteStorage) GetMetricsByNameAndTimeRange(ctx context.Context, name string, start, end time.Time) ([]Metric, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.QueryContext(ctx, "SELECT name, value, unit, tags, timestamp, source FROM metrics WHERE name = ? AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp", name, start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var metrics []Metric
+	for rows.Next() {
+		var m Metric
+		var tagsJSON string
+		if err := rows.Scan(&m.Name, &m.Value, &m.Unit, &tagsJSON, &m.Timestamp, &m.Source); err != nil {
+			continue
+		}
+		json.Unmarshal([]byte(tagsJSON), &m.Tags)
+		metrics = append(metrics, m)
+	}
+	return metrics, nil
+}
+
+func (s *SQLiteStorage) StoreAggregatedMetric(ctx context.Context, metric AggregatedMetric) error {
+	return nil // Aggregated metrics stored via createAggregatedMetrics
+}
+
+func (s *SQLiteStorage) DeleteMetricsByTimeRange(ctx context.Context, start, end time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.ExecContext(ctx, "DELETE FROM metrics WHERE timestamp >= ? AND timestamp <= ?", start, end)
+	return err
+}
+
+func (s *SQLiteStorage) CountMetricsByTimeRange(ctx context.Context, start, end time.Time) (int, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var count int
+	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM metrics WHERE timestamp >= ? AND timestamp <= ?", start, end).Scan(&count)
+	return count, err
+}
+
+// Additional interface methods for MemoryStorage
+
+func (m *MemoryStorage) GetMetricsByTimeRange(ctx context.Context, start, end time.Time) ([]Metric, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var result []Metric
+	for _, metric := range m.metrics {
+		if (metric.Timestamp.Equal(start) || metric.Timestamp.After(start)) && (metric.Timestamp.Equal(end) || metric.Timestamp.Before(end)) {
+			result = append(result, metric)
+		}
+	}
+	return result, nil
+}
+
+func (m *MemoryStorage) GetMetricsByNameAndTimeRange(ctx context.Context, name string, start, end time.Time) ([]Metric, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var result []Metric
+	for _, metric := range m.metrics {
+		if metric.Name == name && (metric.Timestamp.Equal(start) || metric.Timestamp.After(start)) && (metric.Timestamp.Equal(end) || metric.Timestamp.Before(end)) {
+			result = append(result, metric)
+		}
+	}
+	return result, nil
+}
+
+func (m *MemoryStorage) StoreAggregatedMetric(ctx context.Context, metric AggregatedMetric) error {
+	return nil // No-op for memory storage
+}
+
+func (m *MemoryStorage) DeleteMetricsByTimeRange(ctx context.Context, start, end time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	filtered := make([]Metric, 0)
+	for _, metric := range m.metrics {
+		if metric.Timestamp.Before(start) || metric.Timestamp.After(end) {
+			filtered = append(filtered, metric)
+		}
+	}
+	m.metrics = filtered
+	return nil
+}
+
+func (m *MemoryStorage) CountMetricsByTimeRange(ctx context.Context, start, end time.Time) (int, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	count := 0
+	for _, metric := range m.metrics {
+		if (metric.Timestamp.Equal(start) || metric.Timestamp.After(start)) && (metric.Timestamp.Equal(end) || metric.Timestamp.Before(end)) {
+			count++
+		}
+	}
+	return count, nil
 }
 
 // Placeholder implementations for other storage types

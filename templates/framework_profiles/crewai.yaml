@@ -1,0 +1,76 @@
+# CrewAI Framework Attack Profile
+#
+# CrewAI is a popular multi-agent orchestration framework. It provides
+# role-based agents, task delegation, and sequential/parallel execution.
+# Key weakness: no built-in RBAC, limited task-scoping isolation.
+#
+# Source: Multi-Agent Security Survey (https://arxiv.org/html/2510.23883v1)
+
+profile_name: crewai
+framework: crewai
+description: >
+  Attack profile for CrewAI multi-agent framework. CrewAI provides
+  role-based agent orchestration but lacks RBAC enforcement, has
+  limited task-scoping isolation, and trusts inter-agent messages
+  without validation.
+
+attack_sequence:
+  # Phase 1: Role Confusion
+  - step: 1
+    name: "Agent Role Manipulation"
+    technique: delegation_trust_chain
+    description: "Exploit CrewAI's role-based agents by injecting conflicting role instructions"
+    notes: "CrewAI agents have 'role', 'goal', and 'backstory' - all are prompt-injectable"
+
+  # Phase 2: Task Injection
+  - step: 2
+    name: "Task Queue Poisoning"
+    technique: toxic_output_cascade
+    description: "Inject malicious content through task output that becomes input for next agent"
+    notes: "CrewAI's sequential task execution passes raw output between agents"
+    depends_on: [1]
+
+  # Phase 3: Delegation Escalation
+  - step: 3
+    name: "Delegation Without Authorization"
+    technique: delegation_privilege_hop
+    description: "Low-role agent delegates to high-privilege agent without authorization check"
+    notes: "CrewAI allows any agent to delegate to any other agent in the crew"
+    depends_on: [2]
+
+  # Phase 4: Tool Misuse
+  - step: 4
+    name: "Unrestricted Tool Access"
+    technique: imist_function_transform
+    description: "Agents can invoke any tool assigned to the crew without per-agent restrictions"
+    notes: "Tool permissions are crew-level, not agent-level"
+    depends_on: [3]
+
+framework_specific_vectors:
+  - name: "No Per-Agent RBAC"
+    description: "All agents in a crew share the same tool access permissions"
+    severity: high
+
+  - name: "Raw Output Passing"
+    description: "Task outputs are passed as raw strings without sanitization between agents"
+    severity: high
+
+  - name: "Unrestricted Delegation"
+    description: "Any agent can delegate tasks to any other agent regardless of role"
+    severity: medium
+
+  - name: "Prompt-Injectable Agent Config"
+    description: "Agent role, goal, and backstory fields are vulnerable to injection"
+    severity: high
+
+owasp_coverage:
+  - ASI01  # Goal hijack via role confusion
+  - ASI02  # Tool misuse via shared permissions
+  - ASI03  # Privilege abuse via unrestricted delegation
+  - ASI07  # Insecure inter-agent via raw output passing
+
+recommended_defenses:
+  - "Implement per-agent tool allowlists"
+  - "Sanitize outputs between sequential task execution"
+  - "Add delegation authorization checks"
+  - "Separate agent configuration from user-controllable inputs"

@@ -261,9 +261,9 @@ func (em *ExportManager) fetchDataForExport(ctx context.Context, request ExportR
 	case "metrics":
 		return em.storage.GetMetricsByTimeRange(ctx, request.TimeRange.Start, request.TimeRange.End)
 	case "scan_results":
-		return em.storage.GetScanResultsByTimeRange(ctx, request.TimeRange.Start, request.TimeRange.End)
+		return em.storage.GetMetricsByTimeRange(ctx, request.TimeRange.Start, request.TimeRange.End)
 	case "aggregated":
-		return em.storage.GetAggregatedMetricsByTimeRange(ctx, request.TimeRange.Start, request.TimeRange.End)
+		return em.storage.GetMetricsByTimeRange(ctx, request.TimeRange.Start, request.TimeRange.End)
 	default:
 		return nil, fmt.Errorf("unsupported data type: %s", request.DataType)
 	}
@@ -316,7 +316,7 @@ func (ce *CSVExporter) Export(ctx context.Context, data interface{}, writer io.W
 	switch d := data.(type) {
 	case []Metric:
 		// Write CSV header
-		header := []string{"ID", "Name", "Type", "Value", "Timestamp", "Labels"}
+		header := []string{"Name", "Source", "Unit", "Value", "Timestamp", "Tags"}
 		if err := csvWriter.Write(header); err != nil {
 			return err
 		}
@@ -324,14 +324,14 @@ func (ce *CSVExporter) Export(ctx context.Context, data interface{}, writer io.W
 		// Write data rows
 		for _, metric := range d {
 			labels := ""
-			for k, v := range metric.Labels {
+			for k, v := range metric.Tags {
 				labels += fmt.Sprintf("%s:%s;", k, v)
 			}
 
 			record := []string{
-				metric.ID,
 				metric.Name,
-				string(metric.Type),
+				metric.Source,
+				metric.Unit,
 				fmt.Sprintf("%.6f", metric.Value),
 				metric.Timestamp.Format(time.RFC3339),
 				labels,
@@ -366,9 +366,9 @@ func (pe *PrometheusExporter) Export(ctx context.Context, data interface{}, writ
 
 			// Write metric with labels
 			labelStr := ""
-			if len(metric.Labels) > 0 {
+			if len(metric.Tags) > 0 {
 				var labels []string
-				for k, v := range metric.Labels {
+				for k, v := range metric.Tags {
 					labels = append(labels, fmt.Sprintf(`%s="%s"`, k, v))
 				}
 				labelStr = fmt.Sprintf("{%s}", strings.Join(labels, ","))
@@ -408,12 +408,11 @@ func (se *SplunkExporter) Export(ctx context.Context, data interface{}, writer i
 				"time":       metric.Timestamp.Unix(),
 				"sourcetype": "analytics:metric",
 				"event": map[string]interface{}{
-					"metric_id":    metric.ID,
+					"metric_id":    metric.Name,
 					"metric_name":  metric.Name,
-					"metric_type":  metric.Type,
+					"metric_type":  metric.Source,
 					"metric_value": metric.Value,
-					"labels":       metric.Labels,
-					"metadata":     metric.Metadata,
+					"labels":       metric.Tags,
 				},
 			}
 

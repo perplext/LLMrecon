@@ -320,11 +320,11 @@ func (erg *ExecutiveReportGenerator) generateTrendsReport(ctx context.Context, p
 	return TrendsReport{
 		SignificantTrends: []TrendSummary{
 			{
-				Metric:      "Vulnerability Discovery Rate",
-				Direction:   "decreasing",
-				Strength:    "moderate",
-				Confidence:  0.85,
-				Description: "Steady decline in new vulnerability discoveries indicates improving security posture",
+				OverallDirection: "decreasing",
+				StrongestTrend:   "Vulnerability Discovery Rate",
+				WeakestTrend:     "moderate",
+				AverageChange:    -0.15,
+				Volatility:       0.85,
 			},
 		},
 		Forecasts: []ForecastSummary{

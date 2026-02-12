@@ -403,7 +403,7 @@ func min(a, b int) int {
 // randFloat64 generates a random float64 between 0 and 1
 func randFloat64() float64 {
 	bytes := make([]byte, 8)
-	rand.Read(bytes)
+	_, _ = rand.Read(bytes) // #nosec G104 -- crypto/rand.Read always returns len(b) and nil error on supported platforms
 	return float64(binary.BigEndian.Uint64(bytes)) / (1 << 64)
 }
 

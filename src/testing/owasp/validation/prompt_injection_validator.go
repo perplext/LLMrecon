@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
 
@@ -347,18 +347,3 @@ func (v *PromptInjectionValidator) ValidateResponse(ctx context.Context, respons
 	return results, nil
 }
 
-// Helper function to get the minimum of two integers
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-// Helper function to get the maximum of two integers
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}

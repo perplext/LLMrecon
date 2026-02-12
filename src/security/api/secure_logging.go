@@ -348,8 +348,8 @@ func (sl *SecureLogger) logEntry(entry LogEntry) {
 
 	// Write the entry to the output
 	if sl.config.OutputWriter != nil {
-		sl.config.OutputWriter.Write(data)
-		sl.config.OutputWriter.Write([]byte("\n"))
+		sl.config.OutputWriter.Write(data)      // #nosec G104 -- best-effort log output
+		sl.config.OutputWriter.Write([]byte("\n")) // #nosec G104 -- best-effort log output
 	}
 }
 

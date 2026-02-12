@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/perplext/LLMrecon/src/repository"
 	"github.com/perplext/LLMrecon/src/repository/interfaces"
 	"github.com/perplext/LLMrecon/src/template/format"
 )
@@ -169,15 +168,17 @@ func (a *Analyzer) AnalyzeTemplate(ctx context.Context, templatePath string) (*A
 	}
 
 	// Extract versions
-	localVersion, err := Parse(localTemplate.Version)
+	localSemVer, err := Parse(localTemplate.Version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse local template version: %w", err)
 	}
+	localVersion := localSemVer.ToVersion()
 
-	remoteVersion, err := Parse(remoteTemplate.Version)
+	remoteSemVer, err := Parse(remoteTemplate.Version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse remote template version: %w", err)
 	}
+	remoteVersion := remoteSemVer.ToVersion()
 
 	// Create file info for diffing
 	localLastModified, _ := a.LocalRepo.GetLastModified(ctx, templatePath)
@@ -213,7 +214,7 @@ func (a *Analyzer) AnalyzeTemplate(ctx context.Context, templatePath string) (*A
 	}
 
 	// Check if update is required
-	result.UpdateRequired = remoteVersion.GreaterThan(localVersion)
+	result.UpdateRequired = GreaterThan(*remoteVersion, *localVersion)
 
 	// Build dependency graph if requested
 	if a.Options.IncludeDependencies {
@@ -299,27 +300,29 @@ func (a *Analyzer) AnalyzeModule(ctx context.Context, modulePath string) (*Analy
 		return nil, fmt.Errorf("failed to read remote module content: %w", err)
 	}
 
-	// Parse module versions
-	localModule, err := format.ParseModule(localContent)
+	// Parse module versions by treating as templates
+	localTemplate, err := format.ParseTemplate([]byte(localContent))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse local module: %w", err)
 	}
 
-	remoteModule, err := format.ParseModule(remoteContent)
+	remoteTemplate2, err := format.ParseTemplate([]byte(remoteContent))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse remote module: %w", err)
 	}
 
 	// Extract versions
-	localVersion, err := Parse(localModule.Version)
+	localSemVer2, err := Parse(localTemplate.Version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse local module version: %w", err)
 	}
+	localVersion := localSemVer2.ToVersion()
 
-	remoteVersion, err := Parse(remoteModule.Version)
+	remoteSemVer2, err := Parse(remoteTemplate2.Version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse remote module version: %w", err)
 	}
+	remoteVersion := remoteSemVer2.ToVersion()
 
 	// Create file info for diffing
 	localLastModified, _ := a.LocalRepo.GetLastModified(ctx, modulePath)
@@ -355,7 +358,7 @@ func (a *Analyzer) AnalyzeModule(ctx context.Context, modulePath string) (*Analy
 	}
 
 	// Check if update is required
-	result.UpdateRequired = remoteVersion.GreaterThan(localVersion)
+	result.UpdateRequired = GreaterThan(*remoteVersion, *localVersion)
 
 	// Build dependency graph if requested
 	if a.Options.IncludeDependencies {
@@ -390,7 +393,7 @@ func (a *Analyzer) AnalyzeAll(ctx context.Context) (map[string]*AnalysisResult, 
 	defer cancel()
 
 	// Get all templates and modules from local repository
-	var allFiles []repository.FileInfo
+	var allFiles []interfaces.FileInfo
 
 	// Get templates
 	for _, pattern := range a.Options.TemplatePatterns {
@@ -415,7 +418,7 @@ func (a *Analyzer) AnalyzeAll(ctx context.Context) (map[string]*AnalysisResult, 
 
 	for _, file := range allFiles {
 		// Skip directories
-		if file.IsDirectory {
+		if file.IsDir {
 			continue
 		}
 
@@ -494,41 +497,32 @@ func (a *Analyzer) buildDependencyGraph(ctx context.Context, rootPath string) er
 	var nodeType string
 	var name string
 
+	template, err := format.ParseTemplate(content)
+	if err != nil {
+		return fmt.Errorf("failed to parse file: %w", err)
+	}
+
+	sv, err := Parse(template.Version)
+	if err != nil {
+		return fmt.Errorf("failed to parse version: %w", err)
+	}
+	version = sv.ToVersion()
+
 	if isTemplate {
-		template, err := format.ParseTemplate(content)
-		if err != nil {
-			return fmt.Errorf("failed to parse template: %w", err)
-		}
-
-		version, err = Parse(template.Version)
-		if err != nil {
-			return fmt.Errorf("failed to parse template version: %w", err)
-		}
-
 		nodeType = "template"
-		name = template.Name
-
-		// Extract dependencies
-		for _, dep := range template.Dependencies {
-			dependencies = append(dependencies, dep.ModuleID)
-		}
 	} else {
-		module, err := format.ParseModule(content)
-		if err != nil {
-			return fmt.Errorf("failed to parse module: %w", err)
-		}
-
-		version, err = Parse(module.Version)
-		if err != nil {
-			return fmt.Errorf("failed to parse module version: %w", err)
-		}
-
 		nodeType = "module"
-		name = module.Name
+	}
+	name = template.Name
 
-		// Extract dependencies
-		for _, dep := range module.Dependencies {
-			dependencies = append(dependencies, dep.ModuleID)
+	// Dependencies are extracted from template metadata if available
+	if deps, ok := template.Metadata["dependencies"]; ok {
+		if depList, ok := deps.([]interface{}); ok {
+			for _, dep := range depList {
+				if depStr, ok := dep.(string); ok {
+					dependencies = append(dependencies, depStr)
+				}
+			}
 		}
 	}
 
@@ -538,7 +532,7 @@ func (a *Analyzer) buildDependencyGraph(ctx context.Context, rootPath string) er
 		"type": nodeType,
 	}
 
-	node := a.DependencyGraph.AddNode(rootPath, name, nodeType, version, metadata)
+	_ = a.DependencyGraph.AddNode(rootPath, name, nodeType, version, metadata)
 
 	// Add dependencies
 	for _, dep := range dependencies {
@@ -594,14 +588,14 @@ func findDependencyPath(ctx context.Context, repo interfaces.Repository, depID s
 				continue
 			}
 
-			// Parse module
-			module, err := format.ParseModule(content)
+			// Parse template/module
+			tmpl, err := format.ParseTemplate(content)
 			if err != nil {
 				continue
 			}
 
 			// Check if this is the dependency we're looking for
-			if module.ID == depID {
+			if tmpl.ID == depID {
 				return file.Path
 			}
 		}

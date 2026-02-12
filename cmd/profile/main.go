@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package main provides a CLI tool for profiling template operations.
 package main
 
@@ -6,10 +8,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/perplext/LLMrecon/src/profiling"
-	"github.com/perplext/LLMrecon/src/repository"
 	"github.com/perplext/LLMrecon/src/template/management"
 	"github.com/perplext/LLMrecon/src/template/management/types"
 )
@@ -106,9 +108,6 @@ func main() {
 
 	// Run profiling
 	fmt.Println("Running template profiling...")
-if err != nil {
-treturn err
-}
 	// Load templates
 	startTime := time.Now()
 	templates, err := templateProfiler.ProfileTemplateLoadBatch(ctx, source.Path, source.Type)
@@ -124,9 +123,7 @@ treturn err
 	if len(templates) > 0 {
 		// Limit to a reasonable number of templates for execution
 		execTemplates := templates
-if err != nil {
-treturn err
-}		if len(templates) > 10 {
+		if len(templates) > 10 {
 			execTemplates = templates[:10]
 		}
 
@@ -138,17 +135,13 @@ treturn err
 			execTime := time.Since(startTime)
 			fmt.Printf("Executed %d templates in %v (%.2f ms/template)\n",
 				len(execTemplates), execTime, float64(execTime.Milliseconds())/float64(len(execTemplates)))
-if err != nil {
-treturn err
-}			fmt.Printf("Generated %d results\n", len(results))
+			fmt.Printf("Generated %d results\n", len(results))
 		}
 	}
 
 	// Compare with baseline if requested
 	if *compareFlag {
-if err != nil {
-treturn err
-}		comparisonFile := "comparison_report.txt"
+		comparisonFile := "comparison_report.txt"
 		if err := templateProfiler.SaveComparisonReport(comparisonFile); err != nil {
 			fmt.Printf("Error saving comparison report: %v\n", err)
 		} else {

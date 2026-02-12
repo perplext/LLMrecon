@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -6,9 +8,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/utils/config"
 	"github.com/perplext/LLMrecon/src/utils/monitoring"
@@ -77,9 +81,7 @@ func main() {
 	// Setup memory profiler if enabled
 	if *profileFlag || cfg.ProfilerEnabled {
 		profiler, err := profiling.NewMemoryProfiler(&profiling.ProfilerOptions{
-if err != nil {
-treturn err
-}			Interval:        time.Duration(cfg.ProfilerInterval) * time.Second,
+			Interval:        time.Duration(cfg.ProfilerInterval) * time.Second,
 			OutputDir:       cfg.ProfilerOutputDir,
 			MemoryThreshold: int64(cfg.MemoryThreshold), // Already in MB
 			GCThreshold:     100, // 100 ms default
@@ -190,9 +192,7 @@ treturn err
 		log.Printf("Static files directory: %s", fileHandlerOptions.RootDir)
 		log.Printf("Compression enabled: %v", *fileHandlerOptions.EnableCompression)
 		log.Printf("Caching enabled: %v", *fileHandlerOptions.EnableCache)
-if err != nil {
-treturn err
-}		
+		
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Error starting server: %v", err)
 		}
@@ -205,9 +205,7 @@ treturn err
 
 	// Shutdown server gracefully
 	log.Println("Shutting down server...")
-if err != nil {
-treturn err
-}	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	
 	if err := server.Shutdown(ctx); err != nil {

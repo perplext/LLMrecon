@@ -123,6 +123,20 @@ func (m *AccessControlManager) GetUserManager() UserManager {
 	return m.userManager
 }
 
+// GetAuditLogger returns the audit logger
+func (m *AccessControlManager) GetAuditLogger() AuditLogger {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.auditLogger
+}
+
+// GetAuthManager returns the auth manager
+func (m *AccessControlManager) GetAuthManager() *AuthManager {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.authManager
+}
+
 // Initialize initializes the access control system
 func (m *AccessControlManager) Initialize(ctx context.Context) error {
 	m.mu.Lock()

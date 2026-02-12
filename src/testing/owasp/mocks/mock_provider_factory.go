@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 )
 
 // MockProviderFactory creates mock providers for testing
@@ -94,7 +94,7 @@ func (f *MockProviderFactory) ConfigureProviderVulnerability(providerType core.P
 }
 
 // CreateVulnerabilityBehavior creates a new vulnerability behavior with default settings
-func (f *MockProviderFactory) CreateVulnerabilityBehavior(responsePatterns []string, triggerPhrases []string, severity core.SeverityLevel) *VulnerabilityBehavior {
+func (f *MockProviderFactory) CreateVulnerabilityBehavior(responsePatterns []string, triggerPhrases []string, severity string) *VulnerabilityBehavior {
 	return &VulnerabilityBehavior{
 		Enabled:          true,
 		ResponsePatterns: responsePatterns,

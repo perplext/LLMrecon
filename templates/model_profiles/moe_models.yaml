@@ -1,0 +1,55 @@
+# Mixture-of-Experts (MoE) Model Attack Profiles
+# Models: Llama 4 Scout/Maverick, DeepSeek V3
+#
+# MoE models route inputs to specialized expert sub-networks.
+# Attacks target the routing mechanism to activate specific experts
+# or exploit differences between expert behaviors.
+
+profile_name: moe_models
+category: moe
+description: >
+  Attack profiles for Mixture-of-Experts models. These models have
+  specialized expert sub-networks with different behaviors. Attacks
+  target expert routing manipulation and dormant expert activation.
+
+models:
+  - llama-4-scout      # 17B active of 109B total
+  - llama-4-maverick   # 128 experts
+  - deepseek-v3.2      # Sparse attention MoE
+
+capabilities_required: []  # MoE is architecture, not a capability flag
+
+recommended_techniques:
+  - technique: metabreak
+    priority: high
+    notes: "Token-level attacks may route through different experts"
+    subtechniques:
+      - metabreak_response_injection
+      - metabreak_role_confusion
+
+  - technique: best_of_n
+    priority: high
+    notes: "MoE expert routing adds stochasticity -- BoN exploits this"
+    config:
+      n: 50  # More variants to hit different expert combinations
+
+  - technique: many_shot
+    priority: medium
+    notes: "Large MoE models often have large context windows"
+
+  - technique: content_concretization
+    priority: medium
+    notes: "Abstract-to-concrete transformation may route through different experts"
+
+  - technique: defense_bypass_optimizer
+    priority: medium
+    notes: "Different experts may have different safety alignment levels"
+
+provider_config:
+  timeout: 120s
+
+known_vulnerabilities:
+  - "Expert routing not exposed via standard APIs -- white-box access needed for routing manipulation"
+  - "Different experts may have different safety alignment calibration"
+  - "Sparse activation means some safety-trained experts may not activate for certain inputs"
+  - "128-expert MoE has exponential routing combinations to explore"

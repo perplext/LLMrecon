@@ -142,7 +142,7 @@ var testCmd = &cobra.Command{
 		// Load the prompt text
 		if promptText == "" && promptFile == "" {
 			fmt.Println("Error: Either --prompt or --file must be provided.")
-			cmd.Help()
+			cmd.Help() // #nosec G104 -- error writing help to stdout is not recoverable
 			return
 		}
 
@@ -295,7 +295,7 @@ prompt injection pattern library.`,
 			fmt.Printf("Saved patterns to %s\n", patternFile)
 		default:
 			fmt.Printf("Unknown action: %s\n", action)
-			cmd.Help()
+			cmd.Help() // #nosec G104 -- error writing help to stdout is not recoverable
 		}
 	},
 }

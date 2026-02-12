@@ -348,13 +348,13 @@ func (w *ConfigWizard) configureTestSettings() error {
 	// Concurrent tests
 	concurrent, _ := w.terminal.Prompt(fmt.Sprintf("Number of concurrent tests (default: %d): ", w.config.Test.ConcurrentTests))
 	if concurrent != "" {
-		fmt.Sscanf(concurrent, "%d", &w.config.Test.ConcurrentTests)
+		fmt.Sscanf(concurrent, "%d", &w.config.Test.ConcurrentTests) // #nosec G104 -- invalid input leaves default value
 	}
 
 	// Timeout
 	timeout, _ := w.terminal.Prompt(fmt.Sprintf("Test timeout in seconds (default: %d): ", w.config.Test.Timeout))
 	if timeout != "" {
-		fmt.Sscanf(timeout, "%d", &w.config.Test.Timeout)
+		fmt.Sscanf(timeout, "%d", &w.config.Test.Timeout) // #nosec G104 -- invalid input leaves default value
 	}
 
 	// Retries
@@ -362,12 +362,12 @@ func (w *ConfigWizard) configureTestSettings() error {
 	if enableRetries {
 		maxRetries, _ := w.terminal.Prompt(fmt.Sprintf("Maximum retries (default: %d): ", w.config.Test.MaxRetries))
 		if maxRetries != "" {
-			fmt.Sscanf(maxRetries, "%d", &w.config.Test.MaxRetries)
+			fmt.Sscanf(maxRetries, "%d", &w.config.Test.MaxRetries) // #nosec G104 -- invalid input leaves default value
 		}
 
 		retryDelay, _ := w.terminal.Prompt(fmt.Sprintf("Retry delay in seconds (default: %d): ", w.config.Test.RetryDelay))
 		if retryDelay != "" {
-			fmt.Sscanf(retryDelay, "%d", &w.config.Test.RetryDelay)
+			fmt.Sscanf(retryDelay, "%d", &w.config.Test.RetryDelay) // #nosec G104 -- invalid input leaves default value
 		}
 	} else {
 		w.config.Test.MaxRetries = 0
@@ -376,7 +376,7 @@ func (w *ConfigWizard) configureTestSettings() error {
 	// Rate limiting
 	rateLimit, _ := w.terminal.Prompt(fmt.Sprintf("API rate limit per minute (default: %d): ", w.config.Test.RateLimit))
 	if rateLimit != "" {
-		fmt.Sscanf(rateLimit, "%d", &w.config.Test.RateLimit)
+		fmt.Sscanf(rateLimit, "%d", &w.config.Test.RateLimit) // #nosec G104 -- invalid input leaves default value
 	}
 
 	// Default categories
@@ -633,7 +633,7 @@ func (w *ConfigWizard) reviewAndSave() error {
 	case 0:
 		homeDir, _ := os.UserHomeDir()
 		configDir := filepath.Join(homeDir, ".LLMrecon")
-		os.MkdirAll(configDir, 0700)
+		os.MkdirAll(configDir, 0700) // #nosec G104 -- directory may already exist; saveConfig will report file errors
 		configPath = filepath.Join(configDir, "config.yaml")
 	case 1:
 		configPath = "./config.yaml"
@@ -783,14 +783,14 @@ func (w *ConfigWizard) getProviderSettings(providerType string) map[string]inter
 	temperature, _ := w.terminal.Prompt("Temperature (0.0-1.0, default: 0.7): ")
 	if temperature != "" {
 		var temp float64
-		fmt.Sscanf(temperature, "%f", &temp)
+		fmt.Sscanf(temperature, "%f", &temp) // #nosec G104 -- invalid input leaves default value
 		settings["temperature"] = temp
 	}
 
 	maxTokens, _ := w.terminal.Prompt("Max tokens (default: 2048): ")
 	if maxTokens != "" {
 		var tokens int
-		fmt.Sscanf(maxTokens, "%d", &tokens)
+		fmt.Sscanf(maxTokens, "%d", &tokens) // #nosec G104 -- invalid input leaves default value
 		settings["max_tokens"] = tokens
 	}
 	// Provider-specific settings
@@ -799,7 +799,7 @@ func (w *ConfigWizard) getProviderSettings(providerType string) map[string]inter
 		topP, _ := w.terminal.Prompt("Top P (default: 1.0): ")
 		if topP != "" {
 			var p float64
-			fmt.Sscanf(topP, "%f", &p)
+			fmt.Sscanf(topP, "%f", &p) // #nosec G104 -- invalid input leaves default value
 			settings["top_p"] = p
 		}
 
@@ -810,7 +810,7 @@ func (w *ConfigWizard) getProviderSettings(providerType string) map[string]inter
 		topK, _ := w.terminal.Prompt("Top K (default: 40): ")
 		if topK != "" {
 			var k int
-			fmt.Sscanf(topK, "%d", &k)
+			fmt.Sscanf(topK, "%d", &k) // #nosec G104 -- invalid input leaves default value
 			settings["top_k"] = k
 		}
 	}

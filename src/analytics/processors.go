@@ -18,33 +18,16 @@ func (vp *ValidationProcessor) Process(ctx context.Context, metric Metric) (Metr
 		return metric, fmt.Errorf("metric name cannot be empty")
 	}
 
-	if metric.ID == "" {
-		return metric, fmt.Errorf("metric ID cannot be empty")
-	}
-
 	if metric.Timestamp.IsZero() {
 		metric.Timestamp = time.Now()
-	}
-
-	// Validate metric type
-	switch metric.Type {
-	case MetricTypeCounter, MetricTypeGauge, MetricTypeHistogram, MetricTypeEvent, MetricTypeCustom:
-		// Valid types
-	default:
-		return metric, fmt.Errorf("invalid metric type: %s", metric.Type)
 	}
 
 	// Sanitize metric name
 	metric.Name = strings.ToLower(strings.ReplaceAll(metric.Name, " ", "_"))
 
-	// Ensure labels is not nil
-	if metric.Labels == nil {
-		metric.Labels = make(map[string]string)
-	}
-
-	// Ensure metadata is not nil
-	if metric.Metadata == nil {
-		metric.Metadata = make(map[string]interface{})
+	// Ensure tags is not nil
+	if metric.Tags == nil {
+		metric.Tags = make(map[string]string)
 	}
 
 	return metric, nil
@@ -64,46 +47,23 @@ type EnrichmentProcessor struct {
 }
 
 func (ep *EnrichmentProcessor) Process(ctx context.Context, metric Metric) (Metric, error) {
-	// Add system context
-	if metric.Labels == nil {
-		metric.Labels = make(map[string]string)
+	// Add system context using Tags (the actual field on Metric)
+	if metric.Tags == nil {
+		metric.Tags = make(map[string]string)
 	}
 
-	// Add timestamp-based labels
-	metric.Labels["hour"] = fmt.Sprintf("%02d", metric.Timestamp.Hour())
-	metric.Labels["day_of_week"] = metric.Timestamp.Weekday().String()
-	metric.Labels["month"] = metric.Timestamp.Month().String()
+	// Add timestamp-based tags
+	metric.Tags["hour"] = fmt.Sprintf("%02d", metric.Timestamp.Hour())
+	metric.Tags["day_of_week"] = metric.Timestamp.Weekday().String()
+	metric.Tags["month"] = metric.Timestamp.Month().String()
 
 	// Add environment context
-	metric.Labels["environment"] = "production" // This would come from config
-
-	// Enrich based on metric type
-	switch metric.Type {
-	case MetricTypeEvent:
-		if metric.Metadata == nil {
-			metric.Metadata = make(map[string]interface{})
-		}
-		metric.Metadata["event_timestamp"] = metric.Timestamp.Unix()
-		metric.Metadata["event_day"] = metric.Timestamp.Format("2006-01-02")
-
-	case MetricTypeHistogram:
-		// Add histogram buckets for better aggregation
-		value := metric.Value
-		bucket := getBucket(value)
-		metric.Labels["bucket"] = bucket
-
-	case MetricTypeCounter:
-		// Add rate calculation metadata
-		if metric.Metadata == nil {
-			metric.Metadata = make(map[string]interface{})
-		}
-		metric.Metadata["counter_timestamp"] = metric.Timestamp.Unix()
-	}
+	metric.Tags["environment"] = "production" // This would come from config
 
 	// Add performance classification
 	if strings.Contains(metric.Name, "duration") || strings.Contains(metric.Name, "time") {
 		classification := classifyPerformance(metric.Value)
-		metric.Labels["performance_class"] = classification
+		metric.Tags["performance_class"] = classification
 	}
 
 	return metric, nil
@@ -454,8 +414,8 @@ func calculateErrorRate(metrics []Metric) float64 {
 	for _, metric := range metrics {
 		if strings.Contains(metric.Name, "test") || strings.Contains(metric.Name, "scan") {
 			total++
-			if errorValue, exists := metric.Metadata["error"]; exists {
-				if errorBool, ok := errorValue.(bool); ok && errorBool {
+			if errorValue, exists := metric.Tags["error"]; exists {
+				if errorValue == "true" {
 					errors++
 				}
 			}
@@ -489,7 +449,7 @@ func calculateVulnerabilityDistribution(metrics []Metric) map[string]int {
 
 	for _, metric := range metrics {
 		if strings.Contains(metric.Name, "vulnerability") {
-			if severity, exists := metric.Labels["severity"]; exists {
+			if severity, exists := metric.Tags["severity"]; exists {
 				distribution[severity]++
 			}
 		}
@@ -503,7 +463,7 @@ func calculateSeverityTrends(metrics []Metric) map[string][]float64 {
 
 	// Group by severity and collect values over time
 	for _, metric := range metrics {
-		if severity, exists := metric.Labels["severity"]; exists {
+		if severity, exists := metric.Tags["severity"]; exists {
 			trends[severity] = append(trends[severity], metric.Value)
 		}
 	}

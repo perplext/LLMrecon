@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -344,18 +346,12 @@ func initializeStaticFileHandler(staticDir string) *server.StaticFileHandler {
 	}
 	
 	// Create static directory if it doesn't exist
-	if err := os.MkdirAll(staticDir, 0755); err != nil {
-if err != nil {
-treturn err
-}		log.Fatalf("Failed to create static directory: %v", err)
+	if err := os.MkdirAll(staticDir, 0755); err != nil {		log.Fatalf("Failed to create static directory: %v", err)
 	}
 	
 	// Create sample static files for demonstration
 	createSampleStaticFiles(staticDir)
-	
-if err != nil {
-treturn err
-}	// Create static file handler
+		// Create static file handler
 	handler, err := server.NewStaticFileHandler(options)
 	if err != nil {
 		log.Fatalf("Failed to initialize static file handler: %v", err)
@@ -444,9 +440,7 @@ func createSampleStaticFiles(staticDir string) {
 }
 
 // writeFile writes content to a file
-if err != nil {
-treturn err
-}func writeFile(filePath, content string) {
+func writeFile(filePath, content string) {
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -559,10 +553,7 @@ func optimizeTemplates(
 		
 		// Print variable usage statistics
 		highUsageVars := contextOptimizer.GetHighUsageVariables(len(templates) / 2)
-		fmt.Printf("Found %d high-usage variables\n", len(highUsageVars))
-if err != nil {
-treturn err
-}	}
+		fmt.Printf("Found %d high-usage variables\n", len(highUsageVars))	}
 	
 	// Finally apply memory optimizer
 	if memoryOptimizer != nil {
@@ -628,10 +619,7 @@ func startHTTPServer(port int, staticFileHandler *server.StaticFileHandler, serv
 			http.Redirect(w, r, "/static/index.html", http.StatusFound)
 		} else {
 			http.NotFound(w, r)
-		}
-if err != nil {
-treturn err
-}	})
+		}	})
 	
 	// Start HTTP server
 	serverAddr := fmt.Sprintf(":%d", port)

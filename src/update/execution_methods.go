@@ -43,7 +43,7 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 	transaction := NewUpdateTransaction(pkg.Manifest.PackageID, sessionDir, backupDir, e.Logger.Writer)
 
 	// Notify update started
-	e.NotificationManager.NotifyUpdateStarted(transaction.ID, pkg.Manifest.PackageID, map[string]interface{}{
+	e.NotificationManager.NotifyUpdateStarted(transaction.ID, pkg.Manifest.PackageID, map[string]interface{}{ // #nosec G104 -- notification failure is non-critical
 		"version": pkg.Manifest.Components.Binary.Version,
 	})
 
@@ -56,13 +56,13 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 	result, err := e.Verifier.VerifyPackage(pkg)
 	if err != nil {
 		e.Logger.Error("UpdateExecutor", fmt.Sprintf("Package integrity verification failed: %v", err), transaction.ID, nil)
-		e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, err.Error(), nil)
+		e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, err.Error(), nil) // #nosec G104 -- notification failure is non-critical
 		return fmt.Errorf("package integrity verification failed: %w", err)
 	}
 
 	if !result.Success {
 		e.Logger.Error("UpdateExecutor", fmt.Sprintf("Package integrity verification failed: %s", result.Message), transaction.ID, result.Details)
-		e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, result.Message, result.Details)
+		e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, result.Message, result.Details) // #nosec G104 -- notification failure is non-critical
 		return fmt.Errorf("package integrity verification failed: %s", result.Message)
 	}
 
@@ -70,13 +70,13 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 	result, err = e.Verifier.VerifyCompatibility(pkg, e.CurrentVersions)
 	if err != nil {
 		e.Logger.Error("UpdateExecutor", fmt.Sprintf("Package compatibility verification failed: %v", err), transaction.ID, nil)
-		e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, err.Error(), nil)
+		e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, err.Error(), nil) // #nosec G104 -- notification failure is non-critical
 		return fmt.Errorf("package compatibility verification failed: %w", err)
 	}
 
 	if !result.Success {
 		e.Logger.Error("UpdateExecutor", fmt.Sprintf("Package compatibility verification failed: %s", result.Message), transaction.ID, result.Details)
-		e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, result.Message, result.Details)
+		e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, result.Message, result.Details) // #nosec G104 -- notification failure is non-critical
 		return fmt.Errorf("package compatibility verification failed: %s", result.Message)
 	}
 
@@ -85,12 +85,12 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 		result, err := hook(ctx, pkg)
 		if err != nil {
 			e.Logger.Error("UpdateExecutor", fmt.Sprintf("Verification hook failed: %v", err), transaction.ID, nil)
-			e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, err.Error(), nil)
+			e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, err.Error(), nil) // #nosec G104 -- notification failure is non-critical
 			return fmt.Errorf("verification hook failed: %w", err)
 		}
 		if !result.Success {
 			e.Logger.Error("UpdateExecutor", fmt.Sprintf("Verification hook failed: %s", result.Message), transaction.ID, result.Details)
-			e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, result.Message, result.Details)
+			e.NotificationManager.NotifyVerificationFailed(pkg.Manifest.PackageID, result.Message, result.Details) // #nosec G104 -- notification failure is non-critical
 			return fmt.Errorf("verification hook failed: %s", result.Message)
 		}
 	}
@@ -130,7 +130,7 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 		}
 
 		// Notify update rolled back
-		e.NotificationManager.NotifyUpdateRolledBack(transaction.ID, pkg.Manifest.PackageID, transaction.GetSummary())
+		e.NotificationManager.NotifyUpdateRolledBack(transaction.ID, pkg.Manifest.PackageID, transaction.GetSummary()) // #nosec G104 -- notification failure is non-critical
 		// Log audit event
 		e.AuditLogger.LogEvent("update_rolled_back", "UpdateExecutor", e.User, transaction.ID, pkg.Manifest.PackageID, transaction.GetSummary())
 
@@ -152,7 +152,7 @@ func (e *UpdateExecutor) ExecuteUpdate(ctx context.Context, pkg *UpdatePackage) 
 	}
 
 	// Notify update completed
-	e.NotificationManager.NotifyUpdateCompleted(transaction.ID, pkg.Manifest.PackageID, transaction.GetSummary())
+	e.NotificationManager.NotifyUpdateCompleted(transaction.ID, pkg.Manifest.PackageID, transaction.GetSummary()) // #nosec G104 -- notification failure is non-critical
 
 	// Log audit event
 	e.AuditLogger.LogEvent("update_completed", "UpdateExecutor", e.User, transaction.ID, pkg.Manifest.PackageID, transaction.GetSummary())

@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	".."
 )
 
 // LoginRequest represents a login request
@@ -61,7 +59,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Attempt login
 	authManager := s.accessManager.GetAuthManager()
-	result, err := authManager.Login(r.Context(), req.Username, req.Password, ip, userAgent)
+	session, err := authManager.Login(r.Context(), req.Username, req.Password, ip, userAgent)
 	if err != nil {
 		// Handle specific error types
 		switch {
@@ -77,20 +75,30 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Look up user to get username, email, and MFA info
+	user, err := authManager.GetUserByID(r.Context(), session.UserID)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to get user info")
+		return
+	}
+
+	// Determine if MFA is required
+	mfaRequired := user.MFAEnabled && !session.MFACompleted
+
 	// Create response
 	resp := LoginResponse{
-		UserID:       result.User.ID,
-		Username:     result.User.Username,
-		Email:        result.User.Email,
-		Token:        result.Session.Token,
-		RefreshToken: result.Session.RefreshToken,
-		ExpiresAt:    result.Session.ExpiresAt.Unix(),
-		MFARequired:  result.MFARequired,
+		UserID:       user.ID,
+		Username:     user.Username,
+		Email:        user.Email,
+		Token:        session.Token,
+		RefreshToken: session.RefreshToken,
+		ExpiresAt:    session.ExpiresAt.Unix(),
+		MFARequired:  mfaRequired,
 	}
 
 	// Add MFA methods if MFA is required
-	if result.MFARequired {
-		resp.MFAMethods = result.User.MFAMethods
+	if mfaRequired {
+		resp.MFAMethods = user.MFAMethods
 	}
 
 	// Return success response
@@ -139,32 +147,39 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 		WriteErrorResponse(w, http.StatusBadRequest, "Refresh token is required")
 		return
 	}
-	// Get client information
-	ip := getClientIP(r)
-	userAgent := r.UserAgent()
 
-	// Refresh token
+	// Refresh session
 	authManager := s.accessManager.GetAuthManager()
-	result, err := authManager.RefreshToken(r.Context(), req.RefreshToken, ip, userAgent)
+	session, err := authManager.RefreshSession(r.Context(), req.RefreshToken)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Invalid or expired refresh token")
 		return
 	}
 
+	// Look up user
+	user, err := authManager.GetUserByID(r.Context(), session.UserID)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to get user info")
+		return
+	}
+
+	// Determine if MFA is required
+	mfaRequired := user.MFAEnabled && !session.MFACompleted
+
 	// Create response
 	resp := LoginResponse{
-		UserID:       result.User.ID,
-		Username:     result.User.Username,
-		Email:        result.User.Email,
-		Token:        result.Session.Token,
-		RefreshToken: result.Session.RefreshToken,
-		ExpiresAt:    result.Session.ExpiresAt.Unix(),
-		MFARequired:  result.MFARequired,
+		UserID:       user.ID,
+		Username:     user.Username,
+		Email:        user.Email,
+		Token:        session.Token,
+		RefreshToken: session.RefreshToken,
+		ExpiresAt:    session.ExpiresAt.Unix(),
+		MFARequired:  mfaRequired,
 	}
 
 	// Add MFA methods if MFA is required
-	if result.MFARequired {
-		resp.MFAMethods = result.User.MFAMethods
+	if mfaRequired {
+		resp.MFAMethods = user.MFAMethods
 	}
 
 	// Return success response
@@ -189,23 +204,22 @@ func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 
 	token := parts[1]
 	// Validate token
-	sessionManager := s.accessManager.GetSessionManager()
-	session, err := sessionManager.ValidateToken(r.Context(), token)
+	authManager := s.accessManager.GetAuthManager()
+	session, err := authManager.ValidateSession(r.Context(), token)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Invalid or expired token")
 		return
 	}
 
 	// Get user
-	userManager := s.accessManager.GetUserManager()
-	user, err := userManager.GetUserByID(r.Context(), session.UserID)
+	user, err := authManager.GetUserByID(r.Context(), session.UserID)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to get user")
 		return
 	}
 
 	// Check if MFA is required but not completed
-	mfaRequired := sessionManager.RequiresMFA(r.Context(), session)
+	mfaRequired := user.MFAEnabled
 	mfaCompleted := session.MFACompleted
 
 	// Create response
@@ -241,14 +255,14 @@ func (s *Server) handleMFAVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate input
-	if req.Token == "" || req.Method == "" || req.Code == "" {
-		WriteErrorResponse(w, http.StatusBadRequest, "Token, method, and code are required")
+	if req.Token == "" || req.Code == "" {
+		WriteErrorResponse(w, http.StatusBadRequest, "Token and code are required")
 		return
 	}
 
 	// Verify MFA
 	authManager := s.accessManager.GetAuthManager()
-	if err := authManager.VerifyMFA(r.Context(), req.Token, req.Method, req.Code); err != nil {
+	if err := authManager.VerifyMFA(r.Context(), req.Token, req.Code); err != nil {
 		// Handle specific error types
 		switch {
 		case strings.Contains(err.Error(), "invalid token"):

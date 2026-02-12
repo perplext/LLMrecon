@@ -38,6 +38,18 @@ const (
 	LocalProvider ProviderType = "local"
 	// CustomProvider represents a custom provider
 	CustomProvider ProviderType = "custom"
+	// GoogleProvider represents the Google AI provider
+	GoogleProvider ProviderType = "google"
+	// DeepSeekProvider represents the DeepSeek provider
+	DeepSeekProvider ProviderType = "deepseek"
+	// MetaProvider represents the Meta AI provider
+	MetaProvider ProviderType = "meta"
+	// XAIProvider represents the xAI provider
+	XAIProvider ProviderType = "xai"
+	// AlibabaProvider represents the Alibaba Cloud provider
+	AlibabaProvider ProviderType = "alibaba"
+	// MistralProvider represents the Mistral AI provider
+	MistralProvider ProviderType = "mistral"
 )
 
 // ModelCapability represents a capability of a model
@@ -62,6 +74,12 @@ const (
 	ToolUseCapability ModelCapability = "tool-use"
 	// JSONModeCapability represents the capability to output JSON
 	JSONModeCapability ModelCapability = "json-mode"
+	// ReasoningCapability represents the capability to perform chain-of-thought reasoning
+	ReasoningCapability ModelCapability = "reasoning"
+	// AudioInputCapability represents the capability to process audio input
+	AudioInputCapability ModelCapability = "audio-input"
+	// LongContextCapability represents the capability to handle long context windows (100k+ tokens)
+	LongContextCapability ModelCapability = "long-context"
 )
 
 // Message represents a message in a conversation

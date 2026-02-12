@@ -94,6 +94,17 @@ func (v *SemVersion) String() string {
 	return result
 }
 
+// ToVersion converts a SemVersion to a Version
+func (v *SemVersion) ToVersion() *Version {
+	return &Version{
+		Major:      v.Major,
+		Minor:      v.Minor,
+		Patch:      v.Patch,
+		PreRelease: v.Prerelease,
+		BuildMeta:  v.Build,
+	}
+}
+
 // Compare compares two versions
 // Returns -1 if v < other, 0 if v == other, 1 if v > other
 func (v *SemVersion) Compare(other *SemVersion) int {

@@ -405,7 +405,7 @@ func (c *QueryCache) compress(value interface{}) interface{} {
 	}
 
 	_, err = io.Copy(gzw, &buf)
-	gzw.Close()
+	gzw.Close() // #nosec G104 -- gzip writer close error after successful copy is non-critical
 	if err != nil {
 		return value
 	}
@@ -427,10 +427,12 @@ func (c *QueryCache) decompress(value interface{}) interface{} {
 		return value
 	}
 
+	// G110 protection: use io.CopyN to cap decompressed size (50MB max)
+	const maxCacheDecompressSize int64 = 50 * 1024 * 1024 // 50MB
 	var decompressed bytes.Buffer
-	_, err = io.Copy(&decompressed, gzr)
-	gzr.Close()
-	if err != nil {
+	_, err = io.CopyN(&decompressed, gzr, maxCacheDecompressSize+1)
+	gzr.Close() // #nosec G104 -- gzip reader close error after successful read is non-critical
+	if err != nil && err != io.EOF {
 		return value
 	}
 

@@ -401,19 +401,15 @@ func (ta *TrendAnalyzer) calculateCorrelations(ctx context.Context, metricName s
 }
 
 func (ta *TrendAnalyzer) generateSummary(overallTrend *TrendResult, segmentTrends []*TrendResult, seasonalPatterns []SeasonalPattern, dataPointCount int) TrendSummary {
-	summary := TrendSummary{
-		AnomalyCount: len(overallTrend.Anomalies),
-	}
+	summary := TrendSummary{}
 
 	// Determine primary trend
 	if overallTrend != nil {
-		summary.PrimaryTrend = string(overallTrend.Direction)
-		summary.TrendStrength = ta.classifyTrendStrength(overallTrend.Strength)
-		summary.Volatility = ta.classifyVolatility(overallTrend.RSquared)
+		summary.OverallDirection = string(overallTrend.Direction)
+		summary.StrongestTrend = ta.classifyTrendStrength(overallTrend.Strength)
+		summary.AverageChange = overallTrend.Strength
+		summary.Volatility = overallTrend.RSquared
 	}
-
-	// Generate recommendations
-	summary.RecommendedActions = ta.generateRecommendations(overallTrend, segmentTrends, seasonalPatterns)
 
 	return summary
 }

@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Example demonstrating how to use the Template Management System
 package main
 
@@ -77,9 +79,7 @@ func main() {
 	// Execute a template
 	fmt.Println("Executing prompt-injection-basic template...")
 	result, err := management.RunTemplate(ctx, manager, "prompt-injection-basic", map[string]interface{}{
-if err != nil {
-treturn err
-}		"provider": "mock-provider",
+		"provider": "mock-provider",
 	})
 	if err != nil {
 		fmt.Printf("Error executing template: %v\n", err)
@@ -95,9 +95,7 @@ treturn err
 
 	// Execute multiple templates
 	fmt.Println("Executing multiple templates...")
-if err != nil {
-treturn err
-}	templateIDs := []string{"prompt-injection-basic", "data-leakage-test"}
+	templateIDs := []string{"prompt-injection-basic", "data-leakage-test"}
 	results, err := management.RunTemplates(ctx, manager, templateIDs, map[string]interface{}{
 		"provider": "mock-provider",
 	})
@@ -107,9 +105,6 @@ treturn err
 		fmt.Printf("Executed %d templates\n", len(results))
 	}
 	fmt.Println()
-if err != nil {
-treturn err
-}
 	// Generate report
 	fmt.Println("Generating HTML report...")
 	reportData, err := management.GenerateTemplateReport(manager, results, "html")

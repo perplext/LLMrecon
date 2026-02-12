@@ -392,7 +392,7 @@ func (rm *ReleaseManagerImpl) executeCanaryRelease(execution *ReleaseExecution) 
 		rm.completeRelease(execution)
 	} else {
 		rm.addReleaseLog(execution, "error", "Canary unhealthy, initiating rollback", nil)
-		rm.RollbackRelease(context.Background(), execution.ID)
+		_ = rm.RollbackRelease(context.Background(), execution.ID) // #nosec G104 -- rollback is best-effort during canary failure
 	}
 }
 
@@ -478,7 +478,7 @@ func (rm *ReleaseManagerImpl) performHealthChecks(monitor *HealthMonitor) {
 		if score < rm.config.TriggerThreshold {
 			rm.logger.Warn("Health score below threshold, triggering auto-rollback",
 				"releaseID", monitor.ReleaseID, "score", score, "threshold", rm.config.TriggerThreshold)
-			rm.RollbackRelease(context.Background(), monitor.ReleaseID)
+			_ = rm.RollbackRelease(context.Background(), monitor.ReleaseID) // #nosec G104 -- auto-rollback is best-effort
 		}
 	}
 }

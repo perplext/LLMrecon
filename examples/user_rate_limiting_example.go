@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Example demonstrating user-specific rate limiting for LLM template execution
 package main
 
@@ -157,9 +159,7 @@ func main() {
 				
 				startTime := time.Now()
 				result, err := executor.ExecuteForUser(ctx, userTemplate, userID, nil)
-if err != nil {
-treturn err
-}				duration := time.Since(startTime)
+				duration := time.Since(startTime)
 				
 				if err != nil {
 					fmt.Printf("[%s] Error executing request %d: %v (took %v)\n", userID, i, err, duration)
@@ -257,9 +257,7 @@ treturn err
 			},
 		}
 		
-if err != nil {
-treturn err
-}		startTime := time.Now()
+		startTime := time.Now()
 		result, err := adaptiveExecutor.ExecuteForUser(ctx, userTemplate, userID, nil)
 		duration := time.Since(startTime)
 		
@@ -295,9 +293,7 @@ treturn err
 					Match: "rate",
 				},
 			},
-if err != nil {
-treturn err
-}		}
+		}
 		
 		startTime := time.Now()
 		result, err := adaptiveExecutor.ExecuteForUser(ctx, userTemplate, userID, nil)

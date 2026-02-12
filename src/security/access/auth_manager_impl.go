@@ -98,7 +98,7 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 		}
 
 		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
-			return fmt.Errorf("operation failed: %w", err)
+			return nil, fmt.Errorf("operation failed: %w", err)
 		}
 
 		return nil, errors.New("invalid username or password")
@@ -124,7 +124,7 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 			Timestamp:   time.Now(),
 		}
 		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
-			return fmt.Errorf("operation failed: %w", err)
+			return nil, fmt.Errorf("operation failed: %w", err)
 		}
 
 		return nil, errors.New("user account is inactive")
@@ -151,7 +151,7 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 		}
 
 		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
-			return fmt.Errorf("operation failed: %w", err)
+			return nil, fmt.Errorf("operation failed: %w", err)
 		}
 
 		return nil, errors.New("user account is locked")
@@ -170,7 +170,7 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 
 		// Update the user
 		if err := m.userStore.UpdateUser(ctx, user); err != nil {
-			return fmt.Errorf("operation failed: %w", err)
+			return nil, fmt.Errorf("operation failed: %w", err)
 		}
 
 		// Log failed login attempt
@@ -192,7 +192,7 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 		}
 
 		if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
-			return fmt.Errorf("operation failed: %w", err)
+			return nil, fmt.Errorf("operation failed: %w", err)
 		}
 		return nil, errors.New("invalid username or password")
 	}
@@ -203,7 +203,7 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 
 	// Update the user
 	if err := m.userStore.UpdateUser(ctx, user); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
+		return nil, fmt.Errorf("operation failed: %w", err)
 	}
 
 	// Create a new session
@@ -243,7 +243,7 @@ func (m *AuthManagerImpl) Login(ctx context.Context, username, password string) 
 	}
 
 	if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
+		return nil, fmt.Errorf("operation failed: %w", err)
 	}
 
 	return session, nil
@@ -319,7 +319,7 @@ func (m *AuthManagerImpl) ValidateSession(ctx context.Context, sessionID string)
 		// Mark session as expired
 		session.ExpiresAt = time.Now()
 		if err := m.sessionStore.UpdateSession(ctx, session); err != nil {
-			return fmt.Errorf("operation failed: %w", err)
+			return nil, fmt.Errorf("operation failed: %w", err)
 		}
 
 		return nil, errors.New("session has been inactive for too long")
@@ -328,7 +328,7 @@ func (m *AuthManagerImpl) ValidateSession(ctx context.Context, sessionID string)
 	// Update the last activity time
 	session.LastActivity = time.Now()
 	if err := m.sessionStore.UpdateSession(ctx, session); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
+		return nil, fmt.Errorf("operation failed: %w", err)
 	}
 
 	return session, nil

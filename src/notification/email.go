@@ -124,6 +124,7 @@ func (e *EmailChannel) Deliver(notification *Notification) error {
 		// Create TLS config
 		tlsConfig := &tls.Config{
 			ServerName: e.config.SMTPServer,
+			MinVersion: tls.VersionTLS12,
 		}
 
 		// Connect to the server

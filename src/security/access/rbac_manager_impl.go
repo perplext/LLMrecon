@@ -212,7 +212,7 @@ func (m *RBACManagerImpl) GetUserRoles(ctx context.Context, userID string) ([]st
 	}
 
 	if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
+		return nil, fmt.Errorf("operation failed: %w", err)
 	}
 
 	return roles, nil
@@ -266,7 +266,7 @@ func (m *RBACManagerImpl) GetUserPermissions(ctx context.Context, userID string)
 	}
 
 	if err := m.auditLogger.LogAudit(ctx, auditLog); err != nil {
-		return fmt.Errorf("operation failed: %w", err)
+		return nil, fmt.Errorf("operation failed: %w", err)
 	}
 
 	return permissions, nil

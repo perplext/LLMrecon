@@ -88,7 +88,7 @@ func (i *Installer) installBinaryUnix(newBinary, targetPath string) error {
 
 	// Atomic rename
 	if err := os.Rename(tempPath, targetPath); err != nil {
-		os.Remove(tempPath) // Cleanup
+		os.Remove(tempPath) // #nosec G104 -- best-effort cleanup on error path
 		return fmt.Errorf("failed to replace binary: %w", err)
 	}
 
@@ -283,7 +283,7 @@ func (i *Installer) isBinaryModule(filePath string) bool {
 
 // removeEmptyDirectories removes empty directories recursively
 func (i *Installer) removeEmptyDirectories(baseDir string) {
-	filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error { // #nosec G104 -- best-effort cleanup of empty directories
 		if err != nil {
 			return nil
 		}

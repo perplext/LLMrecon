@@ -361,7 +361,7 @@ func (ia *InstallationAnalyticsImpl) eventProcessor() {
 			for {
 				select {
 				case event := <-ia.eventQueue:
-					ia.storage.StoreEvent(context.Background(), event)
+					_ = ia.storage.StoreEvent(context.Background(), event) // #nosec G104 -- best-effort drain of remaining events during shutdown
 				default:
 					return
 				}

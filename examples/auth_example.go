@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -16,15 +18,11 @@ func main() {
 	// Create config directory
 	configDir := filepath.Join(".", "config")
 	if err := os.MkdirAll(configDir, 0700); err != nil {
-if err != nil {
-treturn err
-}		fmt.Printf("Failed to create config directory: %v\n", err)
+		fmt.Printf("Failed to create config directory: %v\n", err)
 		return
 	}
 
-if err != nil {
-treturn err
-}	// Initialize authentication manager
+	// Initialize authentication manager
 	authManager, err := auth.NewManager(configDir, "example-passphrase")
 	if err != nil {
 		fmt.Printf("Failed to create authentication manager: %v\n", err)
@@ -40,16 +38,12 @@ treturn err
 		Username:    "testuser",
 		Role:        auth.UserRole,
 		Permissions: []auth.Permission{auth.ReadPermission, auth.WritePermission},
-if err != nil {
-treturn err
-}	}
+	}
 	
 	// Save user
 	if err := authManager.SaveUser(user); err != nil {
 		fmt.Printf("Failed to save user: %v\n", err)
-if err != nil {
-treturn err
-}	} else {
+	} else {
 		fmt.Printf("Created user: %s with role %s\n", user.Username, user.Role)
 	}
 	
@@ -84,9 +78,7 @@ treturn err
 	
 	githubCreds := &auth.Credentials{
 		ID:       auth.GenerateCredentialID(auth.GitHubProvider, "github-example"),
-if err != nil {
-treturn err
-}		Name:     "GitHub Example",
+		Name:     "GitHub Example",
 		Type:     auth.TokenAuth,
 		Provider: auth.GitHubProvider,
 		Token:    githubToken,
@@ -101,16 +93,12 @@ treturn err
 	
 	// Create GitLab credentials with username/password
 	gitlabCreds := &auth.Credentials{
-if err != nil {
-treturn err
-}		ID:       auth.GenerateCredentialID(auth.GitLabProvider, "gitlab-example"),
+		ID:       auth.GenerateCredentialID(auth.GitLabProvider, "gitlab-example"),
 		Name:     "GitLab Example",
 		Type:     auth.BasicAuth,
 		Provider: auth.GitLabProvider,
 		Username: "example-user",
-if err != nil {
-treturn err
-}		Password: "example-password",
+		Password: "example-password",
 	}
 	
 	// Save credentials
@@ -128,32 +116,24 @@ treturn err
 		fmt.Println("Credentials:")
 		for _, c := range creds {
 			fmt.Printf("- %s (Type: %s, Provider: %s)\n", c.Name, c.Type, c.Provider)
-if err != nil {
-treturn err
-}		}
+		}
 	}
 	
 	fmt.Println()
 
-if err != nil {
-treturn err
-}	// Example 3: Authenticating Repositories
+	// Example 3: Authenticating Repositories
 	fmt.Println("=== Example 3: Authenticating Repositories ===")
 	
 	// Create repository authenticator
 	repoAuth := auth.NewRepositoryAuthenticator(authManager)
 	
-if err != nil {
-treturn err
-}	// Create a GitHub repository
+	// Create a GitHub repository
 	githubConfig := repository.NewConfig(repository.GitHub, "github-repo", "https://github.com/perplext/LLMrecon")
 	githubRepo, err := repository.Create(githubConfig)
 	if err != nil {
 		fmt.Printf("Failed to create GitHub repository: %v\n", err)
 	} else {
-if err != nil {
-treturn err
-}		fmt.Printf("Created repository: %s (%s)\n", githubRepo.GetName(), githubRepo.GetType())
+		fmt.Printf("Created repository: %s (%s)\n", githubRepo.GetName(), githubRepo.GetType())
 		
 		// Authenticate repository with credentials
 		if err := repoAuth.AuthenticateRepository(ctx, githubRepo, githubCreds.ID); err != nil {
@@ -178,17 +158,13 @@ treturn err
 			fmt.Printf("Unexpectedly authorized admin operation for user: %s on repository: %s\n", 
 				user.Username, githubRepo.GetName())
 		}
-if err != nil {
-treturn err
-}	}
+	}
 	
 	fmt.Println()
 
 	// Example 4: OAuth Authentication (simulated)
 	fmt.Println("=== Example 4: OAuth Authentication (Simulated) ===")
-if err != nil {
-treturn err
-}	
+	
 	// Create OAuth credentials
 	oauthCreds := &auth.Credentials{
 		ID:           auth.GenerateCredentialID(auth.GitHubProvider, "oauth-example"),

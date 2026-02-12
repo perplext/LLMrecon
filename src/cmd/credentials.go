@@ -189,17 +189,17 @@ var credentialAddCmd = &cobra.Command{
 		// Validate required fields
 		if credentialService == "" {
 			fmt.Println("Error: service is required")
-			cmd.Help()
+			cmd.Help() // #nosec G104 -- error writing help to stdout is not recoverable
 			os.Exit(1)
 		}
 		if credentialType == "" {
 			fmt.Println("Error: type is required")
-			cmd.Help()
+			cmd.Help() // #nosec G104 -- error writing help to stdout is not recoverable
 			os.Exit(1)
 		}
 		if credentialValue == "" {
 			fmt.Println("Error: value is required")
-			cmd.Help()
+			cmd.Help() // #nosec G104 -- error writing help to stdout is not recoverable
 			os.Exit(1)
 		}
 
@@ -341,7 +341,7 @@ var credentialRotateCmd = &cobra.Command{
 		// Validate required fields
 		if credentialValue == "" {
 			fmt.Println("Error: value is required for rotation")
-			cmd.Help()
+			cmd.Help() // #nosec G104 -- error writing help to stdout is not recoverable
 			os.Exit(1)
 		}
 

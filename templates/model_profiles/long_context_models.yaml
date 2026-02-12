@@ -1,0 +1,68 @@
+# Long-Context Model Attack Profiles
+# Models: Llama 4 Scout (10M), GPT-5 (400K), Gemini 3 Pro (2M)
+#
+# These models support 100K+ token context windows, enabling many-shot
+# jailbreaking and context-overflow attacks at scale.
+
+profile_name: long_context_models
+category: long_context
+description: >
+  Attack profiles for models with extended context windows (100K+ tokens).
+  Many-shot jailbreaking becomes dramatically more effective with larger
+  context windows due to in-context learning amplification.
+
+models:
+  - llama-4-scout      # 10M tokens
+  - llama-4-maverick   # 1M tokens
+  - gpt-5              # 400K tokens
+  - gpt-5.1            # 400K tokens
+  - gpt-5.2            # 400K tokens
+  - gemini-3-pro       # 2M tokens
+  - gemini-2.5-flash   # 1M tokens
+
+capabilities_required:
+  - long-context
+
+recommended_techniques:
+  - technique: many_shot
+    priority: critical
+    notes: "Effectiveness scales with context window size"
+    config:
+      # Calibrate shot count to context window
+      shots_by_context:
+        128k: 256
+        400k: 1000
+        1m: 5000
+        2m: 8000
+        10m: 10000
+      cost_ceiling: 10.0
+      streaming_construction: true
+
+  - technique: best_of_n
+    priority: high
+    notes: "Large context enables more augmentation variants per query"
+
+  - technique: crescendo
+    priority: medium
+    notes: "More turns possible in larger context"
+    config:
+      max_turns: 10  # More room in context
+
+  - technique: poisoned_rag
+    priority: high
+    notes: "Larger context means more poisoned documents fit in retrieval window"
+    config:
+      num_poison_docs: 10  # More than the default 5
+
+provider_config:
+  # Streaming required for 10M+ token payloads
+  streaming: true
+  # Memory limit for payload construction
+  max_payload_memory_mb: 2048
+  timeout: 600s
+
+known_vulnerabilities:
+  - "Many-shot jailbreaking success rate increases with context size"
+  - "Cannot buffer full payload in memory for 10M contexts -- requires streaming"
+  - "Cost per query scales linearly with context usage"
+  - "Context window exhaustion can cause truncation of safety instructions"

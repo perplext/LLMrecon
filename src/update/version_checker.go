@@ -436,7 +436,7 @@ func (vc *ComponentVersionChecker) getCurrentTemplateVersions() map[string]strin
 	}
 
 	// Walk through template directory
-	filepath.Walk(templateDir, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(templateDir, func(path string, info os.FileInfo, err error) error { // #nosec G104 -- best-effort directory walk for version collection
 		if err != nil {
 			return nil
 		}
@@ -465,7 +465,7 @@ func (vc *ComponentVersionChecker) getCurrentModuleVersions() map[string]string 
 	}
 
 	// Walk through module directory
-	filepath.Walk(moduleDir, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(moduleDir, func(path string, info os.FileInfo, err error) error { // #nosec G104 -- best-effort directory walk for version collection
 		if err != nil {
 			return nil
 		}

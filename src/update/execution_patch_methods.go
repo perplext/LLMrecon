@@ -85,7 +85,7 @@ func (e *UpdateExecutor) executeBinaryPatchUpdate(ctx context.Context, pkg *Upda
 	}
 
 	// Notify component updated
-	e.NotificationManager.NotifyComponentUpdated(
+	e.NotificationManager.NotifyComponentUpdated( // #nosec G104 -- notification failure is non-critical
 		transaction.ID,
 		pkg.Manifest.PackageID,
 		"binary",
@@ -177,7 +177,7 @@ func (e *UpdateExecutor) executeTemplatesPatchUpdate(ctx context.Context, pkg *U
 	}
 
 	// Notify component updated
-	e.NotificationManager.NotifyComponentUpdated(
+	e.NotificationManager.NotifyComponentUpdated( // #nosec G104 -- notification failure is non-critical
 		transaction.ID,
 		pkg.Manifest.PackageID,
 		"templates",
@@ -261,7 +261,7 @@ func (e *UpdateExecutor) executeModulesPatchUpdate(ctx context.Context, pkg *Upd
 		}
 
 		// Notify component updated
-		e.NotificationManager.NotifyComponentUpdated(
+		e.NotificationManager.NotifyComponentUpdated( // #nosec G104 -- notification failure is non-critical
 			transaction.ID,
 			pkg.Manifest.PackageID,
 			"module",

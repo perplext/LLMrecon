@@ -1,10 +1,14 @@
+//go:build ignore
+
 package main
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"runtime"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/execution/optimizer"
@@ -242,11 +246,7 @@ func processTemplates(
 			template := template // Create local copy for closure
 			
 			err := concurrencyManager.Submit(func(ctx context.Context) error {
-if err != nil {
-treturn err
-if err != nil {
-treturn err
-}}				// Process template
+				// Process template
 				_, err := processTemplate(template)
 				return err
 			})
@@ -254,18 +254,14 @@ treturn err
 			if err != nil {
 				log.Printf("Error submitting template %s: %v\n", template.ID, err)
 			}
-if err != nil {
-treturn err
-}		}
+		}
 		
 		// Wait for all tasks to complete
 		if err := concurrencyManager.Wait(context.Background()); err != nil {
 			log.Printf("Error waiting for tasks to complete: %v\n", err)
 		}
 		
-if err != nil {
-treturn err
-}		processedCount = len(templates)
+		processedCount = len(templates)
 	} else {
 		// Process templates sequentially
 		for _, template := range templates {

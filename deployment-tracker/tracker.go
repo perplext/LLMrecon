@@ -239,7 +239,7 @@ func (dt *DeploymentTracker) handleRegister(w http.ResponseWriter, r *http.Reque
 	}
 	
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"id": info.ID})
+	json.NewEncoder(w).Encode(map[string]string{"id": info.ID}) // #nosec G104 -- error writing HTTP response is not recoverable
 }
 
 func (dt *DeploymentTracker) handleUpdateMetrics(w http.ResponseWriter, r *http.Request) {
@@ -286,12 +286,12 @@ func (dt *DeploymentTracker) handleReportIssue(w http.ResponseWriter, r *http.Re
 
 func (dt *DeploymentTracker) handleGetStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dt.GetDeploymentStatus())
+	json.NewEncoder(w).Encode(dt.GetDeploymentStatus()) // #nosec G104 -- error writing HTTP response is not recoverable
 }
 
 func (dt *DeploymentTracker) handleGetHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dt.GetDeploymentHealth())
+	json.NewEncoder(w).Encode(dt.GetDeploymentHealth()) // #nosec G104 -- error writing HTTP response is not recoverable
 }
 
 func main() {
@@ -305,5 +305,13 @@ func main() {
 	http.HandleFunc("/api/v1/deployments/health", tracker.handleGetHealth)
 	
 	log.Println("Deployment tracker starting on :8091")
-	log.Fatal(http.ListenAndServe(":8091", nil))
+	server := &http.Server{
+		Addr:              ":8091",
+		Handler:           nil,
+		ReadTimeout:       15 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	log.Fatal(server.ListenAndServe())
 }

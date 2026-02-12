@@ -778,7 +778,7 @@ func (de *DistributedExecutor) redistributeTask(task *DistributedTask) {
 		if len(healthyNodes) > 0 {
 			// Redistribute using load balancer
 			ctx := context.Background()
-			de.distributePartitions(ctx, task)
+			de.distributePartitions(ctx, task) // #nosec G104 -- best-effort redistribution of failed partitions
 		}
 	}
 }

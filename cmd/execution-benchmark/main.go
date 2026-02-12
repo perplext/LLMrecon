@@ -278,10 +278,10 @@ func runBenchmark(reportFile *os.File, profiler *profiling.MemoryProfiler,
 	
 	// Store benchmark results for comparison
 	if executionOptimizer != nil {
-		reportFile.Sync()
+		reportFile.Sync() // #nosec G104 -- best-effort sync before storing benchmark data
 		storeExecutionTime(reportFile, "optimized", elapsedTime)
 	} else {
-		reportFile.Sync()
+		reportFile.Sync() // #nosec G104 -- best-effort sync before storing benchmark data
 		storeExecutionTime(reportFile, "standard", elapsedTime)
 	}
 }
@@ -317,10 +317,10 @@ func calculateExecutionTimeImprovement(reportFile *os.File) float64 {
 	var standardTime, optimizedTime int64
 	
 	// Find the standard execution time
-	fmt.Sscanf(content, "%*s<!-- standard_execution_time: %d -->", &standardTime)
+	fmt.Sscanf(content, "%*s<!-- standard_execution_time: %d -->", &standardTime) // #nosec G104 -- best-effort parse of benchmark timing data
 	
 	// Find the optimized execution time
-	fmt.Sscanf(content, "%*s<!-- optimized_execution_time: %d -->", &optimizedTime)
+	fmt.Sscanf(content, "%*s<!-- optimized_execution_time: %d -->", &optimizedTime) // #nosec G104 -- best-effort parse of benchmark timing data
 	
 	// Calculate improvement
 	if standardTime > 0 && optimizedTime > 0 {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html"
 	"sort"
-	"strings"
 	"time"
 )
 
@@ -162,7 +161,7 @@ func (tw *TableWidget) GetData(ctx context.Context, config DataSourceConfig) (in
 
 	for i, metric := range metrics {
 		labelsStr := ""
-		for k, v := range metric.Labels {
+		for k, v := range metric.Tags {
 			labelsStr += fmt.Sprintf("%s:%s ", k, v)
 		}
 
@@ -182,7 +181,7 @@ func (tw *TableWidget) Render(data interface{}, style WidgetStyle) (string, erro
 		return "", fmt.Errorf("invalid data type for table widget")
 	}
 
-	html := fmt.Sprintf(`
+	htmlOut := fmt.Sprintf(`
 <div class="table-widget" style="border: %dpx %s %s; border-radius: %dpx; background-color: %s; padding: 16px;">
 	<table style="width: 100%%; border-collapse: collapse; color: %s; font-family: %s; font-size: %dpx;">
 		<thead>
@@ -195,11 +194,11 @@ func (tw *TableWidget) Render(data interface{}, style WidgetStyle) (string, erro
 
 	// Add headers
 	for _, header := range tableData.Headers {
-		html += fmt.Sprintf(`<th style="padding: 8px; border: 1px solid %s; color: white;">%s</th>`,
+		htmlOut += fmt.Sprintf(`<th style="padding: 8px; border: 1px solid %s; color: white;">%s</th>`,
 			style.Borders.Color, html.EscapeString(header))
 	}
 
-	html += `</tr></thead><tbody>`
+	htmlOut += `</tr></thead><tbody>`
 
 	// Add rows
 	for i, row := range tableData.Rows {
@@ -208,17 +207,17 @@ func (tw *TableWidget) Render(data interface{}, style WidgetStyle) (string, erro
 			bgColor = "rgba(0,0,0,0.05)"
 		}
 
-		html += fmt.Sprintf(`<tr style="background-color: %s;">`, bgColor)
+		htmlOut += fmt.Sprintf(`<tr style="background-color: %s;">`, bgColor)
 		for _, cell := range row {
-			html += fmt.Sprintf(`<td style="padding: 8px; border: 1px solid %s;">%s</td>`,
+			htmlOut += fmt.Sprintf(`<td style="padding: 8px; border: 1px solid %s;">%s</td>`,
 				style.Borders.Color, html.EscapeString(fmt.Sprintf("%v", cell)))
 		}
-		html += `</tr>`
+		htmlOut += `</tr>`
 	}
 
-	html += `</tbody></table></div>`
+	htmlOut += `</tbody></table></div>`
 
-	return html, nil
+	return htmlOut, nil
 }
 
 func (tw *TableWidget) Validate(config map[string]interface{}) error {

@@ -134,7 +134,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
-				json.NewEncoder(w).Encode(errorResponse)
+				json.NewEncoder(w).Encode(errorResponse) // #nosec G104 -- error writing HTTP response is not recoverable
 				return
 			}
 
@@ -185,7 +185,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 		if !strings.Contains(respContentType, "application/json") {
 			// Not JSON, write the response as is
 			w.WriteHeader(rw.status)
-			w.Write(rw.body)
+			w.Write(rw.body) // #nosec G104 -- error writing HTTP response is not recoverable
 			return
 		}
 
@@ -194,7 +194,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 		if err := json.Unmarshal(rw.body, &responseData); err != nil {
 			// Not valid JSON, write the response as is
 			w.WriteHeader(rw.status)
-			w.Write(rw.body)
+			w.Write(rw.body) // #nosec G104 -- error writing HTTP response is not recoverable
 			return
 		}
 
@@ -203,7 +203,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 		if len(responseFields) == 0 {
 			// No response fields found, write the response as is
 			w.WriteHeader(rw.status)
-			w.Write(rw.body)
+			w.Write(rw.body) // #nosec G104 -- error writing HTTP response is not recoverable
 			return
 		}
 
@@ -270,7 +270,7 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
-				json.NewEncoder(w).Encode(errorResponse)
+				json.NewEncoder(w).Encode(errorResponse) // #nosec G104 -- error writing HTTP response is not recoverable
 				return
 			}
 
@@ -304,11 +304,11 @@ func (m *PromptProtectionMiddleware) Middleware(next http.Handler) http.Handler 
 				return
 			}
 			w.WriteHeader(rw.status)
-			w.Write(modifiedBody)
+			w.Write(modifiedBody) // #nosec G104 -- error writing HTTP response is not recoverable
 		} else {
 			// Write the original response
 			w.WriteHeader(rw.status)
-			w.Write(rw.body)
+			w.Write(rw.body) // #nosec G104 -- error writing HTTP response is not recoverable
 		}
 	})
 }
@@ -472,7 +472,7 @@ func setNestedField(data map[string]interface{}, path string, value interface{})
 			if openBracket > 0 && closeBracket > openBracket {
 				arrayPart = part[:openBracket]
 				indexStr := part[openBracket+1 : closeBracket]
-				fmt.Sscanf(indexStr, "%d", &arrayIndex)
+				fmt.Sscanf(indexStr, "%d", &arrayIndex) // #nosec G104 -- best-effort parse; arrayIndex defaults to -1 on failure
 			}
 		}
 

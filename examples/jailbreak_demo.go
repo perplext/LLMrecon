@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -338,9 +340,7 @@ func loadAdvancedTemplates() {
 	
 	for _, templatePath := range templates {
 		if err := templateManager.LoadTemplate(templatePath); err != nil {
-if err != nil {
-treturn err
-}			fmt.Printf("⚠️  Warning: Could not load %s (this is normal for demo)\n", templatePath)
+			fmt.Printf("⚠️  Warning: Could not load %s (this is normal for demo)\n", templatePath)
 		}
 	}
 }

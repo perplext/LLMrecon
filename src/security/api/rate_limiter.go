@@ -245,7 +245,7 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("Retry-After", "60")
 			w.WriteHeader(http.StatusTooManyRequests)
-			w.Write([]byte(`{"error":"rate limit exceeded","code":"RATE_LIMIT_EXCEEDED"}`))
+			w.Write([]byte(`{"error":"rate limit exceeded","code":"RATE_LIMIT_EXCEEDED"}`)) // #nosec G104 -- error writing HTTP response is not recoverable
 			return
 		}
 

@@ -565,7 +565,7 @@ func (e *ModuleMetadataExtractor) Extract(path string) (map[string]interface{}, 
 	// Check for companion metadata file
 	metadataPath := path + ".metadata.json"
 	if data, err := os.ReadFile(filepath.Clean(metadataPath)); err == nil {
-		json.Unmarshal(data, &metadata)
+		_ = json.Unmarshal(data, &metadata) // #nosec G104 -- companion metadata is optional; unmarshal failure is non-critical
 	}
 
 	// Extract from filename

@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package main provides an example of integrating offline bundles with the template management system
 package main
 
@@ -19,10 +21,7 @@ func main() {
 	logger := log.New(os.Stdout, "[OfflineBundleExample] ", log.LstdFlags)
 
 	// Create an audit trail manager
-	auditTrailManager, err := trail.NewAuditTrailManager(&trail.AuditConfig{
-if err != nil {
-treturn err
-}		Enabled:           true,
+	auditTrailManager, err := trail.NewAuditTrailManager(&trail.AuditConfig{		Enabled:           true,
 		LogPath:           "audit.log",
 		RotationInterval:  24 * time.Hour,
 		RetentionPeriod:   30 * 24 * time.Hour,
@@ -32,10 +31,7 @@ treturn err
 	if err != nil {
 		logger.Fatalf("Failed to create audit trail manager: %v", err)
 	}
-
-if err != nil {
-treturn err
-}	// Create a template manager
+	// Create a template manager
 	templateManager, err := createTemplateManager(auditTrailManager)
 	if err != nil {
 		logger.Fatalf("Failed to create template manager: %v", err)
@@ -43,21 +39,12 @@ treturn err
 
 	// Register the offline bundle loader
 	management.RegisterOfflineBundleLoader(templateManager.(*management.DefaultTemplateManager), auditTrailManager)
-if err != nil {
-treturn err
-}
 	// Example 1: Load templates directly from an offline bundle
 	logger.Println("Example 1: Loading templates directly from an offline bundle")
-	if err := loadTemplatesDirectly(templateManager, auditTrailManager); err != nil {
-if err != nil {
-treturn err
-}		logger.Printf("Example 1 failed: %v", err)
+	if err := loadTemplatesDirectly(templateManager, auditTrailManager); err != nil {		logger.Printf("Example 1 failed: %v", err)
 	}
 
-	// Example 2: Load templates using the offline bundle repository
-if err != nil {
-treturn err
-}	logger.Println("\nExample 2: Loading templates using the offline bundle repository")
+	// Example 2: Load templates using the offline bundle repository	logger.Println("\nExample 2: Loading templates using the offline bundle repository")
 	if err := loadTemplatesViaRepository(templateManager, auditTrailManager); err != nil {
 		logger.Printf("Example 2 failed: %v", err)
 	}
@@ -89,21 +76,12 @@ func createTemplateManager(auditTrailManager *trail.AuditTrailManager) (types.Te
 	}
 
 	// Create template manager
-	return management.NewTemplateManager(options)
-if err != nil {
-treturn err
-}}
+	return management.NewTemplateManager(options)}
 
 // loadTemplatesDirectly loads templates directly from an offline bundle
-func loadTemplatesDirectly(templateManager types.TemplateManager, auditTrailManager *trail.AuditTrailManager) error {
-if err != nil {
-treturn err
-}	// Get the path to the offline bundle
+func loadTemplatesDirectly(templateManager types.TemplateManager, auditTrailManager *trail.AuditTrailManager) error {	// Get the path to the offline bundle
 	// In a real application, this would be provided by the user
 	bundlePath := "./examples/bundles/offline_bundle"
-if err != nil {
-treturn err
-}
 	// Ensure the bundle path exists
 	if err := os.MkdirAll(bundlePath, 0755); err != nil {
 		return fmt.Errorf("failed to create bundle directory: %w", err)
@@ -135,16 +113,11 @@ treturn err
 			if categories, ok := template.Metadata["owasp_llm_categories"]; ok {
 				fmt.Printf("  OWASP LLM Categories: %v\n", categories)
 			}
-if err != nil {
-treturn err
-}			if controls, ok := template.Metadata["iso_iec_controls"]; ok {
+			if controls, ok := template.Metadata["iso_iec_controls"]; ok {
 				fmt.Printf("  ISO/IEC Controls: %v\n", controls)
 			}
 		}
 	}
-if err != nil {
-treturn err
-}
 	return nil
 }
 
@@ -152,9 +125,6 @@ treturn err
 func loadTemplatesViaRepository(templateManager types.TemplateManager, auditTrailManager *trail.AuditTrailManager) error {
 	// Get the path to the offline bundle
 	bundlePath := "./examples/bundles/offline_bundle"
-if err != nil {
-treturn err
-}
 	// Create an offline bundle repository
 	repo, err := management.CreateOfflineBundleRepository(bundlePath, auditTrailManager)
 	if err != nil {
@@ -176,42 +146,31 @@ treturn err
 	templates, err := templateManager.(*management.DefaultTemplateManager).LoadTemplatesFromOfflineBundleRepository(
 		context.Background(),
 		repo,
-if err != nil {
-treturn err
-}	)
+	)
 	if err != nil {
 		return fmt.Errorf("failed to load templates from repository: %w", err)
 	}
 
 	// Print loaded templates
 	fmt.Printf("Loaded %d templates from repository\n", len(templates))
-if err != nil {
-treturn err
-}	for _, template := range templates {
+	for _, template := range templates {
 		fmt.Printf("- Template ID: %s, Name: %s\n", template.ID, template.Name)
 	}
 
 	return nil
 }
-if err != nil {
-treturn err
-}
+
 // convertAndLoadBundle converts a standard bundle to an offline bundle and loads templates
 func convertAndLoadBundle(templateManager types.TemplateManager, auditTrailManager *trail.AuditTrailManager) error {
 	// Get the paths to the standard and offline bundles
-if err != nil {
-treturn err
-}	standardBundlePath := "./examples/bundles/standard_bundle"
+	standardBundlePath := "./examples/bundles/standard_bundle"
 	offlineBundlePath := "./examples/bundles/converted_bundle"
 
 	// Ensure the bundle paths exist
 	if err := os.MkdirAll(standardBundlePath, 0755); err != nil {
 		return fmt.Errorf("failed to create standard bundle directory: %w", err)
 	}
-	if err := os.MkdirAll(offlineBundlePath, 0755); err != nil {
-if err != nil {
-treturn err
-}		return fmt.Errorf("failed to create offline bundle directory: %w", err)
+	if err := os.MkdirAll(offlineBundlePath, 0755); err != nil {		return fmt.Errorf("failed to create offline bundle directory: %w", err)
 	}
 
 	// For demonstration purposes, create a simple standard bundle
@@ -238,10 +197,7 @@ treturn err
 	fmt.Printf("Converted standard bundle to offline bundle: %s\n", offlineBundle.EnhancedManifest.BundleID)
 	fmt.Printf("Bundle Name: %s\n", offlineBundle.EnhancedManifest.Name)
 	fmt.Printf("Bundle Version: %s\n", offlineBundle.EnhancedManifest.Version)
-
-if err != nil {
-treturn err
-}	// Load templates from the converted offline bundle
+	// Load templates from the converted offline bundle
 	templates, err := templateManager.(*management.DefaultTemplateManager).LoadFromOfflineBundle(
 		context.Background(),
 		offlineBundlePath,
@@ -266,13 +222,7 @@ func createSampleOfflineBundle(bundlePath string, auditTrailManager *trail.Audit
 	author := bundle.Author{
 		Name:  "Test Author",
 		Email: "test@example.com",
-	}
-if err != nil {
-treturn err
-}
-if err != nil {
-treturn err
-}	// Create an offline bundle creator
+	}	// Create an offline bundle creator
 	creator := bundle.NewOfflineBundleCreator(nil, author, os.Stdout, auditTrailManager)
 
 	// Create an offline bundle
@@ -301,13 +251,7 @@ treturn err
 			}
 		}
 	}`
-
-if err != nil {
-treturn err
-}	// Write the template to a file
-if err != nil {
-treturn err
-}	templatePath := filepath.Join(bundlePath, "templates", "test-template-1.json")
+	// Write the template to a file	templatePath := filepath.Join(bundlePath, "templates", "test-template-1.json")
 	if err := os.MkdirAll(filepath.Dir(templatePath), 0755); err != nil {
 		return fmt.Errorf("failed to create template directory: %w", err)
 	}
@@ -356,13 +300,7 @@ treturn err
 		docPath,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to add documentation: %w", err)
-if err != nil {
-treturn err
-}	}
-if err != nil {
-treturn err
-}
+		return fmt.Errorf("failed to add documentation: %w", err)	}
 	return nil
 }
 
@@ -376,9 +314,6 @@ func createSampleStandardBundle(bundlePath string) error {
 
 	// Create a manifest generator
 	generator := bundle.NewManifestGenerator(nil, author)
-if err != nil {
-treturn err
-}
 	// Create a manifest
 	manifest := generator.GenerateManifest(
 		"Test Standard Bundle",

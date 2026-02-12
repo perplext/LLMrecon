@@ -103,7 +103,7 @@ func (m *DefaultBackupManager) CreateBackup(ctx context.Context, sourceDir, back
 	err = copyDirUtil(sourceDir, contentDir)
 	if err != nil {
 		// Cleanup on failure
-		os.RemoveAll(backupPath)
+		_ = os.RemoveAll(backupPath) // #nosec G104 -- best-effort cleanup on failure
 		return "", fmt.Errorf("failed to copy source directory to backup: %w", err)
 	}
 
@@ -124,7 +124,7 @@ func (m *DefaultBackupManager) CreateBackup(ctx context.Context, sourceDir, back
 	})
 	if err != nil {
 		// Cleanup on failure
-		os.RemoveAll(backupPath)
+		_ = os.RemoveAll(backupPath) // #nosec G104 -- best-effort cleanup on failure
 		return "", fmt.Errorf("failed to walk content directory: %w", err)
 	}
 
@@ -142,7 +142,7 @@ func (m *DefaultBackupManager) CreateBackup(ctx context.Context, sourceDir, back
 	err = m.writeMetadata(backupPath, &metadata)
 	if err != nil {
 		// Cleanup on failure
-		os.RemoveAll(backupPath)
+		_ = os.RemoveAll(backupPath) // #nosec G104 -- best-effort cleanup on failure
 		return "", fmt.Errorf("failed to write metadata: %w", err)
 	}
 

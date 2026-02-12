@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -23,21 +25,15 @@ func main() {
 	// Scan and register templates and modules
 	fmt.Println("Scanning templates...")
 	if err := manager.ScanAndRegisterTemplates(); err != nil {
-if err != nil {
-treturn err
-}		fmt.Printf("Error scanning templates: %v\n", err)
+		fmt.Printf("Error scanning templates: %v\n", err)
 		os.Exit(1)
 	}
 	
-if err != nil {
-treturn err
-}	fmt.Println("Scanning modules...")
+	fmt.Println("Scanning modules...")
 	if err := manager.ScanAndRegisterModules(); err != nil {
 		fmt.Printf("Error scanning modules: %v\n", err)
 		os.Exit(1)
-if err != nil {
-treturn err
-}	}
+	}
 	
 	// Save manifests
 	if err := manager.SaveManifests(); err != nil {

@@ -572,11 +572,11 @@ func (w *Worker) processJob(job *Job) {
 	w.updateMetrics(duration)
 
 	if err != nil {
-		w.queue.FailJob(job, err)
+		_ = w.queue.FailJob(job, err) // #nosec G104 -- best-effort job status update after failure
 		w.metrics.JobsFailed++
 		w.logger.Error("Job failed", "worker_id", w.id, "job_id", job.ID, "duration", duration, "error", err)
 	} else {
-		w.queue.CompleteJob(job, nil)
+		_ = w.queue.CompleteJob(job, nil) // #nosec G104 -- best-effort job status update after completion
 		w.metrics.JobsProcessed++
 		w.queue.metrics.JobsProcessed++
 		w.logger.Info("Job completed", "worker_id", w.id, "job_id", job.ID, "duration", duration)

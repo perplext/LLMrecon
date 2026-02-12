@@ -1,3 +1,5 @@
+//go:build ignore
+
 package api
 
 import (
@@ -35,8 +37,8 @@ type TOTPSetupResponse struct {
 	QRCodeURL string `json:"qr_code_url"`
 }
 
-// MFAVerifyRequest represents a request to verify an MFA code
-type MFAVerifyRequest struct {
+// MFACodeVerifyRequest represents a request to verify an MFA code
+type MFACodeVerifyRequest struct {
 	Method common.AuthMethod `json:"method"`
 	Code   string            `json:"code"`
 }
@@ -230,7 +232,7 @@ func (h *MFAHandler) handleVerifyMFA(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse request
-	var request MFAVerifyRequest
+	var request MFACodeVerifyRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return

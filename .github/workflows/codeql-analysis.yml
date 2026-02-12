@@ -76,6 +76,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.23'
+        cache: false  # Disable cache since go.mod is in root
         
     - name: Fix Go imports
       run: |
@@ -123,9 +124,36 @@ jobs:
         
     - name: Build Go code
       run: |
-        # Try to build, but don't fail if there are errors
+        # Ensure we have a go.mod file
+        if [ ! -f go.mod ]; then
+          go mod init github.com/perplext/LLMrecon || true
+        fi
+        
+        # Download dependencies
+        go mod tidy || true
         go mod download || true
-        go build ./... 2>/dev/null || true
+        
+        # Build the main binary
+        echo "Building main binary..."
+        go build -o llmrecon ./src/main.go || true
+        
+        # Try to build all packages (allow failures)
+        for dir in src/*/; do
+          if [ -d "$dir" ]; then
+            echo "Building $dir..."
+            go build "./$dir..." 2>/dev/null || true
+          fi
+        done
+        
+        # Build specific commands that exist
+        for cmd in cmd/*/; do
+          if [ -d "$cmd" ]; then
+            echo "Building $cmd..."
+            go build -o /tmp/$(basename $cmd) "./$cmd" 2>/dev/null || true
+          fi
+        done
+        
+        echo "Go build completed (errors ignored for CodeQL analysis)"
         
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

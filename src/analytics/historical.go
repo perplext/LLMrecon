@@ -159,37 +159,34 @@ func (hdm *HistoricalDataManager) Cleanup(ctx context.Context) error {
 func (hdm *HistoricalDataManager) setupDefaultPolicies() {
 	// Default policy for metrics
 	hdm.policies["metrics"] = RetentionPolicy{
-		DataType:       "metrics",
-		HotRetention:   7 * 24 * time.Hour,       // 7 days
-		WarmRetention:  30 * 24 * time.Hour,      // 30 days
-		ColdRetention:  365 * 24 * time.Hour,     // 1 year
-		CompressionAge: 24 * time.Hour,           // 1 day
-		DeletionAge:    2 * 365 * 24 * time.Hour, // 2 years
+		RawDataDays:       7,   // 7 days hot retention
+		AggregatedDays:    30,  // 30 days warm retention
+		TrendDataDays:     365, // 1 year cold retention
+		CompressAfterDays: 1,   // 1 day
+		ArchiveAfterDays:  730, // 2 years
 	}
 
 	// Policy for aggregated data
 	hdm.policies["aggregated"] = RetentionPolicy{
-		DataType:       "aggregated",
-		HotRetention:   30 * 24 * time.Hour,      // 30 days
-		WarmRetention:  90 * 24 * time.Hour,      // 90 days
-		ColdRetention:  2 * 365 * 24 * time.Hour, // 2 years
-		CompressionAge: 7 * 24 * time.Hour,       // 7 days
-		DeletionAge:    5 * 365 * 24 * time.Hour, // 5 years
+		RawDataDays:       30,   // 30 days hot retention
+		AggregatedDays:    90,   // 90 days warm retention
+		TrendDataDays:     730,  // 2 years cold retention
+		CompressAfterDays: 7,    // 7 days
+		ArchiveAfterDays:  1825, // 5 years
 	}
 
 	// Policy for scan results
 	hdm.policies["scan_results"] = RetentionPolicy{
-		DataType:       "scan_results",
-		HotRetention:   14 * 24 * time.Hour,      // 14 days
-		WarmRetention:  90 * 24 * time.Hour,      // 90 days
-		ColdRetention:  365 * 24 * time.Hour,     // 1 year
-		CompressionAge: 3 * 24 * time.Hour,       // 3 days
-		DeletionAge:    3 * 365 * 24 * time.Hour, // 3 years
+		RawDataDays:       14,   // 14 days hot retention
+		AggregatedDays:    90,   // 90 days warm retention
+		TrendDataDays:     365,  // 1 year cold retention
+		CompressAfterDays: 3,    // 3 days
+		ArchiveAfterDays:  1095, // 3 years
 	}
 }
 
 func (hdm *HistoricalDataManager) archiveDataType(ctx context.Context, dataType string, policy RetentionPolicy) error {
-	cutoffTime := time.Now().Add(-policy.HotRetention)
+	cutoffTime := time.Now().AddDate(0, 0, -policy.RawDataDays)
 
 	// Get old metrics that need archiving
 	oldMetrics, err := hdm.storage.GetMetricsByTimeRange(ctx, time.Time{}, cutoffTime)
@@ -249,9 +246,9 @@ func (hdm *HistoricalDataManager) calculateRetentionStatus(ctx context.Context, 
 	now := time.Now()
 
 	// Count metrics in different age ranges
-	hotCutoff := now.Add(-policy.HotRetention)
-	warmCutoff := now.Add(-policy.WarmRetention)
-	coldCutoff := now.Add(-policy.ColdRetention)
+	hotCutoff := now.AddDate(0, 0, -policy.RawDataDays)
+	warmCutoff := now.AddDate(0, 0, -policy.AggregatedDays)
+	coldCutoff := now.AddDate(0, 0, -policy.TrendDataDays)
 
 	hotCount, _ := hdm.storage.CountMetricsByTimeRange(ctx, hotCutoff, now)
 	warmCount, _ := hdm.storage.CountMetricsByTimeRange(ctx, warmCutoff, hotCutoff)
@@ -268,7 +265,7 @@ func (hdm *HistoricalDataManager) calculateRetentionStatus(ctx context.Context, 
 }
 
 func (hdm *HistoricalDataManager) cleanupDataType(ctx context.Context, dataType string, policy RetentionPolicy) error {
-	deletionCutoff := time.Now().Add(-policy.DeletionAge)
+	deletionCutoff := time.Now().AddDate(0, 0, -policy.ArchiveAfterDays)
 
 	// List archives older than deletion age
 	archives, err := hdm.archiver.List(ctx, fmt.Sprintf("%s_*", dataType))

@@ -294,7 +294,7 @@ func outputVersionTable(info *VersionInfo, verbose bool) error {
 		fmt.Fprintf(w, "%s:\t%s\n", cyan("Compiler"), info.Build.Compiler)
 	}
 
-	w.Flush()
+	w.Flush() // #nosec G104 -- error flushing tabwriter to stdout is not recoverable
 
 	// System info
 	if verbose {
@@ -303,7 +303,7 @@ func outputVersionTable(info *VersionInfo, verbose bool) error {
 		fmt.Fprintf(w, "%s:\t%s/%s\n", cyan("Platform"), info.System.OS, info.System.Architecture)
 		fmt.Fprintf(w, "%s:\t%d\n", cyan("CPUs"), info.System.CPUs)
 		fmt.Fprintf(w, "%s:\t%d\n", cyan("GOMAXPROCS"), info.System.GoMaxProcs)
-		w.Flush()
+		w.Flush() // #nosec G104 -- error flushing tabwriter to stdout is not recoverable
 	}
 
 	// Component versions
@@ -321,7 +321,7 @@ func outputVersionTable(info *VersionInfo, verbose bool) error {
 		}
 	}
 
-	w.Flush()
+	w.Flush() // #nosec G104 -- error flushing tabwriter to stdout is not recoverable
 
 	// Compatibility report
 	if info.Compatibility != nil {

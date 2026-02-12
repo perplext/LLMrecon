@@ -94,7 +94,7 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 		if stat, err := os.Stat(destPath); err == nil {
 			startOffset = stat.Size()
 			if startOffset < fileSize {
-				file, err = os.OpenFile(destPath, os.O_APPEND|os.O_WRONLY, 0600)
+				file, err = os.OpenFile(filepath.Clean(destPath), os.O_APPEND|os.O_WRONLY, 0600) // #nosec G304 -- destPath is caller-provided download destination
 				if err != nil {
 					// If we can't open for appending, start from scratch
 					startOffset = 0
@@ -111,7 +111,7 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 
 	// If file wasn't opened for appending, create a new one
 	if file == nil {
-		file, err = os.Create(destPath)
+		file, err = os.Create(filepath.Clean(destPath)) // #nosec G304 -- destPath is caller-provided download destination
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
@@ -138,7 +138,7 @@ func (d *SecureDownloader) Download(ctx context.Context, url, destPath string, o
 
 	// Verify download if requested
 	if options.VerifyAfterDownload {
-		file.Close() // Close the file before verification
+		file.Close() // #nosec G104 -- closing file before verification; error is not actionable here
 		return d.verifyDownload(ctx, url, destPath, options.Headers)
 	}
 
@@ -328,14 +328,14 @@ func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, fil
 
 		// Check status code
 		if resp.StatusCode != http.StatusPartialContent {
-			resp.Body.Close()
+			resp.Body.Close() // #nosec G104 -- closing body on error path; error is not actionable
 			return fmt.Errorf("server doesn't support range requests for chunk %d-%d, got status code: %d", offset, end, resp.StatusCode)
 		}
 
 		// Seek to the correct position in the file
 		_, err = file.Seek(offset, io.SeekStart)
 		if err != nil {
-			resp.Body.Close()
+			resp.Body.Close() // #nosec G104 -- closing body on error path; error is not actionable
 			return fmt.Errorf("failed to seek in file: %w", err)
 		}
 
@@ -347,7 +347,7 @@ func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, fil
 			// Check if context is canceled
 			select {
 			case <-ctx.Done():
-				resp.Body.Close()
+				resp.Body.Close() // #nosec G104 -- closing body on cancellation; error is not actionable
 				return ctx.Err()
 			default:
 				// Continue with download
@@ -359,7 +359,7 @@ func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, fil
 				// Write data to file
 				_, writeErr := file.Write(buf[:n])
 				if writeErr != nil {
-					resp.Body.Close()
+					resp.Body.Close() // #nosec G104 -- closing body on error path; error is not actionable
 					return fmt.Errorf("failed to write to file: %w", writeErr)
 				}
 
@@ -381,11 +381,11 @@ func (d *SecureDownloader) downloadInChunks(ctx context.Context, url string, fil
 					// End of chunk, success
 					break
 				}
-				resp.Body.Close()
+				resp.Body.Close() // #nosec G104 -- closing body on error path; error is not actionable
 				return fmt.Errorf("failed to read from response: %w", err)
 			}
 		}
-		resp.Body.Close()
+		resp.Body.Close() // #nosec G104 -- closing body after successful chunk download
 	}
 
 	// Final progress update

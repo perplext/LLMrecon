@@ -415,7 +415,7 @@ func (p *CachingProvider) GetModels(ctx context.Context) ([]core.ModelInfo, erro
 	}
 
 	// Cache response
-	p.cache.Set(p.GetType(), "GetModels", nil, models, 1*time.Hour)
+	_ = p.cache.Set(p.GetType(), "GetModels", nil, models, 1*time.Hour) // #nosec G104 -- cache set failure is non-critical
 
 	return models, nil
 }
@@ -434,7 +434,7 @@ func (p *CachingProvider) GetModelInfo(ctx context.Context, modelID string) (*co
 	}
 
 	// Cache response
-	p.cache.Set(p.GetType(), "GetModelInfo", modelID, modelInfo, 1*time.Hour)
+	_ = p.cache.Set(p.GetType(), "GetModelInfo", modelID, modelInfo, 1*time.Hour) // #nosec G104 -- cache set failure is non-critical
 
 	return modelInfo, nil
 }
@@ -453,7 +453,7 @@ func (p *CachingProvider) TextCompletion(ctx context.Context, request *core.Text
 	}
 
 	// Cache response
-	p.cache.Set(p.GetType(), "TextCompletion", request, response, 24*time.Hour)
+	_ = p.cache.Set(p.GetType(), "TextCompletion", request, response, 24*time.Hour) // #nosec G104 -- cache set failure is non-critical
 
 	return response, nil
 }
@@ -472,7 +472,7 @@ func (p *CachingProvider) ChatCompletion(ctx context.Context, request *core.Chat
 	}
 
 	// Cache response
-	p.cache.Set(p.GetType(), "ChatCompletion", request, response, 24*time.Hour)
+	_ = p.cache.Set(p.GetType(), "ChatCompletion", request, response, 24*time.Hour) // #nosec G104 -- cache set failure is non-critical
 
 	return response, nil
 }
@@ -497,7 +497,7 @@ func (p *CachingProvider) CreateEmbedding(ctx context.Context, request *core.Emb
 	}
 
 	// Cache response
-	p.cache.Set(p.GetType(), "CreateEmbedding", request, response, 24*time.Hour)
+	_ = p.cache.Set(p.GetType(), "CreateEmbedding", request, response, 24*time.Hour) // #nosec G104 -- cache set failure is non-critical
 
 	return response, nil
 }
@@ -525,7 +525,7 @@ func (p *CachingProvider) CountTokens(ctx context.Context, text string, modelID 
 	}
 
 	// Cache response
-	p.cache.Set(p.GetType(), "CountTokens", key, count, 24*time.Hour)
+	_ = p.cache.Set(p.GetType(), "CountTokens", key, count, 24*time.Hour) // #nosec G104 -- cache set failure is non-critical
 
 	return count, nil
 }
@@ -541,7 +541,7 @@ func (p *CachingProvider) SupportsModel(ctx context.Context, modelID string) boo
 	supports := p.provider.SupportsModel(ctx, modelID)
 
 	// Cache response
-	p.cache.Set(p.GetType(), "SupportsModel", modelID, supports, 1*time.Hour)
+	_ = p.cache.Set(p.GetType(), "SupportsModel", modelID, supports, 1*time.Hour) // #nosec G104 -- cache set failure is non-critical
 
 	return supports
 }
@@ -557,7 +557,7 @@ func (p *CachingProvider) SupportsCapability(ctx context.Context, capability cor
 	supports := p.provider.SupportsCapability(ctx, capability)
 
 	// Cache response
-	p.cache.Set(p.GetType(), "SupportsCapability", capability, supports, 1*time.Hour)
+	_ = p.cache.Set(p.GetType(), "SupportsCapability", capability, supports, 1*time.Hour) // #nosec G104 -- cache set failure is non-critical
 
 	return supports
 }

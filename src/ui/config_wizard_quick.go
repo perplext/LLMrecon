@@ -474,7 +474,7 @@ func (qs *QuickSetup) saveQuickConfig(preset string) error {
 	default:
 		homeDir, _ := os.UserHomeDir()
 		configDir := filepath.Join(homeDir, ".LLMrecon")
-		os.MkdirAll(configDir, 0700)
+		os.MkdirAll(configDir, 0700) // #nosec G104 -- directory may already exist; saveConfig will report file errors
 		configPath = filepath.Join(configDir, "config.yaml")
 	}
 

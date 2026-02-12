@@ -314,7 +314,7 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 		fmt.Fprintf(w, "%s:\t%s\n", cyan("Checksum"), info.Checksum[:16]+"...")
 	}
 
-	w.Flush()
+	w.Flush() // #nosec G104 -- error flushing tabwriter to stdout is not recoverable
 
 	// Component summary
 	fmt.Println("\n" + bold("Components:"))
@@ -335,7 +335,7 @@ func displayBundleInfo(info *BundleInfo, verbose, showCompliance, listFiles, sho
 		info.Statistics.TotalFiles,
 		formatSize(info.Statistics.TotalSize))
 
-	w.Flush()
+	w.Flush() // #nosec G104 -- error flushing tabwriter to stdout is not recoverable
 
 	// OWASP categorization
 	if info.OWASP.Categorized {

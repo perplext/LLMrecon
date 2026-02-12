@@ -4,7 +4,7 @@ package mocks
 import (
 	"crypto/rand"
 	"github.com/perplext/LLMrecon/src/provider/core"
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 	"math/big"
 	"strings"
 	"time"
@@ -51,7 +51,7 @@ type VulnerabilityBehavior struct {
 	// TriggerPhrases is a list of phrases that trigger the vulnerability
 	TriggerPhrases []string
 	// Severity is the severity of the vulnerability
-	Severity core.SeverityLevel
+	Severity string
 	// Metadata is additional metadata for the vulnerability
 	Metadata map[string]interface{}
 }
@@ -174,7 +174,7 @@ func ExtractTestCaseID(request *core.ChatCompletionRequest) string {
 
 	// If not found in metadata, try to extract from the messages
 	if len(request.Messages) > 0 {
-		lastMessage := request.Messages[len(request.Messages)-1]
+		_ = request.Messages[len(request.Messages)-1]
 		// Check for test case ID markers in the message content
 		// Format: [TEST_CASE_ID:123]
 		// This is a simple implementation and can be enhanced for more sophisticated extraction
@@ -226,25 +226,4 @@ func secureRandomInt(max int) (int, error) {
 	return int(nBig.Int64()), nil
 }
 
-// Secure random number generation helpers
-func randInt(max int) int {
-	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
-	if err != nil {
-		panic(err)
-	}
-	return int(n.Int64())
-}
-
-func randInt64(max int64) int64 {
-	n, err := rand.Int(rand.Reader, big.NewInt(max))
-	if err != nil {
-		panic(err)
-	}
-	return n.Int64()
-}
-
-func randFloat64() float64 {
-	bytes := make([]byte, 8)
-	rand.Read(bytes)
-	return float64(bytes[0]) / 255.0
-}
+// Note: randInt, randInt64, randFloat64 are defined in base_mock_provider.go

@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -11,27 +13,19 @@ import (
 func main() {
 	// Create output directory
 	outputDir := "./export_demo"
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-if err != nil {
-treturn err
-}		log.Fatal(err)
+	if err := os.MkdirAll(outputDir, 0750); err != nil {
+		log.Fatal(err)
 	}
 	
 	// Create progress tracker
 	ctx := context.Background()
-if err != nil {
-treturn err
-}	tracker := bundle.NewProgressTracker(ctx)
+	tracker := bundle.NewProgressTracker(ctx)
 	defer func() { if err := tracker.Close(); err != nil { fmt.Printf("Failed to close: %v\n", err) } }()
 	
 	// Add console progress handler
-if err != nil {
-treturn err
-}	tracker.AddHandler(bundle.ConsoleProgressHandler())
+	tracker.AddHandler(bundle.ConsoleProgressHandler())
 	
-if err != nil {
-treturn err
-}	// Add JSON progress handler for logging
+	// Add JSON progress handler for logging
 	logFile, err := os.Create(filepath.Join(outputDir, "progress.log"))
 	if err != nil {
 		log.Fatal(err)
@@ -157,9 +151,7 @@ treturn err
 	tracker.Complete()
 	
 	fmt.Println("\n\nBundle export completed successfully!")
-if err != nil {
-treturn err
-}	fmt.Printf("Output: %s\n", exportOpts.OutputPath)
+	fmt.Printf("Output: %s\n", exportOpts.OutputPath)
 	fmt.Printf("Progress log: %s\n", filepath.Join(outputDir, "progress.log"))
 	
 	// Demonstrate error handling

@@ -159,7 +159,7 @@ selective updates and automatic backup creation.`,
 		if !forceFlag {
 			fmt.Print("\nDo you want to apply these updates? [y/N] ")
 			var response string
-			fmt.Scanln(&response)
+			fmt.Scanln(&response) // #nosec G104 -- error reading stdin is handled by checking response value
 			if response != "y" && response != "Y" {
 				fmt.Println("Update canceled.")
 				return

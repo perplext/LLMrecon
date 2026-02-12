@@ -188,7 +188,7 @@ func (e *BundleExporter) initialize() error {
 // cleanup removes temporary files
 func (e *BundleExporter) cleanup() {
 	if e.tempDir != "" {
-		os.RemoveAll(e.tempDir)
+		_ = os.RemoveAll(e.tempDir) // #nosec G104 -- best-effort temp directory cleanup
 	}
 }
 

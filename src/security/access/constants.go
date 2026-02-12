@@ -60,7 +60,8 @@ const (
 	PermissionSecurityScan          = "security.scan"
 
 	// Audit permissions
-	PermissionAuditView = "audit.view"
+	PermissionAuditView   = "audit.view"
+	PermissionAuditExport = "audit.export"
 
 	// Vulnerability permissions
 	PermissionVulnerabilityView = "vulnerability.view"
@@ -80,6 +81,47 @@ const (
 	PermissionReportDelete   = "report.delete"
 	PermissionReportExport   = "report.export"
 	PermissionReportGenerate = "report.generate"
+
+	// Security incident permissions
+	PermissionSecurityIncidentView   = "security.incident.view"
+	PermissionSecurityIncidentCreate = "security.incident.create"
+	PermissionSecurityIncidentUpdate = "security.incident.update"
+	PermissionSecurityIncidentDelete = "security.incident.delete"
+
+	// Security vulnerability permissions
+	PermissionSecurityVulnerabilityView   = "security.vulnerability.view"
+	PermissionSecurityVulnerabilityCreate = "security.vulnerability.create"
+	PermissionSecurityVulnerabilityUpdate = "security.vulnerability.update"
+	PermissionSecurityVulnerabilityDelete = "security.vulnerability.delete"
+
+	// User management permissions
+	PermissionUserList          = "user.list"
+	PermissionUserResetPassword = "user.reset_password"
+	PermissionUserLock          = "user.lock"
+	PermissionUserUnlock        = "user.unlock"
+	PermissionUserManageMFA     = "user.manage_mfa"
+
+	// Role management permissions
+	PermissionRoleList   = "role.list"
+	PermissionRoleAssign = "role.assign"
+)
+
+// Severity string constants for API handler use
+const (
+	SeverityCritical = "critical"
+	SeverityHigh     = "high"
+	SeverityMedium   = "medium"
+	SeverityLow      = "low"
+	SeverityInfo     = "info"
+)
+
+// Status string constants for API handler use
+const (
+	StatusOpen       = "open"
+	StatusInProgress = "in_progress"
+	StatusResolved   = "resolved"
+	StatusClosed     = "closed"
+	StatusPatched    = "patched"
 )
 
 // AllPermissions contains all defined permissions
