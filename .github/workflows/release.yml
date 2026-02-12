@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   packages: write
+  security-events: write
   id-token: write
 
 jobs:
@@ -215,6 +216,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          target: runtime
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
