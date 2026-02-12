@@ -28,8 +28,7 @@ node_modules/
 tasks.json
 tasks/ 
 
-# Test files and development artifacts
-*_test.go
+# Development artifacts
 *.test
 *.bak
 *.tmp
