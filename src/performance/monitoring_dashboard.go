@@ -483,7 +483,11 @@ func (d *MonitoringDashboard) sendToClient(client *DashboardClient, msg interfac
 	defer client.mutex.Unlock()
 
 	// Set a per-write deadline instead of relying on server-level WriteTimeout
-	client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	if err := client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		d.logger.Error("Failed to set write deadline", "client", client.ID, "error", err)
+		d.metrics.ErrorCount++
+		return
+	}
 	err := client.Conn.WriteJSON(msg)
 	if err != nil {
 		d.logger.Error("Failed to send message to client", "client", client.ID, "error", err)
