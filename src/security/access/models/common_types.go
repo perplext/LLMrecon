@@ -154,6 +154,7 @@ type Vulnerability struct {
 	MitigatedBy     string                `json:"mitigated_by,omitempty"`
 	ResolvedAt      time.Time             `json:"resolved_at,omitempty"`
 	ResolvedBy      string                `json:"resolved_by,omitempty"`
-	AffectedSystems []string              `json:"affected_systems,omitempty"`
-	CVE             string                `json:"cve,omitempty"`
+	AffectedSystems []string               `json:"affected_systems,omitempty"`
+	CVE             string                 `json:"cve,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }

@@ -390,7 +390,7 @@ func (l *OptimizedTemplateLoader) indexRepository(ctx context.Context, repoURL s
 
 		// Read file content
 		content, err := ioutil.ReadAll(reader)
-		reader.Close()
+		reader.Close() // #nosec G104 -- reader close error after successful read is non-critical
 		if err != nil {
 			continue // Skip files that can't be read
 		}
@@ -465,7 +465,7 @@ func (l *OptimizedTemplateLoader) loadTemplateByID(ctx context.Context, id strin
 
 		// Read file content
 		content, err = ioutil.ReadAll(reader)
-		reader.Close()
+		reader.Close() // #nosec G104 -- reader close error after successful read is non-critical
 		if err != nil {
 			return nil, fmt.Errorf("failed to read file content: %w", err)
 		}

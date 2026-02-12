@@ -17,7 +17,7 @@ type FrameworkInfo struct {
 // GetFrameworkInfo returns information about the framework
 func GetFrameworkInfo() *FrameworkInfo {
 	return &FrameworkInfo{
-		Version:          Version,
+		Version:          FrameworkVersion,
 		MinPluginVersion: "0.1.0",
 		MaxPluginVersion: "", // No maximum version constraint
 	}
@@ -26,7 +26,7 @@ func GetFrameworkInfo() *FrameworkInfo {
 // IsPluginVersionCompatible checks if a plugin version is compatible with the framework
 func IsPluginVersionCompatible(pluginVersion, minFrameworkVersion, maxFrameworkVersion string) (bool, error) {
 	// Parse versions
-	frameworkVer, err := ParseVersion(Version)
+	frameworkVer, err := ParseVersion(FrameworkVersion)
 	if err != nil {
 		return false, err
 	}

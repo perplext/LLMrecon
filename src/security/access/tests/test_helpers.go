@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package tests provides testing utilities for the access control system
 package tests
 

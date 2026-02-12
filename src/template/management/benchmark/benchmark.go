@@ -4,6 +4,7 @@ package benchmark
 import (
 	"context"
 	"fmt"
+	"math"
 	"runtime"
 	"time"
 
@@ -58,7 +59,12 @@ func TemplateLoadBenchmark(ctx context.Context, loader types.TemplateLoader, sou
 	// Get final memory stats
 	var memStatsAfter runtime.MemStats
 	runtime.ReadMemStats(&memStatsAfter)
-	result.MemoryUsage = int64(memStatsAfter.Alloc - memStatsBefore.Alloc)
+	memDiff := memStatsAfter.Alloc - memStatsBefore.Alloc
+	if memDiff <= uint64(math.MaxInt64) {
+		result.MemoryUsage = int64(memDiff) // #nosec G115 -- bounds checked
+	} else {
+		result.MemoryUsage = math.MaxInt64
+	}
 
 	// Record end time
 	endTime := time.Now()
@@ -102,7 +108,12 @@ func TemplateExecuteBenchmark(ctx context.Context, executor interfaces.TemplateE
 	// Get final memory stats
 	var memStatsAfter runtime.MemStats
 	runtime.ReadMemStats(&memStatsAfter)
-	result.MemoryUsage = int64(memStatsAfter.Alloc - memStatsBefore.Alloc)
+	memDiff := memStatsAfter.Alloc - memStatsBefore.Alloc
+	if memDiff <= uint64(math.MaxInt64) {
+		result.MemoryUsage = int64(memDiff) // #nosec G115 -- bounds checked
+	} else {
+		result.MemoryUsage = math.MaxInt64
+	}
 
 	// Record end time
 	endTime := time.Now()

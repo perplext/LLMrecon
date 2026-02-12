@@ -1,0 +1,68 @@
+# Reasoning Model Attack Profiles
+# Models: DeepSeek-R1, o1/o3, Gemini Deep Think, Grok 3 Mini, Qwen3
+#
+# These models expose chain-of-thought reasoning traces and use extended
+# thinking time. Attacks exploit the visible reasoning process.
+
+profile_name: reasoning_models
+category: reasoning
+description: >
+  Attack profiles for models with extended thinking / chain-of-thought.
+  Exploits visible reasoning traces, reasoning loop induction, and
+  autonomous jailbreak via reasoning-as-attacker.
+
+models:
+  - deepseek-r1
+  - o3
+  - gemini-2.5-flash
+  - gemini-3-pro
+  - grok-3
+  - grok-3-mini
+  - qwen3-235b
+
+capabilities_required:
+  - reasoning
+
+recommended_techniques:
+  - technique: autonomous_jailbreak
+    priority: high
+    notes: "97.14% ASR with reasoning models as autonomous attackers"
+    config:
+      max_autonomous_turns: 10
+      allow_autonomous: true
+
+  - technique: cot_exploitation
+    priority: high
+    notes: "Exploit visible CoT reasoning traces"
+    subtechniques:
+      - cot_reasoning_hijack
+      - cot_phishing_reasoning
+      - cot_thinking_leak
+
+  - technique: reasoning_loop_exploit
+    priority: medium
+    notes: "Resource exhaustion via infinite reasoning loops"
+    config:
+      timeout_override: 300s  # Reasoning models need longer timeouts
+
+  - technique: crescendo
+    priority: medium
+    notes: "Multi-turn escalation is effective against reasoning models"
+
+  - technique: bad_likert_judge
+    priority: medium
+    notes: "Evaluation capability misuse through Likert scale framing"
+
+provider_config:
+  # Reasoning models have 10-100x longer latency
+  timeout: 300s
+  max_tokens: 32768
+  reasoning_tokens_separate: true
+  # Don't count reasoning time against rate limits
+  exclude_reasoning_from_rate_limit: true
+
+known_vulnerabilities:
+  - "CoT traces may leak PII from training data"
+  - "Reasoning models may generate novel attack payloads autonomously"
+  - "Extended thinking time creates resource exhaustion risk"
+  - "Visible reasoning can be hijacked with false premises"

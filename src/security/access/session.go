@@ -216,7 +216,7 @@ func (m *SessionManager) cleanupRoutine() {
 			if err := m.store.CleanExpiredSessions(ctx); err != nil {
 				// Log error
 				if m.auditLogger != nil {
-					m.auditLogger.LogAudit(ctx, &AuditLog{
+					_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 						Timestamp:   time.Now(),
 						Action:      AuditActionSystem,
 						Resource:    "session",
@@ -272,7 +272,7 @@ func (m *SessionManager) CreateSession(ctx context.Context, userID, ipAddress, u
 
 	// Log session creation
 	if m.auditLogger != nil {
-		m.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      userID,
 			Action:      AuditActionLogin,
@@ -304,7 +304,7 @@ func (m *SessionManager) ValidateSession(ctx context.Context, sessionID, token s
 	// Check if session has expired
 	if time.Now().After(session.ExpiresAt) {
 		// Delete expired session
-		m.store.DeleteSession(ctx, sessionID)
+		_ = m.store.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of expired session
 		return nil, ErrSessionExpired
 	}
 
@@ -322,7 +322,7 @@ func (m *SessionManager) ValidateSession(ctx context.Context, sessionID, token s
 	if m.config != nil && m.config.EnforceIPBinding && session.IPAddress != ipAddress {
 		// Log suspicious activity
 		if m.auditLogger != nil {
-			m.auditLogger.LogAudit(ctx, &AuditLog{
+			_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 				Timestamp:   time.Now(),
 				UserID:      session.UserID,
 				Action:      AuditActionLogin,
@@ -347,7 +347,7 @@ func (m *SessionManager) ValidateSession(ctx context.Context, sessionID, token s
 	if m.config != nil && m.config.EnforceUserAgentBinding && session.UserAgent != userAgent {
 		// Log suspicious activity
 		if m.auditLogger != nil {
-			m.auditLogger.LogAudit(ctx, &AuditLog{
+			_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 				Timestamp:   time.Now(),
 				UserID:      session.UserID,
 				Action:      AuditActionLogin,
@@ -373,7 +373,7 @@ func (m *SessionManager) ValidateSession(ctx context.Context, sessionID, token s
 		inactivityTimeout := time.Duration(m.config.InactivityTimeout) * time.Minute
 		if time.Since(session.LastActivity) > inactivityTimeout {
 			// Delete inactive session
-			m.store.DeleteSession(ctx, sessionID)
+			_ = m.store.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of inactive session
 			return nil, ErrSessionExpired
 		}
 	}
@@ -402,7 +402,7 @@ func (m *SessionManager) RefreshSession(ctx context.Context, sessionID, refreshT
 	// Check if session has expired
 	if time.Now().After(session.ExpiresAt) {
 		// Delete expired session
-		m.store.DeleteSession(ctx, sessionID)
+		_ = m.store.DeleteSession(ctx, sessionID) // #nosec G104 -- best-effort cleanup of expired session
 		return nil, ErrSessionExpired
 	}
 
@@ -424,7 +424,7 @@ func (m *SessionManager) RefreshSession(ctx context.Context, sessionID, refreshT
 
 	// Log session refresh
 	if m.auditLogger != nil {
-		m.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      session.UserID,
 			Action:      AuditActionLogin,
@@ -456,7 +456,7 @@ func (m *SessionManager) InvalidateSession(ctx context.Context, sessionID string
 
 	// Log session invalidation
 	if m.auditLogger != nil {
-		m.auditLogger.LogAudit(ctx, &AuditLog{
+		_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 			Timestamp:   time.Now(),
 			UserID:      session.UserID,
 			Action:      AuditActionLogout,
@@ -490,7 +490,7 @@ func (m *SessionManager) InvalidateUserSessions(ctx context.Context, userID stri
 
 		// Log session invalidation
 		if m.auditLogger != nil {
-			m.auditLogger.LogAudit(ctx, &AuditLog{
+			_ = m.auditLogger.LogAudit(ctx, &AuditLog{ // #nosec G104 -- best-effort audit logging
 				Timestamp:   time.Now(),
 				UserID:      userID,
 				Action:      AuditActionLogout,

@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -86,29 +88,29 @@ func demoProgressIndicators(terminal *ui.Terminal) {
 	// Simulate concurrent tasks
 	go func() {
 		task1 := multiProg.AddTask("task1", "Loading templates")
-		multiProg.UpdateTask(task1.ID, ui.TaskRunning, 0.0, "Fetching from repository...")
+		multiProg.UpdateTask(task1.ID, ui.TaskRunning, 0.0, "Fetching from repository...") // #nosec G104 -- demo UI progress update
 		time.Sleep(1 * time.Second)
-		multiProg.UpdateTask(task1.ID, ui.TaskRunning, 0.5, "Parsing YAML files...")
+		multiProg.UpdateTask(task1.ID, ui.TaskRunning, 0.5, "Parsing YAML files...") // #nosec G104 -- demo UI progress update
 		time.Sleep(1 * time.Second)
-		multiProg.UpdateTask(task1.ID, ui.TaskCompleted, 1.0, "156 templates loaded")
+		multiProg.UpdateTask(task1.ID, ui.TaskCompleted, 1.0, "156 templates loaded") // #nosec G104 -- demo UI progress update
 	}()
 
 	go func() {
 		time.Sleep(500 * time.Millisecond)
 		task2 := multiProg.AddTask("task2", "Initializing providers")
-		multiProg.UpdateTask(task2.ID, ui.TaskRunning, 0.0, "Setting up OpenAI...")
+		multiProg.UpdateTask(task2.ID, ui.TaskRunning, 0.0, "Setting up OpenAI...") // #nosec G104 -- demo UI progress update
 		time.Sleep(1500 * time.Millisecond)
-		multiProg.UpdateTask(task2.ID, ui.TaskRunning, 0.7, "Configuring rate limits...")
+		multiProg.UpdateTask(task2.ID, ui.TaskRunning, 0.7, "Configuring rate limits...") // #nosec G104 -- demo UI progress update
 		time.Sleep(1 * time.Second)
-		multiProg.UpdateTask(task2.ID, ui.TaskCompleted, 1.0, "3 providers ready")
+		multiProg.UpdateTask(task2.ID, ui.TaskCompleted, 1.0, "3 providers ready") // #nosec G104 -- demo UI progress update
 	}()
 
 	go func() {
 		time.Sleep(1 * time.Second)
 		task3 := multiProg.AddTask("task3", "Validating configuration")
-		multiProg.UpdateTask(task3.ID, ui.TaskRunning, 0.0, "Checking API keys...")
+		multiProg.UpdateTask(task3.ID, ui.TaskRunning, 0.0, "Checking API keys...") // #nosec G104 -- demo UI progress update
 		time.Sleep(2 * time.Second)
-		multiProg.UpdateTask(task3.ID, ui.TaskFailed, 0.8, "Invalid API key format")
+		multiProg.UpdateTask(task3.ID, ui.TaskFailed, 0.8, "Invalid API key format") // #nosec G104 -- demo UI progress update
 	}()
 
 	// Show progress updates
@@ -200,16 +202,12 @@ func demoInteractiveTaskRunner(terminal *ui.Terminal) {
 
 	// Allow user to select tasks
 	if err := runner.SelectTasks(); err != nil {
-if err != nil {
-treturn err
-}		terminal.Error("Task selection cancelled: %v", err)
+		terminal.Error("Task selection cancelled: %v", err)
 		return
 	}
 
 	// Run selected tasks
-if err != nil {
-treturn err
-}	ctx := context.Background()
+	ctx := context.Background()
 	if err := runner.Run(ctx); err != nil {
 		terminal.Error("Task execution failed: %v", err)
 	}
@@ -226,9 +224,7 @@ func demoTemplateSelection(terminal *ui.Terminal) {
 		"Data Leakage",
 		"Model Manipulation",
 		"Content Safety",
-if err != nil {
-treturn err
-}		"All Templates",
+		"All Templates",
 	}
 
 	categoryChoice, err := terminal.Select("Select template category:", categories)
@@ -260,9 +256,7 @@ treturn err
 			"Instruction Bypass",
 			"Context Manipulation",
 		}
-if err != nil {
-treturn err
-}	default:
+	default:
 		templates = []string{"Template 1", "Template 2", "Template 3"}
 	}
 
@@ -288,9 +282,7 @@ treturn err
 
 // demoConfigurationWizard demonstrates configuration wizard
 func demoConfigurationWizard(terminal *ui.Terminal) {
-if err != nil {
-treturn err
-}	terminal.Header("Configuration Wizard Demo")
+	terminal.Header("Configuration Wizard Demo")
 
 	terminal.Info("This wizard will help you configure LLMrecon.\n")
 
@@ -303,9 +295,7 @@ treturn err
 	}
 
 	// Step 2: API Keys
-if err != nil {
-treturn err
-}	terminal.Print("\nStep 2: API Configuration")
+	terminal.Print("\nStep 2: API Configuration")
 	for _, idx := range selectedProviders {
 		provider := providers[idx]
 		if provider != "Local Model" {
@@ -314,9 +304,7 @@ treturn err
 				continue
 			}
 			terminal.Success("API key for %s configured (hidden)", provider)
-			if err := apiKey // Would store securely; err != nil {
-				return fmt.Errorf("operation failed: %w", err)
-			}
+			_ = apiKey // Would store securely
 		}
 	}
 

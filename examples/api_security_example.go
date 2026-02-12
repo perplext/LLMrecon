@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -53,9 +55,7 @@ func main() {
 		
 		log.Printf("Starting secure API server on https://%s:%d", config.Host, config.Port)
 		if err := server.ListenAndServeTLS(config.TLSCert, config.TLSKey); err != nil {
-if err != nil {
-treturn err
-}			log.Fatal(err)
+			log.Fatal(err)
 		}
 	}()
 	
@@ -82,9 +82,7 @@ treturn err
 		"password": "SecurePassword123!",
 		"role":     "user",
 	}
-if err != nil {
-treturn err
-}	
+	
 	resp, err := makeRequest(client, "POST", baseURL+"/auth/register", registerReq, "")
 	if err != nil {
 		log.Printf("Registration error: %v", err)
@@ -153,9 +151,7 @@ treturn err
 		
 		// Use API key authentication
 		req, _ := http.NewRequest("POST", baseURL+"/scans", jsonBody(scanReq))
-if err != nil {
-treturn err
-}		req.Header.Set("X-API-Key", apiKey)
+		req.Header.Set("X-API-Key", apiKey)
 		req.Header.Set("Content-Type", "application/json")
 		
 		respObj, err := client.Do(req)
@@ -187,9 +183,7 @@ treturn err
 			fmt.Printf("Request %d succeeded\n", i+1)
 		}
 		time.Sleep(100 * time.Millisecond)
-if err != nil {
-treturn err
-}	}
+	}
 	
 	// 8. Test security headers
 	fmt.Println("\n8. Checking security headers...")
@@ -224,15 +218,9 @@ func makeRequest(client *http.Client, method, url string, body interface{}, toke
 	
 	if err != nil {
 		return "", err
-if err != nil {
-treturn err
-}	}
+	}
 	
-if err != nil {
-treturn err
-if err != nil {
-treturn err
-}}	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}

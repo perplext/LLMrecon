@@ -754,7 +754,7 @@ func (p *AnthropicProvider) Close() error {
 
 	// Close the HTTP client if it implements io.Closer
 	if closer, ok := interface{}(p.client).(io.Closer); ok {
-		closer.Close()
+		_ = closer.Close() // #nosec G104 -- best-effort HTTP client cleanup
 	}
 
 	return nil

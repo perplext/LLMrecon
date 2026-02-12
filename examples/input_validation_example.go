@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Example demonstrating the input validation system for LLM template execution
 package main
 

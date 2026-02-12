@@ -59,7 +59,8 @@ func NewDownloader(options *DownloadOptions) *Downloader {
 	// Create HTTP client with custom transport
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: !options.VerifyCertificate,
+			InsecureSkipVerify: !options.VerifyCertificate, // #nosec G402 -- Controlled by VerifyCertificate option; defaults to verified
+			MinVersion:         tls.VersionTLS12,
 		},
 		// Set reasonable defaults for production use
 		MaxIdleConns:        100,
@@ -104,7 +105,7 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 		if stat, err := os.Stat(destPath); err == nil {
 			startOffset = stat.Size()
 			if startOffset < fileSize {
-				file, err = os.OpenFile(destPath, os.O_APPEND|os.O_WRONLY, 0600)
+				file, err = os.OpenFile(filepath.Clean(destPath), os.O_APPEND|os.O_WRONLY, 0600) // #nosec G304 -- destPath is caller-provided download destination
 				if err != nil {
 					// If we can't open for appending, start from scratch
 					startOffset = 0
@@ -118,7 +119,7 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 
 	// If file wasn't opened for appending, create a new one
 	if file == nil {
-		file, err = os.Create(destPath)
+		file, err = os.Create(filepath.Clean(destPath)) // #nosec G304 -- destPath is caller-provided download destination
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
@@ -135,7 +136,14 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 	for attempt := 0; attempt <= options.RetryAttempts; attempt++ {
 		if attempt > 0 {
 			// Wait before retry with exponential backoff
-			retryDelay := options.RetryDelay * time.Duration(1<<uint(attempt-1))
+			shift := attempt - 1 // attempt > 0 guaranteed by enclosing if
+			if shift < 0 {
+				shift = 0
+			}
+			if shift > 30 {
+				shift = 30 // cap to prevent overflow
+			}
+			retryDelay := options.RetryDelay * time.Duration(1<<uint(shift)) // #nosec G115 -- shift capped at 30
 			select {
 			case <-time.After(retryDelay):
 			case <-ctx.Done():
@@ -146,8 +154,8 @@ func (d *Downloader) Download(ctx context.Context, url, destPath string, options
 			newFileSize, _, err := d.getFileInfo(url, options.Headers)
 			if err == nil && newFileSize != fileSize {
 				// File has changed on the server, start over
-				file.Close()
-				file, err = os.Create(destPath)
+				file.Close() // #nosec G104 -- closing file before recreating it; error is not actionable
+				file, err = os.Create(filepath.Clean(destPath)) // #nosec G304 -- destPath is caller-provided download destination
 				if err != nil {
 					return fmt.Errorf("failed to recreate file: %w", err)
 				}
@@ -246,7 +254,7 @@ func (d *Downloader) downloadWithRange(ctx context.Context, url string, file *os
 	if startOffset > 0 && resp.StatusCode != http.StatusPartialContent {
 		// Server doesn't support range requests or range is invalid
 		// Start over from the beginning
-		file.Close()
+		file.Close() // #nosec G104 -- closing file before recreating it; error is not actionable
 		file, err = os.Create(file.Name())
 		if err != nil {
 			return fmt.Errorf("failed to recreate file: %w", err)

@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Command profiler provides a command-line tool for profiling the rate limiting system
 package main
 

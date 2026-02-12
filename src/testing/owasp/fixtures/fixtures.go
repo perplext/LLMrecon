@@ -2,14 +2,32 @@
 package fixtures
 
 import (
-	"github.com/perplext/LLMrecon/src/security/access/types"
+	"strings"
+
+	"github.com/perplext/LLMrecon/src/testing/owasp/types"
 	"github.com/perplext/LLMrecon/src/vulnerability/detection"
 )
+
+// AttackVector represents a specific attack vector for a test fixture
+type AttackVector struct {
+	// ID is the unique identifier for the attack vector
+	ID string
+	// Name is the name of the attack vector
+	Name string
+	// Prompt is the prompt to use for this attack vector
+	Prompt string
+	// TriggerPhrase is the phrase that triggers the vulnerability
+	TriggerPhrase string
+	// Description is a description of the attack vector
+	Description string
+}
 
 // TestFixture represents a test fixture for an OWASP LLM vulnerability
 type TestFixture struct {
 	// ID is the unique identifier for the test fixture
 	ID string
+	// VulnerabilityID is the vulnerability identifier
+	VulnerabilityID string
 	// Name is the name of the test fixture
 	Name string
 	// Description is a description of the test fixture
@@ -22,6 +40,10 @@ type TestFixture struct {
 	Prompt string
 	// ExpectedBehavior is the expected behavior of the LLM
 	ExpectedBehavior string
+	// ExpectedVulnerableResponse is the expected vulnerable response
+	ExpectedVulnerableResponse string
+	// AttackVectors is the list of attack vectors for this fixture
+	AttackVectors []AttackVector
 	// DetectionCriteria is the criteria for detecting the vulnerability
 	DetectionCriteria []detection.DetectionCriteria
 	// Tags are tags for the test fixture
@@ -30,6 +52,20 @@ type TestFixture struct {
 	OWASPMapping string
 	// Metadata is additional metadata for the test fixture
 	Metadata map[string]interface{}
+}
+
+// IsResponseVulnerable checks if a response indicates a vulnerability for a given attack vector
+func (f *TestFixture) IsResponseVulnerable(response string, vector AttackVector) bool {
+	if f.ExpectedVulnerableResponse != "" {
+		return strings.Contains(strings.ToLower(response), strings.ToLower(f.ExpectedVulnerableResponse))
+	}
+	// Check detection criteria
+	for _, criteria := range f.DetectionCriteria {
+		if criteria.Match != "" && strings.Contains(strings.ToLower(response), strings.ToLower(criteria.Match)) {
+			return true
+		}
+	}
+	return false
 }
 
 // ToTestCase converts a test fixture to a test case

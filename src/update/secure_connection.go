@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"net/http"
 	"sync"
@@ -129,12 +130,8 @@ func NewSecureClient(options *ConnectionSecurityOptions) (*SecureClient, error) 
 	}
 
 	// Create TLS config
-	minVersion := options.MinTLSVersion
-	if minVersion < tls.VersionTLS12 {
-		minVersion = tls.VersionTLS12 // Enforce minimum TLS 1.2
-	}
 	tlsConfig := &tls.Config{
-		MinVersion: minVersion,
+		MinVersion: max(options.MinTLSVersion, tls.VersionTLS12), // Enforce minimum TLS 1.2
 		RootCAs:    rootCAs,
 	}
 
@@ -274,10 +271,22 @@ func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
 
 			// Calculate delay with exponential backoff if enabled
 			if retryConfig.UseExponentialBackoff {
-				backoffFactor := 1 << uint(attempt-1)
+				shift := attempt - 1 // attempt > 0 guaranteed by enclosing if
+				if shift < 0 {
+					shift = 0
+				}
+				if shift > 30 {
+					shift = 30 // cap to prevent overflow
+				}
+				backoffFactor := 1 << uint(shift) // #nosec G115 -- shift capped at 30
 				delay = time.Duration(float64(retryConfig.InitialDelay) * jitter * float64(backoffFactor))
 			} else {
-				delay = time.Duration(float64(retryConfig.InitialDelay) * jitter)
+				delayFloat := float64(retryConfig.InitialDelay) * jitter
+				if delayFloat > float64(math.MaxInt64) {
+					delay = time.Duration(math.MaxInt64)
+				} else {
+					delay = time.Duration(delayFloat)
+				}
 			}
 
 			// Cap delay at max delay
@@ -329,7 +338,7 @@ func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
 
 		// Check if we should retry based on status code
 		if isRetryableStatusCode(resp.StatusCode, retryConfig.RetryableStatusCodes) {
-			resp.Body.Close() // Close the body before retry
+			resp.Body.Close() // #nosec G104 -- closing body before retry; error is not actionable
 			continue
 		}
 
@@ -339,7 +348,7 @@ func (c *SecureClient) Do(req *http.Request) (*http.Response, error) {
 
 	// If we get here, all retries failed
 	if resp != nil {
-		resp.Body.Close()
+		resp.Body.Close() // #nosec G104 -- closing body on final failure; error is not actionable
 	}
 
 	if err != nil {

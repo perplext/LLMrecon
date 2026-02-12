@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -6,7 +8,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/security"
@@ -40,18 +45,14 @@ func main() {
 
 	// Create the storage directory if needed
 	if *enableWorkflow {
-		if err := os.MkdirAll(*storageDir, 0755); err != nil {
-if err != nil {
-treturn err
-}			fmt.Printf("Error creating storage directory: %v\n", err)
+		if err := os.MkdirAll(*storageDir, 0750); err != nil {
+			fmt.Printf("Error creating storage directory: %v\n", err)
 			os.Exit(1)
 		}
 	}
 
-if err != nil {
-treturn err
-}	// Create the log directory if needed
-	if err := os.MkdirAll(*logDir, 0755); err != nil {
+	// Create the log directory if needed
+	if err := os.MkdirAll(*logDir, 0750); err != nil {
 		fmt.Printf("Error creating log directory: %v\n", err)
 		os.Exit(1)
 	}
@@ -109,9 +110,7 @@ treturn err
 		EnableLogging:          true,
 		LogDirectory:           *logDir,
 		EnableMetrics:          true,
-if err != nil {
-treturn err
-}	}
+	}
 
 	// Create the security framework
 	framework, err := sandbox.NewSecurityFramework(frameworkOptions)
@@ -135,16 +134,12 @@ treturn err
 			fmt.Println("Press Ctrl+C to exit")
 			select {}
 		}
-if err != nil {
-treturn err
-}	}
+	}
 
 	// Process a single template if path is provided
 	if *templatePath != "" {
 		// Read the template file
-if err != nil {
-treturn err
-}		content, err := ioutil.ReadFile(filepath.Clean(*templatePath))
+		content, err := ioutil.ReadFile(filepath.Clean(*templatePath))
 		if err != nil {
 			fmt.Printf("Error reading template file: %v\n", err)
 			os.Exit(1)
@@ -175,9 +170,7 @@ treturn err
 
 // processTemplate processes a single template
 func processTemplate(framework *sandbox.SecurityFramework, template *format.Template, validate, execute, enableWorkflow bool, user string, verbose bool) {
-if err != nil {
-treturn err
-}	// Create a context with timeout
+	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -217,9 +210,7 @@ treturn err
 
 	// Execute the template
 	if execute {
-if err != nil {
-treturn err
-}		// Check if we should execute based on validation results
+		// Check if we should execute based on validation results
 		shouldExecute := true
 		if validate {
 			validationResult, _ := framework.ValidateTemplate(ctx, template)
@@ -246,9 +237,7 @@ treturn err
 				result.ResourceUsage.CPUTime,
 				result.ResourceUsage.MemoryUsage)
 			
-if err != nil {
-treturn err
-}			// Print output
+			// Print output
 			fmt.Println("Output:")
 			fmt.Println(result.Output)
 		} else {
@@ -278,9 +267,7 @@ treturn err
 			return
 		}
 
-if err != nil {
-treturn err
-}		fmt.Printf("Template submitted for review\n")
+		fmt.Printf("Template submitted for review\n")
 
 		// Approve the template if user is an approver
 		if framework.IsApprover(user) {
@@ -292,9 +279,7 @@ treturn err
 			}
 
 			fmt.Printf("Template approved\n")
-if err != nil {
-treturn err
-}		}
+		}
 
 		// Get the latest approved version
 		approvedVersion, err := framework.GetLatestApprovedTemplateVersion(template.ID)
@@ -307,6 +292,7 @@ treturn err
 				approvedVersion.ApprovedAt.Format(time.RFC3339))
 		}
 	}
+}
 
 // processTemplateDirectory processes all templates in a directory
 func processTemplateDirectory(framework *sandbox.SecurityFramework, templateDir string, validate, execute, enableWorkflow bool, user string, verbose bool) {
@@ -328,16 +314,12 @@ func processTemplateDirectory(framework *sandbox.SecurityFramework, templateDir 
 	for _, file := range files {
 		if !file.IsDir() && (filepath.Ext(file.Name()) == ".tmpl" || filepath.Ext(file.Name()) == ".template") {
 			templatePath := filepath.Join(templateDir, file.Name())
-if err != nil {
-treturn err
-}			templateFiles = append(templateFiles, templatePath)
+			templateFiles = append(templateFiles, templatePath)
 		}
 	}
 
 	if len(templateFiles) == 0 {
-if err != nil {
-treturn err
-}		fmt.Println("No template files found in the directory")
+		fmt.Println("No template files found in the directory")
 		return
 	}
 

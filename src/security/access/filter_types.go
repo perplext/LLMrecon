@@ -1,6 +1,25 @@
 // Package access provides access control and security auditing functionality
 package access
 
+import "time"
+
+// AuditEvent represents an audit event in the access control system
+type AuditEvent struct {
+	ID         string                 `json:"id"`
+	Timestamp  time.Time              `json:"timestamp"`
+	UserID     string                 `json:"user_id"`
+	Username   string                 `json:"username"`
+	Action     string                 `json:"action"`
+	Resource   string                 `json:"resource"`
+	ResourceID string                 `json:"resource_id"`
+	Severity   string                 `json:"severity"`
+	Status     string                 `json:"status"`
+	IPAddress  string                 `json:"ip_address"`
+	UserAgent  string                 `json:"user_agent"`
+	Details    map[string]interface{} `json:"details"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+}
+
 // UserFilter defines filters for querying users
 type UserFilter struct {
 	Username  string   `json:"username,omitempty"`
@@ -56,16 +75,20 @@ type VulnerabilityFilter struct {
 
 // AuditEventFilter defines filters for querying audit events
 type AuditEventFilter struct {
-	UserID        string `json:"user_id,omitempty"`
-	Action        string `json:"action,omitempty"`
-	Resource      string `json:"resource,omitempty"`
-	ResourceID    string `json:"resource_id,omitempty"`
-	Severity      string `json:"severity,omitempty"`
-	IPAddress     string `json:"ip_address,omitempty"`
-	CreatedAfter  string `json:"created_after,omitempty"`
-	CreatedBefore string `json:"created_before,omitempty"`
-	SortBy        string `json:"sort_by,omitempty"`
-	SortOrder     string `json:"sort_order,omitempty"`
-	Offset        int    `json:"offset,omitempty"`
-	Limit         int    `json:"limit,omitempty"`
+	UserID        string     `json:"user_id,omitempty"`
+	Username      string     `json:"username,omitempty"`
+	Action        string     `json:"action,omitempty"`
+	Resource      string     `json:"resource,omitempty"`
+	ResourceID    string     `json:"resource_id,omitempty"`
+	Severity      string     `json:"severity,omitempty"`
+	Status        string     `json:"status,omitempty"`
+	IPAddress     string     `json:"ip_address,omitempty"`
+	StartTime     *time.Time `json:"start_time,omitempty"`
+	EndTime       *time.Time `json:"end_time,omitempty"`
+	CreatedAfter  string     `json:"created_after,omitempty"`
+	CreatedBefore string     `json:"created_before,omitempty"`
+	SortBy        string     `json:"sort_by,omitempty"`
+	SortOrder     string     `json:"sort_order,omitempty"`
+	Offset        int        `json:"offset,omitempty"`
+	Limit         int        `json:"limit,omitempty"`
 }

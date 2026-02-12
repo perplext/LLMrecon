@@ -5,52 +5,41 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
-	".."
+	"github.com/perplext/LLMrecon/src/security/access"
 )
 
 // CreateIncidentRequest represents a request to create a new security incident
 type CreateIncidentRequest struct {
-	Title             string                 `json:"title"`
-	Description       string                 `json:"description"`
-	Severity          string                 `json:"severity"`
-	AffectedResources []string               `json:"affected_resources,omitempty"`
-	Tags              []string               `json:"tags,omitempty"`
-	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+	Title       string                 `json:"title"`
+	Description string                 `json:"description"`
+	Severity    string                 `json:"severity"`
+	AuditLogIDs []string               `json:"audit_log_ids,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // UpdateIncidentRequest represents a request to update a security incident
 type UpdateIncidentRequest struct {
-	Title             string                 `json:"title,omitempty"`
-	Description       string                 `json:"description,omitempty"`
-	Severity          string                 `json:"severity,omitempty"`
-	Status            string                 `json:"status,omitempty"`
-	AssignedTo        string                 `json:"assigned_to,omitempty"`
-	ResolutionNotes   string                 `json:"resolution_notes,omitempty"`
-	AffectedResources []string               `json:"affected_resources,omitempty"`
-	Tags              []string               `json:"tags,omitempty"`
-	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+	Status     string `json:"status,omitempty"`
+	AssignedTo string `json:"assigned_to,omitempty"`
 }
 
 // IncidentResponse represents a security incident response
 type IncidentResponse struct {
-	ID                string                 `json:"id"`
-	Title             string                 `json:"title"`
-	Description       string                 `json:"description"`
-	Severity          string                 `json:"severity"`
-	Status            string                 `json:"status"`
-	ReportedBy        string                 `json:"reported_by,omitempty"`
-	AssignedTo        string                 `json:"assigned_to,omitempty"`
-	CreatedAt         string                 `json:"created_at"`
-	UpdatedAt         string                 `json:"updated_at"`
-	ResolvedAt        string                 `json:"resolved_at,omitempty"`
-	ResolutionNotes   string                 `json:"resolution_notes,omitempty"`
-	AffectedResources []string               `json:"affected_resources,omitempty"`
-	Tags              []string               `json:"tags,omitempty"`
-	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+	ID          string                 `json:"id"`
+	Title       string                 `json:"title"`
+	Description string                 `json:"description"`
+	Severity    string                 `json:"severity"`
+	Status      string                 `json:"status"`
+	ReportedBy  string                 `json:"reported_by,omitempty"`
+	AssignedTo  string                 `json:"assigned_to,omitempty"`
+	CreatedAt   string                 `json:"created_at"`
+	UpdatedAt   string                 `json:"updated_at"`
+	ResolvedAt  string                 `json:"resolved_at,omitempty"`
+	AuditLogIDs []string               `json:"audit_log_ids,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // handleListIncidents handles listing security incidents with filtering
@@ -63,8 +52,7 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check permission
-	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentView) {
+	if !s.accessManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentView) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -76,29 +64,17 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 	filter := &access.IncidentFilter{
 		Severity:   query.Get("severity"),
 		Status:     query.Get("status"),
-		ReportedBy: query.Get("reported_by"),
-		AssignedTo: query.Get("assigned_to"),
+		AssigneeID: query.Get("assigned_to"),
 	}
 
 	// Parse time range
 	if startDateStr := query.Get("start_date"); startDateStr != "" {
-		startDate, err := time.Parse("2006-01-02", startDateStr)
+		_, err := time.Parse("2006-01-02", startDateStr)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusBadRequest, "Invalid start_date format, expected YYYY-MM-DD")
 			return
 		}
-		filter.StartDate = &startDate
-	}
-
-	if endDateStr := query.Get("end_date"); endDateStr != "" {
-		endDate, err := time.Parse("2006-01-02", endDateStr)
-		if err != nil {
-			WriteErrorResponse(w, http.StatusBadRequest, "Invalid end_date format, expected YYYY-MM-DD")
-			return
-		}
-		// Set to end of day
-		endDate = endDate.Add(24*time.Hour - time.Second)
-		filter.EndDate = &endDate
+		filter.ReportedAfter = startDateStr
 	}
 
 	// Parse pagination parameters
@@ -116,19 +92,14 @@ func (s *Server) handleListIncidents(w http.ResponseWriter, r *http.Request) {
 	filter.Limit = limit
 
 	// Get security incidents
-	securityManager := s.accessManager.GetSecurityManager()
-	incidents, err := securityManager.ListIncidents(r.Context(), filter)
+	incidents, err := s.accessManager.ListIncidents(r.Context(), filter)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to list security incidents")
 		return
 	}
 
-	// Get total count
-	totalCount, err := securityManager.CountIncidents(r.Context(), filter)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to count security incidents")
-		return
-	}
+	// Use len for total count
+	totalCount := int64(len(incidents))
 
 	// Convert incidents to response format
 	var incidentResponses []IncidentResponse
@@ -165,8 +136,7 @@ func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check permission
-	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentCreate) {
+	if !s.accessManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentCreate) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -206,20 +176,17 @@ func (s *Server) handleCreateIncident(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create incident
-	incident := &access.SecurityIncident{
-		Title:             req.Title,
-		Description:       req.Description,
-		Severity:          req.Severity,
-		Status:            access.StatusOpen,
-		ReportedBy:        currentUser.ID,
-		AffectedResources: req.AffectedResources,
-		Tags:              req.Tags,
-		Metadata:          req.Metadata,
-	}
-
-	securityManager := s.accessManager.GetSecurityManager()
-	if err := securityManager.CreateIncident(r.Context(), incident); err != nil {
+	// Create incident using AccessControlManager
+	incident, err := s.accessManager.CreateIncident(
+		r.Context(),
+		req.Title,
+		req.Description,
+		access.AuditSeverity(req.Severity),
+		currentUser.ID,
+		req.AuditLogIDs,
+		req.Metadata,
+	)
+	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to create security incident")
 		return
 	}
@@ -238,8 +205,7 @@ func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check permission
-	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentView) {
+	if !s.accessManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentView) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -251,9 +217,9 @@ func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 		WriteErrorResponse(w, http.StatusBadRequest, "Incident ID is required")
 		return
 	}
+
 	// Get incident
-	securityManager := s.accessManager.GetSecurityManager()
-	incident, err := securityManager.GetIncident(r.Context(), incidentID)
+	incident, err := s.accessManager.GetIncident(r.Context(), incidentID)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Security incident not found")
 		return
@@ -273,8 +239,7 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check permission
-	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentUpdate) {
+	if !s.accessManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentUpdate) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -294,56 +259,14 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get incident
-	securityManager := s.accessManager.GetSecurityManager()
-	incident, err := securityManager.GetIncident(r.Context(), incidentID)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusNotFound, "Security incident not found")
-		return
-	}
-
-	// Update incident fields
-	if req.Title != "" {
-		incident.Title = req.Title
-	}
-
-	if req.Description != "" {
-		incident.Description = req.Description
-	}
-
-	if req.Severity != "" {
-		// Validate severity
-		validSeverities := []string{
-			access.SeverityCritical,
-			access.SeverityHigh,
-			access.SeverityMedium,
-			access.SeverityLow,
-			access.SeverityInfo,
-		}
-
-		validSeverity := false
-		for _, severity := range validSeverities {
-			if req.Severity == severity {
-				validSeverity = true
-				break
-			}
-		}
-
-		if !validSeverity {
-			WriteErrorResponse(w, http.StatusBadRequest, "Invalid severity value")
-			return
-		}
-
-		incident.Severity = req.Severity
-	}
-
+	// Validate status if provided
 	if req.Status != "" {
-		// Validate status
 		validStatuses := []string{
-			access.StatusOpen,
-			access.StatusInProgress,
-			access.StatusResolved,
-			access.StatusClosed,
+			string(access.IncidentStatusNew),
+			string(access.IncidentStatusInProgress),
+			string(access.IncidentStatusResolved),
+			string(access.IncidentStatusClosed),
+			string(access.IncidentStatusDuplicate),
 		}
 
 		validStatus := false
@@ -358,50 +281,24 @@ func (s *Server) handleUpdateIncident(w http.ResponseWriter, r *http.Request) {
 			WriteErrorResponse(w, http.StatusBadRequest, "Invalid status value")
 			return
 		}
-
-		// If changing to resolved or closed, set resolved time
-		if (req.Status == access.StatusResolved || req.Status == access.StatusClosed) &&
-			(incident.Status != access.StatusResolved && incident.Status != access.StatusClosed) {
-			incident.ResolvedAt = time.Now()
-		}
-
-		incident.Status = req.Status
 	}
 
-	if req.AssignedTo != "" {
-		// Validate that the assigned user exists
-		userManager := s.accessManager.GetUserManager()
-		_, err := userManager.GetUserByID(r.Context(), req.AssignedTo)
-		if err != nil {
-			WriteErrorResponse(w, http.StatusBadRequest, "Assigned user does not exist")
-			return
-		}
-
-		incident.AssignedTo = req.AssignedTo
-	}
-
-	if req.ResolutionNotes != "" {
-		incident.ResolutionNotes = req.ResolutionNotes
-	}
-
-	if len(req.AffectedResources) > 0 {
-		incident.AffectedResources = req.AffectedResources
-	}
-
-	if len(req.Tags) > 0 {
-		incident.Tags = req.Tags
-	}
-
-	if req.Metadata != nil {
-		incident.Metadata = req.Metadata
-	}
-
-	// Update timestamp
-	incident.UpdatedAt = time.Now()
-
-	// Update incident
-	if err := securityManager.UpdateIncident(r.Context(), incident); err != nil {
+	// Update incident status
+	if err := s.accessManager.UpdateIncidentStatus(
+		r.Context(),
+		incidentID,
+		access.IncidentStatus(req.Status),
+		req.AssignedTo,
+		currentUser.ID,
+	); err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to update security incident")
+		return
+	}
+
+	// Get updated incident to return
+	incident, err := s.accessManager.GetIncident(r.Context(), incidentID)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve updated incident")
 		return
 	}
 
@@ -419,11 +316,11 @@ func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check permission
-	rbacManager := s.accessManager.GetRBACManager()
-	if !rbacManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentDelete) {
+	if !s.accessManager.HasPermission(r.Context(), currentUser, access.PermissionSecurityIncidentDelete) {
 		WriteErrorResponse(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
+
 	// Get incident ID from URL
 	vars := mux.Vars(r)
 	incidentID := vars["id"]
@@ -432,19 +329,20 @@ func (s *Server) handleDeleteIncident(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Delete incident
-	securityManager := s.accessManager.GetSecurityManager()
-	if err := securityManager.DeleteIncident(r.Context(), incidentID); err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			WriteErrorResponse(w, http.StatusNotFound, "Security incident not found")
-		} else {
-			WriteErrorResponse(w, http.StatusInternalServerError, "Failed to delete security incident")
-		}
+	// Close the incident instead of deleting (no delete method available)
+	if err := s.accessManager.UpdateIncidentStatus(
+		r.Context(),
+		incidentID,
+		access.IncidentStatusClosed,
+		"",
+		currentUser.ID,
+	); err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, "Failed to close security incident")
 		return
 	}
 
 	// Return success response
-	WriteSuccessResponse(w, http.StatusOK, "Security incident deleted successfully", nil)
+	WriteSuccessResponse(w, http.StatusOK, "Security incident closed successfully", nil)
 }
 
 // convertIncidentToResponse converts a security incident to a response format
@@ -455,19 +353,17 @@ func convertIncidentToResponse(incident *access.SecurityIncident) IncidentRespon
 	}
 
 	return IncidentResponse{
-		ID:                incident.ID,
-		Title:             incident.Title,
-		Description:       incident.Description,
-		Severity:          incident.Severity,
-		Status:            incident.Status,
-		ReportedBy:        incident.ReportedBy,
-		AssignedTo:        incident.AssignedTo,
-		CreatedAt:         incident.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:         incident.UpdatedAt.Format(time.RFC3339),
-		ResolvedAt:        resolvedAt,
-		ResolutionNotes:   incident.ResolutionNotes,
-		AffectedResources: incident.AffectedResources,
-		Tags:              incident.Tags,
-		Metadata:          incident.Metadata,
+		ID:          incident.ID,
+		Title:       incident.Title,
+		Description: incident.Description,
+		Severity:    string(incident.Severity),
+		Status:      string(incident.Status),
+		ReportedBy:  incident.ReportedBy,
+		AssignedTo:  incident.AssignedTo,
+		CreatedAt:   incident.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:   incident.UpdatedAt.Format(time.RFC3339),
+		ResolvedAt:  resolvedAt,
+		AuditLogIDs: incident.AuditLogIDs,
+		Metadata:    incident.Metadata,
 	}
 }

@@ -60,7 +60,7 @@ const (
 
 	// LLM06 subcategories
 	TrainingDataExtraction OWASPLLMSubcategory = "training-data-extraction"
-	CredentialLeakage      OWASPLLMSubcategory = "credential-leakage"
+	CredentialLeakage OWASPLLMSubcategory = "credential-leakage" // #nosec G101 -- false positive: this is an OWASP LLM Top 10 security category identifier, not a hardcoded credential
 	PIIDisclosure          OWASPLLMSubcategory = "pii-disclosure"
 
 	// LLM07 subcategories

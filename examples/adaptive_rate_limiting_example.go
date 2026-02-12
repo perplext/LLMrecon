@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Example demonstrating advanced adaptive rate limiting for LLM template execution
 package main
 
@@ -47,7 +49,7 @@ func (p *MockLLMProvider) SendPrompt(ctx context.Context, prompt string, options
 	processingTime := time.Duration(float64(baseProcessingTime) * currentLoad)
 	
 	// Add some randomness (±20%)
-	randomFactor := 0.8 + (mathrand.Float64() * 0.4) // 0.8 to 1.2 #nosec G404
+	randomFactor := 0.8 + (mathrand.Float64() * 0.4) // #nosec G404 -- example code, not security-sensitive (0.8 to 1.2 range)
 	processingTime = time.Duration(float64(processingTime) * randomFactor)
 
 	fmt.Printf("[%s] Processing request from user %s (load: %.2f, time: %v)\n", 
@@ -222,7 +224,7 @@ func main() {
 	fmt.Println("======================================")
 
 	// Seed random number generator
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
 
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)

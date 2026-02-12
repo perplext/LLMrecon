@@ -332,7 +332,7 @@ func (al *IPAllowlist) Middleware(next http.Handler) http.Handler {
 			// Return a 403 Forbidden response
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte(`{"error":"access denied","code":"IP_NOT_ALLOWED"}`))
+			w.Write([]byte(`{"error":"access denied","code":"IP_NOT_ALLOWED"}`)) // #nosec G104 -- error writing HTTP response is not recoverable
 			return
 		}
 

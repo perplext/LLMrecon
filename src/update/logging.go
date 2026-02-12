@@ -95,14 +95,14 @@ func CreateJSONLogFile(logDir, packageID string) (*os.File, error) {
 
 	// Create log file
 	logPath := filepath.Join(logDir, fmt.Sprintf("update-%s-%d.json", packageID, time.Now().Unix()))
-	logFile, err := os.Create(logPath)
+	logFile, err := os.Create(filepath.Clean(logPath)) // #nosec G304 -- path constructed from internal log directory
 	if err != nil {
 		return nil, fmt.Errorf("failed to create log file: %w", err)
 	}
 
 	// Write opening bracket for JSON array
 	if _, err := logFile.WriteString("[\n"); err != nil {
-		logFile.Close()
+		logFile.Close() // #nosec G104 -- closing file on error path; write error already being returned
 		return nil, fmt.Errorf("failed to write to log file: %w", err)
 	}
 

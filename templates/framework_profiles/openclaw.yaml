@@ -1,0 +1,103 @@
+# OpenClaw Framework Attack Profile
+#
+# OpenClaw is an open-source agentic AI framework with 512 known vulnerabilities,
+# 8 critical, and ~10K+ exposed instances. ~900 malicious skills (20% of
+# total packages) were found in its marketplace.
+#
+# Sources:
+#   - SiliconANGLE: https://siliconangle.com/2026/02/09/tens-thousands-openclaw-systems-exposed-due-misconfiguration-known-exploits/
+#   - VentureBeat: https://venturebeat.com/security/openclaw-agentic-ai-security-risk-ciso-guide/
+#   - Kaspersky: https://www.kaspersky.com/blog/openclaw-vulnerabilities-exposed/55263/
+#   - Penligent: https://www.penligent.ai/hackinglabs/the-openclaw-prompt-injection-problem-persistence-tool-hijack-and-the-security-boundary-that-doesnt-exist/
+#   - Cubic: https://www.cubic.dev/blog/we-found-and-fixed-critical-security-vulnerabilities-in-openclaw
+
+profile_name: openclaw
+framework: openclaw
+version_affected: "<=1.2.x"
+description: >
+  Attack profile for OpenClaw agentic AI framework. OpenClaw has significant
+  security debt: 512 known CVEs (8 critical), no RBAC on skill marketplace,
+  sub-agent queue lane isolation bypass, and ~10K+ misconfigured exposed instances.
+
+known_stats:
+  total_cves: 512
+  critical_cves: 8
+  malicious_skills_pct: 20
+  exposed_instances: 10000+
+
+attack_sequence:
+  # Phase 1: Reconnaissance
+  - step: 1
+    name: "Skill Marketplace Enumeration"
+    technique: skill_marketplace_inject
+    description: "Enumerate available skills and identify attack surface"
+    notes: "No authentication required for marketplace browsing"
+
+  # Phase 2: Skill Injection
+  - step: 2
+    name: "Malicious Skill Upload"
+    technique: skill_marketplace_inject
+    description: "Upload skill that inherits system-wide permissions"
+    notes: "Skills inherit all parent agent permissions once loaded"
+    depends_on: [1]
+
+  # Phase 3: Persistence
+  - step: 3
+    name: "Config Rewrite for Persistence"
+    technique: skill_url_to_config
+    description: "URL summarization → config file modification → persistent compromise"
+    notes: "Config changes persist across agent restarts"
+    depends_on: [2]
+
+  # Phase 4: Credential Harvesting
+  - step: 4
+    name: "Credential Extraction"
+    technique: cred_env_extraction
+    description: "Extract API keys, OAuth tokens from agent environment"
+    notes: "Agents inherit access to all configured credentials"
+    depends_on: [3]
+
+  # Phase 5: Lateral Movement
+  - step: 5
+    name: "Sub-Agent Delegation Escalation"
+    technique: delegation_privilege_hop
+    description: "Exploit trust between orchestrator and sub-agents"
+    notes: "Sub-agent queue lane isolation can be bypassed"
+    depends_on: [4]
+
+framework_specific_vectors:
+  - name: "Queue Lane Isolation Bypass"
+    description: "Sub-agents in different queue lanes can communicate through shared storage"
+    severity: critical
+
+  - name: "Skill Auto-Deploy Script"
+    description: "Skills can include auto-deploy scripts that execute on installation"
+    severity: critical
+
+  - name: "Default Admin Credentials"
+    description: "Many exposed instances use default admin credentials"
+    severity: critical
+
+  - name: "No Skill Signing"
+    description: "Marketplace does not require cryptographic signing of skills"
+    severity: high
+
+  - name: "Shared Memory Between Agents"
+    description: "Agents share memory space without proper isolation"
+    severity: high
+
+owasp_coverage:
+  - ASI01  # Goal hijack via skill injection
+  - ASI03  # Privilege abuse via inherited permissions
+  - ASI04  # Supply chain via marketplace
+  - ASI05  # Code execution via auto-deploy scripts
+  - ASI06  # Memory poisoning via shared state
+  - ASI10  # Rogue agents via persistent config rewrite
+
+recommended_defenses:
+  - "Enable skill signing and verification"
+  - "Implement RBAC for skill marketplace"
+  - "Isolate sub-agent queue lanes properly"
+  - "Rotate default credentials on deployment"
+  - "Sandbox skill execution environment"
+  - "Audit all installed skills for known malicious patterns"

@@ -476,7 +476,7 @@ func normalizeAPIKey(key string) string {
 // generateID generates a unique ID
 func generateID() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	_, _ = rand.Read(b) // #nosec G104 -- crypto/rand.Read always returns nil error on supported platforms
 	return fmt.Sprintf("%x", b)
 }
 

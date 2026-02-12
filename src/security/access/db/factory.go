@@ -66,7 +66,7 @@ func NewFactory(config *DBConfig) (*Factory, error) {
 
 	// Test connection
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close() // #nosec G104 -- closing db after ping failure, original error is more important
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 

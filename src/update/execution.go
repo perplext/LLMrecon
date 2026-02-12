@@ -126,7 +126,7 @@ func NewUpdateExecutor(options *UpdateExecutionOptions) (*UpdateExecutor, error)
 
 	// Create audit logger
 	auditLogPath := filepath.Join(logDir, "audit.log")
-	auditLogFile, err := os.OpenFile(auditLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	auditLogFile, err := os.OpenFile(filepath.Clean(auditLogPath), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304 -- path constructed from internal log directory
 	if err != nil {
 		return nil, fmt.Errorf("failed to create audit log file: %w", err)
 	}

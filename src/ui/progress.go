@@ -128,7 +128,7 @@ func (pm *ProgressManager) Update(id string, current int64) error {
 
 	delta := current - bar.current
 	if delta > 0 {
-		bar.bar.Add64(delta)
+		bar.bar.Add64(delta) // #nosec G104 -- progress bar rendering error is non-fatal
 		bar.current = current
 		bar.lastUpdate = time.Now()
 	}
@@ -146,7 +146,7 @@ func (pm *ProgressManager) Increment(id string) error {
 		return fmt.Errorf("progress bar '%s' not found", id)
 	}
 
-	bar.bar.Add(1)
+	bar.bar.Add(1) // #nosec G104 -- progress bar rendering error is non-fatal
 	bar.current++
 	bar.lastUpdate = time.Now()
 
@@ -163,7 +163,7 @@ func (pm *ProgressManager) Finish(id string) error {
 		return fmt.Errorf("progress bar '%s' not found", id)
 	}
 
-	bar.bar.Finish()
+	bar.bar.Finish() // #nosec G104 -- progress bar rendering error is non-fatal
 	delete(pm.bars, id)
 
 	return nil
@@ -175,7 +175,7 @@ func (pm *ProgressManager) Clear() {
 	defer pm.mu.Unlock()
 
 	for _, bar := range pm.bars {
-		bar.bar.Clear()
+		bar.bar.Clear() // #nosec G104 -- progress bar rendering error is non-fatal
 	}
 	pm.bars = make(map[string]*ProgressBar)
 }

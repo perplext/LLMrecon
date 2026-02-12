@@ -351,13 +351,13 @@ func (pr *progressReporter) SetStatus(status string) {
 
 func (pr *progressReporter) SetDetails(details string) {
 	if pr.terminal.multiProg != nil {
-		pr.terminal.multiProg.UpdateTask(pr.taskID, TaskRunning, float64(pr.current)/float64(pr.total), details)
+		pr.terminal.multiProg.UpdateTask(pr.taskID, TaskRunning, float64(pr.current)/float64(pr.total), details) // #nosec G104 -- progress display error is non-fatal
 	}
 }
 
 func (pr *progressReporter) AddSubTask(name string) {
 	if pr.terminal.multiProg != nil {
-		pr.terminal.multiProg.AddSubTask(pr.taskID, name)
+		pr.terminal.multiProg.AddSubTask(pr.taskID, name) // #nosec G104 -- progress display error is non-fatal
 	}
 }
 

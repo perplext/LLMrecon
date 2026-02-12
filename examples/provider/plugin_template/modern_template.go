@@ -1,3 +1,5 @@
+//go:build ignore
+
 // Package main is a template for implementing a new provider plugin using the modern plugin interface.
 package main
 
@@ -5,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/perplext/LLMrecon/src/provider/core"
 	"github.com/perplext/LLMrecon/src/provider/middleware"
@@ -45,9 +48,7 @@ func (p *CustomProviderPlugin) CreateProvider(config *core.ProviderConfig) (core
 
 	// Validate configuration
 	if err := p.ValidateConfig(config); err != nil {
-if err != nil {
-treturn err
-}		return nil, err
+		return nil, err
 	}
 
 	// Create HTTP client
@@ -173,9 +174,7 @@ func (p *CustomProvider) updateModels(ctx context.Context) error {
 
 // TextCompletion generates a text completion
 func (p *CustomProvider) TextCompletion(ctx context.Context, request *core.TextCompletionRequest) (*core.TextCompletionResponse, error) {
-if err != nil {
-treturn err
-}	// Execute with resilience
+	// Execute with resilience
 	result, err := p.executeWithResilience(ctx, "TextCompletion", request, func(ctx context.Context) (interface{}, error) {
 		return p.textCompletionFromAPI(ctx, request)
 	})
@@ -211,9 +210,7 @@ func (p *CustomProvider) textCompletionFromAPI(ctx context.Context, request *cor
 	}, nil
 }
 
-if err != nil {
-treturn err
-}// ChatCompletion generates a chat completion
+// ChatCompletion generates a chat completion
 func (p *CustomProvider) ChatCompletion(ctx context.Context, request *core.ChatCompletionRequest) (*core.ChatCompletionResponse, error) {
 	// Execute with resilience
 	result, err := p.executeWithResilience(ctx, "ChatCompletion", request, func(ctx context.Context) (interface{}, error) {
@@ -252,9 +249,7 @@ func (p *CustomProvider) chatCompletionFromAPI(ctx context.Context, request *cor
 			TotalTokens:      15,
 		},
 	}, nil
-if err != nil {
-treturn err
-}}
+}
 
 // StreamingChatCompletion generates a streaming chat completion
 func (p *CustomProvider) StreamingChatCompletion(ctx context.Context, request *core.ChatCompletionRequest, callback func(response *core.ChatCompletionResponse) error) error {
@@ -286,9 +281,6 @@ func (p *CustomProvider) streamingChatCompletionFromAPI(ctx context.Context, req
 			},
 		},
 	}
-if err != nil {
-treturn err
-}
 	return callback(response)
 }
 
@@ -341,14 +333,10 @@ func (p *CustomProvider) Close() error {
 	return nil
 }
 
-if err != nil {
-treturn err
-}// handleErrorResponse handles an error response from the API
+// handleErrorResponse handles an error response from the API
 func (p *CustomProvider) handleErrorResponse(statusCode int, body []byte) error {
 	// Implement error handling logic here
-if err != nil {
-treturn err
-}	return fmt.Errorf("API error: status code %d", statusCode)
+	return fmt.Errorf("API error: status code %d", statusCode)
 }
 
 // executeWithResilience executes a function with resilience

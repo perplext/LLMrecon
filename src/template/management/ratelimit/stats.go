@@ -2,6 +2,7 @@
 package ratelimit
 
 import (
+	"math"
 	"sync"
 	"time"
 )
@@ -118,7 +119,11 @@ func (s *StatsCollector) RecordEvent(event RateLimitEvent) {
 		s.AcquisitionsByUser[event.UserID]++
 		s.totalWaitTime += event.WaitDuration
 		if s.TotalAcquisitions > 0 {
-			s.AverageWaitTime = time.Duration(s.totalWaitTime.Nanoseconds() / int64(s.TotalAcquisitions))
+			acq := s.TotalAcquisitions
+			if acq > uint64(math.MaxInt64) {
+				acq = uint64(math.MaxInt64)
+			}
+			s.AverageWaitTime = time.Duration(s.totalWaitTime.Nanoseconds() / int64(acq)) // #nosec G115 -- bounds checked above
 		}
 	case EventTypeReject, EventTypeGlobalLimitExceed, EventTypeUserLimitExceed, EventTypeTokensExceed, EventTypeQueueTimeout:
 		s.TotalRejections++

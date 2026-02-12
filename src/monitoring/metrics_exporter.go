@@ -168,13 +168,13 @@ func (m *MetricsExporter) servePrometheusMetrics(w http.ResponseWriter, r *http.
 }
 func (m *MetricsExporter) serveJSONMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(m.GetMetrics()) // Best effort, headers already sent
+	_ = json.NewEncoder(w).Encode(m.GetMetrics()) // #nosec G104 -- HTTP response write error is non-actionable
 
 	// serveStatus serves a simple health status
 }
 func (m *MetricsExporter) serveStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{ // #nosec G104 -- error writing HTTP response is not recoverable
 		"status": "healthy",
 		"uptime": time.Since(m.startTime).String(),
 	})

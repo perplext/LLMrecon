@@ -67,7 +67,7 @@ func (ipt *InteractiveProgressTracker) UpdateProgress(operation string, current 
 	ipt.mu.RUnlock()
 
 	if exists {
-		bar.Set(current)
+		_ = bar.Set(current) // #nosec G104 -- progress bar update is best-effort UI feedback
 	}
 }
 
@@ -78,7 +78,7 @@ func (ipt *InteractiveProgressTracker) IncrementProgress(operation string) {
 	ipt.mu.RUnlock()
 
 	if exists {
-		bar.Add(1)
+		_ = bar.Add(1) // #nosec G104 -- progress bar update is best-effort UI feedback
 	}
 }
 
@@ -88,7 +88,7 @@ func (ipt *InteractiveProgressTracker) CompleteOperation(operation string, messa
 	defer ipt.mu.Unlock()
 
 	if bar, exists := ipt.bars[operation]; exists {
-		bar.Finish()
+		_ = bar.Finish() // #nosec G104 -- progress bar completion is best-effort UI feedback
 		color.Green("✓ %s", message)
 		delete(ipt.bars, operation)
 	}
@@ -100,7 +100,7 @@ func (ipt *InteractiveProgressTracker) FailOperation(operation string, err error
 	defer ipt.mu.Unlock()
 
 	if bar, exists := ipt.bars[operation]; exists {
-		bar.Finish()
+		_ = bar.Finish() // #nosec G104 -- progress bar completion is best-effort UI feedback
 		color.Red("✗ %s: %v", operation, err)
 		delete(ipt.bars, operation)
 	}
@@ -117,7 +117,7 @@ func (ipt *InteractiveProgressTracker) LogMessage(level, message string) {
 
 	// Temporarily clear progress bars
 	for _, bar := range ipt.bars {
-		bar.Clear()
+		_ = bar.Clear() // #nosec G104 -- progress bar clear is best-effort UI feedback
 	}
 
 	// Print message
@@ -138,7 +138,7 @@ func (ipt *InteractiveProgressTracker) LogMessage(level, message string) {
 
 	// Restore progress bars
 	for _, bar := range ipt.bars {
-		bar.RenderBlank()
+		_ = bar.RenderBlank() // #nosec G104 -- progress bar render is best-effort UI feedback
 	}
 }
 

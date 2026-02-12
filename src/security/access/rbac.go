@@ -513,8 +513,8 @@ func (m *SimpleRBACManager) RequireAnyRole(roles ...string) func(ctx context.Con
 				return nil
 			}
 		}
+		return fmt.Errorf("%w: user %s does not have any required roles", ErrUnauthorized, user.Username)
 	}
-	return fmt.Errorf("%w: user %s does not have any required roles", ErrUnauthorized, user.Username)
 }
 
 // RequireAllRoles is a middleware-style function that checks if a user has all of the specified roles
@@ -525,8 +525,8 @@ func (m *SimpleRBACManager) RequireAllRoles(roles ...string) func(ctx context.Co
 				return fmt.Errorf("%w: user %s does not have required role %s", ErrUnauthorized, user.Username, role)
 			}
 		}
+		return nil
 	}
-	return nil
 }
 
 // RequireAnyPermission is a middleware-style function that checks if a user has any of the specified permissions
@@ -537,8 +537,8 @@ func (m *SimpleRBACManager) RequireAnyPermission(permissions ...Permission) func
 				return nil
 			}
 		}
+		return fmt.Errorf("%w: user %s does not have any required permissions", ErrUnauthorized, user.Username)
 	}
-	return fmt.Errorf("%w: user %s does not have any required permissions", ErrUnauthorized, user.Username)
 }
 
 // RequireAllPermissions is a middleware-style function that checks if a user has all of the specified permissions
@@ -549,8 +549,8 @@ func (m *SimpleRBACManager) RequireAllPermissions(permissions ...Permission) fun
 				return fmt.Errorf("%w: user %s does not have required permission %s", ErrUnauthorized, user.Username, permission)
 			}
 		}
+		return nil
 	}
-	return nil
 }
 
 // RBACManagerAdapter wraps SimpleRBACManager to implement the RBACManager interface

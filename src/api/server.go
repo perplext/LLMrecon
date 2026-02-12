@@ -71,7 +71,7 @@ func NewServer(config *ServerConfig) (*Server, error) {
 	// Create prompt protection middleware
 	promptProtectionMiddleware, err := prompt.NewPromptProtectionMiddleware(config.PromptProtectionConfig)
 	if err != nil {
-		securityManager.Close()
+		_ = securityManager.Close() // #nosec G104 -- best-effort cleanup on error path
 		return nil, fmt.Errorf("failed to create prompt protection middleware: %w", err)
 	}
 
@@ -96,7 +96,7 @@ func NewServer(config *ServerConfig) (*Server, error) {
 		// Configure TLS for server
 		tlsConfig, err := communication.ConfigureTLSForServer(config.SecurityConfig.TLSConfig)
 		if err != nil {
-			securityManager.Close()
+			_ = securityManager.Close() // #nosec G104 -- best-effort cleanup on error path
 			return nil, fmt.Errorf("failed to configure TLS: %w", err)
 		}
 
@@ -226,7 +226,7 @@ func (s *Server) registerSecurityRoutes() {
 		// Write response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(response) // #nosec G104 -- error writing HTTP response is not recoverable
 	})))
 }
 

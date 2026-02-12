@@ -184,6 +184,91 @@ For production-scale deployment:
    - Log aggregation system
    - Alert manager
 
+## v0.8.0 New Attack Techniques (2025-2026 Research)
+
+Version 0.8.0 adds 45+ attack modules implementing the latest LLM and agentic AI security research from 2025-2026.
+
+### Attack Module Architecture
+
+All attack modules implement the `AttackModule` interface (`src/attacks/attack.go`) and self-register via `init()` with `attacks.DefaultRegistry`. Shared types live in `src/attacks/common/types.go`.
+
+```go
+// Core interface all modules implement
+type AttackModule interface {
+    Name() string
+    Category() common.AttackCategory
+    Description() string
+    Techniques() []common.TechniqueInfo
+    Execute(ctx context.Context, provider common.Provider, config common.AttackConfig) (*common.AttackResult, error)
+}
+```
+
+**Safety gates**: Dangerous modules require explicit metadata flags:
+- `allow_experimental=true` — Required for deceptive alignment and agent collusion modules
+- `i_understand_risks=true` — Required for RCE chain module
+- `allow_autonomous=true` — Required for autonomous jailbreak module
+
+### Attack Packages
+
+#### Phase 1: Core Attack Techniques (9 types, 19 variants)
+| Package | Techniques | Source |
+|---------|-----------|--------|
+| `src/attacks/orchestration/` | Crescendo, Skeleton Key, Bad Likert Judge, Many-Shot | arXiv 2404.01833, Microsoft Research |
+| `src/attacks/evasion/` | MetaBreak, Poetry-Based, Content Concretization, Immersive World, Best-of-N | arXiv 2407.15211, arXiv 2410.02650 |
+
+#### Phase 2: New Attack Surfaces (4 packages, 15 modules)
+| Package | Modules | Description |
+|---------|---------|-------------|
+| `src/attacks/rag/` | 4 | RAG pipeline poisoning: document injection, vector embedding, KG poisoning, cross-encoder |
+| `src/attacks/agentic/mcp/` | 4 | MCP protocol attacks: tool poisoning, schema manipulation, filesystem escape, supply chain |
+| `src/attacks/agentic/browser/` | 3 | AI browser agent attacks: DOM injection, navigation hijack, screenshot exfiltration |
+| `src/attacks/audio/` | 4 | Audio modality: jailbreak, speech model exploit, multilingual audio, BoN audio |
+
+#### Phase 3: Reasoning & Adaptive Attacks (3 packages, 9 modules)
+| Package | Modules | Description |
+|---------|---------|-------------|
+| `src/attacks/reasoning/` | 3 | Autonomous jailbreak (uses reasoning models as adversaries), CoT exploitation, reasoning loops |
+| `src/attacks/agentic/tool_use/` | 3 | iMIST function transform, AIShellJack agent shell injection, tool-use exploitation |
+| `src/attacks/adaptive/` | 3 | Gradient-based optimization, RL optimization, diffusion-based attacks |
+
+#### Phase 4: Model Adapters & Profiles
+- Provider adapters for 7 model families: OpenAI (GPT-5.x), Anthropic (Claude 4.x), Google (Gemini 2.5), Meta (Llama 4), DeepSeek (V3.2/R2), Alibaba (Qwen3), xAI (Grok 3)
+- Model-specific YAML profiles: `templates/model_profiles/` (reasoning, long-context, MoE, agentic)
+
+#### Phase 5: OWASP Agentic Top 10 2026 Compliance
+- `src/compliance/owasp_agentic.go` — ASI01-ASI10 constants, compliance types, `TechniqueToAgenticCategories()` lookup
+- `templates/owasp_agentic_2026.yaml` — Bidirectional mapping with 70 test cases, MITRE ATLAS tactics, MAESTRO layers
+
+#### Phase 6: Multi-Agent Orchestration (4 packages, 11 modules)
+| Package | Modules | Description |
+|---------|---------|-------------|
+| `src/attacks/agentic/multi_agent/` | 3 | Delegation escalation, toxic agent flow, recursive spawn abuse |
+| `src/attacks/agentic/skill_injection/` | 2 | Marketplace injection, skill takeover chain |
+| `src/attacks/agentic/persistence/` | 3 | Config rewrite, credential harvest, RCE chain |
+| `src/attacks/agentic/deception/` | 2 | Deceptive alignment, agent collusion |
+
+### Framework Attack Profiles
+
+YAML-based attack sequences for specific multi-agent frameworks (`templates/framework_profiles/`):
+- **OpenClaw** — 512 CVEs, malicious skill marketplace, queue lane bypass
+- **CrewAI** — No per-agent RBAC, raw output passing, unrestricted delegation
+- **LangGraph** — State machine manipulation, recursive sub-agent spawning ($38K incident)
+- **AutoGen** — Auto-execute code blocks, Docker sandbox escape, GroupChat trust
+
+### Running New Attack Modules
+
+```bash
+# Build with new modules (self-register via init())
+go build -o llmrecon ./src/main.go
+
+# Run specific attack categories
+go test ./src/attacks/rag/...
+go test ./src/attacks/agentic/...
+go test ./src/attacks/reasoning/...
+go test ./src/attacks/audio/...
+go test ./src/compliance/...
+```
+
 ## Security Considerations
 
 - The tool is designed for security research and should only be used on systems you own or have permission to test
