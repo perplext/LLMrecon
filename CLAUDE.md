@@ -19,7 +19,7 @@ LLMrecon is a security testing tool designed for analyzing Large Language Model 
 The Python implementation includes:
 - ML components for attack optimization
 - OWASP Top 10 2025 compliance
-- Novel attack techniques from 2024-2025 research
+- Novel attack techniques from 2024-2026 research
 - Defense detection capabilities
 - Comprehensive test harness for Ollama models
 
@@ -44,12 +44,12 @@ The Python implementation includes:
 - `llmrecon_harness.py` - Main test harness with CLI interface
 - `llmrecon_2025.py` - Enhanced version with OWASP 2025 support
 - `harness_config.json` - Configuration file
-- `templates/` - Attack templates directory including 2024-2025 techniques
+- `templates/` - Attack templates directory including 2024-2026 techniques
 - `demo.sh` - Quick demonstration script
 
 **Key Features:**
 - Built-in attack templates (prompt injection, jailbreaking, data extraction)
-- Novel 2024-2025 attack techniques (FlipAttack, DrAttack, Policy Puppetry, etc.)
+- Novel 2024-2026 attack techniques (FlipAttack, DrAttack, Policy Puppetry, etc.)
 - ML optimization using multi-armed bandit algorithms
 - Defense detection capabilities
 - Rich CLI interface with progress tracking

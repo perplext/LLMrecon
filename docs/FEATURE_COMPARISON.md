@@ -5,7 +5,7 @@
 | Feature | LLMrecon | Tool A | Tool B | Tool C |
 |---------|----------|--------|--------|--------|
 | **OWASP Top 10 2025** | ✅ Full | ⚠️ Partial | ❌ 2023 | ⚠️ Partial |
-| **Novel 2024-2025 Attacks** | ✅ 8+ types | ❌ None | ⚠️ 2 types | ❌ None |
+| **Novel 2024-2026 Attacks** | ✅ 8+ types | ❌ None | ⚠️ 2 types | ❌ None |
 | **ML Optimization** | ✅ Multi-armed bandit | ❌ No | ❌ No | ⚠️ Basic |
 | **Defense Detection** | ✅ 5+ mechanisms | ⚠️ Basic | ❌ No | ✅ Yes |
 | **Character Encoding Attacks** | ✅ Advanced | ❌ No | ⚠️ Basic | ❌ No |

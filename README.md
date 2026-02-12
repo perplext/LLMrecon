@@ -13,7 +13,7 @@
 
 <p align="center">
   <b>Enterprise-grade LLM security testing with OWASP Top 10 2025 compliance</b><br>
-  <sub>Featuring cutting-edge attack techniques from 2024-2025 research</sub>
+  <sub>Featuring cutting-edge attack techniques from 2024-2026 research</sub>
 </p>
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Installation](#-installation) • [Usage](#-usage) • [Security Findings](#-security-findings) • [Documentation](#-documentation)
@@ -24,7 +24,7 @@
 
 ## 🎯 Overview
 
-LLMrecon is a comprehensive security testing framework designed to identify vulnerabilities in Large Language Models (LLMs). It implements the latest OWASP Top 10 2025 guidelines and incorporates novel attack techniques from cutting-edge 2024-2025 research.
+LLMrecon is a comprehensive security testing framework designed to identify vulnerabilities in Large Language Models (LLMs). It implements the latest OWASP Top 10 2025 guidelines and incorporates novel attack techniques from cutting-edge 2024-2026 research.
 
 ### 🚀 Key Highlights
 
