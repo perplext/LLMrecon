@@ -33,7 +33,7 @@ jobs:
           args: '-no-fail -nosec -exclude=G201 -fmt sarif -out gosec-results.sarif ./...'
           
       - name: Upload Gosec results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'gosec-results.sarif'
