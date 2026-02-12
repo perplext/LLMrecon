@@ -52,14 +52,14 @@ YAML-driven profiles in `templates/framework_profiles/`:
 
 | Framework | Profile | Key Attack Vectors |
 |-----------|---------|-------------------|
-| **OpenClaw** | `openclaw.yaml` | 512 CVEs, malicious skill marketplace, queue lane bypass |
+| **OpenClaw** | `openclaw.yaml` | 4 tracked CVEs, malicious skill marketplace, queue lane bypass |
 | **CrewAI** | `crewai.yaml` | No per-agent RBAC, raw output passing between agents |
 | **LangGraph** | `langgraph.yaml` | State manipulation, recursive sub-agent spawning ($38K incident) |
 | **AutoGen** | `autogen.yaml` | Auto-execute code blocks, Docker sandbox escape |
 
 ### Research References
 
-This release incorporates findings from 16+ published research papers (2024-2025), including work from Microsoft, Anthropic, Google DeepMind, Palo Alto Networks, MITRE, and leading academic institutions.
+This release incorporates findings from 16+ published research papers (2024-2026), including work from Microsoft, Anthropic, Google DeepMind, Palo Alto Networks, MITRE, and leading academic institutions.
 
 ### Safety & Ethical Use
 
