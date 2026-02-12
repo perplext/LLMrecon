@@ -106,8 +106,16 @@ func (h *GzipHandler) Decompress(src io.Reader, dst io.Writer) error {
 		}
 	}()
 
-	_, err = io.Copy(dst, gzReader)
-	return err
+	// Limit decompressed size to prevent decompression bombs (G110)
+	limited := io.LimitReader(gzReader, maxDecompressSize+1)
+	n, err := io.Copy(dst, limited)
+	if err != nil {
+		return err
+	}
+	if n > maxDecompressSize {
+		return fmt.Errorf("decompressed data exceeds maximum size of %d bytes", maxDecompressSize)
+	}
+	return nil
 }
 
 func (h *GzipHandler) GetExtension() string {
@@ -141,8 +149,16 @@ func (h *ZstdHandler) Decompress(src io.Reader, dst io.Writer) error {
 	}
 	defer decoder.Close()
 
-	_, err = io.Copy(dst, decoder)
-	return err
+	// Limit decompressed size to prevent decompression bombs (G110)
+	limited := io.LimitReader(decoder, maxDecompressSize+1)
+	n, err := io.Copy(dst, limited)
+	if err != nil {
+		return err
+	}
+	if n > maxDecompressSize {
+		return fmt.Errorf("decompressed data exceeds maximum size of %d bytes", maxDecompressSize)
+	}
+	return nil
 }
 
 func (h *ZstdHandler) GetExtension() string {
