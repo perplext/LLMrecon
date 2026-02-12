@@ -11,8 +11,8 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://llmrecon.com">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔍</text></svg>">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" integrity="sha384-wnRMKAR68HLd4RD1AT28YEaxFN2LgL+LbkMlVYO5FkJN4PC3dJcSo5LMvFWQOlH" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" crossorigin="anonymous">
     <style>
         /* ===== Theme: Dark / Hacker ===== */
         [data-theme="dark"] {
@@ -123,7 +123,6 @@
 
         h1, h2, h3, h4 {
             font-family: var(--font-heading);
-            transition: font-family 0.3s ease;
         }
 
         a { color: var(--accent-secondary); text-decoration: none; }
@@ -672,7 +671,8 @@
             .owasp-columns { grid-template-columns: 1fr; }
             .footer-inner { flex-direction: column; text-align: center; }
             .nav-inner { padding: 0 1rem; }
-            .theme-toggle { display: none; }
+            .theme-toggle { order: -1; }
+            .nav-right { flex-wrap: wrap; justify-content: flex-end; }
         }
 
         @media (min-width: 769px) and (max-width: 1024px) {
@@ -690,14 +690,14 @@
                 <span>LLMrecon</span>
             </a>
             <div class="nav-right">
-                <div class="theme-toggle">
-                    <button class="theme-btn active" data-theme-select="dark" title="Dark / Hacker">
+                <div class="theme-toggle" role="group" aria-label="Theme selector">
+                    <button class="theme-btn active" data-theme-select="dark" title="Dark / Hacker" aria-label="Dark theme" aria-pressed="true">
                         <i class="fas fa-terminal"></i>
                     </button>
-                    <button class="theme-btn" data-theme-select="light" title="Clean / Professional">
+                    <button class="theme-btn" data-theme-select="light" title="Clean / Professional" aria-label="Light theme" aria-pressed="false">
                         <i class="fas fa-sun"></i>
                     </button>
-                    <button class="theme-btn" data-theme-select="minimal" title="Minimal / Technical">
+                    <button class="theme-btn" data-theme-select="minimal" title="Minimal / Technical" aria-label="Minimal theme" aria-pressed="false">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -863,15 +863,15 @@
                 <div class="owasp-column">
                     <h3>Agentic Top 10 2026</h3>
                     <div class="owasp-item"><span class="owasp-id">ASI01</span> Agent Goal Hijack</div>
-                    <div class="owasp-item"><span class="owasp-id">ASI02</span> Tool Misuse</div>
-                    <div class="owasp-item"><span class="owasp-id">ASI03</span> Privilege Abuse</div>
-                    <div class="owasp-item"><span class="owasp-id">ASI04</span> Supply Chain Compromise</div>
-                    <div class="owasp-item"><span class="owasp-id">ASI05</span> Code Execution Risks</div>
-                    <div class="owasp-item"><span class="owasp-id">ASI06</span> Memory Poisoning</div>
-                    <div class="owasp-item"><span class="owasp-id">ASI07</span> Inter-Agent Communication</div>
-                    <div class="owasp-item"><span class="owasp-id">ASI08</span> Cascading Failures</div>
-                    <div class="owasp-item"><span class="owasp-id">ASI09</span> Trust Exploitation</div>
-                    <div class="owasp-item"><span class="owasp-id">ASI10</span> Rogue Agents</div>
+                    <div class="owasp-item"><span class="owasp-id">ASI02</span> Tool Misuse and Exploitation</div>
+                    <div class="owasp-item"><span class="owasp-id">ASI03</span> Identity and Privilege Abuse</div>
+                    <div class="owasp-item"><span class="owasp-id">ASI04</span> Agentic Supply Chain Vulnerabilities</div>
+                    <div class="owasp-item"><span class="owasp-id">ASI05</span> Unexpected Code Execution (RCE)</div>
+                    <div class="owasp-item"><span class="owasp-id">ASI06</span> Memory &amp; Context Poisoning</div>
+                    <div class="owasp-item"><span class="owasp-id">ASI07</span> Insecure Inter-Agent Communication</div>
+                    <div class="owasp-item"><span class="owasp-id">ASI08</span> Cascading Hallucination Attacks</div>
+                    <div class="owasp-item"><span class="owasp-id">ASI09</span> Human-Agent Trust Exploitation</div>
+                    <div class="owasp-item"><span class="owasp-id">ASI10</span> Uncontrolled Autonomous Agents</div>
                 </div>
             </div>
         </div>
@@ -893,7 +893,7 @@
                     <tbody>
                         <tr>
                             <td><strong>OpenClaw</strong></td>
-                            <td>512 CVEs, malicious skill marketplace, queue lane bypass</td>
+                            <td>4 tracked CVEs, malicious skill marketplace, queue lane bypass</td>
                             <td style="color: #ef4444; font-weight: 600;">Critical</td>
                         </tr>
                         <tr>
@@ -940,8 +940,8 @@ python3 llmrecon_2025.py --models llama3:latest
 <span class="code-comment"># Show OWASP categories</span>
 python3 llmrecon_2025.py --owasp</code></pre>
                 <pre class="code-block code-hidden" id="code-go"><code><span class="code-comment"># Download the latest release</span>
-curl -LO https://github.com/perplext/LLMrecon/releases/latest/download/llmrecon-v0.8.0-linux-amd64
-chmod +x llmrecon-v0.8.0-linux-amd64
+curl -LO https://github.com/perplext/LLMrecon/releases/latest/download/llmrecon-linux-amd64
+chmod +x llmrecon-linux-amd64
 
 <span class="code-comment"># Or build from source</span>
 go build -o llmrecon ./src/main.go
@@ -1003,7 +1003,9 @@ docker run --rm llmrecon --help</code></pre>
             html.setAttribute('data-theme', theme);
             localStorage.setItem('llmrecon-theme', theme);
             themeButtons.forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.themeSelect === theme);
+                const isActive = btn.dataset.themeSelect === theme;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', isActive);
             });
         }
 
@@ -1012,8 +1014,9 @@ docker run --rm llmrecon --help</code></pre>
         });
 
         // Restore saved theme
+        const allowedThemes = ['dark', 'light', 'minimal'];
         const savedTheme = localStorage.getItem('llmrecon-theme');
-        if (savedTheme) setTheme(savedTheme);
+        if (savedTheme && allowedThemes.includes(savedTheme)) setTheme(savedTheme);
 
         // Code tabs
         const codeTabs = document.querySelectorAll('.code-tab');
@@ -1025,7 +1028,8 @@ docker run --rm llmrecon --help</code></pre>
                 document.querySelectorAll('.code-block').forEach(block => {
                     block.classList.add('code-hidden');
                 });
-                document.getElementById('code-' + tab.dataset.tab).classList.remove('code-hidden');
+                const target = document.getElementById('code-' + tab.dataset.tab);
+                if (target) target.classList.remove('code-hidden');
             });
         });
 
