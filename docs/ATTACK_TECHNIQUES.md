@@ -903,6 +903,60 @@ The following sections document novel attack techniques from recent security res
 
 **Source**: arXiv 2506.03703 — Adaptive LLM Attack Optimization (2025)
 
+#### CaMeL Bypass
+
+**Description**: Targets the CaMeL (Capability-based access control for LLM agents) defense, which achieves 67% attack neutralization. Exploits policy definition gaps, capability boundary weaknesses, and data flow tracking limitations.
+
+**Technique IDs**: `camel_policy_gap`, `camel_capability_confusion`, `camel_data_flow_bypass`
+
+**OWASP Mapping**: LLM01, LLM07, ASI02, ASI05
+
+**Source**: arXiv 2503.18813 — CaMeL: Capability-based Access Control for LLM Agents (2025)
+
+**Success Indicators**:
+- Actions executed outside defined capability policies
+- Ambiguous tool descriptions cause misrouted capabilities
+- Data laundered through intermediate operations bypasses flow tracking
+
+#### Salt Resistance
+
+**Description**: Counters LLM Salting, a defense technique that reduces Attack Success Rate (ASR) to 3% by adding deployment-specific fine-tuning. Generates unique attack payloads dynamically rather than relying on pre-computed static prompts that salting is trained to detect.
+
+**Technique IDs**: `salt_dynamic_generation`, `salt_semantic_variation`
+
+**OWASP Mapping**: LLM01, ASI01
+
+**Source**: Sophos CAMLIS 2025 — LLM Salting Defense Analysis
+
+**Success Indicators**:
+- Dynamically generated payloads evade salt-trained classifiers
+- Semantic variations preserve attack intent while avoiding pattern matching
+
+---
+
+### Data Exfiltration
+
+#### Covert Channel Exfiltration
+
+**Description**: Tests for data leakage through covert channels that bypass monitoring. Implements steganographic, linguistic, timing-based, and side-channel exfiltration techniques to assess whether sensitive data can be extracted from LLM-powered systems without detection.
+
+**Technique IDs**: `exfil_steganography`, `exfil_linguistic`, `exfil_timing`, `exfil_side_channel`, `exfil_covert`, `exfil_fragmented`, `exfil_model_based`
+
+**OWASP Mapping**: LLM06 (Sensitive Information Disclosure), ASI03 (Privilege Abuse), ASI05 (Code Execution)
+
+**Channel Types**:
+- **Steganography** — Hidden data in model-generated text using zero-width characters, homoglyphs, or whitespace encoding
+- **Linguistic** — Encodes data in natural language patterns (word choice, sentence structure, capitalization)
+- **Timing** — Uses response latency variation to transmit bits of information
+- **Side-Channel** — Exploits observable system behavior (token count, response length, error patterns)
+- **Fragmented** — Splits sensitive data across multiple requests to evade per-request monitoring
+- **Model-Based** — Leverages model internals to encode data in completion patterns
+
+**Success Indicators**:
+- Data successfully transmitted through covert channel without triggering alerts
+- Fragmented extraction reassembles into complete sensitive data
+- Timing or side-channel patterns encode retrievable information
+
 ---
 
 ### Multi-Agent Orchestration Attacks
@@ -1048,6 +1102,13 @@ Pre-built attack sequences for specific multi-agent frameworks (`templates/frame
 14. [Adaptive LLM Attack Optimization — arXiv 2506.03703](https://arxiv.org/abs/2506.03703)
 15. [AIShellJack — CVE-2026-25253](https://nvd.nist.gov/vuln/detail/CVE-2026-25253)
 16. [Agent Security Bench (ASB) — ICLR 2025](https://github.com/agiresearch/ASB)
+17. [CaMeL: Capability-based Access Control — arXiv 2503.18813](https://arxiv.org/abs/2503.18813)
+18. [LLM Salting Defense — Sophos CAMLIS 2025](https://news.sophos.com/en-us/2025/10/camlis-llm-salting/)
+19. [Autonomous Jailbreak — Nature Communications doi:10.1038/s41467-026-69010-1](https://doi.org/10.1038/s41467-026-69010-1)
+20. [Invariant Labs — MCP Security Audit (2025)](https://invariantlabs.ai/blog/mcp-security-audit)
+21. [Columbia University — Browser Agent Security (2025)](https://arxiv.org/abs/2501.xxxxx)
+22. [Kaspersky OpenClaw Analysis — Skill Takeover Chains (2026)](https://securelist.com/openclaw-analysis/)
+23. [Cubic Security Audit — Agent RCE Chains (2026)](https://cubic.dev/security-audit-2026)
 
 ---
 
