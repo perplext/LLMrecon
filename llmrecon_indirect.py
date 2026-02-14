@@ -407,15 +407,19 @@ class IndirectInjectionTester:
         # Overall summary
         total_tests = len(self.results)
         vulnerable_tests = sum(1 for r in self.results if r["vulnerable"])
-        
+        vuln_pct = f"{vulnerable_tests / total_tests:.0%}" if total_tests > 0 else "0%"
+        secure_pct = f"{(total_tests - vulnerable_tests) / total_tests:.0%}" if total_tests > 0 else "0%"
+        top_vector = max(attack_types.items(), key=lambda x: x[1]['vulnerable'])[0] if attack_types else "N/A"
+        evasion_rate = f"{sum(1 for p in all_patterns if p.get('type') == 'defense_evasion') / len(all_patterns):.0%}" if all_patterns else "0%"
+
         console.print(Panel(
             f"[bold]Indirect Injection Test Complete[/bold]\n\n"
             f"Total Tests: {total_tests}\n"
-            f"Vulnerable: {vulnerable_tests} ({vulnerable_tests/total_tests:.0%} if total_tests > 0 else 0})\n"
-            f"Secure: {total_tests - vulnerable_tests} ({(total_tests - vulnerable_tests)/total_tests:.0%} if total_tests > 0 else 0})\n\n"
+            f"Vulnerable: {vulnerable_tests} ({vuln_pct})\n"
+            f"Secure: {total_tests - vulnerable_tests} ({secure_pct})\n\n"
             f"[yellow]Key Findings:[/yellow]\n"
-            f"• Most effective vector: {max(attack_types.items(), key=lambda x: x[1]['vulnerable'])[0] if attack_types else 'N/A'}\n"
-            f"• Defense evasion rate: {sum(1 for p in all_patterns if p.get('type') == 'defense_evasion') / len(all_patterns):.0%} if all_patterns else 0%"
+            f"• Most effective vector: {top_vector}\n"
+            f"• Defense evasion rate: {evasion_rate}"
         ))
     
     def generate_report(self) -> Dict:

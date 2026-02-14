@@ -94,7 +94,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.34.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -126,9 +126,11 @@ jobs:
           go mod download || echo "No go.mod found or download failed"
           
       - name: Run go vet
-        run: |
-          go vet ./... 2>&1 | head -20 || echo "Go vet found some issues (expected due to missing imports)"
-          
+        run: go vet ./...
+
+      - name: Run Go tests
+        run: go test -race -count=1 ./...
+
       - name: Check Go formatting
         run: |
           if [ -n "$(gofmt -l src/)" ]; then

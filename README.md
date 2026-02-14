@@ -4,12 +4,12 @@
 
 ### Advanced Security Testing Framework for Large Language Models
 
-[![Version](https://img.shields.io/badge/version-v0.7.1-blue.svg)](https://github.com/perplext/LLMrecon/releases)
-[![Go Version](https://img.shields.io/badge/go-1.23.0-00ADD8.svg)](https://go.dev/)
+[![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)](https://github.com/perplext/LLMrecon/releases)
+[![Go Version](https://img.shields.io/badge/go-1.24.0-00ADD8.svg)](https://go.dev/)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![OWASP](https://img.shields.io/badge/OWASP%20Top%2010-2025%20Compliant-green.svg)](https://owasp.org/)
 [![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
-[![Security](https://img.shields.io/badge/security-patched-brightgreen.svg)](SECURITY_UPDATE_v0.7.1.md)
+[![Security](https://img.shields.io/badge/security-patched-brightgreen.svg)](SECURITY.md)
 
 <p align="center">
   <b>Enterprise-grade LLM security testing with OWASP Top 10 2025 compliance</b><br>
@@ -95,7 +95,7 @@ git clone https://github.com/perplext/LLMrecon.git
 cd LLMrecon
 
 # Install Python dependencies
-pip install -r requirements.txt
+pip install -r ml/requirements.txt
 
 # Test your Ollama models
 python3 llmrecon_2025.py --models llama3:latest gpt-oss:latest
@@ -141,7 +141,7 @@ python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r ml/requirements.txt
 
 # Verify installation
 python3 llmrecon_2025.py --help
@@ -359,7 +359,7 @@ System Prompt Leakage:              ███████░░░░░░░�
 - 🛠️ [Installation Guide](docs/installation.md)
 - 📋 [API Reference](docs/api-reference.md)
 - 🔒 [Security Best Practices](SECURITY.md)
-- 🆕 [What's New in v0.7.1](SECURITY_UPDATE_v0.7.1.md)
+- 🆕 [Release Notes](RELEASE.md)
 
 ### OWASP Compliance
 
@@ -396,13 +396,7 @@ make test
 
 ## 🔐 Security
 
-### Latest Security Update (v0.7.1)
-
-- **Fixed**: CVE-2025-22868 - Memory consumption vulnerability in golang.org/x/oauth2
-- **Impact**: Prevented potential DoS attacks via malformed OAuth tokens
-- **Action**: All users should update to v0.7.1 immediately
-
-For security issues, please email security@llmrecon.io or see [SECURITY.md](SECURITY.md).
+For security issues, please see [SECURITY.md](SECURITY.md) or email security@llmrecon.com.
 
 ## 📊 Performance
 
@@ -434,14 +428,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/perplext/LLMrecon/issues)
 - **Discussions**: [Join the conversation](https://github.com/perplext/LLMrecon/discussions)
-- **Security**: security@llmrecon.io
+- **Security**: security@llmrecon.com
 - **Twitter**: [@LLMrecon](https://twitter.com/llmrecon)
 
 ---
 
 <div align="center">
 
-**[Website](https://llmrecon.io)** • **[Documentation](https://docs.llmrecon.io)** • **[Blog](https://blog.llmrecon.io)**
+**[Website](https://llmrecon.com)** • **[Documentation](https://llmrecon.com)** • **[GitHub](https://github.com/perplext/LLMrecon)**
 
 Made with ❤️ by the LLMrecon Team
 

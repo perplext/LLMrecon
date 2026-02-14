@@ -43,9 +43,7 @@ The Python implementation includes:
 **LLMrecon Test Harness Components:**
 - `llmrecon_harness.py` - Main test harness with CLI interface
 - `llmrecon_2025.py` - Enhanced version with OWASP 2025 support
-- `harness_config.json` - Configuration file
 - `templates/` - Attack templates directory including 2024-2026 techniques
-- `demo.sh` - Quick demonstration script
 
 **Key Features:**
 - Built-in attack templates (prompt injection, jailbreaking, data extraction)
