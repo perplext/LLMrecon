@@ -35,7 +35,7 @@ jobs:
       uses: github/codeql-action/analyze@v4
       with:
         category: "/language:javascript-typescript"
-        upload: false  # Don't upload SARIF to avoid conflict with default setup
+        upload: true
 
   analyze-python:
     name: Analyze Python
@@ -58,7 +58,7 @@ jobs:
       uses: github/codeql-action/analyze@v4
       with:
         category: "/language:python"
-        upload: false  # Don't upload SARIF to avoid conflict with default setup
+        upload: true
 
   analyze-go:
     name: Analyze Go
@@ -159,4 +159,4 @@ jobs:
       uses: github/codeql-action/analyze@v4
       with:
         category: "/language:go"
-        upload: false  # Don't upload SARIF to avoid conflict with default setup
+        upload: true

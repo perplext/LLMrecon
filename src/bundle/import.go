@@ -903,7 +903,7 @@ func (i *DefaultBundleImporter) Import(ctx context.Context, bundlePath string, o
 					errors.MediumSeverity,
 					errors.NonRecoverableError,
 					errMsg,
-				).WithCause(fmt.Errorf(errMsg))
+				).WithCause(fmt.Errorf("%s", errMsg))
 				bundleErr.WithContext(map[string]interface{}{
 					"bundle_id": bundleID,
 				})

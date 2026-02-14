@@ -209,9 +209,9 @@ func (hs *HelpSystem) browseCommands() {
 	for category, commands := range categories {
 		hs.terminal.Subsection(category)
 		for _, cmd := range commands {
-			hs.terminal.Info("  " + cmd)
+			hs.terminal.Info("%s", "  "+cmd)
 			if examples, ok := hs.examples[strings.Split(cmd, " ")[0]]; ok && len(examples) > 0 {
-				hs.terminal.Muted("    Example: " + examples[0].Command)
+				hs.terminal.Muted("%s", "    Example: "+examples[0].Command)
 			}
 		}
 		fmt.Println()
@@ -230,7 +230,7 @@ func (hs *HelpSystem) searchTopics() {
 	results := hs.searchContent(query)
 
 	if len(results) == 0 {
-		hs.terminal.Warning("No results found for: " + query)
+		hs.terminal.Warning("%s", "No results found for: "+query)
 		return
 	}
 
@@ -241,13 +241,13 @@ func (hs *HelpSystem) searchTopics() {
 		case Example:
 			hs.terminal.Subsection("Example")
 			hs.terminal.Code(r.Command)
-			hs.terminal.Info(r.Description)
+			hs.terminal.Info("%s", r.Description)
 		case FAQ:
 			hs.terminal.Subsection("FAQ")
-			hs.terminal.Bold(r.Question)
-			hs.terminal.Info(r.Answer)
+			hs.terminal.Bold("%s", r.Question)
+			hs.terminal.Info("%s", r.Answer)
 		case string:
-			hs.terminal.Info("• " + r)
+			hs.terminal.Info("%s", "• "+r)
 		}
 		fmt.Println()
 	}
@@ -288,10 +288,10 @@ func (hs *HelpSystem) showFAQ() {
 	for category, faqs := range hs.faqs {
 		hs.terminal.Subsection(strings.Title(category))
 		for _, faq := range faqs {
-			hs.terminal.Bold("Q: " + faq.Question)
-			hs.terminal.Info("A: " + faq.Answer)
+			hs.terminal.Bold("%s", "Q: "+faq.Question)
+			hs.terminal.Info("%s", "A: "+faq.Answer)
 			if len(faq.Related) > 0 {
-				hs.terminal.Muted("   Related: " + strings.Join(faq.Related, ", "))
+				hs.terminal.Muted("%s", "   Related: "+strings.Join(faq.Related, ", "))
 			}
 			fmt.Println()
 		}
@@ -376,7 +376,7 @@ func (hs *HelpSystem) quickStart() {
 	for _, step := range steps {
 		hs.terminal.Subsection(step.Title)
 		hs.terminal.Code(step.Command)
-		hs.terminal.Info(step.Description)
+		hs.terminal.Info("%s", step.Description)
 		fmt.Println()
 	}
 
@@ -404,21 +404,21 @@ func (hs *HelpSystem) showUsage(cmd *cobra.Command) {
 	hs.terminal.Section("Usage")
 	hs.terminal.Code(cmd.UseLine())
 	if cmd.Long != "" {
-		hs.terminal.Info(cmd.Long)
+		hs.terminal.Info("%s", cmd.Long)
 	}
 	fmt.Println()
 }
 
 func (hs *HelpSystem) showErrorHelp() {
 	hs.terminal.Section("Error Resolution")
-	hs.terminal.Error("Last error: " + hs.context.ErrorContext)
+	hs.terminal.Error("%s", "Last error: "+hs.context.ErrorContext)
 
 	// Provide context-specific error help
 	suggestions := hs.suggester.GetSuggestions()
 	if len(suggestions) > 0 {
 		hs.terminal.Subsection("Suggested Solutions")
 		for _, sug := range suggestions {
-			hs.terminal.Info("• " + sug.Description)
+			hs.terminal.Info("%s", "• "+sug.Description)
 			if sug.Command != "" {
 				hs.terminal.Code("  " + sug.Command)
 			}
@@ -433,7 +433,7 @@ func (hs *HelpSystem) showExamples(command string) {
 		for i, ex := range examples[:min(3, len(examples))] {
 			hs.terminal.Subsection(fmt.Sprintf("Example %d", i+1))
 			hs.terminal.Code(ex.Command)
-			hs.terminal.Muted(ex.Description)
+			hs.terminal.Muted("%s", ex.Description)
 		}
 		fmt.Println()
 	}
@@ -443,7 +443,7 @@ func (hs *HelpSystem) showTips(command string) {
 	if tips, ok := hs.tips[command]; ok && len(tips) > 0 {
 		hs.terminal.Section("Pro Tips")
 		for _, tip := range tips[:min(3, len(tips))] {
-			hs.terminal.Info("💡 " + tip)
+			hs.terminal.Info("%s", "💡 "+tip)
 		}
 		fmt.Println()
 	}
@@ -455,7 +455,7 @@ func (hs *HelpSystem) showRelatedCommands(cmd *cobra.Command) {
 		count := 0
 		for _, sibling := range cmd.Parent().Commands() {
 			if sibling != cmd && count < 5 {
-				hs.terminal.Info(fmt.Sprintf("• %s - %s", sibling.Name(), sibling.Short))
+				hs.terminal.Info("%s", fmt.Sprintf("• %s - %s", sibling.Name(), sibling.Short))
 				count++
 			}
 		}
@@ -472,7 +472,7 @@ func (hs *HelpSystem) showQuickActions(cmd *cobra.Command) {
 		"Press 'q' to quit help",
 	}
 	for _, action := range actions {
-		hs.terminal.Muted(action)
+		hs.terminal.Muted("%s", action)
 	}
 }
 
@@ -526,7 +526,7 @@ func (hs *HelpSystem) showSlowScanTroubleshooting() {
 
 	hs.terminal.Subsection("Troubleshooting Steps")
 	for _, step := range steps {
-		hs.terminal.Info(step)
+		hs.terminal.Info("%s", step)
 		time.Sleep(100 * time.Millisecond) // Visual effect
 	}
 
@@ -544,7 +544,7 @@ func (hs *HelpSystem) showAuthTroubleshooting() {
 	}
 
 	for issue, solution := range issues {
-		hs.terminal.Bold(issue)
+		hs.terminal.Bold("%s", issue)
 		hs.terminal.Code(solution)
 		fmt.Println()
 	}
@@ -562,7 +562,7 @@ func (hs *HelpSystem) showTemplateValidationTroubleshooting() {
 	}
 
 	for _, item := range checklist {
-		hs.terminal.Info(item)
+		hs.terminal.Info("%s", item)
 	}
 
 	hs.terminal.Code("LLMrecon template validate <template> --verbose")
@@ -583,7 +583,7 @@ func (hs *HelpSystem) showNetworkTroubleshooting() {
 	}
 
 	for _, cmd := range commands {
-		hs.terminal.Bold(cmd.Desc)
+		hs.terminal.Bold("%s", cmd.Desc)
 		hs.terminal.Code(cmd.Cmd)
 		fmt.Println()
 	}
@@ -606,7 +606,7 @@ func (hs *HelpSystem) showPermissionTroubleshooting() {
 	}
 
 	for _, sol := range solutions {
-		hs.terminal.Bold(sol.Issue)
+		hs.terminal.Bold("%s", sol.Issue)
 		hs.terminal.Code(sol.Solution)
 		fmt.Println()
 	}

@@ -196,7 +196,7 @@ func (w *ConfigWizard) Run() error {
 		w.terminal.Header(fmt.Sprintf("Configuration Wizard - Step %d/%d: %s", i+1, totalSteps, step.Name))
 
 		if step.Description != "" {
-			w.terminal.Info(step.Description)
+			w.terminal.Info("%s", step.Description)
 			fmt.Println()
 		}
 

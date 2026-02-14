@@ -90,10 +90,10 @@ func (ep *ExportPreview) ShowFormatSelection(data interface{}) (string, error) {
 	// Display format options
 	for i, format := range formats {
 		ep.terminal.Subsection(fmt.Sprintf("%d. %s", i+1, format.Name))
-		ep.terminal.Info(format.Description)
+		ep.terminal.Info("%s", format.Description)
 
 		if len(format.Features) > 0 {
-			ep.terminal.Muted("Features: " + strings.Join(format.Features, " • "))
+			ep.terminal.Muted("%s", "Features: "+strings.Join(format.Features, " • "))
 		}
 
 		fmt.Println()
@@ -670,20 +670,20 @@ func (ep *ExportPreview) showExportOptions(format *ExportFormat) {
 	options := ep.getFormatOptions(format)
 
 	for _, opt := range options {
-		ep.terminal.Info(fmt.Sprintf("• %s: %s", opt.Name, opt.Description))
+		ep.terminal.Info("%s", fmt.Sprintf("• %s: %s", opt.Name, opt.Description))
 		if opt.Default != "" {
-			ep.terminal.Muted("  Default: " + opt.Default)
+			ep.terminal.Muted("%s", "  Default: "+opt.Default)
 		}
 	}
 
 	// File size estimate
 	ep.terminal.Subsection("Estimated File Size")
-	ep.terminal.Info(ep.estimateFileSize(format))
+	ep.terminal.Info("%s", ep.estimateFileSize(format))
 
 	// Compatibility notes
 	if len(format.Compatible) > 0 {
 		ep.terminal.Subsection("Compatible With")
-		ep.terminal.Info(strings.Join(format.Compatible, ", "))
+		ep.terminal.Info("%s", strings.Join(format.Compatible, ", "))
 	}
 }
 

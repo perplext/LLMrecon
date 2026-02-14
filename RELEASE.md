@@ -246,7 +246,7 @@ LLMrecon v0.2.0 delivers enterprise-grade infrastructure supporting 100+ concurr
 ## Support
 
 - GitHub Issues: https://github.com/your-org/llmrecon/issues
-- Documentation: https://docs.llmrecon.ai
+- Documentation: https://llmrecon.com
 - Community: Discord/Slack (coming soon)
 
 ## License
@@ -255,4 +255,4 @@ MIT License - See LICENSE file for details
 
 ## Security
 
-Report security vulnerabilities to: security@llmrecon.ai
+Report security vulnerabilities to: security@llmrecon.com

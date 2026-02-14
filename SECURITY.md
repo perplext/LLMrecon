@@ -6,8 +6,8 @@ The following versions of the LLMrecon tool are currently being supported with s
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| 0.8.x   | :white_check_mark: |
+| < 0.8   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -19,7 +19,7 @@ We take the security of the LLMrecon tool seriously. If you believe you have fou
 - Exploit the vulnerability beyond what is necessary to demonstrate it
 
 ### Please DO:
-- Email us at: security@LLMrecon.org (or update with your preferred email)
+- Email us at: security@llmrecon.com (or update with your preferred email)
 - Include the word "SECURITY" in the subject line
 - Provide detailed steps to reproduce the vulnerability
 - Include the impact and potential attack scenarios
@@ -97,7 +97,7 @@ Currently, we do not offer a bug bounty program. However, we greatly appreciate 
 ## Contact
 
 For security concerns, please contact:
-- Email: security@LLMrecon.org (update with your email)
+- Email: security@llmrecon.com (update with your email)
 - PGP Key: [Link to PGP key if available]
 
 For general questions or support, please use:
@@ -112,4 +112,4 @@ For general questions or support, please use:
 
 ---
 
-Last Updated: January 2025
+Last Updated: February 2026

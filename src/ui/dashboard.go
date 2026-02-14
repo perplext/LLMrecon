@@ -779,7 +779,7 @@ func (d *Dashboard) showExportOptions(results *ScanResults) {
 	}
 
 	for _, opt := range options {
-		d.terminal.Info(opt)
+		d.terminal.Info("%s", opt)
 	}
 }
 

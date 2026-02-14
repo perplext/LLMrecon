@@ -28,8 +28,11 @@ node_modules/
 tasks.json
 tasks/ 
 
-# Test files and development artifacts
-*_test.go
+# Go workspace (local dev files)
+go.work
+go.work.sum
+
+# Development artifacts
 *.test
 *.bak
 *.tmp
