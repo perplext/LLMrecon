@@ -3,8 +3,6 @@ package access
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -628,13 +626,7 @@ func (m *AccessControlManager) createAdminUser(ctx context.Context) error {
 	// Determine admin password from environment or generate a secure random one
 	adminPassword := os.Getenv("LLMRECON_ADMIN_PASSWORD")
 	if adminPassword == "" {
-		// Generate a secure random password
-		randomBytes := make([]byte, 16)
-		if _, err := rand.Read(randomBytes); err != nil {
-			return fmt.Errorf("failed to generate random admin password: %w", err)
-		}
-		adminPassword = hex.EncodeToString(randomBytes)
-		fmt.Fprintf(os.Stderr, "WARNING: No LLMRECON_ADMIN_PASSWORD set. Generated random admin password: %s\n", adminPassword)
+		return fmt.Errorf("LLMRECON_ADMIN_PASSWORD environment variable must be set for admin user creation")
 	}
 
 	// Hash the password with bcrypt

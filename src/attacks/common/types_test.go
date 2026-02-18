@@ -78,6 +78,27 @@ func TestContainsAnyInsensitive(t *testing.T) {
 	}
 }
 
+func TestAttackConfigCostExceeded(t *testing.T) {
+	tests := []struct {
+		name            string
+		maxCost         float64
+		accumulatedCost float64
+		want            bool
+	}{
+		{"no ceiling set", 0, 100, false},
+		{"negative ceiling", -1, 100, false},
+		{"under budget", 10, 5, false},
+		{"at budget", 10, 10, true},
+		{"over budget", 10, 15, true},
+	}
+	for _, tt := range tests {
+		cfg := AttackConfig{MaxCostUSD: tt.maxCost}
+		if got := cfg.CostExceeded(tt.accumulatedCost); got != tt.want {
+			t.Errorf("CostExceeded(%s): got %v, want %v", tt.name, got, tt.want)
+		}
+	}
+}
+
 func TestSimpleLogger(t *testing.T) {
 	// Just verify it doesn't panic
 	l := &SimpleLogger{}
