@@ -237,7 +237,7 @@ func (bu *BinaryUpdater) verifyBinary(binaryPath string, asset *ReleaseAsset) er
 
 	// Make binary executable on Unix systems
 	if runtime.GOOS != "windows" {
-		if err := os.Chmod(binaryPath, 0700); err != nil { // #nosec G302 -- binary must be owner-executable
+		if err := os.Chmod(binaryPath, 0500); err != nil {
 			return fmt.Errorf("failed to make binary executable: %w", err)
 		}
 	}
