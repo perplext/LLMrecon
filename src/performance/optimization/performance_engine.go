@@ -1098,7 +1098,7 @@ func (pe *PerformanceEngine) performAutoTuning(metrics SystemMetrics) {
 	}
 
 	// Start optimization
-	pe.StartOptimization(ctx, target)
+	_, _ = pe.StartOptimization(ctx, target)
 }
 
 // identifyBottleneck finds performance bottleneck

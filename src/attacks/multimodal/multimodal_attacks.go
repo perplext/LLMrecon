@@ -881,7 +881,7 @@ func (mma *MultiModalAttacker) executePayload(ctx context.Context, payload inter
 func (mma *MultiModalAttacker) executeImagePayload(ctx context.Context, payload *ImagePayload, request AttackRequest) AttackResult {
 	// Convert image to base64
 	var buf bytes.Buffer
-	png.Encode(&buf, payload.Image)
+	_ = png.Encode(&buf, payload.Image)
 	imageData := base64.StdEncoding.EncodeToString(buf.Bytes())
 
 	// Prepare prompt with image
@@ -1147,7 +1147,7 @@ func randInt64(max int64) int64 {
 
 func randFloat64() float64 {
 	bytes := make([]byte, 8)
-	rand.Read(bytes)
+	_, _ = rand.Read(bytes)
 	// Convert to float64
 	return float64(bytes[0]) / 255.0
 }
