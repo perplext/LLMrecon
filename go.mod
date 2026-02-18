@@ -31,7 +31,7 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/xuri/excelize/v2 v2.9.1
 	golang.org/x/crypto v0.45.0
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.35.0
 	golang.org/x/term v0.40.0
 	golang.org/x/time v0.11.0
 	gopkg.in/yaml.v3 v3.0.1
