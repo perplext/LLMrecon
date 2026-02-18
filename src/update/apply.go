@@ -84,7 +84,7 @@ func NewUpdateApplier(options *ApplierOptions) (*UpdateApplier, error) {
 // ApplyUpdate applies an update from the given package
 func (a *UpdateApplier) ApplyUpdate(ctx context.Context, pkg *UpdatePackage) error {
 	// Log update start
-	fmt.Fprintf(a.Logger, "Starting update from package %s\n", pkg.PackagePath)
+	_, _ = fmt.Fprintf(a.Logger, "Starting update from package %s\n", pkg.PackagePath)
 
 	// Check if package is compatible
 	compatible, err := pkg.IsCompatible(a.CurrentVersions)
@@ -118,12 +118,12 @@ func (a *UpdateApplier) ApplyUpdate(ctx context.Context, pkg *UpdatePackage) err
 
 	if err != nil {
 		// Log error
-		fmt.Fprintf(a.Logger, "Failed to apply update: %v\n", err)
+		_, _ = fmt.Fprintf(a.Logger, "Failed to apply update: %v\n", err)
 
 		// Attempt to restore from backup
 		restoreErr := a.restoreFromBackup(backupDir)
 		if restoreErr != nil {
-			fmt.Fprintf(a.Logger, "Failed to restore from backup: %v\n", restoreErr)
+			_, _ = fmt.Fprintf(a.Logger, "Failed to restore from backup: %v\n", restoreErr)
 			return fmt.Errorf("failed to apply update and restore from backup: %v (restore error: %v)", err, restoreErr)
 		}
 
@@ -131,7 +131,7 @@ func (a *UpdateApplier) ApplyUpdate(ctx context.Context, pkg *UpdatePackage) err
 	}
 
 	// Log update success
-	fmt.Fprintf(a.Logger, "Successfully applied update from package %s\n", pkg.PackagePath)
+	_, _ = fmt.Fprintf(a.Logger, "Successfully applied update from package %s\n", pkg.PackagePath)
 	return nil
 }
 
@@ -217,7 +217,7 @@ func (a *UpdateApplier) updateBinary(ctx context.Context, pkg *UpdatePackage, pl
 	}
 
 	// Make binary executable
-	if err := os.Chmod(sessionBinaryPath, 0700); err != nil {
+	if err := os.Chmod(sessionBinaryPath, 0700); err != nil { // #nosec G302 -- binary must be owner-executable
 		return fmt.Errorf("failed to make binary executable: %w", err)
 	}
 
@@ -386,7 +386,7 @@ func (a *UpdateApplier) updateBinaryWithPatch(ctx context.Context, pkg *UpdatePa
 	}
 
 	// Make binary executable
-	if err := os.Chmod(sessionBinaryPath, 0700); err != nil {
+	if err := os.Chmod(sessionBinaryPath, 0700); err != nil { // #nosec G302 -- binary must be owner-executable
 		return fmt.Errorf("failed to make binary executable: %w", err)
 	}
 
@@ -689,7 +689,7 @@ func replaceFile(src, dst string) error {
 		tmpDst := dst + ".old"
 
 		// Remove existing temporary file if it exists
-		os.Remove(tmpDst)
+		_ = os.Remove(tmpDst)
 
 		// Rename destination to temporary file
 		if _, err := os.Stat(dst); err == nil {
@@ -701,12 +701,12 @@ func replaceFile(src, dst string) error {
 		// Rename source to destination
 		if err := os.Rename(src, dst); err != nil {
 			// Try to restore original file
-			os.Rename(tmpDst, dst)
+			_ = os.Rename(tmpDst, dst)
 			return fmt.Errorf("failed to rename source file: %w", err)
 		}
 
 		// Remove temporary file
-		os.Remove(tmpDst)
+		_ = os.Remove(tmpDst)
 	} else {
 		// On Unix-like systems, we can use os.Rename to replace the file
 		if err := os.Rename(src, dst); err != nil {

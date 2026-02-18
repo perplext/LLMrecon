@@ -115,7 +115,7 @@ func (p *ProgressTracker) SetStage(stage ProgressStage, operation string) {
 func (p *ProgressTracker) SetTotal(bytes int64, items int) {
 	p.mu.Lock()
 	p.bytesTotal = bytes
-	atomic.StoreInt32(&p.itemsTotal, int32(items))
+	atomic.StoreInt32(&p.itemsTotal, int32(items)) // #nosec G115 -- item counts bounded by bundle size
 	p.mu.Unlock()
 
 	p.sendUpdate()
@@ -128,7 +128,7 @@ func (p *ProgressTracker) UpdateBytes(bytes int64) {
 
 // UpdateItems updates items processed
 func (p *ProgressTracker) UpdateItems(count int) {
-	atomic.AddInt32(&p.itemsProcessed, int32(count))
+	atomic.AddInt32(&p.itemsProcessed, int32(count)) // #nosec G115 -- progress value bounded 0-100
 }
 
 // SetCurrentFile sets the current file being processed

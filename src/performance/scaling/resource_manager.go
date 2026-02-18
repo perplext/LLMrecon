@@ -720,8 +720,8 @@ func (ra *ResourceAllocator) initializePools() {
 	runtime.ReadMemStats(&m)
 	ra.pools["memory"] = &ResourcePool{
 		Type:        "memory",
-		TotalSize:   int64(m.Sys),
-		Available:   int64(m.Sys - m.HeapAlloc),
+		TotalSize:   int64(m.Sys),             // #nosec G115 -- memory stats bounded by system RAM
+		Available:   int64(m.Sys - m.HeapAlloc), // #nosec G115 -- memory stats bounded by system RAM
 		Allocations: make(map[string]int64),
 	}
 

@@ -211,13 +211,13 @@ func (d *MonitoringDashboard) Stop() error {
 	if d.server != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		d.server.Shutdown(ctx)
+		_ = d.server.Shutdown(ctx)
 	}
 
 	// Close all client connections
 	d.mutex.Lock()
 	for _, client := range d.clients {
-		client.Conn.Close()
+		_ = client.Conn.Close()
 	}
 	d.mutex.Unlock()
 
@@ -359,12 +359,12 @@ func (d *MonitoringDashboard) handleClient(client *DashboardClient) {
 		delete(d.clients, client.ID)
 		d.mutex.Unlock()
 
-		client.Conn.Close()
+		_ = client.Conn.Close()
 		d.logger.Info("Client disconnected", "id", client.ID)
 	}()
 
 	// Set read deadline
-	client.Conn.SetReadDeadline(time.Now().Add(d.config.ClientTimeout))
+	_ = client.Conn.SetReadDeadline(time.Now().Add(d.config.ClientTimeout))
 
 	for {
 		var msg map[string]interface{}
@@ -384,7 +384,7 @@ func (d *MonitoringDashboard) handleClient(client *DashboardClient) {
 		d.handleClientMessage(client, msg)
 
 		// Reset read deadline
-		client.Conn.SetReadDeadline(time.Now().Add(d.config.ClientTimeout))
+		_ = client.Conn.SetReadDeadline(time.Now().Add(d.config.ClientTimeout))
 	}
 }
 
@@ -520,7 +520,7 @@ func (d *MonitoringDashboard) cleanupStaleClients() {
 	d.mutex.Lock()
 	for id, client := range d.clients {
 		if client.LastSeen.Before(threshold) {
-			client.Conn.Close()
+			_ = client.Conn.Close()
 			delete(d.clients, id)
 			d.logger.Info("Removed stale client", "id", id)
 		}
@@ -577,7 +577,7 @@ func (d *MonitoringDashboard) handleGetStatus(w http.ResponseWriter, r *http.Req
 func (d *MonitoringDashboard) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"status": "healthy",
 	})
 }
@@ -586,7 +586,7 @@ func (d *MonitoringDashboard) handleHealthCheck(w http.ResponseWriter, r *http.R
 func (d *MonitoringDashboard) handleGetMetricsHistory(w http.ResponseWriter, r *http.Request) {
 	// Placeholder for historical metrics implementation
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "Historical metrics not implemented yet",
 	})
 }
@@ -600,7 +600,7 @@ func (d *MonitoringDashboard) handleExportMetrics(w http.ResponseWriter, r *http
 
 	// Placeholder for metrics export implementation
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "Metrics export not implemented yet",
 	})
 }
@@ -614,7 +614,7 @@ func (d *MonitoringDashboard) handleExportLogs(w http.ResponseWriter, r *http.Re
 
 	// Placeholder for logs export implementation
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "Logs export not implemented yet",
 	})
 }

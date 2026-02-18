@@ -333,6 +333,6 @@ func (l *AuditLog) WithTags(tags ...string) *AuditLog {
 func generateID() string {
 	// Generate a simple random ID
 	bytes := make([]byte, 16)
-	rand.Read(bytes)
+	_, _ = rand.Read(bytes)
 	return hex.EncodeToString(bytes)
 }

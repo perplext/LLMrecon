@@ -386,7 +386,7 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	zipFile, err := os.Create(outputPath)
+	zipFile, err := os.Create(outputPath) // #nosec G304 -- path constructed from internal bundle output
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bundle file: %w", err)
 	}
@@ -444,8 +444,8 @@ func (bm *BundleManager) createBundleArchive(bundle *Bundle, workspaceDir, outpu
 	}
 
 	// Get final file size
-	zipWriter.Close()
-	zipFile.Close()
+	_ = zipWriter.Close()
+	_ = zipFile.Close()
 
 	finalInfo, err := os.Stat(outputPath)
 	if err != nil {
@@ -541,7 +541,7 @@ func (bm *BundleManager) extractBundleFile(file *zip.File, destDir string) error
 		}
 	}()
 
-	destFile, err := os.Create(destPath)
+	destFile, err := os.Create(destPath) // #nosec G304 -- path from internal bundle extraction
 	if err != nil {
 		return err
 	}
@@ -551,7 +551,8 @@ func (bm *BundleManager) extractBundleFile(file *zip.File, destDir string) error
 		}
 	}()
 
-	_, err = io.Copy(destFile, reader)
+	const maxDecompressSize = 500 << 20 // 500MB
+	_, err = io.Copy(destFile, io.LimitReader(reader, maxDecompressSize))
 	return err
 }
 

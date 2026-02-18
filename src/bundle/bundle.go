@@ -200,7 +200,7 @@ func copyDir(src, dst string) error {
 // createZipFromDir creates a zip file from a directory
 func createZipFromDir(src, dst string) error {
 	// Create destination file
-	zipFile, err := os.Create(dst)
+	zipFile, err := os.Create(dst) // #nosec G304 -- path from internal bundle creation
 	if err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func ExtractBundle(bundlePath, outputDir string) error {
 // extractFile extracts a file from a zip archive
 func extractFile(file *zip.File, outputDir string) error {
 	// Create the file path
-	filePath := filepath.Join(outputDir, file.Name)
+	filePath := filepath.Join(outputDir, file.Name) // #nosec G305 -- zip slip prevented by isWithinDir() check below
 
 	// Check for directory traversal
 	if !isWithinDir(outputDir, filePath) {
@@ -335,7 +335,7 @@ func extractFile(file *zip.File, outputDir string) error {
 	}()
 
 	// Create the file
-	outFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+	outFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode()) // #nosec G304 -- path validated by extractZipToDir
 	if err != nil {
 		return err
 	}

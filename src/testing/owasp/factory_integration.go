@@ -16,7 +16,7 @@ type testFactoryAdapter struct {
 // CreateTestCase creates a new test case with the specified parameters
 func (a *testFactoryAdapter) CreateTestCase(vulnerabilityType types.VulnerabilityType, id string, name string, description string) (*types.TestCase, error) {
 	builder := types.NewTestCaseBuilder()
-	builder.NewTestCase()
+	_, _ = builder.NewTestCase()
 	builder.WithID(id)
 	builder.WithName(name)
 	builder.WithDescription(description)

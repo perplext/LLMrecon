@@ -95,7 +95,7 @@ func (p *MemoryProfiler) CaptureHeapProfile(label string) (string, error) {
 	filepath := filepath.Join(p.outputDir, filename)
 
 	// Create file
-	f, err := os.Create(filepath)
+	f, err := os.Create(filepath) // #nosec G304 -- path constructed from struct field outputDir + timestamp
 	if err != nil {
 		return "", fmt.Errorf("failed to create profile file: %w", err)
 	}

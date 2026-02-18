@@ -605,7 +605,7 @@ func (p *BaseMockProviderImpl) generateMockEmbedding(text string, dimension int)
 
 	// Create a new random source with the seed
 	source := mathrand.NewSource(seed)
-	rng := mathrand.New(source)
+	rng := mathrand.New(source) // #nosec G404 -- deterministic mock data generation
 
 	// Generate the embedding vector
 	embedding := make([]float64, dimension)

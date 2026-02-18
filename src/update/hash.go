@@ -1,8 +1,8 @@
 package update
 
 import (
-	"crypto/md5"
-	"crypto/sha1"
+	"crypto/md5"  // #nosec G501 -- legacy MD5 support for file verification compatibility
+	"crypto/sha1" // #nosec G505 -- legacy SHA1 support for file verification compatibility
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
@@ -67,9 +67,9 @@ func NewHashGenerator(algorithm HashAlgorithm) (*HashGenerator, error) {
 	case SHA512:
 		h = sha512.New()
 	case SHA1:
-		h = sha1.New()
+		h = sha1.New() // #nosec G401 -- legacy algorithm support
 	case MD5:
-		h = md5.New()
+		h = md5.New() // #nosec G401 -- legacy algorithm support
 	case BLAKE2b:
 		h, err = blake2b.New512(nil)
 		if err != nil {

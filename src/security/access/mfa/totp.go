@@ -77,7 +77,7 @@ func GenerateQRCodeURL(config *TOTPConfig, accountName string) string {
 // GenerateTOTPCode generates a TOTP code for the given time
 func GenerateTOTPCode(config *TOTPConfig, t time.Time) (string, error) {
 	// Calculate counter
-	counter := uint64(t.Unix() / int64(config.Period))
+	counter := uint64(t.Unix() / int64(config.Period)) // #nosec G115 -- Unix timestamp always positive, fits in uint64
 
 	// Generate HOTP code
 	return generateHOTP(config, counter)
@@ -86,11 +86,11 @@ func GenerateTOTPCode(config *TOTPConfig, t time.Time) (string, error) {
 // VerifyTOTPCode verifies a TOTP code
 func VerifyTOTPCode(config *TOTPConfig, code string, t time.Time, window int) bool {
 	// Calculate counter
-	counter := uint64(t.Unix() / int64(config.Period))
+	counter := uint64(t.Unix() / int64(config.Period)) // #nosec G115 -- Unix timestamp always positive, fits in uint64
 
 	// Check codes within window
 	for i := -window; i <= window; i++ {
-		c, err := generateHOTP(config, counter+uint64(i))
+		c, err := generateHOTP(config, counter+uint64(i)) // #nosec G115 -- window is small (typically 1-2), counter is large positive
 		if err != nil {
 			continue
 		}

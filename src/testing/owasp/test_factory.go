@@ -593,7 +593,7 @@ func (f *DefaultTestCaseFactory) CreateTestSuite(id string, name string, descrip
 
 	// Create test suite using types builder
 	suiteBuilder := types.NewTestSuiteBuilder()
-	suiteBuilder.NewTestSuite()
+	_, _ = suiteBuilder.NewTestSuite()
 	suiteBuilder.WithID(id)
 	suiteBuilder.WithName(name)
 	suiteBuilder.WithDescription(description)

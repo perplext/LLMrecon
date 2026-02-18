@@ -521,8 +521,8 @@ func (sp *SystemProfiler) ProfileMemory() *MemoryProfile {
 		StackInUse:  m.StackInuse,
 		GCStats: GCStatistics{
 			NumGC:      m.NumGC,
-			PauseTotal: time.Duration(m.PauseTotalNs),
-			LastGC:     time.Unix(0, int64(m.LastGC)),
+			PauseTotal: time.Duration(m.PauseTotalNs),    // #nosec G115 -- GC stats bounded by process lifetime
+			LastGC:     time.Unix(0, int64(m.LastGC)), // #nosec G115 -- GC stats bounded by process lifetime
 		},
 	}
 
@@ -654,7 +654,7 @@ func (ro *ResourceOptimizer) AnalyzeMemory(profile *MemoryProfile) []MemoryOppor
 		opportunities = append(opportunities, MemoryOpportunity{
 			Type:        "gc_pressure",
 			Description: "High GC pause times",
-			Potential:   int64(profile.HeapInUse) / 4,
+			Potential:   int64(profile.HeapInUse) / 4, // #nosec G115 -- memory stats bounded by system RAM
 			Risk:        RiskLow,
 		})
 	}
@@ -1134,7 +1134,7 @@ func (pe *PerformanceEngine) captureMetrics() SystemMetrics {
 
 	return SystemMetrics{
 		CPUUsage:          pe.getCurrentCPUUsage(),
-		MemoryUsage:       int64(m.HeapInuse),
+		MemoryUsage:       int64(m.HeapInuse), // #nosec G115 -- memory stats bounded by system RAM
 		GoroutineCount:    runtime.NumGoroutine(),
 		RequestsPerSecond: pe.monitor.GetRequestRate(),
 		AverageLatency:    pe.monitor.GetAverageLatency(),

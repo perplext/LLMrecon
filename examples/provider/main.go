@@ -61,8 +61,8 @@ func main() {
 	}
 
 	// Register providers
-	providerRegistry.RegisterProvider(openaiProvider)
-	providerRegistry.RegisterProvider(anthropicProvider)
+	_ = providerRegistry.RegisterProvider(openaiProvider)
+	_ = providerRegistry.RegisterProvider(anthropicProvider)
 
 	// Sync models from providers
 	if err := modelRegistry.SyncModelsFromProviders([]core.Provider{openaiProvider, anthropicProvider}); err != nil {

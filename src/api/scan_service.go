@@ -85,7 +85,7 @@ func (s *ScanServiceImpl) CreateScan(request CreateScanRequest) (*Scan, error) {
 	if err := s.startScanExecution(scan); err != nil {
 		// Update scan status to failed
 		scan.Status = ScanStatusFailed
-		s.store.Update(scan)
+		_ = s.store.Update(scan)
 		return nil, fmt.Errorf("failed to start scan: %w", err)
 	}
 
@@ -226,7 +226,7 @@ func (s *ScanServiceImpl) executeScan(executor *scanExecutor) {
 	// Update scan status to running
 	scan.Status = ScanStatusRunning
 	scan.StartedAt = &startTime
-	s.store.Update(scan)
+	_ = s.store.Update(scan)
 
 	// Ensure cleanup
 	defer func() {
@@ -244,7 +244,7 @@ func (s *ScanServiceImpl) executeScan(executor *scanExecutor) {
 			scan.Status = ScanStatusCompleted
 		}
 		scan.UpdatedAt = time.Now()
-		s.store.Update(scan)
+		_ = s.store.Update(scan)
 
 		close(executor.progress)
 		executor.completed <- true

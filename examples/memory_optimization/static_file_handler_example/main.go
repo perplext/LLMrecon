@@ -198,7 +198,7 @@ func main() {
 	// Start the server
 	fmt.Println("Server started at http://localhost:8080")
 	fmt.Println("Press Ctrl+C to stop the server")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }
 
 // createExampleFiles creates example static files for testing

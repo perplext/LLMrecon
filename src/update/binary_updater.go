@@ -237,7 +237,7 @@ func (bu *BinaryUpdater) verifyBinary(binaryPath string, asset *ReleaseAsset) er
 
 	// Make binary executable on Unix systems
 	if runtime.GOOS != "windows" {
-		if err := os.Chmod(binaryPath, 0700); err != nil {
+		if err := os.Chmod(binaryPath, 0700); err != nil { // #nosec G302 -- binary must be owner-executable
 			return fmt.Errorf("failed to make binary executable: %w", err)
 		}
 	}
@@ -329,7 +329,7 @@ func (bu *BinaryUpdater) applyWindowsUpdate(newBinaryPath, execPath, backupPath 
 	oldPath := execPath + ".old"
 
 	// Remove any existing .old file
-	os.Remove(oldPath)
+	_ = os.Remove(oldPath)
 
 	// Rename current binary
 	if err := os.Rename(execPath, oldPath); err != nil {
@@ -339,7 +339,7 @@ func (bu *BinaryUpdater) applyWindowsUpdate(newBinaryPath, execPath, backupPath 
 	// Copy new binary in place
 	if err := bu.copyFile(newBinaryPath, execPath); err != nil {
 		// Rollback: restore original binary
-		os.Rename(oldPath, execPath)
+		_ = os.Rename(oldPath, execPath)
 		return fmt.Errorf("failed to copy new binary: %w", err)
 	}
 
@@ -361,7 +361,7 @@ func (bu *BinaryUpdater) applyUnixUpdate(newBinaryPath, execPath, backupPath str
 
 	// Atomic rename
 	if err := os.Rename(tempPath, execPath); err != nil {
-		os.Remove(tempPath) // Cleanup
+		_ = os.Remove(tempPath) // Cleanup
 		return fmt.Errorf("failed to replace binary: %w", err)
 	}
 
@@ -417,7 +417,7 @@ del "%%~f0" >nul 2>&1`, filePath)
 		batchPath := filePath + "_cleanup.bat"
 		if err := os.WriteFile(filepath.Clean(batchPath), []byte(batchContent), 0600); err == nil {
 			go func() {
-				exec.Command("cmd", "/C", batchPath).Start()
+				_ = exec.Command("cmd", "/C", batchPath).Start() // #nosec G204 -- batchPath is constructed internally from filePath + "_cleanup.bat"
 			}()
 		}
 	}
@@ -445,7 +445,7 @@ func (bu *BinaryUpdater) RestartApplication() error {
 	bu.logger.Info("Restarting application with new binary...")
 
 	// Start new process
-	cmd := exec.Command(execPath, args...)
+	cmd := exec.Command(execPath, args...) // #nosec G204 -- execPath is from os.Executable(), args from os.Args
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -500,7 +500,7 @@ func (bu *BinaryUpdater) CanSelfUpdate() error {
 		return fmt.Errorf("insufficient permissions to update binary: %w", err)
 	}
 
-	os.Remove(testFile)
+	_ = os.Remove(testFile)
 	return nil
 }
 
@@ -522,7 +522,7 @@ func (bu *BinaryUpdater) GetUpdatePermissions() *UpdatePermissions {
 		permissions.CanWriteDirectory = false
 		permissions.RequiresElevation = true
 	} else {
-		os.Remove(testFile)
+		_ = os.Remove(testFile)
 	}
 
 	// On Unix, check if we're running as root
@@ -569,7 +569,7 @@ func (bu *BinaryUpdater) elevateWindows(args []string) error {
 	psScript := fmt.Sprintf(`Start-Process -FilePath "%s" -ArgumentList "%s" -Verb RunAs`,
 		execPath, strings.Join(args, " "))
 
-	cmd := exec.Command("powershell", "-Command", psScript)
+	cmd := exec.Command("powershell", "-Command", psScript) // #nosec G204 -- execPath is from os.Executable(), args from caller
 	return cmd.Run()
 }
 
@@ -583,7 +583,7 @@ func (bu *BinaryUpdater) elevateDarwin(args []string) error {
 	script := fmt.Sprintf(`do shell script "%s %s" with administrator privileges`,
 		execPath, strings.Join(args, " "))
 
-	cmd := exec.Command("osascript", "-e", script)
+	cmd := exec.Command("osascript", "-e", script) // #nosec G204 -- execPath is from os.Executable(), args from caller
 	return cmd.Run()
 }
 
@@ -595,7 +595,7 @@ func (bu *BinaryUpdater) elevateLinux(args []string) error {
 	}
 
 	sudoArgs := append([]string{execPath}, args...)
-	cmd := exec.Command("sudo", sudoArgs...)
+	cmd := exec.Command("sudo", sudoArgs...) // #nosec G204 -- execPath is from os.Executable(), args from caller
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -614,7 +614,7 @@ func (bu *BinaryUpdater) ValidateUpdate(expectedVersion string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, execPath, "--version")
+	cmd := exec.CommandContext(ctx, execPath, "--version") // #nosec G204 -- execPath is from os.Executable(), fixed arg
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to validate update: %w", err)
