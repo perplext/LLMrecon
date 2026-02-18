@@ -185,7 +185,7 @@ func (p *Profiler) Start() error {
 			return fmt.Errorf("failed to create CPU profile file: %w", err)
 		}
 		if err := pprof.StartCPUProfile(p.cpuProfileFile); err != nil {
-			p.cpuProfileFile.Close()
+			_ = p.cpuProfileFile.Close()
 			return fmt.Errorf("failed to start CPU profile: %w", err)
 		}
 	}
@@ -209,7 +209,7 @@ func (p *Profiler) Stop() error {
 	if p.config.EnableCPUProfiling {
 		pprof.StopCPUProfile()
 		if p.cpuProfileFile != nil {
-			p.cpuProfileFile.Close()
+			_ = p.cpuProfileFile.Close()
 			p.cpuProfileFile = nil
 		}
 	}
@@ -424,7 +424,7 @@ func (p *Profiler) SaveReport(filePath string) error {
 	report := p.GetReport()
 
 	// Create file
-	file, err := os.Create(filePath)
+	file, err := os.Create(filePath) // #nosec G304 -- path from caller-controlled output parameter
 	if err != nil {
 		return fmt.Errorf("failed to create report file: %w", err)
 	}
@@ -479,7 +479,7 @@ func (p *Profiler) SaveReport(filePath string) error {
 // CaptureMemoryProfile captures a memory profile
 func (p *Profiler) CaptureMemoryProfile(filePath string) error {
 	// Create file
-	file, err := os.Create(filePath)
+	file, err := os.Create(filePath) // #nosec G304 -- path from caller-controlled output parameter
 	if err != nil {
 		return fmt.Errorf("failed to create memory profile file: %w", err)
 	}
@@ -501,7 +501,7 @@ func (p *Profiler) CaptureMemoryProfile(filePath string) error {
 // CaptureCPUProfile captures a CPU profile
 func (p *Profiler) CaptureCPUProfile(filePath string, duration time.Duration) error {
 	// Create file
-	file, err := os.Create(filePath)
+	file, err := os.Create(filePath) // #nosec G304 -- path from caller-controlled output parameter
 	if err != nil {
 		return fmt.Errorf("failed to create CPU profile file: %w", err)
 	}

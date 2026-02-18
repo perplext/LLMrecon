@@ -493,7 +493,7 @@ func (mc *MetricsCollector) collectSystemMetrics() {
 	}
 
 	for _, metric := range systemMetrics {
-		mc.collectMetric(metric)
+		_ = mc.collectMetric(metric)
 	}
 }
 

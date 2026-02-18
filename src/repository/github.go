@@ -237,9 +237,9 @@ func (r *GitHubRepository) GetFile(ctx context.Context, path string) (io.ReadClo
 
 		// Close pipe with error if any
 		if fetchErr != nil {
-			pw.CloseWithError(fetchErr)
+			_ = pw.CloseWithError(fetchErr)
 		} else {
-			pw.Close()
+			_ = pw.Close()
 		}
 	}()
 

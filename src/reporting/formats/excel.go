@@ -34,31 +34,31 @@ func (f *ExcelFormatter) FormatReport(results api.TestResults, writer io.Writer)
 
 	// Create summary sheet
 	summarySheet := "Summary"
-	excel.SetSheetName("Sheet1", summarySheet)
+	_ = excel.SetSheetName("Sheet1", summarySheet)
 
 	// Add title
-	excel.SetCellValue(summarySheet, "A1", "Test Results Report")
-	excel.MergeCell(summarySheet, "A1", "D1")
+	_ = excel.SetCellValue(summarySheet, "A1", "Test Results Report")
+	_ = excel.MergeCell(summarySheet, "A1", "D1")
 
 	// Add generation timestamp
-	excel.SetCellValue(summarySheet, "A2", fmt.Sprintf("Generated: %s", time.Now().Format(time.RFC3339)))
-	excel.MergeCell(summarySheet, "A2", "D2")
+	_ = excel.SetCellValue(summarySheet, "A2", fmt.Sprintf("Generated: %s", time.Now().Format(time.RFC3339)))
+	_ = excel.MergeCell(summarySheet, "A2", "D2")
 
 	// Add headers
 	headers := []string{"ID", "Name", "Severity", "Status", "Category"}
 	for i, header := range headers {
 		cell := fmt.Sprintf("%c4", 'A'+i)
-		excel.SetCellValue(summarySheet, cell, header)
+		_ = excel.SetCellValue(summarySheet, cell, header)
 	}
 
 	// Add test results
 	row := 5
 	for _, result := range results {
-		excel.SetCellValue(summarySheet, fmt.Sprintf("A%d", row), result.ID)
-		excel.SetCellValue(summarySheet, fmt.Sprintf("B%d", row), result.Name)
-		excel.SetCellValue(summarySheet, fmt.Sprintf("C%d", row), string(result.Severity))
-		excel.SetCellValue(summarySheet, fmt.Sprintf("D%d", row), result.Status)
-		excel.SetCellValue(summarySheet, fmt.Sprintf("E%d", row), result.Category)
+		_ = excel.SetCellValue(summarySheet, fmt.Sprintf("A%d", row), result.ID)
+		_ = excel.SetCellValue(summarySheet, fmt.Sprintf("B%d", row), result.Name)
+		_ = excel.SetCellValue(summarySheet, fmt.Sprintf("C%d", row), string(result.Severity))
+		_ = excel.SetCellValue(summarySheet, fmt.Sprintf("D%d", row), result.Status)
+		_ = excel.SetCellValue(summarySheet, fmt.Sprintf("E%d", row), result.Category)
 		row++
 	}
 
@@ -74,16 +74,16 @@ func (f *ExcelFormatter) FormatReport(results api.TestResults, writer io.Writer)
 		detailHeaders := []string{"ID", "Name", "Description", "Details"}
 		for i, header := range detailHeaders {
 			cell := fmt.Sprintf("%c1", 'A'+i)
-			excel.SetCellValue(detailsSheet, cell, header)
+			_ = excel.SetCellValue(detailsSheet, cell, header)
 		}
 
 		// Add detailed information
 		detailRow := 2
 		for _, result := range results {
-			excel.SetCellValue(detailsSheet, fmt.Sprintf("A%d", detailRow), result.ID)
-			excel.SetCellValue(detailsSheet, fmt.Sprintf("B%d", detailRow), result.Name)
-			excel.SetCellValue(detailsSheet, fmt.Sprintf("C%d", detailRow), result.Description)
-			excel.SetCellValue(detailsSheet, fmt.Sprintf("D%d", detailRow), result.Details)
+			_ = excel.SetCellValue(detailsSheet, fmt.Sprintf("A%d", detailRow), result.ID)
+			_ = excel.SetCellValue(detailsSheet, fmt.Sprintf("B%d", detailRow), result.Name)
+			_ = excel.SetCellValue(detailsSheet, fmt.Sprintf("C%d", detailRow), result.Description)
+			_ = excel.SetCellValue(detailsSheet, fmt.Sprintf("D%d", detailRow), result.Details)
 			detailRow++
 		}
 	}
@@ -130,7 +130,7 @@ func (f *ExcelFormatter) WriteToFile(ctx context.Context, reportInterface interf
 	}
 
 	// Create the file
-	file, err := os.Create(filePath)
+	file, err := os.Create(filePath) // #nosec G304 -- path from caller-controlled report output
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", filePath, err)
 	}

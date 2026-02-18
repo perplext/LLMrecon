@@ -341,11 +341,11 @@ func (h *StaticFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					fmt.Printf("Failed to close: %v\n", err)
 				}
 			}()
-			gzipWriter.Write(cacheEntry.data)
+			_, _ = gzipWriter.Write(cacheEntry.data)
 		} else {
 			// Serve uncompressed
 			w.Header().Set("Content-Length", strconv.FormatInt(int64(len(cacheEntry.data)), 10))
-			w.Write(cacheEntry.data)
+			_, _ = w.Write(cacheEntry.data)
 		}
 		return
 	}
@@ -374,11 +374,11 @@ func (h *StaticFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("Failed to close: %v\n", err)
 			}
 		}()
-		io.Copy(gzipWriter, file)
+		_, _ = io.Copy(gzipWriter, file)
 	} else {
 		// Set Content-Length header
 		w.Header().Set("Content-Length", strconv.FormatInt(cacheEntry.size, 10))
-		io.Copy(w, file)
+		_, _ = io.Copy(w, file)
 	}
 }
 

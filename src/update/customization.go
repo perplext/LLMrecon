@@ -108,7 +108,7 @@ func (m *CustomizationManager) ReapplyCustomizations(updatedTemplates, updatedMo
 func UpdateWithCustomizationPreservation(ctx context.Context, installDir, backupDir string, pkg *UpdatePackage) error {
 	// Create log file for customization operations
 	logPath := filepath.Join(backupDir, "customization.log")
-	logFile, err := os.Create(logPath)
+	logFile, err := os.Create(logPath) // #nosec G304 -- path constructed from backupDir parameter + constant filename
 	if err != nil {
 		return fmt.Errorf("failed to create customization log file: %w", err)
 	}

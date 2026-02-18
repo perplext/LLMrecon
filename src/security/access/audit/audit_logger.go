@@ -53,5 +53,5 @@ func (l *AuditLogger) LogEventWithStatus(event, component, id, status string, de
 	}
 	entry += "\n"
 
-	l.writer.Write([]byte(entry))
+	_, _ = l.writer.Write([]byte(entry))
 }

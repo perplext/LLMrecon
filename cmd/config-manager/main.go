@@ -160,7 +160,7 @@ func exportConfiguration(memConfig *config.MemoryConfig, filePath string) {
 	
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		fmt.Printf("Failed to create directory: %v\n", err)
 		os.Exit(1)
 	}

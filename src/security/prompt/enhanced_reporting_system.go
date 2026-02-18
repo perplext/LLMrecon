@@ -198,7 +198,7 @@ func (r *EnhancedReportingSystem) ReportInjectionEnhanced(ctx context.Context, d
 		}
 
 		// Save to disk
-		r.saveReportToDisk(report)
+		_ = r.saveReportToDisk(report)
 
 		// Process with report handlers
 		for _, handler := range r.reportHandlers {

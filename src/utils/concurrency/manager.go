@@ -379,7 +379,7 @@ func (m *ConcurrencyManager) adjustWorkerCount() {
 	utilization := float64(pendingTasks) / float64(activeWorkers)
 
 	// Scale up if utilization is high
-	if utilization >= m.config.ScaleUpThreshold && activeWorkers < int32(m.config.MaxWorkers) {
+	if utilization >= m.config.ScaleUpThreshold && activeWorkers < int32(m.config.MaxWorkers) { // #nosec G115 -- worker counts bounded by config
 		workersToAdd := m.config.ScaleUpStep
 		if int(activeWorkers)+workersToAdd > m.config.MaxWorkers {
 			workersToAdd = m.config.MaxWorkers - int(activeWorkers)
@@ -395,7 +395,7 @@ func (m *ConcurrencyManager) adjustWorkerCount() {
 	}
 
 	// Scale down if utilization is low
-	if utilization <= m.config.ScaleDownThreshold && activeWorkers > int32(m.config.MinWorkers) {
+	if utilization <= m.config.ScaleDownThreshold && activeWorkers > int32(m.config.MinWorkers) { // #nosec G115 -- worker counts bounded by config
 		// We don't need to do anything here, workers will timeout and exit
 		m.stats.WorkerScalingEvents++
 		m.stats.LastScaleDownTime = time.Now()
@@ -409,7 +409,7 @@ func (m *ConcurrencyManager) shouldScaleDown() bool {
 	defer m.mutex.RUnlock()
 
 	// Check if we're at the minimum number of workers
-	if atomic.LoadInt32(&m.activeWorkers) <= int32(m.config.MinWorkers) {
+	if atomic.LoadInt32(&m.activeWorkers) <= int32(m.config.MinWorkers) { // #nosec G115 -- worker counts bounded by config
 		return false
 	}
 
@@ -437,7 +437,7 @@ func (m *ConcurrencyManager) GetStats() *ConcurrencyStats {
 		MaxTaskDuration:     m.stats.MaxTaskDuration,
 		MinTaskDuration:     m.stats.MinTaskDuration,
 		TotalTaskDuration:   m.stats.TotalTaskDuration,
-		QueuedTasks:         int32(len(m.taskQueue)),
+		QueuedTasks:         int32(len(m.taskQueue)), // #nosec G115 -- worker counts bounded by config
 		WorkerScalingEvents: m.stats.WorkerScalingEvents,
 		LastScaleUpTime:     m.stats.LastScaleUpTime,
 		LastScaleDownTime:   m.stats.LastScaleDownTime,

@@ -89,7 +89,10 @@ func (g *ManifestGenerator) GenerateIncrementalManifest(baseManifest *EnhancedBu
 	// Create a copy of the base manifest
 	manifestData, _ := json.Marshal(baseManifest)
 	var incrementalManifest EnhancedBundleManifest
-	json.Unmarshal(manifestData, &incrementalManifest)
+	if err := json.Unmarshal(manifestData, &incrementalManifest); err != nil {
+		// If unmarshal fails, start with empty manifest
+		incrementalManifest = EnhancedBundleManifest{}
+	}
 
 	// Update version and creation time
 	incrementalManifest.Version = newVersion

@@ -445,17 +445,17 @@ func (e *ConcurrencyEngine) Stop() error {
 	// Stop all worker pools
 	e.mutex.Lock()
 	for _, pool := range e.workerPools {
-		pool.Stop()
+		_ = pool.Stop()
 	}
 	for _, pipeline := range e.pipelines {
-		pipeline.Stop()
+		_ = pipeline.Stop()
 	}
 	e.mutex.Unlock()
 
 	// Stop components
-	e.coordinator.Stop()
-	e.scheduler.Stop()
-	e.balancer.Stop()
+	_ = e.coordinator.Stop()
+	_ = e.scheduler.Stop()
+	_ = e.balancer.Stop()
 
 	e.wg.Wait()
 
@@ -610,7 +610,7 @@ func (e *ConcurrencyEngine) scaleUp() {
 
 	for _, pool := range e.workerPools {
 		if len(pool.workers) < e.config.MaxWorkers {
-			pool.AddWorker()
+			_ = pool.AddWorker()
 			e.logger.Info("Scaled up worker pool", "pool", pool.name, "workers", len(pool.workers))
 		}
 	}
@@ -623,7 +623,7 @@ func (e *ConcurrencyEngine) scaleDown() {
 
 	for _, pool := range e.workerPools {
 		if len(pool.workers) > e.config.MinWorkers {
-			pool.RemoveWorker()
+			_ = pool.RemoveWorker()
 			e.logger.Info("Scaled down worker pool", "pool", pool.name, "workers", len(pool.workers))
 		}
 	}
@@ -640,8 +640,8 @@ func (e *ConcurrencyEngine) updateResourceMetrics() {
 		Goroutines:  runtime.NumGoroutine(),
 		GCStats: GCStats{
 			NumGC:       m.NumGC,
-			PauseTotal:  time.Duration(m.PauseTotalNs),
-			LastPause:   time.Duration(m.PauseNs[(m.NumGC+255)%256]),
+			PauseTotal:  time.Duration(m.PauseTotalNs),                    // #nosec G115 -- GC stats bounded by process lifetime
+			LastPause:   time.Duration(m.PauseNs[(m.NumGC+255)%256]), // #nosec G115 -- GC stats bounded by process lifetime
 			HeapSize:    m.HeapAlloc,
 			HeapObjects: m.HeapObjects,
 		},

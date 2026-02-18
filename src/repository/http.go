@@ -252,7 +252,7 @@ func (r *HTTPRepository) ListFiles(ctx context.Context, pattern string) ([]FileI
 				if err != nil {
 					continue
 				}
-				fileResp.Body.Close()
+				_ = fileResp.Body.Close()
 
 				// Get file size
 				fileInfo.Size = fileResp.ContentLength
@@ -370,7 +370,7 @@ func (r *HTTPRepository) GetFile(ctx context.Context, filePath string) (io.ReadC
 
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		r.ReleaseConnection()
 
 		// Create error for status code

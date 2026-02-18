@@ -549,9 +549,9 @@ func (lb *AdvancedLoadBalancer) Stop() error {
 	lb.cancel()
 
 	// Stop components
-	lb.health.Stop()
-	lb.scaler.Stop()
-	lb.predictor.Stop()
+	_ = lb.health.Stop()
+	_ = lb.scaler.Stop()
+	_ = lb.predictor.Stop()
 
 	lb.wg.Wait()
 

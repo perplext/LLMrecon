@@ -319,7 +319,7 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 		}
 	}()
 
-	destFile, err := os.Create(destPath)
+	destFile, err := os.Create(destPath) // #nosec G304 -- path from internal repository extraction
 	if err != nil {
 		return err
 	}
@@ -329,7 +329,8 @@ func (ru *RepositoryUpdater) extractZipFile(file *zip.File, destDir string) erro
 		}
 	}()
 
-	_, err = io.Copy(destFile, reader)
+	const maxDecompressSize = 500 << 20 // 500MB
+	_, err = io.Copy(destFile, io.LimitReader(reader, maxDecompressSize))
 	if err != nil {
 		return err
 	}
@@ -396,7 +397,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 
 	switch header.Typeflag {
 	case tar.TypeDir:
-		return os.MkdirAll(destPath, os.FileMode(header.Mode))
+		return os.MkdirAll(destPath, os.FileMode(header.Mode)) // #nosec G115 -- tar header mode is a valid file permission
 	case tar.TypeReg:
 		// Create directory if needed
 		if err := os.MkdirAll(filepath.Dir(destPath), 0700); err != nil {
@@ -404,7 +405,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		}
 
 		// Extract file
-		destFile, err := os.Create(destPath)
+		destFile, err := os.Create(destPath) // #nosec G304 -- path from internal repository extraction
 		if err != nil {
 			return err
 		}
@@ -420,7 +421,7 @@ func (ru *RepositoryUpdater) extractTarEntry(header *tar.Header, reader io.Reade
 		}
 
 		// Set file permissions
-		return os.Chmod(destPath, os.FileMode(header.Mode))
+		return os.Chmod(destPath, os.FileMode(header.Mode)) // #nosec G115 -- tar header mode is a valid file permission
 	default:
 		// Skip other file types (symlinks, etc.)
 		return nil

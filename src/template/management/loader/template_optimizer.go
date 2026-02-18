@@ -215,7 +215,7 @@ func (o *TemplateOptimizer) cloneTemplate(template *format.Template) *format.Tem
 	// Serialize to JSON and back for a deep copy
 	data, _ := json.Marshal(template)
 	var clone format.Template
-	json.Unmarshal(data, &clone)
+	_ = json.Unmarshal(data, &clone)
 	return &clone
 }
 

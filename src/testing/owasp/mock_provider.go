@@ -477,7 +477,7 @@ func generateMockEmbedding(input string, dimensions int) []float64 {
 	for i, c := range input {
 		seed += int64(c) * int64(i+1)
 	}
-	r := mathrand.New(mathrand.NewSource(seed))
+	r := mathrand.New(mathrand.NewSource(seed)) // #nosec G404 -- deterministic mock data generation
 
 	// Generate random embedding values
 	embedding := make([]float64, dimensions)
@@ -527,7 +527,7 @@ func randFloat64() float64 {
 	// Convert bytes to float64 between 0.0 and 1.0
 	var result uint64
 	for i, b := range bytes {
-		result |= uint64(b) << (8 * uint(i))
+		result |= uint64(b) << (8 * uint(i)) // #nosec G115 -- bounded test data
 	}
 	return float64(result) / float64(^uint64(0))
 }

@@ -45,7 +45,7 @@ func main() {
 	ctx := context.Background()
 
 	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0750); err != nil {
 		log.Fatalf("Failed to create output directory: %v", err)
 	}
 
@@ -204,7 +204,7 @@ func processPrompts(ctx context.Context, manager *prompt.EnhancedProtectionManag
 	userID := "batch-user"
 
 	// Create results file
-	resultsFile, err := os.Create(filepath.Join(outputDir, "results.txt"))
+	resultsFile, err := os.Create(filepath.Join(outputDir, "results.txt")) // #nosec G304 -- path constructed from CLI flag
 	if err != nil {
 		log.Fatalf("Failed to create results file: %v", err)
 	}

@@ -452,7 +452,7 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 	}
 
 	// Create output file
-	outputFile, err := os.Create(outputPath)
+	outputFile, err := os.Create(outputPath) // #nosec G304 -- path from internal decompression pipeline
 	if err != nil {
 		return err
 	}

@@ -554,7 +554,7 @@ func (dp *DowngradeProtection) CreateSecureClient() (*SecureClient, error) {
 	return &SecureClient{
 		client: &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
+				TLSClientConfig: &tls.Config{ // #nosec G402 -- secure config with MinVersion and CipherSuites
 					MinVersion:   options.MinTLSVersion,
 					CipherSuites: options.CipherSuites,
 				},

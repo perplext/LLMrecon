@@ -584,7 +584,7 @@ func (tis *ThreatIntelligenceSystem) ImportIndicators(ctx context.Context, indic
 		tis.indicators[indicator.ID] = indicator
 
 		// Store in repository
-		tis.repository.Store("indicator", indicator.ID, indicator)
+		_ = tis.repository.Store("indicator", indicator.ID, indicator)
 	}
 
 	// Trigger correlation if enabled

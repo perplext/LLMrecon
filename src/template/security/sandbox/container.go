@@ -167,7 +167,7 @@ cat template.txt
 echo "Done."
 `
 
-	if err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0700); err != nil {
+	if err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0700); err != nil { // #nosec G306 -- script must be executable
 		return nil, fmt.Errorf("failed to write script file: %w", err)
 	}
 
@@ -204,9 +204,9 @@ echo "Done."
 	// Create the command
 	switch s.containerEngine {
 	case "docker":
-		cmd = exec.CommandContext(ctx, "docker", args...)
+		cmd = exec.CommandContext(ctx, "docker", args...) // #nosec G204 -- containerEngine is validated to "docker"/"podman", args built from trusted config
 	case "podman":
-		cmd = exec.CommandContext(ctx, "podman", args...)
+		cmd = exec.CommandContext(ctx, "podman", args...) // #nosec G204 -- containerEngine is validated to "docker"/"podman", args built from trusted config
 	default:
 		return nil, fmt.Errorf("unsupported container engine: %s", s.containerEngine)
 	}

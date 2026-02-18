@@ -339,13 +339,13 @@ func (v *SecureVault) GetCredential(id string) (*Credential, error) {
 
 	// Log access
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess(id, cred.Service, "get")
+		_ = v.auditLogger.LogCredentialAccess(id, cred.Service, "get")
 	}
 
 	// Update last used timestamp
 	cred.LastUsedAt = time.Now()
 	if v.autoSave {
-		go v.Save() // Save asynchronously to avoid blocking
+		go func() { _ = v.Save() }() // Save asynchronously to avoid blocking
 	}
 
 	return cred, nil
@@ -394,7 +394,7 @@ func (v *SecureVault) StoreCredential(cred *Credential) error {
 		if isNew {
 			operation = "create"
 		}
-		v.auditLogger.LogCredentialAccess(credID, credService, operation)
+		_ = v.auditLogger.LogCredentialAccess(credID, credService, operation)
 	}
 
 	// Save to file if auto-save is enabled - outside the lock
@@ -440,7 +440,7 @@ func (v *SecureVault) DeleteCredential(id string) error {
 	if credFound {
 		// Log operation outside the lock
 		if v.auditLogger != nil {
-			v.auditLogger.LogCredentialAccess(id, credService, "delete")
+			_ = v.auditLogger.LogCredentialAccess(id, credService, "delete")
 		}
 
 		// Save to file if auto-save is enabled - outside the lock
@@ -464,7 +464,7 @@ func (v *SecureVault) ListCredentials() ([]*Credential, error) {
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("all", "", "list")
+		_ = v.auditLogger.LogCredentialAccess("all", "", "list")
 	}
 
 	return credentials, nil
@@ -484,7 +484,7 @@ func (v *SecureVault) ListCredentialsByService(service string) ([]*Credential, e
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("service:"+service, service, "list")
+		_ = v.auditLogger.LogCredentialAccess("service:"+service, service, "list")
 	}
 
 	return credentials, nil
@@ -504,7 +504,7 @@ func (v *SecureVault) ListCredentialsByType(credType CredentialType) ([]*Credent
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("type:"+string(credType), "", "list")
+		_ = v.auditLogger.LogCredentialAccess("type:"+string(credType), "", "list")
 	}
 
 	return credentials, nil
@@ -527,7 +527,7 @@ func (v *SecureVault) ListCredentialsByTag(tag string) ([]*Credential, error) {
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("tag:"+tag, "", "list")
+		_ = v.auditLogger.LogCredentialAccess("tag:"+tag, "", "list")
 	}
 
 	return credentials, nil
@@ -553,7 +553,7 @@ func (v *SecureVault) RotateCredential(id string, newValue string) error {
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess(id, cred.Service, "rotate")
+		_ = v.auditLogger.LogCredentialAccess(id, cred.Service, "rotate")
 	}
 
 	// Save to file if auto-save is enabled
@@ -594,7 +594,7 @@ func (v *SecureVault) GetCredentialsNeedingRotation() ([]*Credential, error) {
 
 	// Log operation
 	if v.auditLogger != nil {
-		v.auditLogger.LogCredentialAccess("rotation-check", "", "list")
+		_ = v.auditLogger.LogCredentialAccess("rotation-check", "", "list")
 	}
 
 	return credentials, nil

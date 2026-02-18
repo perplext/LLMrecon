@@ -750,8 +750,8 @@ func (p *PerformanceProfiler) CollectMetrics() *PerformanceMetrics {
 		GC: GCMetrics{
 			NumGC:         m.NumGC,
 			NumForcedGC:   m.NumForcedGC,
-			PauseTotal:    time.Duration(m.PauseTotalNs),
-			LastGC:        time.Unix(0, int64(m.LastGC)),
+			PauseTotal:    time.Duration(m.PauseTotalNs),    // #nosec G115 -- GC stats bounded by process lifetime
+			LastGC:        time.Unix(0, int64(m.LastGC)), // #nosec G115 -- GC stats bounded by process lifetime
 			GCCPUFraction: m.GCCPUFraction,
 		},
 	}
@@ -1029,7 +1029,7 @@ type CPUProfiler struct {
 
 func (cp *CPUProfiler) Start() error {
 	filename := filepath.Join(cp.dir, fmt.Sprintf("cpu_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filename) // #nosec G304 -- path constructed from struct field dir + timestamp
 	if err != nil {
 		return err
 	}
@@ -1066,7 +1066,7 @@ func (mp *MemoryProfiler) Stop() error  { return nil }
 
 func (mp *MemoryProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(mp.dir, fmt.Sprintf("memory_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filename) // #nosec G304 -- path constructed from struct field dir + timestamp
 	if err != nil {
 		return nil, err
 	}
@@ -1103,7 +1103,7 @@ func (gp *GoroutineProfiler) Stop() error  { return nil }
 
 func (gp *GoroutineProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(gp.dir, fmt.Sprintf("goroutine_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filename) // #nosec G304 -- path constructed from struct field dir + timestamp
 	if err != nil {
 		return nil, err
 	}
@@ -1147,7 +1147,7 @@ func (bp *BlockProfiler) Stop() error {
 
 func (bp *BlockProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(bp.dir, fmt.Sprintf("block_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filename) // #nosec G304 -- path constructed from struct field dir + timestamp
 	if err != nil {
 		return nil, err
 	}
@@ -1191,7 +1191,7 @@ func (mp *MutexProfiler) Stop() error {
 
 func (mp *MutexProfiler) Collect() (*ProfileData, error) {
 	filename := filepath.Join(mp.dir, fmt.Sprintf("mutex_profile_%d.prof", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filename) // #nosec G304 -- path constructed from struct field dir + timestamp
 	if err != nil {
 		return nil, err
 	}
@@ -1226,7 +1226,7 @@ type TraceProfiler struct {
 
 func (tp *TraceProfiler) Start() error {
 	filename := filepath.Join(tp.dir, fmt.Sprintf("trace_profile_%d.trace", time.Now().Unix()))
-	file, err := os.Create(filename)
+	file, err := os.Create(filename) // #nosec G304 -- path constructed from struct field dir + timestamp
 	if err != nil {
 		return err
 	}

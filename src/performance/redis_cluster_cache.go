@@ -488,15 +488,15 @@ func (c *RedisClusterCache) Stop() error {
 
 	// Stop components
 	if c.warmer != nil {
-		c.warmer.Stop()
+		_ = c.warmer.Stop()
 	}
-	c.invalidator.Stop()
-	c.partitioner.Stop()
+	_ = c.invalidator.Stop()
+	_ = c.partitioner.Stop()
 
 	// Close Redis connections
-	c.primary.Close()
+	_ = c.primary.Close()
 	for _, replica := range c.replicas {
-		replica.Close()
+		_ = replica.Close()
 	}
 
 	c.wg.Wait()

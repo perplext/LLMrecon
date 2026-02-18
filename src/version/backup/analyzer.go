@@ -583,7 +583,7 @@ func findDependencyPath(ctx context.Context, repo interfaces.Repository, depID s
 			}
 
 			content, err := io.ReadAll(reader)
-			reader.Close()
+			_ = reader.Close()
 			if err != nil {
 				continue
 			}

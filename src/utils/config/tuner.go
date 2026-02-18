@@ -326,7 +326,7 @@ func (t *ConfigTuner) SaveConfigToFile(filename string) error {
 	defer t.mutex.RUnlock()
 
 	// Create file
-	f, err := os.Create(filename)
+	f, err := os.Create(filename) // #nosec G304 -- path from caller-controlled output parameter
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}

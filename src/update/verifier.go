@@ -13,6 +13,7 @@ import (
 	"hash"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -163,7 +164,14 @@ func (v *Verifier) verifySignature(filePath, signatureURL string) error {
 
 // downloadSignature downloads a signature from URL
 func (v *Verifier) downloadSignature(signatureURL string) ([]byte, error) {
-	resp, err := http.Get(signatureURL)
+	parsedURL, err := url.Parse(signatureURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid signature URL: %w", err)
+	}
+	if parsedURL.Scheme != "https" {
+		return nil, fmt.Errorf("signature URL must use https scheme, got: %s", parsedURL.Scheme)
+	}
+	resp, err := http.Get(signatureURL) // #nosec G107 -- URL scheme validated above
 	if err != nil {
 		return nil, fmt.Errorf("failed to download signature: %w", err)
 	}

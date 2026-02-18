@@ -523,7 +523,7 @@ func (pe *PersistenceEngine) shouldActivate(attack *PersistentAttack, input stri
 // Helper functions
 func generateAttackID() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
 }
 func generateAnchorPattern(payload string) string {
@@ -533,13 +533,13 @@ func generateAnchorPattern(payload string) string {
 }
 func generatePersistenceToken() string {
 	b := make([]byte, 32)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
 }
 func generateBackdoorTrigger() string {
 	// Generate obfuscated backdoor trigger
 	b := make([]byte, 8)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return fmt.Sprintf("BD_%s", base64.URLEncoding.EncodeToString(b)[:8])
 }
 func fnv32a(text string) uint32 {

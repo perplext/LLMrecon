@@ -2,6 +2,7 @@ package update
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -82,6 +83,15 @@ func (rm *RepositoryManager) SyncRepository(name string) error {
 		return fmt.Errorf("repository '%s' not found", name)
 	}
 
+	// Validate repo URL scheme before passing to git
+	parsedURL, err := url.Parse(repo.URL)
+	if err != nil {
+		return fmt.Errorf("invalid repository URL: %w", err)
+	}
+	if parsedURL.Scheme != "https" && parsedURL.Scheme != "http" && parsedURL.Scheme != "git" && parsedURL.Scheme != "ssh" {
+		return fmt.Errorf("unsupported repository URL scheme: %s", parsedURL.Scheme)
+	}
+
 	// Create parent directories if they don't exist
 	if err := os.MkdirAll(filepath.Dir(repo.LocalPath), 0700); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
@@ -90,13 +100,13 @@ func (rm *RepositoryManager) SyncRepository(name string) error {
 	// Check if repository already exists locally
 	if _, err := os.Stat(filepath.Join(repo.LocalPath, ".git")); os.IsNotExist(err) {
 		// Repository doesn't exist, clone it
-		cmd := exec.Command("git", "clone", repo.URL, repo.LocalPath)
+		cmd := exec.Command("git", "clone", repo.URL, repo.LocalPath) // #nosec G204 -- repo.URL validated above, repo.LocalPath from filepath.Join
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to clone repository: %w", err)
 		}
 	} else {
 		// Repository exists, pull latest changes
-		cmd := exec.Command("git", "-C", repo.LocalPath, "pull")
+		cmd := exec.Command("git", "-C", repo.LocalPath, "pull") // #nosec G204 -- repo.LocalPath constructed via filepath.Join from BaseDir
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to pull repository: %w", err)
 		}
@@ -118,7 +128,7 @@ func (rm *RepositoryManager) updateRepositoryInfo(name string) error {
 	}
 
 	// Get current commit hash
-	cmd := exec.Command("git", "-C", repo.LocalPath, "rev-parse", "HEAD")
+	cmd := exec.Command("git", "-C", repo.LocalPath, "rev-parse", "HEAD") // #nosec G204 -- repo.LocalPath constructed via filepath.Join from BaseDir
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to get current commit hash: %w", err)
@@ -126,7 +136,7 @@ func (rm *RepositoryManager) updateRepositoryInfo(name string) error {
 	repo.CurrentVersion = strings.TrimSpace(string(output))
 
 	// Get latest commit hash from remote
-	cmd = exec.Command("git", "-C", repo.LocalPath, "ls-remote", "origin", "HEAD")
+	cmd = exec.Command("git", "-C", repo.LocalPath, "ls-remote", "origin", "HEAD") // #nosec G204 -- repo.LocalPath constructed via filepath.Join from BaseDir
 	output, err = cmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to get latest commit hash: %w", err)

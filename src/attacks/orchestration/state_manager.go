@@ -300,7 +300,7 @@ func (sm *StateManager) checkpointRoutine() {
 		for _, state := range states {
 			if sm.shouldCheckpoint(state) {
 				sm.mu.Lock()
-				sm.createCheckpoint(state)
+				_ = sm.createCheckpoint(state)
 				sm.mu.Unlock()
 			}
 		}
