@@ -167,8 +167,11 @@ cat template.txt
 echo "Done."
 `
 
-	if err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0700); err != nil { // #nosec G306 -- script must be executable
+	if err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write script file: %w", err)
+	}
+	if err := os.Chmod(scriptFile, 0500); err != nil {
+		return nil, fmt.Errorf("failed to make script file executable: %w", err)
 	}
 
 	// Build the container command
