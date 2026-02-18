@@ -690,18 +690,18 @@ func (p *PerformanceProfiler) Stop() error {
 	if p.server != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		p.server.Shutdown(ctx)
+		_ = p.server.Shutdown(ctx)
 	}
 
 	// Stop components
-	p.alerts.Stop()
-	p.reporter.Stop()
-	p.analyzer.Stop()
-	p.optimizer.Stop()
+	_ = p.alerts.Stop()
+	_ = p.reporter.Stop()
+	_ = p.analyzer.Stop()
+	_ = p.optimizer.Stop()
 
 	// Stop all profilers
 	for _, profiler := range p.profilers {
-		profiler.Stop()
+		_ = profiler.Stop()
 	}
 
 	p.wg.Wait()

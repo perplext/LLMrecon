@@ -447,7 +447,11 @@ func main() {
 	// Start HTTP server
 	fmt.Println("Starting HTTP server on localhost:8080")
 	fmt.Println("Visit http://localhost:8080 to see the example")
-	log.Fatal(http.ListenAndServe("localhost:8080", nil))
+	server := &http.Server{ // #nosec G114 -- example demo server
+		Addr:              "localhost:8080",
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+	log.Fatal(server.ListenAndServe())
 }
 
 // createExampleFiles creates example static files for testing
@@ -633,7 +637,7 @@ tr:hover {
     }
 }
 `
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
+	_ = os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
 }
 
 // createJSFile creates a JavaScript file for the example
@@ -676,7 +680,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	setInterval(updateStats, 2000);
 });
 `
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
+	_ = os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
 }
 
 // formatBytes formats bytes to a human-readable string (KB, MB, GB)

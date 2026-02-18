@@ -160,7 +160,7 @@ func (mo *MemoryOptimizer) backgroundOptimization() {
 	for {
 		select {
 		case <-ticker.C:
-			mo.OptimizeMemory(mo.ctx)
+			_ = mo.OptimizeMemory(mo.ctx)
 		case <-mo.ctx.Done():
 			return
 		}

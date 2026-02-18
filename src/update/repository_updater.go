@@ -207,7 +207,7 @@ func (ru *RepositoryUpdater) downloadRepositoryArchive(ctx context.Context, url,
 	// Download with progress
 	_, err = io.Copy(tempFile, resp.Body)
 	if err != nil {
-		os.Remove(tempFile.Name())
+		_ = os.Remove(tempFile.Name())
 		return "", fmt.Errorf("failed to download archive: %w", err)
 	}
 
