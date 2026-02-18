@@ -167,7 +167,7 @@ func (h *FileHandler) serveContent(w http.ResponseWriter, r *http.Request, cache
 	w.Header().Set("Content-Type", cachedFile.ContentType)
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(cachedFile.Content)))
 	w.WriteHeader(http.StatusOK)
-	w.Write(cachedFile.Content)
+	_, _ = w.Write(cachedFile.Content)
 }
 
 // serveCompressedContent serves gzip compressed content
@@ -176,7 +176,7 @@ func (h *FileHandler) serveCompressedContent(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Encoding", "gzip")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(cachedFile.CompressedContent)))
 	w.WriteHeader(http.StatusOK)
-	w.Write(cachedFile.CompressedContent)
+	_, _ = w.Write(cachedFile.CompressedContent)
 }
 
 // acceptsGzip checks if the client accepts gzip encoding
@@ -253,7 +253,7 @@ func (h *FileHandler) cacheFile(filePath string, file *os.File, info os.FileInfo
 	}
 
 	// Reset file position
-	file.Seek(0, 0)
+	_, _ = file.Seek(0, 0)
 
 	// Calculate ETag (MD5 is acceptable for ETags, not for security)
 	hash := md5.Sum(content) // #nosec G401 - MD5 is fine for ETags
@@ -371,8 +371,8 @@ func shouldCompress(filePath string, compressExtensions []string) bool {
 func compressContent(content []byte) []byte {
 	var b bytes.Buffer
 	gz, _ := gzip.NewWriterLevel(&b, gzip.BestCompression)
-	gz.Write(content)
-	gz.Close()
+	_, _ = gz.Write(content)
+	_ = gz.Close()
 	return b.Bytes()
 }
 

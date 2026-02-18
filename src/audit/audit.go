@@ -149,7 +149,7 @@ func (l *AuditLogger) LogEventWithStatus(event, component, id, status string, de
 		}
 
 		// Write the audit log entry
-		fmt.Fprintf(l.Writer, "[%s] [%s] [%s] [%s] [%s] [%s]%s\n",
+		_, _ = fmt.Fprintf(l.Writer, "[%s] [%s] [%s] [%s] [%s] [%s]%s\n",
 			timestamp.Format(time.RFC3339), status, user, component, event, id, detailsStr)
 	}
 }
@@ -408,21 +408,21 @@ func (l *AuditLogger) generateSummaryReport(events []AuditEvent, writer io.Write
 	}
 
 	// Write bundle counts
-	csv.Write([]string{"Bundle ID", "Count"})
+	_ = csv.Write([]string{"Bundle ID", "Count"})
 	for bundleID, count := range summary.BundleCounts {
-		csv.Write([]string{bundleID, fmt.Sprintf("%d", count)})
+		_ = csv.Write([]string{bundleID, fmt.Sprintf("%d", count)})
 	}
 
 	// Write status counts
-	csv.Write([]string{"Status", "Count"})
+	_ = csv.Write([]string{"Status", "Count"})
 	for status, count := range summary.StatusCounts {
-		csv.Write([]string{status, fmt.Sprintf("%d", count)})
+		_ = csv.Write([]string{status, fmt.Sprintf("%d", count)})
 	}
 
 	// Write user counts
-	csv.Write([]string{"User", "Count"})
+	_ = csv.Write([]string{"User", "Count"})
 	for user, count := range summary.UserCounts {
-		csv.Write([]string{user, fmt.Sprintf("%d", count)})
+		_ = csv.Write([]string{user, fmt.Sprintf("%d", count)})
 	}
 
 	return nil
@@ -472,15 +472,15 @@ func (l *AuditLogger) generateActivityReport(events []AuditEvent, writer io.Writ
 	defer csv.Flush()
 
 	// Write header
-	csv.Write([]string{"Report Type", "Generated At", "Total Events"})
-	csv.Write([]string{string(activityReport.ReportType), activityReport.GeneratedAt.Format(time.RFC3339), fmt.Sprintf("%d", activityReport.TotalEvents)})
+	_ = csv.Write([]string{"Report Type", "Generated At", "Total Events"})
+	_ = csv.Write([]string{string(activityReport.ReportType), activityReport.GeneratedAt.Format(time.RFC3339), fmt.Sprintf("%d", activityReport.TotalEvents)})
 
 	// Write time range
-	csv.Write([]string{"Time Range Start", "Time Range End"})
-	csv.Write([]string{activityReport.TimeRange.Start.Format(time.RFC3339), activityReport.TimeRange.End.Format(time.RFC3339)})
+	_ = csv.Write([]string{"Time Range Start", "Time Range End"})
+	_ = csv.Write([]string{activityReport.TimeRange.Start.Format(time.RFC3339), activityReport.TimeRange.End.Format(time.RFC3339)})
 
 	// Write activities by day
-	csv.Write([]string{"Date", "Timestamp", "Event Type", "Component", "ID", "User", "Status", "Details"})
+	_ = csv.Write([]string{"Date", "Timestamp", "Event Type", "Component", "ID", "User", "Status", "Details"})
 	for day, activities := range activityReport.Activities {
 		for _, activity := range activities {
 			// Format details as string
@@ -489,7 +489,7 @@ func (l *AuditLogger) generateActivityReport(events []AuditEvent, writer io.Writ
 				detailsStr += fmt.Sprintf("%s=%v; ", k, v)
 			}
 
-			csv.Write([]string{
+			_ = csv.Write([]string{
 				day,
 				activity.Timestamp.Format(time.RFC3339),
 				activity.EventType,
@@ -511,7 +511,7 @@ func (l *AuditLogger) exportEventsListAsCSV(events []AuditEvent, writer io.Write
 	defer csv.Flush()
 
 	// Write header
-	csv.Write([]string{"Timestamp", "Event Type", "Component", "ID", "User", "Status", "Details"})
+	_ = csv.Write([]string{"Timestamp", "Event Type", "Component", "ID", "User", "Status", "Details"})
 
 	// Write events
 	for _, event := range events {
@@ -521,7 +521,7 @@ func (l *AuditLogger) exportEventsListAsCSV(events []AuditEvent, writer io.Write
 			detailsStr += fmt.Sprintf("%s=%v; ", k, v)
 		}
 
-		csv.Write([]string{
+		_ = csv.Write([]string{
 			event.Timestamp.Format(time.RFC3339),
 			event.EventType,
 			event.Component,

@@ -838,7 +838,7 @@ func (mma *MultiModalAttacker) embedLSB(img image.Image, data []byte) {
 
 			// Embed bits in RGB channels
 			if bitIndex < 8 {
-				bit := (data[dataIndex] >> uint(7-bitIndex)) & 1
+				bit := (data[dataIndex] >> uint(7-bitIndex)) & 1 // #nosec G115 -- bitIndex is always 0-7, so 7-bitIndex is non-negative
 				pixel.R = (pixel.R & 0xFE) | bit
 			}
 			bitIndex++

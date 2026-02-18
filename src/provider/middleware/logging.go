@@ -330,7 +330,7 @@ func ConsoleLogHandler() LogHandler {
 // FileLogHandler returns a log handler that logs to a file
 func FileLogHandler(filePath string) (LogHandler, error) {
 	// Open the file for appending
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304 -- path from caller-controlled log parameter
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -353,7 +353,7 @@ func FileLogHandler(filePath string) (LogHandler, error) {
 // JSONLogHandler returns a log handler that logs to a JSON file
 func JSONLogHandler(filePath string) (LogHandler, error) {
 	// Open the file for appending
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304 -- path from caller-controlled log parameter
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %w", err)
 	}

@@ -619,7 +619,9 @@ func organizeByCategoryDirectory(mappings []CategoryMapping, sourceDir, outputDi
 	if categorizeMetadata {
 		mappingPath := filepath.Join(outputDir, "category-mappings.json")
 		mappingData, _ := json.MarshalIndent(mappings, "", "  ")
-		os.WriteFile(filepath.Clean(mappingPath), mappingData, 0600)
+		if err := os.WriteFile(filepath.Clean(mappingPath), mappingData, 0600); err != nil {
+			return fmt.Errorf("failed to write category mappings: %w", err)
+		}
 	}
 
 	fmt.Println()

@@ -305,7 +305,9 @@ func (s *SQLiteStorage) QueryMetrics(query *MetricsQuery) (*MetricsResult, error
 		}
 
 		var tags map[string]string
-		json.Unmarshal([]byte(tagsJSON), &tags)
+		if err := json.Unmarshal([]byte(tagsJSON), &tags); err != nil {
+			continue
+		}
 
 		// Find or create data point for this timestamp
 		var dataPoint *DataPoint

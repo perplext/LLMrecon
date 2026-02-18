@@ -91,7 +91,7 @@ func (t *Terminal) Clear() {
 
 	if t.isTerminal && t.clearScreen {
 		// ANSI escape sequence to clear screen and move cursor to top
-		fmt.Fprint(t.output, "\033[2J\033[H")
+		_, _ = fmt.Fprint(t.output, "\033[2J\033[H")
 	}
 }
 
@@ -102,7 +102,7 @@ func (t *Terminal) ClearLine() {
 
 	if t.isTerminal {
 		// Move cursor to beginning of line and clear to end
-		fmt.Fprint(t.output, "\r\033[K")
+		_, _ = fmt.Fprint(t.output, "\r\033[K")
 	}
 }
 
@@ -112,7 +112,7 @@ func (t *Terminal) MoveCursorUp(n int) {
 	defer t.mu.Unlock()
 
 	if t.isTerminal && n > 0 {
-		fmt.Fprintf(t.output, "\033[%dA", n)
+		_, _ = fmt.Fprintf(t.output, "\033[%dA", n)
 	}
 }
 
@@ -126,7 +126,7 @@ func (t *Terminal) ClearPreviousLines(n int) {
 		for i := 0; i < n; i++ {
 			t.ClearLine()
 			if i < n-1 {
-				fmt.Fprint(t.output, "\n")
+				_, _ = fmt.Fprint(t.output, "\n")
 			}
 		}
 
@@ -168,7 +168,7 @@ func (t *Terminal) Print(format string, args ...interface{}) {
 	defer t.mu.Unlock()
 
 	message := fmt.Sprintf(format, args...)
-	fmt.Fprintln(t.output, message)
+	_, _ = fmt.Fprintln(t.output, message)
 	t.lastLines = strings.Count(message, "\n") + 1
 }
 
@@ -182,9 +182,9 @@ func (t *Terminal) printWithColor(c color.Attribute, icon, format string, args .
 	if t.colorOutput {
 		colorFunc := color.New(c).SprintFunc()
 		iconColored := colorFunc(icon)
-		fmt.Fprintf(t.output, "%s %s\n", iconColored, message)
+		_, _ = fmt.Fprintf(t.output, "%s %s\n", iconColored, message)
 	} else {
-		fmt.Fprintf(t.output, "%s %s\n", icon, message)
+		_, _ = fmt.Fprintf(t.output, "%s %s\n", icon, message)
 	}
 
 	t.lastLines = strings.Count(message, "\n") + 1
@@ -205,13 +205,13 @@ func (t *Terminal) Header(title string) {
 
 	if t.colorOutput {
 		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
-		fmt.Fprintf(t.output, "\n%s\n", headerColor(fmt.Sprintf("┌─%s─┐", border)))
-		fmt.Fprintf(t.output, "%s\n", headerColor(fmt.Sprintf("│ %-*s │", width-4, title)))
-		fmt.Fprintf(t.output, "%s\n\n", headerColor(fmt.Sprintf("└─%s─┘", border)))
+		_, _ = fmt.Fprintf(t.output, "\n%s\n", headerColor(fmt.Sprintf("┌─%s─┐", border)))
+		_, _ = fmt.Fprintf(t.output, "%s\n", headerColor(fmt.Sprintf("│ %-*s │", width-4, title)))
+		_, _ = fmt.Fprintf(t.output, "%s\n\n", headerColor(fmt.Sprintf("└─%s─┘", border)))
 	} else {
-		fmt.Fprintf(t.output, "\n┌─%s─┐\n", border)
-		fmt.Fprintf(t.output, "│ %-*s │\n", width-4, title)
-		fmt.Fprintf(t.output, "└─%s─┘\n\n", border)
+		_, _ = fmt.Fprintf(t.output, "\n┌─%s─┐\n", border)
+		_, _ = fmt.Fprintf(t.output, "│ %-*s │\n", width-4, title)
+		_, _ = fmt.Fprintf(t.output, "└─%s─┘\n\n", border)
 	}
 
 	t.lastLines = 5
@@ -277,11 +277,11 @@ func (t *Terminal) tableImpl(headers []string, rows [][]string) {
 
 	if t.colorOutput {
 		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
-		fmt.Fprintln(t.output, headerColor(headerLine))
-		fmt.Fprintln(t.output, headerColor(separatorLine))
+		_, _ = fmt.Fprintln(t.output, headerColor(headerLine))
+		_, _ = fmt.Fprintln(t.output, headerColor(separatorLine))
 	} else {
-		fmt.Fprintln(t.output, headerLine)
-		fmt.Fprintln(t.output, separatorLine)
+		_, _ = fmt.Fprintln(t.output, headerLine)
+		_, _ = fmt.Fprintln(t.output, separatorLine)
 	}
 
 	// Print rows
@@ -297,7 +297,7 @@ func (t *Terminal) tableImpl(headers []string, rows [][]string) {
 				rowLine += cell
 			}
 		}
-		fmt.Fprintln(t.output, rowLine)
+		_, _ = fmt.Fprintln(t.output, rowLine)
 	}
 
 	t.lastLines = len(rows) + 2
@@ -310,9 +310,9 @@ func (t *Terminal) List(items []string, numbered bool) {
 
 	for i, item := range items {
 		if numbered {
-			fmt.Fprintf(t.output, "  %d. %s\n", i+1, item)
+			_, _ = fmt.Fprintf(t.output, "  %d. %s\n", i+1, item)
 		} else {
-			fmt.Fprintf(t.output, "  • %s\n", item)
+			_, _ = fmt.Fprintf(t.output, "  • %s\n", item)
 		}
 	}
 
@@ -345,7 +345,7 @@ func (t *Terminal) FinishProgress(id string) {
 // StartSpinner starts an indeterminate spinner
 func (t *Terminal) StartSpinner(message string) func() {
 	if !t.isTerminal {
-		fmt.Fprintf(t.output, "%s...\n", message)
+		_, _ = fmt.Fprintf(t.output, "%s...\n", message)
 		return func() {}
 	}
 
@@ -362,7 +362,7 @@ func (t *Terminal) StartSpinner(message string) func() {
 			case <-ticker.C:
 				t.ClearLine()
 				frame := t.spinner.Next()
-				fmt.Fprintf(t.output, "%s %s", frame, message)
+				_, _ = fmt.Fprintf(t.output, "%s %s", frame, message)
 			}
 		}
 	}()
@@ -381,7 +381,7 @@ func (t *Terminal) Prompt(prompt string) (string, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	fmt.Fprint(t.output, prompt)
+	_, _ = fmt.Fprint(t.output, prompt)
 
 	var response string
 	_, err := fmt.Fscanln(t.input, &response)
@@ -530,13 +530,13 @@ func (t *Terminal) Section(title string) {
 
 	if t.colorOutput {
 		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
-		fmt.Fprintf(t.output, "\n%s %s\n%s\n",
+		_, _ = fmt.Fprintf(t.output, "\n%s %s\n%s\n",
 			headerColor("▶"),
 			headerColor(title),
 			strings.Repeat("─", len(title)+2),
 		)
 	} else {
-		fmt.Fprintf(t.output, "\n▶ %s\n%s\n",
+		_, _ = fmt.Fprintf(t.output, "\n▶ %s\n%s\n",
 			title,
 			strings.Repeat("─", len(title)+2),
 		)
@@ -553,9 +553,9 @@ func (t *Terminal) KeyValue(key string, value interface{}) {
 	if t.colorOutput {
 		keyColor := color.New(color.FgCyan).SprintFunc()
 		valueColor := color.New(color.FgWhite).SprintFunc()
-		fmt.Fprintf(t.output, "%s: %s\n", keyColor(key), valueColor(fmt.Sprintf("%v", value)))
+		_, _ = fmt.Fprintf(t.output, "%s: %s\n", keyColor(key), valueColor(fmt.Sprintf("%v", value)))
 	} else {
-		fmt.Fprintf(t.output, "%s: %v\n", key, value)
+		_, _ = fmt.Fprintf(t.output, "%s: %v\n", key, value)
 	}
 
 	t.lastLines = 1
@@ -568,9 +568,9 @@ func (t *Terminal) Subheader(text string) {
 
 	if t.colorOutput {
 		subheaderColor := color.New(color.FgCyan, color.Bold).SprintFunc()
-		fmt.Fprintln(t.output, subheaderColor(text))
+		_, _ = fmt.Fprintln(t.output, subheaderColor(text))
 	} else {
-		fmt.Fprintln(t.output, text)
+		_, _ = fmt.Fprintln(t.output, text)
 	}
 
 	t.lastLines = 1
@@ -645,30 +645,30 @@ func (t *Terminal) Box(title, content string) {
 		titleColor := color.New(color.FgCyan, color.Bold).SprintFunc()
 
 		// Top border with title
-		fmt.Fprintf(t.output, "%s\n", boxColor("┌─"+border+"─┐"))
-		fmt.Fprintf(t.output, "%s %s %s\n", boxColor("│"), titleColor(fmt.Sprintf("%-*s", maxWidth-4, title)), boxColor("│"))
-		fmt.Fprintf(t.output, "%s\n", boxColor("├─"+border+"─┤"))
+		_, _ = fmt.Fprintf(t.output, "%s\n", boxColor("┌─"+border+"─┐"))
+		_, _ = fmt.Fprintf(t.output, "%s %s %s\n", boxColor("│"), titleColor(fmt.Sprintf("%-*s", maxWidth-4, title)), boxColor("│"))
+		_, _ = fmt.Fprintf(t.output, "%s\n", boxColor("├─"+border+"─┤"))
 
 		// Content lines
 		for _, line := range lines {
-			fmt.Fprintf(t.output, "%s %-*s %s\n", boxColor("│"), maxWidth-4, line, boxColor("│"))
+			_, _ = fmt.Fprintf(t.output, "%s %-*s %s\n", boxColor("│"), maxWidth-4, line, boxColor("│"))
 		}
 
 		// Bottom border
-		fmt.Fprintf(t.output, "%s\n", boxColor("└─"+border+"─┘"))
+		_, _ = fmt.Fprintf(t.output, "%s\n", boxColor("└─"+border+"─┘"))
 	} else {
 		// Top border with title
-		fmt.Fprintf(t.output, "┌─%s─┐\n", border)
-		fmt.Fprintf(t.output, "│ %-*s │\n", maxWidth-4, title)
-		fmt.Fprintf(t.output, "├─%s─┤\n", border)
+		_, _ = fmt.Fprintf(t.output, "┌─%s─┐\n", border)
+		_, _ = fmt.Fprintf(t.output, "│ %-*s │\n", maxWidth-4, title)
+		_, _ = fmt.Fprintf(t.output, "├─%s─┤\n", border)
 
 		// Content lines
 		for _, line := range lines {
-			fmt.Fprintf(t.output, "│ %-*s │\n", maxWidth-4, line)
+			_, _ = fmt.Fprintf(t.output, "│ %-*s │\n", maxWidth-4, line)
 		}
 
 		// Bottom border
-		fmt.Fprintf(t.output, "└─%s─┘\n", border)
+		_, _ = fmt.Fprintf(t.output, "└─%s─┘\n", border)
 	}
 
 	t.lastLines = len(lines) + 4
@@ -688,13 +688,13 @@ func (t *Terminal) HeaderBox(title string) {
 
 	if t.colorOutput {
 		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
-		fmt.Fprintf(t.output, "\n%s\n", headerColor("┌─"+border+"─┐"))
-		fmt.Fprintf(t.output, "%s\n", headerColor(fmt.Sprintf("│ %-*s │", width-4, title)))
-		fmt.Fprintf(t.output, "%s\n\n", headerColor("└─"+border+"─┘"))
+		_, _ = fmt.Fprintf(t.output, "\n%s\n", headerColor("┌─"+border+"─┐"))
+		_, _ = fmt.Fprintf(t.output, "%s\n", headerColor(fmt.Sprintf("│ %-*s │", width-4, title)))
+		_, _ = fmt.Fprintf(t.output, "%s\n\n", headerColor("└─"+border+"─┘"))
 	} else {
-		fmt.Fprintf(t.output, "\n┌─%s─┐\n", border)
-		fmt.Fprintf(t.output, "│ %-*s │\n", width-4, title)
-		fmt.Fprintf(t.output, "└─%s─┘\n\n", border)
+		_, _ = fmt.Fprintf(t.output, "\n┌─%s─┐\n", border)
+		_, _ = fmt.Fprintf(t.output, "│ %-*s │\n", width-4, title)
+		_, _ = fmt.Fprintf(t.output, "└─%s─┘\n\n", border)
 	}
 
 	t.lastLines = 5
@@ -706,7 +706,7 @@ func (t *Terminal) Printf(format string, args ...interface{}) {
 	defer t.mu.Unlock()
 
 	message := fmt.Sprintf(format, args...)
-	fmt.Fprint(t.output, message)
+	_, _ = fmt.Fprint(t.output, message)
 	t.lastLines = strings.Count(message, "\n")
 	if !strings.HasSuffix(message, "\n") {
 		t.lastLines++
@@ -720,9 +720,9 @@ func (t *Terminal) Input(prompt string, defaultValue string) (string, error) {
 
 	// Display prompt with default value if provided
 	if defaultValue != "" {
-		fmt.Fprintf(t.output, "%s [%s]: ", prompt, defaultValue)
+		_, _ = fmt.Fprintf(t.output, "%s [%s]: ", prompt, defaultValue)
 	} else {
-		fmt.Fprintf(t.output, "%s: ", prompt)
+		_, _ = fmt.Fprintf(t.output, "%s: ", prompt)
 	}
 
 	var response string
@@ -750,13 +750,13 @@ func (t *Terminal) Subsection(title string) {
 
 	if t.colorOutput {
 		subheaderColor := color.New(color.FgCyan).SprintFunc()
-		fmt.Fprintf(t.output, "\n%s %s\n%s\n",
+		_, _ = fmt.Fprintf(t.output, "\n%s %s\n%s\n",
 			subheaderColor("▸"),
 			subheaderColor(title),
 			strings.Repeat("─", len(title)+2),
 		)
 	} else {
-		fmt.Fprintf(t.output, "\n▸ %s\n%s\n",
+		_, _ = fmt.Fprintf(t.output, "\n▸ %s\n%s\n",
 			title,
 			strings.Repeat("─", len(title)+2),
 		)
@@ -774,9 +774,9 @@ func (t *Terminal) Muted(format string, args ...interface{}) {
 
 	if t.colorOutput {
 		mutedColor := color.New(color.FgHiBlack).SprintFunc()
-		fmt.Fprintln(t.output, mutedColor(message))
+		_, _ = fmt.Fprintln(t.output, mutedColor(message))
 	} else {
-		fmt.Fprintln(t.output, message)
+		_, _ = fmt.Fprintln(t.output, message)
 	}
 
 	t.lastLines = strings.Count(message, "\n") + 1
@@ -789,9 +789,9 @@ func (t *Terminal) Code(code string) {
 
 	if t.colorOutput {
 		codeColor := color.New(color.FgGreen).SprintFunc()
-		fmt.Fprintf(t.output, "  %s\n", codeColor(code))
+		_, _ = fmt.Fprintf(t.output, "  %s\n", codeColor(code))
 	} else {
-		fmt.Fprintf(t.output, "  %s\n", code)
+		_, _ = fmt.Fprintf(t.output, "  %s\n", code)
 	}
 
 	t.lastLines = strings.Count(code, "\n") + 1
@@ -806,9 +806,9 @@ func (t *Terminal) Bold(format string, args ...interface{}) {
 
 	if t.colorOutput {
 		boldColor := color.New(color.Bold).SprintFunc()
-		fmt.Fprintln(t.output, boldColor(message))
+		_, _ = fmt.Fprintln(t.output, boldColor(message))
 	} else {
-		fmt.Fprintln(t.output, message)
+		_, _ = fmt.Fprintln(t.output, message)
 	}
 
 	t.lastLines = strings.Count(message, "\n") + 1

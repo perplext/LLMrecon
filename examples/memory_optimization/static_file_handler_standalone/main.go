@@ -252,7 +252,7 @@ func main() {
 
 	// Create static directory if it doesn't exist
 	if _, err := os.Stat("./static"); os.IsNotExist(err) {
-		os.Mkdir("./static", 0755)
+		_ = os.Mkdir("./static", 0750)
 	}
 
 	// Create some example static files
@@ -264,7 +264,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			w.Header().Set("Content-Type", "text/html")
-			w.Write([]byte(`
+			_, _ = w.Write([]byte(`
 				<!DOCTYPE html>
 				<html>
 				<head>
@@ -302,7 +302,7 @@ func main() {
 		metrics := staticFileMonitor.GetMetrics()
 		
 		// Format the metrics in a user-friendly way
-		w.Write([]byte(fmt.Sprintf(`
+		_, _ = w.Write([]byte(fmt.Sprintf(`
 			<!DOCTYPE html>
 			<html>
 			<head>
@@ -392,9 +392,9 @@ func main() {
 	createJSFile("./static/script.js")
 
 	// Start HTTP server
-	fmt.Println("Starting HTTP server on :8080")
+	fmt.Println("Starting HTTP server on localhost:8080")
 	fmt.Println("Visit http://localhost:8080 to see the example")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }
 
 // createExampleFiles creates example static files for testing
@@ -402,7 +402,7 @@ func createExampleFiles(dir string, numFiles, fileSize int) {
 	for i := 1; i <= numFiles; i++ {
 		filePath := filepath.Join(dir, fmt.Sprintf("file%d.txt", i))
 		content := generateRandomContent(fileSize)
-		os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
+		_ = os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
 	}
 }
 
@@ -483,7 +483,7 @@ th {
     background-color: #f2f2f2;
 }
 `
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
 }
 
 // createJSFile creates a JavaScript file for the example
@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	setInterval(updateStats, 2000);
 });
 `
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
+	os.WriteFile(filepath.Clean(filePath), []byte(content), 0600)
 }
 
 // formatBytes formats bytes to a human-readable string (KB, MB, GB)

@@ -108,7 +108,7 @@ func (ep *ExportPreview) ShowFormatSelection(data interface{}) (string, error) {
 	selectedFormat := formats[choice]
 
 	// Show preview
-	ep.ShowPreview(selectedFormat.Name, data)
+	_ = ep.ShowPreview(selectedFormat.Name, data)
 
 	// Confirm selection
 	confirm, err := ep.terminal.Confirm("Export in "+selectedFormat.Name+" format?", true)

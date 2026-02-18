@@ -259,13 +259,13 @@ func (s *MonitoringService) MonitorResourcePool(pool interface{}, poolName strin
 	labels := map[string]string{"pool": poolName}
 
 	// Register pool-specific metrics
-	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.size", poolName),
+	_ = s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.size", poolName),
 		fmt.Sprintf("Current size of the %s pool", poolName), labels)
-	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.active", poolName),
+	_ = s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.active", poolName),
 		fmt.Sprintf("Number of active resources in the %s pool", poolName), labels)
-	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.idle", poolName),
+	_ = s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.idle", poolName),
 		fmt.Sprintf("Number of idle resources in the %s pool", poolName), labels)
-	s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.utilization", poolName),
+	_ = s.metricsManager.RegisterGauge(fmt.Sprintf("resource.pool.%s.utilization", poolName),
 		fmt.Sprintf("Resource pool utilization for %s (0-1)", poolName), labels)
 
 	// Start collecting metrics

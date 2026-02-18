@@ -151,7 +151,7 @@ func (i *Installer) InstallModules(moduleFiles map[string]string) error {
 
 		// Make executable if it's a binary module
 		if i.isBinaryModule(sourcePath) {
-			if err := os.Chmod(targetPath, 0700); err != nil {
+			if err := os.Chmod(targetPath, 0700); err != nil { // #nosec G302 -- binary must be owner-executable
 				i.logger.Warn(fmt.Sprintf("Failed to make module executable: %s", relPath))
 			}
 		}

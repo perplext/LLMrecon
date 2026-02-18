@@ -261,26 +261,26 @@ func (m *MetricsManager) CollectSystemMetrics() {
 	runtime.ReadMemStats(&memStats)
 
 	// Update memory metrics
-	m.SetGauge("system.memory.alloc", float64(memStats.Alloc))
-	m.SetGauge("system.memory.total_alloc", float64(memStats.TotalAlloc))
-	m.SetGauge("system.memory.sys", float64(memStats.Sys))
-	m.SetGauge("system.memory.mallocs", float64(memStats.Mallocs))
-	m.SetGauge("system.memory.frees", float64(memStats.Frees))
-	m.SetGauge("system.memory.heap_alloc", float64(memStats.HeapAlloc))
-	m.SetGauge("system.memory.heap_sys", float64(memStats.HeapSys))
-	m.SetGauge("system.memory.heap_idle", float64(memStats.HeapIdle))
-	m.SetGauge("system.memory.heap_inuse", float64(memStats.HeapInuse))
-	m.SetGauge("system.memory.heap_released", float64(memStats.HeapReleased))
-	m.SetGauge("system.memory.heap_objects", float64(memStats.HeapObjects))
+	_ = m.SetGauge("system.memory.alloc", float64(memStats.Alloc))
+	_ = m.SetGauge("system.memory.total_alloc", float64(memStats.TotalAlloc))
+	_ = m.SetGauge("system.memory.sys", float64(memStats.Sys))
+	_ = m.SetGauge("system.memory.mallocs", float64(memStats.Mallocs))
+	_ = m.SetGauge("system.memory.frees", float64(memStats.Frees))
+	_ = m.SetGauge("system.memory.heap_alloc", float64(memStats.HeapAlloc))
+	_ = m.SetGauge("system.memory.heap_sys", float64(memStats.HeapSys))
+	_ = m.SetGauge("system.memory.heap_idle", float64(memStats.HeapIdle))
+	_ = m.SetGauge("system.memory.heap_inuse", float64(memStats.HeapInuse))
+	_ = m.SetGauge("system.memory.heap_released", float64(memStats.HeapReleased))
+	_ = m.SetGauge("system.memory.heap_objects", float64(memStats.HeapObjects))
 
 	// Update GC metrics
-	m.SetGauge("system.gc.next", float64(memStats.NextGC))
-	m.SetGauge("system.gc.last", float64(memStats.LastGC))
-	m.SetGauge("system.gc.num", float64(memStats.NumGC))
-	m.SetGauge("system.gc.cpu_fraction", float64(memStats.GCCPUFraction))
+	_ = m.SetGauge("system.gc.next", float64(memStats.NextGC))
+	_ = m.SetGauge("system.gc.last", float64(memStats.LastGC))
+	_ = m.SetGauge("system.gc.num", float64(memStats.NumGC))
+	_ = m.SetGauge("system.gc.cpu_fraction", float64(memStats.GCCPUFraction))
 
 	// Update goroutine metrics
-	m.SetGauge("system.goroutines", float64(runtime.NumGoroutine()))
+	_ = m.SetGauge("system.goroutines", float64(runtime.NumGoroutine()))
 }
 
 // StartCollectingSystemMetrics starts collecting system metrics at the specified interval

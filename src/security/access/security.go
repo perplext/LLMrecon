@@ -103,7 +103,7 @@ func (m *BasicSecurityManager) CreateIncident(ctx context.Context, title, descri
 	}
 
 	// Log incident creation
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      reportedBy,
 		Action:      AuditActionCreate,
@@ -153,7 +153,7 @@ func (m *BasicSecurityManager) UpdateIncidentStatus(ctx context.Context, id stri
 	}
 
 	// Log incident update
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      updatedBy,
 		Action:      AuditActionUpdate,
@@ -214,7 +214,7 @@ func (m *BasicSecurityManager) CreateVulnerability(ctx context.Context, title, d
 	}
 
 	// Log vulnerability creation
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      reportedBy,
 		Action:      AuditActionCreate,
@@ -271,7 +271,7 @@ func (m *BasicSecurityManager) UpdateVulnerabilityStatus(ctx context.Context, id
 	}
 
 	// Log vulnerability update
-	m.auditLogger.LogAudit(ctx, &AuditLog{
+	_ = m.auditLogger.LogAudit(ctx, &AuditLog{
 		Timestamp:   time.Now(),
 		UserID:      updatedBy,
 		Action:      AuditActionUpdate,

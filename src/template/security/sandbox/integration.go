@@ -488,7 +488,7 @@ func (f *SecurityFramework) logExecutionResult(result *ExecutionResult, template
 // appendToLogFile appends a log entry to a file
 func (f *SecurityFramework) appendToLogFile(logFile, logEntry string) {
 	// Open the log file in append mode
-	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600) // #nosec G304 -- path from internal security framework logging
 	if err != nil {
 		return
 	}

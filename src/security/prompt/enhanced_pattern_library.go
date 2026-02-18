@@ -194,7 +194,7 @@ func (l *EnhancedInjectionPatternLibrary) loadPatternsFromDisk() error {
 					Description: pattern.Description,
 					Confidence:  0.8,
 				}
-				l.AddPattern(patternObj)
+				_ = l.AddPattern(patternObj)
 			}
 		}
 	}
@@ -389,7 +389,7 @@ func (l *EnhancedInjectionPatternLibrary) AddCustomPattern(pattern string, descr
 		Description: description,
 		Confidence:  0.8,
 	}
-	l.AddPattern(patternObj)
+	_ = l.AddPattern(patternObj)
 
 	// Save to disk
 	return l.savePatternsToDisc()
@@ -412,7 +412,7 @@ func (l *EnhancedInjectionPatternLibrary) ValidateEmergingPattern(pattern string
 					Description: p.Description,
 					Confidence:  p.Confidence,
 				}
-				l.AddPattern(patternObj)
+				_ = l.AddPattern(patternObj)
 			}
 
 			// Save to disk

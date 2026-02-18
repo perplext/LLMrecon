@@ -203,7 +203,7 @@ func ConfigureTLSForServer(config *TLSConfig) (*tls.Config, error) {
 	if minVersion < tls.VersionTLS12 {
 		minVersion = tls.VersionTLS12 // Enforce minimum TLS 1.2
 	}
-	tlsConfig := &tls.Config{
+	tlsConfig := &tls.Config{ // #nosec G402 -- server-side TLS config, no InsecureSkipVerify
 		MinVersion: minVersion,
 	}
 

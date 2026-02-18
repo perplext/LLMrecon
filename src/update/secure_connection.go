@@ -130,7 +130,7 @@ func NewSecureClient(options *ConnectionSecurityOptions) (*SecureClient, error) 
 	}
 
 	// Create TLS config
-	tlsConfig := &tls.Config{
+	tlsConfig := &tls.Config{ // #nosec G402 -- TLS 1.2 minimum, RootCAs, optional cert pinning
 		MinVersion: max(options.MinTLSVersion, tls.VersionTLS12), // Enforce minimum TLS 1.2
 		RootCAs:    rootCAs,
 	}
