@@ -56,7 +56,9 @@ func main() {
 
 	// Create static directory if it doesn't exist
 	if _, err := os.Stat("./static"); os.IsNotExist(err) {
-		os.Mkdir("./static", 0755)
+		if err := os.Mkdir("./static", 0755); err != nil {
+			log.Fatalf("Failed to create static directory: %v", err)
+		}
 	}
 
 	// Create some example static files
@@ -204,7 +206,9 @@ func createExampleFiles(dir string, numFiles, fileSize int) {
 	for i := 1; i <= numFiles; i++ {
 		filePath := filepath.Join(dir, fmt.Sprintf("file%d.txt", i))
 		content := generateRandomContent(fileSize)
-		os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
+		if err := os.WriteFile(filepath.Clean(filePath), []byte(content), 0644); err != nil {
+			log.Printf("Warning: failed to write %s: %v", filePath, err)
+		}
 	}
 }
 
@@ -269,7 +273,9 @@ pre {
     overflow-x: auto;
 }
 `
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Clean(filePath), []byte(content), 0644); err != nil {
+		log.Printf("Warning: failed to write CSS file %s: %v", filePath, err)
+	}
 }
 
 // createJSFile creates a JavaScript file for the example
@@ -313,7 +319,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 `
 
-	os.WriteFile(filepath.Clean(filePath), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Clean(filePath), []byte(content), 0644); err != nil {
+		log.Printf("Warning: failed to write JS file %s: %v", filePath, err)
+	}
 }
 
 // formatBytes formats bytes to a human-readable string (KB, MB, GB)
