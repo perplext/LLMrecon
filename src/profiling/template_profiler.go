@@ -319,7 +319,7 @@ func (p *TemplateProfiler) EstablishBaseline(ctx context.Context, sources []type
 
 	// Reset profiler
 	p.profiler = NewProfiler(p.config.ProfilerConfig)
-	p.Start()
+	_ = p.Start()
 
 	// Load and execute templates from each source
 	for _, source := range sources {
@@ -361,7 +361,7 @@ func (p *TemplateProfiler) EstablishBaseline(ctx context.Context, sources []type
 	}
 
 	// Stop profiler
-	p.Stop()
+	_ = p.Stop()
 
 	fmt.Println("Baseline established successfully")
 	return nil
@@ -555,7 +555,7 @@ func (p *TemplateProfiler) startContinuousMonitoring() {
 
 			// Save report periodically
 			if p.config.ReportFilePath != "" {
-				p.profiler.SaveReport(p.config.ReportFilePath)
+				_ = p.profiler.SaveReport(p.config.ReportFilePath)
 			}
 		}
 	}

@@ -499,7 +499,7 @@ func (f *SecurityFramework) appendToLogFile(logFile, logEntry string) {
 	}()
 
 	// Write the log entry
-	file.WriteString(logEntry)
+	_, _ = file.WriteString(logEntry)
 }
 
 // GetMetrics returns the metrics from the metrics collector

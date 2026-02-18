@@ -69,7 +69,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			w.Header().Set("Content-Type", "text/html")
-			w.Write([]byte(`
+			_, _ = w.Write([]byte(`
 				<!DOCTYPE html>
 				<html>
 				<head>
@@ -107,7 +107,7 @@ func main() {
 		metrics := staticFileMonitor.GetMetrics()
 		
 		// Format the metrics in a user-friendly way
-		w.Write([]byte(fmt.Sprintf(`
+		_, _ = w.Write([]byte(fmt.Sprintf(`
 			<!DOCTYPE html>
 			<html>
 			<head>
@@ -198,7 +198,11 @@ func main() {
 	// Start the server
 	fmt.Println("Server started at http://localhost:8080")
 	fmt.Println("Press Ctrl+C to stop the server")
-	log.Fatal(http.ListenAndServe("localhost:8080", nil))
+	server := &http.Server{ // #nosec G114 -- example demo server
+		Addr:              "localhost:8080",
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+	log.Fatal(server.ListenAndServe())
 }
 
 // createExampleFiles creates example static files for testing

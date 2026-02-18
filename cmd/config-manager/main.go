@@ -205,22 +205,22 @@ func compareConfigurations() {
 	
 	// Reset to load dev configuration
 	config.ResetConfig()
-	os.Setenv("APP_ENV", string(config.Development))
+	_ = os.Setenv("APP_ENV", string(config.Development))
 	devConfig := config.GetMemoryConfig()
-	
+
 	// Reset to load test configuration
 	config.ResetConfig()
-	os.Setenv("APP_ENV", string(config.Testing))
+	_ = os.Setenv("APP_ENV", string(config.Testing))
 	testConfig := config.GetMemoryConfig()
-	
+
 	// Reset to load prod configuration
 	config.ResetConfig()
-	os.Setenv("APP_ENV", string(config.Production))
+	_ = os.Setenv("APP_ENV", string(config.Production))
 	prodConfig := config.GetMemoryConfig()
-	
+
 	// Restore current environment
 	config.ResetConfig()
-	os.Setenv("APP_ENV", string(currentEnv))
+	_ = os.Setenv("APP_ENV", string(currentEnv))
 	
 	fmt.Println("Configuration Comparison:")
 	fmt.Println("------------------------")

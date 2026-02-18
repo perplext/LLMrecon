@@ -813,7 +813,7 @@ func (ra *ResourceAllocator) rollbackAllocation(allocation *ResourceAllocation) 
 // scheduleRelease schedules automatic release
 func (ra *ResourceAllocator) scheduleRelease(allocation *ResourceAllocation) {
 	time.Sleep(time.Until(allocation.ExpiryTime))
-	ra.Release(allocation.ID)
+	_ = ra.Release(allocation.ID)
 }
 
 // Release frees allocated resources
@@ -996,7 +996,7 @@ func (rm *ResourceManager) monitorAllocation(ctx context.Context, allocation *Re
 	for {
 		select {
 		case <-ctx.Done():
-			rm.allocator.Release(allocation.ID)
+			_ = rm.allocator.Release(allocation.ID)
 			return
 		case <-ticker.C:
 			if allocation.Status != AllocationActive {
@@ -1040,7 +1040,7 @@ func (rm *ResourceManager) triggerPredictiveScaling(resource string, predicted f
 		Value:  math.Ceil(predicted / rm.config.ScalingThresholds.ScaleUpCPU),
 	}
 
-	rm.executeAction(action)
+	_ = rm.executeAction(action)
 }
 
 func (rm *ResourceManager) getMetricValue(metric string) float64 {
