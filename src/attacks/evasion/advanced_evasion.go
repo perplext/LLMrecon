@@ -2,15 +2,50 @@ package evasion
 
 import (
 	"context"
+	crypto_rand "crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	math_rand "math/rand"
+	"math/big"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
 )
+
+// secureFloat64 returns a cryptographically secure random float64 in [0.0, 1.0).
+func secureFloat64() float64 {
+	// Generate a random int in [0, 2^53) and divide by 2^53
+	n, err := crypto_rand.Int(crypto_rand.Reader, big.NewInt(1<<53))
+	if err != nil {
+		return 0.5 // safe fallback
+	}
+	return float64(n.Int64()) / (1 << 53)
+}
+
+// secureIntn returns a cryptographically secure random int in [0, max).
+func secureIntn(max int) int {
+	if max <= 0 {
+		return 0
+	}
+	n, err := crypto_rand.Int(crypto_rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		return 0
+	}
+	return int(n.Int64())
+}
+
+// secureInt63n returns a cryptographically secure random int64 in [0, max).
+func secureInt63n(max int64) int64 {
+	if max <= 0 {
+		return 0
+	}
+	n, err := crypto_rand.Int(crypto_rand.Reader, big.NewInt(max))
+	if err != nil {
+		return 0
+	}
+	return n.Int64()
+}
 
 // AdvancedEvasion implements sophisticated evasion techniques
 type AdvancedEvasion struct {
@@ -489,10 +524,8 @@ func (he *HomoglyphEngine) ApplyHomoglyphs(text string, level int) string {
 	result := []rune{}
 
 	for _, char := range text {
-		if alternatives, exists := he.mappings[unicode.ToLower(char)]; exists && math_rand.Float64() < float64(level)*0.2 { // #nosec G404 -- non-cryptographic randomness for text obfuscation
-			// Select random alternative
-			alt := alternatives[math_rand.Intn(len(alternatives))] // #nosec G404 -- non-cryptographic randomness for text obfuscation
-
+		if alternatives, exists := he.mappings[unicode.ToLower(char)]; exists && secureFloat64() < float64(level)*0.2 {			// Select random alternative
+			alt := alternatives[secureIntn(len(alternatives))]
 			// Preserve case
 			if unicode.IsUpper(char) {
 				alt = unicode.ToUpper(alt)
@@ -568,8 +601,7 @@ func (un *UnicodeNormalization) Obfuscate(text string) string {
 
 	for _, char := range text {
 		// Add combining characters
-		if math_rand.Float64() < 0.2 { // #nosec G404 -- non-cryptographic randomness for text obfuscation
-			result = append(result, char)
+		if secureFloat64() < 0.2 {			result = append(result, char)
 			// Add zero-width joiner
 			result = append(result, '\u200D')
 		} else {
@@ -594,8 +626,7 @@ func (do *DirectionalOverride) Obfuscate(text string) string {
 	result := []string{}
 
 	for i, word := range words {
-		if i > 0 && math_rand.Float64() < 0.3 { // #nosec G404 -- non-cryptographic randomness for text obfuscation
-			// Insert RTL override
+		if i > 0 && secureFloat64() < 0.3 {			// Insert RTL override
 			result = append(result, "\u202E"+word+"\u202C")
 		} else {
 			result = append(result, word)
@@ -720,8 +751,7 @@ func (te *TimingEvasion) registerStrategies() {
 // ApplyTimingEvasion fragments payload with delays
 func (te *TimingEvasion) ApplyTimingEvasion(payload string) []Fragment {
 	// Select strategy
-	strategy := te.delayStrategies[math_rand.Intn(len(te.delayStrategies))] // #nosec G404 -- non-cryptographic randomness for text obfuscation
-
+	strategy := te.delayStrategies[secureIntn(len(te.delayStrategies))]
 	return strategy.Fragment(payload)
 }
 
@@ -732,8 +762,7 @@ type RandomDelay struct {
 
 func (rd *RandomDelay) CalculateDelay(payload string) time.Duration {
 	// Random delay within variance
-	return time.Duration(math_rand.Int63n(int64(rd.variance))) // #nosec G404 -- non-cryptographic randomness for text obfuscation
-}
+	return time.Duration(secureInt63n(int64(rd.variance)))}
 func (rd *RandomDelay) Fragment(payload string) []Fragment {
 	// Fragment into words with random delays
 	words := strings.Fields(payload)
@@ -915,7 +944,7 @@ func (ae *AdvancedEvasion) adaptEvasion(ctx context.Context, payload string, ses
 func (ae *AdvancedEvasion) fragmentPayload(payload string) []string {
 	// Fragment into semantic chunks
 	words := strings.Fields(payload)
-	chunkSize := 3 + math_rand.Intn(3) // #nosec G404 -- non-cryptographic randomness for text obfuscation
+	chunkSize := 3 + secureIntn(3)
 	fragments := []string{}
 
 	for i := 0; i < len(words); i += chunkSize {

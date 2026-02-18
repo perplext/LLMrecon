@@ -197,8 +197,11 @@ func (m *CredentialManager) InstallGitHookInDir(customDir string) error {
 
 		// Backup existing hook
 		backupPath := hookPath + ".backup"
-		if err := os.WriteFile(filepath.Clean(backupPath), existingHook, 0700); err != nil { // #nosec G306 -- git hook backup must be executable
+		if err := os.WriteFile(filepath.Clean(backupPath), existingHook, 0600); err != nil {
 			return fmt.Errorf("failed to backup existing git hook: %w", err)
+		}
+		if err := os.Chmod(filepath.Clean(backupPath), 0500); err != nil {
+			return fmt.Errorf("failed to make git hook backup executable: %w", err)
 		}
 	}
 
@@ -237,8 +240,11 @@ exit 0
 `
 
 	// Write hook
-	if err := os.WriteFile(filepath.Clean(hookPath), []byte(hookContent), 0700); err != nil { // #nosec G306 -- git hook must be executable
+	if err := os.WriteFile(filepath.Clean(hookPath), []byte(hookContent), 0600); err != nil {
 		return fmt.Errorf("failed to write git hook: %w", err)
+	}
+	if err := os.Chmod(filepath.Clean(hookPath), 0500); err != nil {
+		return fmt.Errorf("failed to make git hook executable: %w", err)
 	}
 	return nil
 }

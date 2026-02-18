@@ -2,14 +2,47 @@ package learning
 
 import (
 	"context"
+	crypto_rand "crypto/rand"
 	"fmt"
 	"math"
-	"math/rand"
+	"math/big"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 )
+
+// secureFloat64 returns a cryptographically secure random float64 in [0.0, 1.0).
+func secureFloat64() float64 {
+	n, err := crypto_rand.Int(crypto_rand.Reader, big.NewInt(1<<53))
+	if err != nil {
+		return 0.5
+	}
+	return float64(n.Int64()) / (1 << 53)
+}
+
+// secureIntn returns a cryptographically secure random int in [0, max).
+func secureIntn(max int) int {
+	if max <= 0 {
+		return 0
+	}
+	n, err := crypto_rand.Int(crypto_rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		return 0
+	}
+	return int(n.Int64())
+}
+
+// secureNormFloat64 returns an approximation of a normal distribution value
+// using the Box-Muller transform with crypto/rand.
+func secureNormFloat64() float64 {
+	u1 := secureFloat64()
+	u2 := secureFloat64()
+	if u1 == 0 {
+		u1 = 0.0001 // avoid log(0)
+	}
+	return math.Sqrt(-2*math.Log(u1)) * math.Cos(2*math.Pi*u2)
+}
 
 // AdaptiveSystem learns and improves attack strategies
 type AdaptiveSystem struct {
@@ -327,8 +360,7 @@ func (as *AdaptiveSystem) selectPolicy(target interface{}) *Policy {
 // selectAction chooses action based on policy
 func (as *AdaptiveSystem) selectAction(state State, policy *Policy) Action {
 	// Epsilon-greedy exploration
-	if rand.Float64() < as.config.ExplorationRate { // #nosec G404 -- ML algorithm randomness, not security-critical
-		// Explore: random action
+	if secureFloat64() < as.config.ExplorationRate {		// Explore: random action
 		return as.generateRandomAction()
 	}
 
@@ -1226,13 +1258,12 @@ func (ee *EvolutionEngine) createInitialPopulation() []Individual {
 
 // randomGenome creates random genes
 func (ee *EvolutionEngine) randomGenome() map[string]float64 {
-	// #nosec G404 -- ML/genetic algorithm randomness, not security-critical
 	genes := map[string]float64{
-		"aggression":  rand.Float64(),
-		"stealth":     rand.Float64(),
-		"persistence": rand.Float64(),
-		"creativity":  rand.Float64(),
-		"adaptation":  rand.Float64(),
+		"aggression":  secureFloat64(),
+		"stealth":     secureFloat64(),
+		"persistence": secureFloat64(),
+		"creativity":  secureFloat64(),
+		"adaptation":  secureFloat64(),
 	}
 	return genes
 }
@@ -1283,7 +1314,7 @@ func (ee *EvolutionEngine) selection() []Individual {
 		// Random tournament
 		tournament := []Individual{}
 		for j := 0; j < tournamentSize; j++ {
-			idx := rand.Intn(len(ee.population)) // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
+			idx := secureIntn(len(ee.population))
 			tournament = append(tournament, ee.population[idx])
 		}
 
@@ -1306,8 +1337,7 @@ func (ee *EvolutionEngine) reproduce(parents []Individual) []Individual {
 
 	for i := 0; i < len(parents)-1; i += 2 {
 		// Crossover
-		if rand.Float64() < ee.config.CrossoverRate { // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
-			child1, child2 := ee.crossover(parents[i], parents[i+1])
+		if secureFloat64() < ee.config.CrossoverRate {			child1, child2 := ee.crossover(parents[i], parents[i+1])
 			offspring = append(offspring, child1, child2)
 		} else {
 			offspring = append(offspring, parents[i], parents[i+1])
@@ -1316,8 +1346,7 @@ func (ee *EvolutionEngine) reproduce(parents []Individual) []Individual {
 
 	// Mutation
 	for i := range offspring {
-		if rand.Float64() < ee.config.MutationRate { // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
-			offspring[i] = ee.mutate(offspring[i])
+		if secureFloat64() < ee.config.MutationRate {			offspring[i] = ee.mutate(offspring[i])
 		}
 	}
 
@@ -1339,8 +1368,7 @@ func (ee *EvolutionEngine) crossover(parent1, parent2 Individual) (Individual, I
 
 	// Uniform crossover
 	for gene := range parent1.Genome.Genes {
-		if rand.Float64() < 0.5 { // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
-			child1.Genome.Genes[gene] = parent1.Genome.Genes[gene]
+		if secureFloat64() < 0.5 {			child1.Genome.Genes[gene] = parent1.Genome.Genes[gene]
 			child2.Genome.Genes[gene] = parent2.Genome.Genes[gene]
 		} else {
 			child1.Genome.Genes[gene] = parent2.Genome.Genes[gene]
@@ -1357,8 +1385,8 @@ func (ee *EvolutionEngine) mutate(individual Individual) Individual {
 
 	// Gaussian mutation
 	for gene := range mutated.Genome.Genes {
-		if rand.Float64() < 0.2 { // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
-			delta := rand.NormFloat64() * 0.1 // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
+		if secureFloat64() < 0.2 {
+			delta := secureNormFloat64() * 0.1
 			mutated.Genome.Genes[gene] += delta
 
 			// Clamp to [0,1]
@@ -1420,15 +1448,15 @@ func (as *AdaptiveSystem) generateRandomAction() Action {
 	}
 
 	return Action{
-		Type:       actions[rand.Intn(len(actions))],  // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
-		Confidence: rand.Float64(),                     // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
+		Type:       actions[secureIntn(len(actions))],
+		Confidence: secureFloat64(),
 		Parameters: make(map[string]interface{}),
 	}
 }
 
 func (as *AdaptiveSystem) sampleAction(probs map[ActionType]float64) Action {
 	// Weighted random sampling
-	r := rand.Float64() // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
+	r := secureFloat64()
 	cumulative := 0.0
 
 	for actionType, prob := range probs {
@@ -1752,14 +1780,12 @@ func generateID() string {
 }
 
 func randomFloat64() float64 {
-	return float64(rand.Intn(100)) / 100.0 // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
-}
+	return float64(secureIntn(100)) / 100.0}
 
 func randomNormFloat64() float64 {
 	// Simple normal distribution approximation
 	sum := 0.0
 	for i := 0; i < 12; i++ {
-		sum += rand.Float64() // #nosec G404 -- ML/genetic algorithm randomness, not security-critical
-	}
+		sum += secureFloat64()	}
 	return sum - 6.0
 }

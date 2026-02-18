@@ -25,7 +25,13 @@ func getDiskSpaceAvailable(dir string) int64 {
 		if bavail > maxBlocks {
 			return math.MaxInt64
 		}
-		return int64(bavail) * int64(bsize) // #nosec G115 -- overflow prevented by clamp above
+		// Explicit bounds check: bavail is guaranteed <= maxBlocks <= MaxInt64
+		if bavail > uint64(math.MaxInt64) {
+			return math.MaxInt64
+		}
+		safeBavail := int64(bavail)
+		safeBsize := int64(bsize)
+		return safeBavail * safeBsize
 	}
 	return 0
 }

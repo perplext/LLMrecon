@@ -3,11 +3,23 @@ package concurrency
 import (
 	"context"
 	"fmt"
+	"math"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
 )
+
+// safeIntToInt32 converts int to int32 with bounds clamping to prevent overflow.
+func safeIntToInt32(v int) int32 {
+	if v > math.MaxInt32 {
+		return math.MaxInt32
+	}
+	if v < math.MinInt32 {
+		return math.MinInt32
+	}
+	return int32(v)
+}
 
 // ConcurrencyManager manages concurrent operations and limits
 type ConcurrencyManager struct {
@@ -378,11 +390,14 @@ func (m *ConcurrencyManager) adjustWorkerCount() {
 	pendingTasks := atomic.LoadInt32(&m.pendingTasks)
 	utilization := float64(pendingTasks) / float64(activeWorkers)
 
+	// Compare in int space to avoid int32 overflow on config values
+	activeInt := int(activeWorkers)
+
 	// Scale up if utilization is high
-	if utilization >= m.config.ScaleUpThreshold && activeWorkers < int32(m.config.MaxWorkers) { // #nosec G115 -- worker counts bounded by config
+	if utilization >= m.config.ScaleUpThreshold && activeInt < m.config.MaxWorkers {
 		workersToAdd := m.config.ScaleUpStep
-		if int(activeWorkers)+workersToAdd > m.config.MaxWorkers {
-			workersToAdd = m.config.MaxWorkers - int(activeWorkers)
+		if activeInt+workersToAdd > m.config.MaxWorkers {
+			workersToAdd = m.config.MaxWorkers - activeInt
 		}
 
 		for i := 0; i < workersToAdd; i++ {
@@ -395,7 +410,7 @@ func (m *ConcurrencyManager) adjustWorkerCount() {
 	}
 
 	// Scale down if utilization is low
-	if utilization <= m.config.ScaleDownThreshold && activeWorkers > int32(m.config.MinWorkers) { // #nosec G115 -- worker counts bounded by config
+	if utilization <= m.config.ScaleDownThreshold && activeInt > m.config.MinWorkers {
 		// We don't need to do anything here, workers will timeout and exit
 		m.stats.WorkerScalingEvents++
 		m.stats.LastScaleDownTime = time.Now()
@@ -408,8 +423,8 @@ func (m *ConcurrencyManager) shouldScaleDown() bool {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	// Check if we're at the minimum number of workers
-	if atomic.LoadInt32(&m.activeWorkers) <= int32(m.config.MinWorkers) { // #nosec G115 -- worker counts bounded by config
+	// Check if we're at the minimum number of workers (compare in int space to avoid int32 overflow)
+	if int(atomic.LoadInt32(&m.activeWorkers)) <= m.config.MinWorkers {
 		return false
 	}
 
@@ -437,7 +452,7 @@ func (m *ConcurrencyManager) GetStats() *ConcurrencyStats {
 		MaxTaskDuration:     m.stats.MaxTaskDuration,
 		MinTaskDuration:     m.stats.MinTaskDuration,
 		TotalTaskDuration:   m.stats.TotalTaskDuration,
-		QueuedTasks:         int32(len(m.taskQueue)), // #nosec G115 -- worker counts bounded by config
+		QueuedTasks:         safeIntToInt32(len(m.taskQueue)),
 		WorkerScalingEvents: m.stats.WorkerScalingEvents,
 		LastScaleUpTime:     m.stats.LastScaleUpTime,
 		LastScaleDownTime:   m.stats.LastScaleDownTime,

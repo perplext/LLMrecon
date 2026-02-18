@@ -216,8 +216,8 @@ func (a *UpdateApplier) updateBinary(ctx context.Context, pkg *UpdatePackage, pl
 		return fmt.Errorf("failed to extract binary: %w", err)
 	}
 
-	// Make binary executable
-	if err := os.Chmod(sessionBinaryPath, 0700); err != nil { // #nosec G302 -- binary must be owner-executable
+	// Make binary executable (owner read+execute only)
+	if err := os.Chmod(sessionBinaryPath, 0500); err != nil {
 		return fmt.Errorf("failed to make binary executable: %w", err)
 	}
 
@@ -385,8 +385,8 @@ func (a *UpdateApplier) updateBinaryWithPatch(ctx context.Context, pkg *UpdatePa
 		return fmt.Errorf("failed to apply patch: %w", err)
 	}
 
-	// Make binary executable
-	if err := os.Chmod(sessionBinaryPath, 0700); err != nil { // #nosec G302 -- binary must be owner-executable
+	// Make binary executable (owner read+execute only)
+	if err := os.Chmod(sessionBinaryPath, 0500); err != nil {
 		return fmt.Errorf("failed to make binary executable: %w", err)
 	}
 
