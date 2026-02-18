@@ -857,7 +857,9 @@ func (s *SQLiteStorage) GetMetricsByTimeRange(ctx context.Context, start, end ti
 		if err := rows.Scan(&m.Name, &m.Value, &m.Unit, &tagsJSON, &m.Timestamp, &m.Source); err != nil {
 			continue
 		}
-		json.Unmarshal([]byte(tagsJSON), &m.Tags)
+		if err := json.Unmarshal([]byte(tagsJSON), &m.Tags); err != nil {
+			continue
+		}
 		metrics = append(metrics, m)
 	}
 	return metrics, nil
@@ -880,7 +882,9 @@ func (s *SQLiteStorage) GetMetricsByNameAndTimeRange(ctx context.Context, name s
 		if err := rows.Scan(&m.Name, &m.Value, &m.Unit, &tagsJSON, &m.Timestamp, &m.Source); err != nil {
 			continue
 		}
-		json.Unmarshal([]byte(tagsJSON), &m.Tags)
+		if err := json.Unmarshal([]byte(tagsJSON), &m.Tags); err != nil {
+			continue
+		}
 		metrics = append(metrics, m)
 	}
 	return metrics, nil

@@ -245,7 +245,7 @@ LLMrecon v0.2.0 delivers enterprise-grade infrastructure supporting 100+ concurr
 
 ## Support
 
-- GitHub Issues: https://github.com/your-org/llmrecon/issues
+- GitHub Issues: https://github.com/perplext/LLMrecon/issues
 - Documentation: https://llmrecon.com
 - Community: Discord/Slack (coming soon)
 

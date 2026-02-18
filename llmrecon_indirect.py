@@ -409,7 +409,11 @@ class IndirectInjectionTester:
         vulnerable_tests = sum(1 for r in self.results if r["vulnerable"])
         vuln_pct = f"{vulnerable_tests / total_tests:.0%}" if total_tests > 0 else "0%"
         secure_pct = f"{(total_tests - vulnerable_tests) / total_tests:.0%}" if total_tests > 0 else "0%"
-        top_vector = max(attack_types.items(), key=lambda x: x[1]['vulnerable'])[0] if attack_types else "N/A"
+        top_vector = (
+            max(attack_types.items(), key=lambda x: x[1]['vulnerable'])[0]
+            if attack_types and any(v['vulnerable'] > 0 for v in attack_types.values())
+            else "N/A"
+        )
         evasion_rate = f"{sum(1 for p in all_patterns if p.get('type') == 'defense_evasion') / len(all_patterns):.0%}" if all_patterns else "0%"
 
         console.print(Panel(
