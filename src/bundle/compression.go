@@ -492,7 +492,7 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 	}
 	// Apply encryption if requested
 	if options.Encryption != nil {
-		writer.Close()
+		_ = writer.Close()
 
 		// Read compressed data
 		compressedFile, err := os.Open(filepath.Clean(writer.(*os.File).Name()))
@@ -513,7 +513,7 @@ func (c *BundleCompressor) CompressBundle(bundlePath string, outputPath string, 
 		}
 
 		// Add encryption header
-		c.writeEncryptionHeader(outputPath, options.Encryption)
+		_ = c.writeEncryptionHeader(outputPath, options.Encryption)
 	}
 
 	return nil
@@ -559,13 +559,13 @@ func (c *BundleCompressor) DecompressBundle(archivePath string, outputPath strin
 		}
 		defer os.Remove(tempFile.Name())
 		// Skip header and decrypt
-		archiveFile.Seek(int64(encInfo.HeaderSize), 0)
+		_, _ = archiveFile.Seek(int64(encInfo.HeaderSize), 0)
 		err = encHandler.DecryptStream(archiveFile, tempFile, options.Password)
 		if err != nil {
 			return err
 		}
 
-		tempFile.Close()
+		_ = tempFile.Close()
 		reader, err = os.Open(filepath.Clean(tempFile.Name()))
 		if err != nil {
 			return err

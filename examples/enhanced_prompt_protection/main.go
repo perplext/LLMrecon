@@ -118,7 +118,7 @@ func runInteractiveMode(ctx context.Context, manager *prompt.EnhancedProtectionM
 		// Read prompt from user
 		fmt.Print("> ")
 		var input string
-		fmt.Scanln(&input)
+		_, _ = fmt.Scanln(&input)
 		// Exit if user types 'exit'
 		if input == "exit" {
 			break

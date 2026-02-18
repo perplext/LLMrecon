@@ -76,12 +76,12 @@ func NewLoggingMiddleware(minLevel LogLevel, redactPII bool) *LoggingMiddleware 
 
 	if redactPII {
 		// Add default PII redaction patterns
-		middleware.AddRedactPattern(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`, "[EMAIL]")
-		middleware.AddRedactPattern(`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`, "[PHONE]")
-		middleware.AddRedactPattern(`\b\d{3}[-]?\d{2}[-]?\d{4}\b`, "[SSN]")
-		middleware.AddRedactPattern(`\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|6(?:011|5[0-9]{2})[0-9]{12}|(?:2131|1800|35\d{3})\d{11})\b`, "[CREDIT_CARD]")
-		middleware.AddRedactPattern(`\bsk-[A-Za-z0-9]{48}\b`, "[OPENAI_API_KEY]")
-		middleware.AddRedactPattern(`\bsk-ant-[A-Za-z0-9]{48}\b`, "[ANTHROPIC_API_KEY]")
+		_ = middleware.AddRedactPattern(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`, "[EMAIL]")
+		_ = middleware.AddRedactPattern(`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`, "[PHONE]")
+		_ = middleware.AddRedactPattern(`\b\d{3}[-]?\d{2}[-]?\d{4}\b`, "[SSN]")
+		_ = middleware.AddRedactPattern(`\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|6(?:011|5[0-9]{2})[0-9]{12}|(?:2131|1800|35\d{3})\d{11})\b`, "[CREDIT_CARD]")
+		_ = middleware.AddRedactPattern(`\bsk-[A-Za-z0-9]{48}\b`, "[OPENAI_API_KEY]")
+		_ = middleware.AddRedactPattern(`\bsk-ant-[A-Za-z0-9]{48}\b`, "[ANTHROPIC_API_KEY]")
 	}
 
 	return middleware
