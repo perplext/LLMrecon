@@ -80,7 +80,7 @@ jobs:
           echo "BINARY_NAME=${BINARY_NAME}" >> $GITHUB_ENV
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: llmrecon-${{ matrix.platform }}
           path: |
