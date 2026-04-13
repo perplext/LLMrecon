@@ -166,7 +166,7 @@ jobs:
           echo "⚠️ **Security Note**: This tool is designed for authorized security testing only. Ensure you have proper permissions before testing any systems." >> release_notes.md
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.VERSION }}
           name: LLMrecon ${{ steps.version.outputs.VERSION }}
