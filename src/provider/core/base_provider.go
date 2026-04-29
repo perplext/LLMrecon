@@ -91,8 +91,10 @@ func (p *BaseProvider) GetModels(ctx context.Context) ([]ModelInfo, error) {
 	// Check if models cache is expired
 	if time.Since(modelsLastUpdated) > p.modelsCacheTTL {
 		// Cache is expired, but we'll return the cached models
-		// and update the cache asynchronously
-		go p.updateModels(context.Background())
+		// and update the cache asynchronously. The async update intentionally
+		// uses context.Background so it outlives the calling request — using
+		// ctx would cancel the refresh on every fast-returning call.
+		go p.updateModels(context.Background()) // #nosec G118 -- intentional ctx detach for async cache refresh
 	}
 
 	p.modelsMutex.RLock()
