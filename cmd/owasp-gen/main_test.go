@@ -36,12 +36,31 @@ categories:
       - id: shared_tech
         priority: low
 `
-	if err := os.WriteFile(yamlPath, []byte(fixture), 0o644); err != nil {
+	if err := os.WriteFile(yamlPath, []byte(fixture), 0o600); err != nil {
 		t.Fatalf("write fixture: %v", err)
 	}
 
 	if err := run(yamlPath, outPath); err != nil {
 		t.Fatalf("run() returned error: %v", err)
+	}
+
+	// Determinism: re-running the generator must produce byte-identical output.
+	// This is what the v0.10.0 `go generate ./... && git diff --exit-code` CI
+	// check depends on; if this property regresses, every PR will see spurious
+	// diffs in the generated file.
+	got1, err := os.ReadFile(outPath) //nolint:gosec // path under TempDir
+	if err != nil {
+		t.Fatalf("read first output: %v", err)
+	}
+	if err := run(yamlPath, outPath); err != nil {
+		t.Fatalf("second run() returned error: %v", err)
+	}
+	got2, err := os.ReadFile(outPath) //nolint:gosec // path under TempDir
+	if err != nil {
+		t.Fatalf("read second output: %v", err)
+	}
+	if string(got1) != string(got2) {
+		t.Errorf("generator output is non-deterministic across runs:\n--- first:\n%s\n--- second:\n%s", got1, got2)
 	}
 
 	got, err := os.ReadFile(outPath) //nolint:gosec // path under TempDir
@@ -98,7 +117,9 @@ func TestGeneratorRejectsUnknownASIKey(t *testing.T) {
     attack_techniques:
       - id: foo
 `
-	_ = os.WriteFile(yamlPath, []byte(fixture), 0o644)
+	if err := os.WriteFile(yamlPath, []byte(fixture), 0o600); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
 
 	err := run(yamlPath, outPath)
 	if err == nil {
@@ -114,7 +135,9 @@ func TestGeneratorRejectsEmptyYaml(t *testing.T) {
 	yamlPath := filepath.Join(dir, "fixture.yaml")
 	outPath := filepath.Join(dir, "out.go")
 
-	_ = os.WriteFile(yamlPath, []byte(`categories: {}`), 0o644)
+	if err := os.WriteFile(yamlPath, []byte(`categories: {}`), 0o600); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
 
 	err := run(yamlPath, outPath)
 	if err == nil {
