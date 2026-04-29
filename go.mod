@@ -22,7 +22,7 @@ require (
 	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/klauspost/compress v1.18.5
 	github.com/lib/pq v1.11.2
-	github.com/mattn/go-sqlite3 v1.14.34
+	github.com/mattn/go-sqlite3 v1.14.37
 	github.com/rs/zerolog v1.34.0
 	github.com/schollz/progressbar/v3 v3.19.0
 	github.com/spf13/cobra v1.10.2
