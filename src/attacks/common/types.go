@@ -62,7 +62,92 @@ const (
 	CategoryAudio         AttackCategory = "audio"
 	CategoryReasoning     AttackCategory = "reasoning"
 	CategoryAdaptive      AttackCategory = "adaptive"
+	CategoryMemory        AttackCategory = "memory"
 )
+
+// AttackOutcome categorizes how an attack run ended. Introduced in v0.9.0
+// to disambiguate "ran fully and target resisted" from "did not run to
+// completion" (capability missing, gate blocked, budget out, provider error).
+//
+// Bandit reward attribution should filter on outcome:
+//
+//	WHERE outcome IN ('success', 'refused')
+//
+// Skipped runs do not enter the reward signal.
+type AttackOutcome string
+
+const (
+	OutcomeSuccess AttackOutcome = "success" // attack landed (target produced harmful content)
+	OutcomeRefused AttackOutcome = "refused" // ran fully; target resisted
+	OutcomeSkipped AttackOutcome = "skipped" // did not run to completion; see SkipReason
+)
+
+// SkipReason enumerates the reasons an attack run can end with
+// Outcome=OutcomeSkipped. Introduced in v0.9.0.
+type SkipReason string
+
+const (
+	SkipMissingCapability   SkipReason = "missing_capability"
+	SkipGateBlocked         SkipReason = "gate_blocked"
+	SkipBudgetExceeded      SkipReason = "budget_exceeded"
+	SkipProviderError       SkipReason = "provider_error"
+	SkipPreconditionFailed  SkipReason = "precondition_failed"
+	SkipModelRefusedImage   SkipReason = "model_declined_image_input"
+	SkipReasoningTraceEmpty SkipReason = "reasoning_trace_empty"
+	SkipSignatureGated      SkipReason = "anthropic_signature_blocks_mutation"
+	SkipNoMutationTarget    SkipReason = "no_safety_step_to_hijack"
+	SkipMemoryNotRetained   SkipReason = "provider_reports_no_memory_retention"
+)
+
+// EngineBudget bounds the runtime of evolutionary attack engines (jbfuzz,
+// persona_evolve). All four knobs are honored independently. Introduced in v0.9.0.
+type EngineBudget struct {
+	MaxQueries          int  `json:"max_queries"`
+	MaxWallClockSeconds int  `json:"max_wall_clock_seconds"`
+	MaxGenerations      int  `json:"max_generations"`
+	EarlyStopOnSuccess  bool `json:"early_stop_on_success"`
+}
+
+// Default and hard-ceiling budgets for evolutionary engines. Operator config
+// is clamped to the hard ceilings at Execute() entry; clamping logs a warning.
+const (
+	DefaultMaxQueries          = 100
+	DefaultMaxWallClockSeconds = 180
+	DefaultMaxGenerations      = 25
+	HardMaxQueries             = 5000
+	HardMaxWallClockSeconds    = 1800 // 30 min
+	HardMaxGenerations         = 200
+)
+
+// DefaultEngineBudget returns the v0.9.0 default budget for adaptive engines.
+func DefaultEngineBudget() EngineBudget {
+	return EngineBudget{
+		MaxQueries:          DefaultMaxQueries,
+		MaxWallClockSeconds: DefaultMaxWallClockSeconds,
+		MaxGenerations:      DefaultMaxGenerations,
+		EarlyStopOnSuccess:  true,
+	}
+}
+
+// Clamp reduces budget knobs to the hard ceilings, returning a summary of
+// any fields that were clamped. The returned slice is empty when no clamping
+// occurred.
+func (b *EngineBudget) Clamp() []string {
+	var clamped []string
+	if b.MaxQueries > HardMaxQueries {
+		clamped = append(clamped, fmt.Sprintf("max_queries=%d→%d", b.MaxQueries, HardMaxQueries))
+		b.MaxQueries = HardMaxQueries
+	}
+	if b.MaxWallClockSeconds > HardMaxWallClockSeconds {
+		clamped = append(clamped, fmt.Sprintf("max_wall_clock=%d→%d", b.MaxWallClockSeconds, HardMaxWallClockSeconds))
+		b.MaxWallClockSeconds = HardMaxWallClockSeconds
+	}
+	if b.MaxGenerations > HardMaxGenerations {
+		clamped = append(clamped, fmt.Sprintf("max_generations=%d→%d", b.MaxGenerations, HardMaxGenerations))
+		b.MaxGenerations = HardMaxGenerations
+	}
+	return clamped
+}
 
 // TechniqueInfo provides metadata about an attack technique.
 type TechniqueInfo struct {
@@ -118,6 +203,17 @@ func (c AttackConfig) CostExceeded(accumulatedCost float64) bool {
 }
 
 // AttackResult contains the outcome of an attack execution.
+//
+// In v0.9.0, the typed fields Outcome/SkipReason/SkipDetail/CleanupHint were
+// added alongside the existing Success bool. The two are kept in sync by the
+// NewAttackResult constructor and the WithSkip helper:
+//
+//	r := NewAttackResult("minja", OutcomeSuccess)        // Success=true,  Outcome=success
+//	r := NewAttackResult("h_cot", OutcomeSkipped).WithSkip(SkipSignatureGated, "...")
+//
+// Direct struct literals on AttackResult are still permitted for backward
+// compatibility with v0.8.0 modules, but new code should prefer the
+// constructor to avoid Success/Outcome desync. See TestAttackResultInvariants.
 type AttackResult struct {
 	// Identification
 	ID        string    `json:"id"`
@@ -132,6 +228,18 @@ type AttackResult struct {
 	Confidence float64 `json:"confidence"`
 	Response   string  `json:"response"`
 
+	// v0.9.0: typed outcome and skip reason. Outcome is the source of truth;
+	// Success is kept as a derived field for backward compatibility.
+	Outcome    AttackOutcome `json:"outcome,omitempty"`
+	SkipReason SkipReason    `json:"skip_reason,omitempty"`
+	SkipDetail string        `json:"skip_detail,omitempty"`
+
+	// CleanupHint is set by attack modules that perform persistent state
+	// changes (e.g., memory poisoning). It contains operator-facing
+	// instructions for purging injected records. v0.9.0 does not auto-purge;
+	// the v0.10.0 Purger interface will close that loop.
+	CleanupHint string `json:"cleanup_hint,omitempty"`
+
 	// Metrics
 	AttemptCount int           `json:"attempt_count"`
 	Duration     time.Duration `json:"duration"`
@@ -139,13 +247,43 @@ type AttackResult struct {
 	CostUSD      float64       `json:"cost_usd"`
 
 	// Analysis
-	SuccessFactors   []string `json:"success_factors,omitempty"`
-	FailureReasons   []string `json:"failure_reasons,omitempty"`
-	SuggestedFollowup string  `json:"suggested_followup,omitempty"`
+	SuccessFactors    []string `json:"success_factors,omitempty"`
+	FailureReasons    []string `json:"failure_reasons,omitempty"`
+	SuggestedFollowup string   `json:"suggested_followup,omitempty"`
 
 	// Metadata
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
+
+// NewAttackResult constructs an AttackResult with Outcome and Success kept
+// consistent. Prefer this over struct literals in v0.9.0+ code.
+func NewAttackResult(technique string, outcome AttackOutcome) *AttackResult {
+	return &AttackResult{
+		ID:        GenerateAttackID(),
+		Timestamp: time.Now(),
+		Technique: technique,
+		Outcome:   outcome,
+		Success:   outcome == OutcomeSuccess,
+	}
+}
+
+// WithSkip annotates a skipped result with reason and human-readable detail.
+// Returns the receiver for fluent chaining. Panics if Outcome != OutcomeSkipped,
+// since attaching a skip reason to a non-skipped result would mask the actual
+// outcome.
+func (r *AttackResult) WithSkip(reason SkipReason, detail string) *AttackResult {
+	if r.Outcome != OutcomeSkipped {
+		panic(fmt.Sprintf("WithSkip called on result with Outcome=%q (must be %q)", r.Outcome, OutcomeSkipped))
+	}
+	r.SkipReason = reason
+	r.SkipDetail = detail
+	return r
+}
+
+// IsSkipped reports whether the result was skipped (capability missing,
+// gate blocked, budget out, or provider error). Convenience for bandit
+// reward filters and report generators.
+func (r *AttackResult) IsSkipped() bool { return r.Outcome == OutcomeSkipped }
 
 // --- Shared helper functions ---
 
