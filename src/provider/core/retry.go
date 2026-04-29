@@ -111,8 +111,7 @@ func RetryableQuery[T any](ctx context.Context, policy RetryPolicy, fn func(ctx 
 			fromRetryAfter = true
 		}
 		if policy.JitterFraction > 0 {
-			//nolint:gosec // pseudo-random jitter is fine; we don't need crypto/rand here
-			sleep += time.Duration(rand.Float64() * policy.JitterFraction * float64(sleep))
+			sleep += time.Duration(rand.Float64()*policy.JitterFraction*float64(sleep)) // #nosec G404 -- math/rand used for non-security randomization (jitter/simulation/load distribution)
 		}
 		if !fromRetryAfter && sleep > policy.MaxBackoff {
 			sleep = policy.MaxBackoff

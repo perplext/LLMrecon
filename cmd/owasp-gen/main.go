@@ -62,7 +62,7 @@ func main() {
 }
 
 func run(yamlPath, outPath string) error {
-	raw, err := os.ReadFile(yamlPath) //nolint:gosec // path supplied via flag, intentional
+	raw, err := os.ReadFile(yamlPath) // #nosec G304 -- yamlPath is operator-supplied via -yaml flag (build-time generator)
 	if err != nil {
 		return fmt.Errorf("read yaml %s: %w", yamlPath, err)
 	}
@@ -108,7 +108,7 @@ func run(yamlPath, outPath string) error {
 		return fmt.Errorf("format generated source: %w", err)
 	}
 
-	if err := os.WriteFile(outPath, formatted, 0o644); err != nil { //nolint:gosec // generated source, not secret
+	if err := os.WriteFile(outPath, formatted, 0o600); err != nil {
 		return fmt.Errorf("write %s: %w", outPath, err)
 	}
 	fmt.Printf("owasp-gen: wrote %d techniques to %s\n", len(techniques), outPath)
