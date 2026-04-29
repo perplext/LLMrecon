@@ -101,6 +101,14 @@ func RetryableQuery[T any](ctx context.Context, policy RetryPolicy, fn func(ctx 
 			return zero, ctxErr
 		}
 
+		// Only *TransientError is retry-eligible. Unknown error types are
+		// surfaced immediately so the caller can decide. Without this gate,
+		// a buggy provider returning bare errors would stall the whole
+		// retry budget on every call.
+		if !IsTransient(err) {
+			return zero, err
+		}
+
 		lastErr = err
 
 		// Last attempt: don't sleep, just return.

@@ -126,6 +126,24 @@ func TestRetryableQuery_ContextCancelDuringFn(t *testing.T) {
 	}
 }
 
+// TestRetryableQuery_UnknownErrorReturnsImmediately verifies that errors
+// that are neither *TransientError nor *PermanentError surface immediately.
+// The retry budget must not absorb buggy provider returns.
+func TestRetryableQuery_UnknownErrorReturnsImmediately(t *testing.T) {
+	plain := errors.New("plain unknown error")
+	var calls int32
+	_, err := RetryableQuery(context.Background(), zeroJitterPolicy(5), func(_ context.Context) (string, error) {
+		atomic.AddInt32(&calls, 1)
+		return "", plain
+	})
+	if !errors.Is(err, plain) {
+		t.Errorf("expected unknown error to surface, got %v", err)
+	}
+	if calls != 1 {
+		t.Errorf("expected 1 call (no retry on unknown error), got %d", calls)
+	}
+}
+
 // TestRetryableQuery_PreCancelledCtxSkipsFn verifies that when ctx is already
 // cancelled before the first attempt, fn is NOT invoked at all. Avoids
 // firing a provider network call when the caller has already given up.
