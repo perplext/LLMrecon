@@ -69,6 +69,15 @@ func RetryableQuery[T any](ctx context.Context, policy RetryPolicy, fn func(ctx 
 	var lastErr error
 
 	for attempt := 1; attempt <= policy.MaxAttempts; attempt++ {
+		// Check ctx cancellation before each attempt — including the first.
+		// fn may make a network call; if ctx is already cancelled we should
+		// surface that without spending a syscall on it.
+		if err := ctx.Err(); err != nil {
+			if lastErr != nil {
+				return zero, lastErr
+			}
+			return zero, err
+		}
 		// Check overall budget before each attempt (after the first).
 		if attempt > 1 && hasDeadline && time.Now().After(deadline) {
 			if lastErr != nil {

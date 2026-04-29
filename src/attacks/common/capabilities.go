@@ -134,6 +134,9 @@ const MaxImagePayloadBytes = 5 * 1024 * 1024
 
 // NewImagePayloadBytes constructs an inline-bytes ImagePayload after
 // validating the MIME type, non-empty data, and size cap.
+//
+// The constructor takes a defensive copy of b so post-construction mutations
+// by the caller cannot violate the validated invariants.
 func NewImagePayloadBytes(b []byte, mt ImageMimeType, d ImageDetail) (ImagePayload, error) {
 	if len(b) == 0 {
 		return ImagePayload{}, fmt.Errorf("image payload: empty bytes")
@@ -147,7 +150,9 @@ func NewImagePayloadBytes(b []byte, mt ImageMimeType, d ImageDetail) (ImagePaylo
 	if !validDetail(d) {
 		return ImagePayload{}, fmt.Errorf("image payload: invalid detail %q", d)
 	}
-	return ImagePayload{bytes: b, mimeType: mt, detail: d}, nil
+	owned := make([]byte, len(b))
+	copy(owned, b)
+	return ImagePayload{bytes: owned, mimeType: mt, detail: d}, nil
 }
 
 // NewImagePayloadURL constructs a URL-referenced ImagePayload. The URL is not
@@ -166,8 +171,17 @@ func NewImagePayloadURL(url string, mt ImageMimeType, d ImageDetail) (ImagePaylo
 	return ImagePayload{url: url, mimeType: mt, detail: d}, nil
 }
 
-// Bytes returns the inline image bytes (nil for URL-referenced payloads).
-func (p ImagePayload) Bytes() []byte { return p.bytes }
+// Bytes returns a defensive copy of the inline image bytes (nil for
+// URL-referenced payloads). Callers cannot mutate the payload's internal
+// state through the returned slice.
+func (p ImagePayload) Bytes() []byte {
+	if p.bytes == nil {
+		return nil
+	}
+	out := make([]byte, len(p.bytes))
+	copy(out, p.bytes)
+	return out
+}
 
 // URL returns the image URL ("" for inline-bytes payloads).
 func (p ImagePayload) URL() string { return p.url }

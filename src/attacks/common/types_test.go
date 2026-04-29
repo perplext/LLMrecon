@@ -178,6 +178,24 @@ func TestAttackResultInvariants(t *testing.T) {
 		_ = NewAttackResult("test", OutcomeSuccess).WithSkip(SkipMissingCapability, "")
 	})
 
+	t.Run("WithSkip panics on empty SkipReason", func(t *testing.T) {
+		defer func() {
+			if recover() == nil {
+				t.Errorf("WithSkip with empty SkipReason should panic")
+			}
+		}()
+		_ = NewAttackResult("test", OutcomeSkipped).WithSkip("", "detail")
+	})
+
+	t.Run("WithSkip panics on unknown SkipReason", func(t *testing.T) {
+		defer func() {
+			if recover() == nil {
+				t.Errorf("WithSkip with unknown SkipReason should panic")
+			}
+		}()
+		_ = NewAttackResult("test", OutcomeSkipped).WithSkip(SkipReason("invented_reason"), "detail")
+	})
+
 	t.Run("Skipped result has Success=false", func(t *testing.T) {
 		r := NewAttackResult("test", OutcomeSkipped).WithSkip(SkipBudgetExceeded, "ran out")
 		if r.Success {

@@ -126,6 +126,25 @@ func TestRetryableQuery_ContextCancelDuringFn(t *testing.T) {
 	}
 }
 
+// TestRetryableQuery_PreCancelledCtxSkipsFn verifies that when ctx is already
+// cancelled before the first attempt, fn is NOT invoked at all. Avoids
+// firing a provider network call when the caller has already given up.
+func TestRetryableQuery_PreCancelledCtxSkipsFn(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	var calls int32
+	_, err := RetryableQuery(ctx, zeroJitterPolicy(3), func(_ context.Context) (string, error) {
+		atomic.AddInt32(&calls, 1)
+		return "ok", nil
+	})
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("expected context.Canceled, got %v", err)
+	}
+	if calls != 0 {
+		t.Errorf("expected fn to be skipped on pre-cancelled ctx, got calls=%d", calls)
+	}
+}
+
 func TestRetryableQuery_HonorsRetryAfter(t *testing.T) {
 	var calls int32
 	policy := zeroJitterPolicy(2)

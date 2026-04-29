@@ -267,13 +267,36 @@ func NewAttackResult(technique string, outcome AttackOutcome) *AttackResult {
 	}
 }
 
+// validSkipReasons enumerates SkipReason values WithSkip will accept.
+// Kept in sync with the constants above; deliberately not derived via
+// reflection so adding a new constant requires a deliberate edit here.
+var validSkipReasons = map[SkipReason]struct{}{
+	SkipMissingCapability:   {},
+	SkipGateBlocked:         {},
+	SkipBudgetExceeded:      {},
+	SkipProviderError:       {},
+	SkipPreconditionFailed:  {},
+	SkipModelRefusedImage:   {},
+	SkipReasoningTraceEmpty: {},
+	SkipSignatureGated:      {},
+	SkipNoMutationTarget:    {},
+	SkipMemoryNotRetained:   {},
+}
+
 // WithSkip annotates a skipped result with reason and human-readable detail.
-// Returns the receiver for fluent chaining. Panics if Outcome != OutcomeSkipped,
-// since attaching a skip reason to a non-skipped result would mask the actual
-// outcome.
+// Returns the receiver for fluent chaining. Panics if Outcome != OutcomeSkipped
+// (attaching a skip reason to a non-skipped result would mask the actual
+// outcome) or if reason is empty/unknown (we want skip taxonomy integrity for
+// the bandit reward filter).
 func (r *AttackResult) WithSkip(reason SkipReason, detail string) *AttackResult {
 	if r.Outcome != OutcomeSkipped {
 		panic(fmt.Sprintf("WithSkip called on result with Outcome=%q (must be %q)", r.Outcome, OutcomeSkipped))
+	}
+	if reason == "" {
+		panic("WithSkip called with empty SkipReason")
+	}
+	if _, ok := validSkipReasons[reason]; !ok {
+		panic(fmt.Sprintf("WithSkip called with unknown SkipReason %q (add to constants in types.go)", reason))
 	}
 	r.SkipReason = reason
 	r.SkipDetail = detail
