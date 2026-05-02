@@ -84,6 +84,8 @@ scratch-*.md
 
 # Screenshot artifacts
 *.png
+# …but keep committed test fixtures.
+!src/attacks/multimodal/testdata/*.png
 
 # Serena
 .serena/
