@@ -95,12 +95,18 @@ func TestRetryableQuery_ContextCancellationAbortsLoop(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	var calls int32
 	go func() {
-		// Cancel after first attempt.
+		// Cancel mid-sleep on the first iteration.
 		time.Sleep(20 * time.Millisecond)
 		cancel()
 	}()
 	policy := zeroJitterPolicy(10)
-	policy.InitialBackoff = 50 * time.Millisecond // long enough for cancel to land mid-sleep
+	// InitialBackoff alone isn't enough — zeroJitterPolicy sets MaxBackoff
+	// to 10ms which would silently clamp the sleep below the cancel time
+	// (20ms). Override BOTH so the cancel reliably lands during the first
+	// iteration's backoff sleep, and the select-on-ctx-Done path is
+	// deterministically exercised.
+	policy.InitialBackoff = 200 * time.Millisecond
+	policy.MaxBackoff = 200 * time.Millisecond
 	_, err := RetryableQuery(ctx, policy, func(_ context.Context) (string, error) {
 		atomic.AddInt32(&calls, 1)
 		return "", &TransientError{Kind: TransientRateLimit}
@@ -110,6 +116,40 @@ func TestRetryableQuery_ContextCancellationAbortsLoop(t *testing.T) {
 	}
 	if calls < 1 {
 		t.Errorf("expected at least 1 call, got %d", calls)
+	}
+}
+
+// TestRetryableQuery_CtxCancelBetweenIterationsReturnsCtxErr targets the
+// race window where the timer wins the select (sleep finishes first) but
+// ctx is cancelled before the next iteration's check. Pre-fix, the
+// top-of-loop check returned lastErr (the previous transient) instead of
+// ctx.Err(), masking the cancellation.
+//
+// Synthesized deterministically: pre-cancel an already-set-up ctx, then
+// run with a transient-returning fn that sets lastErr on the first call,
+// and assert the final error wraps context.Canceled rather than the
+// transient.
+func TestRetryableQuery_CtxCancelBetweenIterationsReturnsCtxErr(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	var calls int32
+	policy := zeroJitterPolicy(3)
+	// Tiny backoff so the timer wins the select reliably, leaving the
+	// top-of-loop ctx check as the only place ctx.Err() can be observed.
+	policy.InitialBackoff = 1 * time.Millisecond
+	policy.MaxBackoff = 1 * time.Millisecond
+
+	_, err := RetryableQuery(ctx, policy, func(_ context.Context) (string, error) {
+		c := atomic.AddInt32(&calls, 1)
+		// Cancel after the first transient is observed but before the
+		// second call would run. With 1ms backoff the timer fires fast,
+		// so the cancellation must land between iterations.
+		if c == 1 {
+			cancel()
+		}
+		return "", &TransientError{Kind: TransientRateLimit}
+	})
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("expected context.Canceled, got %v (lastErr should NOT mask ctx cancellation)", err)
 	}
 }
 
