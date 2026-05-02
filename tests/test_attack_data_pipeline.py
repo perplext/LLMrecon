@@ -371,6 +371,98 @@ class TestBanditRewardFilter(unittest.TestCase):
         # And the central rule: skipped is NOT in the reward set.
         self.assertNotIn(OUTCOME_SKIPPED, BANDIT_REWARD_OUTCOMES)
 
+    def test_recent_skipped_burst_does_not_displace_rewardables(self):
+        """Regression: when the newest rows are all skipped, the reward
+        population must still contain the most recent `limit` rewardable
+        rows. A naive implementation that LIMITs first and filters
+        skipped afterward will shrink sample_count toward zero — exactly
+        the bug CodeRabbit caught on PR #163.
+        """
+        # Inline import to avoid coupling the test to pandas/numpy import
+        # order at module load (the pipeline class brings them in).
+        from ml.data.attack_data_pipeline import AttackDataPipeline
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            p = AttackDataPipeline({"storage_path": tmpdir})
+
+            # Insert 5 rewardable rows (oldest first), then 3 skipped rows
+            # (newest). Limit=5 — a buggy implementation would see 3
+            # skipped + 2 rewardable in its window; a correct one sees
+            # all 5 rewardable.
+            conn = sqlite3.connect(p.db_path)
+            try:
+                base = "2026-01-01T00:00:0"
+                for i, (status, outcome) in enumerate([
+                    ("success", OUTCOME_SUCCESS),
+                    ("blocked", OUTCOME_REFUSED),
+                    ("success", OUTCOME_SUCCESS),
+                    ("blocked", OUTCOME_REFUSED),
+                    ("success", OUTCOME_SUCCESS),
+                ]):
+                    conn.execute(
+                        """INSERT INTO attacks
+                           (attack_id, timestamp, attack_type, target_model,
+                            provider, payload, status, response_time, tokens_used,
+                            technique_params, obfuscation_level, response,
+                            success_indicators, detection_score, semantic_similarity,
+                            features, outcome)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        (f"r{i}", f"{base}{i}", "t", "m", "p", "x", status,
+                         0.0, 0, "{}", 0.0, "", "[]", 0.0, 0.0, "{}", outcome),
+                    )
+                # Newer rows: all skipped.
+                for i, _ in enumerate(range(3)):
+                    conn.execute(
+                        """INSERT INTO attacks
+                           (attack_id, timestamp, attack_type, target_model,
+                            provider, payload, status, response_time, tokens_used,
+                            technique_params, obfuscation_level, response,
+                            success_indicators, detection_score, semantic_similarity,
+                            features, outcome)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        (f"k{i}", f"2026-01-02T00:00:0{i}", "t", "m", "p",
+                         "x", "skipped", 0.0, 0, "{}", 0.0, "", "[]", 0.0,
+                         0.0, "{}", OUTCOME_SKIPPED),
+                    )
+                conn.commit()
+            finally:
+                conn.close()
+
+            # limit=5: with the bug, sample_count would be 2 (3 skipped
+            # displaced 3 rewardables); with the fix, sample_count is 5.
+            result = p.get_bandit_rewards(limit=5)
+            self.assertEqual(
+                result["sample_count"], 5,
+                "recent skipped burst displaced rewardables out of the "
+                "limit window — reward filter is applied AFTER LIMIT "
+                f"instead of inside the LIMIT subquery: {result}",
+            )
+            self.assertEqual(
+                result["outcomes"].get(OUTCOME_SUCCESS), 3,
+                f"success count drift: {result}",
+            )
+            self.assertEqual(
+                result["outcomes"].get(OUTCOME_REFUSED), 2,
+                f"refused count drift: {result}",
+            )
+            self.assertEqual(
+                result["skipped_count"], 3,
+                "skipped_count must be reported separately (not in reward sample)",
+            )
+            # success_rate over rewardables: 3/5 = 0.6.
+            self.assertAlmostEqual(result["success_rate"], 0.6)
+        finally:
+            for p in Path(tmpdir).rglob("*"):
+                try:
+                    p.unlink()
+                except OSError:
+                    pass
+            try:
+                os.rmdir(tmpdir)
+            except OSError:
+                pass
+
     def test_filter_excludes_skipped_at_sql_level(self):
         # Build a tiny migrated DB with one of each outcome; verify a
         # filter query returns only success + refused.

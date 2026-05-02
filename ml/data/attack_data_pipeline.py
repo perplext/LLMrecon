@@ -8,7 +8,6 @@ capture real attack data.
 
 import json
 import re
-import shutil
 import time
 import hashlib
 import sqlite3
@@ -95,14 +94,28 @@ def _migrate_v090(conn: sqlite3.Connection, db_path: Path) -> None:
     needs_alter = "outcome" not in cols or "parent_run_id" not in cols
 
     # Only back up when we're about to actually mutate the schema.
+    #
+    # Use SQLite's Online Backup API (Connection.backup) rather than a
+    # filesystem copy. In WAL mode (which we enable below for the
+    # attacks DB), recently-committed transactions can live in
+    # `<db>-wal` and `<db>-shm` sidecar files; copying only the main
+    # `.db` file produces an inconsistent snapshot where commits made
+    # via WAL haven't been checkpointed into the main file. SQLite's
+    # docs explicitly warn against filesystem copies for this reason.
+    # The Online Backup API handles WAL state correctly by walking the
+    # database page-by-page through the source connection.
     if needs_alter and db_path.exists():
         # timezone-aware UTC; .utcnow() is deprecated in Python 3.12+.
         ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         backup = db_path.with_suffix(db_path.suffix + f".bak.{ts}")
         try:
-            shutil.copy2(db_path, backup)
+            dst = sqlite3.connect(str(backup))
+            try:
+                conn.backup(dst)
+            finally:
+                dst.close()
             logger.info("v0.9.0 migration: backed up %s → %s", db_path, backup)
-        except OSError as e:
+        except sqlite3.Error as e:
             logger.warning("v0.9.0 migration: backup failed (%s); proceeding anyway", e)
 
     conn.execute("PRAGMA journal_mode=WAL;")
@@ -620,36 +633,53 @@ class AttackDataPipeline:
                 params.append(attack_type)
             where_sql = (" AND ".join(where_clauses)) if where_clauses else "1=1"
 
-            # Aggregate including skipped so we can report skipped_count
-            # for transparency. The reward SQL itself filters skipped via
-            # CASE WHEN — equivalent to a WHERE outcome IN (...) but lets
-            # us count skipped in the same pass.
+            # Reward query — apply the rewardable-outcome filter INSIDE
+            # the LIMIT-bound subquery so the window contains the most
+            # recent `limit` *rewardable* rows. If we filtered after
+            # LIMIT, a burst of recent skipped rows would displace
+            # rewardables out of the window and shrink sample_count
+            # without bound. The partial index `idx_attacks_outcome`
+            # also only helps when the IN-clause is in the SQL, not
+            # post-fetch in Python.
             placeholders = ",".join("?" * len(BANDIT_REWARD_OUTCOMES))
-            sql = f"""
+            reward_sql = f"""
                 SELECT outcome, COUNT(*) FROM (
                     SELECT outcome
                     FROM attacks
-                    WHERE {where_sql}
+                    WHERE {where_sql} AND outcome IN ({placeholders})
                     ORDER BY timestamp DESC
                     LIMIT ?
                 )
                 GROUP BY outcome
             """
-            cursor.execute(sql, (*params, limit))
+            cursor.execute(reward_sql, (*params, *BANDIT_REWARD_OUTCOMES, limit))
             outcomes: Dict[str, int] = {}
             for row in cursor.fetchall():
                 key = row[0] or "(null)"
                 outcomes[key] = row[1]
 
+            # Skipped count — separate query because we just filtered
+            # them OUT of the reward population. Bounded by the same
+            # `limit` window so the displayed counts are temporally
+            # comparable to the reward sample.
+            skipped_sql = f"""
+                SELECT COUNT(*) FROM (
+                    SELECT 1
+                    FROM attacks
+                    WHERE {where_sql} AND outcome = ?
+                    ORDER BY timestamp DESC
+                    LIMIT ?
+                )
+            """
+            cursor.execute(skipped_sql, (*params, OUTCOME_SKIPPED, limit))
+            skipped_row = cursor.fetchone()
+            skipped_count = skipped_row[0] if skipped_row else 0
+            outcomes[OUTCOME_SKIPPED] = skipped_count
+
             # Reward population: success + refused. Skipped explicitly excluded.
             rewardable = outcomes.get(OUTCOME_SUCCESS, 0) + outcomes.get(OUTCOME_REFUSED, 0)
             success_count = outcomes.get(OUTCOME_SUCCESS, 0)
-            skipped_count = outcomes.get(OUTCOME_SKIPPED, 0)
             success_rate = (success_count / rewardable) if rewardable > 0 else 0.0
-
-            # Silence the unused-placeholders warning the linter would
-            # otherwise issue if the parametric IN clause is unused.
-            _ = placeholders
 
             return {
                 "success_rate": success_rate,
