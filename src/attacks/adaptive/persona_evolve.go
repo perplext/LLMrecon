@@ -275,7 +275,10 @@ func mutateSlot(p persona, donors []persona, rng *rand.Rand) persona {
 		return p
 	}
 	d := donors[rng.Intn(len(donors))]
-	const numSlots = 7
+	// numSlots must equal the number of crossover-eligible slots so mutation
+	// covers the same surface as crossoverUniform; otherwise the GA cannot
+	// introduce novel values for the omitted slot.
+	const numSlots = 8
 	switch rng.Intn(numSlots) {
 	case 0:
 		p.Role = d.Role
@@ -288,8 +291,10 @@ func mutateSlot(p persona, donors []persona, rng *rand.Rand) persona {
 	case 4:
 		p.Constraints = d.Constraints
 	case 5:
-		p.Traits = append([]string{}, d.Traits...)
+		p.Backstory = d.Backstory
 	case 6:
+		p.Traits = append([]string{}, d.Traits...)
+	case 7:
 		p.Style = copyStyle(d.Style)
 	}
 	return p
@@ -374,7 +379,7 @@ func immigrate(pop []persona, fitness []float64, frac float64, seeds []persona, 
 // when the candidate is too similar (token-set Jaccard >= noveltyDuplicateSim)
 // to any other population member. Cheap surrogate for embedding-based
 // novelty search; doesn't pull in extra deps.
-func noveltyAdjustedFitness(idx int, raw []float64, prompts []string) []float64 {
+func noveltyAdjustedFitness(raw []float64, prompts []string) []float64 {
 	out := make([]float64, len(raw))
 	for i, r := range raw {
 		out[i] = r
@@ -388,7 +393,6 @@ func noveltyAdjustedFitness(idx int, raw []float64, prompts []string) []float64 
 			}
 		}
 	}
-	_ = idx
 	return out
 }
 
@@ -534,7 +538,7 @@ func (m *PersonaEvolveModule) Execute(
 				bestResponse = resp
 			}
 		}
-		adjusted = noveltyAdjustedFitness(0, raws, prompts)
+		adjusted = noveltyAdjustedFitness(raws, prompts)
 		return
 	}
 

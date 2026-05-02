@@ -247,14 +247,21 @@ func TestMutateSlot_ChangesExactlyOneSlot(t *testing.T) {
 		Role: "DONOR_ROLE", Tone: "DONOR_TONE",
 		Expertise: []string{"DONOR_EXP"}, Traits: []string{"DONOR_TRAIT"},
 		Motivation: "DONOR_MOT", Constraints: "DONOR_CON",
+		Backstory: "DONOR_BACK",
+		Style:     map[string]interface{}{"marker": "DONOR_STYLE"},
 	}}
 	rng := rand.New(rand.NewSource(99))
 
-	// Run mutation many times; on average each slot should be hit at least once.
+	// Run mutation many times; with 8 slots and 400 trials, every slot
+	// should be hit at least once (probability of missing any one slot is
+	// (7/8)^400 ≈ 10^-23). Test asserts coverage parity with
+	// crossoverUniform (which picks from the same 8 slots).
 	hits := map[string]int{}
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 400; i++ {
 		base := persona{Role: "x", Tone: "x", Motivation: "x", Constraints: "x",
-			Expertise: []string{"x"}, Traits: []string{"x"}}
+			Backstory: "x",
+			Expertise: []string{"x"}, Traits: []string{"x"},
+			Style: map[string]interface{}{"marker": "x"}}
 		out := mutateSlot(base, donors, rng)
 		if out.Role == "DONOR_ROLE" {
 			hits["role"]++
@@ -268,16 +275,22 @@ func TestMutateSlot_ChangesExactlyOneSlot(t *testing.T) {
 		if out.Constraints == "DONOR_CON" {
 			hits["con"]++
 		}
+		if out.Backstory == "DONOR_BACK" {
+			hits["back"]++
+		}
 		if len(out.Expertise) > 0 && out.Expertise[0] == "DONOR_EXP" {
 			hits["exp"]++
 		}
 		if len(out.Traits) > 0 && out.Traits[0] == "DONOR_TRAIT" {
 			hits["trait"]++
 		}
+		if out.Style != nil && out.Style["marker"] == "DONOR_STYLE" {
+			hits["style"]++
+		}
 	}
-	for _, k := range []string{"role", "tone", "mot", "con", "exp", "trait"} {
+	for _, k := range []string{"role", "tone", "mot", "con", "back", "exp", "trait", "style"} {
 		if hits[k] == 0 {
-			t.Errorf("slot %q never selected by mutation across 200 runs", k)
+			t.Errorf("slot %q never selected by mutation across 400 runs", k)
 		}
 	}
 }
@@ -399,7 +412,7 @@ func TestImmigrate_ReplacesBottomN(t *testing.T) {
 func TestNoveltyAdjustedFitness_PenalizesDuplicates(t *testing.T) {
 	prompts := []string{"hello world", "hello world", "totally different content"}
 	raw := []float64{1.0, 1.0, 1.0}
-	out := noveltyAdjustedFitness(0, raw, prompts)
+	out := noveltyAdjustedFitness(raw, prompts)
 
 	if out[0] >= 1.0 {
 		t.Errorf("duplicate at 0 should be penalized; got %.3f", out[0])
@@ -494,8 +507,25 @@ func TestPersonaEvolve_HardCeilingClamping(t *testing.T) {
 		t.Fatal(err)
 	}
 	clamped, ok := r.Metadata["budget_clamped"].([]string)
-	if !ok || len(clamped) != 3 {
-		t.Errorf("budget_clamped = %#v, want 3 entries", r.Metadata["budget_clamped"])
+	if !ok || len(clamped) == 0 {
+		t.Errorf("budget_clamped = %#v, want at least one entry", r.Metadata["budget_clamped"])
+	}
+	// Each over-the-ceiling knob must produce a clamp message; we assert
+	// presence rather than exact count to stay robust to future budget
+	// fields without sacrificing the invariant we care about (operator
+	// config never silently exceeds hard ceilings).
+	wantClamped := []string{"max_queries", "max_wall_clock", "max_generations"}
+	for _, want := range wantClamped {
+		found := false
+		for _, msg := range clamped {
+			if strings.Contains(msg, want) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("budget_clamped missing %q: %v", want, clamped)
+		}
 	}
 	if r.AttemptCount > common.HardMaxQueries {
 		t.Errorf("AttemptCount=%d exceeds HardMaxQueries=%d", r.AttemptCount, common.HardMaxQueries)
