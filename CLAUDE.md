@@ -313,31 +313,31 @@ Modules type-assert at `Execute()` entry and emit `OutcomeSkipped + SkipMissingC
 // Image input — multimodal SIVA/VSH.
 type ImageProvider interface {
     Provider
-    QueryWithImages(ctx, prompt, []ImagePayload, opts) (string, error)
+    QueryWithImages(ctx context.Context, prompt string, images []ImagePayload, options map[string]interface{}) (string, error)
 }
 
 // Session lifecycle — memorygraft cross-session verification.
 type SessionProvider interface {
     Provider
     SessionID() string
-    NewSession(ctx) (Provider, error)
+    NewSession(ctx context.Context) (Provider, error)
 }
 
 // Memory introspection — all memory-poisoning modes fail-fast on stateless targets.
 type MemoryProbe interface {
     Provider
-    ProbeMemory(ctx) (retains bool, err error)
+    ProbeMemory(ctx context.Context) (retains bool, err error)
 }
 
 // Reasoning trace — H-CoT mutation source.
 type ReasoningProvider interface {
     Provider
-    QueryWithReasoning(ctx, msgs, opts) (string, ReasoningTrace, error)
+    QueryWithReasoning(ctx context.Context, messages []Message, options map[string]interface{}) (response string, trace ReasoningTrace, err error)
 }
 
 // Module-side cleanup hook (NOT a provider interface).
 type Cleaner interface {
-    Cleanup(ctx, recordIDs []string) error
+    Cleanup(ctx context.Context, recordIDs []string) error
 }
 ```
 

@@ -8,7 +8,7 @@ This changelog was started with v0.9.0; earlier history lives in `git log`.
 
 ## [Unreleased]
 
-## [0.9.0] — 2026-05-02
+## [0.9.0] - 2026-05-02
 
 The v0.9.0 release adds **6 Go attack modules and 5 attack templates**
 covering Q4 2025 – Q2 2026 LLM and agentic-AI attack research, plus the
