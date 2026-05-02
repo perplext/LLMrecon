@@ -128,7 +128,10 @@ def parse_define(arg: str) -> tuple:
     key = key.strip()
     if not key:
         raise ValueError(f"-D KEY may not be empty (from {arg!r})")
-    if not PLACEHOLDER_PATTERN.match("{{" + key + "}}"):
+    if not PLACEHOLDER_PATTERN.fullmatch("{{" + key + "}}"):
+        # fullmatch (not match) — match anchors only at the start, so a
+        # malformed key like "A}}B" would slip through because "{{A}}" is a
+        # valid prefix of "{{A}}B}}".
         raise ValueError(
             f"-D KEY {key!r} must match [A-Z][A-Z0-9_]* "
             f"(uppercase letters, digits, underscores; starting with a letter)"

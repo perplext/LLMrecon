@@ -161,6 +161,16 @@ class TestParseDefine(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_define("1KEY=x")
 
+    def test_rejects_key_with_embedded_braces(self):
+        # Regression: re.match would accept this because "{{A}}" is a valid
+        # prefix; fullmatch requires the entire wrapped string to match.
+        with self.assertRaises(ValueError):
+            parse_define("A}}B=x")
+
+    def test_rejects_key_with_trailing_garbage(self):
+        with self.assertRaises(ValueError):
+            parse_define("KEY!=x")
+
 
 class TestParseDefines(unittest.TestCase):
     def test_collects_multiple(self):
