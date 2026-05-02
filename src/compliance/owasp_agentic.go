@@ -217,6 +217,18 @@ func TechniqueToAgenticCategories(techniqueID string) []OWASPAgenticCategory {
 		"cot_phishing_reasoning":     {TrustExploitation},
 		"deceptive_alignment":        {TrustExploitation, RogueAgents},
 		"autonomous_jailbreak":       {RogueAgents},
+		// v0.9.0 additions — keep in sync with templates/owasp_agentic_2026.yaml
+		// technique_index. The cmd/owasp-gen tool produces the equivalent
+		// generated map; v0.10.0 will switch the runtime lookup to the
+		// generated map and delete this hand-written block.
+		"h_cot":                      {AgentGoalHijack},
+		"siva":                       {AgentGoalHijack},
+		"vsh":                        {AgentGoalHijack},
+		"jbfuzz":                     {AgentGoalHijack},
+		"persona_evolve":             {AgentGoalHijack, TrustExploitation},
+		"minja":                      {MemoryPoisoning},
+		"memorygraft":                {MemoryPoisoning, RogueAgents},
+		"injecmem":                   {MemoryPoisoning},
 	}
 	return index[techniqueID]
 }
