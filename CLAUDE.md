@@ -267,6 +267,149 @@ go test ./src/attacks/audio/...
 go test ./src/compliance/...
 ```
 
+## v0.9.0 New Attack Modules + Outcome Taxonomy + Provider Capabilities
+
+Version 0.9.0 adds 6 Go attack modules and 5 templates covering Q4 2025 – Q2 2026 research, plus the cross-cutting infrastructure that makes outcomes machine-comparable across the ML/bandit/compliance stack.
+
+### v0.9.0 Attack Module Inventory
+
+| Module | Path | Source | OWASP Agentic | Safety gate |
+|--------|------|--------|---------------|-------------|
+| `minja` / `memorygraft` / `injecmem` | `src/attacks/memory/poisoning.go` | arXiv 2503.03704 / 2512.16962 / OpenReview QVX6hcJ2um | ASI06 (+ASI10 for memorygraft) | `i_understand_risks=true` |
+| `h_cot` | `src/attacks/reasoning/h_cot.go` | arXiv 2502.12893, 2510.26418 | ASI01 | `i_understand_risks=true` + `common.ReasoningProvider` |
+| `siva` | `src/attacks/multimodal/siva.go` | arXiv 2602.08136 | ASI01 | `common.ImageProvider` |
+| `vsh` | `src/attacks/multimodal/vsh.go` | ScienceDirect S0031320325010520 | ASI01 | `common.ImageProvider` |
+| `jbfuzz` | `src/attacks/adaptive/jbfuzz.go` | arXiv 2503.08990 | ASI01 | `allow_experimental=true` |
+| `persona_evolve` | `src/attacks/adaptive/persona_evolve.go` | arXiv 2507.22171 | ASI01 + ASI09 | `allow_experimental=true` |
+
+### `AttackOutcome` 3-state taxonomy (`src/attacks/common/types.go`)
+
+Every v0.9.0 module returns one of three outcomes via `common.NewAttackResult`:
+
+```go
+type AttackOutcome string
+const (
+    OutcomeSuccess AttackOutcome = "success"   // attack landed
+    OutcomeRefused AttackOutcome = "refused"   // ran fully, target resisted
+    OutcomeSkipped AttackOutcome = "skipped"   // didn't run (capability/gate/budget/error)
+)
+```
+
+Skipped runs **always** carry a typed `SkipReason`. The full enum lives in `common/types.go`; the attack-author rule of thumb:
+
+- Use `SkipMissingCapability` when type assertion against an optional provider interface fails.
+- Use `SkipGateBlocked` when a safety-gate metadata flag is missing.
+- Use `SkipBudgetExceeded` when an evolutionary engine exhausted query/wall-clock/generation budget without success.
+- Use `SkipProviderError` for transient/network failures — never silent `Success=false`.
+- Use `SkipPreconditionFailed` for operator-config errors (missing payload, missing corpus path, etc).
+
+The bandit-relevant invariant: **`OutcomeSkipped` rows are excluded from reward aggregation.** Skipped reflects engine/capability state, not target behavior; including them biases the bandit toward (or against) targets that simply lack capabilities. The Python pipeline exposes this filter via `AttackDataPipeline.get_bandit_rewards()`, the canonical single point of truth.
+
+### Optional provider capabilities (`src/attacks/common/capabilities.go`)
+
+Modules type-assert at `Execute()` entry and emit `OutcomeSkipped + SkipMissingCapability` when the assertion fails. Five interfaces:
+
+```go
+// Image input — multimodal SIVA/VSH.
+type ImageProvider interface {
+    Provider
+    QueryWithImages(ctx context.Context, prompt string, images []ImagePayload, options map[string]interface{}) (string, error)
+}
+
+// Session lifecycle — memorygraft cross-session verification.
+type SessionProvider interface {
+    Provider
+    SessionID() string
+    NewSession(ctx context.Context) (Provider, error)
+}
+
+// Memory introspection — all memory-poisoning modes fail-fast on stateless targets.
+type MemoryProbe interface {
+    Provider
+    ProbeMemory(ctx context.Context) (retains bool, err error)
+}
+
+// Reasoning trace — H-CoT mutation source.
+type ReasoningProvider interface {
+    Provider
+    QueryWithReasoning(ctx context.Context, messages []Message, options map[string]interface{}) (response string, trace ReasoningTrace, err error)
+}
+
+// Module-side cleanup hook (NOT a provider interface).
+type Cleaner interface {
+    Cleanup(ctx context.Context, recordIDs []string) error
+}
+```
+
+`ImagePayload` is constructor-only (`NewImagePayloadBytes` / `NewImagePayloadURL`) — direct struct literals fail at compile time because the fields are unexported. Constructors validate MIME type, size cap (`MaxImagePayloadBytes = 5 MiB`), and detail enum.
+
+`ReasoningTrace.Signed=true` indicates an Anthropic-style cryptographically-signed thinking block whose text cannot be modified on round-trip; H-CoT short-circuits to `SkipSignatureGated` rather than wasting a re-injection.
+
+### Safety-gate flag matrix
+
+| Flag | Modules requiring it |
+|------|----------------------|
+| `i_understand_risks=true` | `minja`, `memorygraft`, `injecmem`, `h_cot`, `rce_chain` |
+| `allow_experimental=true` | `jbfuzz`, `persona_evolve`, `autonomous_jailbreak`, `deceptive_alignment`, `agent_collusion` |
+| `allow_autonomous=true` | `autonomous_jailbreak` (per v0.8.0) |
+
+Modules emit `OutcomeSkipped + SkipGateBlocked` when the corresponding flag is missing.
+
+### `EngineBudget` + hard ceilings (evolutionary engines)
+
+JBFuzz and persona_evolve share `common.EngineBudget` knobs and hard ceilings:
+
+```go
+const (
+    DefaultMaxQueries          = 100
+    DefaultMaxWallClockSeconds = 180
+    DefaultMaxGenerations      = 25
+    HardMaxQueries             = 5000
+    HardMaxWallClockSeconds    = 1800   // 30 min
+    HardMaxGenerations         = 200
+)
+```
+
+Hard ceilings clamp operator config; `(*EngineBudget).Clamp()` returns a slice of human-readable strings naming each clamped knob. Modules surface this in `result.Metadata["budget_clamped"]`.
+
+### `RetryableQuery` retry helper (`src/provider/core/retry.go`)
+
+Generic retry loop wrapping `func(ctx) (T, error)`. Two-class typed errors:
+
+- `*TransientError` (rate limit, 5xx, network) — retry with exponential backoff, jitter, optional `Retry-After` honor, ctx-aware sleep via `select{case <-ctx.Done(): … case <-t.C: …}`.
+- `*PermanentError` (auth, content-policy, schema mismatch) — surface immediately without retry.
+- Any other type — surface immediately. Buggy provider returns must not absorb the retry budget.
+
+ctx cancellation always wins: cancelling mid-loop returns `ctx.Err()`, never the previous transient. (PR #164 fixed an internal inconsistency where a top-of-loop check could let `lastErr` mask the cancellation.)
+
+### OWASP Agentic 2026 codegen (`cmd/owasp-gen`)
+
+Reads `templates/owasp_agentic_2026.yaml` (the canonical source) and emits `src/compliance/owasp_agentic_generated.go` containing `GeneratedTechniqueToAgenticCategories`. v0.9.0 ships the generator side-by-side with the existing hand-written `TechniqueToAgenticCategories`; v0.10.0 will switch the runtime lookup to the generated map and add a `go generate ./... && git diff --exit-code` drift check.
+
+### ML pipeline migration (`ml/data/attack_data_pipeline.py`)
+
+Two new columns: `outcome TEXT`, `parent_run_id TEXT`. Partial indexes (`idx_attacks_outcome`, `idx_attacks_parent_run_id`).
+
+`_migrate_v090(conn, db_path)`:
+- Idempotent: `PRAGMA table_info` introspection skips already-applied ALTERs; partial indexes use `IF NOT EXISTS`.
+- Backs up via SQLite's **Online Backup API** (`Connection.backup`), not `shutil.copy2`. WAL-mode databases keep recently-committed transactions in `-wal`/`-shm` sidecar files; a filesystem copy can produce an inconsistent snapshot.
+- Backup file (`{db}.bak.{UTC-timestamp}`) created only on the first run that detects a missing column.
+- Backfills `outcome` from legacy `status` once: `'success' if status='success' else 'refused'`.
+
+`_redact_sensitive_keys()` recursively scrubs dict keys matching `(?i)(key|token|secret|password|auth)` in `technique_params` and `features` before INSERT.
+
+`get_bandit_rewards(target_model, attack_type, limit)` is the canonical filter: `WHERE outcome IN ('success', 'refused') ORDER BY timestamp DESC LIMIT ?` — applied INSIDE the LIMIT subquery so a burst of recent skipped rows doesn't displace rewardables. Returns `{success_rate, sample_count, skipped_count, outcomes}`.
+
+### Integration smoke tests
+
+`src/attacks/integration/integration_test.go` — one end-to-end smoke test per family (memory, reasoning, multimodal, adaptive). Each test calls `t.Skip()` (NOT `t.Fatal`) when `os.Getenv("RUN_INTEGRATION")` is unset, so CI is silent by default.
+
+```bash
+RUN_INTEGRATION=1 go test ./src/attacks/integration/...
+```
+
+Cost note: smoke tests against a local `MockLLMServer` are free. Running them against real providers (uncapped budgets, real keys) costs roughly $3–$8 per run on production-tier models — most of that is the GA engines.
+
 ## Security Considerations
 
 - The tool is designed for security research and should only be used on systems you own or have permission to test
