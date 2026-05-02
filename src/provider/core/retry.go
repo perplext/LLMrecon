@@ -72,10 +72,16 @@ func RetryableQuery[T any](ctx context.Context, policy RetryPolicy, fn func(ctx 
 		// Check ctx cancellation before each attempt — including the first.
 		// fn may make a network call; if ctx is already cancelled we should
 		// surface that without spending a syscall on it.
+		//
+		// When ctx is cancelled, return ctx.Err() unconditionally — even when
+		// a prior iteration left lastErr set. The post-fn ctx check below
+		// (after the call) returns ctx.Err() too, and these two paths must
+		// agree: ctx cancellation is operator intent ("stop now") that
+		// trumps a previous transient. Returning lastErr here lets the
+		// transient mask the cancellation, which races the
+		// ContextCancellationAbortsLoop test when the ctx-vs-timer select
+		// goes to the timer first.
 		if err := ctx.Err(); err != nil {
-			if lastErr != nil {
-				return zero, lastErr
-			}
 			return zero, err
 		}
 		// Check overall budget before each attempt (after the first).
