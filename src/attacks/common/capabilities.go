@@ -42,6 +42,42 @@ type ImageProvider interface {
 	QueryWithImages(ctx context.Context, prompt string, images []ImagePayload, options map[string]interface{}) (string, error)
 }
 
+// ReasoningProvider is implemented by providers that expose the model's
+// reasoning trace alongside the final response (e.g., DeepSeek-R1, Gemini
+// 2.5 "Deep Think", o3, Claude 4.x extended thinking).
+//
+// Used by the H-CoT (chain-of-thought hijacking) attack module in v0.9.0.
+//
+// The interface is intentionally minimal — the heavier
+// core.ReasoningProvider exposes structured reasoning steps, token counts,
+// and timing for use inside provider adapters. Attack modules only need
+// the per-step text and a "is this trace cryptographically signed (and
+// therefore unmodifiable)?" boolean to gate the mutation path.
+type ReasoningProvider interface {
+	Provider
+	// QueryWithReasoning sends a chat request and returns the final response
+	// plus the model's reasoning trace. Providers that do not return a
+	// trace for the given request (e.g., model class doesn't reason, or
+	// request didn't trigger reasoning) return an empty trace; callers
+	// distinguish via len(trace.Steps) == 0.
+	QueryWithReasoning(ctx context.Context, messages []Message, options map[string]interface{}) (response string, trace ReasoningTrace, err error)
+}
+
+// ReasoningTrace is the minimal reasoning-trace shape consumed by attack
+// modules. The Signed field reports whether the provider returned a
+// cryptographically-signed trace whose text cannot be modified on round-trip
+// (Anthropic's thinking-block signature). Modules detecting Signed=true
+// emit OutcomeSkipped + SkipSignatureGated rather than attempting mutation
+// that would be silently discarded.
+type ReasoningTrace struct {
+	// Steps is the ordered list of reasoning-step text. Empty when the
+	// provider returned no trace for this query.
+	Steps []string
+	// Signed reports whether the trace is cryptographically signed and
+	// therefore not safely modifiable on round-trip.
+	Signed bool
+}
+
 // SessionProvider is implemented by providers that expose session lifecycle
 // controls. Memory-poisoning modules use NewSession to verify that injected
 // records persist across fresh sessions.

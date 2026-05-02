@@ -151,6 +151,12 @@ type fakeMemoryProbe struct{ fakeProvider }
 
 func (fakeMemoryProbe) ProbeMemory(_ context.Context) (bool, error) { return true, nil }
 
+type fakeReasoningProvider struct{ fakeProvider }
+
+func (fakeReasoningProvider) QueryWithReasoning(_ context.Context, _ []Message, _ map[string]interface{}) (string, ReasoningTrace, error) {
+	return "ok", ReasoningTrace{Steps: []string{"step 1", "step 2"}}, nil
+}
+
 type fakeCleaner struct{}
 
 func (fakeCleaner) Cleanup(_ context.Context, _ []string) error { return nil }
@@ -175,6 +181,15 @@ func TestCapabilitiesAreSatisfiableByConcreteTypes(t *testing.T) {
 	retains, _ := mp.ProbeMemory(context.Background())
 	if !retains {
 		t.Errorf("MemoryProbe.ProbeMemory() = false, want true")
+	}
+
+	var rp ReasoningProvider = fakeReasoningProvider{}
+	resp, trace, _ := rp.QueryWithReasoning(context.Background(), nil, nil)
+	if resp != "ok" || len(trace.Steps) != 2 {
+		t.Errorf("ReasoningProvider.QueryWithReasoning() = %q / %d steps; want \"ok\" / 2", resp, len(trace.Steps))
+	}
+	if trace.Signed {
+		t.Errorf("default ReasoningTrace.Signed should be false")
 	}
 
 	var c Cleaner = fakeCleaner{}
