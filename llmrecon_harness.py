@@ -26,6 +26,17 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ml.data.attack_data_pipeline import AttackDataPipeline, AttackData, AttackStatus
 from ml.agents.multi_armed_bandit import MultiArmedBanditOptimizer
 
+# v0.9.0: placeholder substitution for parameterized templates (echoleak_chain,
+# reverse_captcha, etc.). Templates ship structural scaffolds with
+# {{HARMFUL_INSTRUCTION}} / {{EXFIL_URL}} placeholders rather than literal
+# weaponized payloads; the loader rejects unfilled placeholders at run time.
+from template_loader import (
+    UnfilledPlaceholderError,
+    parse_defines,
+    substitute_placeholders,
+    validate_no_unfilled,
+)
+
 # Initialize Rich console
 console = Console()
 
@@ -99,8 +110,18 @@ class OllamaConnector:
 class LLMreconHarness:
     """Main test harness for LLMrecon with Ollama"""
     
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: Optional[str] = None,
+                 config_overrides: Optional[Dict] = None):
+        """Initialize the harness.
+
+        config_path:      optional path to a JSON config file.
+        config_overrides: optional dict of keys merged on top of the loaded
+                          config. v0.9.0 uses this to thread CLI -D
+                          substitutions through to the template loader.
+        """
         self.config = self._load_config(config_path)
+        if config_overrides:
+            self.config.update(config_overrides)
         self.ollama = OllamaConnector(self.config.get('ollama_url', 'http://localhost:11434'))
         self.templates = self._load_templates()
         
@@ -160,8 +181,17 @@ class LLMreconHarness:
         logger.info("ML components initialized successfully")
     
     def _load_templates(self) -> List[AttackTemplate]:
-        """Load attack templates"""
+        """Load attack templates.
+
+        v0.9.0: respects ``self.config['template_substitutions']`` (a
+        ``Dict[str, str]``) for {{KEY}} placeholder substitution and rejects
+        any template whose placeholders are not fully resolved at load time.
+        Files with a top-level ``"kind"`` other than ``"attack_template"`` are
+        skipped (they are corpora consumed by Go-side engines, not runnable
+        attack templates).
+        """
         templates = []
+        substitutions: Dict[str, str] = self.config.get('template_substitutions', {}) or {}
         
         # Built-in templates
         builtin_templates = [
@@ -232,11 +262,23 @@ class LLMreconHarness:
                 try:
                     with open(template_file, 'r') as f:
                         template_dict = json.load(f)
-                        templates.append(AttackTemplate(template_dict))
-                        logger.info(f"Loaded custom template: {template_file.name}")
+                    # Skip non-runnable corpora (e.g., genetic_persona_seeds.json
+                    # consumed by the Go-side persona_evolve engine).
+                    kind = template_dict.get('kind', 'attack_template')
+                    if kind != 'attack_template':
+                        logger.info(f"Skipping {template_file.name}: kind={kind!r}")
+                        continue
+                    # Substitute placeholders, then reject if any remain.
+                    substituted = substitute_placeholders(template_dict, substitutions)
+                    validate_no_unfilled(substituted, source=template_file.name)
+                    templates.append(AttackTemplate(substituted))
+                    logger.info(f"Loaded custom template: {template_file.name}")
+                except UnfilledPlaceholderError as e:
+                    # Surface clearly: this is a deliberate refusal, not a parse error.
+                    logger.error(str(e))
                 except Exception as e:
                     logger.error(f"Failed to load template {template_file}: {e}")
-        
+
         return templates
     
     def run_attack(self, model: str, template: AttackTemplate) -> Dict:
@@ -512,8 +554,25 @@ Examples:
     parser.add_argument('--list-models', action='store_true', help='List available Ollama models')
     parser.add_argument('--list-templates', action='store_true', help='List available attack templates')
     parser.add_argument('--no-ml', action='store_true', help='Disable ML components')
-    
+    parser.add_argument(
+        '-D', '--define',
+        action='append',
+        default=[],
+        metavar='KEY=VALUE',
+        help='v0.9.0: substitute {{KEY}} placeholders in templates (repeatable). '
+             'KEY must be uppercase letters/digits/underscores starting with a letter. '
+             'Required for parameterized templates like echoleak_chain.json '
+             '(needs HARMFUL_INSTRUCTION and EXFIL_URL).',
+    )
+
     args = parser.parse_args()
+
+    # Parse -D KEY=VALUE substitutions early so a malformed value fails fast.
+    try:
+        substitutions = parse_defines(args.define)
+    except ValueError as e:
+        console.print(f"[red]Error parsing -D:[/red] {e}")
+        sys.exit(2)
     
     # Handle special commands
     if args.list_models:
@@ -524,14 +583,15 @@ Examples:
             console.print(f"  • {model}")
         return
     
-    # Initialize harness
-    config = {}
-    if args.config:
-        config = json.load(open(args.config))
+    # Initialize harness. config_path loads the JSON file; config_overrides
+    # carries CLI flags (--no-ml, -D substitutions) on top.
+    overrides: Dict = {}
     if args.no_ml:
-        config['enable_ml'] = False
-    
-    harness = LLMreconHarness(args.config)
+        overrides['enable_ml'] = False
+    if substitutions:
+        overrides['template_substitutions'] = substitutions
+
+    harness = LLMreconHarness(args.config, config_overrides=overrides or None)
     
     if args.list_templates:
         console.print("[bold]Available Attack Templates:[/bold]")
