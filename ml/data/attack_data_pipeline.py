@@ -7,10 +7,11 @@ capture real attack data.
 """
 
 import json
+import re
 import time
 import hashlib
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict, field
@@ -21,6 +22,141 @@ from collections import defaultdict
 import threading
 from queue import Queue
 import logging
+
+
+# ---------------------------------------------------------------------------
+# v0.9.0 outcome taxonomy + bandit reward filter
+# ---------------------------------------------------------------------------
+
+# Outcome values stored in the attacks.outcome column. Mirrors the Go-side
+# common.AttackOutcome enum. The bandit reward filter excludes "skipped"
+# because skipped runs reflect engine/capability state, not target behavior,
+# and including them in reward aggregation would bias the bandit toward
+# (or against) targets that simply lack capabilities.
+OUTCOME_SUCCESS = "success"
+OUTCOME_REFUSED = "refused"
+OUTCOME_SKIPPED = "skipped"
+
+# BANDIT_REWARD_OUTCOMES is the canonical set of outcomes that count toward
+# bandit reward aggregation. Skipped is NOT here — see docstring above.
+BANDIT_REWARD_OUTCOMES = (OUTCOME_SUCCESS, OUTCOME_REFUSED)
+
+# Pattern matched against metadata keys for credential redaction. Case-
+# insensitive substring match; values for matching keys become "[REDACTED]"
+# before storage. Per the v0.9.0 plan security review.
+_SENSITIVE_KEY_PATTERN = re.compile(r"(?i)(key|token|secret|password|auth)")
+_REDACTED_PLACEHOLDER = "[REDACTED]"
+
+
+def _redact_sensitive_keys(obj: Any) -> Any:
+    """Return a deep copy of obj with values scrubbed wherever a string key
+    matches _SENSITIVE_KEY_PATTERN. Non-dict / non-list inputs are returned
+    unchanged. Used by the storage path to prevent operator-supplied
+    Metadata from leaking credentials into the analytics DB.
+
+    Examples:
+        >>> _redact_sensitive_keys({"api_key": "sk-1234", "model": "gpt-4"})
+        {'api_key': '[REDACTED]', 'model': 'gpt-4'}
+        >>> _redact_sensitive_keys({"params": {"auth_token": "x"}})
+        {'params': {'auth_token': '[REDACTED]'}}
+    """
+    if isinstance(obj, dict):
+        out = {}
+        for k, v in obj.items():
+            if isinstance(k, str) and _SENSITIVE_KEY_PATTERN.search(k):
+                out[k] = _REDACTED_PLACEHOLDER
+            else:
+                out[k] = _redact_sensitive_keys(v)
+        return out
+    if isinstance(obj, list):
+        return [_redact_sensitive_keys(v) for v in obj]
+    return obj
+
+
+def _migrate_v090(conn: sqlite3.Connection, db_path: Path) -> None:
+    """Idempotent v0.9.0 schema migration for the attacks table.
+
+    Adds the `outcome` and `parent_run_id` columns + supporting partial
+    indexes. Backs up the database to {db_path}.bak.{UTC-timestamp} on the
+    first run that detects either column is missing. Subsequent runs are
+    no-ops (PRAGMA table_info reports the columns; ALTER TABLE is skipped;
+    CREATE INDEX guards on IF NOT EXISTS).
+
+    Backfill rule for legacy rows: outcome = 'success' iff status = 'success',
+    else 'refused'. Pre-v0.9.0 data has no third state to recover.
+
+    The migration is also safe to call on a fresh DB created by
+    _init_database (which now includes the columns from the start) — both
+    ALTER TABLE branches are skipped and only the indexes are created.
+    """
+    cur = conn.cursor()
+    cols = {r[1] for r in cur.execute("PRAGMA table_info(attacks)").fetchall()}
+    needs_alter = "outcome" not in cols or "parent_run_id" not in cols
+
+    # Only back up when we're about to actually mutate the schema.
+    #
+    # Use SQLite's Online Backup API (Connection.backup) rather than a
+    # filesystem copy. In WAL mode (which we enable below for the
+    # attacks DB), recently-committed transactions can live in
+    # `<db>-wal` and `<db>-shm` sidecar files; copying only the main
+    # `.db` file produces an inconsistent snapshot where commits made
+    # via WAL haven't been checkpointed into the main file. SQLite's
+    # docs explicitly warn against filesystem copies for this reason.
+    # The Online Backup API handles WAL state correctly by walking the
+    # database page-by-page through the source connection.
+    if needs_alter and db_path.exists():
+        # timezone-aware UTC; .utcnow() is deprecated in Python 3.12+.
+        ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        backup = db_path.with_suffix(db_path.suffix + f".bak.{ts}")
+        try:
+            dst = sqlite3.connect(str(backup))
+            try:
+                conn.backup(dst)
+            finally:
+                dst.close()
+            logger.info("v0.9.0 migration: backed up %s → %s", db_path, backup)
+        except sqlite3.Error as e:
+            logger.warning("v0.9.0 migration: backup failed (%s); proceeding anyway", e)
+
+    conn.execute("PRAGMA journal_mode=WAL;")
+
+    pre_count_row = cur.execute("SELECT COUNT(*) FROM attacks").fetchone()
+    pre_count = pre_count_row[0] if pre_count_row else 0
+
+    with conn:  # BEGIN IMMEDIATE … COMMIT
+        if "outcome" not in cols:
+            conn.execute("ALTER TABLE attacks ADD COLUMN outcome TEXT")
+        if "parent_run_id" not in cols:
+            conn.execute("ALTER TABLE attacks ADD COLUMN parent_run_id TEXT")
+
+    # Partial indexes — IF NOT EXISTS makes this idempotent across runs.
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_attacks_outcome "
+        "ON attacks(outcome) WHERE outcome IS NOT NULL"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_attacks_parent_run_id "
+        "ON attacks(parent_run_id) WHERE parent_run_id IS NOT NULL"
+    )
+
+    post_cols = {r[1] for r in cur.execute("PRAGMA table_info(attacks)").fetchall()}
+    assert {"outcome", "parent_run_id"} <= post_cols, (
+        f"v0.9.0 migration failed: post-migration columns {post_cols} missing outcome/parent_run_id"
+    )
+    post_count = cur.execute("SELECT COUNT(*) FROM attacks").fetchone()[0]
+    assert post_count == pre_count, (
+        f"v0.9.0 migration row-count drift: pre={pre_count} post={post_count}"
+    )
+
+    # Backfill legacy rows once. WHERE outcome IS NULL keeps this idempotent
+    # and confined to pre-migration rows.
+    conn.execute(
+        "UPDATE attacks "
+        "SET outcome = CASE WHEN status = 'success' THEN ? ELSE ? END "
+        "WHERE outcome IS NULL",
+        (OUTCOME_SUCCESS, OUTCOME_REFUSED),
+    )
+    conn.commit()
 
 
 # Configure logging
@@ -122,10 +258,16 @@ class AttackDataPipeline:
         self.feature_extractors = self._init_feature_extractors()
         
     def _init_database(self):
-        """Initialize SQLite database for attack data"""
+        """Initialize SQLite database for attack data.
+
+        Fresh databases get the full v0.9.0 schema including outcome and
+        parent_run_id from CREATE TABLE. Pre-v0.9.0 databases that already
+        exist on disk are upgraded by _migrate_v090, which is idempotent
+        (safe to call on fresh DBs too — both ALTER branches no-op).
+        """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS attacks (
                 attack_id TEXT PRIMARY KEY,
@@ -147,17 +289,25 @@ class AttackDataPipeline:
                 user_id TEXT,
                 campaign_id TEXT,
                 features TEXT,
+                outcome TEXT,
+                parent_run_id TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         ''')
-        
+
         # Create indices for common queries
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON attacks(timestamp)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_attack_type ON attacks(attack_type)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_status ON attacks(status)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_target_model ON attacks(target_model)')
-        
+
         conn.commit()
+
+        # Apply the v0.9.0 migration. Idempotent: on fresh DBs the columns
+        # already exist (both ALTER branches no-op) and only the partial
+        # indexes are created.
+        _migrate_v090(conn, self.db_path)
+
         conn.close()
         
     def _init_feature_extractors(self) -> Dict[str, Any]:
@@ -386,14 +536,22 @@ class AttackDataPipeline:
         cursor = conn.cursor()
         
         try:
+            # Credential redaction: scrub keys matching the sensitive-key
+            # pattern in technique_params and features before serialization.
+            # Per v0.9.0 plan security review — operator-supplied Metadata
+            # frequently leaks API keys / OAuth tokens / session bearers when
+            # captured verbatim into analytics.
+            safe_params = _redact_sensitive_keys(processed_data['technique_params'])
+            safe_features = _redact_sensitive_keys(processed_data['features'])
+
             cursor.execute('''
                 INSERT OR REPLACE INTO attacks (
                     attack_id, timestamp, attack_type, target_model, provider,
                     payload, technique_params, obfuscation_level, status,
                     response, response_time, tokens_used, success_indicators,
                     detection_score, semantic_similarity, session_id, user_id,
-                    campaign_id, features
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    campaign_id, features, outcome, parent_run_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 processed_data['attack_id'],
                 processed_data['timestamp'],
@@ -401,7 +559,7 @@ class AttackDataPipeline:
                 processed_data['target_model'],
                 processed_data['provider'],
                 processed_data['payload'],
-                json.dumps(processed_data['technique_params']),
+                json.dumps(safe_params),
                 processed_data['obfuscation_level'],
                 processed_data['status'],
                 processed_data['response'],
@@ -413,7 +571,9 @@ class AttackDataPipeline:
                 processed_data.get('session_id'),
                 processed_data.get('user_id'),
                 processed_data.get('campaign_id'),
-                json.dumps(processed_data['features'])
+                json.dumps(safe_features),
+                processed_data.get('outcome'),
+                processed_data.get('parent_run_id'),
             ))
             
             conn.commit()
@@ -423,7 +583,113 @@ class AttackDataPipeline:
             conn.rollback()
         finally:
             conn.close()
-    
+
+    def get_bandit_rewards(
+        self,
+        target_model: Optional[str] = None,
+        attack_type: Optional[str] = None,
+        limit: int = 1000,
+    ) -> Dict[str, Any]:
+        """Bandit reward aggregation excluding skipped outcomes.
+
+        Bandits select arms (provider/model/technique) based on observed
+        reward — but rows with outcome='skipped' reflect engine or
+        capability state (missing ImageProvider, signature-gated trace,
+        budget exceeded), NOT target behavior. Including them in reward
+        aggregation biases the bandit toward (or against) targets that
+        simply lack capabilities. The v0.9.0 plan's central correctness
+        invariant is `WHERE outcome IN ('success', 'refused')` everywhere
+        bandit reward is computed.
+
+        This method is the canonical single point of truth for that
+        filter. Other code that aggregates reward should call here rather
+        than write its own WHERE clause.
+
+        Args:
+            target_model: Optional filter on target_model column.
+            attack_type: Optional filter on attack_type column.
+            limit: Max rows to consider (most recent first).
+
+        Returns:
+            {
+                "success_rate": float in [0, 1] over qualifying rows,
+                "sample_count": int — qualifying rows seen,
+                "skipped_count": int — for transparency / debug,
+                "outcomes": dict counting each outcome value,
+            }
+            sample_count == 0 ⟹ success_rate == 0.0 (no rewards yet).
+        """
+        conn = sqlite3.connect(self.db_path)
+        try:
+            cursor = conn.cursor()
+
+            where_clauses = []
+            params: List[Any] = []
+            if target_model is not None:
+                where_clauses.append("target_model = ?")
+                params.append(target_model)
+            if attack_type is not None:
+                where_clauses.append("attack_type = ?")
+                params.append(attack_type)
+            where_sql = (" AND ".join(where_clauses)) if where_clauses else "1=1"
+
+            # Reward query — apply the rewardable-outcome filter INSIDE
+            # the LIMIT-bound subquery so the window contains the most
+            # recent `limit` *rewardable* rows. If we filtered after
+            # LIMIT, a burst of recent skipped rows would displace
+            # rewardables out of the window and shrink sample_count
+            # without bound. The partial index `idx_attacks_outcome`
+            # also only helps when the IN-clause is in the SQL, not
+            # post-fetch in Python.
+            placeholders = ",".join("?" * len(BANDIT_REWARD_OUTCOMES))
+            reward_sql = f"""
+                SELECT outcome, COUNT(*) FROM (
+                    SELECT outcome
+                    FROM attacks
+                    WHERE {where_sql} AND outcome IN ({placeholders})
+                    ORDER BY timestamp DESC
+                    LIMIT ?
+                )
+                GROUP BY outcome
+            """
+            cursor.execute(reward_sql, (*params, *BANDIT_REWARD_OUTCOMES, limit))
+            outcomes: Dict[str, int] = {}
+            for row in cursor.fetchall():
+                key = row[0] or "(null)"
+                outcomes[key] = row[1]
+
+            # Skipped count — separate query because we just filtered
+            # them OUT of the reward population. Bounded by the same
+            # `limit` window so the displayed counts are temporally
+            # comparable to the reward sample.
+            skipped_sql = f"""
+                SELECT COUNT(*) FROM (
+                    SELECT 1
+                    FROM attacks
+                    WHERE {where_sql} AND outcome = ?
+                    ORDER BY timestamp DESC
+                    LIMIT ?
+                )
+            """
+            cursor.execute(skipped_sql, (*params, OUTCOME_SKIPPED, limit))
+            skipped_row = cursor.fetchone()
+            skipped_count = skipped_row[0] if skipped_row else 0
+            outcomes[OUTCOME_SKIPPED] = skipped_count
+
+            # Reward population: success + refused. Skipped explicitly excluded.
+            rewardable = outcomes.get(OUTCOME_SUCCESS, 0) + outcomes.get(OUTCOME_REFUSED, 0)
+            success_count = outcomes.get(OUTCOME_SUCCESS, 0)
+            success_rate = (success_count / rewardable) if rewardable > 0 else 0.0
+
+            return {
+                "success_rate": success_rate,
+                "sample_count": rewardable,
+                "skipped_count": skipped_count,
+                "outcomes": outcomes,
+            }
+        finally:
+            conn.close()
+
     def _get_recent_attack_stats(self, target_model: str, attack_type: str) -> Dict[str, float]:
         """Get statistics for recent attacks"""
         conn = sqlite3.connect(self.db_path)
