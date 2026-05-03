@@ -149,11 +149,11 @@ func TestRunAttackRun_JBFuzzAgainstMock(t *testing.T) {
 	}
 }
 
-// TestRunAttackRun_RejectsUnknownProvider verifies the v1 mock-only
-// constraint is surfaced cleanly, not as a generic error.
+// TestRunAttackRun_RejectsUnknownProvider verifies the unknown-provider
+// path emits a friendly error listing the supported providers.
 func TestRunAttackRun_RejectsUnknownProvider(t *testing.T) {
 	attackRunModule = "jbfuzz"
-	attackRunProvider = "openai"
+	attackRunProvider = "groq"
 	defer func() { attackRunModule, attackRunProvider = "", "" }()
 
 	var stdout, stderr bytes.Buffer
@@ -161,8 +161,78 @@ func TestRunAttackRun_RejectsUnknownProvider(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for unsupported provider")
 	}
-	if !strings.Contains(err.Error(), "v1 supports mock only") {
-		t.Errorf("error should mention v1 mock-only constraint; got %q", err.Error())
+	if !strings.Contains(err.Error(), "mock|openai|anthropic") {
+		t.Errorf("error should list supported providers; got %q", err.Error())
+	}
+}
+
+// TestBuildAttackProvider_OpenAIRequiresAPIKey asserts the friendly
+// error when OPENAI_API_KEY env var is unset.
+func TestBuildAttackProvider_OpenAIRequiresAPIKey(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "")
+	_, err := buildAttackProvider("openai")
+	if err == nil {
+		t.Fatal("expected error when OPENAI_API_KEY is unset")
+	}
+	if !strings.Contains(err.Error(), "OPENAI_API_KEY") {
+		t.Errorf("error should mention OPENAI_API_KEY; got %q", err.Error())
+	}
+}
+
+// TestBuildAttackProvider_AnthropicRequiresAPIKey asserts the parallel
+// error for Anthropic.
+func TestBuildAttackProvider_AnthropicRequiresAPIKey(t *testing.T) {
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	_, err := buildAttackProvider("anthropic")
+	if err == nil {
+		t.Fatal("expected error when ANTHROPIC_API_KEY is unset")
+	}
+	if !strings.Contains(err.Error(), "ANTHROPIC_API_KEY") {
+		t.Errorf("error should mention ANTHROPIC_API_KEY; got %q", err.Error())
+	}
+}
+
+// TestBuildAttackProvider_OpenAIWrapsViaBridge asserts the provider
+// returned for "openai" is a common.Provider (i.e., the shim works
+// end-to-end). No API call fires; this is the type-level wiring check.
+func TestBuildAttackProvider_OpenAIWrapsViaBridge(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "sk-test-fake-key-not-used")
+	p, err := buildAttackProvider("openai")
+	if err != nil {
+		t.Fatalf("buildAttackProvider: %v", err)
+	}
+	if p == nil {
+		t.Fatal("provider is nil")
+	}
+	if p.GetName() != "openai" {
+		t.Errorf("GetName = %q, want openai (proves bridge.WrapCore is in the path)", p.GetName())
+	}
+}
+
+// TestBuildAttackProvider_AnthropicWrapsViaBridge — parallel for Anthropic.
+func TestBuildAttackProvider_AnthropicWrapsViaBridge(t *testing.T) {
+	t.Setenv("ANTHROPIC_API_KEY", "sk-ant-test-fake-key-not-used")
+	p, err := buildAttackProvider("anthropic")
+	if err != nil {
+		t.Fatalf("buildAttackProvider: %v", err)
+	}
+	if p == nil {
+		t.Fatal("provider is nil")
+	}
+	if p.GetName() != "anthropic" {
+		t.Errorf("GetName = %q, want anthropic", p.GetName())
+	}
+}
+
+// TestEnvOr asserts the env-var fallback helper.
+func TestEnvOr(t *testing.T) {
+	t.Setenv("TEST_KEY_PRESENT", "value-from-env")
+	if got := envOr("TEST_KEY_PRESENT", "fallback"); got != "value-from-env" {
+		t.Errorf("envOr present = %q, want value-from-env", got)
+	}
+	t.Setenv("TEST_KEY_ABSENT", "")
+	if got := envOr("TEST_KEY_ABSENT", "fallback"); got != "fallback" {
+		t.Errorf("envOr absent = %q, want fallback", got)
 	}
 }
 
