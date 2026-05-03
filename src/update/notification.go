@@ -151,12 +151,14 @@ func NewWebhookNotificationHandler(url string, headers map[string]string) *Webho
 	}
 }
 
-// HandleNotification handles a notification by sending it to a webhook
+// HandleNotification handles a notification by sending it to a webhook.
+//
+// v0.10.0 #174 Tier 1: returns a non-nil error rather than silently
+// swallowing the notification. Operators who configured a webhook URL
+// expect deliveries; a no-op return masquerading as success means
+// missed alerts they'll only notice when an incident reveals the gap.
 func (h *WebhookNotificationHandler) HandleNotification(notification *Notification) error {
-	// In a real implementation, this would send an HTTP request to the webhook URL
-	// For now, we'll just log that webhook notification is not implemented
-	fmt.Printf("Webhook notification not implemented (URL: %s)\n", h.URL)
-	return nil
+	return fmt.Errorf("WebhookNotificationHandler.HandleNotification: not implemented in this version (URL=%q); webhook delivery is deferred to v0.11.0", h.URL)
 }
 
 // NotificationManager manages notification handlers
