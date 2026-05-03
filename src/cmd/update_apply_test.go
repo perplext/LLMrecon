@@ -65,8 +65,14 @@ func TestApplyModuleUpdate_ReturnsError(t *testing.T) {
 	if !strings.Contains(err.Error(), "not implemented") {
 		t.Errorf("error should mention 'not implemented'; got %q", err.Error())
 	}
+	// Both the module ID and the modules dir should appear in the
+	// error so operators can recover the right file in the right
+	// location. Parity with TestApplyTemplatesUpdate_ReturnsError.
 	if !strings.Contains(err.Error(), "best-of-n") {
 		t.Errorf("error should include the module ID; got %q", err.Error())
+	}
+	if !strings.Contains(err.Error(), "/usr/local/share/llmrecon/modules") {
+		t.Errorf("error should include the modules dir; got %q", err.Error())
 	}
 }
 

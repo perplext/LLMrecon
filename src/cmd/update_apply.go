@@ -261,7 +261,17 @@ func init() {
 // when an update-apply path is unimplemented in this release. Centralized
 // so the message is consistent across the four stubs and easy to update
 // once Tier 2 (#174) lands real implementations.
-const applyNotImplementedHint = "on-disk update apply not implemented in this version; download bundle to %q and extract manually, or wait for v0.10.0 #174 Tier 2"
+// applyNotImplementedHint is what operators see when an update-apply
+// path is unimplemented in this release. The path interpolated is the
+// already-downloaded bundle: applyXxxUpdate is only reached AFTER
+// DownloadWithProgress has succeeded, so the bundle is sitting on disk
+// at downloadPath. Operators can extract it manually until Tier 2 ships.
+//
+// Side effect (relied upon): os.Exit(1) at the loop tail skips the
+// defer os.RemoveAll(tempDir), which is desirable on this error path —
+// preserving the bundle is exactly what the message directs operators
+// toward. (Tier 2 will add explicit cleanup once apply is real.)
+const applyNotImplementedHint = "on-disk update apply not implemented in this version; bundle downloaded to %q — extract manually, or wait for v0.10.0 #174 Tier 2"
 
 // createBackup creates a backup of the current installation.
 //
