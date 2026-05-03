@@ -66,6 +66,15 @@ func (m *BoNAudioModule) Execute(ctx context.Context, provider common.Provider, 
 		Metadata:  make(map[string]interface{}),
 	}
 
+	// v0.10.0 #176 capability gate.
+	_, hasAudio := provider.(common.AudioProvider)
+	if !hasAudio && !common.TextSimulationOptIn(config) {
+		return common.MissingCapabilitySkip(m.Name(), "common.AudioProvider"), nil
+	}
+	if !hasAudio {
+		defer common.MarkTextSimulation(result, "audio")
+	}
+
 	objective := config.Objective
 	if objective == "" {
 		objective = config.Payload

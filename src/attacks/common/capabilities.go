@@ -122,6 +122,168 @@ type Cleaner interface {
 	Cleanup(ctx context.Context, recordIDs []string) error
 }
 
+// ---------------------------------------------------------------------------
+// v0.10.0 #176 — modality-specific capabilities for agentic + audio attacks
+// ---------------------------------------------------------------------------
+//
+// Pre-v0.10.0, these attack modules called provider.Query with text
+// payloads pretending to be MCP-tool / browser / audio modality
+// invocations. Compliance reporting and bandit reward couldn't tell
+// "ran fully against the right surface" from "ran in text simulation
+// against a non-matching provider."
+//
+// These interfaces are the v0.10.0 #176 fix. Modules type-assert at
+// Execute() entry; emit SkipMissingCapability when absent. Operators
+// who explicitly want the legacy text-simulation behavior pass
+// Metadata["mode"]="text_simulation" — modules then fall back to
+// plain Query AND set Metadata["true_modality"] on the result so
+// downstream consumers can filter simulations out.
+//
+// No provider in v0.10.0 implements these yet — that's #166's adapter
+// work. Until then, real-provider runs of these modules emit clean
+// Skipped outcomes by default, which is the correct behavior.
+
+// MCPProvider is implemented by providers that can invoke Model
+// Context Protocol tools natively. Used by attacks targeting
+// MCP infrastructure (mcp/* and tool_use/* modules).
+type MCPProvider interface {
+	Provider
+	// InvokeTool calls a named MCP tool with the given arguments.
+	// Returns the tool's text response, or an error if the call
+	// failed at the protocol/transport layer.
+	InvokeTool(ctx context.Context, toolName string, args map[string]interface{}) (string, error)
+}
+
+// BrowserProvider is implemented by providers that can fetch and
+// reason over web content (used by AI browser-agent attacks).
+// agentic/browser/* modules require this capability.
+type BrowserProvider interface {
+	Provider
+	// BrowseAndQuery fetches the URL, then asks the model the prompt
+	// in the context of the fetched content. Returns the model's
+	// response text.
+	BrowseAndQuery(ctx context.Context, url string, prompt string) (string, error)
+}
+
+// AudioProvider is implemented by providers that accept audio inputs
+// alongside text prompts (e.g., GPT-4o audio, Gemini with audio,
+// speech-language models). audio/* modules require this capability.
+type AudioProvider interface {
+	Provider
+	// QueryWithAudio sends a prompt with an audio attachment and
+	// returns the model's text response.
+	QueryWithAudio(ctx context.Context, prompt string, audio AudioPayload) (string, error)
+}
+
+// AudioPayload carries audio bytes + format metadata. Constructor
+// validates the format enum and a basic non-empty-bytes check; rich
+// audio-specific validation (sample rate, codec) is deferred to the
+// adapter implementing AudioProvider.
+type AudioPayload struct {
+	bytes  []byte
+	format AudioFormat
+}
+
+// AudioFormat enumerates the supported audio container formats.
+type AudioFormat string
+
+const (
+	AudioFormatWAV  AudioFormat = "wav"
+	AudioFormatMP3  AudioFormat = "mp3"
+	AudioFormatOGG  AudioFormat = "ogg"
+	AudioFormatFLAC AudioFormat = "flac"
+)
+
+// MaxAudioPayloadBytes caps the in-memory size of an audio payload.
+// Mirrors MaxImagePayloadBytes — providers that accept larger should
+// upload out-of-band.
+const MaxAudioPayloadBytes = 25 * 1024 * 1024 // 25 MiB
+
+// NewAudioPayload constructs an AudioPayload after validating the
+// format enum and non-empty bytes.
+func NewAudioPayload(b []byte, format AudioFormat) (AudioPayload, error) {
+	if len(b) == 0 {
+		return AudioPayload{}, fmt.Errorf("audio payload: empty bytes")
+	}
+	if len(b) > MaxAudioPayloadBytes {
+		return AudioPayload{}, fmt.Errorf("audio payload: %d bytes exceeds max %d", len(b), MaxAudioPayloadBytes)
+	}
+	if !validAudioFormat(format) {
+		return AudioPayload{}, fmt.Errorf("audio payload: unsupported format %q", format)
+	}
+	owned := make([]byte, len(b))
+	copy(owned, b)
+	return AudioPayload{bytes: owned, format: format}, nil
+}
+
+// Bytes returns a defensive copy of the audio bytes.
+func (p AudioPayload) Bytes() []byte {
+	if p.bytes == nil {
+		return nil
+	}
+	out := make([]byte, len(p.bytes))
+	copy(out, p.bytes)
+	return out
+}
+
+// Format returns the audio format.
+func (p AudioPayload) Format() AudioFormat { return p.format }
+
+func validAudioFormat(f AudioFormat) bool {
+	switch f {
+	case AudioFormatWAV, AudioFormatMP3, AudioFormatOGG, AudioFormatFLAC:
+		return true
+	}
+	return false
+}
+
+// ---------------------------------------------------------------------------
+// v0.10.0 #176 — capability-gate helpers
+// ---------------------------------------------------------------------------
+//
+// Modules use these at Execute() entry to keep the gate boilerplate
+// to ~3 lines:
+//
+//   _, hasMCP := provider.(common.MCPProvider)
+//   if !hasMCP && !common.TextSimulationOptIn(config) {
+//       return common.MissingCapabilitySkip(m.Name(), "common.MCPProvider"), nil
+//   }
+//   // ... existing module logic ...
+//   if !hasMCP {
+//       common.MarkTextSimulation(result, "mcp")
+//   }
+
+// TextSimulationOptIn reports whether the operator passed
+// Metadata["mode"]="text_simulation" — the documented escape hatch
+// for running modality-specific modules against text-only providers
+// as a best-effort approximation of the true modality. Without the
+// opt-in, modules emit OutcomeSkipped + SkipMissingCapability.
+func TextSimulationOptIn(config AttackConfig) bool {
+	return config.Metadata["mode"] == "text_simulation"
+}
+
+// MissingCapabilitySkip returns an OutcomeSkipped result citing the
+// named capability interface. Use at Execute() entry when both
+// the type assertion fails and the operator hasn't opted into
+// text simulation.
+func MissingCapabilitySkip(moduleName, capabilityName string) *AttackResult {
+	r := NewAttackResult(moduleName, OutcomeSkipped)
+	r.WithSkip(SkipMissingCapability, capabilityName)
+	return r
+}
+
+// MarkTextSimulation tags the result so downstream consumers
+// (compliance scorecards, bandit reward) can filter simulated runs
+// out of aggregations. Sets Metadata["mode"]="text_simulation" and
+// Metadata["true_modality"]=<modality string>.
+func MarkTextSimulation(result *AttackResult, trueModality string) {
+	if result.Metadata == nil {
+		result.Metadata = map[string]interface{}{}
+	}
+	result.Metadata["mode"] = "text_simulation"
+	result.Metadata["true_modality"] = trueModality
+}
+
 // --- ImagePayload and supporting typed enums ---
 
 // ImageMimeType enumerates the image MIME types supported by ImageProvider
