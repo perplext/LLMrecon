@@ -401,24 +401,41 @@ func (c *OfflineBundleCLI) createValidateCommand() *cobra.Command {
 				}
 			}
 
-			// Validate bundle
+			// Validate bundle. v0.10.0 #177: the previous version of
+			// this switch parsed 7 levels but only handled 2 (signature,
+			// checksum). Every other branch fell into "not implemented
+			// yet" — a documentation lie. Now: signature and checksum
+			// route to their purpose-built helpers; the remaining
+			// levels go through the standard BundleValidator interface.
 			fmt.Fprintf(c.Output, "Validating bundle with level: %s...\n", level)
 			var result *bundle.ValidationResult
 
-			if validationLevel == bundle.SignatureValidationLevel && publicKey != nil {
-				// Validate signature
+			switch validationLevel {
+			case bundle.SignatureValidationLevel:
+				if publicKey == nil {
+					return fmt.Errorf("--public-key is required for level=signature")
+				}
 				result, err = bundle.VerifyBundle(offlineBundle, publicKey)
 				if err != nil {
-					return fmt.Errorf("failed to verify bundle: %w", err)
+					return fmt.Errorf("verify signature: %w", err)
 				}
-			} else if validationLevel == bundle.ChecksumValidationLevel {
-				// Validate checksums
+
+			case bundle.ChecksumValidationLevel:
 				result, err = bundle.VerifyBundleChecksums(offlineBundle)
 				if err != nil {
-					return fmt.Errorf("failed to verify bundle checksums: %w", err)
+					return fmt.Errorf("verify checksums: %w", err)
 				}
-			} else {
-				return fmt.Errorf("validation level %s not implemented yet", level)
+
+			default:
+				// basic / standard / strict / manifest / compatibility
+				// all flow through the standard validator. The
+				// validator picks the right internal checks based on
+				// the level passed.
+				validator := bundle.NewBundleValidator(c.Output)
+				result, err = validator.Validate(offlineBundle, validationLevel)
+				if err != nil {
+					return fmt.Errorf("validate (level=%s): %w", validationLevel, err)
+				}
 			}
 
 			// Print validation results
