@@ -214,7 +214,7 @@ func (r *HTTPRepository) ListFiles(ctx context.Context, pattern string) ([]FileI
 		// Process links
 		for _, link := range links {
 			// Skip parent directory links
-			if link == "github.com/perplext/LLMrecon/src/security/access" || link == "../" {
+			if link == "../" {
 				continue
 			}
 

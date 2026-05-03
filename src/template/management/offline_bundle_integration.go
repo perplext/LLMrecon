@@ -9,7 +9,6 @@ import (
 	auditTrail "github.com/perplext/LLMrecon/src/audit/trail"
 	"github.com/perplext/LLMrecon/src/bundle"
 	"github.com/perplext/LLMrecon/src/repository"
-	securityAuditTrail "github.com/perplext/LLMrecon/src/security/access/audit/trail"
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/loaders"
 )
@@ -17,20 +16,18 @@ import (
 // OfflineBundleSource is a constant for the offline bundle source
 const OfflineBundleSource = loaders.OfflineBundleSource
 
-// auditTrailAdapter converts between audit trail types
-func auditTrailAdapter(manager *auditTrail.AuditTrailManager) *securityAuditTrail.Manager {
-	if manager == nil {
-		return nil
-	}
-	// For now, return nil as the loader can handle nil
-	// In a real implementation, we would create a proper adapter
-	return nil
-}
-
-// RegisterOfflineBundleLoader registers an offline bundle loader with the template manager
-func RegisterOfflineBundleLoader(manager *DefaultTemplateManager, auditTrailManager *auditTrail.AuditTrailManager) {
-	securityAuditManager := auditTrailAdapter(auditTrailManager)
-	loader := loaders.NewOfflineBundleLoader(securityAuditManager)
+// RegisterOfflineBundleLoader registers an offline bundle loader with the template manager.
+//
+// v0.10.0 #180: the auditTrailManager parameter is preserved for API
+// stability but no longer used inside the loader. The previous adapter
+// from src/audit/trail.AuditTrailManager to
+// src/security/access/audit/trail.Manager (which always returned nil)
+// is removed along with the entire src/security/access/ subtree.
+// Callers can still pass their AuditTrailManager; the loader simply
+// doesn't log to it. v0.11.0 may revisit if a clear audit-logging
+// requirement re-emerges.
+func RegisterOfflineBundleLoader(manager *DefaultTemplateManager, _ *auditTrail.AuditTrailManager) {
+	loader := loaders.NewOfflineBundleLoader()
 	manager.loaders = append(manager.loaders, loader)
 }
 
@@ -47,7 +44,7 @@ func (m *DefaultTemplateManager) LoadFromOfflineBundle(ctx context.Context, bund
 
 	// If no offline bundle loader is registered, register one
 	if offlineBundleLoader == nil {
-		offlineBundleLoader = loaders.NewOfflineBundleLoader(nil)
+		offlineBundleLoader = loaders.NewOfflineBundleLoader()
 		m.loaders = append(m.loaders, offlineBundleLoader)
 	}
 

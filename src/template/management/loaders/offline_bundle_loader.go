@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/perplext/LLMrecon/src/bundle"
-	"github.com/perplext/LLMrecon/src/security/access/audit/trail"
 	"github.com/perplext/LLMrecon/src/template/format"
 	"github.com/perplext/LLMrecon/src/template/management/types"
 )
@@ -17,21 +15,24 @@ import (
 // OfflineBundleSource represents a source for offline bundles
 const OfflineBundleSource = "offline_bundle"
 
-// OfflineBundleLoader loads templates from offline bundles
+// OfflineBundleLoader loads templates from offline bundles.
+//
+// v0.10.0 #180: previously held a *trail.Manager from
+// src/security/access/audit/trail to log load events. The audit log
+// was optional (nil-safe), so removing it doesn't change functional
+// behavior — and lets us delete the entire src/security/access/
+// subtree (dead RBAC framework, see plan Decision 0.1 = remove).
 type OfflineBundleLoader struct {
 	// validator is the offline bundle validator
 	validator *bundle.OfflineBundleValidator
-	// auditTrail is the audit trail manager
-	auditTrail *trail.Manager
 	// validationLevel is the level of validation to perform
 	validationLevel bundle.ValidationLevel
 }
 
-// NewOfflineBundleLoader creates a new offline bundle loader
-func NewOfflineBundleLoader(auditTrail *trail.Manager) *OfflineBundleLoader {
+// NewOfflineBundleLoader creates a new offline bundle loader.
+func NewOfflineBundleLoader() *OfflineBundleLoader {
 	return &OfflineBundleLoader{
 		validator:       bundle.NewOfflineBundleValidator(nil),
-		auditTrail:      auditTrail,
 		validationLevel: bundle.StandardValidation,
 	}
 }
@@ -112,29 +113,10 @@ func (l *OfflineBundleLoader) LoadFromPath(ctx context.Context, path string, rec
 		}
 	}
 
-	// Log audit event
-	if l.auditTrail != nil {
-		auditLog := &trail.AuditLog{
-			Operation:    "load_templates_from_offline_bundle",
-			ResourceType: "offline_bundle",
-			ResourceID:   offlineBundle.EnhancedManifest.BundleID,
-			Description:  fmt.Sprintf("Loaded %d templates from offline bundle %s", len(templates), offlineBundle.EnhancedManifest.Name),
-			Status:       "success",
-			Timestamp:    time.Now(),
-			Details: map[string]interface{}{
-				"bundle_path":      path,
-				"recursive":        recursive,
-				"template_count":   len(templates),
-				"bundle_version":   offlineBundle.EnhancedManifest.Version,
-				"validation_level": string(l.validationLevel),
-			},
-		}
-
-		if err := l.auditTrail.LogOperation(context.Background(), auditLog); err != nil {
-			// Log error but continue
-			fmt.Printf("Warning: Failed to log audit event: %v\n", err)
-		}
-	}
+	// Audit logging removed in v0.10.0 #180 along with the
+	// src/security/access/ subtree. If audit logging returns in the
+	// future, callers should use src/audit/trail.AuditTrailManager
+	// (the non-RBAC variant) which remains in the codebase.
 
 	return templates, nil
 }

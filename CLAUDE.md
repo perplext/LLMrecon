@@ -144,10 +144,16 @@ This is an enterprise-grade LLM security testing tool implementing OWASP LLM Top
    - Templates organized by OWASP categories
 
 4. **Security Framework**:
-   - RBAC with multi-factor authentication support
-   - Audit trail management with structured logging
-   - Secure communication with TLS
-   - Prompt injection protection and content filtering
+   - Audit trail logging via `src/audit/trail` (`AuditTrailManager`).
+   - Secure communication with TLS.
+   - Prompt injection protection and content filtering.
+   - **Note**: the v0.2.0 RBAC + MFA + auth subsystem under
+     `src/security/access/` was removed in v0.10.0 (#180) — every
+     constructor returned "not implemented", four CLI commands
+     (`access_control` / `audit` / `auth` / `user`) sat as `.disabled`
+     files, and no consumer ever wired the framework end-to-end. If
+     auth/RBAC returns it'll be in v0.11.0+ as a fresh design rather
+     than a partial revival.
 
 ### v0.2.0 Production Scale Infrastructure
 
