@@ -59,11 +59,19 @@ func (v *IntegrityVerifier) VerifyPackage(pkg *UpdatePackage) (*VerificationResu
 
 	// For now, we'll skip checksum verification
 
-	// Verify digital signature if provided
+	// Verify digital signature if provided.
+	//
+	// v0.10.0 #174 Tier 1: refuse rather than silently log+pass when a
+	// signature is present but the verifier is unimplemented. Operators
+	// who packaged a signed bundle expect verification to either succeed
+	// or fail visibly — silently bypassing means a tampered bundle could
+	// pass through this code path with `Success: true`.
 	if pkg.Manifest.Signature != "" {
-		// This would typically involve public key cryptography
-		// For now, we'll just log that signature verification is not implemented
-		fmt.Fprintf(v.Logger, "Digital signature verification not implemented\n")
+		fmt.Fprintf(v.Logger, "Digital signature verification not implemented; refusing to claim verification success on a signed bundle\n")
+		return &VerificationResult{
+			Success: false,
+			Message: "Digital signature verification not implemented in this version (deferred to v0.11.0); refuse-on-signed-bundle is the v0.10.0 #174 Tier 1 fail-safe",
+		}, fmt.Errorf("digital signature verification not implemented; cannot verify signed bundle")
 	}
 
 	// Log verification success
