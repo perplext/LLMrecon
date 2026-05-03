@@ -105,14 +105,19 @@ fi
 # emits clear failure messages with "did you mean…?" hints.
 
 echo "→ OWASP YAML ↔ code id resolution"
+# Per-check tracking so this check's success line isn't suppressed when
+# an earlier check (e.g., Go-pin mismatch in check 2) set FAIL=1. Each
+# check reports independently; FAIL aggregates for the script's exit code.
+CHECK3_FAIL=0
 if ! go test ./src/compliance/ -run TestOWASPYAML -count=1 > /tmp/yaml-drift-test.log 2>&1; then
     cat /tmp/yaml-drift-test.log
     if [ -n "${CI:-}" ]; then
         echo "::error file=templates/owasp_agentic_2026.yaml::OWASP YAML id resolution failed; see test output above"
     fi
     FAIL=1
+    CHECK3_FAIL=1
 fi
-if [ "$FAIL" -eq 0 ]; then
+if [ "$CHECK3_FAIL" -eq 0 ]; then
     echo "  All YAML ids resolve."
 fi
 
