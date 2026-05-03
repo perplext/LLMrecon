@@ -46,6 +46,35 @@ type AudioProvider interface {
 	ChatWithAudio(ctx context.Context, request *ChatCompletionRequest, audio *AudioInput) (*ChatCompletionResponse, error)
 }
 
+// ImageProvider is implemented by providers that support image input alongside
+// text messages (e.g., GPT-4o vision, Claude 4.x vision, Gemini multimodal).
+//
+// v0.10.0 #166: this is the core-level capability that the bridge package
+// promotes into common.ImageProvider for attack-module type assertions.
+type ImageProvider interface {
+	Provider
+	// ChatWithImages sends a chat request with one or more attached images.
+	// Each ImageInput carries either inline Bytes or a URL reference, plus
+	// the MIME type and an advisory Detail hint that providers may honor or
+	// ignore at their discretion.
+	ChatWithImages(ctx context.Context, request *ChatCompletionRequest, images []ImageInput) (*ChatCompletionResponse, error)
+}
+
+// ImageInput contains a single image for ImageProvider.ChatWithImages. Exactly
+// one of Bytes / URL must be non-empty; the bridge package validates this when
+// converting from common.ImagePayload.
+type ImageInput struct {
+	// Bytes holds the inline image bytes. Mutually exclusive with URL.
+	Bytes []byte `json:"bytes,omitempty"`
+	// URL references an image hosted out-of-band. Mutually exclusive with Bytes.
+	URL string `json:"url,omitempty"`
+	// MimeType is the image MIME type (e.g., "image/jpeg", "image/png").
+	MimeType string `json:"mime_type"`
+	// Detail is an advisory hint to the provider ("low", "high", "auto").
+	// Providers that don't accept this hint silently ignore it.
+	Detail string `json:"detail,omitempty"`
+}
+
 // AudioInput contains audio data for providers that support audio input.
 type AudioInput struct {
 	// Data is the raw audio bytes.
