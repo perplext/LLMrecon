@@ -331,6 +331,312 @@ func TestGetModel_FallsBackOnEmptyConfig(t *testing.T) {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Capability-promotion tests (v0.10.0 #166)
+// ---------------------------------------------------------------------------
+//
+// These assert WrapCore returns the right wrapper type based on the
+// underlying core.Provider's capabilities, and that the capability
+// methods translate request/response shapes correctly.
+
+// imageCapableMock embeds mockCoreProvider and adds ChatWithImages so
+// it satisfies core.ImageProvider.
+type imageCapableMock struct {
+	*mockCoreProvider
+	LastImages []core.ImageInput
+}
+
+func (m *imageCapableMock) ChatWithImages(_ context.Context, req *core.ChatCompletionRequest, images []core.ImageInput) (*core.ChatCompletionResponse, error) {
+	m.LastRequest = req
+	m.LastImages = images
+	if m.Err != nil {
+		return nil, m.Err
+	}
+	if m.Response != nil {
+		return m.Response, nil
+	}
+	return &core.ChatCompletionResponse{
+		Choices: []core.ChatCompletionChoice{{
+			Index:        0,
+			Message:      core.Message{Role: "assistant", Content: "saw an image"},
+			FinishReason: "stop",
+		}},
+	}, nil
+}
+
+// reasoningCapableMock embeds mockCoreProvider and adds ChatWithReasoning
+// so it satisfies core.ReasoningProvider.
+type reasoningCapableMock struct {
+	*mockCoreProvider
+	Trace *core.ThinkingTrace
+}
+
+func (m *reasoningCapableMock) ChatWithReasoning(_ context.Context, req *core.ChatCompletionRequest) (*core.ChatCompletionResponse, *core.ThinkingTrace, error) {
+	m.LastRequest = req
+	if m.Err != nil {
+		return nil, nil, m.Err
+	}
+	resp := m.Response
+	if resp == nil {
+		resp = &core.ChatCompletionResponse{
+			Choices: []core.ChatCompletionChoice{{
+				Index:        0,
+				Message:      core.Message{Role: "assistant", Content: "thought about it"},
+				FinishReason: "stop",
+			}},
+		}
+	}
+	return resp, m.Trace, nil
+}
+
+// signedReasoningMock additionally satisfies the signedReasoningProvider
+// marker interface so the bridge surfaces Signed=true.
+type signedReasoningMock struct {
+	*reasoningCapableMock
+}
+
+func (signedReasoningMock) ReasoningTraceIsSigned() bool { return true }
+
+// imageReasoningCapableMock satisfies BOTH core.ImageProvider and
+// core.ReasoningProvider.
+type imageReasoningCapableMock struct {
+	*mockCoreProvider
+	LastImages []core.ImageInput
+	Trace      *core.ThinkingTrace
+}
+
+func (m *imageReasoningCapableMock) ChatWithImages(_ context.Context, req *core.ChatCompletionRequest, images []core.ImageInput) (*core.ChatCompletionResponse, error) {
+	m.LastRequest = req
+	m.LastImages = images
+	return &core.ChatCompletionResponse{
+		Choices: []core.ChatCompletionChoice{{Message: core.Message{Role: "assistant", Content: "img"}}},
+	}, nil
+}
+
+func (m *imageReasoningCapableMock) ChatWithReasoning(_ context.Context, req *core.ChatCompletionRequest) (*core.ChatCompletionResponse, *core.ThinkingTrace, error) {
+	m.LastRequest = req
+	return &core.ChatCompletionResponse{
+		Choices: []core.ChatCompletionChoice{{Message: core.Message{Role: "assistant", Content: "rsn"}}},
+	}, m.Trace, nil
+}
+
+// TestWrapCore_PlainProviderDoesNotPromote asserts a plain core.Provider
+// (no capabilities) wraps to a value that does NOT satisfy
+// common.ImageProvider or common.ReasoningProvider — so attack-module
+// type assertions correctly skip.
+func TestWrapCore_PlainProviderDoesNotPromote(t *testing.T) {
+	wrapped := WrapCore(&mockCoreProvider{})
+	if _, ok := wrapped.(common.ImageProvider); ok {
+		t.Error("plain provider promoted to common.ImageProvider; want skip")
+	}
+	if _, ok := wrapped.(common.ReasoningProvider); ok {
+		t.Error("plain provider promoted to common.ReasoningProvider; want skip")
+	}
+}
+
+// TestWrapCore_ImagePromotion asserts an underlying core.ImageProvider
+// surfaces as common.ImageProvider AND that QueryWithImages translates
+// the ImagePayload into a core.ImageInput.
+func TestWrapCore_ImagePromotion(t *testing.T) {
+	imgMock := &imageCapableMock{mockCoreProvider: &mockCoreProvider{}}
+	wrapped := WrapCore(imgMock)
+
+	ip, ok := wrapped.(common.ImageProvider)
+	if !ok {
+		t.Fatal("wrapper does not satisfy common.ImageProvider")
+	}
+	// Reasoning should NOT be promoted — only image is supported.
+	if _, ok := wrapped.(common.ReasoningProvider); ok {
+		t.Error("wrapper unexpectedly satisfies common.ReasoningProvider")
+	}
+
+	payload, err := common.NewImagePayloadBytes(
+		[]byte{0x89, 0x50, 0x4E, 0x47}, // PNG magic, just any bytes for the test
+		common.ImageMimePNG,
+		common.ImageDetailHigh,
+	)
+	if err != nil {
+		t.Fatalf("NewImagePayloadBytes: %v", err)
+	}
+
+	resp, err := ip.QueryWithImages(context.Background(), "what is this?", []common.ImagePayload{payload}, nil)
+	if err != nil {
+		t.Fatalf("QueryWithImages: %v", err)
+	}
+	if resp != "saw an image" {
+		t.Errorf("response = %q, want %q", resp, "saw an image")
+	}
+	if len(imgMock.LastImages) != 1 {
+		t.Fatalf("got %d images at core layer, want 1", len(imgMock.LastImages))
+	}
+	got := imgMock.LastImages[0]
+	if got.MimeType != "image/png" {
+		t.Errorf("MimeType = %q, want image/png", got.MimeType)
+	}
+	if got.Detail != "high" {
+		t.Errorf("Detail = %q, want high", got.Detail)
+	}
+	if len(got.Bytes) != 4 {
+		t.Errorf("Bytes len = %d, want 4", len(got.Bytes))
+	}
+}
+
+// TestWrapCore_ImagePromotion_RejectsEmptyImages asserts the bridge
+// fails fast on a zero-image call rather than dispatching to the
+// provider with an empty slice.
+func TestWrapCore_ImagePromotion_RejectsEmptyImages(t *testing.T) {
+	wrapped := WrapCore(&imageCapableMock{mockCoreProvider: &mockCoreProvider{}})
+	ip := wrapped.(common.ImageProvider)
+	_, err := ip.QueryWithImages(context.Background(), "x", nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "at least one") {
+		t.Errorf("expected 'at least one image required' error; got %v", err)
+	}
+}
+
+// TestWrapCore_ReasoningPromotion asserts an underlying
+// core.ReasoningProvider surfaces as common.ReasoningProvider AND that
+// QueryWithReasoning translates the ThinkingTrace.Steps into the
+// minimal ReasoningTrace.Steps shape modules consume.
+func TestWrapCore_ReasoningPromotion(t *testing.T) {
+	rsnMock := &reasoningCapableMock{
+		mockCoreProvider: &mockCoreProvider{},
+		Trace: &core.ThinkingTrace{
+			Steps: []core.ThinkingStep{
+				{Content: "first I considered X", Type: "summary"},
+				{Content: "then concluded Y", Type: "summary"},
+				{Content: "", Type: "summary"}, // empty step should be elided
+			},
+			TotalThinkingTokens: 1234,
+		},
+	}
+	wrapped := WrapCore(rsnMock)
+
+	rp, ok := wrapped.(common.ReasoningProvider)
+	if !ok {
+		t.Fatal("wrapper does not satisfy common.ReasoningProvider")
+	}
+	if _, ok := wrapped.(common.ImageProvider); ok {
+		t.Error("wrapper unexpectedly satisfies common.ImageProvider")
+	}
+
+	resp, trace, err := rp.QueryWithReasoning(context.Background(), []common.Message{
+		{Role: "user", Content: "solve X"},
+	}, nil)
+	if err != nil {
+		t.Fatalf("QueryWithReasoning: %v", err)
+	}
+	if resp != "thought about it" {
+		t.Errorf("response = %q, want %q", resp, "thought about it")
+	}
+	if trace.Signed {
+		t.Error("trace.Signed = true for non-signed provider; want false")
+	}
+	if got := len(trace.Steps); got != 2 {
+		t.Errorf("Steps count = %d, want 2 (empty step should be elided)", got)
+	}
+	if trace.Steps[0] != "first I considered X" {
+		t.Errorf("Steps[0] = %q, want %q", trace.Steps[0], "first I considered X")
+	}
+}
+
+// TestWrapCore_ReasoningPromotion_SignedFlag asserts a core provider
+// marked via signedReasoningProvider surfaces Signed=true on the
+// returned trace. This is the v0.10.0 #166 hook for Anthropic's
+// extended-thinking signed-trace handling.
+func TestWrapCore_ReasoningPromotion_SignedFlag(t *testing.T) {
+	signed := signedReasoningMock{
+		reasoningCapableMock: &reasoningCapableMock{
+			mockCoreProvider: &mockCoreProvider{},
+			Trace:            &core.ThinkingTrace{Steps: []core.ThinkingStep{{Content: "step"}}},
+		},
+	}
+	wrapped := WrapCore(signed)
+	rp, ok := wrapped.(common.ReasoningProvider)
+	if !ok {
+		t.Fatal("wrapper does not satisfy common.ReasoningProvider")
+	}
+	_, trace, err := rp.QueryWithReasoning(context.Background(), []common.Message{{Role: "user", Content: "x"}}, nil)
+	if err != nil {
+		t.Fatalf("QueryWithReasoning: %v", err)
+	}
+	if !trace.Signed {
+		t.Error("trace.Signed = false for signed provider; want true")
+	}
+}
+
+// TestWrapCore_ImageReasoningPromotion asserts a provider supporting
+// BOTH capabilities returns a wrapper satisfying both interfaces, and
+// each capability method routes to the correct underlying provider.
+func TestWrapCore_ImageReasoningPromotion(t *testing.T) {
+	dual := &imageReasoningCapableMock{
+		mockCoreProvider: &mockCoreProvider{},
+		Trace:            &core.ThinkingTrace{Steps: []core.ThinkingStep{{Content: "thinking"}}},
+	}
+	wrapped := WrapCore(dual)
+
+	ip, okI := wrapped.(common.ImageProvider)
+	rp, okR := wrapped.(common.ReasoningProvider)
+	if !okI {
+		t.Fatal("dual-capable wrapper does not satisfy common.ImageProvider")
+	}
+	if !okR {
+		t.Fatal("dual-capable wrapper does not satisfy common.ReasoningProvider")
+	}
+
+	payload, _ := common.NewImagePayloadBytes(
+		[]byte{0x00, 0x01},
+		common.ImageMimeJPEG,
+		common.ImageDetailAuto,
+	)
+
+	imgResp, err := ip.QueryWithImages(context.Background(), "look", []common.ImagePayload{payload}, nil)
+	if err != nil {
+		t.Fatalf("QueryWithImages: %v", err)
+	}
+	if imgResp != "img" {
+		t.Errorf("image response = %q, want %q", imgResp, "img")
+	}
+
+	rsnResp, _, err := rp.QueryWithReasoning(context.Background(), []common.Message{{Role: "user", Content: "think"}}, nil)
+	if err != nil {
+		t.Fatalf("QueryWithReasoning: %v", err)
+	}
+	if rsnResp != "rsn" {
+		t.Errorf("reasoning response = %q, want %q", rsnResp, "rsn")
+	}
+}
+
+// TestWrapCore_ImagePromotion_URLPayload asserts URL-referenced
+// ImagePayloads round-trip with empty Bytes and the URL field set.
+func TestWrapCore_ImagePromotion_URLPayload(t *testing.T) {
+	imgMock := &imageCapableMock{mockCoreProvider: &mockCoreProvider{}}
+	wrapped := WrapCore(imgMock)
+	ip := wrapped.(common.ImageProvider)
+
+	payload, err := common.NewImagePayloadURL(
+		"https://example.com/x.png",
+		common.ImageMimePNG,
+		common.ImageDetailLow,
+	)
+	if err != nil {
+		t.Fatalf("NewImagePayloadURL: %v", err)
+	}
+	_, err = ip.QueryWithImages(context.Background(), "p", []common.ImagePayload{payload}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(imgMock.LastImages) != 1 {
+		t.Fatalf("got %d images, want 1", len(imgMock.LastImages))
+	}
+	got := imgMock.LastImages[0]
+	if got.URL != "https://example.com/x.png" {
+		t.Errorf("URL = %q, want %q", got.URL, "https://example.com/x.png")
+	}
+	if len(got.Bytes) != 0 {
+		t.Errorf("Bytes len = %d, want 0 for URL payload", len(got.Bytes))
+	}
+}
+
 // TestGetTokenCount_DelegatesToProvider asserts the wrapper calls
 // CountTokens on the inner provider.
 func TestGetTokenCount_DelegatesToProvider(t *testing.T) {
