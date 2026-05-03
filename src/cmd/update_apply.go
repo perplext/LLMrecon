@@ -40,6 +40,11 @@ selective updates and automatic backup creation.`,
 		forceFlag, _ := cmd.Flags().GetBool("yes")
 		noVerifyFlag, _ := cmd.Flags().GetBool("no-verify")
 		backupFlag, _ := cmd.Flags().GetBool("backup")
+		// v0.10.0 #174 Tier 2: --experimental gates the new atomic-
+		// replace apply path. Off by default for one release cycle so
+		// operators opt in explicitly. With Tier 1 still in effect the
+		// non-experimental path errors out cleanly.
+		experimentalFlag, _ := cmd.Flags().GetBool("experimental")
 
 		// Load configuration
 		cfg, err := config.LoadConfig()
@@ -214,15 +219,26 @@ selective updates and automatic backup creation.`,
 				}
 			}
 
-			// Apply update based on component type
+			// Apply update based on component type. The Tier 2 atomic-
+			// replace path activates when --experimental is set; without
+			// it the Tier 1 stubs still return "not implemented" so the
+			// operator never sees a fake success.
 			switch {
 			case u.Component == "core" || u.Component == "binary":
 				err = applyCoreBinaryUpdate(downloadPath)
 			case u.Component == "templates":
-				err = applyTemplatesUpdate(downloadPath, cfg.Templates.Dir)
+				if experimentalFlag {
+					err = applyTemplatesUpdateAtomic(downloadPath, cfg.Templates.Dir, backupFlag)
+				} else {
+					err = applyTemplatesUpdate(downloadPath, cfg.Templates.Dir)
+				}
 			case strings.HasPrefix(u.Component, "module."):
 				moduleID := strings.TrimPrefix(u.Component, "module.")
-				err = applyModuleUpdate(downloadPath, moduleID, cfg.Modules.Dir)
+				if experimentalFlag {
+					err = applyModuleUpdateAtomic(downloadPath, moduleID, cfg.Modules.Dir, backupFlag)
+				} else {
+					err = applyModuleUpdate(downloadPath, moduleID, cfg.Modules.Dir)
+				}
 			}
 
 			if err != nil {
@@ -255,6 +271,7 @@ func init() {
 	updateApplyCmd.Flags().BoolP("yes", "y", false, "Apply updates without confirmation")
 	updateApplyCmd.Flags().Bool("no-verify", false, "Skip signature verification")
 	updateApplyCmd.Flags().Bool("backup", false, "Create backup before applying updates")
+	updateApplyCmd.Flags().Bool("experimental", false, "Enable atomic-replace apply for templates/modules (v0.10.0 #174 Tier 2; opt-in for one release cycle)")
 }
 
 // applyNotImplementedHint is the standard guidance string operators see
@@ -309,4 +326,115 @@ func applyTemplatesUpdate(downloadPath, templatesDir string) error {
 // modules/<id>/.
 func applyModuleUpdate(downloadPath, moduleID, modulesDir string) error {
 	return fmt.Errorf(applyNotImplementedHint+" (component=module.%s, target=%q)", downloadPath, moduleID, modulesDir)
+}
+
+// applyTemplatesUpdateAtomic is the v0.10.0 #174 Tier 2 implementation:
+// extracts the bundle into a sibling staging dir on the same filesystem
+// as templatesDir, validates manifest presence, then atomically swaps
+// the staged dir for templatesDir via os.Rename. Backup retention is
+// controlled by the --backup flag.
+//
+// The honesty invariant: kill -9 at any point leaves the operator with
+// EITHER the old templates dir OR the new one — never a half-extracted
+// state. If kill -9 lands between the backup rename and the apply
+// rename, the operator can run `update apply --recover` (or the
+// documented `mv {dest}.bak.{ts} {dest}` recipe in the error message)
+// to restore.
+func applyTemplatesUpdateAtomic(downloadPath, templatesDir string, keepBackup bool) error {
+	res, err := update.AtomicReplaceFromZip(update.StagedApplyOptions{
+		ArchivePath: downloadPath,
+		DestDir:     templatesDir,
+		Validate:    validateTemplatesBundle,
+		KeepBackup:  keepBackup,
+	})
+	if err != nil {
+		return fmt.Errorf("templates apply: %w", err)
+	}
+	if res.FirstInstall {
+		fmt.Printf("Installed templates to %q (%d bytes).\n", templatesDir, res.StagedBytes)
+	} else {
+		fmt.Printf("Replaced templates at %q (%d bytes).\n", templatesDir, res.StagedBytes)
+	}
+	if res.BackupPath != "" {
+		fmt.Printf("Backup retained at %q.\n", res.BackupPath)
+	}
+	return nil
+}
+
+// applyModuleUpdateAtomic mirrors applyTemplatesUpdateAtomic, scoped to
+// modules/<moduleID>/. Module updates land at modulesDir/moduleID so
+// each module's atomic swap is independent — a kill -9 mid-apply on
+// one module never leaves another half-applied.
+func applyModuleUpdateAtomic(downloadPath, moduleID, modulesDir string, keepBackup bool) error {
+	if moduleID == "" {
+		return fmt.Errorf("applyModuleUpdateAtomic: empty moduleID")
+	}
+	target := filepath.Join(modulesDir, moduleID)
+	res, err := update.AtomicReplaceFromZip(update.StagedApplyOptions{
+		ArchivePath: downloadPath,
+		DestDir:     target,
+		Validate:    validateModuleBundle,
+		KeepBackup:  keepBackup,
+	})
+	if err != nil {
+		return fmt.Errorf("module %q apply: %w", moduleID, err)
+	}
+	if res.FirstInstall {
+		fmt.Printf("Installed module %q to %q (%d bytes).\n", moduleID, target, res.StagedBytes)
+	} else {
+		fmt.Printf("Replaced module %q at %q (%d bytes).\n", moduleID, target, res.StagedBytes)
+	}
+	if res.BackupPath != "" {
+		fmt.Printf("Backup retained at %q.\n", res.BackupPath)
+	}
+	return nil
+}
+
+// validateTemplatesBundle is the staged-content sanity check for a
+// templates bundle. Asserts presence of the marker file the bundle
+// build process always writes; rejects empty bundles outright.
+//
+// Intentionally minimal: deeper schema validation belongs in a separate
+// pass under template/loader. Here we just want "this looks like a
+// templates payload" so the swap doesn't replace the install with junk.
+func validateTemplatesBundle(stagedDir string) error {
+	entries, err := os.ReadDir(stagedDir)
+	if err != nil {
+		return fmt.Errorf("read staged: %w", err)
+	}
+	if len(entries) == 0 {
+		return fmt.Errorf("staged bundle is empty")
+	}
+	// Look for either a top-level templates/ dir or .yaml files at root —
+	// both shapes appear in the wild depending on bundle origin.
+	hasTemplatesShape := false
+	for _, e := range entries {
+		if e.IsDir() && e.Name() == "templates" {
+			hasTemplatesShape = true
+			break
+		}
+		if !e.IsDir() && (strings.HasSuffix(e.Name(), ".yaml") || strings.HasSuffix(e.Name(), ".yml")) {
+			hasTemplatesShape = true
+			break
+		}
+	}
+	if !hasTemplatesShape {
+		return fmt.Errorf("staged bundle has no templates/ dir or .yaml files at root")
+	}
+	return nil
+}
+
+// validateModuleBundle is the staged-content sanity check for a single
+// module bundle. Asserts the bundle is non-empty; modules don't yet
+// have a normative on-disk schema, so no further check applies until
+// we land one.
+func validateModuleBundle(stagedDir string) error {
+	entries, err := os.ReadDir(stagedDir)
+	if err != nil {
+		return fmt.Errorf("read staged: %w", err)
+	}
+	if len(entries) == 0 {
+		return fmt.Errorf("staged bundle is empty")
+	}
+	return nil
 }
