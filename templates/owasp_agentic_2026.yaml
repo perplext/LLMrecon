@@ -112,7 +112,7 @@ categories:
       - id: mcp_tool_desc_injection
         priority: critical
         notes: "Hidden instructions in MCP tool descriptions"
-      - id: mcp_shadow_tool
+      - id: mcp_tool_shadow
         priority: high
         notes: "Shadow tool masquerading as legitimate MCP tool"
       - id: agent_shell_injection
@@ -199,9 +199,9 @@ categories:
       - id: mcp_supply_chain
         priority: critical
         notes: "437K+ downloads of vulnerable MCP packages"
-      - id: poisoned_rag_knowledge_base
+      - id: kg_triple_injection
         priority: high
-        notes: "Poison RAG knowledge base for persistent compromise"
+        notes: "Knowledge-graph RAG poisoning: persistent compromise via injected triples"
       - id: skill_poisoning
         priority: critical
         notes: "~900 malicious skills (20% of OpenClaw packages)"
@@ -283,15 +283,15 @@ categories:
     atlas_techniques: ["AML.T0020", "AML.T0051"]
     maestro_layers: ["L3-Model", "L5-Agent"]
     attack_techniques:
-      - id: poisoned_rag_corpus
+      - id: poisoned_rag_direct
         priority: critical
-        notes: "90% manipulation with 5 poisoned documents"
-      - id: poisoned_rag_knowledge_base
+        notes: "PoisonedRAG direct injection: 90% manipulation with 5 poisoned documents"
+      - id: kg_triple_injection
         priority: high
-        notes: "Persistent knowledge base compromise"
-      - id: poisoned_rag_embedding
+        notes: "Knowledge-graph triple injection for persistent KB compromise"
+      - id: vec_embed_semantic_mirror
         priority: high
-        notes: "Embedding-level retrieval manipulation"
+        notes: "Embedding-level retrieval manipulation via semantic mirroring"
       - id: many_shot
         priority: high
         notes: "Context window saturation with in-context learning manipulation"
@@ -525,19 +525,19 @@ technique_index:
   imist_function_transform: [ASI02]
   imist_schema_exploit: [ASI02]
   mcp_tool_desc_injection: [ASI02]
-  mcp_shadow_tool: [ASI02]
+  mcp_tool_shadow: [ASI02]
   agent_shell_injection: [ASI02, ASI05, ASI08]
   mcp_sampling_injection: [ASI02, ASI07]
   agent_privilege_escalation: [ASI03]
   delegation_escalation: [ASI03]
   mcp_supply_chain: [ASI03, ASI04]
-  poisoned_rag_knowledge_base: [ASI04, ASI06]
+  kg_triple_injection: [ASI04, ASI06]
   skill_poisoning: [ASI04]
   skill_takeover_chain: [ASI04]
   mcp_filesystem_escape: [ASI05]
   rce_chain: [ASI05]
-  poisoned_rag_corpus: [ASI06]
-  poisoned_rag_embedding: [ASI06]
+  poisoned_rag_direct: [ASI06]
+  vec_embed_semantic_mirror: [ASI06]
   many_shot: [ASI06]
   agent_config_rewrite: [ASI06, ASI10]
   toxic_agent_flow: [ASI07]
