@@ -60,19 +60,33 @@ print structured errors and exit non-zero.`,
 		publicKeyPath, _ := cmd.Flags().GetString("public-key")
 		level, _ := cmd.Flags().GetString("level")
 
+		// Validate --level BEFORE loading the bundle so a bad level
+		// fails fast without I/O. Mirrors bundle_import.go's
+		// fail-fast ordering and shares the same TrimSpace+ToLower
+		// normalization (otherwise --level=" manifest " silently
+		// hits the default branch).
+		normLevel := strings.ToLower(strings.TrimSpace(level))
+		switch normLevel {
+		case "signature":
+			if publicKeyPath == "" {
+				return fmt.Errorf("--public-key is required for --level=signature")
+			}
+		case "checksum", "", "manifest":
+			// valid; fall through
+		default:
+			return fmt.Errorf("unknown --level %q (valid: signature, checksum, manifest)", level)
+		}
+
 		bndl, err := bundle.LoadBundle(bundlePath)
 		if err != nil {
 			return fmt.Errorf("load bundle: %w", err)
 		}
 
-		// Map the operator-friendly --level string to the bundle
-		// package's enum. Each level routes to the corresponding
-		// purpose-built verification entry point.
-		switch strings.ToLower(level) {
+		// Each level routes to the corresponding purpose-built
+		// verification entry point. The level was already validated
+		// above; this switch is exhaustive for the accepted set.
+		switch normLevel {
 		case "signature":
-			if publicKeyPath == "" {
-				return fmt.Errorf("--public-key is required for --level=signature")
-			}
 			pubKey, err := os.ReadFile(filepath.Clean(publicKeyPath))
 			if err != nil {
 				return fmt.Errorf("read public key %q: %w", publicKeyPath, err)
@@ -90,16 +104,13 @@ print structured errors and exit non-zero.`,
 			}
 			return reportValidation(cmd, result)
 
-		case "", "manifest":
+		default: // "" or "manifest" — guaranteed by the validation switch above
 			validator := bundle.NewBundleValidator(cmd.OutOrStdout())
 			result, err := validator.ValidateManifest(&bndl.Manifest)
 			if err != nil {
 				return fmt.Errorf("validate manifest: %w", err)
 			}
 			return reportValidation(cmd, result)
-
-		default:
-			return fmt.Errorf("unknown --level %q (valid: signature, checksum, manifest)", level)
 		}
 	},
 }

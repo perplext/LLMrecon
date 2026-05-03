@@ -152,5 +152,39 @@ func TestBundleVerify_RejectsMissingBundle(t *testing.T) {
 	}
 }
 
+// TestBundleVerify_InvalidLevelFailsBeforeLoad asserts that when the
+// --level is invalid, the command surfaces the level error WITHOUT
+// touching the bundle path. The bundle path is set to "/nonexistent"
+// — if level validation ran AFTER LoadBundle (the regression
+// CodeRabbit flagged on PR #195), the test would observe a "load
+// bundle" error instead of "unknown --level".
+func TestBundleVerify_InvalidLevelFailsBeforeLoad(t *testing.T) {
+	_, _, err := runVerify(t, "/nonexistent/path", "garbage", "")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "unknown") {
+		t.Errorf("err = %v, want fail-fast 'unknown --level' error before load attempt", err)
+	}
+	if strings.Contains(err.Error(), "load bundle") {
+		t.Errorf("err = %v; level should be validated before LoadBundle is called", err)
+	}
+}
+
+// TestBundleVerify_LevelTrimsWhitespace asserts that --level=" manifest "
+// (surrounding whitespace) normalizes to manifest, mirroring the
+// TrimSpace behavior of bundle_import.go's parseValidationLevel.
+// CodeRabbit caught the inconsistency on PR #195.
+func TestBundleVerify_LevelTrimsWhitespace(t *testing.T) {
+	dir := writeMinimalBundle(t)
+	stdout, stderr, err := runVerify(t, dir, "  manifest  ", "")
+	if err != nil {
+		t.Fatalf("verify failed for whitespace-padded level: %v\nstderr=%s", err, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "✓") {
+		t.Errorf("stdout missing success marker: %q", stdout.String())
+	}
+}
+
 // silence unused-import lint when the build tag flips.
 var _ = errors.New
