@@ -43,6 +43,7 @@ var (
 	attackRunPayload string
 	attackRunMetadata []string
 	attackRunSuccessIndicators []string
+	attackRunEmitJSONL string
 )
 
 var attackCmd = &cobra.Command{
@@ -105,6 +106,7 @@ func init() {
 	attackRunCmd.Flags().StringVar(&attackRunPayload, "payload", "", "operator-supplied payload (the harmful query, instruction, etc.)")
 	attackRunCmd.Flags().StringSliceVar(&attackRunMetadata, "metadata", nil, "key=value pair (repeatable; e.g. allow_experimental=true)")
 	attackRunCmd.Flags().StringSliceVar(&attackRunSuccessIndicators, "success-indicators", nil, "comma-separated substrings that mark Outcome=Success")
+	attackRunCmd.Flags().StringVar(&attackRunEmitJSONL, "emit-jsonl", "", "write the AttackResult as one JSON line to <path>, or '-' for stdout (appends to file). Pairs with `python -m ml.data.ingest`. v0.10.0 #181.")
 	if err := attackRunCmd.MarkFlagRequired("module"); err != nil {
 		panic(fmt.Sprintf("MarkFlagRequired: %v", err))
 	}
@@ -193,9 +195,62 @@ func runAttackRun(out, _ io.Writer) error {
 		return fmt.Errorf("module %q Execute: %w", attackRunModule, err)
 	}
 
+	// JSONL emit (v0.10.0 #181): single JSON line wrapped with
+	// provider/model context so the Python pipeline ingest can populate
+	// the SQLite schema's target_model + provider columns. Mutually
+	// exclusive with the default pretty-printed output.
+	if attackRunEmitJSONL != "" {
+		return writeJSONLEntry(attackRunEmitJSONL, out, provider, result)
+	}
+
 	enc := json.NewEncoder(out)
 	enc.SetIndent("", "  ")
 	return enc.Encode(result)
+}
+
+// jsonlEntry is the wire format for `--emit-jsonl`. Wraps an
+// AttackResult with provider/model context the Python ingest needs to
+// populate columns the AttackResult itself doesn't carry.
+type jsonlEntry struct {
+	Provider string                `json:"provider"`
+	Model    string                `json:"model"`
+	Result   *common.AttackResult  `json:"result"`
+}
+
+// writeJSONLEntry writes one JSONL line to the configured target.
+// Path "-" writes to out (stdout); any other path is opened in
+// append-create mode so multiple `attack run` invocations build a
+// multi-line file usable by `python -m ml.data.ingest`.
+func writeJSONLEntry(target string, out io.Writer, provider common.Provider, result *common.AttackResult) error {
+	entry := jsonlEntry{
+		Provider: provider.GetName(),
+		Model:    provider.GetModel(),
+		Result:   result,
+	}
+	line, err := json.Marshal(entry)
+	if err != nil {
+		return fmt.Errorf("jsonl marshal: %w", err)
+	}
+	line = append(line, '\n')
+
+	if target == "-" {
+		_, err := out.Write(line)
+		return err
+	}
+
+	// Append mode so repeated runs against the same path build a
+	// proper JSONL file. Permissions 0o644 — standard for log-shaped
+	// output. #nosec G304 — target is operator-supplied via the
+	// --emit-jsonl flag, intentional.
+	f, err := os.OpenFile(target, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) // #nosec G304
+	if err != nil {
+		return fmt.Errorf("open %q: %w", target, err)
+	}
+	defer f.Close() // #nosec G307 -- write+close error is reported via the Write below
+	if _, err := f.Write(line); err != nil {
+		return fmt.Errorf("write %q: %w", target, err)
+	}
+	return nil
 }
 
 // buildAttackProvider constructs a common.Provider for the named provider.
