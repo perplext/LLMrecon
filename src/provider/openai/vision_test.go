@@ -200,11 +200,19 @@ func TestChatWithImages_AppendsSyntheticUserMessage(t *testing.T) {
 	}
 }
 
-// TestChatWithImages_RejectsEmpty asserts at-least-one-image guard.
+// TestChatWithImages_RejectsEmpty asserts at-least-one-image guard. The
+// background GetModels goroutine kicked off by NewOpenAIProvider DOES
+// hit the server (on /v1/models); the assertion only fires for a
+// /chat/completions call, which would mean the empty-images guard
+// failed.
 func TestChatWithImages_RejectsEmpty(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		t.Error("server should not be called for empty-images request")
-		w.WriteHeader(500)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/chat/completions") {
+			t.Error("server reached /chat/completions for empty-images request; the guard failed")
+			w.WriteHeader(500)
+			return
+		}
+		_, _ = w.Write([]byte(`{"data":[]}`))
 	}))
 	defer srv.Close()
 	p := newTestProvider(t, srv)
