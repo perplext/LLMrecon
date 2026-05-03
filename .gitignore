@@ -1,7 +1,7 @@
-# v0.9.0: generated OWASP map (regenerate via `go generate ./src/compliance/...`).
-# CI will run `go generate ./... && git diff --exit-code` to assert no drift
-# once the runtime lookup is switched to the generated map in v0.10.0.
-src/compliance/owasp_agentic_generated.go
+# NOTE: src/compliance/owasp_agentic_generated.go is intentionally COMMITTED
+# (un-gitignored in v0.10.0 #169). The verify-drift CI job runs `go generate
+# ./...` and asserts no diff against the committed copy — that's the
+# canonical drift check.
 
 # Logs
 logs
