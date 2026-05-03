@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 # verify-drift.sh — assert derived artifacts match their sources of truth.
 #
-# Two checks:
+# Three checks:
 #   1. OWASP compliance codegen — `go generate ./...` produces no diff in
 #      src/compliance/owasp_agentic_generated.go.
 #   2. Go-version pins — every go-version: '1.X' in .github/workflows/*.yml
 #      and FROM golang:1.X in Dockerfile matches go.mod's `go 1.X` directive.
+#   3. OWASP YAML ↔ code id resolution — every attack_techniques.id and
+#      technique_index entry in templates/owasp_agentic_2026.yaml resolves
+#      to either a registered module name or a known TechniqueInfo ID.
+#      (v0.10.0 #179)
 #
 # Used by:
 #   - `make verify-drift` (local)
@@ -90,4 +94,26 @@ fi
 if [ "$FAIL" -eq 0 ]; then
     echo "  All pins match."
 fi
+
+# ---------------------------------------------------------------------------
+# Check 3 — OWASP YAML id resolution (v0.10.0 #179)
+# ---------------------------------------------------------------------------
+#
+# Delegates to a Go test that imports the src/attacks/all barrel to
+# populate attacks.DefaultRegistry, then walks the YAML's
+# attack_techniques.id entries asserting each resolves. The test itself
+# emits clear failure messages with "did you mean…?" hints.
+
+echo "→ OWASP YAML ↔ code id resolution"
+if ! go test ./src/compliance/ -run TestOWASPYAML -count=1 > /tmp/yaml-drift-test.log 2>&1; then
+    cat /tmp/yaml-drift-test.log
+    if [ -n "${CI:-}" ]; then
+        echo "::error file=templates/owasp_agentic_2026.yaml::OWASP YAML id resolution failed; see test output above"
+    fi
+    FAIL=1
+fi
+if [ "$FAIL" -eq 0 ]; then
+    echo "  All YAML ids resolve."
+fi
+
 exit "$FAIL"
