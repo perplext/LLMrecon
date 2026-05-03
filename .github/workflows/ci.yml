@@ -119,7 +119,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version-file: 'go.mod'
 
       - name: Download dependencies
         run: |
@@ -139,3 +139,22 @@ jobs:
           else
             echo "All Go files are properly formatted"
           fi
+
+  verify-drift:
+    # Per v0.10.0 plan #169: detect drift between derived artifacts and
+    # their sources of truth. CI shares the implementation with `make
+    # verify-drift` via scripts/verify-drift.sh — single source of truth
+    # for both local and CI runs.
+    name: Verify Drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Run drift checks
+        run: bash scripts/verify-drift.sh
