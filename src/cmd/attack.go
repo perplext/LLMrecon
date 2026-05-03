@@ -1,15 +1,17 @@
-// Package cmd — `attack` command for v0.10.0 issue #173.
+// Package cmd — `attack` command for v0.10.0 issues #173 + #167.
 //
 // Surfaces the previously-unreachable `attacks.DefaultRegistry` to operators:
 //
 //   llmrecon attack list                          — enumerate registered modules
 //   llmrecon attack list --json                   — machine-readable
 //   llmrecon attack run --module=<name> --provider=mock [...]
+//   llmrecon attack run --module=<name> --provider=openai|anthropic [...]
 //
-// v1 ships with --provider=mock only. Real providers come online when
-// v0.10.0 issues #167 (common.Provider shim) and #166 (adapter wiring)
-// land. The `attack` command's flag surface is designed to be stable
-// across that change — only the createProvider() implementation grows.
+// As of #167 (provider shim), --provider=openai and --provider=anthropic
+// are wired through bridge.WrapCore. Per-modality capability gates are
+// still pending #166 (adapter wiring); modules that need ImageProvider /
+// ReasoningProvider against a real adapter will emit clean
+// SkipMissingCapability outcomes until #166 lands.
 package cmd
 
 import (
@@ -17,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -26,6 +29,10 @@ import (
 	"github.com/perplext/LLMrecon/src/attacks"
 	_ "github.com/perplext/LLMrecon/src/attacks/all" // register every attack module via init()
 	"github.com/perplext/LLMrecon/src/attacks/common"
+	"github.com/perplext/LLMrecon/src/provider/anthropic"
+	"github.com/perplext/LLMrecon/src/provider/bridge"
+	"github.com/perplext/LLMrecon/src/provider/core"
+	"github.com/perplext/LLMrecon/src/provider/openai"
 )
 
 // Flag values for `attack list` and `attack run`.
@@ -192,14 +199,69 @@ func runAttackRun(out, _ io.Writer) error {
 }
 
 // buildAttackProvider constructs a common.Provider for the named provider.
-// v1: mock only. v0.10.0 issue #166 + #167 will extend this to real adapters.
+//
+//   - "mock" (default): runtime mock; deterministic refusal response.
+//   - "openai": real OpenAI adapter wrapped via bridge.WrapCore. Reads
+//     API key from OPENAI_API_KEY env var. Model from OPENAI_MODEL or
+//     defaults to "gpt-4o-mini".
+//   - "anthropic": real Anthropic adapter via bridge.WrapCore. Reads
+//     ANTHROPIC_API_KEY; model from ANTHROPIC_MODEL or defaults to
+//     "claude-3-5-sonnet-20241022".
+//
+// Friendly errors when API keys are missing — distinct from the v1
+// "not yet supported" stub the previous version emitted.
+//
+// Per-modality capability gates (ImageProvider, ReasoningProvider) come
+// online when v0.10.0 #166 wires the adapters; until then, modules
+// requiring those capabilities emit clean SkipMissingCapability
+// outcomes against real providers.
 func buildAttackProvider(name string) (common.Provider, error) {
 	switch name {
 	case "mock", "":
 		return &cmdMockProvider{}, nil
+	case "openai":
+		key := os.Getenv("OPENAI_API_KEY")
+		if key == "" {
+			return nil, fmt.Errorf("provider=openai requires OPENAI_API_KEY env var")
+		}
+		model := envOr("OPENAI_MODEL", "gpt-4o-mini")
+		cfg := &core.ProviderConfig{
+			Type:         core.OpenAIProvider,
+			APIKey:       key,
+			DefaultModel: model,
+		}
+		p, err := openai.NewOpenAIProvider(cfg)
+		if err != nil {
+			return nil, fmt.Errorf("openai.NewOpenAIProvider: %w", err)
+		}
+		return bridge.WrapCore(p), nil
+	case "anthropic":
+		key := os.Getenv("ANTHROPIC_API_KEY")
+		if key == "" {
+			return nil, fmt.Errorf("provider=anthropic requires ANTHROPIC_API_KEY env var")
+		}
+		model := envOr("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+		cfg := &core.ProviderConfig{
+			Type:         core.AnthropicProvider,
+			APIKey:       key,
+			DefaultModel: model,
+		}
+		p, err := anthropic.NewAnthropicProvider(cfg)
+		if err != nil {
+			return nil, fmt.Errorf("anthropic.NewAnthropicProvider: %w", err)
+		}
+		return bridge.WrapCore(p), nil
 	default:
-		return nil, fmt.Errorf("provider %q not yet supported (v1 supports mock only; real-provider support is gated by v0.10.0 issues #166 and #167)", name)
+		return nil, fmt.Errorf("provider %q not supported (mock|openai|anthropic)", name)
 	}
+}
+
+// envOr returns os.Getenv(key) if non-empty, otherwise fallback.
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }
 
 // cmdMockProvider is a runtime mock for `attack run --provider=mock`.
