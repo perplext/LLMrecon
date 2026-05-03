@@ -50,6 +50,15 @@ func (m *SamplingInjectionModule) Execute(ctx context.Context, provider common.P
 		Metadata:  make(map[string]interface{}),
 	}
 
+	// v0.10.0 #176 capability gate.
+	_, hasMCP := provider.(common.MCPProvider)
+	if !hasMCP && !common.TextSimulationOptIn(config) {
+		return common.MissingCapabilitySkip(m.Name(), "common.MCPProvider"), nil
+	}
+	if !hasMCP {
+		defer common.MarkTextSimulation(result, "mcp")
+	}
+
 	objective := config.Objective
 	if objective == "" {
 		objective = config.Payload

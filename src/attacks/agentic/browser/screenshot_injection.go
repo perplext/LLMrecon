@@ -51,6 +51,15 @@ func (m *ScreenshotInjectionModule) Execute(ctx context.Context, provider common
 		Metadata:  make(map[string]interface{}),
 	}
 
+	// v0.10.0 #176 capability gate.
+	_, hasBrowser := provider.(common.BrowserProvider)
+	if !hasBrowser && !common.TextSimulationOptIn(config) {
+		return common.MissingCapabilitySkip(m.Name(), "common.BrowserProvider"), nil
+	}
+	if !hasBrowser {
+		defer common.MarkTextSimulation(result, "browser")
+	}
+
 	objective := config.Objective
 	if objective == "" {
 		objective = config.Payload
