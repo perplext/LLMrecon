@@ -124,6 +124,71 @@ func TestNewImagePayloadURL(t *testing.T) {
 	}
 }
 
+// TestNewAudioPayload covers the AudioPayload constructor's
+// validation contract. Mirrors the existing TestNewImagePayloadBytes.
+func TestNewAudioPayload(t *testing.T) {
+	smallWAV := []byte{0x52, 0x49, 0x46, 0x46} // "RIFF"
+	tooBig := make([]byte, MaxAudioPayloadBytes+1)
+
+	cases := []struct {
+		name    string
+		b       []byte
+		format  AudioFormat
+		wantErr string
+	}{
+		{"valid wav", smallWAV, AudioFormatWAV, ""},
+		{"valid mp3", smallWAV, AudioFormatMP3, ""},
+		{"valid ogg", smallWAV, AudioFormatOGG, ""},
+		{"valid flac", smallWAV, AudioFormatFLAC, ""},
+		{"empty bytes", []byte{}, AudioFormatWAV, "empty bytes"},
+		{"oversized", tooBig, AudioFormatWAV, "exceeds max"},
+		{"bogus format", smallWAV, AudioFormat("opus"), "unsupported format"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p, err := NewAudioPayload(c.b, c.format)
+			if c.wantErr == "" {
+				if err != nil {
+					t.Fatalf("expected no error, got %v", err)
+				}
+				if string(p.Bytes()) != string(c.b) {
+					t.Errorf("Bytes() round-trip mismatch")
+				}
+				if p.Format() != c.format {
+					t.Errorf("Format() = %q, want %q", p.Format(), c.format)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("expected error containing %q, got nil", c.wantErr)
+			}
+			if !strings.Contains(err.Error(), c.wantErr) {
+				t.Errorf("error %q does not contain %q", err.Error(), c.wantErr)
+			}
+		})
+	}
+}
+
+// TestAudioPayloadDefensiveCopy mirrors the same contract as
+// TestImagePayloadDefensiveCopy: caller mutations don't affect the
+// payload's internal state.
+func TestAudioPayloadDefensiveCopy(t *testing.T) {
+	original := []byte{0x52, 0x49, 0x46, 0x46, 0x01}
+	p, err := NewAudioPayload(original, AudioFormatWAV)
+	if err != nil {
+		t.Fatal(err)
+	}
+	original[0] = 0xFF
+	if p.Bytes()[0] == 0xFF {
+		t.Errorf("constructor did not copy; caller mutation visible inside payload")
+	}
+	first := p.Bytes()
+	first[0] = 0xFF
+	if p.Bytes()[0] == 0xFF {
+		t.Errorf("Bytes() did not copy; mutation across reads")
+	}
+}
+
 // fakeProvider implements common.Provider with no-op methods. Used below to
 // confirm that adding the optional capability methods produces a value
 // satisfying the corresponding interface.
@@ -155,6 +220,24 @@ type fakeReasoningProvider struct{ fakeProvider }
 
 func (fakeReasoningProvider) QueryWithReasoning(_ context.Context, _ []Message, _ map[string]interface{}) (string, ReasoningTrace, error) {
 	return "ok", ReasoningTrace{Steps: []string{"step 1", "step 2"}}, nil
+}
+
+type fakeMCPProvider struct{ fakeProvider }
+
+func (fakeMCPProvider) InvokeTool(_ context.Context, _ string, _ map[string]interface{}) (string, error) {
+	return "tool result", nil
+}
+
+type fakeBrowserProvider struct{ fakeProvider }
+
+func (fakeBrowserProvider) BrowseAndQuery(_ context.Context, _, _ string) (string, error) {
+	return "browser result", nil
+}
+
+type fakeAudioProvider struct{ fakeProvider }
+
+func (fakeAudioProvider) QueryWithAudio(_ context.Context, _ string, _ AudioPayload) (string, error) {
+	return "audio result", nil
 }
 
 type fakeCleaner struct{}
@@ -190,6 +273,26 @@ func TestCapabilitiesAreSatisfiableByConcreteTypes(t *testing.T) {
 	}
 	if trace.Signed {
 		t.Errorf("default ReasoningTrace.Signed should be false")
+	}
+
+	// v0.10.0 #176 capabilities
+	var mcp MCPProvider = fakeMCPProvider{}
+	if r, _ := mcp.InvokeTool(context.Background(), "x", nil); r != "tool result" {
+		t.Errorf("MCPProvider.InvokeTool() = %q, want \"tool result\"", r)
+	}
+
+	var bp BrowserProvider = fakeBrowserProvider{}
+	if r, _ := bp.BrowseAndQuery(context.Background(), "https://example.com", "x"); r != "browser result" {
+		t.Errorf("BrowserProvider.BrowseAndQuery() = %q, want \"browser result\"", r)
+	}
+
+	var ap AudioProvider = fakeAudioProvider{}
+	audio, err := NewAudioPayload([]byte{0x52, 0x49, 0x46, 0x46}, AudioFormatWAV) // RIFF header bytes
+	if err != nil {
+		t.Errorf("NewAudioPayload: %v", err)
+	}
+	if r, _ := ap.QueryWithAudio(context.Background(), "x", audio); r != "audio result" {
+		t.Errorf("AudioProvider.QueryWithAudio() = %q, want \"audio result\"", r)
 	}
 
 	var c Cleaner = fakeCleaner{}
