@@ -4,6 +4,7 @@ type: feat
 date: 2026-05-02
 issues_in_scope: [166, 167, 169, 173, 174, 175, 176, 177, 178, 179, 180, 181]
 issues_deferred: [168, 170, 171]
+issues_partial: {174: "Tiers 1+2 in scope; Tier 3 (binary self-replace + sigverify) deferred to v0.11.0"}
 reviewers: [dhh, kieran, simplicity]
 ---
 
@@ -27,7 +28,7 @@ v0.10.0 fixes those, plus the smaller honesty gaps surfaced by the post-release 
 
 Corollary: **#169 (drift-detection CI) must merge before any non-#173 PR**, so subsequent PRs are gated by the drift checks. The v0.9.0 Go-pin drift escaped because no such check existed.
 
-## Scope (~3 weeks focused, 5–6 weeks with normal interruptions)
+## Scope
 
 Effort estimates are honest after Kieran's review caught two systematic underestimates.
 
@@ -47,7 +48,7 @@ Effort estimates are honest after Kieran's review caught two systematic underest
 | #177 | Bundle: re-enable `import`/`verify`; cosign signing; GitHub/GitLab fetch | 5 days | Closes air-gapped trust loop |
 | #175 | Single README pass to canonical `attack run` post-#173 | ½ day | Done at end, once |
 
-**Total**: 30–34 working days of focused work.
+**Total**: 31–33 working days of focused work (~6 weeks at full focus, 8–10 weeks with normal interruptions).
 
 ## Deferred to v0.11.0
 
