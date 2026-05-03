@@ -174,6 +174,12 @@ selective updates and automatic backup creation.`,
 		}
 		defer os.RemoveAll(tempDir)
 
+		// Track per-update apply failures so we can exit non-zero at the
+		// end if any update failed to land. Mirrors how the Tier 1
+		// "not implemented" stubs surface: each is an error that should
+		// signal failure, not be papered over with a generic completion message.
+		applyErrorCount := 0
+
 		// Download and apply updates
 		for _, u := range updates {
 			fmt.Printf("\nUpdating %s to version %s...\n", u.Component, u.LatestVersion.String())
@@ -221,12 +227,22 @@ selective updates and automatic backup creation.`,
 
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error applying update: %v\n", err)
+				applyErrorCount++
 				continue
 			}
 
 			fmt.Printf("Successfully updated %s to version %s.\n", u.Component, u.LatestVersion.String())
 		}
 
+		// v0.10.0 #174 Tier 1: any apply path that errored (including the
+		// "not implemented" stubs) means the on-disk state did NOT change
+		// to the version the operator asked for. Exit non-zero so any
+		// surrounding shell/CI workflow notices, instead of trusting a
+		// 0-exit-with-error-printed signal.
+		if applyErrorCount > 0 {
+			fmt.Fprintf(os.Stderr, "\nUpdate process completed with %d error(s); see above. No on-disk changes were made for the failing components.\n", applyErrorCount)
+			os.Exit(1)
+		}
 		fmt.Println("\nUpdate process completed.")
 	},
 }
@@ -241,55 +257,56 @@ func init() {
 	updateApplyCmd.Flags().Bool("backup", false, "Create backup before applying updates")
 }
 
-// createBackup creates a backup of the current installation
+// applyNotImplementedHint is the standard guidance string operators see
+// when an update-apply path is unimplemented in this release. Centralized
+// so the message is consistent across the four stubs and easy to update
+// once Tier 2 (#174) lands real implementations.
+// applyNotImplementedHint is what operators see when an update-apply
+// path is unimplemented in this release. The path interpolated is the
+// already-downloaded bundle: applyXxxUpdate is only reached AFTER
+// DownloadWithProgress has succeeded, so the bundle is sitting on disk
+// at downloadPath. Operators can extract it manually until Tier 2 ships.
+//
+// Side effect (relied upon): os.Exit(1) at the loop tail skips the
+// defer os.RemoveAll(tempDir), which is desirable on this error path —
+// preserving the bundle is exactly what the message directs operators
+// toward. (Tier 2 will add explicit cleanup once apply is real.)
+const applyNotImplementedHint = "on-disk update apply not implemented in this version; bundle downloaded to %q — extract manually, or wait for v0.10.0 #174 Tier 2"
+
+// createBackup creates a backup of the current installation.
+//
+// v0.10.0 #174 Tier 1: returns a non-nil error rather than silently no-op'ing.
+// Tier 2 will implement (cp -a of install dir with timestamp suffix). Operator
+// who explicitly passed --backup gets a hard failure rather than a fake
+// "Backup created successfully" message they shouldn't trust.
 func createBackup(cfg *config.Config) error {
-	// This is a placeholder implementation
-	// In a real implementation, this would:
-	// 1. Create a timestamped backup directory
-	// 2. Copy the current binary
-	// 3. Archive the templates directory
-	// 4. Archive the modules directory
-	// 5. Save the current configuration
-
-	fmt.Println("Backup functionality not implemented in this version.")
-	return nil
+	return fmt.Errorf("createBackup: not implemented in this version (deferred to v0.10.0 #174 Tier 2)")
 }
 
-// applyCoreBinaryUpdate applies an update to the core binary
+// applyCoreBinaryUpdate applies an update to the core binary.
+//
+// v0.10.0 #174 Tier 1: stops printing fake success. Binary self-replace
+// is high-risk (atomic swap of running process's binary, Windows file
+// locks, permission preservation) and is deferred to v0.11.0 — the
+// templates/modules paths in Tier 2 are lower-risk and ship first.
 func applyCoreBinaryUpdate(downloadPath string) error {
-	// This is a placeholder implementation
-	// In a real implementation, this would:
-	// 1. Extract the downloaded archive
-	// 2. Replace the current binary with the new one
-	// 3. Ensure proper permissions are set
-	// 4. Handle platform-specific details (e.g., Windows file locks)
-
-	fmt.Println("Core binary update not implemented in this version.")
-	return nil
+	return fmt.Errorf("applyCoreBinaryUpdate: not implemented in this version (binary self-replace deferred; see v0.10.0 #174 Tier 1; download is at %q)", downloadPath)
 }
 
-// applyTemplatesUpdate applies an update to the templates
+// applyTemplatesUpdate applies an update to the templates directory.
+//
+// v0.10.0 #174 Tier 1: returns error instead of nil so the caller's
+// "Successfully updated" message is suppressed. Tier 2 will implement
+// via ZIP extract + atomic os.Rename over the templates dir.
 func applyTemplatesUpdate(downloadPath, templatesDir string) error {
-	// This is a placeholder implementation
-	// In a real implementation, this would:
-	// 1. Extract the downloaded archive to a temporary location
-	// 2. Validate the template structure
-	// 3. Backup existing templates
-	// 4. Copy new templates to the templates directory
-
-	fmt.Println("Templates update not implemented in this version.")
-	return nil
+	return fmt.Errorf(applyNotImplementedHint+" (component=templates, target=%q)", downloadPath, templatesDir)
 }
 
-// applyModuleUpdate applies an update to a specific module
+// applyModuleUpdate applies an update to a specific module.
+//
+// v0.10.0 #174 Tier 1: returns error instead of nil. Tier 2 will
+// implement via the same atomic-replace pattern as templates, scoped to
+// modules/<id>/.
 func applyModuleUpdate(downloadPath, moduleID, modulesDir string) error {
-	// This is a placeholder implementation
-	// In a real implementation, this would:
-	// 1. Extract the downloaded archive to a temporary location
-	// 2. Validate the module structure
-	// 3. Backup existing module
-	// 4. Copy new module to the modules directory
-
-	fmt.Printf("Module update for '%s' not implemented in this version.\n", moduleID)
-	return nil
+	return fmt.Errorf(applyNotImplementedHint+" (component=module.%s, target=%q)", downloadPath, moduleID, modulesDir)
 }
