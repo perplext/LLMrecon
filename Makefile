@@ -44,6 +44,10 @@ deps: ## Download and tidy dependencies
 	$(GOMOD) download
 	$(GOMOD) tidy
 
+.PHONY: verify-drift
+verify-drift: ## Check derived artifacts match their sources of truth (compliance codegen + Go-version pins)
+	@bash scripts/verify-drift.sh
+
 .PHONY: build
 build: ## Build the binary
 	@echo "Building $(BINARY_NAME)..."
