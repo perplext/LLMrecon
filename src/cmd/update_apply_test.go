@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"archive/zip"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -95,5 +98,179 @@ func TestApplyStubsAreConsistent(t *testing.T) {
 				t.Errorf("%s returned nil; expected non-nil per v0.10.0 #174 Tier 1 honesty invariant", c.name)
 			}
 		})
+	}
+}
+
+// makeTemplatesZip writes a minimal templates bundle to tempfile and
+// returns the path. Used by Tier 2 cmd-level tests.
+func makeTemplatesZip(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	zp := filepath.Join(dir, "templates.zip")
+	f, err := os.Create(zp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = f.Close() }()
+	zw := zip.NewWriter(f)
+	w, err := zw.Create("templates/llm01.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Write([]byte("id: llm01\nversion: 0.10.0\n")); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return zp
+}
+
+// makeModuleZip mirrors makeTemplatesZip for module bundles.
+func makeModuleZip(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	zp := filepath.Join(dir, "module.zip")
+	f, err := os.Create(zp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = f.Close() }()
+	zw := zip.NewWriter(f)
+	w, err := zw.Create("module.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Write([]byte("package m // stub\n")); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return zp
+}
+
+// TestApplyTemplatesUpdateAtomic_FirstInstall is the v0.10.0 #174 Tier 2
+// happy path: a fresh install lands the bundle into templatesDir.
+func TestApplyTemplatesUpdateAtomic_FirstInstall(t *testing.T) {
+	zp := makeTemplatesZip(t)
+	parent := t.TempDir()
+	dest := filepath.Join(parent, "templates")
+
+	if err := applyTemplatesUpdateAtomic(zp, dest, false); err != nil {
+		t.Fatalf("applyTemplatesUpdateAtomic: %v", err)
+	}
+	got, err := os.ReadFile(filepath.Join(dest, "templates/llm01.yaml"))
+	if err != nil {
+		t.Fatalf("read extracted: %v", err)
+	}
+	if !strings.Contains(string(got), "id: llm01") {
+		t.Errorf("content = %q", got)
+	}
+}
+
+// TestApplyTemplatesUpdateAtomic_RejectsEmptyBundle asserts the
+// validateTemplatesBundle guard fires on empty bundles, leaving the
+// pre-existing dest untouched.
+func TestApplyTemplatesUpdateAtomic_RejectsEmptyBundle(t *testing.T) {
+	dir := t.TempDir()
+	zp := filepath.Join(dir, "empty.zip")
+	f, err := os.Create(zp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	zw := zip.NewWriter(f)
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	parent := t.TempDir()
+	dest := filepath.Join(parent, "templates")
+	if err := os.MkdirAll(dest, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	original := []byte("PRE-EXISTING\n")
+	if err := os.WriteFile(filepath.Join(dest, "marker.txt"), original, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	err = applyTemplatesUpdateAtomic(zp, dest, false)
+	if err == nil {
+		t.Fatal("expected error for empty bundle")
+	}
+
+	// Pre-existing dest untouched.
+	got, err := os.ReadFile(filepath.Join(dest, "marker.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != string(original) {
+		t.Errorf("dest changed; got %q", got)
+	}
+}
+
+// TestApplyTemplatesUpdateAtomic_KeepBackup asserts --backup keeps the
+// .bak directory after a successful apply.
+func TestApplyTemplatesUpdateAtomic_KeepBackup(t *testing.T) {
+	zp := makeTemplatesZip(t)
+	parent := t.TempDir()
+	dest := filepath.Join(parent, "templates")
+	if err := os.MkdirAll(dest, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dest, "old.yaml"), []byte("v1"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := applyTemplatesUpdateAtomic(zp, dest, true); err != nil {
+		t.Fatal(err)
+	}
+
+	// .bak. sibling exists.
+	entries, _ := os.ReadDir(parent)
+	hasBak := false
+	for _, e := range entries {
+		if strings.Contains(e.Name(), ".bak.") {
+			hasBak = true
+		}
+	}
+	if !hasBak {
+		t.Error("no .bak. sibling found; expected one with KeepBackup=true")
+	}
+}
+
+// TestApplyModuleUpdateAtomic_RejectsEmptyModuleID asserts the empty-
+// moduleID guard fires before any filesystem touch.
+func TestApplyModuleUpdateAtomic_RejectsEmptyModuleID(t *testing.T) {
+	zp := makeModuleZip(t)
+	parent := t.TempDir()
+
+	err := applyModuleUpdateAtomic(zp, "", parent, false)
+	if err == nil {
+		t.Fatal("expected error for empty moduleID")
+	}
+	if !strings.Contains(err.Error(), "empty moduleID") {
+		t.Errorf("err = %v, want 'empty moduleID' substring", err)
+	}
+}
+
+// TestApplyModuleUpdateAtomic_LandsAtModuleSubdir asserts module
+// bundles land at modulesDir/<moduleID>/, not at modulesDir/.
+func TestApplyModuleUpdateAtomic_LandsAtModuleSubdir(t *testing.T) {
+	zp := makeModuleZip(t)
+	parent := t.TempDir()
+
+	if err := applyModuleUpdateAtomic(zp, "best-of-n", parent, false); err != nil {
+		t.Fatalf("applyModuleUpdateAtomic: %v", err)
+	}
+	got, err := os.ReadFile(filepath.Join(parent, "best-of-n", "module.go"))
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	if !strings.Contains(string(got), "package m") {
+		t.Errorf("content = %q", got)
 	}
 }
