@@ -31,21 +31,40 @@ import (
 )
 
 // WrapCore returns a common.Provider backed by the given core.Provider.
-// The returned value also implements common.* capability interfaces
-// where the wrapped provider supports the underlying core capability:
-// future v0.10.0 issue #166 work will extend this.
+// The returned value also implements common.ImageProvider and/or
+// common.ReasoningProvider when the wrapped provider implements the
+// corresponding core capability interface (v0.10.0 #166).
 //
-// Returns the inner provider wrapped in a coreAdapter. Caller retains
-// ownership of the inner provider — the adapter does not call Close()
-// on it; that's the caller's responsibility.
+// The 2x2 capability matrix is realized by four concrete wrapper types
+// (coreAdapter, imageAdapter, reasoningAdapter, imageReasoningAdapter)
+// rather than one struct with always-present methods. The reason: Go's
+// type assertion is structural at compile time — a single struct with
+// QueryWithImages would always satisfy common.ImageProvider, defeating
+// the type-assertion gate that attack modules use to detect capability
+// presence. Modules need OK to mean "this provider really does images,"
+// not "the wrapper has the method."
+//
+// Returns the inner provider wrapped in a coreAdapter (or capability
+// extension thereof). Caller retains ownership of the inner provider —
+// the adapter does not call Close() on it; that's the caller's
+// responsibility.
 func WrapCore(p core.Provider) common.Provider {
 	if p == nil {
-		// Defensive: nil core.Provider would NPE inside Query. Operators
-		// should never see this path; constructor errors should have
-		// already returned, but the contract is clearer with the guard.
 		return nilProvider{}
 	}
-	return &coreAdapter{inner: p}
+	base := &coreAdapter{inner: p}
+	img, hasImg := p.(core.ImageProvider)
+	rsn, hasRsn := p.(core.ReasoningProvider)
+	switch {
+	case hasImg && hasRsn:
+		return &imageReasoningAdapter{coreAdapter: base, img: img, rsn: rsn}
+	case hasImg:
+		return &imageAdapter{coreAdapter: base, img: img}
+	case hasRsn:
+		return &reasoningAdapter{coreAdapter: base, rsn: rsn}
+	default:
+		return base
+	}
 }
 
 // coreAdapter is the WrapCore-returned common.Provider.
@@ -62,18 +81,7 @@ type coreAdapter struct {
 // Modules that need richer control should configure the underlying
 // provider via core.ProviderConfig before WrapCore.
 func (a *coreAdapter) Query(ctx context.Context, msgs []common.Message, opts map[string]interface{}) (string, error) {
-	req := &core.ChatCompletionRequest{
-		Messages: convertMessages(msgs),
-	}
-
-	// Default to the provider's configured model. Operator can override
-	// via opts["model"] if they want to drive multiple models from a
-	// single wrapped provider.
-	if cfg := a.inner.GetConfig(); cfg != nil {
-		req.Model = cfg.DefaultModel
-	}
-	applyOptions(req, opts)
-
+	req := a.buildChatRequest(msgs, opts)
 	resp, err := a.inner.ChatCompletion(ctx, req)
 	if err != nil {
 		return "", err
@@ -116,6 +124,151 @@ func (a *coreAdapter) GetTokenCount(text string) int {
 		return len(text) / 4
 	}
 	return n
+}
+
+// ---------------------------------------------------------------------------
+// Capability-extension wrappers (v0.10.0 #166)
+// ---------------------------------------------------------------------------
+//
+// Each adapter embeds *coreAdapter so all common.Provider methods (Query,
+// GetName, GetModel, GetTokenCount) inherit from the base. The capability
+// methods (QueryWithImages, QueryWithReasoning) live on the extension
+// type. The compile-time interface checks below catch missing methods.
+
+// imageAdapter exposes common.ImageProvider on top of coreAdapter.
+type imageAdapter struct {
+	*coreAdapter
+	img core.ImageProvider
+}
+
+// QueryWithImages translates the common-side prompt + ImagePayload list
+// into a core.ChatCompletionRequest + []core.ImageInput, calls through
+// the wrapped core.ImageProvider, and extracts the first choice's text.
+//
+// Constraint translation:
+//   - common.ImagePayload's mutual-exclusion invariant (bytes XOR url)
+//     was already validated at construction; the conversion here trusts
+//     it but the underlying core.ImageInput documents the same.
+//   - Empty images slice short-circuits to a typed error rather than
+//     falling through to the core.ImageProvider — the bridge's contract
+//     is that QueryWithImages with zero images is a programming error.
+func (a *imageAdapter) QueryWithImages(ctx context.Context, prompt string, images []common.ImagePayload, opts map[string]interface{}) (string, error) {
+	if len(images) == 0 {
+		return "", fmt.Errorf("bridge: QueryWithImages: at least one image required")
+	}
+	req := a.buildChatRequest([]common.Message{{Role: "user", Content: prompt}}, opts)
+	coreImages := make([]core.ImageInput, 0, len(images))
+	for _, p := range images {
+		coreImages = append(coreImages, core.ImageInput{
+			Bytes:    p.Bytes(),
+			URL:      p.URL(),
+			MimeType: string(p.MimeType()),
+			Detail:   string(p.Detail()),
+		})
+	}
+	resp, err := a.img.ChatWithImages(ctx, req, coreImages)
+	if err != nil {
+		return "", err
+	}
+	if resp == nil || len(resp.Choices) == 0 {
+		return "", fmt.Errorf("provider %s returned no choices", a.GetName())
+	}
+	return resp.Choices[0].Message.Content, nil
+}
+
+// reasoningAdapter exposes common.ReasoningProvider on top of coreAdapter.
+type reasoningAdapter struct {
+	*coreAdapter
+	rsn core.ReasoningProvider
+}
+
+// QueryWithReasoning calls through to the wrapped core.ReasoningProvider
+// and translates the heavier core.ThinkingTrace into the minimal
+// common.ReasoningTrace shape attack modules consume.
+//
+// trace.Signed: the bridge defaults to false. Anthropic's adapter sets
+// Signed=true on the core.ThinkingTrace via a sentinel marker (the
+// Anthropic-specific implementation surfaces this via a field on
+// core.ThinkingTrace once #166 lands the Anthropic side); for OpenAI
+// the trace is plain summary text so Signed stays false. See the
+// signedReasoningProvider sentinel below.
+func (a *reasoningAdapter) QueryWithReasoning(ctx context.Context, msgs []common.Message, opts map[string]interface{}) (string, common.ReasoningTrace, error) {
+	req := a.buildChatRequest(msgs, opts)
+	resp, trace, err := a.rsn.ChatWithReasoning(ctx, req)
+	if err != nil {
+		return "", common.ReasoningTrace{}, err
+	}
+	if resp == nil || len(resp.Choices) == 0 {
+		return "", common.ReasoningTrace{}, fmt.Errorf("provider %s returned no choices", a.GetName())
+	}
+	steps := make([]string, 0)
+	if trace != nil {
+		for _, s := range trace.Steps {
+			if s.Content != "" {
+				steps = append(steps, s.Content)
+			}
+		}
+	}
+	signed := false
+	if sig, ok := a.rsn.(signedReasoningProvider); ok {
+		signed = sig.ReasoningTraceIsSigned()
+	}
+	return resp.Choices[0].Message.Content, common.ReasoningTrace{Steps: steps, Signed: signed}, nil
+}
+
+// signedReasoningProvider is an opt-in marker any core.ReasoningProvider
+// can implement to declare its reasoning trace is cryptographically
+// signed (Anthropic). Modules consuming common.ReasoningTrace.Signed
+// gate mutation paths on the field; without this marker the bridge
+// defaults to Signed=false.
+type signedReasoningProvider interface {
+	ReasoningTraceIsSigned() bool
+}
+
+// imageReasoningAdapter exposes both common.ImageProvider and
+// common.ReasoningProvider. The capability methods come from the two
+// embedded extension types; the embedded *coreAdapter remains the
+// common.Provider implementer.
+type imageReasoningAdapter struct {
+	*coreAdapter
+	img core.ImageProvider
+	rsn core.ReasoningProvider
+}
+
+// QueryWithImages — see imageAdapter.QueryWithImages.
+func (a *imageReasoningAdapter) QueryWithImages(ctx context.Context, prompt string, images []common.ImagePayload, opts map[string]interface{}) (string, error) {
+	tmp := &imageAdapter{coreAdapter: a.coreAdapter, img: a.img}
+	return tmp.QueryWithImages(ctx, prompt, images, opts)
+}
+
+// QueryWithReasoning — see reasoningAdapter.QueryWithReasoning.
+func (a *imageReasoningAdapter) QueryWithReasoning(ctx context.Context, msgs []common.Message, opts map[string]interface{}) (string, common.ReasoningTrace, error) {
+	tmp := &reasoningAdapter{coreAdapter: a.coreAdapter, rsn: a.rsn}
+	return tmp.QueryWithReasoning(ctx, msgs, opts)
+}
+
+// Compile-time interface checks. These fail at build time if the
+// wrappers stop satisfying the common.* contracts.
+var (
+	_ common.Provider          = (*coreAdapter)(nil)
+	_ common.ImageProvider     = (*imageAdapter)(nil)
+	_ common.ReasoningProvider = (*reasoningAdapter)(nil)
+	_ common.ImageProvider     = (*imageReasoningAdapter)(nil)
+	_ common.ReasoningProvider = (*imageReasoningAdapter)(nil)
+)
+
+// buildChatRequest centralizes the common.Message → core.ChatCompletionRequest
+// conversion so the capability adapters share a single source of truth
+// with the plain-text Query path.
+func (a *coreAdapter) buildChatRequest(msgs []common.Message, opts map[string]interface{}) *core.ChatCompletionRequest {
+	req := &core.ChatCompletionRequest{
+		Messages: convertMessages(msgs),
+	}
+	if cfg := a.inner.GetConfig(); cfg != nil {
+		req.Model = cfg.DefaultModel
+	}
+	applyOptions(req, opts)
+	return req
 }
 
 // ---------------------------------------------------------------------------
