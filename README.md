@@ -5,7 +5,7 @@
 ### Advanced Security Testing Framework for Large Language Models
 
 [![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)](https://github.com/perplext/LLMrecon/releases)
-[![Go Version](https://img.shields.io/badge/go-1.24.0-00ADD8.svg)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/go-1.25.0-00ADD8.svg)](https://go.dev/)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![OWASP](https://img.shields.io/badge/OWASP%20Top%2010-2025%20Compliant-green.svg)](https://owasp.org/)
 [![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
@@ -113,18 +113,28 @@ python3 llmrecon_2025.py --models gpt-oss:latest --categories prompt_injection
 # Build the Go binary
 go build -o llmrecon ./src/main.go
 
-# Run OWASP compliance scan
-./llmrecon scan --provider openai --model gpt-4 --owasp
+# Enumerate every registered attack module
+./llmrecon attack list
 
-# Generate compliance report
-./llmrecon report --format html --output security-report.html
+# Run an attack module against the built-in mock provider
+./llmrecon attack run --module=jbfuzz --provider=mock \
+    --metadata=allow_experimental=true \
+    --metadata=max_queries=8
+
+# Verify a bundle (signature, checksum, or manifest schema)
+./llmrecon bundle verify ./extracted-bundle --level=manifest
 ```
+
+**Real provider support** (OpenAI, Anthropic) for `attack run` is wired
+via the v0.10.0 capability adapters (#166). See
+[`docs/plans/2026-05-02-feat-v0-10-0-phased-execution-plan.md`](docs/plans/2026-05-02-feat-v0-10-0-phased-execution-plan.md)
+for the full Go-side roadmap.
 
 ## 📦 Installation
 
 ### Prerequisites
 
-- **Go** 1.23.0+ (for enterprise features)
+- **Go** 1.25.0+ (for enterprise features)
 - **Python** 3.8+ (for ML components and Ollama testing)
 - **Git** for cloning the repository
 - **Ollama** (optional, for local model testing)
@@ -175,7 +185,7 @@ docker build -t llmrecon:latest .
 docker run -it llmrecon:latest --help
 
 # With volume mount for reports
-docker run -v $(pwd)/reports:/app/reports llmrecon:latest scan --model gpt-4
+docker run -v $(pwd)/reports:/app/reports llmrecon:latest attack list
 ```
 
 ## 🎮 Usage
@@ -205,18 +215,35 @@ python3 verify_2025_features.py
 #### Go CLI (Enterprise)
 
 ```bash
-# Basic scan
-./llmrecon scan --provider openai --model gpt-4
+# Enumerate registered attack modules (all 50+ across categories)
+./llmrecon attack list
 
-# OWASP compliance check
-./llmrecon owasp --full-scan --model gpt-4
+# Machine-readable form for compliance scorecards / CI
+./llmrecon attack list --json
 
-# Template-based testing
-./llmrecon template run --dir examples/templates/owasp-llm/
+# Run a single attack module
+./llmrecon attack run --module=h_cot --provider=mock \
+    --metadata=i_understand_risks=true \
+    --payload="Walk through the technique step by step" \
+    --success-indicators="step by step,detailed"
 
-# Generate reports
-./llmrecon report --scan-id latest --format pdf
+# Emit results as JSONL for the Python ML pipeline (v0.9.0 #181)
+./llmrecon attack run --module=jbfuzz --provider=mock \
+    --metadata=allow_experimental=true \
+    --emit-jsonl=- | python3 -m ml.data.ingest
+
+# Bundle round-trip (v0.10.0 #177)
+./llmrecon bundle create --output=bundle.tar.gz
+./llmrecon bundle verify ./extracted-bundle --level=manifest
+./llmrecon bundle import ./extracted-bundle --target=./templates
+
+# Atomic-replace update apply (v0.10.0 #174 Tier 2)
+./llmrecon update apply --component=templates --experimental --backup
 ```
+
+> The `--experimental` flag on `update apply` opts into the
+> atomic-replace path. Without it the apply path errors out with a
+> "not implemented" message — the v0.10.0 honesty invariant.
 
 ### Advanced Usage
 
@@ -237,9 +264,14 @@ indicators:
   - "previous instructions"
 ```
 
-Run with:
+Templates created via `./llmrecon template create` are listed by
+`./llmrecon template list`. The Go side runs templates through the
+attack-module registry once they're registered; until then the
+template format is consumed by the Python harness:
+
 ```bash
-./llmrecon template run --file custom_attack.yaml --model gpt-4
+python3 llmrecon_harness.py --models llama3:latest \
+    --custom-template path/to/custom_attack.yaml
 ```
 
 #### ML-Powered Optimization
