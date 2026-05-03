@@ -79,14 +79,14 @@ func ExtractZip(archivePath, destDir string) (int64, error) {
 		}
 
 		if entry.FileInfo().IsDir() {
-			if err := os.MkdirAll(target, 0o755); err != nil {
+			if err := os.MkdirAll(target, 0o750); err != nil {
 				return 0, fmt.Errorf("mkdir %q: %w", target, err)
 			}
 			continue
 		}
 
 		// File entry: ensure parent dir exists.
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(target), 0o750); err != nil {
 			return 0, fmt.Errorf("mkdir parent of %q: %w", target, err)
 		}
 
@@ -118,6 +118,10 @@ func extractFileEntry(entry *zip.File, target string, budget int64) (int64, erro
 		mode = 0o644
 	}
 
+	// #nosec G304 — target is the output of safeJoin(destDir, entry.Name),
+	// which rejects absolute paths and traversal and re-verifies the
+	// joined path resolves under destDir. The "variable file inclusion"
+	// concern doesn't apply: target cannot land outside the staging dir.
 	out, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode)
 	if err != nil {
 		return 0, fmt.Errorf("create file: %w", err)

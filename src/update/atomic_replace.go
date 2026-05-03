@@ -99,7 +99,7 @@ func AtomicReplaceFromZip(opts StagedApplyOptions) (*AtomicReplaceResult, error)
 	}
 
 	parent := filepath.Dir(absDest)
-	if err := os.MkdirAll(parent, 0o755); err != nil {
+	if err := os.MkdirAll(parent, 0o750); err != nil {
 		return nil, fmt.Errorf("mkdir parent %q: %w", parent, err)
 	}
 
