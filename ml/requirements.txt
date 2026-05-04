@@ -31,7 +31,7 @@ networkx>=3.6.1
 # Utilities
 tqdm>=4.65.0
 python-dotenv>=1.2.2
-pyyaml>=6.0
+pyyaml>=6.0.3
 
 # Optional GPU Support
 # Uncomment based on your CUDA version:
