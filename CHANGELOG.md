@@ -8,6 +8,215 @@ This changelog was started with v0.9.0; earlier history lives in `git log`.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-05-03
+
+The v0.10.0 release is **the honesty release**. Every code path that
+previously printed "success" while doing nothing now either does the
+work for real, returns a typed error, or is removed along with the
+docs that advertised it. No CLI command is more capable today than
+v0.9.0; many are *less* capable, in the sense that paths that used to
+fake-succeed now fail-fast with actionable messages.
+
+The single acceptance criterion for v0.10.0: **no code path returns
+"not implemented" while printing or returning success.**
+
+### CLI surface — real, end-to-end
+
+`attack list` and `attack run` enumerate and execute every registered
+attack module. Before v0.10.0 the registry was empty at runtime — every
+`init()`-registered module since v0.7.0 was build-only because no
+binary linked the attack packages. Fixed via `src/attacks/all` barrel
+import.
+
+```
+./llmrecon attack list                                 # 50+ modules
+./llmrecon attack list --json                          # CI / scorecard
+./llmrecon attack run --module=jbfuzz --provider=mock \
+    --metadata=allow_experimental=true                 # ends with typed AttackResult
+```
+
+A `--provider=mock` is the only provider in v0.10.0; OpenAI and
+Anthropic are wired but capability adapters drive
+`SkipMissingCapability` until a future release wires the bridge into
+the `attack run` CLI path. (#173)
+
+### Provider capability adapters (#166)
+
+OpenAI and Anthropic adapters now implement `core.ImageProvider` and
+`core.ReasoningProvider`; the bridge package promotes them into
+`common.ImageProvider` and `common.ReasoningProvider` via a 2×2
+wrapper-type matrix. SIVA, VSH, and H-CoT modules' v0.9.0
+type-assertion gates now find a capable provider against real OpenAI
+and Anthropic targets instead of always emitting
+`SkipMissingCapability`.
+
+OpenAI:
+- Vision via Chat Completions multimodal content parts
+  (data: URLs for inline bytes, URL refs verbatim, `Detail` honored).
+- Reasoning via the Responses API (`include=["reasoning.encrypted_content"]`,
+  `reasoning.summary="detailed"`); empty-summary case (o3 omits >90%)
+  surfaces as `len(trace.Steps)==0` so H-CoT short-circuits to
+  `SkipReasoningTraceEmpty` after retry budget.
+
+Anthropic:
+- Vision via Messages API content blocks; `Detail` hint dropped (no
+  equivalent in API).
+- Reasoning via extended thinking (`thinking.type="enabled"`,
+  `budget_tokens=10000`). `ReasoningTraceIsSigned() bool` returns
+  `true` so the bridge surfaces `Signed=true`; H-CoT short-circuits
+  to `SkipSignatureGated` rather than wasting attempts on
+  thinking-text mutation that the API would silently discard.
+
+### Capability gates for agentic/audio modules (#176)
+
+Three new capability interfaces — `MCPProvider`, `BrowserProvider`,
+`AudioProvider` — gate 13 modules (4 mcp + 2 tool_use + 3 browser + 4
+audio) that previously text-simulated their advertised modality
+against any provider. Default behavior: `OutcomeSkipped +
+SkipMissingCapability` against a non-matching provider.
+
+Operators who explicitly want the legacy text-simulation behavior
+pass `Metadata["mode"]="text_simulation"`; modules then fall back
+to plain `Query` AND tag the result with `Metadata["mode"]` and
+`Metadata["true_modality"]` so downstream consumers (compliance
+scorecards, bandit reward) can filter simulated runs out of
+real-attack aggregations.
+
+### `update apply` — atomic-replace + Tier 1 honesty (#174)
+
+Tier 1: every "not implemented" stub in `src/update/` and
+`src/cmd/update_apply.go` returns a non-nil error so the CLI exits
+non-zero. The previous behavior was to print success while writing
+nothing to disk — the worst kind of bug for a security tool.
+
+Tier 2: `--experimental` flag opts into the new atomic-replace path.
+Strategy:
+
+1. Stage: extract bundle into a sibling tmp dir on the SAME
+   filesystem as dest (so `os.Rename` is syscall-atomic).
+2. Validate: caller-supplied `Validate` runs on staged dir.
+3. Backup: `os.Rename(dest, dest+".bak."+ts)` — atomic.
+4. Apply: `os.Rename(staged, dest)` — atomic.
+5. Cleanup: optional, controlled by `--backup` flag.
+
+Kill -9 at any point leaves the operator with EITHER the old install
+OR the new one — never a half-extracted state.
+`RecoverFromInterruptedApply` finds and restores from the most-recent
+`.bak` sibling when a kill -9 lands between steps 3 and 4.
+
+ZIP extraction guards: zip-slip rejection (per-entry path
+re-verified via `filepath.Rel`), symlink skipping, per-entry
+size cap (100 MiB), total cap (1 GiB), file mode AND'd with `0o755`.
+
+### Bundle round-trip (#177)
+
+`bundle verify` and `bundle import` are restored against the live
+`src/bundle` API. The five `.disabled` cmd files (2,175 lines, written
+against an early API draft that no longer exists) are atticked under
+`attic/v0-7-0-bundle-disabled/` with a README. Aspirational commands
+(`publish`, `sync`, `registry`) stay atticked — they depend on a
+bundle-registry concept the codebase never finished and are out of
+scope for v0.10.0.
+
+`offline_bundle_cli.go` validation-level switch fixed: previously
+parsed 7 levels but only handled 2; remaining 5 (basic, standard,
+strict, manifest, compatibility) now route through the standard
+`BundleValidator.Validate(level)` interface.
+
+### Python ↔ Go JSONL bridge (#181)
+
+`attack run --emit-jsonl=<path>` writes one JSONL row per
+`AttackResult`. `python -m ml.data.ingest` reads JSONL and inserts
+into the v0.9.0 `attacks.db` schema with field-by-field equality.
+Credential redaction at the Python boundary scrubs `OPENAI_API_KEY`,
+`ANTHROPIC_API_KEY`, generic bearer tokens, and any value matching
+the v0.9.0 `_SENSITIVE_KEY_PATTERN`.
+
+```
+./llmrecon attack run --module=jbfuzz --provider=mock \
+    --metadata=allow_experimental=true \
+    --emit-jsonl=- | python3 -m ml.data.ingest
+```
+
+### Drift-detection CI (#169 + #179)
+
+`scripts/verify-drift.sh` runs on every PR and asserts:
+
+1. OWASP compliance codegen up-to-date (`go generate ./...` produces
+   no diff against `src/compliance/owasp_agentic_generated.go`).
+2. Go-version pins match `go.mod` across Dockerfiles, CI workflows,
+   and any in-repo references.
+3. Every YAML technique ID in `templates/owasp_agentic_2026.yaml`
+   resolves to a Go constant in `src/compliance`.
+
+The v0.9.0 Docker push break was caused by a Go-pin drift (1.24 in
+Dockerfile vs 1.25 in `go.mod`); this CI guard prevents recurrence.
+
+### Dead RBAC cleanup (#180)
+
+The v0.2.0 RBAC + MFA + auth subsystem under `src/security/access/`
+returned "not implemented" from every constructor. Four CLI commands
+(`access_control`, `audit`, `auth`, `user`) sat as `.disabled` files.
+No consumer ever wired the framework end-to-end. Removed: 121 files,
+~24,000 lines. If auth/RBAC returns it'll be in v0.11.0+ as a fresh
+design rather than a partial revival.
+
+### `common.Provider` bridge shim (#167)
+
+`bridge.WrapCore(core.Provider) → common.Provider` translates between
+the heavier core LLM-API surface and the minimal surface attack
+modules consume. Selects from a 2×2 wrapper-type matrix based on the
+underlying provider's capabilities (`coreAdapter`, `imageAdapter`,
+`reasoningAdapter`, `imageReasoningAdapter`). Four concrete types
+instead of one struct with always-present methods because Go's type
+assertion is structural — a single struct with `QueryWithImages`
+would always satisfy `common.ImageProvider` regardless of underlying
+support, defeating the gate that attack modules use to detect
+capability presence.
+
+### README pass (#175)
+
+Six fictional CLI examples removed from the README. The first
+Go-side quick-start example was `./llmrecon scan --provider openai
+--model gpt-4 --owasp` — there is no `scan` command that takes those
+flags. Replaced with the actually-working v0.10.0 surface (`attack
+list`, `attack run`, `bundle verify`, `update apply --experimental`).
+
+`src/cmd/readme_smoke_test.go` pins documented command paths against
+the live Cobra tree so future README drift fails CI.
+
+### Migration notes
+
+- **No data migration needed.** v0.9.0 SQLite schema unchanged.
+- **`attack run` provider value**: today only `mock` is wired through
+  the CLI. Real providers (`openai`, `anthropic`) require the bridge
+  package's `WrapCore` to be invoked from the CLI — that's planned
+  for v0.10.1 along with `--api-key` / config-file wiring.
+- **`update apply` operators**: the `--experimental` flag is
+  required to opt into the atomic-replace path. Without it the apply
+  path errors out with the v0.10.0 honesty message. One release
+  cycle of opt-in before the default flips.
+- **`bundle import` and `bundle verify`** require an EXTRACTED bundle
+  directory, not a `.tar.gz` / `.zip` archive. Extract with `tar xf`
+  or `unzip` first.
+
+### Deferred to v0.11.0
+
+- **#168 Purger interface** — automated cleanup of memory-poisoning
+  implants. Depends on a new CLI subcommand surface; no operator
+  pulling on it.
+- **#170 Embedding fitness** — opt-in fitness function for
+  `jbfuzz`/`persona_evolve`; current heuristic remains the default.
+- **#171 MCTS-Explore** — opt-in selection algorithm for `jbfuzz`;
+  default UCB1+restart unchanged. Pure engine R&D.
+- **#174 Tier 3** — binary self-replace + signature verification for
+  `update apply`. Out of scope; needs separate planning cycle.
+- **`bundle create --sign`** (cosign integration), **`bundle create
+  --source=github`** / **`--source=gitlab`** — Tier B/C of #177.
+- **OpenAI/Anthropic provider wiring through the CLI** — adapters
+  exist (#166), but `attack run` only accepts `--provider=mock`
+  today. v0.10.1 will land the wiring + `--api-key`/config plumbing.
+
 ## [0.9.0] - 2026-05-02
 
 The v0.9.0 release adds **6 Go attack modules and 5 attack templates**
