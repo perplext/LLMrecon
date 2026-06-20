@@ -2,7 +2,7 @@
 title: "feat: v0.12.0 — new attack modules (MemMorph, Sleeper, IterInject, SymJack, TrustFall)"
 type: feat
 date: 2026-06-19
-status: active
+status: completed
 origin: docs/brainstorms/2026-06-19-v0-12-0-new-attack-modules-requirements.md
 target_branch: feature/v0.12.0-new-attack-modules
 follows: docs/plans/2026-05-04-feat-v0-11-0-stabilization-plan.md
