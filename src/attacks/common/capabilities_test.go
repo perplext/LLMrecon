@@ -244,6 +244,45 @@ type fakeCleaner struct{}
 
 func (fakeCleaner) Cleanup(_ context.Context, _ []string) error { return nil }
 
+type fakeCodingAgentProvider struct{ fakeProvider }
+
+func (fakeCodingAgentProvider) ApproveFileOperation(_ context.Context, op FileOperation) (ApprovalOutcome, error) {
+	// Simulate a symlinked destination: resolved target differs from shown.
+	return ApprovalOutcome{
+		HasApprovalStep:     true,
+		Approved:            true,
+		ResolvedDestination: "/home/user/.config/mcp/servers.json",
+		Wrote:               true,
+	}, nil
+}
+
+func (fakeCodingAgentProvider) TrustFolder(_ context.Context, req FolderTrustRequest) (FolderTrustOutcome, error) {
+	return FolderTrustOutcome{HasTrustPrompt: true, Trusted: true, ExecutedPaths: req.ProjectMCPPaths}, nil
+}
+
+// TestApprovalOutcomeMisrepresentedVs covers the SymJack success predicate:
+// approved + wrote + resolved != shown.
+func TestApprovalOutcomeMisrepresentedVs(t *testing.T) {
+	cases := []struct {
+		name  string
+		o     ApprovalOutcome
+		shown string
+		want  bool
+	}{
+		{"symlinked write", ApprovalOutcome{Approved: true, Wrote: true, ResolvedDestination: "/cfg/mcp.json"}, "docs/demo.mp4", true},
+		{"honest write", ApprovalOutcome{Approved: true, Wrote: true, ResolvedDestination: "docs/demo.mp4"}, "docs/demo.mp4", false},
+		{"approved but no write", ApprovalOutcome{Approved: true, Wrote: false, ResolvedDestination: "/cfg/mcp.json"}, "docs/demo.mp4", false},
+		{"not approved", ApprovalOutcome{Approved: false, Wrote: true, ResolvedDestination: "/cfg/mcp.json"}, "docs/demo.mp4", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := c.o.MisrepresentedVs(c.shown); got != c.want {
+				t.Errorf("MisrepresentedVs(%q) = %v, want %v", c.shown, got, c.want)
+			}
+		})
+	}
+}
+
 // TestCapabilitiesAreSatisfiableByConcreteTypes verifies that the optional
 // capability interfaces are usefully implementable: a value with the right
 // methods does satisfy the interface, and a value missing them does not (the
@@ -298,6 +337,17 @@ func TestCapabilitiesAreSatisfiableByConcreteTypes(t *testing.T) {
 	var c Cleaner = fakeCleaner{}
 	if err := c.Cleanup(context.Background(), nil); err != nil {
 		t.Errorf("Cleaner.Cleanup() returned error: %v", err)
+	}
+
+	// v0.12.0 coding-agent capability
+	var ca CodingAgentProvider = fakeCodingAgentProvider{}
+	ao, _ := ca.ApproveFileOperation(context.Background(), FileOperation{ShownDestination: "docs/demo.mp4"})
+	if !ao.MisrepresentedVs("docs/demo.mp4") {
+		t.Errorf("CodingAgentProvider.ApproveFileOperation should report misrepresentation for symlinked destination")
+	}
+	to, _ := ca.TrustFolder(context.Background(), FolderTrustRequest{ProjectMCPPaths: []string{"./.mcp/evil.json"}})
+	if len(to.ExecutedPaths) != 1 {
+		t.Errorf("CodingAgentProvider.TrustFolder ExecutedPaths = %d, want 1", len(to.ExecutedPaths))
 	}
 
 	// Negative compile check: fakeProvider does NOT implement ImageProvider
