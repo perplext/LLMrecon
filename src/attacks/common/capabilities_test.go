@@ -273,6 +273,7 @@ func TestApprovalOutcomeMisrepresentedVs(t *testing.T) {
 		{"honest write", ApprovalOutcome{Approved: true, Wrote: true, ResolvedDestination: "docs/demo.mp4"}, "docs/demo.mp4", false},
 		{"approved but no write", ApprovalOutcome{Approved: true, Wrote: false, ResolvedDestination: "/cfg/mcp.json"}, "docs/demo.mp4", false},
 		{"not approved", ApprovalOutcome{Approved: false, Wrote: true, ResolvedDestination: "/cfg/mcp.json"}, "docs/demo.mp4", false},
+		{"empty resolved destination", ApprovalOutcome{Approved: true, Wrote: true, ResolvedDestination: ""}, "docs/demo.mp4", false},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

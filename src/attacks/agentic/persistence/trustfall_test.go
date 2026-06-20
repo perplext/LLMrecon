@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/perplext/LLMrecon/src/attacks/common"
@@ -30,6 +31,9 @@ func TestTrustFall_MissingCapability(t *testing.T) {
 	r, _ := (&TrustFallModule{}).Execute(context.Background(), &testutil.MockProvider{}, trustfallConfig())
 	if r.Outcome != common.OutcomeSkipped || r.SkipReason != common.SkipMissingCapability {
 		t.Errorf("outcome=%q skip=%q, want skipped/missing_capability", r.Outcome, r.SkipReason)
+	}
+	if !strings.Contains(r.SkipDetail, "CodingAgentProvider") {
+		t.Errorf("SkipDetail %q should name common.CodingAgentProvider", r.SkipDetail)
 	}
 }
 

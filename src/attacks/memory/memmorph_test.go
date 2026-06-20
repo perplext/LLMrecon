@@ -104,4 +104,33 @@ func TestMemMorph_RecordCountConfigurable(t *testing.T) {
 	if len(ids) != 5 {
 		t.Errorf("injected_record_ids = %d, want 5", len(ids))
 	}
+	// 5 inject queries + 1 trigger query.
+	if mock.CallCount() != 6 {
+		t.Errorf("CallCount = %d, want 6", mock.CallCount())
+	}
+}
+
+// A pathological record_count is clamped to the ceiling and flagged, so a
+// config typo can't drive an unbounded number of live injections.
+func TestMemMorph_RecordCountClamped(t *testing.T) {
+	mock := &memoryAwareMock{MockProvider: &testutil.MockProvider{DefaultResponse: "search_tool"}, ProbeRetains: true}
+	cfg := memMorphConfig()
+	cfg.Metadata["record_count"] = "1000000"
+	r, _ := (&MemMorphModule{}).Execute(context.Background(), mock, cfg)
+	ids, _ := r.Metadata["injected_record_ids"].([]string)
+	if len(ids) != maxMemMorphRecords {
+		t.Errorf("injected_record_ids = %d, want %d (clamped)", len(ids), maxMemMorphRecords)
+	}
+	if r.Metadata["record_count_clamped"] != true {
+		t.Errorf("expected record_count_clamped=true in metadata")
+	}
+}
+
+// Inject-phase provider error → SkipProviderError.
+func TestMemMorph_InjectPhaseError(t *testing.T) {
+	mock := &memoryAwareMock{MockProvider: &testutil.MockProvider{ErrorOn: 1, ErrorMsg: "inject boom"}, ProbeRetains: true}
+	r, _ := (&MemMorphModule{}).Execute(context.Background(), mock, memMorphConfig())
+	if r.Outcome != common.OutcomeSkipped || r.SkipReason != common.SkipProviderError {
+		t.Errorf("outcome=%q skip=%q, want skipped/provider_error", r.Outcome, r.SkipReason)
+	}
 }

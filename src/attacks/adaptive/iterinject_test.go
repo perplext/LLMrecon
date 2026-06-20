@@ -51,9 +51,10 @@ func TestIterInject_SuccessWhenPayloadLands(t *testing.T) {
 	}
 }
 
-// Covers AE3: budget exhausts before landing → SkipBudgetExceeded (not success=false).
+// Covers AE3: query budget exhausts with partial (non-landing, non-refusing)
+// responses → SkipBudgetExceeded (not success=false, not refused).
 func TestIterInject_BudgetExceeded(t *testing.T) {
-	mock := &testutil.MockProvider{DefaultResponse: "I cannot comply with that."}
+	mock := &testutil.MockProvider{DefaultResponse: "Here is some general background information."}
 	cfg := iterInjectConfig()
 	cfg.Metadata["max_queries"] = "4" // 2 iterations of (optimizer + attack)
 	r, _ := (&IterInjectModule{}).Execute(context.Background(), mock, cfg)
@@ -63,6 +64,78 @@ func TestIterInject_BudgetExceeded(t *testing.T) {
 	if r.Metadata["iterations"].(int) != 2 {
 		t.Errorf("iterations = %v, want 2", r.Metadata["iterations"])
 	}
+}
+
+// Regression: generation budget exhausted (with query/wall-clock budget to
+// spare) and partial responses → SkipBudgetExceeded, NOT OutcomeRefused.
+// Generation exhaustion is engine state, not target refusal; reporting it as
+// refused would pollute bandit reward aggregation.
+func TestIterInject_GenerationBudgetExhausted(t *testing.T) {
+	mock := &testutil.MockProvider{DefaultResponse: "Here is some general background information."}
+	cfg := iterInjectConfig()
+	cfg.Metadata["max_generations"] = "2"
+	cfg.Metadata["max_queries"] = "100" // ample; generations bind first
+	r, _ := (&IterInjectModule{}).Execute(context.Background(), mock, cfg)
+	if r.Outcome != common.OutcomeSkipped || r.SkipReason != common.SkipBudgetExceeded {
+		t.Fatalf("outcome=%q skip=%q, want skipped/budget_exceeded (generation exhaustion)", r.Outcome, r.SkipReason)
+	}
+	if r.Metadata["iterations"].(int) != 2 {
+		t.Errorf("iterations = %v, want 2", r.Metadata["iterations"])
+	}
+}
+
+// A target that refuses every optimized payload is a genuine target verdict →
+// OutcomeRefused (counts toward bandit attribution), distinct from budget.
+func TestIterInject_RefusedWhenTargetResistsAll(t *testing.T) {
+	mock := &testutil.MockProvider{DefaultResponse: "I cannot comply with that request."}
+	cfg := iterInjectConfig()
+	cfg.Metadata["max_generations"] = "3"
+	cfg.Metadata["max_queries"] = "100"
+	r, _ := (&IterInjectModule{}).Execute(context.Background(), mock, cfg)
+	if r.Outcome != common.OutcomeRefused {
+		t.Fatalf("outcome=%q, want refused (target refused every attempt)", r.Outcome)
+	}
+	if r.Success {
+		t.Errorf("refused result should have Success=false")
+	}
+}
+
+// A provider whose attack queries always error → SkipProviderError, not
+// SkipBudgetExceeded (don't launder a dead provider into a budget verdict).
+func TestIterInject_DeadProvider(t *testing.T) {
+	mock := &alwaysErrorProvider{}
+	cfg := iterInjectConfig()
+	cfg.Metadata["max_queries"] = "6"
+	r, _ := (&IterInjectModule{}).Execute(context.Background(), mock, cfg)
+	if r.Outcome != common.OutcomeSkipped || r.SkipReason != common.SkipProviderError {
+		t.Errorf("outcome=%q skip=%q, want skipped/provider_error", r.Outcome, r.SkipReason)
+	}
+}
+
+// max_queries < 2 can't afford a single optimizer+attack iteration → a
+// precondition error, not "SkipBudgetExceeded after 0 queries".
+func TestIterInject_PreconditionTooFewQueries(t *testing.T) {
+	mock := &testutil.MockProvider{DefaultResponse: "x"}
+	cfg := iterInjectConfig()
+	cfg.Metadata["max_queries"] = "1"
+	r, _ := (&IterInjectModule{}).Execute(context.Background(), mock, cfg)
+	if r.Outcome != common.OutcomeSkipped || r.SkipReason != common.SkipPreconditionFailed {
+		t.Errorf("outcome=%q skip=%q, want skipped/precondition_failed", r.Outcome, r.SkipReason)
+	}
+	if mock.CallCount() != 0 {
+		t.Errorf("precondition-failed run made %d queries, want 0", mock.CallCount())
+	}
+}
+
+// alwaysErrorProvider implements common.Provider and errors on every Query —
+// used to exercise the dead-provider path deterministically.
+type alwaysErrorProvider struct{}
+
+func (alwaysErrorProvider) GetName() string            { return "dead" }
+func (alwaysErrorProvider) GetModel() string           { return "dead-model" }
+func (alwaysErrorProvider) GetTokenCount(s string) int { return len(s) / 4 }
+func (alwaysErrorProvider) Query(_ context.Context, _ []common.Message, _ map[string]interface{}) (string, error) {
+	return "", errors.New("provider unreachable")
 }
 
 // Covers AE6: config exceeding a hard ceiling is clamped and surfaced.

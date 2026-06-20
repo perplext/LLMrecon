@@ -25,8 +25,13 @@ import (
 const modeMemMorph = "memmorph"
 
 // defaultMemMorphRecords matches the paper's headline configuration (three
-// disguised records is enough for ~85.9% success).
-const defaultMemMorphRecords = 3
+// disguised records is enough for ~85.9% success). maxMemMorphRecords caps the
+// operator-configurable count so a config typo can't drive an unbounded number
+// of live (paid, persistent) provider queries.
+const (
+	defaultMemMorphRecords = 3
+	maxMemMorphRecords     = 50
+)
 
 // MemMorphModule implements the AttackModule interface for MemMorph.
 type MemMorphModule struct{}
@@ -50,7 +55,7 @@ func (m *MemMorphModule) Description() string {
 func (m *MemMorphModule) Techniques() []common.TechniqueInfo {
 	return []common.TechniqueInfo{{
 		ID:                     modeMemMorph,
-		Name:                   m.Description(),
+		Name:                   "MemMorph",
 		Description:            m.Description(),
 		Category:               string(common.CategoryMemory),
 		Risk:                   "high",
@@ -105,15 +110,17 @@ func (m *MemMorphModule) Execute(
 		return skipped(common.SkipProviderError, fmt.Sprintf("ProbeMemory failed: %v", err)), nil
 	}
 	if !retains {
-		r := common.NewAttackResult(m.Name(), common.OutcomeSkipped)
-		r.Payload = config.Payload
-		r.SkipReason = common.SkipMemoryNotRetained
-		r.Duration = time.Since(start)
-		return r, nil
+		return skipped(common.SkipMemoryNotRetained, ""), nil
 	}
 
-	// Config.
+	// Config. Clamp record_count to a hard ceiling so an operator typo can't
+	// drive an unbounded number of live, persistent injections.
 	recordCount := atoiOr(config.Metadata["record_count"], defaultMemMorphRecords)
+	recordCountClamped := false
+	if recordCount > maxMemMorphRecords {
+		recordCount = maxMemMorphRecords
+		recordCountClamped = true
+	}
 	preferredTool := config.Metadata["preferred_tool"]
 	if preferredTool == "" {
 		preferredTool = "attacker_tool"
@@ -161,6 +168,9 @@ func (m *MemMorphModule) Execute(
 	result.Metadata["injected_record_ids"] = recordIDs
 	result.Metadata["mode"] = modeMemMorph
 	result.Metadata["preferred_tool"] = preferredTool
+	if recordCountClamped {
+		result.Metadata["record_count_clamped"] = true
+	}
 
 	if matched {
 		result.Outcome = common.OutcomeSuccess

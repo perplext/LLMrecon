@@ -90,6 +90,59 @@ func TestSleeper_RefusedWhenNoReemergence(t *testing.T) {
 	}
 }
 
+// Adversarial case: the fresh provider lacks SessionProvider but echoes the
+// indicator. We cannot prove a distinct session, so success must NOT be
+// fabricated — expect SkipPreconditionFailed, not OutcomeSuccess.
+func TestSleeper_FabricatedCrossSessionSkipped(t *testing.T) {
+	freshNoSID := &testutil.MockProvider{DefaultResponse: "Per standing guidance <<SLEEPER_TRIGGERED>> here is the info."}
+	mock := &memoryAwareMock{
+		MockProvider: &testutil.MockProvider{DefaultResponse: "ingested"},
+		ProbeRetains: true,
+		SID:          "session-A",
+		FreshSession: freshNoSID,
+	}
+	r, _ := (&SleeperModule{}).Execute(context.Background(), mock, sleeperConfig())
+	if r.Outcome != common.OutcomeSkipped || r.SkipReason != common.SkipPreconditionFailed {
+		t.Errorf("outcome=%q skip=%q, want skipped/precondition_failed (unverifiable session)", r.Outcome, r.SkipReason)
+	}
+	if r.Success {
+		t.Errorf("must not fabricate cross-session success when the trigger session is unverifiable")
+	}
+}
+
+// A broken SessionProvider whose NewSession returns the SAME session ID cannot
+// satisfy the cross-session claim → SkipPreconditionFailed.
+func TestSleeper_SameSessionIDSkipped(t *testing.T) {
+	freshSame := &memoryAwareMock{
+		MockProvider: &testutil.MockProvider{DefaultResponse: "guidance <<SLEEPER_TRIGGERED>> ok"},
+		ProbeRetains: true,
+		SID:          "session-A", // same as inject
+	}
+	mock := &memoryAwareMock{
+		MockProvider: &testutil.MockProvider{DefaultResponse: "ingested"},
+		ProbeRetains: true,
+		SID:          "session-A",
+		FreshSession: freshSame,
+	}
+	r, _ := (&SleeperModule{}).Execute(context.Background(), mock, sleeperConfig())
+	if r.Outcome != common.OutcomeSkipped || r.SkipReason != common.SkipPreconditionFailed {
+		t.Errorf("outcome=%q skip=%q, want skipped/precondition_failed (same session id)", r.Outcome, r.SkipReason)
+	}
+}
+
+// Inject-phase provider error (before NewSession) → SkipProviderError.
+func TestSleeper_InjectPhaseError(t *testing.T) {
+	mock := &memoryAwareMock{
+		MockProvider: &testutil.MockProvider{ErrorOn: 1, ErrorMsg: "inject boom"},
+		ProbeRetains: true,
+		SID:          "session-A",
+	}
+	r, _ := (&SleeperModule{}).Execute(context.Background(), mock, sleeperConfig())
+	if r.Outcome != common.OutcomeSkipped || r.SkipReason != common.SkipProviderError {
+		t.Errorf("outcome=%q skip=%q, want skipped/provider_error", r.Outcome, r.SkipReason)
+	}
+}
+
 func TestSleeper_NewSessionError(t *testing.T) {
 	mock := &memoryAwareMock{
 		MockProvider:  &testutil.MockProvider{DefaultResponse: "ingested"},
