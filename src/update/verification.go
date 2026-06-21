@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/perplext/LLMrecon/src/version"
 )
@@ -50,16 +51,8 @@ func (v *IntegrityVerifier) VerifyPackage(pkg *UpdatePackage) (*VerificationResu
 		}, fmt.Errorf("manifest file not found")
 	}
 
-	// TODO: Implement manifest checksum verification
-	// The PackageManifest structure doesn't have a Checksums field currently
-
-	// TODO: Implement checksum verification using component checksums
-	// Current PackageManifest structure uses Components field with individual checksums
-	// rather than a centralized Checksums field
-
-	// For now, we'll skip checksum verification
-
-	// Verify digital signature if provided.
+	// Verify digital signature if provided — a hard refusal that precedes
+	// checksum work.
 	//
 	// v0.10.0 #174 Tier 1: refuse rather than silently log+pass when a
 	// signature is present but the verifier is unimplemented. Operators
@@ -74,13 +67,107 @@ func (v *IntegrityVerifier) VerifyPackage(pkg *UpdatePackage) (*VerificationResu
 		}, fmt.Errorf("digital signature verification not implemented; cannot verify signed bundle")
 	}
 
+	// Verify the component checksums declared in the manifest against the
+	// package payloads on disk. Honesty invariant (#224): an IntegrityVerifier
+	// must not return Success:true unless it actually verified integrity. This
+	// replaces the prior "skip checksum verification" path that returned
+	// success unconditionally.
+	verified, err := v.verifyComponentChecksums(pkg)
+	if err != nil {
+		fmt.Fprintf(v.Logger, "Component checksum verification failed: %v\n", err)
+		return &VerificationResult{
+			Success: false,
+			Message: fmt.Sprintf("Component checksum verification failed: %v", err),
+			Details: map[string]interface{}{"verified_components": verified},
+		}, fmt.Errorf("component checksum verification failed: %w", err)
+	}
+	if verified == 0 {
+		// Nothing was verifiable — the manifest declares no component checksums.
+		// Refuse to claim integrity success rather than silently passing.
+		return &VerificationResult{
+			Success: false,
+			Message: "Manifest declares no component checksums; package integrity cannot be verified",
+		}, fmt.Errorf("no component checksums declared; cannot verify package integrity")
+	}
+
 	// Log verification success
-	fmt.Fprintf(v.Logger, "Package integrity verification successful\n")
+	fmt.Fprintf(v.Logger, "Package integrity verification successful (%d component checksum(s) verified)\n", verified)
 
 	return &VerificationResult{
 		Success: true,
 		Message: "Package integrity verification successful",
+		Details: map[string]interface{}{"verified_components": verified},
 	}, nil
+}
+
+// verifyComponentChecksums verifies every component checksum declared in the
+// package manifest against the corresponding payload on disk, and returns the
+// number of checksums successfully verified.
+//
+// Payload layout convention (relative to pkg.PackagePath, an extracted package
+// directory):
+//   - templates:  templates/            (directory hash)
+//   - modules:    modules/<module-id>   (file hash)
+//   - binary:     binary/<platform>     (file hash, per declared platform)
+//
+// A declared checksum whose payload is missing, unreadable, or mismatched is a
+// hard failure (returns an error) — the verifier never treats an unverifiable
+// declared checksum as a pass.
+func (v *IntegrityVerifier) verifyComponentChecksums(pkg *UpdatePackage) (int, error) {
+	verified := 0
+	c := pkg.Manifest.Components
+
+	// Templates component — directory hash.
+	if c.Templates.Checksum != "" {
+		dir := filepath.Join(pkg.PackagePath, "templates")
+		got, err := calculateDirectoryHash(dir)
+		if err != nil {
+			return verified, fmt.Errorf("templates payload: %w", err)
+		}
+		if !hashEqual(got, c.Templates.Checksum) {
+			return verified, fmt.Errorf("templates checksum mismatch (manifest %s, computed %s)", c.Templates.Checksum, got)
+		}
+		verified++
+	}
+
+	// Module components — per-module file hash.
+	for _, m := range c.Modules {
+		if m.Checksum == "" {
+			continue
+		}
+		path := filepath.Join(pkg.PackagePath, "modules", m.ID)
+		data, err := os.ReadFile(filepath.Clean(path))
+		if err != nil {
+			return verified, fmt.Errorf("module %q payload: %w", m.ID, err)
+		}
+		if !hashEqual(calculateFileHash(data), m.Checksum) {
+			return verified, fmt.Errorf("module %q checksum mismatch", m.ID)
+		}
+		verified++
+	}
+
+	// Binary component — per-platform file hash.
+	for platform, sum := range c.Binary.Checksums {
+		if sum == "" {
+			continue
+		}
+		path := filepath.Join(pkg.PackagePath, "binary", platform)
+		data, err := os.ReadFile(filepath.Clean(path))
+		if err != nil {
+			return verified, fmt.Errorf("binary[%s] payload: %w", platform, err)
+		}
+		if !hashEqual(calculateFileHash(data), sum) {
+			return verified, fmt.Errorf("binary[%s] checksum mismatch", platform)
+		}
+		verified++
+	}
+
+	return verified, nil
+}
+
+// hashEqual compares two hex-encoded SHA-256 digests case-insensitively.
+func hashEqual(a, b string) bool {
+	return strings.EqualFold(a, b)
 }
 
 // VerifyCompatibility verifies that the update package is compatible with the current installation
