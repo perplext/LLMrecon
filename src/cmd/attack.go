@@ -55,9 +55,9 @@ Use 'attack list' to enumerate every registered module with its category,
 OWASP mapping, and required capabilities. Use 'attack run' to execute a
 single module against a provider.
 
-v1 (this release) supports --provider=mock only. Real providers come
-online when v0.10.0 issues #166 (adapter wiring) and #167 (common.Provider
-shim) land. Until then, mock-mode validates module wiring end-to-end.`,
+Currently --provider=mock is the only wired provider; real-provider
+wiring is tracked in #234. Until it lands, mock mode validates module
+wiring end-to-end.`,
 }
 
 var attackListCmd = &cobra.Command{
@@ -74,8 +74,8 @@ description. Use --json for a machine-readable form.`,
 var attackRunCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run a single attack module",
-	Long: `Execute one attack module against a provider. v1 supports
---provider=mock only.
+	Long: `Execute one attack module against a provider. --provider=mock is
+currently the only wired provider (real providers tracked in #234).
 
 Examples:
 
@@ -102,7 +102,7 @@ func init() {
 	attackListCmd.Flags().BoolVar(&attackListJSON, "json", false, "emit machine-readable JSON")
 
 	attackRunCmd.Flags().StringVar(&attackRunModule, "module", "", "registered module name (required)")
-	attackRunCmd.Flags().StringVar(&attackRunProvider, "provider", "mock", "provider name (v1: mock only)")
+	attackRunCmd.Flags().StringVar(&attackRunProvider, "provider", "mock", "provider name (currently: mock only)")
 	attackRunCmd.Flags().StringVar(&attackRunPayload, "payload", "", "operator-supplied payload (the harmful query, instruction, etc.)")
 	attackRunCmd.Flags().StringSliceVar(&attackRunMetadata, "metadata", nil, "key=value pair (repeatable; e.g. allow_experimental=true)")
 	attackRunCmd.Flags().StringSliceVar(&attackRunSuccessIndicators, "success-indicators", nil, "comma-separated substrings that mark Outcome=Success")
@@ -263,12 +263,12 @@ func writeJSONLEntry(target string, out io.Writer, provider common.Provider, res
 //     ANTHROPIC_API_KEY; model from ANTHROPIC_MODEL or defaults to
 //     "claude-3-5-sonnet-20241022".
 //
-// Friendly errors when API keys are missing — distinct from the v1
+// Friendly errors when API keys are missing — distinct from the earlier
 // "not yet supported" stub the previous version emitted.
 //
 // Per-modality capability gates (ImageProvider, ReasoningProvider) come
-// online when v0.10.0 #166 wires the adapters; until then, modules
-// requiring those capabilities emit clean SkipMissingCapability
+// online when the real-provider adapters are wired (#234); until then,
+// modules requiring those capabilities emit clean SkipMissingCapability
 // outcomes against real providers.
 func buildAttackProvider(name string) (common.Provider, error) {
 	switch name {
