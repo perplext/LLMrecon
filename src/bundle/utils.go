@@ -97,7 +97,7 @@ func copyFileUtil(src, dst string) error {
 	}
 
 	// Create destination file
-	dstFile, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
+	dstFile, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode()) // #nosec G304 -- destination path for bundle/update file copy/extraction is operator-supplied by design
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}

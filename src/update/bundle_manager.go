@@ -599,7 +599,7 @@ func (bm *BundleManager) copyFile(src, dst string) error {
 		}
 	}()
 
-	destFile, err := os.Create(dst)
+	destFile, err := os.Create(dst) // #nosec G304 -- destination path for bundle/update file copy/extraction is operator-supplied by design
 	if err != nil {
 		return err
 	}
