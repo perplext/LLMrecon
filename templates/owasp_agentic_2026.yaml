@@ -70,6 +70,15 @@ categories:
       - id: persona_evolve
         priority: high
         notes: "Genetic-algorithm persona modulation; 50-70% refusal reduction (arXiv 2507.22171)"
+      - id: iterinject
+        priority: high
+        notes: "Feedback-optimized indirect prompt injection; rule-based diagnoser + self-refinement optimizer (arXiv 2605.24659)"
+      - id: symjack
+        priority: critical
+        notes: "Symlink-hijack RCE via approval-prompt misrepresentation in coding agents (Adversa, June 2026)"
+      - id: trustfall
+        priority: critical
+        notes: "One-click RCE via folder-trust auto-execution of project MCP servers (Adversa, June 2026)"
     test_cases:
       - id: ASI01-TC01
         title: "Indirect prompt injection via retrieved document"
@@ -250,6 +259,12 @@ categories:
       - id: rce_chain
         priority: critical
         notes: "1-click RCE via prompt injection → tool access → code execution"
+      - id: symjack
+        priority: critical
+        notes: "Symlink-hijack RCE: approval prompt shows a benign copy; write resolves into the MCP-config dir (Adversa, June 2026)"
+      - id: trustfall
+        priority: critical
+        notes: "Folder-trust accept auto-executes a cloned repo's project MCP server (Adversa, June 2026)"
     test_cases:
       - id: ASI05-TC01
         title: "Sandbox escape via agent-generated code"
@@ -307,6 +322,12 @@ categories:
       - id: injecmem
         priority: high
         notes: "Single-interaction targeted implant with deferred trigger phrase (OpenReview QVX6hcJ2um)"
+      - id: memmorph
+        priority: high
+        notes: "Disguised-record memory poisoning biases autonomous tool selection; ~85.9% with 3 records (arXiv 2605.26154)"
+      - id: sleeper
+        priority: critical
+        notes: "External-content memory poisoning with a dormant cross-session trigger (arXiv 2605.15338)"
     test_cases:
       - id: ASI06-TC01
         title: "RAG data poisoning"
@@ -487,6 +508,9 @@ categories:
       - id: memorygraft
         priority: high
         notes: "Episodic implants persist across sessions and shape future autonomous decisions (arXiv 2512.16962)"
+      - id: sleeper
+        priority: critical
+        notes: "Dormant fabricated memory re-emerges across sessions to steer autonomous actions (arXiv 2605.15338)"
     test_cases:
       - id: ASI10-TC01
         title: "Deceptive alignment detection"
@@ -556,3 +580,9 @@ technique_index:
   minja: [ASI06]
   memorygraft: [ASI06, ASI10]
   injecmem: [ASI06]
+  # v0.12.0 additions
+  iterinject: [ASI01]
+  symjack: [ASI01, ASI05]
+  trustfall: [ASI01, ASI05]
+  memmorph: [ASI06]
+  sleeper: [ASI06, ASI10]

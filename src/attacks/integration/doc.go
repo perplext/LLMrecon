@@ -13,6 +13,7 @@ import (
 	_ "github.com/perplext/LLMrecon/src/attacks/adaptive"
 	_ "github.com/perplext/LLMrecon/src/attacks/agentic/browser"
 	_ "github.com/perplext/LLMrecon/src/attacks/agentic/mcp"
+	_ "github.com/perplext/LLMrecon/src/attacks/agentic/persistence"
 	_ "github.com/perplext/LLMrecon/src/attacks/agentic/tool_use"
 	_ "github.com/perplext/LLMrecon/src/attacks/audio"
 	_ "github.com/perplext/LLMrecon/src/attacks/memory"
