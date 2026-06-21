@@ -68,3 +68,21 @@ jobs:
       - name: Run govulncheck
         run: |
           govulncheck ./... || echo "Some vulnerabilities found, see output above"
+
+  honesty-lint:
+    name: Honesty Lint
+    runs-on: ubuntu-latest
+    # Diff-scoped: only meaningful against a PR base. Catches a newly-added
+    # `return nil` next to a TODO/FIXME (a stub that claims success) — #233.
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # full history so merge-base with the PR base resolves
+
+      - name: Run honesty lint
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: python3 scripts/honesty_lint.py --base "origin/${BASE_REF}"
