@@ -7,6 +7,18 @@ import (
 	"testing"
 )
 
+// mustGetEvents fails the test immediately if GetAuditEvents errors, so a
+// retrieval failure surfaces as itself rather than as an ambiguous
+// count/content mismatch downstream.
+func mustGetEvents(t *testing.T, l *CredentialAuditLogger, limit int, filter map[string]string) []CredentialAuditEvent {
+	t.Helper()
+	events, err := l.GetAuditEvents(limit, filter)
+	if err != nil {
+		t.Fatalf("GetAuditEvents(%d, %v): %v", limit, filter, err)
+	}
+	return events
+}
+
 func newLogger(t *testing.T) (*CredentialAuditLogger, string) {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "nested", "audit.log")
@@ -52,7 +64,7 @@ func TestLogCredentialError(t *testing.T) {
 	if err := l.LogCredentialError("cred-2", "anthropic", "write", errors.New("denied")); err != nil {
 		t.Fatal(err)
 	}
-	events, _ := l.GetAuditEvents(0, nil)
+	events := mustGetEvents(t, l, 0, nil)
 	if len(events) != 1 || events[0].Success || events[0].ErrorMessage != "denied" {
 		t.Errorf("error event not recorded correctly: %+v", events)
 	}
@@ -66,7 +78,7 @@ func TestLogAlert(t *testing.T) {
 	if err := l.LogAlert("suspicious access", "intrusion", map[string]string{"ip": "1.2.3.4"}); err != nil {
 		t.Fatal(err)
 	}
-	events, _ := l.GetAuditEvents(0, nil)
+	events := mustGetEvents(t, l, 0, nil)
 	if len(events) != 1 || events[0].EventType != "alert" {
 		t.Fatalf("alert event not recorded: %+v", events)
 	}
@@ -81,15 +93,15 @@ func TestGetAuditEvents_Filter(t *testing.T) {
 	_ = l.LogCredentialError("cred-B", "svc2", "delete", errors.New("x"))
 	_ = l.LogCredentialAccess("cred-A", "svc1", "update")
 
-	byID, _ := l.GetAuditEvents(0, map[string]string{"credential_id": "cred-A"})
+	byID := mustGetEvents(t, l, 0, map[string]string{"credential_id": "cred-A"})
 	if len(byID) != 2 {
 		t.Errorf("credential_id filter: got %d, want 2", len(byID))
 	}
-	failed, _ := l.GetAuditEvents(0, map[string]string{"success": "false"})
+	failed := mustGetEvents(t, l, 0, map[string]string{"success": "false"})
 	if len(failed) != 1 || failed[0].CredentialID != "cred-B" {
 		t.Errorf("success=false filter: got %+v", failed)
 	}
-	byType, _ := l.GetAuditEvents(0, map[string]string{"event_type": "read_credential"})
+	byType := mustGetEvents(t, l, 0, map[string]string{"event_type": "read_credential"})
 	if len(byType) != 1 {
 		t.Errorf("event_type filter: got %d, want 1", len(byType))
 	}
@@ -100,7 +112,7 @@ func TestGetAuditEvents_Limit(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		_ = l.LogCredentialAccess("c", "s", "read")
 	}
-	events, _ := l.GetAuditEvents(2, nil)
+	events := mustGetEvents(t, l, 2, nil)
 	if len(events) != 2 {
 		t.Errorf("limit=2: got %d events", len(events))
 	}
@@ -133,7 +145,7 @@ func TestRotateLogFile(t *testing.T) {
 		t.Errorf("rotation should have produced a backup file")
 	}
 	// Fresh read returns empty (active file moved away).
-	events, _ := l.GetAuditEvents(0, nil)
+	events := mustGetEvents(t, l, 0, nil)
 	if len(events) != 0 {
 		t.Errorf("post-rotation active log should be empty, got %d", len(events))
 	}

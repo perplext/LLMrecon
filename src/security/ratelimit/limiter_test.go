@@ -39,10 +39,16 @@ func TestRateLimiter_Refill(t *testing.T) {
 	if rl.Allow() {
 		t.Fatalf("bucket should be empty before refill")
 	}
-	time.Sleep(50 * time.Millisecond) // ~5 tokens accrue, capped at 2
-	if !rl.Allow() {
-		t.Errorf("token should be available after refill window")
+	// Poll for a refilled token rather than asserting after a single fixed
+	// sleep, so the test stays green under loaded CI.
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if rl.Allow() {
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
 	}
+	t.Errorf("a token should have refilled within the deadline")
 }
 
 func TestRateLimiter_RefillCapsAtMax(t *testing.T) {

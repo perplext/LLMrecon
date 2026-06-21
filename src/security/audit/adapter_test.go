@@ -19,7 +19,7 @@ func TestAdapter_LogCredentialAccess_WritesBothSinks(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Credential logger sink:
-	events, _ := cl.GetAuditEvents(0, nil)
+	events := mustGetEvents(t, cl, 0, nil)
 	if len(events) != 1 {
 		t.Errorf("credential logger should have 1 event, got %d", len(events))
 	}
@@ -34,7 +34,7 @@ func TestAdapter_LogCredentialError(t *testing.T) {
 	if err := a.LogCredentialError("cred-2", "svc", "delete", errors.New("nope")); err != nil {
 		t.Fatal(err)
 	}
-	events, _ := cl.GetAuditEvents(0, nil)
+	events := mustGetEvents(t, cl, 0, nil)
 	if len(events) != 1 || events[0].Success {
 		t.Errorf("expected one failure event, got %+v", events)
 	}

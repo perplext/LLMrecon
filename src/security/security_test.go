@@ -135,8 +135,11 @@ func TestHandleError_WritesResponse(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/x", nil)
 	sm.HandleError(rec, req, errors.New("kaboom"), "internal error")
-	if rec.Code == 0 {
-		t.Errorf("HandleError should have written a status code")
+	// A generic (non-SecureError) error maps to 500 (see communication
+	// ErrorHandler.HandleError default branch). The httptest recorder defaults
+	// Code to 200, so this also proves an error status was actually written.
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("HandleError should write 500 for a generic error, got %d", rec.Code)
 	}
 }
 
