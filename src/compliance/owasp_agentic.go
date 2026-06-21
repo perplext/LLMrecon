@@ -229,6 +229,13 @@ func TechniqueToAgenticCategories(techniqueID string) []OWASPAgenticCategory {
 		"minja":                      {MemoryPoisoning},
 		"memorygraft":                {MemoryPoisoning, RogueAgents},
 		"injecmem":                   {MemoryPoisoning},
+		// v0.12.0 additions — keep in sync with the YAML technique_index and
+		// the generated map.
+		"iterinject":                 {AgentGoalHijack},
+		"symjack":                    {AgentGoalHijack, UnexpectedCodeExecution},
+		"trustfall":                  {AgentGoalHijack, UnexpectedCodeExecution},
+		"memmorph":                   {MemoryPoisoning},
+		"sleeper":                    {MemoryPoisoning, RogueAgents},
 	}
 	return index[techniqueID]
 }
