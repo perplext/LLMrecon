@@ -1,7 +1,6 @@
 package bundle
 
 import (
-	"compress/gzip"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -519,27 +518,6 @@ func copyDeltaFile(src, dst string) error {
 	return err
 }
 
-// CompressDelta compresses a delta bundle
-func CompressDelta(deltaPath string, outputPath string) error {
-	output, err := os.Create(filepath.Clean(outputPath)) // #nosec G304 -- outputPath is caller-provided output destination
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err := output.Close(); err != nil {
-			fmt.Printf("Failed to close: %v\n", err)
-		}
-	}()
-	gzWriter := gzip.NewWriter(output)
-	defer func() {
-		if err := gzWriter.Close(); err != nil {
-			fmt.Printf("Failed to close: %v\n", err)
-		}
-	}()
-
-	// TODO: Implement tar + gzip compression of delta directory
-	return fmt.Errorf("delta compression not yet implemented")
-}
 
 // Update applies an update to the bundle
 func (uc *UpdateContext) Update() error {
