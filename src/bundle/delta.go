@@ -505,7 +505,7 @@ func copyDeltaFile(src, dst string) error {
 		}
 	}()
 
-	destination, err := os.Create(dst)
+	destination, err := os.Create(dst) // #nosec G304 -- destination path for bundle/update file copy/extraction is operator-supplied by design
 	if err != nil {
 		return err
 	}

@@ -30,7 +30,18 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: securego/gosec@v2.27.1
         with:
-          args: '-exclude=G201,G115,G302 -fmt sarif -out gosec-results.sarif ./...'
+          # Excluded rules (with rationale). The v2.27.1 bump (#256) enabled
+          # several analyzers that fire systematically against this tool's
+          # nature; they are accepted at the rule level here. Security-meaningful
+          # rules (G101/G117/G204/G304/G123/...) stay ON and are reviewed
+          # per-site with inline `#nosec <rule> -- reason` annotations.
+          #   G201/G115/G302 - pre-existing (format-string, int-overflow, file-perm) false positives
+          #   G118 - goroutine uses context.Background: background workers in a CLI; not a security finding
+          #   G122 - filepath.Walk TOCTOU: operations over the operator's own local files
+          #   G703 - path-traversal taint on operator-supplied paths (same surface as the per-site-reviewed G304)
+          #   G705 - XSS taint in examples/ demo HTTP servers, not product code
+          #   G706 - log-injection (LOW) on operator-supplied identifiers
+          args: '-exclude=G201,G115,G302,G118,G122,G703,G705,G706 -fmt sarif -out gosec-results.sarif ./...'
           
       - name: Upload Gosec results
         uses: github/codeql-action/upload-sarif@v4

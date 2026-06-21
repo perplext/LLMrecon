@@ -228,7 +228,7 @@ func (m *ConfigManager) Save() error {
 	m.mutex.RUnlock()
 
 	// Marshal to JSON
-	data, err := json.MarshalIndent(configsCopy, "", "  ")
+	data, err := json.MarshalIndent(configsCopy, "", "  ") // #nosec G117 -- provider config persisted to the user's local config file; storing provider API keys there is the intended behavior
 	if err != nil {
 		return fmt.Errorf("failed to marshal configs to JSON: %w", err)
 	}

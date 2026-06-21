@@ -536,7 +536,7 @@ func (hs *HelpSystem) showSlowScanTroubleshooting() {
 func (hs *HelpSystem) showAuthTroubleshooting() {
 	hs.terminal.Subsection("Common Authentication Issues")
 
-	issues := map[string]string{
+	issues := map[string]string{ // #nosec G101 -- help-text map (issue->command), not credentials
 		"Invalid credentials":   "LLMrecon auth login --force",
 		"Expired token":         "LLMrecon auth refresh",
 		"Missing permissions":   "LLMrecon auth status",

@@ -142,10 +142,26 @@ func (p *CertificatePinner) WrapTransport(transport *http.Transport) *http.Trans
 	// Create a copy of the transport
 	newTransport := transport.Clone()
 
+	// Ensure a TLS config exists so the pin check below always has somewhere
+	// to attach (a TLS 1.2 floor avoids a downgrade finding on the fresh config).
+	if newTransport.TLSClientConfig == nil {
+		newTransport.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+	}
+
+	// Disable TLS session resumption (gosec G123): resumed sessions skip the
+	// VerifyPeerCertificate callback, which would silently bypass the
+	// certificate-pin check set below. Forcing a full handshake on every
+	// connection guarantees pin verification always runs.
+	newTransport.TLSClientConfig.SessionTicketsDisabled = true
+	newTransport.TLSClientConfig.ClientSessionCache = nil
+
 	// Get the original verification function
 	originalVerifyPeerCert := newTransport.TLSClientConfig.VerifyPeerCertificate
 
-	// Set a new verification function that includes pin checking
+	// Set a new verification function that includes pin checking.
+	// #nosec G123 -- session resumption is disabled above (SessionTicketsDisabled=true,
+	// ClientSessionCache=nil), so no resumed handshake can bypass this pin check;
+	// gosec's static check only recognizes a VerifyConnection callback.
 	newTransport.TLSClientConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
 		// Call the original verification function if it exists
 		if originalVerifyPeerCert != nil {

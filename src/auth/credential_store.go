@@ -167,7 +167,7 @@ func (s *CredentialStore) save() error {
 	}
 
 	// Convert to JSON
-	data, err := json.Marshal(storedCreds)
+	data, err := json.Marshal(storedCreds) // #nosec G117 -- credential store; the marshaled JSON is encrypted immediately below before any I/O
 	if err != nil {
 		return err
 	}

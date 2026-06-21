@@ -386,7 +386,7 @@ func (bu *BinaryUpdater) copyFile(src, dst string) error {
 		return err
 	}
 
-	destFile, err := os.Create(dst)
+	destFile, err := os.Create(dst) // #nosec G304 -- destination path for bundle/update file copy/extraction is operator-supplied by design
 	if err != nil {
 		return err
 	}
@@ -445,7 +445,7 @@ func (bu *BinaryUpdater) RestartApplication() error {
 	bu.logger.Info("Restarting application with new binary...")
 
 	// Start new process
-	cmd := exec.Command(execPath, args...) // #nosec G204 -- execPath is from os.Executable(), args from os.Args
+	cmd := exec.Command(execPath, args...) // #nosec G204,G702 -- self-update re-exec; execPath is from os.Executable(), args from os.Args
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin

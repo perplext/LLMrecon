@@ -759,7 +759,7 @@ func CreatePackage(manifestPath, outputPath string) error {
 	}
 
 	// Create output file
-	outputFile, err := os.Create(outputPath)
+	outputFile, err := os.Create(outputPath) // #nosec G304 -- destination path for bundle/update file copy/extraction is operator-supplied by design
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
 	}
