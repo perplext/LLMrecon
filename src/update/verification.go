@@ -130,12 +130,18 @@ func (v *IntegrityVerifier) verifyComponentChecksums(pkg *UpdatePackage) (int, e
 		verified++
 	}
 
-	// Module components — per-module file hash.
+	// Module components — per-module file hash. Module IDs come from the
+	// (untrusted) manifest, so the resolved path must be confined to the
+	// package directory: a manifest with ID "../../etc/passwd" must not let the
+	// verifier read outside the package (existence/hash-oracle traversal).
 	for _, m := range c.Modules {
 		if m.Checksum == "" {
 			continue
 		}
 		path := filepath.Join(pkg.PackagePath, "modules", m.ID)
+		if !isPathWithinBase(pkg.PackagePath, path) {
+			return verified, fmt.Errorf("module %q: payload path escapes the package directory", m.ID)
+		}
 		data, err := os.ReadFile(filepath.Clean(path))
 		if err != nil {
 			return verified, fmt.Errorf("module %q payload: %w", m.ID, err)
@@ -146,12 +152,16 @@ func (v *IntegrityVerifier) verifyComponentChecksums(pkg *UpdatePackage) (int, e
 		verified++
 	}
 
-	// Binary component — per-platform file hash.
+	// Binary component — per-platform file hash. Platform names are also
+	// manifest-controlled and confined the same way.
 	for platform, sum := range c.Binary.Checksums {
 		if sum == "" {
 			continue
 		}
 		path := filepath.Join(pkg.PackagePath, "binary", platform)
+		if !isPathWithinBase(pkg.PackagePath, path) {
+			return verified, fmt.Errorf("binary[%s]: payload path escapes the package directory", platform)
+		}
 		data, err := os.ReadFile(filepath.Clean(path))
 		if err != nil {
 			return verified, fmt.Errorf("binary[%s] payload: %w", platform, err)
@@ -163,6 +173,17 @@ func (v *IntegrityVerifier) verifyComponentChecksums(pkg *UpdatePackage) (int, e
 	}
 
 	return verified, nil
+}
+
+// isPathWithinBase reports whether target resolves to a location inside base.
+// Guards manifest-supplied path segments (module IDs, platform names) against
+// directory traversal.
+func isPathWithinBase(base, target string) bool {
+	rel, err := filepath.Rel(base, target)
+	if err != nil {
+		return false
+	}
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) && !filepath.IsAbs(rel)
 }
 
 // hashEqual compares two hex-encoded SHA-256 digests case-insensitively.

@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -120,6 +121,53 @@ func TestVerifyPackage_DeclaredPayloadMissing(t *testing.T) {
 	res, err := newVerifier().VerifyPackage(pkg)
 	if err == nil || res.Success {
 		t.Errorf("expected failure when a declared payload is missing; success=%v err=%v", res.Success, err)
+	}
+}
+
+func TestVerifyPackage_BinaryChecksumMatch(t *testing.T) {
+	dir := t.TempDir()
+	writeManifestStub(t, dir)
+	binDir := filepath.Join(dir, "binary")
+	if err := os.MkdirAll(binDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	content := []byte("binary-payload")
+	if err := os.WriteFile(filepath.Join(binDir, "linux-amd64"), content, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	pkg := &UpdatePackage{PackagePath: dir, Manifest: PackageManifest{
+		Components: Components{Binary: BinaryComponentInfo{
+			Checksums: map[string]string{"linux-amd64": calculateFileHash(content)},
+		}},
+	}}
+
+	res, err := newVerifier().VerifyPackage(pkg)
+	if err != nil || !res.Success {
+		t.Errorf("expected success on matching binary checksum; success=%v err=%v", res.Success, err)
+	}
+}
+
+// A manifest whose module ID or platform name escapes the package directory
+// must be rejected before any file read (path-traversal / hash-oracle guard).
+func TestVerifyPackage_PathTraversalRejected(t *testing.T) {
+	cases := map[string]PackageManifest{
+		"module id traversal": {Components: Components{Modules: []ModuleComponentInfo{{ID: "../../../etc/passwd", Checksum: "abc"}}}},
+		"platform traversal":  {Components: Components{Binary: BinaryComponentInfo{Checksums: map[string]string{"../../../etc/hosts": "abc"}}}},
+	}
+	for name, manifest := range cases {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			writeManifestStub(t, dir)
+			pkg := &UpdatePackage{PackagePath: dir, Manifest: manifest}
+
+			res, err := newVerifier().VerifyPackage(pkg)
+			if err == nil || res.Success {
+				t.Errorf("expected rejection of traversal path; success=%v err=%v", res.Success, err)
+			}
+			if !strings.Contains(err.Error(), "escapes the package directory") {
+				t.Errorf("error %q should report the path escape", err.Error())
+			}
+		})
 	}
 }
 
