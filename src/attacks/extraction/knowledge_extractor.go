@@ -413,7 +413,7 @@ func (c *CredentialDetector) Name() string { return "credential_detector" }
 
 func (c *CredentialDetector) Detect(content string) *DataLeak {
 	// API key patterns
-	apiKeyPatterns := map[string]string{
+	apiKeyPatterns := map[string]string{ // #nosec G101 -- detection regexes for leaked credentials, not credentials
 		"aws_access":   `AKIA[0-9A-Z]{16}`,
 		"github_token": `ghp_[0-9a-zA-Z]{36}`,
 		"slack_token":  `xox[baprs]-[0-9a-zA-Z]{10,48}`,

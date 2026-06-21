@@ -262,9 +262,9 @@ func (s *ContainerSandbox) cleanupContainer(containerName string) {
 
 	switch s.containerEngine {
 	case "docker":
-		cmd = exec.CommandContext(ctx, "docker", "rm", "-f", containerName)
+		cmd = exec.CommandContext(ctx, "docker", "rm", "-f", containerName) // #nosec G204 -- literal binary; containerName is internally generated, passed as a discrete arg (no shell)
 	case "podman":
-		cmd = exec.CommandContext(ctx, "podman", "rm", "-f", containerName)
+		cmd = exec.CommandContext(ctx, "podman", "rm", "-f", containerName) // #nosec G204 -- literal binary; containerName is internally generated, passed as a discrete arg (no shell)
 	default:
 		return
 	}

@@ -392,7 +392,7 @@ func (qs *QuickSetup) cicdSetup() error {
 			Enabled:  true,
 			Endpoint: "https://api.openai.com/v1",
 			Model:    "gpt-3.5-turbo", // Cost-effective for CI
-			APIKey:   "${OPENAI_API_KEY}",
+			APIKey:   "${OPENAI_API_KEY}", // #nosec G101 -- env-var reference in example config, not a real key
 			Settings: map[string]interface{}{
 				"temperature": 0.0, // Deterministic
 				"max_tokens":  2048,

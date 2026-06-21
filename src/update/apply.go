@@ -612,7 +612,7 @@ func copyFile(src, dst string) error {
 	}()
 
 	// Create destination file
-	dstFile, err := os.Create(dst)
+	dstFile, err := os.Create(dst) // #nosec G304 -- destination path for bundle/update file copy/extraction is operator-supplied by design
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
