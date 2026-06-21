@@ -66,12 +66,20 @@ type KeyRotator struct {
 
 // NewKeyRotator creates a new key rotator
 func NewKeyRotator(ks *Keystore) *KeyRotator {
+	// stopChan is initialized in a *closed* state to mean "not running".
+	// StartAutoRotation distinguishes running from stopped by reading this
+	// channel: a closed channel selects immediately (proceed to start), an
+	// open channel falls through to default (already running). If it were
+	// created open, the very first StartAutoRotation would wrongly report
+	// "already running" and the worker would never launch.
+	stopChan := make(chan struct{})
+	close(stopChan)
 	return &KeyRotator{
 		keystore:        ks,
 		rotationInfos:   make(map[string]*KeyRotationInfo),
 		policies:        make(map[string]*RotationPolicy),
 		rotationHistory: make([]RotationEvent, 0),
-		stopChan:        make(chan struct{}),
+		stopChan:        stopChan,
 	}
 }
 
