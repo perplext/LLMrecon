@@ -48,6 +48,7 @@ type FileLogger struct {
 	compress     bool
 	mu           sync.Mutex
 	rotationTime time.Time
+	fileSeq      int // monotonic counter ensuring unique filenames across rotations
 }
 
 // NewFileLogger creates a new file-based audit logger
@@ -125,8 +126,13 @@ func (l *FileLogger) Close() error {
 
 // openLogFile opens a new log file
 func (l *FileLogger) openLogFile() error {
+	// Include a monotonic sequence number alongside the timestamp: the
+	// second-granularity timestamp alone collides when rotation fires more
+	// than once within the same second, silently appending rotated entries to
+	// the same file via O_APPEND.
 	timestamp := time.Now().Format("20060102-150405")
-	filename := fmt.Sprintf("audit-%s.log", timestamp)
+	filename := fmt.Sprintf("audit-%s-%06d.log", timestamp, l.fileSeq)
+	l.fileSeq++
 	filePath := filepath.Join(l.directory, filename)
 
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600) // #nosec G304 -- path constructed from struct field directory + timestamp
