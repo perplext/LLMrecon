@@ -215,10 +215,15 @@ func TestPersistence_EncryptionAtRestRoundTrip(t *testing.T) {
 	path := filepath.Join(dir, "keys.json")
 	const pass = "round-trip-passphrase"
 
+	// AutoSave is intentionally OFF: Close() always persists both the keystore
+	// metadata and the vault synchronously, so the round-trip still works — and
+	// we avoid vault.GetCredential's fire-and-forget `go Save()` (triggered on
+	// reopen via load()), which otherwise races t.TempDir cleanup and fails with
+	// "directory not empty".
 	ks1, err := NewFileKeyStore(KeyStoreOptions{
 		StoragePath: path,
 		Passphrase:  pass,
-		AutoSave:    true,
+		AutoSave:    false,
 	})
 	if err != nil {
 		t.Fatalf("open #1: %v", err)
@@ -236,7 +241,7 @@ func TestPersistence_EncryptionAtRestRoundTrip(t *testing.T) {
 	ks2, err := NewFileKeyStore(KeyStoreOptions{
 		StoragePath: path,
 		Passphrase:  pass,
-		AutoSave:    true,
+		AutoSave:    false,
 	})
 	if err != nil {
 		t.Fatalf("open #2: %v", err)
