@@ -11,6 +11,12 @@ func newManager(t *testing.T, cfg *ProtectionConfig) *ProtectionManager {
 	if err != nil {
 		t.Fatalf("NewProtectionManager: %v", err)
 	}
+	// The reporting system defaults to local storage at a relative "reports"
+	// path; disable it so tests don't write files into the source tree. The
+	// reporting goroutine still runs (keeping the data-race fix under test).
+	if pm.reportingSystem != nil {
+		pm.reportingSystem.reportingConfig.EnableLocalStorage = false
+	}
 	t.Cleanup(func() { _ = pm.Close() })
 	return pm
 }
