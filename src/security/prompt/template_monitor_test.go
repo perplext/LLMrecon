@@ -12,31 +12,40 @@ func newTemplateMonitor() *TemplateMonitor {
 func TestMonitorPrompt_RecordsPatternStats(t *testing.T) {
 	m := newTemplateMonitor()
 
-	result := &ProtectionResult{
-		RiskScore: 0.8,
-		Detections: []*Detection{
-			{Type: DetectionTypePromptInjection, Pattern: "p-injection", Confidence: 0.9,
-				Location: &DetectionLocation{Context: "ctx"}},
-		},
+	// MonitorPrompt mutates the result.Detections slice it's given (it appends
+	// "unusual pattern" detections), so build a FRESH result per call rather
+	// than sharing one — otherwise the second call would also process the
+	// appended detection and create a second, unrelated stats entry. Look up
+	// the specific stat by its composite "type:pattern" key instead of relying
+	// on map iteration order.
+	const key = string(DetectionTypePromptInjection) + ":p-injection"
+	newCall := func() *ProtectionResult {
+		return &ProtectionResult{
+			RiskScore: 0.8,
+			Detections: []*Detection{
+				{Type: DetectionTypePromptInjection, Pattern: "p-injection", Confidence: 0.9,
+					Location: &DetectionLocation{Context: "ctx"}},
+			},
+		}
 	}
-	m.MonitorPrompt(context.Background(), result)
 
-	all := m.GetAllPatternStats()
-	if len(all) != 1 {
-		t.Fatalf("expected 1 tracked pattern, got %d", len(all))
+	m.MonitorPrompt(context.Background(), newCall())
+	stats := m.GetPatternStats(key)
+	if stats == nil {
+		t.Fatal("expected stats recorded for the prompt-injection pattern")
 	}
-	if all[0].Count != 1 {
-		t.Fatalf("expected count 1, got %d", all[0].Count)
+	if stats.Count != 1 {
+		t.Fatalf("expected count 1, got %d", stats.Count)
 	}
-	if all[0].DetectionTypes[DetectionTypePromptInjection] != 1 {
+	if stats.DetectionTypes[DetectionTypePromptInjection] != 1 {
 		t.Fatal("detection-type count not recorded")
 	}
 
-	// Monitoring the same pattern again increments the count.
-	m.MonitorPrompt(context.Background(), result)
-	again := m.GetAllPatternStats()
-	if again[0].Count != 2 {
-		t.Fatalf("expected count 2 after second monitor, got %d", again[0].Count)
+	// Monitoring the same pattern again increments the count on the same key.
+	m.MonitorPrompt(context.Background(), newCall())
+	stats = m.GetPatternStats(key)
+	if stats == nil || stats.Count != 2 {
+		t.Fatalf("expected count 2 after second monitor, got %+v", stats)
 	}
 }
 
