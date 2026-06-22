@@ -27,10 +27,14 @@ func TestReportDetections_SkipsEmptyAndLowConfidence(t *testing.T) {
 		Detections: []*Detection{{Type: DetectionTypeJailbreak, Confidence: 0.5}},
 	})
 
-	// Give the loop a moment; nothing should accumulate.
-	time.Sleep(50 * time.Millisecond)
-	if got := rs.GetReports(); len(got) != 0 {
-		t.Fatalf("expected no reports, got %d", len(got))
+	// Poll over a short window; nothing should ever accumulate. Polling (rather
+	// than a single fixed sleep) catches a delayed async write on slow CI nodes.
+	deadline := time.Now().Add(300 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if got := rs.GetReports(); len(got) != 0 {
+			t.Fatalf("expected no reports, got %d", len(got))
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 

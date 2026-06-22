@@ -166,27 +166,42 @@ func TestListKeysByFilters(t *testing.T) {
 		t.Fatalf("StoreKey rsa: %v", err)
 	}
 
-	all, _ := ks.ListKeys()
+	all, err := ks.ListKeys()
+	if err != nil {
+		t.Fatalf("ListKeys: %v", err)
+	}
 	if len(all) != 2 {
 		t.Fatalf("expected 2 keys, got %d", len(all))
 	}
 
-	byType, _ := ks.ListKeysByType(RSAKey)
+	byType, err := ks.ListKeysByType(RSAKey)
+	if err != nil {
+		t.Fatalf("ListKeysByType: %v", err)
+	}
 	if len(byType) != 1 || byType[0].Name != "rsa" {
 		t.Fatalf("ListKeysByType returned %+v", byType)
 	}
 
-	byUsage, _ := ks.ListKeysByUsage(SigningKey)
+	byUsage, err := ks.ListKeysByUsage(SigningKey)
+	if err != nil {
+		t.Fatalf("ListKeysByUsage: %v", err)
+	}
 	if len(byUsage) != 1 || byUsage[0].Name != "rsa" {
 		t.Fatalf("ListKeysByUsage returned %+v", byUsage)
 	}
 
-	byTag, _ := ks.ListKeysByTag("team:blue")
+	byTag, err := ks.ListKeysByTag("team:blue")
+	if err != nil {
+		t.Fatalf("ListKeysByTag(team:blue): %v", err)
+	}
 	if len(byTag) != 1 || byTag[0].Name != "sym" {
 		t.Fatalf("ListKeysByTag returned %+v", byTag)
 	}
 
-	none, _ := ks.ListKeysByTag("team:green")
+	none, err := ks.ListKeysByTag("team:green")
+	if err != nil {
+		t.Fatalf("ListKeysByTag(team:green): %v", err)
+	}
 	if len(none) != 0 {
 		t.Fatalf("ListKeysByTag for absent tag should be empty, got %d", len(none))
 	}

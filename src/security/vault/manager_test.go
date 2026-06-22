@@ -2,6 +2,7 @@ package vault
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -51,6 +52,9 @@ func TestManager_UnknownProvider(t *testing.T) {
 }
 
 func TestManager_GetAPIKey_NoneStored(t *testing.T) {
+	// Hermetic against an inherited env var: ensure no anthropic key is visible
+	// to the constructor (LoadFromEnv) or the GetAPIKey env fallback.
+	t.Setenv("LLMRT_ANTHROPIC_API_KEY", "")
 	m := newManager(t)
 	if _, err := m.GetAPIKey(core.AnthropicProvider); err == nil {
 		t.Error("GetAPIKey with no stored key and no env var must error")
@@ -58,10 +62,14 @@ func TestManager_GetAPIKey_NoneStored(t *testing.T) {
 }
 
 func TestManager_GetAPIKey_EnvFallback(t *testing.T) {
-	// No credential stored, but a matching env var exists -> fallback returns it.
-	t.Setenv("LLMRT_ANTHROPIC_API_KEY", "sk-env-anthropic")
+	// Construct with the env var empty so NewCredentialManager's LoadFromEnv does
+	// NOT import it as a stored credential — otherwise GetAPIKey would return the
+	// stored copy and we'd never exercise the env-fallback branch.
+	t.Setenv("LLMRT_ANTHROPIC_API_KEY", "")
 	m := newManager(t)
 
+	// Now set the env var: with nothing stored, GetAPIKey must fall back to it.
+	t.Setenv("LLMRT_ANTHROPIC_API_KEY", "sk-env-anthropic")
 	got, err := m.GetAPIKey(core.AnthropicProvider)
 	if err != nil {
 		t.Fatalf("GetAPIKey env fallback: %v", err)
@@ -134,12 +142,23 @@ func TestManager_InstallGitHookInDir(t *testing.T) {
 	if err := m.InstallGitHookInDir(dir); err != nil {
 		t.Fatalf("InstallGitHookInDir: %v", err)
 	}
-	hook, err := os.ReadFile(filepath.Join(hooks, "pre-commit"))
+	hookPath := filepath.Join(hooks, "pre-commit")
+	hook, err := os.ReadFile(hookPath)
 	if err != nil {
 		t.Fatalf("hook not written: %v", err)
 	}
 	if !strings.Contains(string(hook), "LLMrecon credential check") {
 		t.Fatal("installed hook missing the credential-check marker")
+	}
+	// The generated hook must be valid bash, not just contain the right marker
+	// (regression guard: show_error() previously lacked a closing brace, which
+	// a marker-only check happily passed). Validate syntax with `bash -n`.
+	if bashPath, lookErr := exec.LookPath("bash"); lookErr == nil {
+		if out, syntaxErr := exec.Command(bashPath, "-n", hookPath).CombinedOutput(); syntaxErr != nil {
+			t.Fatalf("installed hook is not valid bash: %v\n%s", syntaxErr, out)
+		}
+	} else {
+		t.Log("bash not found; skipping hook syntax validation")
 	}
 
 	// Idempotent: installing again is a no-op (marker already present).

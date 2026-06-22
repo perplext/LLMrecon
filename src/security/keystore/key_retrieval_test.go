@@ -53,11 +53,15 @@ func TestRetriever_GetKey(t *testing.T) {
 func TestRetriever_GetKeys(t *testing.T) {
 	_, kr := newPopulatedKeystore()
 
-	if got, _ := kr.GetKeys(nil); len(got) != 0 {
+	got, err := kr.GetKeys(nil)
+	if err != nil {
+		t.Fatalf("GetKeys(nil): %v", err)
+	}
+	if len(got) != 0 {
 		t.Fatalf("GetKeys(nil) should be empty, got %d", len(got))
 	}
 
-	got, err := kr.GetKeys([]string{"rsa-1", "aes-1", "ghost"})
+	got, err = kr.GetKeys([]string{"rsa-1", "aes-1", "ghost"})
 	if err != nil {
 		t.Fatalf("GetKeys: %v", err)
 	}
