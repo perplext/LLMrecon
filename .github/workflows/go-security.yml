@@ -86,3 +86,16 @@ jobs:
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: python3 scripts/honesty_lint.py --base "origin/${BASE_REF}"
+
+      # Guard against the worst-of-both-worlds //go:build ignore files in
+      # src/cmd/: they show up in greps, rot uncovered, and confuse readers.
+      # Finish them or attic them — never leave them build-ignored (#226).
+      - name: Guard against //go:build ignore in src/cmd
+        run: |
+          matches=$(grep -rl "go:build ignore" src/cmd/ 2>/dev/null || true)
+          if [ -n "$matches" ]; then
+            echo "::error::src/cmd/ must not contain //go:build ignore files. Finish them or attic them (see #226):"
+            echo "$matches"
+            exit 1
+          fi
+          echo "OK: no //go:build ignore files in src/cmd/"
