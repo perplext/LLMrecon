@@ -49,7 +49,10 @@ func NewContentFilter(config *ProtectionConfig) *ContentFilter {
 		// Email addresses
 		regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`),
 		// API keys and tokens
-		regexp.MustCompile(`\b(?:api[_-]?key|access[_-]?token|secret[_-]?key|client[_-]?secret)["']?\b`),
+		// Match the whole credential assignment (label + delimiter + value) so the
+		// secret value is masked, not just the label. Handles key=value / key:value,
+		// optional surrounding whitespace, and quoted or unquoted values.
+		regexp.MustCompile(`(?i)\b(?:api[_-]?key|access[_-]?token|secret[_-]?key|client[_-]?secret)\b\s*[:=]\s*["']?[^\s"']+["']?`),
 		regexp.MustCompile(`\b(?:sk|pk)_(?:test|live)_[\w\d]{10,}\b`), // Stripe API keys (relaxed pattern to match test case)
 		regexp.MustCompile(`\bsk_test_1234567890abcdef\b`),            // Exact match for test case
 		regexp.MustCompile(`\bgh[pousr]_[A-Za-z0-9_]{16,}\b`),         // GitHub tokens
