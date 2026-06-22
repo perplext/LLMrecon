@@ -196,6 +196,15 @@ func (pm *ProtectionManager) ProtectPrompt(ctx context.Context, prompt string) (
 		}
 	}
 
+	// If any stage decided to block, the protected prompt must not carry the
+	// original (malicious) content back to the caller. The underlying detectors
+	// clear their own result, but ProtectPrompt builds its own result and only
+	// propagates the verdict above — clear it here so a caller that forwards the
+	// returned string can't accidentally ship a blocked prompt to the model.
+	if result.ActionTaken == ActionBlocked {
+		result.ProtectedPrompt = ""
+	}
+
 	// Apply approval workflow if enabled and risk score exceeds threshold
 	if pm.approvalWorkflow != nil && result.RiskScore >= pm.config.ApprovalThreshold {
 		approved, approvalResult, err := pm.approvalWorkflow.RequestApproval(ctx, result)
@@ -219,17 +228,35 @@ func (pm *ProtectionManager) ProtectPrompt(ctx context.Context, prompt string) (
 		}
 	}
 
-	// Apply real-time monitoring if enabled (doesn't modify the prompt, just monitors)
+	// Apply real-time monitoring if enabled (doesn't modify the prompt, just monitors).
+	// MonitorPrompt mutates the result it's given (appends detections, bumps risk)
+	// and ReportDetections reads it; both run concurrently with each other and with
+	// the caller, who already holds `result`. Hand each goroutine its own snapshot so
+	// these fire-and-forget tasks can't race each other or the returned result.
 	if pm.monitor != nil {
-		go pm.monitor.MonitorPrompt(ctx, result)
+		go pm.monitor.MonitorPrompt(ctx, copyResult(result))
 	}
 
 	// Apply reporting if enabled and new patterns were detected
 	if pm.reportingSystem != nil && len(result.Detections) > 0 {
-		go pm.reportingSystem.ReportDetections(ctx, result)
+		go pm.reportingSystem.ReportDetections(ctx, copyResult(result))
 	}
 
 	return result.ProtectedPrompt, result, nil
+}
+
+// copyResult returns a snapshot of a ProtectionResult safe to hand to a
+// fire-and-forget goroutine: the struct is copied and the Detections slice is
+// reallocated, so appends/reads in the goroutine don't race the caller's result.
+// The *Detection elements are shared, which is safe because the async monitor and
+// reporting paths read detection fields but never mutate existing detections.
+func copyResult(r *ProtectionResult) *ProtectionResult {
+	cp := *r
+	if r.Detections != nil {
+		cp.Detections = make([]*Detection, len(r.Detections))
+		copy(cp.Detections, r.Detections)
+	}
+	return &cp
 }
 
 // ProtectResponse protects against prompt injection in LLM responses
@@ -271,9 +298,10 @@ func (pm *ProtectionManager) ProtectResponse(ctx context.Context, response strin
 		}
 	}
 
-	// Apply reporting if enabled and new patterns were detected
+	// Apply reporting if enabled and new patterns were detected. Pass a snapshot
+	// so the async reporter can't race the caller's result (see copyResult).
 	if pm.reportingSystem != nil && len(result.Detections) > 0 {
-		go pm.reportingSystem.ReportDetections(ctx, result)
+		go pm.reportingSystem.ReportDetections(ctx, copyResult(result))
 	}
 
 	return result.ProtectedResponse, result, nil

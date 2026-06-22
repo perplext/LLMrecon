@@ -215,9 +215,10 @@ show_error() {
   echo "\033[1;31mERROR:\033[0m $1"
   echo "$2"
   exit 1
+}
 
 # Check for potential API keys and tokens
-if git diff --cached | grep -E '(api[_-]?key|api[_-]?token|access[_-]?token|secret[_-]?key|password|credential)["'\''']?\s*[:=]\s*["'\''']?[A-Za-z0-9_\-]{20,}'; then
+if git diff --cached | grep -E '(api[_-]?key|api[_-]?token|access[_-]?token|secret[_-]?key|password|credential)["'\'']?\s*[:=]\s*["'\'']?[A-Za-z0-9_\-]{20,}'; then
   show_error "Potential API key or credential found in commit." "Please remove the credential or add it to .gitignore."
 fi
 
