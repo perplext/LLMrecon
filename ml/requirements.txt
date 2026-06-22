@@ -39,7 +39,7 @@ pyyaml>=6.0.3
 # tensorflow[and-cuda]
 
 # Development Dependencies
-pytest>=9.1.0
+pytest>=9.1.1
 black>=26.5.1
 flake8>=7.3.0
 mypy>=2.1.0
