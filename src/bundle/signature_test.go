@@ -53,7 +53,10 @@ func TestCalculateFileChecksum(t *testing.T) {
 		t.Fatalf("checksum missing sha256 prefix: %q", sum)
 	}
 	// Deterministic.
-	again, _ := CalculateFileChecksum(f)
+	again, err := CalculateFileChecksum(f)
+	if err != nil {
+		t.Fatalf("CalculateFileChecksum (repeat): %v", err)
+	}
 	if again != sum {
 		t.Fatal("checksum should be deterministic")
 	}
@@ -116,7 +119,10 @@ func TestSignVerifyBundle_RoundTrip(t *testing.T) {
 }
 
 func TestVerifyBundle_TamperedContent(t *testing.T) {
-	priv, pub, _ := GenerateKeyPair()
+	priv, pub, err := GenerateKeyPair()
+	if err != nil {
+		t.Fatalf("GenerateKeyPair: %v", err)
+	}
 	b := buildSignableBundle(t)
 	if err := SignBundle(b, priv); err != nil {
 		t.Fatalf("SignBundle: %v", err)
@@ -126,14 +132,20 @@ func TestVerifyBundle_TamperedContent(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(b.BundlePath, "a.txt"), []byte("corrupted"), 0600); err != nil {
 		t.Fatalf("tamper: %v", err)
 	}
-	res, _ := VerifyBundle(b, pub)
+	res, err := VerifyBundle(b, pub)
+	if err != nil {
+		t.Fatalf("VerifyBundle: %v", err)
+	}
 	if res.Valid {
 		t.Fatal("tampered content must fail bundle verification")
 	}
 }
 
 func TestVerifyBundle_TamperedManifest(t *testing.T) {
-	priv, pub, _ := GenerateKeyPair()
+	priv, pub, err := GenerateKeyPair()
+	if err != nil {
+		t.Fatalf("GenerateKeyPair: %v", err)
+	}
 	b := buildSignableBundle(t)
 	if err := SignBundle(b, priv); err != nil {
 		t.Fatalf("SignBundle: %v", err)
@@ -141,21 +153,33 @@ func TestVerifyBundle_TamperedManifest(t *testing.T) {
 
 	// Mutate a signed manifest field -> signature no longer matches.
 	b.Manifest.Name = "evil-rename"
-	res, _ := VerifyBundle(b, pub)
+	res, err := VerifyBundle(b, pub)
+	if err != nil {
+		t.Fatalf("VerifyBundle: %v", err)
+	}
 	if res.Valid {
 		t.Fatal("tampered manifest must fail signature verification")
 	}
 }
 
 func TestVerifyBundle_WrongKey(t *testing.T) {
-	priv, _, _ := GenerateKeyPair()
-	_, otherPub, _ := GenerateKeyPair()
+	priv, _, err := GenerateKeyPair()
+	if err != nil {
+		t.Fatalf("GenerateKeyPair: %v", err)
+	}
+	_, otherPub, err := GenerateKeyPair()
+	if err != nil {
+		t.Fatalf("GenerateKeyPair: %v", err)
+	}
 
 	b := buildSignableBundle(t)
 	if err := SignBundle(b, priv); err != nil {
 		t.Fatalf("SignBundle: %v", err)
 	}
-	res, _ := VerifyBundle(b, otherPub)
+	res, err := VerifyBundle(b, otherPub)
+	if err != nil {
+		t.Fatalf("VerifyBundle: %v", err)
+	}
 	if res.Valid {
 		t.Fatal("verification with the wrong public key must fail")
 	}

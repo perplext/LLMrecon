@@ -59,7 +59,8 @@ func TestSaveBundle_RoundTrip(t *testing.T) {
 }
 
 func TestCreateEmptyBundle(t *testing.T) {
-	b, err := CreateEmptyBundle("/tmp/b", "1.0", "bundle-id", MixedBundleType, "name", "desc", "1.0.0")
+	dir := t.TempDir()
+	b, err := CreateEmptyBundle(dir, "1.0", "bundle-id", MixedBundleType, "name", "desc", "1.0.0")
 	if err != nil {
 		t.Fatalf("CreateEmptyBundle: %v", err)
 	}
@@ -69,13 +70,13 @@ func TestCreateEmptyBundle(t *testing.T) {
 
 	// Each required field, when missing, must error.
 	bad := []struct {
-		name                                                  string
+		name                          string
 		path, id, bundleName, version string
 	}{
 		{"no path", "", "id", "n", "1.0"},
-		{"no id", "/tmp/b", "", "n", "1.0"},
-		{"no name", "/tmp/b", "id", "", "1.0"},
-		{"no version", "/tmp/b", "id", "n", ""},
+		{"no id", dir, "", "n", "1.0"},
+		{"no name", dir, "id", "", "1.0"},
+		{"no version", dir, "id", "n", ""},
 	}
 	for _, c := range bad {
 		if _, err := CreateEmptyBundle(c.path, "1.0", c.id, MixedBundleType, c.bundleName, "d", c.version); err == nil {

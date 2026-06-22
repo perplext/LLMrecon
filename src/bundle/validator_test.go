@@ -23,7 +23,10 @@ func buildValidatableBundle(t *testing.T) *Bundle {
 	m.AddContentItem("a.yaml", TemplateContentType, "id-a", "1.0", "")
 	m.Content[0].Checksum = calculateHash(content)
 	// manifest.json must exist on disk for ValidateChecksums.
-	data, _ := json.Marshal(m)
+	data, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("marshal manifest: %v", err)
+	}
 	if err := os.WriteFile(filepath.Join(dir, "manifest.json"), data, 0600); err != nil {
 		t.Fatalf("write manifest: %v", err)
 	}
@@ -116,7 +119,10 @@ func TestValidate_InvalidManifestShortCircuits(t *testing.T) {
 func TestValidateCompatibility(t *testing.T) {
 	v := newValidator().(*DefaultBundleValidator)
 
-	core, _ := version.ParseVersion("1.5.0")
+	core, err := version.ParseVersion("1.5.0")
+	if err != nil {
+		t.Fatalf("ParseVersion: %v", err)
+	}
 	current := map[string]*version.SemVersion{"core": &core}
 
 	// Bundle requiring <= current core: compatible.
@@ -126,9 +132,13 @@ func TestValidateCompatibility(t *testing.T) {
 		t.Fatalf("expected compatible, got valid=%v err=%v", res.Valid, err)
 	}
 
-	// Bundle requiring a newer core than installed: incompatible.
+	// Bundle requiring a newer core than installed: incompatible. Here an error
+	// IS expected (compatibility failure), so assert it alongside !Valid.
 	tooNew := &Bundle{Manifest: BundleManifest{Compatibility: Compatibility{MinVersion: "9.0.0"}}}
-	res, _ = v.ValidateCompatibility(tooNew, current)
+	res, err = v.ValidateCompatibility(tooNew, current)
+	if err == nil {
+		t.Fatal("incompatible bundle should return an error")
+	}
 	if res.Valid {
 		t.Fatal("bundle requiring a newer core must be incompatible")
 	}
