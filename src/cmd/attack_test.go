@@ -170,7 +170,7 @@ func TestRunAttackRun_RejectsUnknownProvider(t *testing.T) {
 // error when OPENAI_API_KEY env var is unset.
 func TestBuildAttackProvider_OpenAIRequiresAPIKey(t *testing.T) {
 	t.Setenv("OPENAI_API_KEY", "")
-	_, err := buildAttackProvider("openai")
+	_, err := buildAttackProvider("openai", "")
 	if err == nil {
 		t.Fatal("expected error when OPENAI_API_KEY is unset")
 	}
@@ -183,7 +183,7 @@ func TestBuildAttackProvider_OpenAIRequiresAPIKey(t *testing.T) {
 // error for Anthropic.
 func TestBuildAttackProvider_AnthropicRequiresAPIKey(t *testing.T) {
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	_, err := buildAttackProvider("anthropic")
+	_, err := buildAttackProvider("anthropic", "")
 	if err == nil {
 		t.Fatal("expected error when ANTHROPIC_API_KEY is unset")
 	}
@@ -197,7 +197,7 @@ func TestBuildAttackProvider_AnthropicRequiresAPIKey(t *testing.T) {
 // end-to-end). No API call fires; this is the type-level wiring check.
 func TestBuildAttackProvider_OpenAIWrapsViaBridge(t *testing.T) {
 	t.Setenv("OPENAI_API_KEY", "sk-test-fake-key-not-used")
-	p, err := buildAttackProvider("openai")
+	p, err := buildAttackProvider("openai", "")
 	if err != nil {
 		t.Fatalf("buildAttackProvider: %v", err)
 	}
@@ -212,7 +212,7 @@ func TestBuildAttackProvider_OpenAIWrapsViaBridge(t *testing.T) {
 // TestBuildAttackProvider_AnthropicWrapsViaBridge — parallel for Anthropic.
 func TestBuildAttackProvider_AnthropicWrapsViaBridge(t *testing.T) {
 	t.Setenv("ANTHROPIC_API_KEY", "sk-ant-test-fake-key-not-used")
-	p, err := buildAttackProvider("anthropic")
+	p, err := buildAttackProvider("anthropic", "")
 	if err != nil {
 		t.Fatalf("buildAttackProvider: %v", err)
 	}
@@ -233,6 +233,44 @@ func TestEnvOr(t *testing.T) {
 	t.Setenv("TEST_KEY_ABSENT", "")
 	if got := envOr("TEST_KEY_ABSENT", "fallback"); got != "fallback" {
 		t.Errorf("envOr absent = %q, want fallback", got)
+	}
+}
+
+// TestFirstNonEmpty covers the precedence helper backing --api-key: the flag
+// value (first arg) must win over the env value (second arg).
+func TestFirstNonEmpty(t *testing.T) {
+	if got := firstNonEmpty("flag", "env"); got != "flag" {
+		t.Errorf("flag should win: got %q", got)
+	}
+	if got := firstNonEmpty("", "env"); got != "env" {
+		t.Errorf("env should be used when flag empty: got %q", got)
+	}
+	if got := firstNonEmpty("", ""); got != "" {
+		t.Errorf("both empty should be empty: got %q", got)
+	}
+}
+
+// TestBuildAttackProvider_APIKeyFlag asserts the --api-key flag value is honored
+// as the key source even when the provider's env var is unset (#234).
+func TestBuildAttackProvider_APIKeyFlag(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "") // env empty; only the flag supplies the key
+	p, err := buildAttackProvider("openai", "sk-flag-supplied-key")
+	if err != nil {
+		t.Fatalf("--api-key should satisfy the key requirement: %v", err)
+	}
+	if p == nil || p.GetName() != "openai" {
+		t.Fatalf("expected wired openai provider, got %v", p)
+	}
+
+	// With neither flag nor env, construction fails with a friendly error that
+	// names both sources.
+	_, err = buildAttackProvider("anthropic", "")
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	if _, err = buildAttackProvider("anthropic", ""); err == nil {
+		t.Fatal("expected error when neither --api-key nor env var is set")
+	}
+	if !strings.Contains(err.Error(), "--api-key") {
+		t.Errorf("error should mention the --api-key flag; got %q", err.Error())
 	}
 }
 
