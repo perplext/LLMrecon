@@ -264,7 +264,6 @@ func TestBuildAttackProvider_APIKeyFlag(t *testing.T) {
 
 	// With neither flag nor env, construction fails with a friendly error that
 	// names both sources.
-	_, err = buildAttackProvider("anthropic", "")
 	t.Setenv("ANTHROPIC_API_KEY", "")
 	if _, err = buildAttackProvider("anthropic", ""); err == nil {
 		t.Fatal("expected error when neither --api-key nor env var is set")
