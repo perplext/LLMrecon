@@ -95,3 +95,53 @@ func TestNoFictionalCommandsRegistered(t *testing.T) {
 		}
 	}
 }
+
+// TestQuickstartDocumentsRealCLISurface mirrors the README check for the
+// canonical docs/quickstart.md (#232 doc consolidation). The previous
+// quickstart documented fictional `scan --target`, `init`, `config set`,
+// and `report` commands; the consolidated quickstart only uses real ones.
+// Every command path it documents must resolve to a registered Cobra command.
+//
+// When you add/remove a `./llmrecon` example in docs/quickstart.md, update
+// this list. CI fails if they drift apart.
+func TestQuickstartDocumentsRealCLISurface(t *testing.T) {
+	cases := []string{
+		"attack list",
+		"attack run",
+		"template list",
+		"template create",
+		"bundle create",
+		"bundle verify",
+		"bundle import",
+		"bundle info",
+		"credential add",
+		"credential list",
+		"credential rotate",
+		"update check",
+		"update apply",
+		"check-version",
+		"version",
+		"changelog",
+		"detect",
+		"prompt-protection",
+	}
+
+	for _, path := range cases {
+		t.Run(path, func(t *testing.T) {
+			args := strings.Fields(path)
+			cmd, _, err := rootCmd.Find(args)
+			if err != nil {
+				t.Errorf("quickstart documents `./llmrecon %s` but rootCmd.Find errored: %v", path, err)
+				return
+			}
+			if cmd == rootCmd {
+				t.Errorf("quickstart documents `./llmrecon %s` but it resolved to rootCmd (subcommand not registered)", path)
+				return
+			}
+			gotPath := strings.TrimPrefix(cmd.CommandPath(), rootCmd.Name()+" ")
+			if gotPath != path {
+				t.Errorf("quickstart docs `./llmrecon %s` resolved to a different command: %q", path, gotPath)
+			}
+		})
+	}
+}
