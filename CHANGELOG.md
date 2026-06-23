@@ -8,6 +8,19 @@ This changelog was started with v0.9.0; earlier history lives in `git log`.
 
 ## [Unreleased]
 
+### Added
+
+- **`common.Purger` provider interface + `attack purge` command (#168).**
+  Automated cleanup of memory-poisoning implants, succeeding v0.9.0's manual
+  `CleanupHint` workflow. Providers that own a purgeable memory store implement
+  `Purger.Purge(ctx, recordIDs)`; the memory-poisoning modules (`minja`,
+  `memorygraft`, `injecmem`) now report `purger_available` in their result
+  metadata, and `llmrecon attack purge --provider <name> --record-ids <ids>`
+  (or `--result <emit-jsonl-file>`) rolls back the injection. Providers without
+  the capability get a friendly error pointing back to the manual `CleanupHint`.
+  Includes an in-memory reference `Purger` (`testutil.MockMemoryProvider`) and an
+  inject→verify-present→purge→verify-absent smoke test.
+
 ## [0.10.0] - 2026-05-03
 
 The v0.10.0 release is **the honesty release**. Every code path that

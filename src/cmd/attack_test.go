@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -331,4 +334,111 @@ func minInt(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// ---------------------------------------------------------------------------
+// `attack purge` (#168)
+// ---------------------------------------------------------------------------
+
+func TestAttackPurge_MockSucceeds(t *testing.T) {
+	attackPurgeProvider = "mock"
+	attackPurgeAPIKey = ""
+	attackPurgeRecordIDs = []string{"rec-1", "rec-2"}
+	attackPurgeResult = ""
+
+	var buf bytes.Buffer
+	if err := runAttackPurge(&buf); err != nil {
+		t.Fatalf("runAttackPurge: %v", err)
+	}
+	if !strings.Contains(buf.String(), "Purged 2 record(s)") {
+		t.Errorf("unexpected output: %q", buf.String())
+	}
+}
+
+func TestAttackPurge_NoIDsErrors(t *testing.T) {
+	attackPurgeProvider = "mock"
+	attackPurgeAPIKey = ""
+	attackPurgeRecordIDs = nil
+	attackPurgeResult = ""
+
+	if err := runAttackPurge(io.Discard); err == nil {
+		t.Fatal("expected an error when no record IDs are supplied")
+	}
+}
+
+func TestAttackPurge_ProviderNotPurger(t *testing.T) {
+	// openai provider builds with a fake key (no network) but is not a Purger.
+	attackPurgeProvider = "openai"
+	attackPurgeAPIKey = "sk-fake-not-used"
+	attackPurgeRecordIDs = []string{"rec-1"}
+	attackPurgeResult = ""
+
+	err := runAttackPurge(io.Discard)
+	if err == nil {
+		t.Fatal("expected an error for a non-Purger provider")
+	}
+	if !strings.Contains(err.Error(), "does not support automated purge") {
+		t.Errorf("error should explain the missing Purger capability; got %v", err)
+	}
+}
+
+func TestAttackPurge_FromResultFile(t *testing.T) {
+	entry := jsonlEntry{
+		Provider: "mock",
+		Model:    "mock-model",
+		Result: &common.AttackResult{
+			Metadata: map[string]interface{}{"injected_record_ids": []string{"rec-from-file"}},
+		},
+	}
+	line, err := json.Marshal(entry)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	path := filepath.Join(t.TempDir(), "run.jsonl")
+	if err := os.WriteFile(path, append(line, '\n'), 0600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	attackPurgeProvider = "mock"
+	attackPurgeAPIKey = ""
+	attackPurgeRecordIDs = nil
+	attackPurgeResult = path
+
+	var buf bytes.Buffer
+	if err := runAttackPurge(&buf); err != nil {
+		t.Fatalf("runAttackPurge: %v", err)
+	}
+	if !strings.Contains(buf.String(), "rec-from-file") {
+		t.Errorf("output should name the purged ID; got %q", buf.String())
+	}
+}
+
+func TestReadInjectedRecordIDs(t *testing.T) {
+	withIDs, _ := json.Marshal(jsonlEntry{Result: &common.AttackResult{
+		Metadata: map[string]interface{}{"injected_record_ids": []string{"a", "b"}},
+	}})
+	noMeta, _ := json.Marshal(jsonlEntry{Result: &common.AttackResult{}})
+	path := filepath.Join(t.TempDir(), "r.jsonl")
+	if err := os.WriteFile(path, []byte(string(withIDs)+"\n"+string(noMeta)+"\n"), 0600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	ids, err := readInjectedRecordIDs(path)
+	if err != nil {
+		t.Fatalf("readInjectedRecordIDs: %v", err)
+	}
+	if len(ids) != 2 || ids[0] != "a" || ids[1] != "b" {
+		t.Fatalf("ids = %v, want [a b]", ids)
+	}
+
+	if _, err := readInjectedRecordIDs(filepath.Join(t.TempDir(), "missing.jsonl")); err == nil {
+		t.Error("expected an error for a missing file")
+	}
+}
+
+func TestDedupeNonEmpty(t *testing.T) {
+	got := dedupeNonEmpty([]string{"a", "", "a", "b", ""})
+	if len(got) != 2 || got[0] != "a" || got[1] != "b" {
+		t.Fatalf("dedupeNonEmpty = %v, want [a b]", got)
+	}
 }

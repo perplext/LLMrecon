@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -45,6 +46,11 @@ var (
 	attackRunMetadata []string
 	attackRunSuccessIndicators []string
 	attackRunEmitJSONL string
+
+	attackPurgeProvider  string
+	attackPurgeAPIKey    string
+	attackPurgeRecordIDs []string
+	attackPurgeResult    string
 )
 
 var attackCmd = &cobra.Command{
@@ -95,10 +101,35 @@ Examples:
 	},
 }
 
+var attackPurgeCmd = &cobra.Command{
+	Use:   "purge",
+	Short: "Roll back a memory-poisoning injection via the provider's Purger",
+	Long: `Automated cleanup (#168) for memory-poisoning runs. The minja /
+memorygraft / injecmem modules record the injected record IDs in their result
+(metadata "injected_record_ids", also echoed in CleanupHint). This command
+calls Purger.Purge on the target to remove them — the successor to v0.9.0's
+manual-cleanup workflow.
+
+The provider must implement common.Purger (own a purgeable memory store);
+otherwise this reports a friendly error and you fall back to manual cleanup.
+
+Examples:
+
+  # Purge explicit record IDs
+  llmrecon attack purge --provider=mock --record-ids=rec-1,rec-2
+
+  # Purge IDs read from a prior run's --emit-jsonl output
+  llmrecon attack purge --provider=mock --result=run.jsonl`,
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		return runAttackPurge(cmd.OutOrStdout())
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(attackCmd)
 	attackCmd.AddCommand(attackListCmd)
 	attackCmd.AddCommand(attackRunCmd)
+	attackCmd.AddCommand(attackPurgeCmd)
 
 	attackListCmd.Flags().BoolVar(&attackListJSON, "json", false, "emit machine-readable JSON")
 
@@ -112,6 +143,11 @@ func init() {
 	if err := attackRunCmd.MarkFlagRequired("module"); err != nil {
 		panic(fmt.Sprintf("MarkFlagRequired: %v", err))
 	}
+
+	attackPurgeCmd.Flags().StringVar(&attackPurgeProvider, "provider", "mock", "provider name (must implement Purger)")
+	attackPurgeCmd.Flags().StringVar(&attackPurgeAPIKey, "api-key", "", "provider API key; takes precedence over the provider's *_API_KEY env var")
+	attackPurgeCmd.Flags().StringSliceVar(&attackPurgeRecordIDs, "record-ids", nil, "comma-separated injected record IDs to purge")
+	attackPurgeCmd.Flags().StringVar(&attackPurgeResult, "result", "", "path to a prior --emit-jsonl result file; reads injected_record_ids from it")
 }
 
 // ---------------------------------------------------------------------------
@@ -208,6 +244,91 @@ func runAttackRun(out, _ io.Writer) error {
 	enc := json.NewEncoder(out)
 	enc.SetIndent("", "  ")
 	return enc.Encode(result)
+}
+
+// ---------------------------------------------------------------------------
+// `attack purge`  (#168)
+// ---------------------------------------------------------------------------
+
+func runAttackPurge(out io.Writer) error {
+	// Gather the record IDs from --record-ids and/or a prior --result file.
+	ids := append([]string{}, attackPurgeRecordIDs...)
+	if attackPurgeResult != "" {
+		fromFile, err := readInjectedRecordIDs(attackPurgeResult)
+		if err != nil {
+			return fmt.Errorf("reading --result %s: %w", attackPurgeResult, err)
+		}
+		ids = append(ids, fromFile...)
+	}
+	ids = dedupeNonEmpty(ids)
+	if len(ids) == 0 {
+		return fmt.Errorf("no record IDs to purge; pass --record-ids or --result")
+	}
+
+	provider, err := buildAttackProvider(attackPurgeProvider, attackPurgeAPIKey)
+	if err != nil {
+		return err
+	}
+
+	purger, ok := provider.(common.Purger)
+	if !ok {
+		return fmt.Errorf("provider %q does not support automated purge (no Purger capability); "+
+			"follow the run's CleanupHint to remove the records manually", attackPurgeProvider)
+	}
+
+	if err := purger.Purge(context.Background(), ids); err != nil {
+		return fmt.Errorf("purge failed: %w", err)
+	}
+	fmt.Fprintf(out, "Purged %d record(s) from provider %q: %s\n", len(ids), attackPurgeProvider, strings.Join(ids, ", "))
+	return nil
+}
+
+// readInjectedRecordIDs reads injected_record_ids from each JSONL line of a
+// prior `--emit-jsonl` result file.
+func readInjectedRecordIDs(path string) ([]string, error) {
+	data, err := os.ReadFile(filepath.Clean(path)) // #nosec G304 -- operator-supplied result path by design
+	if err != nil {
+		return nil, err
+	}
+	var ids []string
+	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		var entry jsonlEntry
+		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			return nil, fmt.Errorf("parse JSONL line: %w", err)
+		}
+		if entry.Result == nil || entry.Result.Metadata == nil {
+			continue
+		}
+		// JSON unmarshals a []string into []interface{}.
+		switch v := entry.Result.Metadata["injected_record_ids"].(type) {
+		case []interface{}:
+			for _, item := range v {
+				if s, ok := item.(string); ok {
+					ids = append(ids, s)
+				}
+			}
+		case []string:
+			ids = append(ids, v...)
+		}
+	}
+	return ids, nil
+}
+
+func dedupeNonEmpty(in []string) []string {
+	seen := make(map[string]bool, len(in))
+	var out []string
+	for _, s := range in {
+		if s == "" || seen[s] {
+			continue
+		}
+		seen[s] = true
+		out = append(out, s)
+	}
+	return out
 }
 
 // jsonlEntry is the wire format for `--emit-jsonl`. Wraps an
@@ -347,3 +468,8 @@ func (cmdMockProvider) Query(_ context.Context, _ []common.Message, _ map[string
 func (cmdMockProvider) GetName() string             { return "mock" }
 func (cmdMockProvider) GetModel() string            { return "mock-model" }
 func (cmdMockProvider) GetTokenCount(s string) int  { return len(s) / 4 }
+
+// Purge implements common.Purger so `attack purge --provider=mock` exercises
+// the cleanup path end-to-end. The mock owns no real memory store, so purge is
+// a successful no-op.
+func (cmdMockProvider) Purge(_ context.Context, _ []string) error { return nil }
