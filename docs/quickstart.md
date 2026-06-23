@@ -62,6 +62,11 @@ Useful flags (`./llmrecon attack run --help` for the full list):
 - `--emit-jsonl <path>` — append the result as one JSON line for the Python
   ingest pipeline (`python -m ml.data.ingest`).
 
+The evolutionary engines (`jbfuzz`, `persona_evolve`) take extra `--metadata`
+knobs — `selection=ucb1_restart|mcts_explore`, `fitness=heuristic|embedding`
+(with `embedding_endpoint` / `embedding_model`), and `rng_seed` for
+deterministic runs. See [Attack Techniques](ATTACK_TECHNIQUES.md#evolutionary-fuzzing-engines).
+
 ## 4. Run against a real provider
 
 Real providers read the API key from `--api-key` (preferred) or the
@@ -76,6 +81,18 @@ Real providers read the API key from `--api-key` (preferred) or the
 export OPENAI_API_KEY="sk-..."
 ./llmrecon attack run --module=jbfuzz --provider=openai --payload="..." \
   --metadata=allow_experimental=true
+```
+
+### Cleaning up memory-poisoning implants
+
+The memory-poisoning modules (`minja`, `memorygraft`, `injecmem`) record the
+injected record IDs in their result. When the target supports automated cleanup,
+roll an injection back with `attack purge`:
+
+```bash
+./llmrecon attack purge --provider=<name> --record-ids=rec-1,rec-2
+# or read the IDs from a prior run's --emit-jsonl output
+./llmrecon attack purge --provider=<name> --result=run.jsonl
 ```
 
 ## 5. Templates

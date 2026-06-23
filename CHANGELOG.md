@@ -8,6 +8,15 @@ This changelog was started with v0.9.0; earlier history lives in `git log`.
 
 ## [Unreleased]
 
+### Documentation
+
+- Documented the adaptive/evolutionary fuzzing engines (`jbfuzz`,
+  `persona_evolve`) in `docs/ATTACK_TECHNIQUES.md` — including the v0.12.0
+  `selection=mcts_explore` and `fitness=embedding` knobs and memory-poisoning
+  cleanup via `attack purge` / `Purger` — with research citations (JBFuzz,
+  GPTFuzzer, e5, MINJA/MemoryGraft/InjecMem). Added `attack purge` and the
+  engine metadata knobs to `docs/quickstart.md`.
+
 ## [0.12.0] - 2026-06-22
 
 Everything since v0.10.0: the v0.11.0 stabilization pass (first-time test
