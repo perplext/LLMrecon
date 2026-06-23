@@ -461,7 +461,7 @@ func (m *PersonaEvolveModule) Execute(
 	if fitnessName == "" {
 		fitnessName = "heuristic"
 	}
-	fit, err := newFitness(fitnessName)
+	fit, err := newFitness(ctx, fitnessName, config)
 	if err != nil {
 		return skipped(common.SkipPreconditionFailed, err.Error()), nil
 	}
