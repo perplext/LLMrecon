@@ -10,6 +10,18 @@ This changelog was started with v0.9.0; earlier history lives in `git log`.
 
 ### Added
 
+- **Embedding-fitness for jbfuzz / persona_evolve (#170).** The evolutionary
+  engines' opt-in `fitness=embedding` scorer is now implemented (was a stub
+  returning "not implemented"). It scores goal-relevance as the cosine
+  similarity between the target response and the operator objective, embedded
+  via a local Ollama-style `/api/embeddings` endpoint (option b), and blends
+  that with the refusal heuristic. Configure with metadata `embedding_endpoint`
+  (default `http://localhost:11434/api/embeddings`) and `embedding_model`
+  (default `nomic-embed-text`). Opting in without a reachable endpoint yields a
+  clean `OutcomeSkipped` + `SkipPreconditionFailed`, never a crash; a transient
+  mid-run embed failure degrades to the heuristic. Covered by unit tests against
+  an in-process mock endpoint and an opt-in `RUN_INTEGRATION` smoke test against
+  a real Ollama model.
 - **`common.Purger` provider interface + `attack purge` command (#168).**
   Automated cleanup of memory-poisoning implants, succeeding v0.9.0's manual
   `CleanupHint` workflow. Providers that own a purgeable memory store implement
