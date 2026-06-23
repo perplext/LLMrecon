@@ -40,6 +40,7 @@ var (
 	attackListJSON   bool
 	attackRunModule  string
 	attackRunProvider string
+	attackRunAPIKey  string
 	attackRunPayload string
 	attackRunMetadata []string
 	attackRunSuccessIndicators []string
@@ -103,6 +104,7 @@ func init() {
 
 	attackRunCmd.Flags().StringVar(&attackRunModule, "module", "", "registered module name (required)")
 	attackRunCmd.Flags().StringVar(&attackRunProvider, "provider", "mock", "provider name (currently: mock only)")
+	attackRunCmd.Flags().StringVar(&attackRunAPIKey, "api-key", "", "provider API key; takes precedence over the provider's *_API_KEY env var")
 	attackRunCmd.Flags().StringVar(&attackRunPayload, "payload", "", "operator-supplied payload (the harmful query, instruction, etc.)")
 	attackRunCmd.Flags().StringSliceVar(&attackRunMetadata, "metadata", nil, "key=value pair (repeatable; e.g. allow_experimental=true)")
 	attackRunCmd.Flags().StringSliceVar(&attackRunSuccessIndicators, "success-indicators", nil, "comma-separated substrings that mark Outcome=Success")
@@ -172,7 +174,7 @@ func runAttackRun(out, _ io.Writer) error {
 		return err
 	}
 
-	provider, err := buildAttackProvider(attackRunProvider)
+	provider, err := buildAttackProvider(attackRunProvider, attackRunAPIKey)
 	if err != nil {
 		return err
 	}
@@ -256,28 +258,30 @@ func writeJSONLEntry(target string, out io.Writer, provider common.Provider, res
 // buildAttackProvider constructs a common.Provider for the named provider.
 //
 //   - "mock" (default): runtime mock; deterministic refusal response.
-//   - "openai": real OpenAI adapter wrapped via bridge.WrapCore. Reads
-//     API key from OPENAI_API_KEY env var. Model from OPENAI_MODEL or
-//     defaults to "gpt-4o-mini".
-//   - "anthropic": real Anthropic adapter via bridge.WrapCore. Reads
-//     ANTHROPIC_API_KEY; model from ANTHROPIC_MODEL or defaults to
-//     "claude-3-5-sonnet-20241022".
+//   - "openai": real OpenAI adapter wrapped via bridge.WrapCore. API key
+//     from the apiKey arg (--api-key flag) if set, else OPENAI_API_KEY env
+//     var. Model from OPENAI_MODEL or defaults to "gpt-4o-mini".
+//   - "anthropic": real Anthropic adapter via bridge.WrapCore. API key from
+//     apiKey arg else ANTHROPIC_API_KEY; model from ANTHROPIC_MODEL or
+//     defaults to "claude-3-5-sonnet-20241022".
 //
-// Friendly errors when API keys are missing — distinct from the earlier
-// "not yet supported" stub the previous version emitted.
+// The apiKey argument (sourced from --api-key) takes precedence over the
+// provider's *_API_KEY env var. Friendly errors when no key is available —
+// distinct from the earlier "not yet supported" stub the previous version
+// emitted.
 //
 // Per-modality capability gates (ImageProvider, ReasoningProvider) come
 // online when the real-provider adapters are wired (#234); until then,
 // modules requiring those capabilities emit clean SkipMissingCapability
 // outcomes against real providers.
-func buildAttackProvider(name string) (common.Provider, error) {
+func buildAttackProvider(name, apiKey string) (common.Provider, error) {
 	switch name {
 	case "mock", "":
 		return &cmdMockProvider{}, nil
 	case "openai":
-		key := os.Getenv("OPENAI_API_KEY")
+		key := firstNonEmpty(apiKey, os.Getenv("OPENAI_API_KEY"))
 		if key == "" {
-			return nil, fmt.Errorf("provider=openai requires OPENAI_API_KEY env var")
+			return nil, fmt.Errorf("provider=openai requires an API key (--api-key flag or OPENAI_API_KEY env var)")
 		}
 		model := envOr("OPENAI_MODEL", "gpt-4o-mini")
 		cfg := &core.ProviderConfig{
@@ -291,9 +295,9 @@ func buildAttackProvider(name string) (common.Provider, error) {
 		}
 		return bridge.WrapCore(p), nil
 	case "anthropic":
-		key := os.Getenv("ANTHROPIC_API_KEY")
+		key := firstNonEmpty(apiKey, os.Getenv("ANTHROPIC_API_KEY"))
 		if key == "" {
-			return nil, fmt.Errorf("provider=anthropic requires ANTHROPIC_API_KEY env var")
+			return nil, fmt.Errorf("provider=anthropic requires an API key (--api-key flag or ANTHROPIC_API_KEY env var)")
 		}
 		model := envOr("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
 		cfg := &core.ProviderConfig{
@@ -317,6 +321,17 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// firstNonEmpty returns the first non-empty string, or "" if all are empty.
+// Used so the --api-key flag takes precedence over the *_API_KEY env var.
+func firstNonEmpty(vals ...string) string {
+	for _, v := range vals {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 // cmdMockProvider is a runtime mock for `attack run --provider=mock`.
