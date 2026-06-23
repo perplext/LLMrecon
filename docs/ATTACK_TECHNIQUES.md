@@ -1187,7 +1187,7 @@ Pre-built attack sequences for specific multi-agent frameworks (`templates/frame
 27. [Persona Evolution — arXiv 2507.22171](https://arxiv.org/abs/2507.22171)
 28. [MINJA: Memory Injection Attack — arXiv 2503.03704](https://arxiv.org/abs/2503.03704)
 29. [MemoryGraft — arXiv 2512.16962](https://arxiv.org/abs/2512.16962)
-30. [InjecMem — OpenReview QVX6hcJ2um](https://openreview.net/forum?id=QVX6hcJ2um)
+30. InjecMem — OpenReview `QVX6hcJ2um` (submission identifier per the source memory-poisoning module; not linked — a resolvable OpenReview URL could not be confirmed at publication time)
 
 ---
 
