@@ -101,3 +101,6 @@ htmlcov/
 dist/
 *.egg-info/
 .eggs/
+
+# Prompt-protection reporting run artifacts (test/runtime output, not source)
+src/security/prompt/reports/
