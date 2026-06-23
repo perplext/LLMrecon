@@ -65,12 +65,13 @@ func TestChatCompletionFromAPI_ErrorClassification(t *testing.T) {
 	}
 }
 
-// TestChatCompletionFromAPI_RateLimitNotYetRetryable documents a current wiring
-// gap (tracked separately): a 429 surfaces as a *core.ProviderError, which
-// core.IsTransient does NOT recognize, so the RetryableQuery helper would treat
-// it as non-retryable. When the provider→retry classification is implemented,
-// this assertion will flip and should be updated alongside closing the gap.
-func TestChatCompletionFromAPI_RateLimitNotYetRetryable(t *testing.T) {
+// TestChatCompletionFromAPI_RateLimitIsProviderError documents that a 429
+// surfaces as a *core.ProviderError carrying the status code. The retry
+// DECISION for that error lives in middleware.RetryMiddleware (the live retry
+// path via executeWithResilience), which retries 429/5xx — see
+// src/provider/middleware/retry_test.go. (#304 removed the redundant, unused
+// core.RetryableQuery/Transient/Permanent system; this is the real path.)
+func TestChatCompletionFromAPI_RateLimitIsProviderError(t *testing.T) {
 	srv := errorServer(http.StatusTooManyRequests, `{"error":{"message":"slow down","type":"rate_limit_error"}}`)
 	defer srv.Close()
 	p := newTestProvider(t, srv)
@@ -79,10 +80,11 @@ func TestChatCompletionFromAPI_RateLimitNotYetRetryable(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected an error for 429")
 	}
-	if core.IsTransient(err) {
-		t.Error("429 is now classified as transient — the retry wiring was implemented; update this test and close the gap issue")
+	var pe *core.ProviderError
+	if !errors.As(err, &pe) {
+		t.Fatalf("expected *core.ProviderError, got %T: %v", err, err)
 	}
-	if core.IsPermanent(err) {
-		t.Error("429 is now classified as permanent — revisit: a rate limit should be transient")
+	if pe.StatusCode != http.StatusTooManyRequests {
+		t.Errorf("StatusCode = %d, want 429", pe.StatusCode)
 	}
 }
