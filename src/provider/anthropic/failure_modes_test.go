@@ -54,20 +54,22 @@ func TestHandleErrorResponse_Classification(t *testing.T) {
 	}
 }
 
-// TestHandleErrorResponse_RateLimitNotYetRetryable documents the same wiring gap
-// as the OpenAI provider: a 429 surfaces as a *core.ProviderError, which
-// core.IsTransient does not recognize, so RetryableQuery would not retry it.
-// Flip this assertion when the provider→retry classification is implemented.
-func TestHandleErrorResponse_RateLimitNotYetRetryable(t *testing.T) {
+// TestHandleErrorResponse_RateLimitIsProviderError documents that a 429
+// surfaces as a *core.ProviderError carrying the status code. The retry
+// decision lives in middleware.RetryMiddleware (see
+// src/provider/middleware/retry_test.go), which retries 429/5xx. (#304 removed
+// the redundant, unused core.RetryableQuery/Transient/Permanent system.)
+func TestHandleErrorResponse_RateLimitIsProviderError(t *testing.T) {
 	p := dummyProvider(t)
 	err := p.handleErrorResponse(http.StatusTooManyRequests, []byte(`{"error":{"type":"rate_limit_error"}}`))
 	if err == nil {
 		t.Fatal("expected an error for 429")
 	}
-	if core.IsTransient(err) {
-		t.Error("429 is now transient — retry wiring implemented; update this test and close the gap issue")
+	var pe *core.ProviderError
+	if !errors.As(err, &pe) {
+		t.Fatalf("expected *core.ProviderError, got %T: %v", err, err)
 	}
-	if core.IsPermanent(err) {
-		t.Error("429 is now permanent — revisit: a rate limit should be transient")
+	if pe.StatusCode != http.StatusTooManyRequests {
+		t.Errorf("StatusCode = %d, want 429", pe.StatusCode)
 	}
 }
