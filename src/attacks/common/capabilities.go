@@ -122,6 +122,20 @@ type Cleaner interface {
 	Cleanup(ctx context.Context, recordIDs []string) error
 }
 
+// Purger is implemented by providers that own a memory store the operator can
+// purge programmatically. After a memory-poisoning run emits a CleanupHint with
+// injected record IDs (also recorded in result.Metadata["injected_record_ids"]),
+// the CLI (`llmrecon attack purge`) calls Purge to roll back the injection —
+// the automated successor to v0.9.0's manual-cleanup CleanupHint workflow.
+//
+// Modules type-assert against Purger to report whether a target supports
+// automated cleanup; the CLI type-asserts to perform it. Purge SHOULD be
+// idempotent: purging an already-absent ID is not an error.
+type Purger interface {
+	Provider
+	Purge(ctx context.Context, recordIDs []string) error
+}
+
 // ---------------------------------------------------------------------------
 // v0.10.0 #176 — modality-specific capabilities for agentic + audio attacks
 // ---------------------------------------------------------------------------
