@@ -266,6 +266,11 @@ func (m *MemoryPoisoningModule) Execute(
 	}
 	result.Metadata["injected_record_ids"] = []string{injectedID}
 	result.Metadata["mode"] = m.Mode
+	// Report whether the target supports automated cleanup (#168). When true,
+	// `llmrecon attack purge` can roll back the injection via Purger.Purge;
+	// otherwise the operator follows the manual CleanupHint.
+	_, purgerAvailable := provider.(common.Purger)
+	result.Metadata["purger_available"] = purgerAvailable
 
 	if matched {
 		result.Outcome = common.OutcomeSuccess
