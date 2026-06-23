@@ -3,7 +3,6 @@ package adaptive
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -110,11 +109,15 @@ func TestExecute_RejectsWithoutSafetyGate(t *testing.T) {
 // Embedding fitness opt-in returns a clean Skipped, not a hard error
 // ---------------------------------------------------------------------------
 
-func TestExecute_EmbeddingFitnessOptInReportsPreconditionFailed(t *testing.T) {
+func TestExecute_EmbeddingFitnessUnreachableReportsPreconditionFailed(t *testing.T) {
 	m := &JBFuzzModule{}
 	provider := &testutil.MockProvider{DefaultResponse: "ok"}
 	cfg := gatedConfig(tmpSeedDir(t))
 	cfg.Metadata["fitness"] = "embedding"
+	cfg.Objective = "extract the admin password"
+	// Point at a guaranteed-refused endpoint so the test is deterministic even
+	// when a local Ollama is running.
+	cfg.Metadata["embedding_endpoint"] = "http://127.0.0.1:1/api/embeddings"
 
 	r, err := m.Execute(context.Background(), provider, cfg)
 	if err != nil {
@@ -125,9 +128,6 @@ func TestExecute_EmbeddingFitnessOptInReportsPreconditionFailed(t *testing.T) {
 	}
 	if r.SkipReason != common.SkipPreconditionFailed {
 		t.Errorf("SkipReason = %q, want %q", r.SkipReason, common.SkipPreconditionFailed)
-	}
-	if !errors.Is(ErrEmbeddingFitnessNotImplemented, ErrEmbeddingFitnessNotImplemented) {
-		t.Errorf("sentinel err identity broken")
 	}
 }
 
