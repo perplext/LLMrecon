@@ -108,6 +108,7 @@ func TestQuickstartDocumentsRealCLISurface(t *testing.T) {
 	cases := []string{
 		"attack list",
 		"attack run",
+		"attack purge",
 		"template list",
 		"template create",
 		"bundle create",

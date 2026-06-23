@@ -934,6 +934,78 @@ The following sections document novel attack techniques from recent security res
 
 ---
 
+### Evolutionary Fuzzing Engines
+
+Black-box engines that *discover* jailbreaks at runtime by mutating a seed corpus and steering on feedback — distinct from the curated, handcrafted techniques above. Both require `allow_experimental=true` (they generate novel attacks rather than replaying known ones) and share pluggable **fitness** scorers; JBFuzz additionally exposes pluggable **selection** strategies.
+
+#### JBFuzz
+
+**Description**: Black-box mutation/feedback fuzzer using synonym substitution over a seed corpus. Each generation selects a seed, mutates it, queries the target, and scores the response; higher-scoring seeds are favored over time.
+
+**Technique IDs**: `jbfuzz`
+
+**OWASP Mapping**: LLM01, ASI01
+
+**Source**: JBFuzz — arXiv 2503.08990
+
+**Selection strategies** (`metadata selection=`):
+- `ucb1_restart` *(default)* — UCB1 bandit over the fixed seed population with a periodic uniform-random restart to escape local optima.
+- `mcts_explore` — Monte-Carlo search tree: each node is a prompt, children are its mutated variants; a UCT tree policy (exploitation + depth-weighted exploration bonus) with progressive widening and reward backpropagation from each expanded leaf to the root. Per GPTFuzzer (Yu et al., USENIX Security 2024, arXiv 2309.10253).
+
+**Fitness scorers** (`metadata fitness=`):
+- `heuristic` *(default)* — refusal-indicator matching with a short-response length floor. Cheap, deterministic, no dependencies.
+- `embedding` — scores goal-relevance as the cosine similarity between the target response and the operator `objective`, embedded via a local Ollama-style endpoint (`embedding_endpoint`, default `http://localhost:11434/api/embeddings`; `embedding_model`, default `nomic-embed-text`), blended with the heuristic. Opting in without a reachable endpoint yields a clean `Skipped`/`precondition_failed`, never a crash. Per e5-base-v2 (arXiv 2212.03533).
+
+**Key metadata**: `allow_experimental=true` (required), `selection`, `fitness`, `seed_dir`, `rng_seed` (deterministic runs), `max_queries` / `max_generations` / `max_wall_clock_seconds` (budget, hard-capped), `early_stop_on_success`.
+
+**Success Indicators**:
+- A mutated prompt elicits a response crossing the fitness success threshold
+- Result records `selection`, `node_count`, `best_score`, and the per-generation trajectory
+
+#### Persona Evolution
+
+**Description**: Genetic algorithm that evolves jailbreak *personas* (backstory / traits / style) via uniform crossover and mutation, with k-tournament selection and a novelty penalty that preserves population diversity. Shares JBFuzz's fitness scorers (`heuristic` / `embedding`).
+
+**Technique IDs**: `persona_evolve`
+
+**OWASP Mapping**: LLM01, ASI01, ASI09
+
+**Source**: arXiv 2507.22171
+
+**Key metadata**: `allow_experimental=true` (required), `fitness`, `corpus_path`, `rng_seed`, and the same budget knobs as JBFuzz.
+
+**Success Indicators**:
+- An evolved persona elicits a response crossing the fitness threshold
+
+---
+
+### Memory Poisoning & Cleanup
+
+**Description**: Persistent, state-changing attacks that inject a payload into a target's long-term memory store (vector DB / agent log) so it resurfaces in a later turn or session. All modes require `i_understand_risks=true` and a target that retains memory (`common.MemoryProbe`); they fail-fast as `Skipped` against stateless targets.
+
+**Technique IDs**: `minja`, `memorygraft`, `injecmem`
+
+**OWASP Mapping**: ASI06 (memorygraft also ASI10)
+
+**Sources**: MINJA — arXiv 2503.03704 · MemoryGraft — arXiv 2512.16962 · InjecMem — OpenReview QVX6hcJ2um
+
+**Cleanup (`attack purge`)**: every run records the injected record IDs (`metadata injected_record_ids`, also echoed in `CleanupHint`) and whether the target supports automated cleanup (`purger_available`). When the provider implements the `common.Purger` capability, roll the injection back with:
+
+```bash
+# explicit IDs
+llmrecon attack purge --provider=<name> --record-ids=rec-1,rec-2
+# or read IDs from a prior run's --emit-jsonl output
+llmrecon attack purge --provider=<name> --result=run.jsonl
+```
+
+Providers without `Purger` return a friendly error pointing back to the manual `CleanupHint`.
+
+**Success Indicators**:
+- The injected payload resurfaces in a later turn/session (poisoning landed)
+- After `purge`, the implant is absent from the store
+
+---
+
 ### Data Exfiltration
 
 #### Covert Channel Exfiltration
@@ -1109,6 +1181,13 @@ Pre-built attack sequences for specific multi-agent frameworks (`templates/frame
 21. [Columbia University — Browser Agent Security (2025)](https://arxiv.org/abs/2501.xxxxx)
 22. [Kaspersky OpenClaw Analysis — Skill Takeover Chains (2026)](https://securelist.com/openclaw-analysis/)
 23. [Cubic Security Audit — Agent RCE Chains (2026)](https://cubic.dev/security-audit-2026)
+24. [JBFuzz — arXiv 2503.08990](https://arxiv.org/abs/2503.08990)
+25. [GPTFuzzer (MCTS-Explore) — Yu et al., USENIX Security 2024, arXiv 2309.10253](https://arxiv.org/abs/2309.10253)
+26. [Text Embeddings by Weakly-Supervised Contrastive Pre-training (e5) — arXiv 2212.03533](https://arxiv.org/abs/2212.03533)
+27. [Persona Evolution — arXiv 2507.22171](https://arxiv.org/abs/2507.22171)
+28. [MINJA: Memory Injection Attack — arXiv 2503.03704](https://arxiv.org/abs/2503.03704)
+29. [MemoryGraft — arXiv 2512.16962](https://arxiv.org/abs/2512.16962)
+30. InjecMem — OpenReview `QVX6hcJ2um` (submission identifier per the source memory-poisoning module; not linked — a resolvable OpenReview URL could not be confirmed at publication time)
 
 ---
 
