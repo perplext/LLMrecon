@@ -125,11 +125,20 @@ func (m *JBFuzzModule) Execute(
 		return skipped(common.SkipPreconditionFailed, fmt.Sprintf("no seeds found in %q", seedDir)), nil
 	}
 
-	// 5. Population — deterministic RNG when seeded via metadata "rng_seed",
-	//    otherwise time-based. Used by mutation and UCB1 random restart.
+	// 5. Selection strategy + RNG. Deterministic RNG when seeded via metadata
+	//    "rng_seed", otherwise time-based; used by mutation and selection.
+	//    Default selection is UCB1+restart (unchanged from v0.9.0); opt into the
+	//    MCTS-Explore tree via metadata "selection=mcts_explore" (#171).
 	rng := newRNG(config.Metadata["rng_seed"])
 
-	pool := newPopulation(seeds)
+	selectionName := config.Metadata["selection"]
+	if selectionName == "" {
+		selectionName = "ucb1_restart"
+	}
+	sel, err := newSelector(selectionName, seeds)
+	if err != nil {
+		return skipped(common.SkipPreconditionFailed, err.Error()), nil
+	}
 
 	// Indicators for "this looks harmful" (used by refusal-heuristic fitness):
 	// operator-supplied config.SuccessIndicators take precedence; seed
@@ -168,22 +177,14 @@ func (m *JBFuzzModule) Execute(
 			return skipped(common.SkipProviderError, fmt.Sprintf("ctx: %v", ctxErr)), nil
 		}
 
-		// Select a candidate by UCB1; every popRestartEvery iterations,
-		// substitute a uniform-random sample to escape local optima.
-		var cand candidate
-		if gen > 0 && gen%popRestartEvery == 0 {
-			cand = pool.uniformRandom(rng)
-		} else {
-			cand = pool.selectUCB1(gen)
-		}
-
-		// Mutate the candidate's prompt with one of the v0.9.0 operators.
-		mutator := pickMutator(rng)
-		mutated := mutator.apply(cand.prompt, rng)
+		// Select + expand via the configured strategy (UCB1+restart or
+		// MCTS-Explore). The selector owns mutation so it can record the mutated
+		// prompt as a tree node (MCTS) or score it against its seed (UCB1).
+		pick := sel.next(gen, rng)
 
 		// Query the target.
 		response, qerr := provider.Query(ctx, []common.Message{
-			{Role: "user", Content: mutated},
+			{Role: "user", Content: pick.prompt},
 		}, nil)
 		queries++
 
@@ -192,22 +193,20 @@ func (m *JBFuzzModule) Execute(
 		var score float64
 		if qerr == nil {
 			score = fit.score(response, successInds)
-		} else {
-			score = 0.0
 		}
-		pool.update(cand.id, score)
+		sel.record(pick, score)
 
 		trajectory = append(trajectory, generationSummary{
-			Generation: gen,
-			CandidateID: cand.id,
-			Mutator:    mutator.name(),
-			Score:      score,
-			Queries:    queries,
+			Generation:  gen,
+			CandidateID: pick.candidateID,
+			Mutator:     pick.mutatorName,
+			Score:       score,
+			Queries:     queries,
 		})
 
 		if score > bestScore {
 			bestScore = score
-			bestCandidate = mutated
+			bestCandidate = pick.prompt
 			bestResponse = response
 		}
 
@@ -246,6 +245,8 @@ func (m *JBFuzzModule) Execute(
 	result.Metadata["best_score"] = bestScore
 	result.Metadata["fitness"] = fitnessName
 	result.Metadata["population_size"] = len(seeds)
+	result.Metadata["selection"] = selectionName
+	result.Metadata["node_count"] = sel.nodeCount()
 	result.Metadata["population_trajectory"] = trajectory
 	if len(clamped) > 0 {
 		result.Metadata["budget_clamped"] = clamped
@@ -334,6 +335,185 @@ func (p *population) update(id string, score float64) {
 			return
 		}
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Selection strategies (#171)
+// ---------------------------------------------------------------------------
+
+// pick is what a selector hands back each generation: the mutated prompt to
+// query, trajectory bookkeeping, and an opaque handle the selector uses to
+// apply the score (a candidate id for UCB1, a *mctsNode for MCTS).
+type pick struct {
+	prompt      string
+	mutatorName string
+	candidateID string
+	handle      interface{}
+}
+
+// selector abstracts seed/node selection so the main loop is strategy-agnostic.
+type selector interface {
+	// next selects and mutates, returning the prompt to query this generation.
+	next(gen int, rng *rand.Rand) pick
+	// record applies the score for a previously returned pick.
+	record(p pick, score float64)
+	// nodeCount is the number of seeds/nodes the strategy is tracking.
+	nodeCount() int
+}
+
+func newSelector(name string, seeds []seed) (selector, error) {
+	switch name {
+	case "", "ucb1_restart":
+		return &ucb1RestartSelector{pool: newPopulation(seeds)}, nil
+	case "mcts_explore":
+		return newMCTSSelector(seeds), nil
+	default:
+		return nil, fmt.Errorf("jbfuzz: unknown selection %q (valid: ucb1_restart, mcts_explore)", name)
+	}
+}
+
+// ucb1RestartSelector is the v0.9.0 default: UCB1 over a fixed seed population
+// with a periodic uniform-random restart. Behavior (and RNG call order) is
+// unchanged from the pre-#171 inline loop.
+type ucb1RestartSelector struct {
+	pool *population
+}
+
+func (s *ucb1RestartSelector) next(gen int, rng *rand.Rand) pick {
+	var cand candidate
+	if gen > 0 && gen%popRestartEvery == 0 {
+		cand = s.pool.uniformRandom(rng)
+	} else {
+		cand = s.pool.selectUCB1(gen)
+	}
+	mut := pickMutator(rng)
+	return pick{
+		prompt:      mut.apply(cand.prompt, rng),
+		mutatorName: mut.name(),
+		candidateID: cand.id,
+		handle:      cand.id,
+	}
+}
+
+func (s *ucb1RestartSelector) record(p pick, score float64) {
+	if id, ok := p.handle.(string); ok {
+		s.pool.update(id, score)
+	}
+}
+
+func (s *ucb1RestartSelector) nodeCount() int { return len(s.pool.candidates) }
+
+// ---------------------------------------------------------------------------
+// MCTS-Explore (#171) — GPTFuzzer (Yu et al., USENIX Security 2024)
+// ---------------------------------------------------------------------------
+
+const (
+	// mctsExploreConstant: UCT exploration weight, classic c=sqrt(2).
+	mctsExploreConstant = 1.41421356237
+	// mctsDepthPenalty: the explore bonus is weighted by depth — deeper nodes
+	// are penalized so the search keeps breadth and doesn't tunnel into one
+	// over-mutated lineage (GPTFuzzer's reward-for-depth correction).
+	mctsDepthPenalty = 0.1
+	// mctsMaxChildren: progressive widening — a node accumulates up to this many
+	// children before the tree policy is forced to descend instead of expand.
+	mctsMaxChildren = 4
+)
+
+type mctsNode struct {
+	id         string
+	prompt     string
+	depth      int
+	parent     *mctsNode
+	children   []*mctsNode
+	totalScore float64
+	visits     int
+}
+
+// uct scores a node for the tree policy. Unvisited nodes return +Inf so they
+// are always expanded first; otherwise exploitation (mean reward) plus a
+// depth-weighted exploration bonus.
+func (n *mctsNode) uct(parentVisits int) float64 {
+	if n.visits == 0 {
+		return math.MaxFloat64
+	}
+	avg := n.totalScore / float64(n.visits)
+	explore := mctsExploreConstant * math.Sqrt(math.Log(float64(parentVisits+1))/float64(n.visits))
+	return avg + explore - mctsDepthPenalty*float64(n.depth)
+}
+
+type mctsSelector struct {
+	roots  []*mctsNode
+	all    []*mctsNode // flat index for nodeCount
+	nextID int
+}
+
+func newMCTSSelector(seeds []seed) *mctsSelector {
+	s := &mctsSelector{}
+	for _, sd := range seeds {
+		n := &mctsNode{id: sd.ID, prompt: sd.Prompt}
+		s.roots = append(s.roots, n)
+		s.all = append(s.all, n)
+	}
+	return s
+}
+
+func (s *mctsSelector) next(_ int, rng *rand.Rand) pick {
+	// Tree policy: best root, then descend by UCT until a node with room for
+	// another child (progressive widening), then expand there.
+	node := bestByUCT(s.roots, s.rootVisits())
+	for len(node.children) >= mctsMaxChildren {
+		node = bestByUCT(node.children, node.visits)
+	}
+
+	// Expansion: mutate the selected node's prompt into a fresh child node.
+	mut := pickMutator(rng)
+	s.nextID++
+	child := &mctsNode{
+		id:     fmt.Sprintf("mcts-%d", s.nextID),
+		prompt: mut.apply(node.prompt, rng),
+		depth:  node.depth + 1,
+		parent: node,
+	}
+	node.children = append(node.children, child)
+	s.all = append(s.all, child)
+
+	return pick{prompt: child.prompt, mutatorName: mut.name(), candidateID: child.id, handle: child}
+}
+
+// record backpropagates the score from the expanded leaf up to its root.
+func (s *mctsSelector) record(p pick, score float64) {
+	node, ok := p.handle.(*mctsNode)
+	if !ok {
+		return
+	}
+	for n := node; n != nil; n = n.parent {
+		n.totalScore += score
+		n.visits++
+	}
+}
+
+func (s *mctsSelector) nodeCount() int { return len(s.all) }
+
+func (s *mctsSelector) rootVisits() int {
+	total := 0
+	for _, r := range s.roots {
+		total += r.visits
+	}
+	return total
+}
+
+// bestByUCT returns the highest-UCT node among siblings (deterministic on ties:
+// first index wins, so a fixed rng_seed yields a reproducible tree).
+func bestByUCT(nodes []*mctsNode, parentVisits int) *mctsNode {
+	best := nodes[0]
+	bestUCT := best.uct(parentVisits)
+	for _, n := range nodes[1:] {
+		if u := n.uct(parentVisits); u > bestUCT {
+			bestUCT = u
+			best = n
+		}
+	}
+	return best
 }
 
 // ---------------------------------------------------------------------------

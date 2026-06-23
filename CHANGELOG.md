@@ -10,6 +10,15 @@ This changelog was started with v0.9.0; earlier history lives in `git log`.
 
 ### Added
 
+- **MCTS-Explore selection strategy for jbfuzz (#171).** New opt-in seed
+  selector via metadata `selection=mcts_explore`, alongside the unchanged
+  default `ucb1_restart`. Builds a Monte-Carlo search tree (each node a prompt,
+  children its mutated variants) with a UCT tree policy — exploitation plus a
+  depth-weighted exploration bonus — progressive widening, and reward
+  backpropagation from each expanded leaf to the root, per GPTFuzzer (Yu et al.,
+  USENIX Security 2024). Deterministic under a fixed `rng_seed`. The result
+  records `selection` and `node_count`. Selection is now behind a `selector`
+  abstraction; UCB1+restart behavior (and RNG call order) is preserved exactly.
 - **Embedding-fitness for jbfuzz / persona_evolve (#170).** The evolutionary
   engines' opt-in `fitness=embedding` scorer is now implemented (was a stub
   returning "not implemented"). It scores goal-relevance as the cosine
