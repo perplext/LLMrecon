@@ -1,122 +1,143 @@
 # Quick Start Guide
 
-Get up and running with LLMrecon in 5 minutes.
+Get up and running with LLMrecon. This is the single canonical quickstart —
+it consolidates what used to be spread across several overlapping guides.
 
-## 1. Install
+> Every `llmrecon` command shown here is verified against the real CLI by a
+> smoke test (`src/cmd/readme_smoke_test.go`); documented commands that don't
+> exist fail CI.
 
-### Option A: Download Binary (Fastest)
+## 1. Build
+
+LLMrecon is built from source with Go (1.21+).
 
 ```bash
-# macOS
-curl -L https://github.com/your-org/LLMrecon/releases/latest/download/LLMrecon-darwin-amd64.tar.gz | tar xz
-sudo mv LLMrecon /usr/local/bin/
+# Clone, then build the CLI
+go build -o llmrecon ./src/main.go
 
-# Linux
-curl -L https://github.com/your-org/LLMrecon/releases/latest/download/LLMrecon-linux-amd64.tar.gz | tar xz
-sudo mv LLMrecon /usr/local/bin/
-
-# Verify installation
-LLMrecon version
+# Verify
+./llmrecon version
 ```
 
-### Option B: Install with Go
+For the Python attack-harness components (ML optimization, Ollama test
+harness), see the Python sections of `CLAUDE.md` and install:
 
 ```bash
-go install github.com/your-org/LLMrecon/src@latest
+pip install numpy pandas requests rich
 ```
 
-## 2. Configure
+## 2. Explore the attack modules
+
+The attack-module ecosystem is the core of the tool.
 
 ```bash
-# Initialize configuration
-LLMrecon init
+# Enumerate every registered attack module
+./llmrecon attack list
 
-# Set your OpenAI API key
+# Machine-readable form
+./llmrecon attack list --json
+```
+
+## 3. Run your first attack (mock provider)
+
+`--provider=mock` runs a module's full state machine against a deterministic
+local mock — no API key, no network, no cost. Ideal for trying things out.
+
+```bash
+./llmrecon attack run \
+  --module=jbfuzz \
+  --provider=mock \
+  --payload="<the harmful instruction to test>" \
+  --metadata=allow_experimental=true
+```
+
+Useful flags (`./llmrecon attack run --help` for the full list):
+
+- `--provider` — `mock` (default), `openai`, or `anthropic`.
+- `--api-key` — provider API key; takes precedence over the provider's
+  `*_API_KEY` env var.
+- `--metadata key=value` — repeatable; sets safety gates (e.g.
+  `allow_experimental=true`, `i_understand_risks=true`).
+- `--success-indicators` — comma-separated substrings that mark a success.
+- `--emit-jsonl <path>` — append the result as one JSON line for the Python
+  ingest pipeline (`python -m ml.data.ingest`).
+
+## 4. Run against a real provider
+
+Real providers read the API key from `--api-key` (preferred) or the
+`OPENAI_API_KEY` / `ANTHROPIC_API_KEY` env var.
+
+```bash
+# Flag (takes precedence)
+./llmrecon attack run --module=jbfuzz --provider=openai --api-key="sk-..." \
+  --payload="..." --metadata=allow_experimental=true
+
+# Or via env var
 export OPENAI_API_KEY="sk-..."
-
-# Or configure directly
-LLMrecon config set openai.api_key "sk-..."
+./llmrecon attack run --module=jbfuzz --provider=openai --payload="..." \
+  --metadata=allow_experimental=true
 ```
 
-## 3. Run Your First Scan
+## 5. Templates
 
 ```bash
-# Test for prompt injection vulnerabilities
-LLMrecon scan --target openai --template prompt-injection/basic
+# List vulnerability templates
+./llmrecon template list
 
-# Run all OWASP LLM Top 10 tests
-LLMrecon scan --target openai --compliance owasp-llm
+# Create a new template
+./llmrecon template create
 ```
 
-## 4. View Results
+## 6. Bundles (air-gapped distribution)
 
 ```bash
-# Get scan results
-LLMrecon scan list
-LLMrecon scan results <scan-id>
+# Create a signed bundle
+./llmrecon bundle create
 
-# Generate HTML report
-LLMrecon report --format html --output report.html
-open report.html  # macOS
-# or
-xdg-open report.html  # Linux
+# Verify an extracted bundle's signature / checksums / manifest
+./llmrecon bundle verify <path>
+
+# Import an extracted bundle directory
+./llmrecon bundle import <path>
+
+# Inspect a bundle
+./llmrecon bundle info <path>
 ```
 
-## Common Commands
+## 7. Credentials
 
 ```bash
-# Update templates to latest
-LLMrecon template update
-
-# List available templates
-LLMrecon template list
-
-# Test specific vulnerability category
-LLMrecon scan --target openai --category data-leakage
-
-# Scan with custom template
-LLMrecon scan --target openai --template ./my-template.yaml
-
-# Get help
-LLMrecon help
-LLMrecon scan --help
+./llmrecon credential add
+./llmrecon credential list
+./llmrecon credential rotate <id>
 ```
 
-## Example: Full Security Audit
+## 8. Updates
 
 ```bash
-# 1. Update everything
-LLMrecon update
-LLMrecon template update
-
-# 2. Run comprehensive scan
-LLMrecon scan \
-  --target openai \
-  --compliance owasp-llm \
-  --output-dir ./audit-results \
-  --parallel 5
-
-# 3. Generate executive report
-LLMrecon report \
-  --scan-id latest \
-  --format pdf \
-  --template executive-summary \
-  --output security-audit.pdf
-
-# 4. View critical findings
-LLMrecon scan results latest --severity critical,high
+./llmrecon update check     # see what's available
+./llmrecon update apply     # apply available updates
+./llmrecon check-version    # check the binary version against the latest
 ```
 
-## Next Steps
+## Common commands
 
-- 📖 Read the [User Guide](user-guide.md) for detailed usage
-- 🧪 Learn to [write custom templates](template-guide.md)
-- 🔧 Set up [CI/CD integration](user-guide.md#integration-with-cicd)
-- 🤝 [Contribute](../CONTRIBUTING.md) to the project
+```bash
+./llmrecon version          # build/version info
+./llmrecon changelog        # version history
+./llmrecon detect           # detect vulnerabilities in LLM responses
+./llmrecon prompt-protection # manage prompt-injection protection
+./llmrecon help             # full command tree
+./llmrecon attack run --help # per-command help
+```
 
-## Need Help?
+## Next steps
 
-- 💬 [Discord Community](https://discord.gg/LLMrecon)
-- 📚 [Full Documentation](https://docs.LLMrecon.com)
-- 🐛 [Report Issues](https://github.com/your-org/LLMrecon/issues)
-- 📧 [Email Support](mailto:support@LLMrecon.com)
+- 📖 [User Guide](user-guide.md) — detailed usage
+- 🧪 [Template Guide](template-guide.md) — writing custom templates
+- 🤝 [Contributing](../CONTRIBUTING.md)
+
+## Need help?
+
+- 🐛 [Report issues](https://github.com/perplext/LLMrecon/issues)
+- 📚 Browse the rest of `docs/`
