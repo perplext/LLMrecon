@@ -387,8 +387,7 @@ System Prompt Leakage:              ███████░░░░░░░�
 
 ### Core Documentation
 
-- 📖 [Quick Start Guide](docs/QUICK-START-REFERENCE.md)
-- 🛠️ [Installation Guide](docs/installation.md)
+- 📖 [Quick Start Guide](docs/quickstart.md) (install + first attack run)
 - 📋 [API Reference](docs/api-reference.md)
 - 🔒 [Security Best Practices](SECURITY.md)
 - 🆕 [Release Notes](RELEASE.md)
