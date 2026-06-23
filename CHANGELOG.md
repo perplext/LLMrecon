@@ -8,6 +8,13 @@ This changelog was started with v0.9.0; earlier history lives in `git log`.
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-06-22
+
+Everything since v0.10.0: the v0.11.0 stabilization pass (first-time test
+coverage for the crypto / bundle / template subsystems, dead-code attic, doc
+consolidation, and the production bugs that writing those tests surfaced) plus
+three v0.12.0 attack-engine features.
+
 ### Added
 
 - **MCTS-Explore selection strategy for jbfuzz (#171).** New opt-in seed
@@ -41,6 +48,39 @@ This changelog was started with v0.9.0; earlier history lives in `git log`.
   the capability get a friendly error pointing back to the manual `CleanupHint`.
   Includes an in-memory reference `Purger` (`testutil.MockMemoryProvider`) and an
   inject→verify-present→purge→verify-absent smoke test.
+- **First-time test coverage for the security-critical subsystems** (v0.11.0
+  Phase 2). `src/security/` (#231 — keystore / vault / cert-pinning / prompt),
+  `src/bundle/` (#230 — bundle round-trip, signature, zip-slip), and
+  `src/template/` (#229 — loader / validator / cache) went from zero tests to
+  `go test -race`-clean suites covering happy + adversarial paths.
+- `--api-key` flag for `attack run` (takes precedence over `*_API_KEY` env
+  vars), plus provider HTTP error-classification tests (#234).
+
+### Fixed
+
+- **keystore**: automatic key rotation could never start — `KeyRotator`
+  initialized its stop channel open, so the first `StartAutoRotation` always
+  reported "already running".
+- **prompt**: `NewContentFilter` panicked on a corrupted regex literal (a
+  botched secret-scanner edit), which also crashed `NewProtectionManager`.
+- **prompt**: `ProtectPrompt` returned a "blocked" verdict while still handing
+  back the original malicious prompt; and `ProtectionManager` raced a shared
+  result across its monitor/reporting goroutines.
+- **audit**: `FileLogger` rotation collided filenames within the same second,
+  silently appending rotated entries to a single file.
+
+### Changed / Removed
+
+- Atticked dead code: `src/bundle/delta.go` (#228), the build-ignored
+  `src/cmd` tools (#226 / #227), the obsolete v0.2 / v0.3 planning docs, and the
+  unused `core.RetryableQuery` / Transient / Permanent retry system (#304 — the
+  live retry path is `middleware.RetryMiddleware`, which already retries 429/5xx).
+- Consolidated `docs/` (#232): five overlapping quickstarts folded into a single
+  fiction-free `docs/quickstart.md` (guarded by a CLI smoke test); top-level docs
+  cut from ~85 to ~65.
+- Added a CI guard against `//go:build ignore` files in `src/cmd` (#226).
+- Removed 94 accidentally-committed prompt-protection report artifacts and
+  gitignored the output directory.
 
 ## [0.10.0] - 2026-05-03
 
