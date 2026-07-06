@@ -20,7 +20,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/jung-kurt/gofpdf v1.16.2
-	github.com/klauspost/compress v1.18.6
+	github.com/klauspost/compress v1.19.0
 	github.com/lib/pq v1.12.3
 	github.com/mattn/go-sqlite3 v1.14.47
 	github.com/rs/zerolog v1.35.1
