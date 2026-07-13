@@ -15,7 +15,7 @@ stable-baselines3>=2.9.0
 
 # Visualization & Dashboard
 streamlit>=1.58.0
-plotly>=6.8.0
+plotly>=6.9.0
 matplotlib>=3.11.0
 seaborn>=0.13.2
 
