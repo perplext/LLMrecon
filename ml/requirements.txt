@@ -16,7 +16,7 @@ stable-baselines3>=2.9.0
 # Visualization & Dashboard
 streamlit>=1.59.2
 plotly>=6.8.0
-matplotlib>=3.11.0
+matplotlib>=3.11.1
 seaborn>=0.13.2
 
 # Image Processing (for multi-modal)
