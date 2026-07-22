@@ -21,7 +21,7 @@ seaborn>=0.13.2
 
 # Image Processing (for multi-modal)
 Pillow>=12.3.0
-opencv-python>=4.13.0.92
+opencv-python>=5.0.0.93
 qrcode>=8.2
 
 # Data Processing
