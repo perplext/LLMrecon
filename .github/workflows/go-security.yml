@@ -28,7 +28,7 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@v2.27.1
+        uses: securego/gosec@v2.28.0
         with:
           # Excluded rules (with rationale). The v2.27.1 bump (#256) enabled
           # several analyzers that fire systematically against this tool's
