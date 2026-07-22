@@ -20,7 +20,7 @@ matplotlib>=3.11.1
 seaborn>=0.13.2
 
 # Image Processing (for multi-modal)
-Pillow>=12.2.0
+Pillow>=12.3.0
 opencv-python>=4.13.0.92
 qrcode>=8.2
 
