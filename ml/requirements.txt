@@ -6,7 +6,7 @@ torch>=2.13.0
 tensorflow>=2.21.0
 scikit-learn>=1.9.0
 numpy>=2.5.1
-pandas>=3.0.4
+pandas>=3.0.5
 
 # Deep Learning & NLP
 transformers>=5.14.1
