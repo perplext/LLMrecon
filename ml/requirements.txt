@@ -14,7 +14,7 @@ gym>=0.26.2
 stable-baselines3>=2.9.0
 
 # Visualization & Dashboard
-streamlit>=1.60.0
+streamlit>=1.62.0
 plotly>=6.8.0
 matplotlib>=3.11.1
 seaborn>=0.13.2
