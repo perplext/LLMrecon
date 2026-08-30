@@ -30,7 +30,7 @@ networkx>=3.6.1
 
 # Utilities
 tqdm>=4.70.0
-python-dotenv>=1.2.2
+python-dotenv>=1.2.3
 pyyaml>=6.0.3
 
 # Optional GPU Support
