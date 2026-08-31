@@ -9,7 +9,7 @@ numpy>=2.5.1
 pandas>=3.0.5
 
 # Deep Learning & NLP
-transformers>=5.15.1
+transformers>=5.16.1
 gym>=0.26.2
 stable-baselines3>=2.9.0
 
