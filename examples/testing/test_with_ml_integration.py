@@ -189,5 +189,5 @@ if __name__ == "__main__":
     print(f"Attacks processed: {pipeline_stats['attacks_processed']}")
     print(f"Collection rate: {pipeline_stats['collection_rate']:.2f}/s")
     
-    print("\nML components data saved to: /Users/nconsolo/claude-code/llmrecon/data/attacks/")
+    print("\nML components data saved to: ./data/attacks/")
     print("Database: attacks.db")

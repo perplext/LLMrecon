@@ -104,3 +104,23 @@ dist/
 
 # Prompt-protection reporting run artifacts (test/runtime output, not source)
 src/security/prompt/reports/
+
+# Compiled Go binaries accidentally built into the repo root.
+# Prefer building into ./bin/ (gitignored) via `go build -o bin/<name>`.
+/llmrecon
+/demo
+/downgrade_example
+/enhanced_prompt_protection
+/execution-benchmark
+/hash_example
+/offline-bundle
+/owasp-gen
+/owasp-mock-test
+/static_file_handler_example
+/static_file_handler_standalone
+/template_security_standalone
+/validate-manifest
+/bin/
+
+# Test-run security reports (output, not source)
+security_reports/
