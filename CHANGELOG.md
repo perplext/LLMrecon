@@ -17,6 +17,75 @@ This changelog was started with v0.9.0; earlier history lives in `git log`.
   GPTFuzzer, e5, MINJA/MemoryGraft/InjecMem). Added `attack purge` and the
   engine metadata knobs to `docs/quickstart.md`.
 
+## [0.13.0] - 2026-09-10
+
+Absorbs the March–September 2026 LLM/agentic attack-research wave (the catalog
+frontier had stopped at ~June 2026), plus a dependency/security pass folding in
+the open Dependabot bumps and resolving the CodeQL dependency CVEs.
+
+### Added
+
+- **Six new attack modules** (all self-register; `attack list` now enumerates
+  64). Each cites its primary source and follows the honesty bar (real
+  `Execute()`, typed skips, no fabricated success):
+  - **`agent_data_injection`** (`adaptive/`) — steers an agent via malicious
+    data disguised as trusted provenance / control-token / delimiter framing
+    rather than instructions. Modes: `provenance` (default), `control_token`
+    (folds in CrowdStrike PT0198), `delimiter`. Gate: `i_understand_risks`.
+    Source: arXiv 2607.05120; CrowdStrike PT0198.
+  - **`mcp_tag_concealment`** (`agentic/mcp`) — invisible Unicode TAG-block
+    payloads (`conceal_mode=tag_conceal`) or a post-approval metadata rug-pull
+    (`conceal_mode=rugpull`); asserts the MCP approval-view vs model-view
+    fidelity gap structurally. Capability: `MCPProvider` (text-sim opt-in).
+    Gate: `i_understand_risks`. Source: arXiv 2607.05744.
+  - **`mosaic_cmd_chain`** (`agentic/persistence`) — composes individually-benign
+    shell commands into a dangerous producer→consumer chain. Capability:
+    `CommandChainProvider`. Gate: `i_understand_risks`. Source: arXiv 2607.02857.
+  - **`prja_reasoning_inject`** (`reasoning/`) — psychological framing drives
+    harmful content into the reasoning trace while the answer stays benign;
+    reads (never mutates) the trace, so signed traces run. Capability:
+    `ReasoningProvider`. Gate: `i_understand_risks`. Source: arXiv 2604.15725.
+  - **`token_suppression`** (`evasion/`) — suppresses the model's refusal
+    vocabulary. Pure-prompt, no gate. Source: CrowdStrike PT0197.
+  - **`ghost_vectors`** (`rag/`) — reconstructs soft-deleted embeddings from an
+    HNSW raw index, bypassing API-level deletion. Capability: `VectorStoreProbe`.
+    Gate: `i_understand_risks`. Source: arXiv 2606.18497.
+- **New optional provider capabilities** in `src/attacks/common`:
+  `VectorStoreProbe` (insert/delete/raw-index-read) and `CommandChainProvider`
+  (execute a command chain, report per-command-allow vs dangerous composition).
+- **New/extended test doubles**: `testutil.MockVectorStore`; `MockCodingAgent`
+  gains `RunCommandChain` with a real producer→consumer composition detector.
+- **OWASP Agentic 2026 mapping** extended with the six techniques (YAML
+  categories + `technique_index`, regenerated `owasp_agentic_generated.go`, and
+  the hand-written map kept consistent); documented in
+  `docs/ATTACK_TECHNIQUES.md` with citations.
+
+### Changed
+
+- **Dependencies (Dependabot bumps folded in):** aws-sdk-go-v2 1.44.0→1.45.1
+  (+ config/credentials/s3), klauspost/compress 1.19.2→1.20.0,
+  golang.org/x/crypto 0.54.0→0.56.0, go-playground/validator/v10 10.30.3→10.30.4,
+  go-sql-driver/mysql 1.10.0→1.10.1; Python torch>=2.14.0, numpy>=2.5.2,
+  transformers>=5.16.1, streamlit>=1.63.0, plotly>=7.0.0, scipy>=1.18.1; CI
+  securego/gosec v2.28.0→v2.29.0.
+
+### Security
+
+- **`xuri/excelize/v2` 2.10.1→2.11.0** — resolves the high-severity unbounded
+  row-index allocation OOM/panic DoS.
+- **CodeQL dependency CVEs resolved** by the x/crypto + x/net + aws-sdk bumps
+  (CVE-2026-56854 critical; -59161/-54063 high; -59162/-78662/-56855 medium);
+  `govulncheck ./...` confirms none remain reachable.
+- **Known accepted:** GO-2026-5932 (note) — `x/crypto/openpgp` is deprecated and
+  has no fixed release; reached only transitively (init) via
+  `google/go-github/v45`. Real fix is a go-github major upgrade (follow-up).
+
+### Fixed
+
+- **Integration smoke suite** now imports the `evasion/` and `rag/` packages
+  (a pre-existing gap — neither was ever registered in the smoke binary), so
+  modules in those packages are covered by registration and smoke tests.
+
 ## [0.12.0] - 2026-06-22
 
 Everything since v0.10.0: the v0.11.0 stabilization pass (first-time test

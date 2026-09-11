@@ -4,7 +4,7 @@
 
 ### Advanced Security Testing Framework for Large Language Models
 
-[![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)](https://github.com/perplext/LLMrecon/releases)
+[![Version](https://img.shields.io/badge/version-v0.13.0-blue.svg)](https://github.com/perplext/LLMrecon/releases)
 [![Go Version](https://img.shields.io/badge/go-1.25.0-00ADD8.svg)](https://go.dev/)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![OWASP](https://img.shields.io/badge/OWASP%20Top%2010-2025%20Compliant-green.svg)](https://owasp.org/)

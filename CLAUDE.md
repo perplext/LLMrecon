@@ -416,6 +416,62 @@ RUN_INTEGRATION=1 go test ./src/attacks/integration/...
 
 Cost note: smoke tests against a local `MockLLMServer` are free. Running them against real providers (uncapped budgets, real keys) costs roughly $3–$8 per run on production-tier models — most of that is the GA engines.
 
+## v0.13.0 New Attack Modules (Mar–Sep 2026 Research Wave)
+
+Version 0.13.0 adds six attack modules absorbing the March–September 2026
+research wave, plus two optional provider capabilities. All follow the v0.9.0+
+honesty bar and the 3-state outcome taxonomy; every gated module runs against
+`--provider=mock` or the relevant mock target.
+
+### v0.13.0 Attack Module Inventory
+
+| Module | Path | Source | OWASP Agentic | Safety gate | Capability |
+|--------|------|--------|---------------|-------------|------------|
+| `agent_data_injection` | `src/attacks/adaptive/agent_data_injection.go` | arXiv 2607.05120; CrowdStrike PT0198 | ASI01 | `i_understand_risks` | — (text; runs on mock) |
+| `mcp_tag_concealment` | `src/attacks/agentic/mcp/tag_concealment.go` | arXiv 2607.05744 | ASI01, ASI05 | `i_understand_risks` | `MCPProvider` (text-sim opt-in) |
+| `mosaic_cmd_chain` | `src/attacks/agentic/persistence/mosaic_cmd_chain.go` | arXiv 2607.02857 | ASI01, ASI05 | `i_understand_risks` | `CommandChainProvider` |
+| `prja_reasoning_inject` | `src/attacks/reasoning/prja.go` | arXiv 2604.15725 | ASI01 | `i_understand_risks` | `ReasoningProvider` |
+| `token_suppression` | `src/attacks/evasion/token_suppression.go` | CrowdStrike PT0197 | ASI01 | none | — |
+| `ghost_vectors` | `src/attacks/rag/ghost_vectors.go` | arXiv 2606.18497 | ASI04 | `i_understand_risks` | `VectorStoreProbe` |
+
+Key distinctions from adjacent existing modules:
+
+- **`agent_data_injection`** attacks the trusted/untrusted *data* boundary
+  (forged provenance / control tokens / delimiters), not instruction-following —
+  orthogonal to `iterinject` and instruction-style indirect injection. It lives
+  in `adaptive/` (barrel-wired) but reports `CategoryInjection`.
+- **`mcp_tag_concealment`** tests invisible-encoding + the approval-view /
+  model-view divergence, distinct from `mcp_tool_poisoning` (visible malicious
+  content). Uses `Metadata["conceal_mode"]` (`tag_conceal`/`rugpull`) — a
+  dedicated key so it does not collide with the shared `Metadata["mode"]`
+  text-simulation opt-in.
+- **`mosaic_cmd_chain`** succeeds only when every command passes its
+  per-command filter *and* the composition is dangerous — distinct from
+  `rce_chain` (single-step) and `symjack` (approval/symlink).
+- **`prja_reasoning_inject`** *reads* the reasoning trace (never mutates it), so
+  signed traces run — unlike `h_cot`, which mutates and short-circuits to
+  `SkipSignatureGated`. Success is scored on the trace, with the benign-answer
+  evasion recorded in metadata.
+- **`ghost_vectors`** targets deletion durability at the storage layer
+  (insert → API-delete → raw-index recovery), distinct from
+  `vector_embedding_attack` / `model_inversion` (live embeddings via API).
+
+### New optional capabilities (`src/attacks/common/capabilities.go`)
+
+- **`VectorStoreProbe`** — `InsertVector` / `DeleteVector` (API/soft delete) /
+  `ReadRawIndex` (tombstoned records included). Exercised by
+  `testutil.MockVectorStore` (soft-delete by default; `HardDelete` models a
+  compacting store).
+- **`CommandChainProvider`** — `RunCommandChain` returning
+  `CommandChainOutcome{PerCommandAllowed, DangerousComposition}`. Exercised by
+  `testutil.MockCodingAgent.RunCommandChain` (a real producer→consumer detector;
+  `ExtraCommandBlock` / `ForceNoDangerousComposition` drive the refused paths).
+
+The OWASP Agentic 2026 mapping is regenerated from
+`templates/owasp_agentic_2026.yaml` via `cmd/owasp-gen` (`go generate
+./src/compliance/...`); the drift test enforces YAML↔registry consistency.
+
+
 ## Security Considerations
 
 - The tool is designed for security research and should only be used on systems you own or have permission to test
