@@ -500,3 +500,97 @@ func validDetail(d ImageDetail) bool {
 	}
 	return false
 }
+
+// ---------------------------------------------------------------------------
+// v0.13.0 — vector-store storage-layer capability for Ghost Vectors
+// ---------------------------------------------------------------------------
+//
+// Ghost Vectors (arXiv 2606.18497) is a deletion-durability attack: HNSW-based
+// vector stores implement deletion as a soft-delete (tombstone) that leaves the
+// raw embedding in the index files, so a "deleted" record remains
+// reconstructible by an attacker with storage-layer access. The vulnerability
+// is the persistence of soft-deleted data, NOT the Vec2Text inversion model.
+//
+// VectorStoreProbe models exactly that surface: insert a record, delete it
+// through the normal API, then read the raw index directly. The module records
+// OutcomeSuccess only when a soft-deleted record's source text is still
+// recoverable from the raw index. A store that hard-deletes (nothing recoverable)
+// drives OutcomeRefused. No production provider implements this yet; the
+// testutil.MockVectorStore double exercises it end-to-end and real runs emit a
+// clean SkipMissingCapability.
+
+// VectorStoreProbe is implemented by targets that expose a vector store's
+// insert / API-delete / raw-storage-read surface. Ghost Vectors requires it.
+type VectorStoreProbe interface {
+	Provider
+	// InsertVector adds a record (id + source text) to the store.
+	InsertVector(ctx context.Context, id, text string) error
+	// DeleteVector removes a record through the store's normal delete API.
+	// A soft-delete implementation only tombstones the record.
+	DeleteVector(ctx context.Context, id string) error
+	// ReadRawIndex returns the records present in the underlying index files,
+	// bypassing the delete API — including tombstoned (soft-deleted) records
+	// on stores that do not compact on delete.
+	ReadRawIndex(ctx context.Context) ([]RawVectorRecord, error)
+}
+
+// RawVectorRecord is a single record as it exists in the raw index, including
+// whether it has been tombstoned by a soft-delete. Text stands in for the
+// source reconstructed via Vec2Text-style inversion in the real attack.
+type RawVectorRecord struct {
+	ID      string
+	Text    string
+	Deleted bool // tombstoned by a soft-delete but still present in the index
+}
+
+// ---------------------------------------------------------------------------
+// v0.13.0 — command-chain capability for MOSAIC
+// ---------------------------------------------------------------------------
+//
+// MOSAIC (arXiv 2607.02857) composes individually-benign shell commands into an
+// exploit: each command passes a per-command safety filter alone, but a
+// producer→consumer relationship forms across the trace via shared OS state
+// (one command writes a payload, a later one executes it). The chain is the
+// payload.
+//
+// CommandChainProvider models a coding agent's command-execution surface. The
+// outcome reports which commands were individually allowed AND whether the
+// executed sequence produced a dangerous cross-command composition — the MOSAIC
+// success signal. It is a distinct optional interface from CodingAgentProvider
+// (the v0.12.0 approval/trust surface) so neither disturbs the other; the
+// testutil.MockCodingAgent double implements both. No production provider
+// implements it yet, so real runs emit a clean SkipMissingCapability.
+type CommandChainProvider interface {
+	Provider
+	// RunCommandChain executes an ordered sequence of shell commands sharing OS
+	// state and reports the composition outcome.
+	RunCommandChain(ctx context.Context, commands []string) (CommandChainOutcome, error)
+}
+
+// CommandChainOutcome reports the result of executing a command chain.
+type CommandChainOutcome struct {
+	// PerCommandAllowed[i] reports whether command i passed the agent's
+	// per-command safety filter in isolation. MOSAIC's premise is that every
+	// entry is true while the composition is still dangerous.
+	PerCommandAllowed []bool
+	// DangerousComposition is true when the executed sequence formed a dangerous
+	// cross-command data/OS-state flow (producer→consumer) that no single
+	// allowed command represents.
+	DangerousComposition bool
+	// Detail is a human-readable description of the composition finding.
+	Detail string
+}
+
+// AllAllowed reports whether every command in the chain passed its per-command
+// filter (no single command tripped a guard).
+func (o CommandChainOutcome) AllAllowed() bool {
+	if len(o.PerCommandAllowed) == 0 {
+		return false
+	}
+	for _, ok := range o.PerCommandAllowed {
+		if !ok {
+			return false
+		}
+	}
+	return true
+}

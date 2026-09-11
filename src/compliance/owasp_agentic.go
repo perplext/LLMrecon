@@ -236,6 +236,14 @@ func TechniqueToAgenticCategories(techniqueID string) []OWASPAgenticCategory {
 		"trustfall":                  {AgentGoalHijack, UnexpectedCodeExecution},
 		"memmorph":                   {MemoryPoisoning},
 		"sleeper":                    {MemoryPoisoning, RogueAgents},
+		// v0.13.0 additions — keep in sync with the YAML technique_index and
+		// the generated map.
+		"agent_data_injection":       {AgentGoalHijack},
+		"prja_reasoning_inject":      {AgentGoalHijack},
+		"token_suppression":          {AgentGoalHijack},
+		"mcp_tag_concealment":        {AgentGoalHijack, UnexpectedCodeExecution},
+		"mosaic_cmd_chain":           {AgentGoalHijack, UnexpectedCodeExecution},
+		"ghost_vectors":              {AgenticSupplyChain},
 	}
 	return index[techniqueID]
 }
