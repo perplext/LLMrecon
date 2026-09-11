@@ -2,20 +2,20 @@
 # Python 3.8+ required
 
 # Core ML Libraries
-torch>=2.13.0
+torch>=2.14.0
 tensorflow>=2.21.0
 scikit-learn>=1.9.0
-numpy>=2.5.1
+numpy>=2.5.2
 pandas>=3.0.5
 
 # Deep Learning & NLP
-transformers>=5.15.1
+transformers>=5.16.1
 gym>=0.26.2
 stable-baselines3>=2.9.0
 
 # Visualization & Dashboard
-streamlit>=1.62.0
-plotly>=6.8.0
+streamlit>=1.63.0
+plotly>=7.0.0
 matplotlib>=3.11.1
 seaborn>=0.13.2
 
@@ -25,7 +25,7 @@ opencv-python>=5.0.0.93
 qrcode>=8.2
 
 # Data Processing
-scipy>=1.18.0
+scipy>=1.18.1
 networkx>=3.6.1
 
 # Utilities
