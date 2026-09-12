@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/perplext/LLMrecon/src/attacks/common"
@@ -45,9 +46,19 @@ type MockCodingAgent struct {
 	// TrustErr, when set, is returned from TrustFolder (SkipProviderError).
 	TrustErr error
 
+	// CommandChainErr, when set, is returned from RunCommandChain (SkipProviderError).
+	CommandChainErr error
+	// ExtraCommandBlock adds tokens to the per-command blocklist so a test can
+	// model a hardened agent that rejects one step and breaks the chain.
+	ExtraCommandBlock []string
+	// ForceNoDangerousComposition suppresses the composition finding, modeling a
+	// sandbox that isolates OS state between commands (the secure path).
+	ForceNoDangerousComposition bool
+
 	// Recorded effects for assertions.
 	Writes      []ResolvedWrite
 	ExecutedMCP []string
+	RanCommands []string
 }
 
 // ResolvedWrite records a file write the agent performed, capturing the gap
@@ -111,4 +122,92 @@ func (m *MockCodingAgent) WriteCount() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return len(m.Writes)
+}
+
+// ---------------------------------------------------------------------------
+// MockCodingAgent — CommandChainProvider (v0.13.0, MOSAIC)
+// ---------------------------------------------------------------------------
+
+// Compile-time check: MockCodingAgent also satisfies CommandChainProvider.
+var _ common.CommandChainProvider = (*MockCodingAgent)(nil)
+
+// commandBlocklist are tokens a per-command filter blocks in isolation. A
+// realistic coding agent rejects overtly-destructive commands but waves
+// through the individually-benign steps MOSAIC composes.
+var commandBlocklist = []string{"rm -rf /", "curl ", "wget ", ":(){", "mkfs", "dd if="}
+
+// producerConsumerExec are tokens marking a command that executes/sources
+// shell content — the "consumer" end of a MOSAIC producer→consumer flow.
+var producerConsumerExec = []string{"sh -c", "| sh", "| bash", "bash -c", "eval ", "source ", ". ./"}
+
+// RunCommandChain evaluates each command against a per-command blocklist and
+// detects a dangerous producer→consumer composition (a write via ">" followed
+// by a command that executes shell content). Knobs let tests force outcomes:
+//   - CommandChainErr → provider error.
+//   - ExtraCommandBlock adds tokens to the per-command blocklist (models a
+//     hardened agent that breaks the chain).
+//   - ForceNoDangerousComposition suppresses the composition finding (models a
+//     sandbox that isolates OS state between commands).
+func (m *MockCodingAgent) RunCommandChain(_ context.Context, commands []string) (common.CommandChainOutcome, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.CommandChainErr != nil {
+		return common.CommandChainOutcome{}, m.CommandChainErr
+	}
+
+	block := append([]string(nil), commandBlocklist...)
+	block = append(block, m.ExtraCommandBlock...)
+
+	allowed := make([]bool, len(commands))
+	for i, c := range commands {
+		ok := true
+		for _, bad := range block {
+			if bad != "" && strings.Contains(c, bad) {
+				ok = false
+				break
+			}
+		}
+		allowed[i] = ok
+	}
+	m.RanCommands = append(m.RanCommands, commands...)
+
+	// Producer→consumer detection across ALLOWED commands only: a write
+	// ("... > file") in one command followed by a *later* allowed command that
+	// executes/sources shell content. Blocked commands don't run, and the
+	// consumer is checked before the current command is marked a producer, so a
+	// single command cannot compose with itself.
+	dangerous := false
+	detail := "no dangerous cross-command composition detected"
+	if !m.ForceNoDangerousComposition {
+		producerSeen := false
+		for i, c := range commands {
+			if !allowed[i] {
+				continue // blocked commands are not executed, so they can't compose
+			}
+			// Consumer check first: only counts if a prior command was a producer.
+			if producerSeen {
+				for _, ex := range producerConsumerExec {
+					if strings.Contains(c, ex) {
+						dangerous = true
+						detail = "producer write followed by consumer exec of shared state"
+						break
+					}
+				}
+			}
+			if dangerous {
+				break
+			}
+			// Then mark this command as a producer for subsequent commands.
+			if strings.Contains(c, ">") {
+				producerSeen = true
+			}
+		}
+	}
+
+	return common.CommandChainOutcome{
+		PerCommandAllowed:    allowed,
+		DangerousComposition: dangerous,
+		Detail:               detail,
+	}, nil
 }

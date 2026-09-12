@@ -4,8 +4,8 @@
 
 ### Advanced Security Testing Framework for Large Language Models
 
-[![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)](https://github.com/perplext/LLMrecon/releases)
-[![Go Version](https://img.shields.io/badge/go-1.25.0-00ADD8.svg)](https://go.dev/)
+[![Version](https://img.shields.io/badge/version-v0.13.0-blue.svg)](https://github.com/perplext/LLMrecon/releases)
+[![Go Version](https://img.shields.io/badge/go-1.26.0-00ADD8.svg)](https://go.dev/)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![OWASP](https://img.shields.io/badge/OWASP%20Top%2010-2025%20Compliant-green.svg)](https://owasp.org/)
 [![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
@@ -134,7 +134,7 @@ for the full Go-side roadmap.
 
 ### Prerequisites
 
-- **Go** 1.25.0+ (for enterprise features)
+- **Go** 1.26.0+ (for enterprise features)
 - **Python** 3.8+ (for ML components and Ollama testing)
 - **Git** for cloning the repository
 - **Ollama** (optional, for local model testing)

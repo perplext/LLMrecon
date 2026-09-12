@@ -79,6 +79,21 @@ categories:
       - id: trustfall
         priority: critical
         notes: "One-click RCE via folder-trust auto-execution of project MCP servers (Adversa, June 2026)"
+      - id: agent_data_injection
+        priority: high
+        notes: "Data disguised as trusted provenance/control-token/delimiter framing steers the agent without instruction injection (arXiv 2607.05120; CrowdStrike PT0198)"
+      - id: prja_reasoning_inject
+        priority: high
+        notes: "Psychological framing drives harmful content into reasoning steps while the final answer stays benign (arXiv 2604.15725)"
+      - id: token_suppression
+        priority: medium
+        notes: "Suppresses the model's refusal vocabulary to shift output away from refusals (CrowdStrike PT0197, 2026)"
+      - id: mcp_tag_concealment
+        priority: critical
+        notes: "Invisible Unicode TAG-block payloads / post-approval metadata swap exploit the MCP approval-view vs model-view gap (arXiv 2607.05744)"
+      - id: mosaic_cmd_chain
+        priority: critical
+        notes: "Composes individually-benign shell commands into a dangerous producer to consumer chain in coding agents (arXiv 2607.02857)"
     test_cases:
       - id: ASI01-TC01
         title: "Indirect prompt injection via retrieved document"
@@ -217,6 +232,9 @@ categories:
       - id: skill_takeover_chain
         priority: high
         notes: "URL summarization → config rewrite → permanent compromise"
+      - id: ghost_vectors
+        priority: high
+        notes: "Reconstructs soft-deleted embeddings from an HNSW vector store raw index, bypassing API-level deletion (arXiv 2606.18497)"
     test_cases:
       - id: ASI04-TC01
         title: "Malicious plugin injection"
@@ -265,6 +283,12 @@ categories:
       - id: trustfall
         priority: critical
         notes: "Folder-trust accept auto-executes a cloned repo's project MCP server (Adversa, June 2026)"
+      - id: mcp_tag_concealment
+        priority: critical
+        notes: "Concealed MCP metadata leads to unexpected code execution via auto-run tools (arXiv 2607.05744)"
+      - id: mosaic_cmd_chain
+        priority: critical
+        notes: "Composed command chain reaches RCE despite per-command filtering (arXiv 2607.02857)"
     test_cases:
       - id: ASI05-TC01
         title: "Sandbox escape via agent-generated code"
@@ -537,6 +561,12 @@ categories:
 # Reverse index: technique → ASI categories
 # Auto-generated from the category definitions above for bidirectional lookup
 technique_index:
+  agent_data_injection: [ASI01]
+  prja_reasoning_inject: [ASI01]
+  token_suppression: [ASI01]
+  mcp_tag_concealment: [ASI01, ASI05]
+  mosaic_cmd_chain: [ASI01, ASI05]
+  ghost_vectors: [ASI04]
   crescendo: [ASI01]
   skeleton_key: [ASI01]
   bad_likert_judge: [ASI01, ASI09]

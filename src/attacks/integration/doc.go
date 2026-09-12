@@ -16,7 +16,9 @@ import (
 	_ "github.com/perplext/LLMrecon/src/attacks/agentic/persistence"
 	_ "github.com/perplext/LLMrecon/src/attacks/agentic/tool_use"
 	_ "github.com/perplext/LLMrecon/src/attacks/audio"
+	_ "github.com/perplext/LLMrecon/src/attacks/evasion"
 	_ "github.com/perplext/LLMrecon/src/attacks/memory"
 	_ "github.com/perplext/LLMrecon/src/attacks/multimodal"
+	_ "github.com/perplext/LLMrecon/src/attacks/rag"
 	_ "github.com/perplext/LLMrecon/src/attacks/reasoning"
 )
