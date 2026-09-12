@@ -137,6 +137,7 @@ func (m *PRJAModule) Execute(
 	var response string
 	var trace common.ReasoningTrace
 	var lastErr error
+	anySucceeded := false
 	attempts := 0
 	for attempts = 1; attempts <= prjaMaxRetries; attempts++ {
 		if ctxErr := ctx.Err(); ctxErr != nil {
@@ -147,12 +148,16 @@ func (m *PRJAModule) Execute(
 			lastErr = err
 			continue
 		}
+		anySucceeded = true
 		response, trace = resp, t
 		if len(trace.Steps) > 0 {
 			break
 		}
 	}
-	if lastErr != nil && len(trace.Steps) == 0 {
+	// SkipProviderError only when every attempt errored. If at least one query
+	// succeeded but returned an empty trace, that is SkipReasoningTraceEmpty,
+	// not a provider error.
+	if !anySucceeded {
 		return skipped(common.SkipProviderError,
 			fmt.Sprintf("reasoning query failed across %d attempts; last error: %v", prjaMaxRetries, lastErr)), nil
 	}

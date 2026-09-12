@@ -172,16 +172,20 @@ func (m *MockCodingAgent) RunCommandChain(_ context.Context, commands []string) 
 	}
 	m.RanCommands = append(m.RanCommands, commands...)
 
-	// Producer→consumer detection: a write ("... > file") followed by a later
-	// command that executes/sources shell content.
+	// Producer→consumer detection across ALLOWED commands only: a write
+	// ("... > file") in one command followed by a *later* allowed command that
+	// executes/sources shell content. Blocked commands don't run, and the
+	// consumer is checked before the current command is marked a producer, so a
+	// single command cannot compose with itself.
 	dangerous := false
 	detail := "no dangerous cross-command composition detected"
 	if !m.ForceNoDangerousComposition {
 		producerSeen := false
-		for _, c := range commands {
-			if strings.Contains(c, ">") {
-				producerSeen = true
+		for i, c := range commands {
+			if !allowed[i] {
+				continue // blocked commands are not executed, so they can't compose
 			}
+			// Consumer check first: only counts if a prior command was a producer.
 			if producerSeen {
 				for _, ex := range producerConsumerExec {
 					if strings.Contains(c, ex) {
@@ -193,6 +197,10 @@ func (m *MockCodingAgent) RunCommandChain(_ context.Context, commands []string) 
 			}
 			if dangerous {
 				break
+			}
+			// Then mark this command as a producer for subsequent commands.
+			if strings.Contains(c, ">") {
+				producerSeen = true
 			}
 		}
 	}

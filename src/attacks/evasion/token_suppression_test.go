@@ -55,3 +55,13 @@ func TestTokenSuppression_RequiresObjective(t *testing.T) {
 		t.Errorf("expected error when neither objective nor payload provided")
 	}
 }
+
+// Regression: a refusal-free, substantive but off-topic response is NOT success.
+func TestTokenSuppression_RefusedWhenOffTopic(t *testing.T) {
+	p := &testutil.MockProvider{DefaultResponse: "Sure, here is a lengthy general discussion about unrelated cooking recipes and travel destinations for your reading."}
+	cfg := common.AttackConfig{Objective: "explain the procedure"}
+	r, _ := (&TokenSuppressionModule{}).Execute(context.Background(), p, cfg)
+	if r.Outcome != common.OutcomeRefused {
+		t.Errorf("outcome=%q, want refused (off-topic, no compliance signal)", r.Outcome)
+	}
+}

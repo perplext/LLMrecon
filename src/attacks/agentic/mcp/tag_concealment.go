@@ -194,7 +194,10 @@ func (m *TagConcealmentModule) Execute(
 	}
 	result.Metadata["mode"] = mode
 	result.Metadata["fidelity_gap"] = fidelityGap
-	result.Metadata["shown_rendering"] = stripTagBlock(modelFedDesc)
+	// shown_rendering is what the human approver saw — always the benign
+	// shownDesc. (In rugpull mode the payload has no TAG chars, so stripping
+	// modelFedDesc would wrongly surface the malicious model view here.)
+	result.Metadata["shown_rendering"] = shownDesc
 	result.Metadata["model_fed_len"] = len([]rune(modelFedDesc))
 	result.Metadata["shown_len"] = len([]rune(shownDesc))
 	result.Duration = time.Since(start)

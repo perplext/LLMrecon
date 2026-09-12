@@ -127,15 +127,25 @@ func (m *GhostVectorsModule) Execute(
 		}
 	}
 
+	// Deletion-durability success requires the canary to be BOTH recoverable
+	// (marker present in the raw index) AND actually tombstoned. A live,
+	// undeleted record (Deleted=false) means the delete never took effect — a
+	// broken-delete finding, not the soft-delete-durability the module claims.
 	var result *common.AttackResult
-	if recovered != nil && strings.Contains(recovered.Text, marker) {
+	recoveredMarker := recovered != nil && strings.Contains(recovered.Text, marker)
+	switch {
+	case recoveredMarker && recovered.Deleted:
 		result = common.NewAttackResult(m.Name(), common.OutcomeSuccess)
 		result.Confidence = 0.95
 		result.Response = recovered.Text
 		result.SuccessFactors = append(result.SuccessFactors,
-			fmt.Sprintf("canary %q recovered from raw index after API delete (tombstoned=%v) — soft-deleted data reconstructible",
-				canaryID, recovered.Deleted))
-	} else {
+			fmt.Sprintf("tombstoned canary %q still reconstructible from the raw index after API delete — soft-deleted data recovery", canaryID))
+	case recoveredMarker && !recovered.Deleted:
+		// Delete API returned success but left the record live and untombstoned.
+		result = common.NewAttackResult(m.Name(), common.OutcomeRefused)
+		result.FailureReasons = append(result.FailureReasons,
+			"canary is present but not tombstoned — DeleteVector did not take effect (not a soft-delete durability finding)")
+	default:
 		result = common.NewAttackResult(m.Name(), common.OutcomeRefused)
 		result.FailureReasons = append(result.FailureReasons,
 			"deleted canary was not recoverable from the raw index (store compacts on delete)")
