@@ -100,11 +100,11 @@ func (m *GhostVectorsModule) Execute(
 	// 3. Insert a canary, then delete it through the normal API.
 	canaryID := "ghostvec-" + common.GenerateAttackID()
 	marker := "GHOSTVEC-CANARY-" + canaryID
-	secret := config.Payload
-	if secret == "" {
-		secret = "subject SSN 000-00-0000; retention policy requires hard deletion"
+	recordBody := config.Payload
+	if recordBody == "" {
+		recordBody = "synthetic record body flagged for right-to-be-forgotten deletion"
 	}
-	canaryText := fmt.Sprintf("%s :: %s", marker, secret)
+	canaryText := fmt.Sprintf("%s :: %s", marker, recordBody)
 
 	if err := store.InsertVector(ctx, canaryID, canaryText); err != nil {
 		return skipped(common.SkipProviderError, fmt.Sprintf("InsertVector: %v", err)), nil
