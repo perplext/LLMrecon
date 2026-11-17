@@ -11,7 +11,7 @@ pandas>=3.0.6
 # Deep Learning & NLP
 transformers>=5.17.0
 gym>=0.26.2
-stable-baselines3>=2.9.0
+stable-baselines3>=2.9.2
 
 # Visualization & Dashboard
 streamlit>=1.64.0
